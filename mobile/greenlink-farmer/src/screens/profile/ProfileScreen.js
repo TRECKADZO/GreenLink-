@@ -122,12 +122,30 @@ const ProfileScreen = ({ navigation }) => {
       <View style={styles.content}>
         {/* Status */}
         <View style={styles.statusCard}>
-          <NetworkStatus isOnline={isOnline} />
-          {pendingActions.length > 0 && (
-            <Text style={styles.pendingText}>
-              {pendingActions.length} action(s) en attente de sync
-            </Text>
-          )}
+          <View style={styles.statusLeft}>
+            <NetworkStatus isOnline={isOnline} />
+            {pendingActions.length > 0 && (
+              <Text style={styles.pendingText}>
+                {pendingActions.length} action(s) en attente
+              </Text>
+            )}
+            {syncStatus?.lastSync && (
+              <Text style={styles.lastSyncText}>
+                Dernière sync: {new Date(syncStatus.lastSync).toLocaleTimeString('fr-FR')}
+              </Text>
+            )}
+          </View>
+          <TouchableOpacity 
+            style={[styles.syncButton, syncing && styles.syncButtonDisabled]}
+            onPress={handleManualSync}
+            disabled={syncing}
+          >
+            {syncing ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <Text style={styles.syncButtonText}>🔄 Sync</Text>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Info Cards */}
