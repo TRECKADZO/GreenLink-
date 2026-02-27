@@ -36,6 +36,13 @@ import {
   WishlistScreen,
 } from './src/screens/marketplace';
 
+// Screens - Carbon/RSE
+import {
+  CarbonMarketplaceScreen,
+  MyCarbonPurchasesScreen,
+  MyCarbonScoreScreen,
+} from './src/screens/carbon';
+
 import { Loader } from './src/components/UI';
 import { COLORS } from './src/config';
 
