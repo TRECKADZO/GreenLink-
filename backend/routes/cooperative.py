@@ -367,6 +367,154 @@ async def get_member_details(
         "total_premium_earned": total_premium
     }
 
+# ============= MEMBER PARCELS MANAGEMENT =============
+
+class MemberParcelCreate(BaseModel):
+    location: str
+    village: str
+    area_hectares: float
+    crop_type: str = "cacao"
+    gps_lat: Optional[float] = None
+    gps_lng: Optional[float] = None
+    certification: Optional[str] = None
+
+@router.post("/members/{member_id}/parcels")
+async def add_member_parcel(
+    member_id: str,
+    parcel: MemberParcelCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Ajouter une parcelle à un membre"""
+    verify_cooperative(current_user)
+    
+    # Verify member belongs to this cooperative
+    member = await db.coop_members.find_one({
+        "_id": ObjectId(member_id),
+        "coop_id": current_user["_id"]
+    })
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Membre non trouvé")
+    
+    # Calculate carbon score based on area and practices
+    carbon_score = round(min(9.5, 5.5 + (parcel.area_hectares * 0.3) + (1.5 if parcel.certification else 0)), 1)
+    co2_captured = round(parcel.area_hectares * carbon_score * 2.5, 2)
+    
+    parcel_doc = {
+        "member_id": ObjectId(member_id),
+        "coop_id": current_user["_id"],
+        "farmer_id": member.get("user_id") or str(member["_id"]),
+        "location": parcel.location,
+        "village": parcel.village,
+        "region": current_user.get("headquarters_region", ""),
+        "area_hectares": parcel.area_hectares,
+        "crop_type": parcel.crop_type,
+        "carbon_score": carbon_score,
+        "co2_captured_tonnes": co2_captured,
+        "gps_coordinates": {
+            "lat": parcel.gps_lat,
+            "lng": parcel.gps_lng
+        } if parcel.gps_lat and parcel.gps_lng else None,
+        "certification": parcel.certification,
+        "eudr_compliant": True,
+        "deforestation_free": True,
+        "status": "active",
+        "created_at": datetime.utcnow(),
+        "created_by": current_user["_id"]
+    }
+    
+    result = await db.parcels.insert_one(parcel_doc)
+    
+    # Update member stats
+    await db.coop_members.update_one(
+        {"_id": ObjectId(member_id)},
+        {
+            "$inc": {"parcels_count": 1, "total_hectares": parcel.area_hectares},
+            "$set": {"last_parcel_added": datetime.utcnow()}
+        }
+    )
+    
+    return {
+        "message": "Parcelle ajoutée avec succès",
+        "parcel_id": str(result.inserted_id),
+        "carbon_score": carbon_score,
+        "co2_captured_tonnes": co2_captured
+    }
+
+@router.get("/members/{member_id}/parcels")
+async def get_member_parcels(
+    member_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Liste des parcelles d'un membre"""
+    verify_cooperative(current_user)
+    
+    # Verify member belongs to this cooperative
+    member = await db.coop_members.find_one({
+        "_id": ObjectId(member_id),
+        "coop_id": current_user["_id"]
+    })
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Membre non trouvé")
+    
+    parcels = await db.parcels.find({
+        "$or": [
+            {"member_id": ObjectId(member_id)},
+            {"farmer_id": str(member["_id"])}
+        ]
+    }).to_list(100)
+    
+    return {
+        "member_id": member_id,
+        "member_name": member.get("full_name", ""),
+        "total_parcels": len(parcels),
+        "total_hectares": round(sum(p.get("area_hectares", 0) for p in parcels), 2),
+        "total_co2": round(sum(p.get("co2_captured_tonnes", 0) for p in parcels), 2),
+        "average_carbon_score": round(sum(p.get("carbon_score", 0) for p in parcels) / max(len(parcels), 1), 1),
+        "parcels": [{
+            "id": str(p["_id"]),
+            "location": p.get("location", ""),
+            "village": p.get("village", ""),
+            "area_hectares": p.get("area_hectares", 0),
+            "crop_type": p.get("crop_type", "cacao"),
+            "carbon_score": p.get("carbon_score", 0),
+            "co2_captured_tonnes": p.get("co2_captured_tonnes", 0),
+            "certification": p.get("certification"),
+            "gps_coordinates": p.get("gps_coordinates"),
+            "created_at": p.get("created_at", "")
+        } for p in parcels]
+    }
+
+@router.delete("/members/{member_id}/parcels/{parcel_id}")
+async def delete_member_parcel(
+    member_id: str,
+    parcel_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Supprimer une parcelle d'un membre"""
+    verify_cooperative(current_user)
+    
+    parcel = await db.parcels.find_one({
+        "_id": ObjectId(parcel_id),
+        "member_id": ObjectId(member_id)
+    })
+    
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcelle non trouvée")
+    
+    await db.parcels.delete_one({"_id": ObjectId(parcel_id)})
+    
+    # Update member stats
+    await db.coop_members.update_one(
+        {"_id": ObjectId(member_id)},
+        {
+            "$inc": {"parcels_count": -1, "total_hectares": -parcel.get("area_hectares", 0)}
+        }
+    )
+    
+    return {"message": "Parcelle supprimée avec succès"}
+
 # ============= LOT MANAGEMENT =============
 
 @router.get("/lots")
