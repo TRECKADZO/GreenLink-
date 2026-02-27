@@ -514,7 +514,10 @@ def test_user_type_protection():
             print_success("Producer correctly blocked from buyer endpoint")
             protection_working = True
         else:
-            print_error(f"Producer not blocked from buyer endpoint - got status {response.status_code if response else 'None'}")
+            if response:
+                print_error(f"Producer not blocked from buyer endpoint - got status {response.status_code} (expected 403)")
+            else:
+                print_error("Producer test failed - no response received")
             protection_working = False
     else:
         protection_working = False
