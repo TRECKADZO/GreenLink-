@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/card';
@@ -9,6 +9,7 @@ import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import Navbar from '../components/Navbar';
 import { useToast } from '../hooks/use-toast';
+import axios from 'axios';
 import { 
   ShoppingCart, 
   MapPin, 
@@ -17,11 +18,18 @@ import {
   Truck,
   CheckCircle,
   Package,
-  ArrowLeft
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
+  Smartphone,
+  XCircle
 } from 'lucide-react';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { cart, checkout, loading } = useCart();
   const { toast } = useToast();
@@ -34,14 +42,62 @@ const CheckoutPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [simulationMode, setSimulationMode] = useState(true);
+
+  // Check simulation mode on mount
+  useEffect(() => {
+    const checkSimulation = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/payments/simulation-status`);
+        setSimulationMode(response.data.simulation_mode);
+      } catch (error) {
+        console.error('Error checking simulation status:', error);
+      }
+    };
+    checkSimulation();
+  }, []);
+
+  // Handle payment return
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    const status = searchParams.get('status');
+    
+    if (ref) {
+      // Check payment status
+      checkPaymentStatus(ref);
+    }
+  }, [searchParams]);
+
+  const checkPaymentStatus = async (merchantRef) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_URL}/api/payments/status/${merchantRef}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setPaymentStatus(response.data);
+      
+      if (response.data.status === 'paid') {
+        toast({
+          title: 'Paiement réussi!',
+          description: 'Votre paiement a été confirmé'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+    }
+  };
 
   if (!user) {
     navigate('/login');
     return null;
   }
 
-  if (cart.items.length === 0 && !orderSuccess) {
-    navigate('/#marketplace');
+  if (cart.items.length === 0 && !orderSuccess && !paymentStatus) {
+    navigate('/marketplace');
     return null;
   }
 
@@ -59,12 +115,20 @@ const CheckoutPage = () => {
 
     setSubmitting(true);
     try {
+      // First create the orders
       const result = await checkout(formData);
-      setOrderSuccess(result);
-      toast({
-        title: 'Commande confirmée!',
-        description: `${result.total_orders} commande(s) créée(s) avec succès`
-      });
+      
+      if (formData.payment_method === 'orange_money') {
+        // Initiate Orange Money payment
+        await initiateOrangeMoneyPayment(result);
+      } else {
+        // Cash on delivery - show success directly
+        setOrderSuccess(result);
+        toast({
+          title: 'Commande confirmée!',
+          description: `${result.total_orders} commande(s) créée(s) avec succès`
+        });
+      }
     } catch (error) {
       toast({
         title: 'Erreur',
@@ -76,7 +140,240 @@ const CheckoutPage = () => {
     }
   };
 
-  // Success State
+  const initiateOrangeMoneyPayment = async (checkoutResult) => {
+    setPaymentProcessing(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const orderIds = checkoutResult.orders.map(o => o._id);
+      
+      const response = await axios.post(
+        `${API_URL}/api/payments/initiate`,
+        {
+          order_ids: orderIds,
+          customer_phone: formData.phone,
+          customer_email: user?.email
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const paymentData = response.data;
+      
+      if (paymentData.simulation_mode) {
+        // In simulation mode, show simulation interface
+        setPaymentStatus({
+          status: 'pending_simulation',
+          merchant_reference: paymentData.merchant_reference,
+          amount: paymentData.amount,
+          orders: checkoutResult.orders
+        });
+      } else {
+        // In production, redirect to Orange Money payment page
+        if (paymentData.payment_url) {
+          window.location.href = paymentData.payment_url;
+        }
+      }
+      
+    } catch (error) {
+      toast({
+        title: 'Erreur de paiement',
+        description: error.response?.data?.detail || 'Impossible d\'initier le paiement',
+        variant: 'destructive'
+      });
+      setPaymentProcessing(false);
+    }
+  };
+
+  const simulatePayment = async (action) => {
+    if (!paymentStatus?.merchant_reference) return;
+    
+    setPaymentProcessing(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/payments/simulate/SIM_TOKEN?action=${action}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        setPaymentStatus({
+          ...paymentStatus,
+          status: 'paid',
+          transaction_id: response.data.transaction_id
+        });
+        toast({
+          title: 'Paiement simulé avec succès!',
+          description: 'Le paiement a été confirmé'
+        });
+      } else {
+        setPaymentStatus({
+          ...paymentStatus,
+          status: response.data.status
+        });
+        toast({
+          title: 'Paiement échoué',
+          description: response.data.message,
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.detail || 'Erreur lors de la simulation',
+        variant: 'destructive'
+      });
+    } finally {
+      setPaymentProcessing(false);
+    }
+  };
+
+  // Payment Simulation Interface
+  if (paymentStatus?.status === 'pending_simulation') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="pt-24 pb-12 px-6">
+          <div className="max-w-lg mx-auto">
+            <Card className="p-8">
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
+                  <Smartphone className="w-10 h-10 text-orange-500" />
+                </div>
+                <Badge className="bg-yellow-100 text-yellow-700 mb-2">Mode Simulation</Badge>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Paiement Orange Money
+                </h1>
+                <p className="text-gray-600 mt-2">
+                  Simulez le paiement pour tester le flux complet
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-gray-600">Montant</span>
+                  <span className="text-2xl font-bold text-orange-600">
+                    {paymentStatus.amount?.toLocaleString()} FCFA
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">Téléphone</span>
+                  <span className="font-medium">{formData.phone}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm mt-2">
+                  <span className="text-gray-500">Référence</span>
+                  <span className="font-mono text-xs">{paymentStatus.merchant_reference}</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-500 text-center mb-6">
+                En production, vous seriez redirigé vers Orange Money pour entrer votre code PIN.
+                Pour l'instant, choisissez le résultat du paiement :
+              </p>
+
+              <div className="space-y-3">
+                <Button
+                  onClick={() => simulatePayment('success')}
+                  disabled={paymentProcessing}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-6"
+                  data-testid="simulate-success-btn"
+                >
+                  {paymentProcessing ? (
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  ) : (
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                  )}
+                  Simuler Paiement Réussi
+                </Button>
+                
+                <Button
+                  onClick={() => simulatePayment('fail')}
+                  disabled={paymentProcessing}
+                  variant="outline"
+                  className="w-full border-red-300 text-red-600 hover:bg-red-50 py-6"
+                  data-testid="simulate-fail-btn"
+                >
+                  <XCircle className="w-5 h-5 mr-2" />
+                  Simuler Échec
+                </Button>
+                
+                <Button
+                  onClick={() => {
+                    setPaymentStatus(null);
+                    setPaymentProcessing(false);
+                  }}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Payment Success State (after simulation or real payment)
+  if (paymentStatus?.status === 'paid') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="pt-24 pb-12 px-6">
+          <div className="max-w-2xl mx-auto">
+            <Card className="p-8 text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="w-10 h-10 text-green-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                Paiement Confirmé!
+              </h1>
+              <p className="text-gray-600 mb-6">
+                Votre paiement Orange Money a été traité avec succès.
+              </p>
+              
+              <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-gray-500">Transaction</span>
+                  <span className="font-mono text-sm">{paymentStatus.transaction_id}</span>
+                </div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-gray-500">Montant</span>
+                  <span className="font-bold text-[#2d5a4d]">
+                    {paymentStatus.amount?.toLocaleString()} FCFA
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Statut</span>
+                  <Badge className="bg-green-100 text-green-700">Payé</Badge>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/marketplace')}
+                  className="flex-1"
+                >
+                  Continuer mes achats
+                </Button>
+                <Button
+                  onClick={() => navigate('/buyer/orders')}
+                  className="flex-1 bg-[#2d5a4d] hover:bg-[#1a4038]"
+                >
+                  Voir mes commandes
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Success State (Cash on Delivery)
   if (orderSuccess) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -102,9 +399,14 @@ const CheckoutPage = () => {
                       <p className="font-medium text-gray-900">#{order.order_number}</p>
                       <p className="text-sm text-gray-500">{order.supplier_name}</p>
                     </div>
-                    <p className="font-bold text-[#2d5a4d]">
-                      {order.total_amount.toLocaleString()} FCFA
-                    </p>
+                    <div className="text-right">
+                      <p className="font-bold text-[#2d5a4d]">
+                        {order.total_amount.toLocaleString()} FCFA
+                      </p>
+                      <Badge className="bg-yellow-100 text-yellow-700">
+                        Paiement à la livraison
+                      </Badge>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -112,7 +414,7 @@ const CheckoutPage = () => {
               <div className="flex gap-4">
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/#marketplace')}
+                  onClick={() => navigate('/marketplace')}
                   className="flex-1"
                 >
                   Continuer mes achats
@@ -140,6 +442,7 @@ const CheckoutPage = () => {
             variant="ghost"
             onClick={() => navigate(-1)}
             className="mb-6"
+            data-testid="back-btn"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour
@@ -164,6 +467,7 @@ const CheckoutPage = () => {
                       <Label htmlFor="address">Adresse complète *</Label>
                       <Input
                         id="address"
+                        data-testid="address-input"
                         placeholder="Ex: Cocody Angré 7ème tranche, près de la pharmacie..."
                         value={formData.address}
                         onChange={(e) => setFormData({...formData, address: e.target.value})}
@@ -175,6 +479,7 @@ const CheckoutPage = () => {
                       <Label htmlFor="phone">Téléphone *</Label>
                       <Input
                         id="phone"
+                        data-testid="phone-input"
                         placeholder="+225 07 00 00 00 00"
                         value={formData.phone}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
@@ -192,12 +497,14 @@ const CheckoutPage = () => {
                     Mode de paiement
                   </h2>
                   <div className="space-y-3">
+                    {/* Cash on Delivery */}
                     <label 
                       className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                         formData.payment_method === 'cash_on_delivery'
                           ? 'border-[#2d5a4d] bg-[#2d5a4d]/5'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
+                      data-testid="payment-cash"
                     >
                       <input
                         type="radio"
@@ -208,18 +515,20 @@ const CheckoutPage = () => {
                         className="w-5 h-5 text-[#2d5a4d]"
                       />
                       <Truck className="w-6 h-6 text-gray-600" />
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold text-gray-900">Paiement à la livraison</p>
                         <p className="text-sm text-gray-500">Payez en espèces à la réception</p>
                       </div>
                     </label>
 
+                    {/* Orange Money */}
                     <label 
                       className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                         formData.payment_method === 'orange_money'
-                          ? 'border-[#2d5a4d] bg-[#2d5a4d]/5'
+                          ? 'border-orange-500 bg-orange-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
+                      data-testid="payment-orange-money"
                     >
                       <input
                         type="radio"
@@ -227,18 +536,36 @@ const CheckoutPage = () => {
                         value="orange_money"
                         checked={formData.payment_method === 'orange_money'}
                         onChange={(e) => setFormData({...formData, payment_method: e.target.value})}
-                        className="w-5 h-5 text-[#2d5a4d]"
+                        className="w-5 h-5 text-orange-500"
                       />
-                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">OM</span>
+                      <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">OM</span>
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold text-gray-900">Orange Money</p>
                         <p className="text-sm text-gray-500">Paiement mobile sécurisé</p>
                       </div>
-                      <Badge className="ml-auto bg-orange-100 text-orange-700">Bientôt</Badge>
+                      {simulationMode && (
+                        <Badge className="bg-yellow-100 text-yellow-700 text-xs">
+                          Mode Test
+                        </Badge>
+                      )}
                     </label>
                   </div>
+
+                  {formData.payment_method === 'orange_money' && simulationMode && (
+                    <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-yellow-700">
+                          <strong>Mode simulation activé</strong>
+                          <p className="mt-1">
+                            Les paiements sont simulés pour les tests. En production, vous serez redirigé vers Orange Money.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </Card>
 
                 {/* Notes */}
@@ -247,6 +574,7 @@ const CheckoutPage = () => {
                     Instructions (optionnel)
                   </h2>
                   <textarea
+                    data-testid="notes-input"
                     placeholder="Instructions spéciales pour la livraison..."
                     value={formData.notes}
                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
@@ -257,10 +585,27 @@ const CheckoutPage = () => {
 
                 <Button
                   type="submit"
-                  disabled={submitting}
-                  className="w-full bg-[#d4a574] hover:bg-[#c49564] text-[#2d5a4d] font-semibold py-6 text-lg"
+                  data-testid="confirm-order-btn"
+                  disabled={submitting || paymentProcessing}
+                  className={`w-full font-semibold py-6 text-lg ${
+                    formData.payment_method === 'orange_money' 
+                      ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                      : 'bg-[#d4a574] hover:bg-[#c49564] text-[#2d5a4d]'
+                  }`}
                 >
-                  {submitting ? 'Traitement...' : 'Confirmer la commande'}
+                  {submitting || paymentProcessing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Traitement...
+                    </>
+                  ) : formData.payment_method === 'orange_money' ? (
+                    <>
+                      <Smartphone className="w-5 h-5 mr-2" />
+                      Payer avec Orange Money
+                    </>
+                  ) : (
+                    'Confirmer la commande'
+                  )}
                 </Button>
               </form>
             </div>
@@ -314,6 +659,25 @@ const CheckoutPage = () => {
                   <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t">
                     <span>Total</span>
                     <span className="text-[#2d5a4d]">{cart.total.toLocaleString()} FCFA</span>
+                  </div>
+                </div>
+
+                {/* Payment Method Indicator */}
+                <div className="mt-4 p-3 rounded-lg bg-gray-50">
+                  <div className="flex items-center gap-2 text-sm">
+                    {formData.payment_method === 'orange_money' ? (
+                      <>
+                        <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">OM</span>
+                        </div>
+                        <span className="text-gray-700">Orange Money</span>
+                      </>
+                    ) : (
+                      <>
+                        <Truck className="w-5 h-5 text-gray-600" />
+                        <span className="text-gray-700">Paiement à la livraison</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </Card>
