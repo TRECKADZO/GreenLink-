@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import Navbar from '../../components/Navbar';
 import SupplierSidebar from '../../components/SupplierSidebar';
 import { marketplaceApi } from '../../services/marketplaceApi';
-import { Package, Plus, Edit, Trash2, Search, AlertCircle } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Search, AlertCircle, Upload, X, Image } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
 const categories = [
@@ -33,11 +33,13 @@ const MyProducts = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const fileInputRef = useRef(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     category: '',
