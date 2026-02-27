@@ -331,7 +331,7 @@ def test_error_handling():
     # Test 6b: Wrong password login
     print("\n   6b. Testing login with wrong password:")
     wrong_login = {
-        "phone_number": "+225 07 12 34 56 78",
+        "phone_number": "+22507123456789",
         "password": "wrongpassword"
     }
     
