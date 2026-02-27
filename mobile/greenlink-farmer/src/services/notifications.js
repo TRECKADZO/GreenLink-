@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
+import Constants from 'expo-constants';
 
 // Configuration des notifications
 Notifications.setNotificationHandler({
@@ -32,7 +33,8 @@ class NotificationService {
     }
 
     if (!Device.isDevice) {
-      console.log('Push notifications require a physical device');
+      console.log('[NotificationService] Push notifications require a physical device');
+      // In development/emulator, we can still test with a mock token
       return null;
     }
 
@@ -45,40 +47,46 @@ class NotificationService {
     }
 
     if (finalStatus !== 'granted') {
-      console.log('Push notification permission denied');
+      console.log('[NotificationService] Push notification permission denied');
       return null;
     }
 
     try {
-      // Pour Expo, on utilise le token Expo
+      // Get the project ID from Constants or use fallback
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId || 
+                       Constants.easConfig?.projectId ||
+                       'greenlink-farmer';
+      
       token = (await Notifications.getExpoPushTokenAsync({
-        projectId: 'greenlink-farmer', // Remplacer par votre project ID
+        projectId,
       })).data;
 
       this.expoPushToken = token;
       await AsyncStorage.setItem('expoPushToken', token);
       
-      // Enregistrer le token sur le serveur
+      // Register token on server
       await this.registerTokenOnServer(token);
       
-      console.log('Push token:', token);
+      console.log('[NotificationService] Push token registered:', token);
     } catch (error) {
-      console.error('Error getting push token:', error);
+      console.error('[NotificationService] Error getting push token:', error);
     }
 
     return token;
   }
 
-  // Enregistrer le token sur le serveur backend
+  // Register token on backend server
   async registerTokenOnServer(token) {
     try {
-      await api.post('/notifications/register-device', {
+      await api.post('/greenlink/notifications/register-device', {
         push_token: token,
         platform: Platform.OS,
-        device_name: Device.modelName,
+        device_name: Device.modelName || 'Unknown Device',
       });
+      console.log('[NotificationService] Token registered on server');
     } catch (error) {
-      console.error('Error registering token on server:', error);
+      // Don't throw - this is non-critical
+      console.error('[NotificationService] Error registering token on server:', error.message);
     }
   }
 
