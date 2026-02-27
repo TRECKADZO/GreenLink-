@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import Navbar from '../components/Navbar';
-import { greenlinkApi } from '../services/greenlinkApi';
+import { Card } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
+import Navbar from '../../components/Navbar';
+import { greenlinkApi } from '../../services/greenlinkApi';
 import { 
   Sprout, 
   TrendingUp, 
@@ -16,7 +16,7 @@ import {
   Smartphone,
   CheckCircle
 } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
+import { useToast } from '../../hooks/use-toast';
 
 const FarmerDashboard = () => {
   const { user } = useAuth();
