@@ -62,6 +62,7 @@ Build a comprehensive agritech platform connecting:
 - Orange Money payments (backend simulation only)
 - USSD interface (web simulator, no telecom integration)
 - Carbon credit certificates (text format, no PDF)
+- **SMS notifications** (simulated, stored in DB, ready for Orange API)
 
 ## API Endpoints
 
