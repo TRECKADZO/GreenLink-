@@ -26,9 +26,9 @@ class Colors:
     END = '\033[0m'
 
 def print_test_header(title):
-    print(f"\n{Colors.BLUE}{Colors.BOLD}{'='*60}{Colors.END}")
+    print(f"\n{Colors.BLUE}{Colors.BOLD}{'='*80}{Colors.END}")
     print(f"{Colors.BLUE}{Colors.BOLD}{title}{Colors.END}")
-    print(f"{Colors.BLUE}{Colors.BOLD}{'='*60}{Colors.END}")
+    print(f"{Colors.BLUE}{Colors.BOLD}{'='*80}{Colors.END}")
 
 def print_success(message):
     print(f"{Colors.GREEN}✅ {message}{Colors.END}")
@@ -42,376 +42,570 @@ def print_warning(message):
 def print_info(message):
     print(f"{Colors.BLUE}ℹ️  {message}{Colors.END}")
 
-def test_register_with_email():
-    """Test registering a new user with email"""
-    print_test_header("TEST 1: Register with Email")
+# Global test data storage
+test_tokens = {}
+test_user_ids = {}
+test_data = {}
+
+class TestTracker:
+    def __init__(self):
+        self.results = []
     
-    test_data = {
-        "email": "test@greenlink.ci",
-        "password": "test123",
-        "full_name": "Test Email User",
-        "user_type": "producteur"
-    }
-    
-    try:
-        response = requests.post(f"{BASE_URL}/auth/register", json=test_data)
-        print_info(f"POST {BASE_URL}/auth/register")
-        print_info(f"Data: {json.dumps(test_data, indent=2)}")
-        print_info(f"Status Code: {response.status_code}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if "access_token" in data and "user" in data:
-                user = data["user"]
-                if user.get("email") == test_data["email"]:
-                    print_success(f"Registration with email successful - User ID: {user.get('_id')}")
-                    return data["access_token"], user["_id"]
-                else:
-                    print_error("User email field missing or incorrect in response")
-                    return None, None
-            else:
-                print_error("Missing access_token or user in response")
-                return None, None
+    def add_result(self, test_name, passed, details=""):
+        self.results.append({
+            "name": test_name,
+            "passed": passed,
+            "details": details
+        })
+        if passed:
+            print_success(f"{test_name}")
         else:
-            print_error(f"Registration failed: {response.text}")
-            return None, None
+            print_error(f"{test_name}: {details}")
+    
+    def get_summary(self):
+        passed = len([r for r in self.results if r["passed"]])
+        total = len(self.results)
+        return passed, total
+
+tracker = TestTracker()
+
+def make_request(method, url, **kwargs):
+    """Helper function to make HTTP requests with proper error handling"""
+    try:
+        response = requests.request(method, url, **kwargs)
+        print_info(f"{method.upper()} {url}")
+        if "json" in kwargs:
+            print_info(f"Data: {json.dumps(kwargs['json'], indent=2, default=str)}")
+        print_info(f"Status Code: {response.status_code}")
+        return response
     except Exception as e:
         print_error(f"Request failed: {str(e)}")
-        return None, None
+        return None
 
-def test_register_with_phone():
-    """Test registering a new user with phone number"""
-    print_test_header("TEST 2: Register with Phone")
+# ============= AUTHENTICATION SETUP =============
+
+def setup_test_accounts():
+    """Create test accounts for all user types"""
+    print_test_header("SETUP: Creating Test Accounts")
     
-    test_data = {
-        "phone_number": "+22507654321",
-        "password": "test456",
-        "full_name": "Test Phone User",
-        "user_type": "acheteur"
-    }
+    accounts = [
+        {
+            "email": "planteur@test.ci",
+            "password": "test123",
+            "full_name": "Kouadio Yao",
+            "user_type": "producteur",
+            "key": "producteur"
+        },
+        {
+            "email": "acheteur@test.ci", 
+            "password": "test123",
+            "full_name": "Société Cacao Plus",
+            "user_type": "acheteur",
+            "key": "acheteur"
+        },
+        {
+            "email": "rse@test.ci",
+            "password": "test123", 
+            "full_name": "Green Impact SA",
+            "user_type": "entreprise_rse",
+            "key": "entreprise_rse"
+        }
+    ]
     
-    try:
-        response = requests.post(f"{BASE_URL}/auth/register", json=test_data)
-        print_info(f"POST {BASE_URL}/auth/register")
-        print_info(f"Data: {json.dumps(test_data, indent=2)}")
-        print_info(f"Status Code: {response.status_code}")
+    for account in accounts:
+        # First try to register
+        response = make_request("POST", f"{BASE_URL}/auth/register", json=account)
         
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             data = response.json()
-            if "access_token" in data and "user" in data:
-                user = data["user"]
-                if user.get("phone_number") == test_data["phone_number"]:
-                    print_success(f"Registration with phone successful - User ID: {user.get('_id')}")
-                    return data["access_token"], user["_id"]
-                else:
-                    print_error("User phone_number field missing or incorrect in response")
-                    return None, None
-            else:
-                print_error("Missing access_token or user in response")
-                return None, None
+            test_tokens[account["key"]] = data["access_token"]
+            test_user_ids[account["key"]] = data["user"]["_id"]
+            print_success(f"Created {account['key']} account: {account['email']}")
         else:
-            print_error(f"Registration failed: {response.text}")
-            return None, None
-    except Exception as e:
-        print_error(f"Request failed: {str(e)}")
-        return None, None
-
-def test_login_with_email():
-    """Test login with email as identifier"""
-    print_test_header("TEST 3: Login with Email")
-    
-    login_data = {
-        "identifier": "test@greenlink.ci",
-        "password": "test123"
-    }
-    
-    try:
-        response = requests.post(f"{BASE_URL}/auth/login", json=login_data)
-        print_info(f"POST {BASE_URL}/auth/login")
-        print_info(f"Data: {json.dumps(login_data, indent=2)}")
-        print_info(f"Status Code: {response.status_code}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if "access_token" in data and "user" in data:
-                user = data["user"]
-                if user.get("email") == login_data["identifier"]:
-                    print_success("Email login successful")
-                    return True
-                else:
-                    print_error("User email mismatch in login response")
-                    return False
-            else:
-                print_error("Missing access_token or user in login response")
-                return False
-        else:
-            print_error(f"Email login failed: {response.text}")
-            return False
-    except Exception as e:
-        print_error(f"Email login request failed: {str(e)}")
-        return False
-
-def test_login_with_phone():
-    """Test login with phone as identifier"""
-    print_test_header("TEST 4: Login with Phone")
-    
-    login_data = {
-        "identifier": "+22507654321",
-        "password": "test456"
-    }
-    
-    try:
-        response = requests.post(f"{BASE_URL}/auth/login", json=login_data)
-        print_info(f"POST {BASE_URL}/auth/login")
-        print_info(f"Data: {json.dumps(login_data, indent=2)}")
-        print_info(f"Status Code: {response.status_code}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if "access_token" in data and "user" in data:
-                user = data["user"]
-                if user.get("phone_number") == login_data["identifier"]:
-                    print_success("Phone login successful")
-                    return True
-                else:
-                    print_error("User phone number mismatch in login response")
-                    return False
-            else:
-                print_error("Missing access_token or user in login response")
-                return False
-        else:
-            print_error(f"Phone login failed: {response.text}")
-            return False
-    except Exception as e:
-        print_error(f"Phone login request failed: {str(e)}")
-        return False
-
-def test_duplicate_email_registration():
-    """Test registering with duplicate email should fail"""
-    print_test_header("TEST 5: Duplicate Email Registration (Should Fail)")
-    
-    duplicate_data = {
-        "email": "test@greenlink.ci",
-        "password": "different123",
-        "full_name": "Different User",
-        "user_type": "entreprise_rse"
-    }
-    
-    try:
-        response = requests.post(f"{BASE_URL}/auth/register", json=duplicate_data)
-        print_info(f"POST {BASE_URL}/auth/register")
-        print_info(f"Data: {json.dumps(duplicate_data, indent=2)}")
-        print_info(f"Status Code: {response.status_code}")
-        
-        if response.status_code == 400:
-            error_msg = response.json().get("detail", "")
-            if "email" in error_msg.lower() or "déjà enregistré" in error_msg:
-                print_success("Duplicate email registration correctly rejected")
-                return True
-            else:
-                print_error(f"Unexpected error message for duplicate email: {error_msg}")
-                return False
-        else:
-            print_error(f"Expected 400 status code for duplicate email, got {response.status_code}: {response.text}")
-            return False
-    except Exception as e:
-        print_error(f"Duplicate email test request failed: {str(e)}")
-        return False
-
-def test_duplicate_phone_registration():
-    """Test registering with duplicate phone should fail"""
-    print_test_header("TEST 6: Duplicate Phone Registration (Should Fail)")
-    
-    duplicate_data = {
-        "phone_number": "+22507654321",
-        "password": "different456",
-        "full_name": "Different User",
-        "user_type": "fournisseur"
-    }
-    
-    try:
-        response = requests.post(f"{BASE_URL}/auth/register", json=duplicate_data)
-        print_info(f"POST {BASE_URL}/auth/register")
-        print_info(f"Data: {json.dumps(duplicate_data, indent=2)}")
-        print_info(f"Status Code: {response.status_code}")
-        
-        if response.status_code == 400:
-            error_msg = response.json().get("detail", "")
-            if "téléphone" in error_msg.lower() or "déjà enregistré" in error_msg:
-                print_success("Duplicate phone registration correctly rejected")
-                return True
-            else:
-                print_error(f"Unexpected error message for duplicate phone: {error_msg}")
-                return False
-        else:
-            print_error(f"Expected 400 status code for duplicate phone, got {response.status_code}: {response.text}")
-            return False
-    except Exception as e:
-        print_error(f"Duplicate phone test request failed: {str(e)}")
-        return False
-
-def test_registration_without_contact():
-    """Test registering without phone AND email should fail"""
-    print_test_header("TEST 7: Registration without Phone AND Email (Should Fail)")
-    
-    invalid_data = {
-        "password": "test789",
-        "full_name": "Invalid User",
-        "user_type": "producteur"
-    }
-    
-    try:
-        response = requests.post(f"{BASE_URL}/auth/register", json=invalid_data)
-        print_info(f"POST {BASE_URL}/auth/register")
-        print_info(f"Data: {json.dumps(invalid_data, indent=2)}")
-        print_info(f"Status Code: {response.status_code}")
-        
-        if response.status_code == 422:
-            error_msg = response.text
-            print_success("Registration without contact info correctly rejected with validation error")
-            return True
-        else:
-            print_error(f"Expected 422 validation error, got {response.status_code}: {response.text}")
-            return False
-    except Exception as e:
-        print_error(f"No contact info test request failed: {str(e)}")
-        return False
-
-def test_login_wrong_identifier():
-    """Test login with non-existent identifier should fail"""
-    print_test_header("TEST 8: Login with Wrong Identifier (Should Fail)")
-    
-    wrong_login = {
-        "identifier": "nonexistent@test.com",
-        "password": "test123"
-    }
-    
-    try:
-        response = requests.post(f"{BASE_URL}/auth/login", json=wrong_login)
-        print_info(f"POST {BASE_URL}/auth/login")
-        print_info(f"Data: {json.dumps(wrong_login, indent=2)}")
-        print_info(f"Status Code: {response.status_code}")
-        
-        if response.status_code == 401:
-            print_success("Login with wrong identifier correctly rejected")
-            return True
-        else:
-            print_error(f"Expected 401 unauthorized, got {response.status_code}: {response.text}")
-            return False
-    except Exception as e:
-        print_error(f"Wrong identifier test request failed: {str(e)}")
-        return False
-
-def test_profile_display(token, expected_email=None, expected_phone=None):
-    """Test profile endpoint to verify email/phone fields are correctly displayed"""
-    print_test_header("TEST 9: Profile Display Verification")
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    try:
-        response = requests.get(f"{BASE_URL}/auth/me", headers=headers)
-        print_info(f"GET {BASE_URL}/auth/me")
-        print_info(f"Headers: Bearer token provided")
-        print_info(f"Status Code: {response.status_code}")
-        
-        if response.status_code == 200:
-            user = response.json()
-            print_info(f"Profile data retrieved: {json.dumps(user, indent=2, default=str)}")
+            # Try to login if already exists
+            login_data = {
+                "identifier": account["email"],
+                "password": account["password"]
+            }
+            response = make_request("POST", f"{BASE_URL}/auth/login", json=login_data)
             
-            success = True
-            if expected_email:
-                if user.get("email") == expected_email:
-                    print_success(f"Email field correctly displayed: {expected_email}")
-                else:
-                    print_error(f"Email field mismatch. Expected: {expected_email}, Got: {user.get('email')}")
-                    success = False
-            
-            if expected_phone:
-                if user.get("phone_number") == expected_phone:
-                    print_success(f"Phone field correctly displayed: {expected_phone}")
-                else:
-                    print_error(f"Phone field mismatch. Expected: {expected_phone}, Got: {user.get('phone_number')}")
-                    success = False
-            
-            return success
-        else:
-            print_error(f"Profile retrieval failed: {response.text}")
-            return False
-    except Exception as e:
-        print_error(f"Profile display test request failed: {str(e)}")
-        return False
+            if response and response.status_code == 200:
+                data = response.json()
+                test_tokens[account["key"]] = data["access_token"]
+                test_user_ids[account["key"]] = data["user"]["_id"]
+                print_success(f"Logged into existing {account['key']} account: {account['email']}")
+            else:
+                print_error(f"Failed to setup {account['key']} account")
+                return False
+    
+    return len(test_tokens) == 3
 
-def main():
-    print(f"{Colors.BOLD}🧪 GreenLink Authentication System Test Suite with Email Support{Colors.END}")
+# ============= PRODUCER/FARMER TESTS =============
+
+def test_producer_parcel_declaration():
+    """Test parcel declaration by producer"""
+    print_test_header("PRODUCER TEST 1: Parcel Declaration")
+    
+    if "producteur" not in test_tokens:
+        tracker.add_result("Producer Parcel Declaration", False, "No producer token available")
+        return
+    
+    parcel_data = {
+        "farmer_name": "Kouadio Yao",
+        "phone_number": "+22507123456",
+        "location": "Bouaflé Centre",
+        "region": "Bouaflé",
+        "crop_type": "cacao",
+        "area_hectares": 3.5,
+        "trees_count": 450,
+        "farming_practices": ["agroforesterie", "compost", "zero_pesticides"],
+        "language": "francais"
+    }
+    
+    headers = {"Authorization": f"Bearer {test_tokens['producteur']}"}
+    response = make_request("POST", f"{BASE_URL}/greenlink/parcels", json=parcel_data, headers=headers)
+    
+    if response and response.status_code == 200:
+        data = response.json()
+        if all(field in data for field in ["_id", "carbon_score", "carbon_credits_earned"]):
+            test_data["parcel_id"] = data["_id"]
+            carbon_score = data["carbon_score"]
+            print_info(f"Created parcel with carbon score: {carbon_score}")
+            tracker.add_result("Producer Parcel Declaration", True, f"Carbon score: {carbon_score}")
+        else:
+            tracker.add_result("Producer Parcel Declaration", False, "Missing required fields in response")
+    else:
+        tracker.add_result("Producer Parcel Declaration", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+def test_producer_get_parcels():
+    """Test getting producer's parcels"""
+    print_test_header("PRODUCER TEST 2: Get My Parcels")
+    
+    if "producteur" not in test_tokens:
+        tracker.add_result("Get Producer Parcels", False, "No producer token available")
+        return
+    
+    headers = {"Authorization": f"Bearer {test_tokens['producteur']}"}
+    response = make_request("GET", f"{BASE_URL}/greenlink/parcels/my-parcels", headers=headers)
+    
+    if response and response.status_code == 200:
+        parcels = response.json()
+        if isinstance(parcels, list) and len(parcels) > 0:
+            parcel = parcels[0]
+            if all(field in parcel for field in ["_id", "farmer_name", "carbon_score"]):
+                print_info(f"Retrieved {len(parcels)} parcels")
+                tracker.add_result("Get Producer Parcels", True, f"Found {len(parcels)} parcels")
+            else:
+                tracker.add_result("Get Producer Parcels", False, "Parcel missing required fields")
+        else:
+            tracker.add_result("Get Producer Parcels", False, "No parcels returned")
+    else:
+        tracker.add_result("Get Producer Parcels", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+def test_producer_harvest_declaration():
+    """Test harvest declaration by producer"""
+    print_test_header("PRODUCER TEST 3: Harvest Declaration")
+    
+    if "producteur" not in test_tokens or "parcel_id" not in test_data:
+        tracker.add_result("Producer Harvest Declaration", False, "Missing producer token or parcel ID")
+        return
+    
+    harvest_data = {
+        "parcel_id": test_data["parcel_id"],
+        "quantity_kg": 250,
+        "quality_grade": "A",
+        "price_per_kg": 1500,
+        "sale_type": "marketplace"
+    }
+    
+    headers = {"Authorization": f"Bearer {test_tokens['producteur']}"}
+    response = make_request("POST", f"{BASE_URL}/greenlink/harvests", json=harvest_data, headers=headers)
+    
+    if response and response.status_code == 200:
+        data = response.json()
+        if all(field in data for field in ["_id", "total_amount", "carbon_premium"]):
+            test_data["harvest_id"] = data["_id"]
+            carbon_premium = data["carbon_premium"]
+            total_amount = data["total_amount"]
+            print_info(f"Harvest declared - Total: {total_amount} FCFA, Carbon premium: {carbon_premium} FCFA")
+            tracker.add_result("Producer Harvest Declaration", True, f"Premium: {carbon_premium} FCFA")
+        else:
+            tracker.add_result("Producer Harvest Declaration", False, "Missing required fields in response")
+    else:
+        tracker.add_result("Producer Harvest Declaration", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+def test_producer_payment_request():
+    """Test mobile money payment request"""
+    print_test_header("PRODUCER TEST 4: Mobile Money Payment Request")
+    
+    if "producteur" not in test_tokens or "harvest_id" not in test_data:
+        tracker.add_result("Producer Payment Request", False, "Missing producer token or harvest ID")
+        return
+    
+    payment_data = {
+        "harvest_id": test_data["harvest_id"],
+        "phone_number": "+22507123456",
+        "amount": 387500,
+        "payment_method": "orange_money"
+    }
+    
+    headers = {"Authorization": f"Bearer {test_tokens['producteur']}"}
+    response = make_request("POST", f"{BASE_URL}/greenlink/payments/request", json=payment_data, headers=headers)
+    
+    if response and response.status_code == 200:
+        data = response.json()
+        if all(field in data for field in ["success", "transaction_id", "amount"]):
+            transaction_id = data["transaction_id"]
+            print_info(f"Payment processed - Transaction ID: {transaction_id}")
+            tracker.add_result("Producer Payment Request", True, f"Transaction ID: {transaction_id}")
+        else:
+            tracker.add_result("Producer Payment Request", False, "Missing required fields in response")
+    else:
+        tracker.add_result("Producer Payment Request", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+def test_producer_dashboard():
+    """Test producer dashboard"""
+    print_test_header("PRODUCER TEST 5: Producer Dashboard")
+    
+    if "producteur" not in test_tokens:
+        tracker.add_result("Producer Dashboard", False, "No producer token available")
+        return
+    
+    headers = {"Authorization": f"Bearer {test_tokens['producteur']}"}
+    response = make_request("GET", f"{BASE_URL}/greenlink/farmer/dashboard", headers=headers)
+    
+    if response and response.status_code == 200:
+        data = response.json()
+        required_fields = ["total_parcels", "total_area_hectares", "average_carbon_score", "total_revenue", "carbon_premium_earned"]
+        if all(field in data for field in required_fields):
+            print_info(f"Dashboard stats - Parcels: {data['total_parcels']}, Revenue: {data['total_revenue']} FCFA")
+            tracker.add_result("Producer Dashboard", True, f"Revenue: {data['total_revenue']} FCFA")
+        else:
+            missing_fields = [f for f in required_fields if f not in data]
+            tracker.add_result("Producer Dashboard", False, f"Missing fields: {missing_fields}")
+    else:
+        tracker.add_result("Producer Dashboard", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+# ============= BUYER TESTS =============
+
+def test_buyer_create_order():
+    """Test buyer order creation"""
+    print_test_header("BUYER TEST 1: Create Buyer Order")
+    
+    if "acheteur" not in test_tokens:
+        tracker.add_result("Buyer Create Order", False, "No buyer token available")
+        return
+    
+    order_data = {
+        "crop_type": "cacao",
+        "quantity_needed_kg": 5000,
+        "max_price_per_kg": 1600,
+        "carbon_requirement": True,
+        "min_carbon_score": 7.0,
+        "certifications_required": ["UTZ"],
+        "delivery_location": "Abidjan Port",
+        "delivery_date": (datetime.utcnow() + timedelta(days=30)).isoformat()
+    }
+    
+    headers = {"Authorization": f"Bearer {test_tokens['acheteur']}"}
+    response = make_request("POST", f"{BASE_URL}/greenlink/buyer/orders", json=order_data, headers=headers)
+    
+    if response and response.status_code == 200:
+        data = response.json()
+        if all(field in data for field in ["_id", "status", "matched_parcels"]):
+            test_data["buyer_order_id"] = data["_id"]
+            matched_count = len(data["matched_parcels"])
+            print_info(f"Order created with {matched_count} matched parcels")
+            tracker.add_result("Buyer Create Order", True, f"Matched {matched_count} parcels")
+        else:
+            tracker.add_result("Buyer Create Order", False, "Missing required fields in response")
+    else:
+        tracker.add_result("Buyer Create Order", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+def test_buyer_traceability_report():
+    """Test EUDR traceability report generation"""
+    print_test_header("BUYER TEST 2: EUDR Traceability Report")
+    
+    if "acheteur" not in test_tokens or "buyer_order_id" not in test_data:
+        tracker.add_result("Buyer Traceability Report", False, "Missing buyer token or order ID")
+        return
+    
+    headers = {"Authorization": f"Bearer {test_tokens['acheteur']}"}
+    response = make_request("GET", f"{BASE_URL}/greenlink/buyer/traceability/{test_data['buyer_order_id']}", headers=headers)
+    
+    if response and response.status_code == 200:
+        data = response.json()
+        required_fields = ["order_id", "parcels", "farmers", "average_carbon_score", "eudr_compliant", "blockchain_hash"]
+        if all(field in data for field in required_fields):
+            eudr_compliant = data["eudr_compliant"]
+            carbon_score = data["average_carbon_score"]
+            print_info(f"Traceability report - Carbon score: {carbon_score}, EUDR compliant: {eudr_compliant}")
+            tracker.add_result("Buyer Traceability Report", True, f"EUDR compliant: {eudr_compliant}")
+        else:
+            missing_fields = [f for f in required_fields if f not in data]
+            tracker.add_result("Buyer Traceability Report", False, f"Missing fields: {missing_fields}")
+    else:
+        tracker.add_result("Buyer Traceability Report", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+def test_buyer_dashboard():
+    """Test buyer dashboard"""
+    print_test_header("BUYER TEST 3: Buyer Dashboard")
+    
+    if "acheteur" not in test_tokens:
+        tracker.add_result("Buyer Dashboard", False, "No buyer token available")
+        return
+    
+    headers = {"Authorization": f"Bearer {test_tokens['acheteur']}"}
+    response = make_request("GET", f"{BASE_URL}/greenlink/buyer/dashboard", headers=headers)
+    
+    if response and response.status_code == 200:
+        data = response.json()
+        required_fields = ["total_orders", "active_orders", "total_carbon_offset_tonnes", "eudr_compliance_rate"]
+        if all(field in data for field in required_fields):
+            total_orders = data["total_orders"]
+            compliance_rate = data["eudr_compliance_rate"]
+            print_info(f"Buyer stats - Orders: {total_orders}, EUDR compliance: {compliance_rate}%")
+            tracker.add_result("Buyer Dashboard", True, f"Orders: {total_orders}, Compliance: {compliance_rate}%")
+        else:
+            missing_fields = [f for f in required_fields if f not in data]
+            tracker.add_result("Buyer Dashboard", False, f"Missing fields: {missing_fields}")
+    else:
+        tracker.add_result("Buyer Dashboard", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+# ============= CSR COMPANY TESTS =============
+
+def test_carbon_credits_marketplace():
+    """Test carbon credits marketplace listing"""
+    print_test_header("CSR TEST 1: Carbon Credits Marketplace")
+    
+    # Test without filters
+    response = make_request("GET", f"{BASE_URL}/greenlink/carbon-credits")
+    
+    if response and response.status_code == 200:
+        credits = response.json()
+        if isinstance(credits, list) and len(credits) >= 3:  # Should have 3 seeded credits
+            credit = credits[0]
+            if all(field in credit for field in ["_id", "credit_type", "price_per_tonne", "verification_standard"]):
+                test_data["carbon_credit_id"] = credit["_id"]
+                print_info(f"Found {len(credits)} carbon credits")
+                tracker.add_result("Carbon Credits Marketplace", True, f"Found {len(credits)} credits")
+            else:
+                tracker.add_result("Carbon Credits Marketplace", False, "Credit missing required fields")
+        else:
+            tracker.add_result("Carbon Credits Marketplace", False, f"Expected 3+ credits, got {len(credits) if isinstance(credits, list) else 0}")
+    else:
+        tracker.add_result("Carbon Credits Marketplace", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+def test_carbon_credits_filters():
+    """Test carbon credits marketplace with filters"""
+    print_test_header("CSR TEST 2: Carbon Credits Marketplace Filters")
+    
+    # Test with filters
+    params = {
+        "standard": "Verra",
+        "min_price": 10000,
+        "max_price": 20000
+    }
+    
+    response = make_request("GET", f"{BASE_URL}/greenlink/carbon-credits", params=params)
+    
+    if response and response.status_code == 200:
+        credits = response.json()
+        if isinstance(credits, list):
+            # Verify filters applied correctly
+            valid = True
+            for credit in credits:
+                if credit.get("verification_standard") != "Verra":
+                    valid = False
+                    break
+                price = credit.get("price_per_tonne", 0)
+                if price < 10000 or price > 20000:
+                    valid = False
+                    break
+            
+            if valid:
+                print_info(f"Filter test passed - Found {len(credits)} Verra credits in price range")
+                tracker.add_result("Carbon Credits Marketplace Filters", True, f"Found {len(credits)} filtered credits")
+            else:
+                tracker.add_result("Carbon Credits Marketplace Filters", False, "Filters not applied correctly")
+        else:
+            tracker.add_result("Carbon Credits Marketplace Filters", False, "Invalid response format")
+    else:
+        tracker.add_result("Carbon Credits Marketplace Filters", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+def test_carbon_credit_purchase():
+    """Test carbon credit purchase"""
+    print_test_header("CSR TEST 3: Carbon Credit Purchase")
+    
+    if "entreprise_rse" not in test_tokens or "carbon_credit_id" not in test_data:
+        tracker.add_result("Carbon Credit Purchase", False, "Missing CSR token or credit ID")
+        return
+    
+    purchase_data = {
+        "credit_id": test_data["carbon_credit_id"],
+        "quantity_tonnes": 100,
+        "total_price": 1200000,
+        "purpose": "scope3_compensation",
+        "retirement_requested": True
+    }
+    
+    headers = {"Authorization": f"Bearer {test_tokens['entreprise_rse']}"}
+    response = make_request("POST", f"{BASE_URL}/greenlink/carbon-credits/purchase", json=purchase_data, headers=headers)
+    
+    if response and response.status_code == 200:
+        data = response.json()
+        if all(field in data for field in ["_id", "certificate_url", "status"]):
+            certificate_url = data["certificate_url"]
+            status = data["status"]
+            print_info(f"Purchase completed - Status: {status}, Certificate: {certificate_url}")
+            tracker.add_result("Carbon Credit Purchase", True, f"Status: {status}")
+        else:
+            tracker.add_result("Carbon Credit Purchase", False, "Missing required fields in response")
+    else:
+        tracker.add_result("Carbon Credit Purchase", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+def test_csr_impact_dashboard():
+    """Test CSR impact dashboard"""
+    print_test_header("CSR TEST 4: CSR Impact Dashboard")
+    
+    if "entreprise_rse" not in test_tokens:
+        tracker.add_result("CSR Impact Dashboard", False, "No CSR token available")
+        return
+    
+    headers = {"Authorization": f"Bearer {test_tokens['entreprise_rse']}"}
+    response = make_request("GET", f"{BASE_URL}/greenlink/rse/impact-dashboard", headers=headers)
+    
+    if response and response.status_code == 200:
+        data = response.json()
+        required_fields = ["total_co2_offset_tonnes", "total_farmers_impacted", "women_farmers_percentage", "regions_covered"]
+        if all(field in data for field in required_fields):
+            co2_offset = data["total_co2_offset_tonnes"]
+            farmers_impacted = data["total_farmers_impacted"]
+            women_percentage = data["women_farmers_percentage"]
+            print_info(f"Impact stats - CO2: {co2_offset}t, Farmers: {farmers_impacted}, Women: {women_percentage}%")
+            tracker.add_result("CSR Impact Dashboard", True, f"CO2 offset: {co2_offset}t")
+        else:
+            missing_fields = [f for f in required_fields if f not in data]
+            tracker.add_result("CSR Impact Dashboard", False, f"Missing fields: {missing_fields}")
+    else:
+        tracker.add_result("CSR Impact Dashboard", False, f"Failed with status {response.status_code if response else 'No response'}")
+
+# ============= INTEGRATION TESTS =============
+
+def test_user_type_protection():
+    """Test that users can only access their respective endpoints"""
+    print_test_header("INTEGRATION TEST 1: User Type Protection")
+    
+    # Test producer trying to access buyer endpoint
+    if "producteur" in test_tokens:
+        headers = {"Authorization": f"Bearer {test_tokens['producteur']}"}
+        response = make_request("POST", f"{BASE_URL}/greenlink/buyer/orders", 
+                              json={"crop_type": "cacao", "quantity_needed_kg": 100}, 
+                              headers=headers)
+        
+        if response and response.status_code == 403:
+            print_success("Producer correctly blocked from buyer endpoint")
+            protection_working = True
+        else:
+            print_error("Producer not blocked from buyer endpoint")
+            protection_working = False
+    else:
+        protection_working = False
+    
+    # Test buyer trying to access CSR endpoint  
+    if "acheteur" in test_tokens and protection_working:
+        headers = {"Authorization": f"Bearer {test_tokens['acheteur']}"}
+        response = make_request("POST", f"{BASE_URL}/greenlink/carbon-credits/purchase",
+                              json={"credit_id": "test", "quantity_tonnes": 10, "total_price": 1000},
+                              headers=headers)
+        
+        if response and response.status_code == 403:
+            print_success("Buyer correctly blocked from CSR endpoint")
+        else:
+            print_error("Buyer not blocked from CSR endpoint")
+            protection_working = False
+    
+    tracker.add_result("User Type Protection", protection_working, "Access control validation")
+
+def run_comprehensive_tests():
+    """Run all tests in the correct order"""
+    print(f"{Colors.BOLD}🧪 GreenLink Multi-Profile Platform Comprehensive Test Suite{Colors.END}")
     print(f"Backend URL: {BACKEND_URL}")
     print(f"Testing API endpoints at: {BASE_URL}")
     
-    test_results = []
-    email_token = None
-    phone_token = None
+    # Setup phase
+    if not setup_test_accounts():
+        print_error("Failed to setup test accounts. Cannot proceed with testing.")
+        return False
     
-    # Test 1: Register with Email
-    email_token, email_user_id = test_register_with_email()
-    test_results.append(("Register with Email", email_token is not None))
+    # Producer tests
+    test_producer_parcel_declaration()
+    test_producer_get_parcels()
+    test_producer_harvest_declaration()
+    test_producer_payment_request()
+    test_producer_dashboard()
     
-    # Test 2: Register with Phone  
-    phone_token, phone_user_id = test_register_with_phone()
-    test_results.append(("Register with Phone", phone_token is not None))
+    # Buyer tests
+    test_buyer_create_order()
+    test_buyer_traceability_report()
+    test_buyer_dashboard()
     
-    # Test 3: Login with Email
-    email_login_success = test_login_with_email()
-    test_results.append(("Login with Email", email_login_success))
+    # CSR tests
+    test_carbon_credits_marketplace()
+    test_carbon_credits_filters()
+    test_carbon_credit_purchase()
+    test_csr_impact_dashboard()
     
-    # Test 4: Login with Phone
-    phone_login_success = test_login_with_phone()
-    test_results.append(("Login with Phone", phone_login_success))
+    # Integration tests
+    test_user_type_protection()
     
-    # Test 5: Duplicate Email Registration
-    duplicate_email_test = test_duplicate_email_registration()
-    test_results.append(("Duplicate Email Rejection", duplicate_email_test))
-    
-    # Test 6: Duplicate Phone Registration
-    duplicate_phone_test = test_duplicate_phone_registration()
-    test_results.append(("Duplicate Phone Rejection", duplicate_phone_test))
-    
-    # Test 7: Registration without Contact Info
-    no_contact_test = test_registration_without_contact()
-    test_results.append(("No Contact Info Rejection", no_contact_test))
-    
-    # Test 8: Login with Wrong Identifier
-    wrong_login_test = test_login_wrong_identifier()
-    test_results.append(("Wrong Identifier Rejection", wrong_login_test))
-    
-    # Test 9: Profile Display (if we have tokens)
-    if email_token:
-        email_profile_test = test_profile_display(email_token, expected_email="test@greenlink.ci")
-        test_results.append(("Email Profile Display", email_profile_test))
-    
-    if phone_token:
-        phone_profile_test = test_profile_display(phone_token, expected_phone="+22507654321")
-        test_results.append(("Phone Profile Display", phone_profile_test))
-    
-    # Summary
+    # Results summary
     print_test_header("TEST RESULTS SUMMARY")
     
-    passed_tests = 0
-    total_tests = len(test_results)
+    passed, total = tracker.get_summary()
     
-    for test_name, passed in test_results:
-        if passed:
-            print_success(f"{test_name}")
-            passed_tests += 1
-        else:
-            print_error(f"{test_name}")
+    # Group results by category
+    producer_tests = [r for r in tracker.results if "Producer" in r["name"]]
+    buyer_tests = [r for r in tracker.results if "Buyer" in r["name"]]
+    csr_tests = [r for r in tracker.results if "CSR" in r["name"] or "Carbon" in r["name"]]
+    integration_tests = [r for r in tracker.results if "Integration" in r["name"] or "Protection" in r["name"]]
     
-    print(f"\n{Colors.BOLD}Results: {passed_tests}/{total_tests} tests passed{Colors.END}")
+    categories = [
+        ("PRODUCER TESTS", producer_tests),
+        ("BUYER TESTS", buyer_tests), 
+        ("CSR COMPANY TESTS", csr_tests),
+        ("INTEGRATION TESTS", integration_tests)
+    ]
     
-    if passed_tests == total_tests:
-        print_success(f"🎉 All authentication tests with email support passed!")
+    for category_name, category_tests in categories:
+        if category_tests:
+            print(f"\n{Colors.BOLD}{category_name}:{Colors.END}")
+            for test in category_tests:
+                status = "✅" if test["passed"] else "❌"
+                print(f"  {status} {test['name']}")
+                if not test["passed"] and test["details"]:
+                    print(f"      {Colors.RED}Error: {test['details']}{Colors.END}")
+    
+    print(f"\n{Colors.BOLD}Overall Results: {passed}/{total} tests passed{Colors.END}")
+    
+    if passed == total:
+        print_success(f"🎉 All GreenLink platform tests passed!")
         return True
     else:
-        print_error(f"⚠️  {total_tests - passed_tests} tests failed")
+        print_error(f"⚠️  {total - passed} tests failed")
         return False
+
+def main():
+    """Main test execution"""
+    success = run_comprehensive_tests()
+    
+    # Print final status
+    if success:
+        print_success("✅ GreenLink Multi-Profile Platform: All systems operational")
+    else:
+        print_error("❌ GreenLink Multi-Profile Platform: Issues detected")
+    
+    return success
 
 if __name__ == "__main__":
     success = main()
