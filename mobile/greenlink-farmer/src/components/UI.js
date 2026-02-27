@@ -218,6 +218,20 @@ const styles = StyleSheet.create({
   menuIcon: {
     fontSize: FONTS.sizes.xxl,
   },
+  menuItemHighlight: {
+    backgroundColor: COLORS.accent + '30',
+    borderColor: COLORS.accent,
+    borderWidth: 2,
+  },
+  menuNumberHighlight: {
+    backgroundColor: COLORS.accent,
+  },
+  menuNumberTextHighlight: {
+    color: COLORS.primary,
+  },
+  menuTitleHighlight: {
+    color: COLORS.primary,
+  },
 
   // InfoCard
   infoCard: {
