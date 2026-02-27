@@ -38,6 +38,13 @@ import CarbonMarketplace from "./pages/rse/CarbonMarketplace";
 // Admin Routes
 import AdminDashboard from "./pages/admin/Dashboard";
 
+// Cooperative Routes
+import CooperativeDashboard from "./pages/cooperative/Dashboard";
+import CooperativeMembersPage from "./pages/cooperative/MembersPage";
+import CooperativeLotsPage from "./pages/cooperative/LotsPage";
+import CooperativeDistributionsPage from "./pages/cooperative/DistributionsPage";
+import CooperativeReportsPage from "./pages/cooperative/ReportsPage";
+
 function App() {
   return (
     <div className="App">
