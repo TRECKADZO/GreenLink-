@@ -149,12 +149,14 @@ Build a comprehensive agritech platform connecting:
 - ✅ Mobile App Push Notifications integration
 - ✅ Mobile App Background Sync integration
 - ✅ Camera & Geolocation for parcel photos (mobile)
+- ✅ Firebase Cloud Messaging (FCM) service with Expo fallback
+- ✅ EAS Build configuration for production APK/IPA
 
 ### P1 (High Priority)
 - Real Orange Money API integration (requires merchant registration)
 - Real USSD/SMS integration (Orange API)
 - PDF certificate generation
-- Build production APK/IPA for mobile app distribution
+- ⚠️ Configure Firebase project and upload `google-services.json` for production FCM
 
 ### P2 (Medium Priority)
 - Product price history tracking
