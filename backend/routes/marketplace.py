@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Query
+from fastapi import APIRouter, HTTPException, Depends, status, Query, UploadFile, File
 from typing import List, Optional
 import os
+import uuid
+import base64
 from motor.motor_asyncio import AsyncIOMotorClient
 from marketplace_models import (
     Product, ProductCreate, Order, OrderCreate, 
@@ -11,7 +13,6 @@ from auth_models import User
 from routes.auth import get_current_user
 from datetime import datetime, timedelta
 from bson import ObjectId
-import uuid
 
 router = APIRouter(prefix="/api/marketplace", tags=["marketplace"])
 
@@ -20,6 +21,63 @@ mongo_url = os.environ.get('MONGO_URL')
 db_name = os.environ.get('DB_NAME', 'test_database')
 client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
+
+# Ensure upload directory exists
+UPLOAD_DIR = "/app/backend/uploads/products"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# ============= IMAGE UPLOAD =============
+
+@router.post("/upload-image")
+async def upload_product_image(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload product image"""
+    if current_user.get("user_type") != "fournisseur":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seuls les fournisseurs peuvent uploader des images"
+        )
+    
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/webp", "image/jpg"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail="Type de fichier non autorisé. Utilisez JPG, PNG ou WebP"
+        )
+    
+    # Generate unique filename
+    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    filename = f"{uuid.uuid4()}.{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    
+    # Save file
+    content = await file.read()
+    
+    # Check file size (max 5MB)
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image trop grande (max 5MB)")
+    
+    with open(filepath, "wb") as f:
+        f.write(content)
+    
+    # Return URL path
+    image_url = f"/api/marketplace/images/{filename}"
+    
+    return {"url": image_url, "filename": filename}
+
+@router.get("/images/{filename}")
+async def get_product_image(filename: str):
+    """Serve product image"""
+    from fastapi.responses import FileResponse
+    
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Image non trouvée")
+    
+    return FileResponse(filepath)
 
 # ============= PRODUCTS =============
 
