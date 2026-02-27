@@ -55,7 +55,7 @@ const NotificationsScreen = ({ navigation }) => {
     try {
       await farmerApi.markNotificationRead(id);
       setNotifications(notifications.map(n => 
-        n._id === id ? { ...n, is_read: true } : n
+        (n.id || n._id) === id ? { ...n, is_read: true } : n
       ));
     } catch (error) {
       console.error('Error marking notification as read:', error);
