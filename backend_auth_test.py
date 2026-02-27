@@ -96,7 +96,7 @@ def test_login():
     print("\n🧪 TEST 2: Login with Created Account")
     
     login_data = {
-        "phone_number": "+225 07 12 34 56 78",
+        "phone_number": "+22507123456789",
         "password": "test123"
     }
     
