@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import Navbar from '../components/Navbar';
-import SupplierSidebar from '../components/SupplierSidebar';
-import { marketplaceApi } from '../services/marketplaceApi';
+import { Card } from '../../components/ui/card';
+import { Badge } from '../../components/ui/badge';
+import Navbar from '../../components/Navbar';
+import SupplierSidebar from '../../components/SupplierSidebar';
+import { marketplaceApi } from '../../services/marketplaceApi';
 import {
   Package,
   ShoppingCart,
@@ -16,7 +16,7 @@ import {
   DollarSign,
   Activity
 } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
+import { useToast } from '../../hooks/use-toast';
 
 const SupplierDashboard = () => {
   const { user } = useAuth();
