@@ -181,7 +181,7 @@ async def create_buyer_order(
     
     order_dict = order.dict()
     order_dict["buyer_id"] = current_user["_id"]
-    order_dict["buyer_company"] = current_user.get("company_name", current_user["full_name"])
+    order_dict["buyer_company"] = current_user.get("company_name") or current_user.get("full_name") or "Société Inconnue"
     order_dict["status"] = "open"
     order_dict["matched_parcels"] = []
     order_dict["total_carbon_credits"] = 0
