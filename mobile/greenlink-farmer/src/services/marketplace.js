@@ -11,20 +11,20 @@ export const marketplaceApi = {
   // Panier
   getCart: () => api.get('/marketplace/cart'),
   addToCart: (productId, quantity) => api.post('/marketplace/cart/add', { product_id: productId, quantity }),
-  updateCartItem: (productId, quantity) => api.put(`/marketplace/cart/${productId}`, { quantity }),
-  removeFromCart: (productId) => api.delete(`/marketplace/cart/${productId}`),
-  clearCart: () => api.delete('/marketplace/cart'),
+  updateCartItem: (productId, quantity) => api.put('/marketplace/cart/update', { product_id: productId, quantity }),
+  removeFromCart: (productId) => api.delete(`/marketplace/cart/remove/${productId}`),
+  clearCart: () => api.delete('/marketplace/cart/clear'),
   
   // Wishlist
   getWishlist: () => api.get('/marketplace/wishlist'),
-  addToWishlist: (productId) => api.post('/marketplace/wishlist', { product_id: productId }),
-  removeFromWishlist: (productId) => api.delete(`/marketplace/wishlist/${productId}`),
+  addToWishlist: (productId) => api.post('/marketplace/wishlist/add', { product_id: productId }),
+  removeFromWishlist: (productId) => api.delete(`/marketplace/wishlist/remove/${productId}`),
   
   // Commandes
-  getOrders: () => api.get('/marketplace/orders'),
+  getOrders: () => api.get('/marketplace/orders/my-orders'),
   getOrder: (id) => api.get(`/marketplace/orders/${id}`),
   createOrder: (data) => api.post('/marketplace/orders', data),
   
   // Checkout
-  checkout: (data) => api.post('/marketplace/checkout', data),
+  checkout: (data) => api.post('/marketplace/cart/checkout', data),
 };
