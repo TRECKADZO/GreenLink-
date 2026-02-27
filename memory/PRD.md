@@ -192,12 +192,32 @@ Supplier: supplier1@test.com / test123
    - Offline mode support
    - USSD-like simple interface
 
+## Recent Changes (December 2025)
+9. **Push Notifications Integration** - Integrated push notifications into mobile app
+   - Updated `App.js` with notification listeners and handlers
+   - Backend endpoint `/api/greenlink/notifications/register-device` for device registration
+   - Navigation to specific screens from notifications
+   - Badge management and notification channels for Android
+10. **Background Sync Integration** - App now syncs when coming to foreground
+    - Automatic sync on app resume
+    - Manual sync button in Profile screen
+    - Sync status display with last sync time
+11. **Improved Notifications Service** - Enhanced notification handling
+    - Proper Expo Constants integration for project ID
+    - Better error handling and logging
+    - Platform-specific device registration
+
 ## Files of Reference
 - `/app/backend/routes/admin.py` - Admin and partners routes
 - `/app/backend/routes/payments.py` - Orange Money integration
+- `/app/backend/routes/greenlink.py` - Farmer endpoints including notifications
 - `/app/frontend/src/pages/rse/CarbonMarketplace.jsx` - Carbon marketplace
 - `/app/frontend/src/pages/admin/Dashboard.jsx` - Admin dashboard
 - `/app/frontend/src/components/PartnersSection.jsx` - Partners display
 - `/app/frontend/src/pages/ConditionsPage.jsx` - Terms page
 - `/app/frontend/src/pages/ConfidentialitePage.jsx` - Privacy page
 - `/app/frontend/src/pages/SecuritePage.jsx` - Security page
+- `/app/mobile/greenlink-farmer/App.js` - Mobile app entry point with notifications
+- `/app/mobile/greenlink-farmer/src/services/notifications.js` - Push notification service
+- `/app/mobile/greenlink-farmer/src/services/sync.js` - Background sync service
+- `/app/mobile/greenlink-farmer/src/screens/profile/ProfileScreen.js` - Profile with sync button
