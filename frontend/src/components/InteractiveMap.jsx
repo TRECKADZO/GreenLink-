@@ -69,7 +69,7 @@ const InteractiveMap = ({ activeRegions = [], onRegionClick }) => {
         >
           {/* Background - Côte d'Ivoire outline */}
           <path
-            d="M 100 120 L 200 100 L 350 110 L 450 150 L 480 250 L 460 350 L 400 420 L 300 450 L 150 430 L 100 350 L 90 250 Z"
+            d="M 200 120 L 300 100 L 450 110 L 550 150 L 580 250 L 560 350 L 500 420 L 400 450 L 250 430 L 200 350 L 190 250 Z"
             fill="#e8f5e9"
             stroke="#81c784"
             strokeWidth="2"
@@ -77,11 +77,11 @@ const InteractiveMap = ({ activeRegions = [], onRegionClick }) => {
           
           {/* Ocean/Gulf of Guinea */}
           <path
-            d="M 80 380 Q 200 450, 400 420 L 400 480 L 80 480 Z"
+            d="M 180 380 Q 300 450, 500 420 L 500 480 L 180 480 Z"
             fill="#bbdefb"
             opacity="0.5"
           />
-          <text x="200" y="460" fill="#1976d2" fontSize="12" fontWeight="bold">
+          <text x="300" y="460" fill="#1976d2" fontSize="12" fontWeight="bold">
             Golfe de Guinée
           </text>
 
