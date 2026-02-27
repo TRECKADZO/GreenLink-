@@ -155,6 +155,12 @@ const Navbar = () => {
             Marketplace
           </button>
           <button 
+            onClick={() => navigate('/carbon-marketplace')}
+            className="text-white/80 hover:text-white transition-colors font-medium"
+          >
+            Crédits Carbone
+          </button>
+          <button 
             onClick={() => navigate('/#features')}
             className="text-white/80 hover:text-white transition-colors font-medium"
           >
