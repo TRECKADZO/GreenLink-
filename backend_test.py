@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-GreenLink Agritech Backend API Tests
-Tests all backend endpoints for the GreenLink Agritech Clone application.
+Comprehensive Backend Test Suite for GreenLink Authentication System with Email Support
+Testing the updated authentication system that supports both email and phone registration/login.
 """
 
 import requests
@@ -9,456 +9,406 @@ import json
 import sys
 from datetime import datetime
 
-# Backend URL from frontend environment
+# Get backend URL from environment
 BACKEND_URL = "https://farm-intelligence-14.preview.emergentagent.com"
+BASE_URL = f"{BACKEND_URL}/api"
 
-class BackendTester:
-    def __init__(self):
-        self.test_results = []
-        self.total_tests = 0
-        self.passed_tests = 0
-        
-    def log_result(self, test_name, success, message="", data=None):
-        """Log test result"""
-        self.total_tests += 1
-        if success:
-            self.passed_tests += 1
-        
-        result = {
-            "test": test_name,
-            "success": success,
-            "message": message,
-            "data": data,
-            "timestamp": datetime.now().isoformat()
-        }
-        self.test_results.append(result)
-        
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status}: {test_name}")
-        if message:
-            print(f"    {message}")
-        print()
-        
-    def test_features_api(self):
-        """Test GET /api/features endpoint"""
-        try:
-            response = requests.get(f"{BACKEND_URL}/api/features", timeout=10)
-            
-            if response.status_code != 200:
-                self.log_result("Features API - HTTP Status", False, 
-                              f"Expected 200, got {response.status_code}")
-                return False
-                
-            features = response.json()
-            
-            # Check if we have 7 features
-            if len(features) != 7:
-                self.log_result("Features API - Count", False, 
-                              f"Expected 7 features, got {len(features)}")
-                return False
-            
-            # Check feature structure
-            required_fields = ['icon', 'title', 'description', 'order']
-            optional_fields = ['badge', 'badgeColor']
-            
-            for i, feature in enumerate(features):
-                # Check required fields
-                for field in required_fields:
-                    if field not in feature:
-                        self.log_result("Features API - Structure", False, 
-                                      f"Feature {i+1} missing required field: {field}")
-                        return False
-                
-                # Validate order field is present and is integer
-                if not isinstance(feature.get('order'), int):
-                    self.log_result("Features API - Order Field", False,
-                                  f"Feature {i+1} order field should be integer")
-                    return False
-            
-            # Check if features are sorted by order
-            orders = [f['order'] for f in features]
-            if orders != sorted(orders):
-                self.log_result("Features API - Sorting", False,
-                              "Features are not sorted by order field")
-                return False
-                
-            self.log_result("Features API - Complete", True, 
-                          f"Successfully retrieved {len(features)} features with correct structure and sorting")
-            return True
-            
-        except Exception as e:
-            self.log_result("Features API - Error", False, f"Exception: {str(e)}")
-            return False
+class Colors:
+    GREEN = '\033[92m'
+    RED = '\033[91m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    BOLD = '\033[1m'
+    END = '\033[0m'
+
+def print_test_header(title):
+    print(f"\n{Colors.BLUE}{Colors.BOLD}{'='*60}{Colors.END}")
+    print(f"{Colors.BLUE}{Colors.BOLD}{title}{Colors.END}")
+    print(f"{Colors.BLUE}{Colors.BOLD}{'='*60}{Colors.END}")
+
+def print_success(message):
+    print(f"{Colors.GREEN}✅ {message}{Colors.END}")
+
+def print_error(message):
+    print(f"{Colors.RED}❌ {message}{Colors.END}")
+
+def print_warning(message):
+    print(f"{Colors.YELLOW}⚠️  {message}{Colors.END}")
+
+def print_info(message):
+    print(f"{Colors.BLUE}ℹ️  {message}{Colors.END}")
+
+def test_register_with_email():
+    """Test registering a new user with email"""
+    print_test_header("TEST 1: Register with Email")
     
-    def test_steps_api(self):
-        """Test GET /api/steps endpoint"""
-        try:
-            response = requests.get(f"{BACKEND_URL}/api/steps", timeout=10)
-            
-            if response.status_code != 200:
-                self.log_result("Steps API - HTTP Status", False, 
-                              f"Expected 200, got {response.status_code}")
-                return False
-                
-            steps = response.json()
-            
-            # Check if we have 3 steps
-            if len(steps) != 3:
-                self.log_result("Steps API - Count", False, 
-                              f"Expected 3 steps, got {len(steps)}")
-                return False
-            
-            # Check step structure
-            required_fields = ['number', 'icon', 'title', 'description', 'order']
-            
-            for i, step in enumerate(steps):
-                for field in required_fields:
-                    if field not in step:
-                        self.log_result("Steps API - Structure", False, 
-                                      f"Step {i+1} missing required field: {field}")
-                        return False
-                
-                # Validate order field
-                if not isinstance(step.get('order'), int):
-                    self.log_result("Steps API - Order Field", False,
-                                  f"Step {i+1} order field should be integer")
-                    return False
-            
-            # Check sorting by order
-            orders = [s['order'] for s in steps]
-            if orders != sorted(orders):
-                self.log_result("Steps API - Sorting", False,
-                              "Steps are not sorted by order field")
-                return False
-                
-            self.log_result("Steps API - Complete", True, 
-                          f"Successfully retrieved {len(steps)} steps with correct structure and sorting")
-            return True
-            
-        except Exception as e:
-            self.log_result("Steps API - Error", False, f"Exception: {str(e)}")
-            return False
+    test_data = {
+        "email": "test@greenlink.ci",
+        "password": "test123",
+        "full_name": "Test Email User",
+        "user_type": "producteur"
+    }
     
-    def test_crops_api(self):
-        """Test GET /api/crops endpoint"""
-        try:
-            response = requests.get(f"{BACKEND_URL}/api/crops", timeout=10)
-            
-            if response.status_code != 200:
-                self.log_result("Crops API - HTTP Status", False, 
-                              f"Expected 200, got {response.status_code}")
-                return False
-                
-            crops = response.json()
-            
-            # Check if we have 6 crops
-            if len(crops) != 6:
-                self.log_result("Crops API - Count", False, 
-                              f"Expected 6 crops, got {len(crops)}")
-                return False
-            
-            # Check crop structure
-            required_fields = ['icon', 'title', 'locations', 'color', 'order']
-            
-            for i, crop in enumerate(crops):
-                for field in required_fields:
-                    if field not in crop:
-                        self.log_result("Crops API - Structure", False, 
-                                      f"Crop {i+1} missing required field: {field}")
-                        return False
-                
-                # Validate order field
-                if not isinstance(crop.get('order'), int):
-                    self.log_result("Crops API - Order Field", False,
-                                  f"Crop {i+1} order field should be integer")
-                    return False
-            
-            # Check sorting
-            orders = [c['order'] for c in crops]
-            if orders != sorted(orders):
-                self.log_result("Crops API - Sorting", False,
-                              "Crops are not sorted by order field")
-                return False
-                
-            self.log_result("Crops API - Complete", True, 
-                          f"Successfully retrieved {len(crops)} crops with correct structure and sorting")
-            return True
-            
-        except Exception as e:
-            self.log_result("Crops API - Error", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_producers_api(self):
-        """Test GET /api/producers endpoint with and without limit"""
-        try:
-            # Test without limit
-            response = requests.get(f"{BACKEND_URL}/api/producers", timeout=10)
-            
-            if response.status_code != 200:
-                self.log_result("Producers API - HTTP Status", False, 
-                              f"Expected 200, got {response.status_code}")
-                return False
-                
-            all_producers = response.json()
-            
-            # Check if we have 4 producers
-            if len(all_producers) != 4:
-                self.log_result("Producers API - Count", False, 
-                              f"Expected 4 producers, got {len(all_producers)}")
-                return False
-            
-            # Check producer structure
-            required_fields = ['name', 'initial', 'crop', 'location', 'color', 'order']
-            
-            for i, producer in enumerate(all_producers):
-                for field in required_fields:
-                    if field not in producer:
-                        self.log_result("Producers API - Structure", False, 
-                                      f"Producer {i+1} missing required field: {field}")
-                        return False
-                
-                # Validate order field
-                if not isinstance(producer.get('order'), int):
-                    self.log_result("Producers API - Order Field", False,
-                                  f"Producer {i+1} order field should be integer")
-                    return False
-            
-            # Check sorting
-            orders = [p['order'] for p in all_producers]
-            if orders != sorted(orders):
-                self.log_result("Producers API - Sorting", False,
-                              "Producers are not sorted by order field")
-                return False
-            
-            # Test with limit parameter
-            response_limited = requests.get(f"{BACKEND_URL}/api/producers?limit=2", timeout=10)
-            
-            if response_limited.status_code != 200:
-                self.log_result("Producers API - Limit Parameter HTTP", False, 
-                              f"Expected 200 for limit query, got {response_limited.status_code}")
-                return False
-                
-            limited_producers = response_limited.json()
-            
-            if len(limited_producers) != 2:
-                self.log_result("Producers API - Limit Parameter", False, 
-                              f"Expected 2 producers with limit=2, got {len(limited_producers)}")
-                return False
-                
-            self.log_result("Producers API - Complete", True, 
-                          f"Successfully retrieved {len(all_producers)} producers (all) and {len(limited_producers)} producers (limit=2)")
-            return True
-            
-        except Exception as e:
-            self.log_result("Producers API - Error", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_testimonials_api(self):
-        """Test GET /api/testimonials endpoint"""
-        try:
-            response = requests.get(f"{BACKEND_URL}/api/testimonials", timeout=10)
-            
-            if response.status_code != 200:
-                self.log_result("Testimonials API - HTTP Status", False, 
-                              f"Expected 200, got {response.status_code}")
-                return False
-                
-            testimonials = response.json()
-            
-            # Check if we have 2 testimonials
-            if len(testimonials) != 2:
-                self.log_result("Testimonials API - Count", False, 
-                              f"Expected 2 testimonials, got {len(testimonials)}")
-                return False
-            
-            # Check testimonial structure
-            required_fields = ['text', 'author', 'role', 'initial', 'color', 'order']
-            
-            for i, testimonial in enumerate(testimonials):
-                for field in required_fields:
-                    if field not in testimonial:
-                        self.log_result("Testimonials API - Structure", False, 
-                                      f"Testimonial {i+1} missing required field: {field}")
-                        return False
-                
-                # Validate order field
-                if not isinstance(testimonial.get('order'), int):
-                    self.log_result("Testimonials API - Order Field", False,
-                                  f"Testimonial {i+1} order field should be integer")
-                    return False
-            
-            # Check sorting
-            orders = [t['order'] for t in testimonials]
-            if orders != sorted(orders):
-                self.log_result("Testimonials API - Sorting", False,
-                              "Testimonials are not sorted by order field")
-                return False
-                
-            self.log_result("Testimonials API - Complete", True, 
-                          f"Successfully retrieved {len(testimonials)} testimonials with correct structure and sorting")
-            return True
-            
-        except Exception as e:
-            self.log_result("Testimonials API - Error", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_pricing_plans_api(self):
-        """Test GET /api/pricing-plans endpoint"""
-        try:
-            response = requests.get(f"{BACKEND_URL}/api/pricing-plans", timeout=10)
-            
-            if response.status_code != 200:
-                self.log_result("Pricing Plans API - HTTP Status", False, 
-                              f"Expected 200, got {response.status_code}")
-                return False
-                
-            plans = response.json()
-            
-            # Check if we have 4 pricing plans
-            if len(plans) != 4:
-                self.log_result("Pricing Plans API - Count", False, 
-                              f"Expected 4 pricing plans, got {len(plans)}")
-                return False
-            
-            # Check pricing plan structure
-            required_fields = ['name', 'price', 'period', 'popular', 'features', 'cta', 'ctaVariant', 'order']
-            optional_fields = ['badge']
-            
-            for i, plan in enumerate(plans):
-                for field in required_fields:
-                    if field not in plan:
-                        self.log_result("Pricing Plans API - Structure", False, 
-                                      f"Plan {i+1} missing required field: {field}")
-                        return False
-                
-                # Validate specific fields
-                if not isinstance(plan.get('popular'), bool):
-                    self.log_result("Pricing Plans API - Popular Field", False,
-                                  f"Plan {i+1} popular field should be boolean")
-                    return False
-                
-                if not isinstance(plan.get('features'), list):
-                    self.log_result("Pricing Plans API - Features Field", False,
-                                  f"Plan {i+1} features field should be array")
-                    return False
-                
-                if not isinstance(plan.get('order'), int):
-                    self.log_result("Pricing Plans API - Order Field", False,
-                                  f"Plan {i+1} order field should be integer")
-                    return False
-            
-            # Check sorting
-            orders = [p['order'] for p in plans]
-            if orders != sorted(orders):
-                self.log_result("Pricing Plans API - Sorting", False,
-                              "Pricing plans are not sorted by order field")
-                return False
-                
-            self.log_result("Pricing Plans API - Complete", True, 
-                          f"Successfully retrieved {len(plans)} pricing plans with correct structure and sorting")
-            return True
-            
-        except Exception as e:
-            self.log_result("Pricing Plans API - Error", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_contact_api(self):
-        """Test POST /api/contact endpoint"""
-        try:
-            # Test data
-            test_contact = {
-                "name": "Marie Dubois",
-                "email": "marie.dubois@agritech.ci", 
-                "message": "Je souhaite en savoir plus sur vos solutions de traçabilité pour ma coopérative de cacao à Soubré.",
-                "userType": "producteur"
-            }
-            
-            response = requests.post(
-                f"{BACKEND_URL}/api/contact", 
-                json=test_contact,
-                headers={"Content-Type": "application/json"},
-                timeout=10
-            )
-            
-            if response.status_code != 200:
-                self.log_result("Contact API - HTTP Status", False, 
-                              f"Expected 200, got {response.status_code}. Response: {response.text}")
-                return False
-                
-            created_contact = response.json()
-            
-            # Check if response contains the _id field
-            if "_id" not in created_contact:
-                self.log_result("Contact API - ID Field", False, 
-                              "Response should contain _id field")
-                return False
-            
-            # Check if all input fields are returned
-            for field in ["name", "email", "message", "userType"]:
-                if field not in created_contact:
-                    self.log_result("Contact API - Response Fields", False, 
-                                  f"Response missing field: {field}")
-                    return False
-                
-                if created_contact[field] != test_contact[field]:
-                    self.log_result("Contact API - Data Integrity", False, 
-                                  f"Field {field} value mismatch")
-                    return False
-            
-            # Check if createdAt field exists
-            if "createdAt" not in created_contact:
-                self.log_result("Contact API - CreatedAt Field", False, 
-                              "Response should contain createdAt field")
-                return False
-                
-            self.log_result("Contact API - Complete", True, 
-                          f"Successfully created contact with ID: {created_contact['_id']}")
-            return True
-            
-        except Exception as e:
-            self.log_result("Contact API - Error", False, f"Exception: {str(e)}")
-            return False
-    
-    def run_all_tests(self):
-        """Run all backend API tests"""
-        print("🚀 Starting GreenLink Agritech Backend API Tests")
-        print("=" * 60)
-        print()
+    try:
+        response = requests.post(f"{BASE_URL}/auth/register", json=test_data)
+        print_info(f"POST {BASE_URL}/auth/register")
+        print_info(f"Data: {json.dumps(test_data, indent=2)}")
+        print_info(f"Status Code: {response.status_code}")
         
-        # Run individual tests
-        self.test_features_api()
-        self.test_steps_api()
-        self.test_crops_api()
-        self.test_producers_api()
-        self.test_testimonials_api()
-        self.test_pricing_plans_api()
-        self.test_contact_api()
+        if response.status_code == 200:
+            data = response.json()
+            if "access_token" in data and "user" in data:
+                user = data["user"]
+                if user.get("email") == test_data["email"]:
+                    print_success(f"Registration with email successful - User ID: {user.get('_id')}")
+                    return data["access_token"], user["_id"]
+                else:
+                    print_error("User email field missing or incorrect in response")
+                    return None, None
+            else:
+                print_error("Missing access_token or user in response")
+                return None, None
+        else:
+            print_error(f"Registration failed: {response.text}")
+            return None, None
+    except Exception as e:
+        print_error(f"Request failed: {str(e)}")
+        return None, None
+
+def test_register_with_phone():
+    """Test registering a new user with phone number"""
+    print_test_header("TEST 2: Register with Phone")
+    
+    test_data = {
+        "phone_number": "+22507654321",
+        "password": "test456",
+        "full_name": "Test Phone User",
+        "user_type": "acheteur"
+    }
+    
+    try:
+        response = requests.post(f"{BASE_URL}/auth/register", json=test_data)
+        print_info(f"POST {BASE_URL}/auth/register")
+        print_info(f"Data: {json.dumps(test_data, indent=2)}")
+        print_info(f"Status Code: {response.status_code}")
         
-        # Print summary
-        print("=" * 60)
-        print(f"📊 TEST SUMMARY")
-        print(f"Total Tests: {self.total_tests}")
-        print(f"Passed: {self.passed_tests}")
-        print(f"Failed: {self.total_tests - self.passed_tests}")
-        print(f"Success Rate: {(self.passed_tests / self.total_tests * 100):.1f}%")
-        print("=" * 60)
+        if response.status_code == 200:
+            data = response.json()
+            if "access_token" in data and "user" in data:
+                user = data["user"]
+                if user.get("phone_number") == test_data["phone_number"]:
+                    print_success(f"Registration with phone successful - User ID: {user.get('_id')}")
+                    return data["access_token"], user["_id"]
+                else:
+                    print_error("User phone_number field missing or incorrect in response")
+                    return None, None
+            else:
+                print_error("Missing access_token or user in response")
+                return None, None
+        else:
+            print_error(f"Registration failed: {response.text}")
+            return None, None
+    except Exception as e:
+        print_error(f"Request failed: {str(e)}")
+        return None, None
+
+def test_login_with_email():
+    """Test login with email as identifier"""
+    print_test_header("TEST 3: Login with Email")
+    
+    login_data = {
+        "identifier": "test@greenlink.ci",
+        "password": "test123"
+    }
+    
+    try:
+        response = requests.post(f"{BASE_URL}/auth/login", json=login_data)
+        print_info(f"POST {BASE_URL}/auth/login")
+        print_info(f"Data: {json.dumps(login_data, indent=2)}")
+        print_info(f"Status Code: {response.status_code}")
         
-        # Return overall success
-        return self.passed_tests == self.total_tests
+        if response.status_code == 200:
+            data = response.json()
+            if "access_token" in data and "user" in data:
+                user = data["user"]
+                if user.get("email") == login_data["identifier"]:
+                    print_success("Email login successful")
+                    return True
+                else:
+                    print_error("User email mismatch in login response")
+                    return False
+            else:
+                print_error("Missing access_token or user in login response")
+                return False
+        else:
+            print_error(f"Email login failed: {response.text}")
+            return False
+    except Exception as e:
+        print_error(f"Email login request failed: {str(e)}")
+        return False
+
+def test_login_with_phone():
+    """Test login with phone as identifier"""
+    print_test_header("TEST 4: Login with Phone")
+    
+    login_data = {
+        "identifier": "+22507654321",
+        "password": "test456"
+    }
+    
+    try:
+        response = requests.post(f"{BASE_URL}/auth/login", json=login_data)
+        print_info(f"POST {BASE_URL}/auth/login")
+        print_info(f"Data: {json.dumps(login_data, indent=2)}")
+        print_info(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "access_token" in data and "user" in data:
+                user = data["user"]
+                if user.get("phone_number") == login_data["identifier"]:
+                    print_success("Phone login successful")
+                    return True
+                else:
+                    print_error("User phone number mismatch in login response")
+                    return False
+            else:
+                print_error("Missing access_token or user in login response")
+                return False
+        else:
+            print_error(f"Phone login failed: {response.text}")
+            return False
+    except Exception as e:
+        print_error(f"Phone login request failed: {str(e)}")
+        return False
+
+def test_duplicate_email_registration():
+    """Test registering with duplicate email should fail"""
+    print_test_header("TEST 5: Duplicate Email Registration (Should Fail)")
+    
+    duplicate_data = {
+        "email": "test@greenlink.ci",
+        "password": "different123",
+        "full_name": "Different User",
+        "user_type": "entreprise_rse"
+    }
+    
+    try:
+        response = requests.post(f"{BASE_URL}/auth/register", json=duplicate_data)
+        print_info(f"POST {BASE_URL}/auth/register")
+        print_info(f"Data: {json.dumps(duplicate_data, indent=2)}")
+        print_info(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 400:
+            error_msg = response.json().get("detail", "")
+            if "email" in error_msg.lower() or "déjà enregistré" in error_msg:
+                print_success("Duplicate email registration correctly rejected")
+                return True
+            else:
+                print_error(f"Unexpected error message for duplicate email: {error_msg}")
+                return False
+        else:
+            print_error(f"Expected 400 status code for duplicate email, got {response.status_code}: {response.text}")
+            return False
+    except Exception as e:
+        print_error(f"Duplicate email test request failed: {str(e)}")
+        return False
+
+def test_duplicate_phone_registration():
+    """Test registering with duplicate phone should fail"""
+    print_test_header("TEST 6: Duplicate Phone Registration (Should Fail)")
+    
+    duplicate_data = {
+        "phone_number": "+22507654321",
+        "password": "different456",
+        "full_name": "Different User",
+        "user_type": "fournisseur"
+    }
+    
+    try:
+        response = requests.post(f"{BASE_URL}/auth/register", json=duplicate_data)
+        print_info(f"POST {BASE_URL}/auth/register")
+        print_info(f"Data: {json.dumps(duplicate_data, indent=2)}")
+        print_info(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 400:
+            error_msg = response.json().get("detail", "")
+            if "téléphone" in error_msg.lower() or "déjà enregistré" in error_msg:
+                print_success("Duplicate phone registration correctly rejected")
+                return True
+            else:
+                print_error(f"Unexpected error message for duplicate phone: {error_msg}")
+                return False
+        else:
+            print_error(f"Expected 400 status code for duplicate phone, got {response.status_code}: {response.text}")
+            return False
+    except Exception as e:
+        print_error(f"Duplicate phone test request failed: {str(e)}")
+        return False
+
+def test_registration_without_contact():
+    """Test registering without phone AND email should fail"""
+    print_test_header("TEST 7: Registration without Phone AND Email (Should Fail)")
+    
+    invalid_data = {
+        "password": "test789",
+        "full_name": "Invalid User",
+        "user_type": "producteur"
+    }
+    
+    try:
+        response = requests.post(f"{BASE_URL}/auth/register", json=invalid_data)
+        print_info(f"POST {BASE_URL}/auth/register")
+        print_info(f"Data: {json.dumps(invalid_data, indent=2)}")
+        print_info(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 422:
+            error_msg = response.text
+            print_success("Registration without contact info correctly rejected with validation error")
+            return True
+        else:
+            print_error(f"Expected 422 validation error, got {response.status_code}: {response.text}")
+            return False
+    except Exception as e:
+        print_error(f"No contact info test request failed: {str(e)}")
+        return False
+
+def test_login_wrong_identifier():
+    """Test login with non-existent identifier should fail"""
+    print_test_header("TEST 8: Login with Wrong Identifier (Should Fail)")
+    
+    wrong_login = {
+        "identifier": "nonexistent@test.com",
+        "password": "test123"
+    }
+    
+    try:
+        response = requests.post(f"{BASE_URL}/auth/login", json=wrong_login)
+        print_info(f"POST {BASE_URL}/auth/login")
+        print_info(f"Data: {json.dumps(wrong_login, indent=2)}")
+        print_info(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 401:
+            print_success("Login with wrong identifier correctly rejected")
+            return True
+        else:
+            print_error(f"Expected 401 unauthorized, got {response.status_code}: {response.text}")
+            return False
+    except Exception as e:
+        print_error(f"Wrong identifier test request failed: {str(e)}")
+        return False
+
+def test_profile_display(token, expected_email=None, expected_phone=None):
+    """Test profile endpoint to verify email/phone fields are correctly displayed"""
+    print_test_header("TEST 9: Profile Display Verification")
+    
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    try:
+        response = requests.get(f"{BASE_URL}/auth/me", headers=headers)
+        print_info(f"GET {BASE_URL}/auth/me")
+        print_info(f"Headers: Bearer token provided")
+        print_info(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            user = response.json()
+            print_info(f"Profile data retrieved: {json.dumps(user, indent=2, default=str)}")
+            
+            success = True
+            if expected_email:
+                if user.get("email") == expected_email:
+                    print_success(f"Email field correctly displayed: {expected_email}")
+                else:
+                    print_error(f"Email field mismatch. Expected: {expected_email}, Got: {user.get('email')}")
+                    success = False
+            
+            if expected_phone:
+                if user.get("phone_number") == expected_phone:
+                    print_success(f"Phone field correctly displayed: {expected_phone}")
+                else:
+                    print_error(f"Phone field mismatch. Expected: {expected_phone}, Got: {user.get('phone_number')}")
+                    success = False
+            
+            return success
+        else:
+            print_error(f"Profile retrieval failed: {response.text}")
+            return False
+    except Exception as e:
+        print_error(f"Profile display test request failed: {str(e)}")
+        return False
+
+def main():
+    print(f"{Colors.BOLD}🧪 GreenLink Authentication System Test Suite with Email Support{Colors.END}")
+    print(f"Backend URL: {BACKEND_URL}")
+    print(f"Testing API endpoints at: {BASE_URL}")
+    
+    test_results = []
+    email_token = None
+    phone_token = None
+    
+    # Test 1: Register with Email
+    email_token, email_user_id = test_register_with_email()
+    test_results.append(("Register with Email", email_token is not None))
+    
+    # Test 2: Register with Phone  
+    phone_token, phone_user_id = test_register_with_phone()
+    test_results.append(("Register with Phone", phone_token is not None))
+    
+    # Test 3: Login with Email
+    email_login_success = test_login_with_email()
+    test_results.append(("Login with Email", email_login_success))
+    
+    # Test 4: Login with Phone
+    phone_login_success = test_login_with_phone()
+    test_results.append(("Login with Phone", phone_login_success))
+    
+    # Test 5: Duplicate Email Registration
+    duplicate_email_test = test_duplicate_email_registration()
+    test_results.append(("Duplicate Email Rejection", duplicate_email_test))
+    
+    # Test 6: Duplicate Phone Registration
+    duplicate_phone_test = test_duplicate_phone_registration()
+    test_results.append(("Duplicate Phone Rejection", duplicate_phone_test))
+    
+    # Test 7: Registration without Contact Info
+    no_contact_test = test_registration_without_contact()
+    test_results.append(("No Contact Info Rejection", no_contact_test))
+    
+    # Test 8: Login with Wrong Identifier
+    wrong_login_test = test_login_wrong_identifier()
+    test_results.append(("Wrong Identifier Rejection", wrong_login_test))
+    
+    # Test 9: Profile Display (if we have tokens)
+    if email_token:
+        email_profile_test = test_profile_display(email_token, expected_email="test@greenlink.ci")
+        test_results.append(("Email Profile Display", email_profile_test))
+    
+    if phone_token:
+        phone_profile_test = test_profile_display(phone_token, expected_phone="+22507654321")
+        test_results.append(("Phone Profile Display", phone_profile_test))
+    
+    # Summary
+    print_test_header("TEST RESULTS SUMMARY")
+    
+    passed_tests = 0
+    total_tests = len(test_results)
+    
+    for test_name, passed in test_results:
+        if passed:
+            print_success(f"{test_name}")
+            passed_tests += 1
+        else:
+            print_error(f"{test_name}")
+    
+    print(f"\n{Colors.BOLD}Results: {passed_tests}/{total_tests} tests passed{Colors.END}")
+    
+    if passed_tests == total_tests:
+        print_success(f"🎉 All authentication tests with email support passed!")
+        return True
+    else:
+        print_error(f"⚠️  {total_tests - passed_tests} tests failed")
+        return False
 
 if __name__ == "__main__":
-    tester = BackendTester()
-    success = tester.run_all_tests()
-    
-    # Save detailed results to file
-    with open('/app/test_results.json', 'w') as f:
-        json.dump(tester.test_results, f, indent=2)
-    
-    print(f"\n📝 Detailed results saved to: /app/test_results.json")
-    
-    if success:
-        print("\n🎉 All backend tests passed successfully!")
-        sys.exit(0)
-    else:
-        print("\n❌ Some tests failed. Check the output above for details.")
-        sys.exit(1)
+    success = main()
+    sys.exit(0 if success else 1)
