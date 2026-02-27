@@ -25,12 +25,17 @@ Build a comprehensive agritech platform connecting:
 ### 3. Entreprise RSE (CSR Company)
 - **Needs**: Verified carbon credits, impact tracking, CSRD reporting
 - **Features**: Carbon marketplace, impact dashboard, certificates
-- **Key Routes**: `/rse/dashboard`
+- **Key Routes**: `/rse/dashboard`, `/carbon-marketplace`
 
 ### 4. Fournisseur (Supplier)
 - **Needs**: Product management, order handling, customer messaging
 - **Features**: Full marketplace CRUD, dashboard analytics, notifications
 - **Key Routes**: `/supplier/dashboard`, `/supplier/products`, `/supplier/orders`
+
+### 5. Admin (Super Administrator)
+- **Needs**: Platform management, partner management
+- **Features**: Partner CRUD, platform statistics
+- **Key Routes**: `/admin/dashboard`
 
 ## Technical Architecture
 
@@ -41,6 +46,8 @@ Build a comprehensive agritech platform connecting:
   - `/api/greenlink/*` - Farmer, Buyer, RSE endpoints
   - `/api/marketplace/*` - Supplier and marketplace endpoints
   - `/api/payments/*` - Orange Money payment integration
+  - `/api/admin/*` - Admin management
+  - `/api/partners` - Public partners list
 
 ### Frontend (React)
 - **Components**: Shadcn UI library
@@ -51,7 +58,7 @@ Build a comprehensive agritech platform connecting:
 
 ### Completed (February 2026)
 - [x] Landing page (clone of greenlink-agritech.com)
-- [x] Authentication (email + phone, all 4 user types)
+- [x] Authentication (email + phone, all 5 user types including admin)
 - [x] Farmer dashboard with USSD simulator
 - [x] Buyer dashboard with EUDR export
 - [x] RSE dashboard with impact metrics and interactive map
@@ -68,6 +75,11 @@ Build a comprehensive agritech platform connecting:
 - [x] **Order Tracking** - Timeline-based order status tracking
 - [x] **Supplier Notifications** - Notifications on new orders and payments
 - [x] **Orange Money Integration (SIMULATION)** - Full payment flow with simulation mode
+- [x] **Carbon Marketplace** - Dedicated page for carbon credits (accessible to all, purchase for RSE only)
+- [x] **Partners Section** - Replaced "Nos membres actifs" with "Nos Partenaires" (Orange CI added)
+- [x] **Admin Dashboard** - Super admin for managing partners
+- [x] **Legal Pages** - Conditions, Confidentialité, Sécurité
+- [x] **Removed Emergent Badge** - Watermark removed from footer
 
 ### Mocked/Simulated
 - **Orange Money payments** - Simulation mode active (no real API keys yet)
@@ -78,10 +90,18 @@ Build a comprehensive agritech platform connecting:
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Create account
+- `POST /api/auth/register` - Create account (supports admin type)
 - `POST /api/auth/login` - Login (identifier field: email or phone)
 - `GET /api/auth/me` - Get current user
 - `PUT /api/auth/profile` - Update profile
+
+### Admin
+- `GET /api/partners` - Get public partners (no auth)
+- `GET /api/admin/partners` - Get all partners (admin only)
+- `POST /api/admin/partners` - Create partner (admin only)
+- `PUT /api/admin/partners/{id}` - Update partner (admin only)
+- `DELETE /api/admin/partners/{id}` - Delete partner (admin only)
+- `GET /api/admin/stats` - Platform statistics (admin only)
 
 ### Farmer (Greenlink)
 - `POST /api/greenlink/parcels` - Declare parcel (auto SMS if score ≥7)
@@ -99,36 +119,22 @@ Build a comprehensive agritech platform connecting:
 - `POST /api/marketplace/wishlist/add` - Add to wishlist
 - `DELETE /api/marketplace/wishlist/remove/{id}` - Remove from wishlist
 
-### Cart & Orders
-- `GET /api/marketplace/cart` - Get cart
-- `POST /api/marketplace/cart/add` - Add to cart
-- `PUT /api/marketplace/cart/update` - Update quantity
-- `DELETE /api/marketplace/cart/remove/{id}` - Remove item
-- `POST /api/marketplace/cart/checkout` - Create orders
-- `GET /api/marketplace/buyer/orders` - Get buyer orders
-- `GET /api/marketplace/orders/{id}/tracking` - Get order tracking
-
 ### Payments (Orange Money)
 - `GET /api/payments/simulation-status` - Check if simulation mode
 - `POST /api/payments/initiate` - Initiate payment
 - `GET /api/payments/status/{ref}` - Get payment status
 - `POST /api/payments/simulate/{token}` - Simulate payment (test mode)
-- `POST /api/payments/webhook` - Webhook for real payments
 
 ## Database Collections
-- `users` - All user types with profile fields
+- `users` - All user types with profile fields (including admin)
 - `parcels` - Farmer parcel declarations
 - `harvests` - Harvest records
-- `buyer_orders` - Corporate buyer orders
-- `carbon_credits` - Available credits
-- `carbon_purchases` - Purchase records
 - `products` - Supplier products
 - `orders` - Marketplace orders
 - `payments` - Payment records
 - `product_reviews` - Product ratings and reviews
 - `wishlists` - User wishlists
-- `order_tracking` - Order status history
-- `notifications` - User notifications
+- `partners` - Platform partners
 
 ## Prioritized Backlog
 
@@ -137,6 +143,9 @@ Build a comprehensive agritech platform connecting:
 - ✅ Product reviews and ratings
 - ✅ Wishlist functionality
 - ✅ Order tracking
+- ✅ Carbon Marketplace page
+- ✅ Admin dashboard with partner management
+- ✅ Legal pages (Conditions, Confidentialité, Sécurité)
 
 ### P1 (High Priority)
 - Real Orange Money API integration (requires merchant registration)
@@ -155,6 +164,7 @@ Build a comprehensive agritech platform connecting:
 
 ## Test Credentials
 ```
+Admin: klenakan.eric@gmail.com / 474Treckadzo
 Buyer: buyer@test.com / password123
 Farmer: farmer1@test.com / test123
 RSE: rse1@test.com / test123
@@ -162,21 +172,32 @@ Supplier: supplier1@test.com / test123
 ```
 
 ## Known Limitations
-- Orange Money is in SIMULATION MODE (use `/api/payments/simulate/{token}?action=success`)
+- Orange Money is in SIMULATION MODE
 - USSD is web-based simulation only
 - SMS notifications are logged, not sent to real phones
 - Certificates are text, not PDF
 
 ## Recent Changes (February 27, 2026)
-1. **Orange Money Payment Integration** - Full payment flow with simulation mode
-   - `/app/backend/routes/payments.py` - New payment routes
-   - `/app/frontend/src/pages/CheckoutPage.jsx` - Updated with Orange Money option
-2. **Bug Fix** - Fixed React warning in CheckoutPage (navigate in useEffect)
-3. **Bug Fix** - Fixed star rating z-index issue in product reviews
+1. **Carbon Marketplace** - New dedicated page at `/carbon-marketplace` accessible to all users
+   - RSE companies can purchase credits
+   - Farmers see info about their carbon potential
+2. **Partners Section** - Replaced "Nos membres actifs" with "Nos Partenaires"
+   - Added Orange Côte d'Ivoire as first partner
+   - Dynamic loading from database
+3. **Admin Dashboard** - Super admin at `/admin/dashboard`
+   - Manage partners (CRUD operations)
+   - Admin account: klenakan.eric@gmail.com
+4. **Legal Pages** - Created `/conditions`, `/confidentialite`, `/securite`
+5. **Removed Emergent Badge** - Watermark removed from footer
+6. **Updated Navigation** - Added "Crédits Carbone" link in navbar
+7. **Updated Footer** - Links to legal pages and marketplaces
 
 ## Files of Reference
+- `/app/backend/routes/admin.py` - Admin and partners routes
 - `/app/backend/routes/payments.py` - Orange Money integration
-- `/app/backend/routes/marketplace.py` - Marketplace features
-- `/app/frontend/src/pages/CheckoutPage.jsx` - Checkout with Orange Money
-- `/app/frontend/src/pages/MarketplacePage.jsx` - Products with reviews/wishlist
-- `/app/frontend/src/pages/WishlistPage.jsx` - Wishlist page
+- `/app/frontend/src/pages/rse/CarbonMarketplace.jsx` - Carbon marketplace
+- `/app/frontend/src/pages/admin/Dashboard.jsx` - Admin dashboard
+- `/app/frontend/src/components/PartnersSection.jsx` - Partners display
+- `/app/frontend/src/pages/ConditionsPage.jsx` - Terms page
+- `/app/frontend/src/pages/ConfidentialitePage.jsx` - Privacy page
+- `/app/frontend/src/pages/SecuritePage.jsx` - Security page
