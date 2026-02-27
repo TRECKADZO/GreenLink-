@@ -315,7 +315,7 @@ def test_error_handling():
     # Test 6a: Duplicate phone number
     print("\n   6a. Testing duplicate phone number registration:")
     duplicate_data = {
-        "phone_number": "+225 07 12 34 56 78",  # Same as first user
+        "phone_number": "+22507123456789",  # Same as first user
         "password": "test456",
         "full_name": "Duplicate User",
         "user_type": "acheteur"
