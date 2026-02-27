@@ -107,12 +107,12 @@ const NotificationsScreen = ({ navigation }) => {
         ) : (
           notifications.map((notification, index) => (
             <TouchableOpacity
-              key={notification._id || index}
+              key={notification.id || notification._id || index}
               style={[
                 styles.notificationCard,
                 !notification.is_read && styles.notificationUnread,
               ]}
-              onPress={() => markAsRead(notification._id)}
+              onPress={() => markAsRead(notification.id || notification._id)}
             >
               <View style={styles.notificationIcon}>
                 <Text style={styles.iconText}>
