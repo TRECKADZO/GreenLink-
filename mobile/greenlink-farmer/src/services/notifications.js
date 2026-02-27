@@ -3,7 +3,6 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
-import Constants from 'expo-constants';
 
 // Configuration des notifications
 Notifications.setNotificationHandler({
@@ -34,7 +33,6 @@ class NotificationService {
 
     if (!Device.isDevice) {
       console.log('[NotificationService] Push notifications require a physical device');
-      // In development/emulator, we can still test with a mock token
       return null;
     }
 
@@ -52,14 +50,11 @@ class NotificationService {
     }
 
     try {
-      // Get the project ID from Constants or use fallback
-      const projectId = Constants.expoConfig?.extra?.eas?.projectId || 
-                       Constants.easConfig?.projectId ||
-                       'greenlink-farmer';
-      
-      token = (await Notifications.getExpoPushTokenAsync({
-        projectId,
-      })).data;
+      // Get the Expo push token - SDK 53 compatible
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId: '69cdf51e-6916-433e-99ed-bfdc2e852057',
+      });
+      token = tokenData.data;
 
       this.expoPushToken = token;
       await AsyncStorage.setItem('expoPushToken', token);
