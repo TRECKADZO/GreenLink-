@@ -177,12 +177,15 @@ class TestFarmerDashboardAPI:
     def test_declare_parcel(self):
         """Test declaring a new parcel"""
         response = self.session.post(f"{BASE_URL}/api/greenlink/parcels", json={
+            'farmer_name': 'Test Farmer',
+            'phone_number': '+225070000001',
             'location': 'Bouaflé Test',
             'region': 'Marahoué',
             'area_hectares': 2.5,
             'trees_count': 350,
             'crop_type': 'cacao',
-            'farming_practices': ['agroforesterie', 'compost']
+            'farming_practices': ['agroforesterie', 'compost'],
+            'language': 'francais'
         })
         assert response.status_code == 200, f"Parcel declaration failed: {response.text}"
         data = response.json()
@@ -238,7 +241,7 @@ class TestBuyerDashboardAPI:
             'max_price_per_kg': 1500,
             'carbon_requirement': True,
             'min_carbon_score': 7.0,
-            'delivery_deadline': '2026-03-15'
+            'delivery_date': '2026-03-15T00:00:00'
         })
         assert response.status_code == 200, f"Order creation failed: {response.text}"
         data = response.json()
