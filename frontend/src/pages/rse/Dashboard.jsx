@@ -5,6 +5,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import Navbar from '../../components/Navbar';
+import InteractiveMap from '../../components/InteractiveMap';
 import { greenlinkApi } from '../../services/greenlinkApi';
 import { 
   Leaf, 
@@ -15,7 +16,8 @@ import {
   TrendingUp,
   Download,
   Heart,
-  Building2
+  Building2,
+  Map
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
