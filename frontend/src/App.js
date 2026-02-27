@@ -43,6 +43,9 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/marketplace" element={<MarketplacePage />} />
+              <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
               
               {/* Supplier/Fournisseur Routes */}
               <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
