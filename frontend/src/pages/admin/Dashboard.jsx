@@ -20,7 +20,9 @@ import {
   Save,
   X,
   Handshake,
-  Building2
+  Building2,
+  BarChart3,
+  Globe
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
