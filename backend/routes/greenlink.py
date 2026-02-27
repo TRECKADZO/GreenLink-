@@ -298,7 +298,7 @@ async def get_carbon_credits(
 
 @router.post("/carbon-credits/purchase", response_model=CarbonPurchaseInDB)
 async def purchase_carbon_credits(
-    purchase: CarbonPurchase,
+    purchase: CarbonPurchaseCreate,
     current_user: dict = Depends(get_current_user)
 ):
     """Acheter crédits carbone"""
