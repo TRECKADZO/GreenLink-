@@ -210,6 +210,37 @@ Supplier: supplier1@test.com / test123
     - Proper Expo Constants integration for project ID
     - Better error handling and logging
     - Platform-specific device registration
+12. **EAS Build Configuration** - Production build setup for mobile app
+    - `eas.json` configured for preview and production builds
+    - `app.json` updated with all required plugins and permissions
+    - NPM scripts for easy build commands
+    - Complete README with build and distribution instructions
+
+## Mobile App Build Instructions
+
+### Quick Start (Development)
+```bash
+cd /app/mobile/greenlink-farmer
+yarn install
+npx expo start
+```
+
+### Production Build (APK for Android)
+```bash
+# Login to Expo (first time)
+npx eas-cli login
+
+# Build preview APK
+yarn build:preview
+
+# Build production APK
+yarn build:android
+```
+
+### Distribution Options
+1. **QR Code** - Scan with Expo Go app
+2. **Direct APK link** - Share via WhatsApp/SMS
+3. **Google Play Store** - Use `yarn submit:android`
 
 ## Files of Reference
 - `/app/backend/routes/admin.py` - Admin and partners routes
@@ -222,6 +253,9 @@ Supplier: supplier1@test.com / test123
 - `/app/frontend/src/pages/ConfidentialitePage.jsx` - Privacy page
 - `/app/frontend/src/pages/SecuritePage.jsx` - Security page
 - `/app/mobile/greenlink-farmer/App.js` - Mobile app entry point with notifications
+- `/app/mobile/greenlink-farmer/README.md` - Complete build and distribution guide
+- `/app/mobile/greenlink-farmer/eas.json` - EAS Build configuration
+- `/app/mobile/greenlink-farmer/app.json` - Expo configuration with plugins
 - `/app/mobile/greenlink-farmer/src/services/notifications.js` - Push notification service
 - `/app/mobile/greenlink-farmer/src/services/sync.js` - Background sync service
 - `/app/mobile/greenlink-farmer/src/screens/profile/ProfileScreen.js` - Profile with sync button
