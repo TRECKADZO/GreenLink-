@@ -25,32 +25,19 @@
       },
       "package": "com.greenlink.farmer",
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE"
+        "CAMERA",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-camera",
-      "expo-location",
-      "expo-image-picker"
-    ],
     "extra": {
       "eas": {
         "projectId": "69cdf51e-6916-433e-99ed-bfdc2e852057"
       }
     },
-    "owner": "treckadzo",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/69cdf51e-6916-433e-99ed-bfdc2e852057"
-    }
+    "owner": "treckadzo"
   }
 }
