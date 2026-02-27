@@ -247,6 +247,64 @@ const FarmerDashboard = () => {
             </div>
           )}
         </Card>
+
+        {/* SMS Notifications Section */}
+        <Card className="p-6 mt-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <MessageSquare className="w-6 h-6 text-orange-600" />
+              <h2 className="text-xl font-bold text-gray-900">Notifications SMS</h2>
+            </div>
+            <Button 
+              onClick={sendWeeklySummary}
+              disabled={sendingSummary}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {sendingSummary ? 'Envoi...' : 'Envoyer Résumé'}
+            </Button>
+          </div>
+          
+          <div className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-4 rounded-r-lg">
+            <p className="text-sm text-orange-800">
+              <strong>Notifications automatiques:</strong> Vous recevez un SMS quand votre parcelle atteint un score carbone ≥ 7/10 (éligible à la prime).
+            </p>
+          </div>
+
+          {smsHistory.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Aucun SMS envoyé</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {smsHistory.slice(0, 5).map((sms, index) => (
+                <div 
+                  key={index}
+                  className="p-4 bg-gray-50 rounded-lg border-l-4 border-orange-400"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <Badge className={`text-xs ${
+                      sms.template === 'carbon_premium_eligible' ? 'bg-green-100 text-green-700' :
+                      sms.template === 'harvest_payment' ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {sms.template === 'carbon_premium_eligible' ? 'Prime Carbone' :
+                       sms.template === 'harvest_payment' ? 'Paiement' :
+                       sms.template === 'weekly_summary' ? 'Résumé' : sms.template}
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      {new Date(sms.created_at).toLocaleString('fr-FR')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-800 font-mono bg-white p-2 rounded border">
+                    {sms.message}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       </div>
     </div>
   );
