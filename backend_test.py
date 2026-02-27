@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Test Suite for GreenLink Authentication System with Email Support
-Testing the updated authentication system that supports both email and phone registration/login.
+Comprehensive Backend Test Suite for GreenLink Multi-Profile Platform
+Testing the complete GreenLink system including:
+1. Producer/Farmer Profile (Producteur) 
+2. Buyer Profile (Acheteur)
+3. CSR Company Profile (Entreprise RSE)
+4. Integration Tests
 """
 
 import requests
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Get backend URL from environment
 BACKEND_URL = "https://farm-intelligence-14.preview.emergentagent.com"
