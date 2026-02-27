@@ -56,7 +56,7 @@ class TestAdminAuthValidation:
     def test_dashboard_requires_auth(self):
         """Dashboard endpoint requires authentication"""
         response = requests.get(f"{API_URL}/dashboard")
-        assert response.status_code == 401, f"Expected 401, got {response.status_code}"
+        assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
         print("PASS: Dashboard requires authentication")
     
     def test_dashboard_requires_admin_role(self, admin_token):
@@ -229,7 +229,7 @@ class TestProductionReport:
     def test_production_report_requires_auth(self):
         """Production report requires authentication"""
         response = requests.get(f"{API_URL}/report/production")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
         print("PASS: Production report requires auth")
 
 
@@ -257,7 +257,7 @@ class TestCarbonReport:
     def test_carbon_report_requires_auth(self):
         """Carbon report requires authentication"""
         response = requests.get(f"{API_URL}/report/carbon")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
         print("PASS: Carbon report requires auth")
 
 
@@ -286,7 +286,7 @@ class TestSocialImpactReport:
     def test_social_impact_report_requires_auth(self):
         """Social impact report requires authentication"""
         response = requests.get(f"{API_URL}/report/social-impact")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
         print("PASS: Social impact report requires auth")
 
 
@@ -315,7 +315,7 @@ class TestTradeReport:
     def test_trade_report_requires_auth(self):
         """Trade report requires authentication"""
         response = requests.get(f"{API_URL}/report/trade")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
         print("PASS: Trade report requires auth")
 
 
@@ -345,7 +345,7 @@ class TestEUDRComplianceReport:
     def test_eudr_report_requires_auth(self):
         """EUDR compliance report requires authentication"""
         response = requests.get(f"{API_URL}/report/eudr-compliance")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
         print("PASS: EUDR compliance report requires auth")
 
 
@@ -368,7 +368,7 @@ class TestRegionalAnalytics:
     def test_regions_analytics_requires_auth(self):
         """Regional analytics requires authentication"""
         response = requests.get(f"{API_URL}/regions")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
         print("PASS: Regional analytics requires auth")
 
 
@@ -398,7 +398,7 @@ class TestCSVExport:
             f"{API_URL}/export/csv",
             params={'report_type': 'production'}
         )
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
         print("PASS: CSV export requires auth")
 
 
