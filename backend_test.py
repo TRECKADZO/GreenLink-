@@ -542,7 +542,7 @@ def test_user_type_protection():
                               json=valid_purchase_data,
                               headers=headers)
         
-        if response:
+        if response is not None:
             print_info(f"Response status: {response.status_code}")
             if response.status_code == 403:
                 print_success("Buyer correctly blocked from CSR endpoint (403 Forbidden)")
