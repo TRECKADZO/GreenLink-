@@ -255,9 +255,16 @@ yarn build:android
 - `/app/backend/routes/admin.py` - Admin and partners routes
 - `/app/backend/routes/payments.py` - Orange Money integration
 - `/app/backend/routes/greenlink.py` - Farmer endpoints including notifications
+- `/app/backend/routes/cooperative.py` - Cooperative management endpoints
 - `/app/backend/services/fcm_service.py` - Firebase Cloud Messaging service
 - `/app/frontend/src/pages/rse/CarbonMarketplace.jsx` - Carbon marketplace
 - `/app/frontend/src/pages/admin/Dashboard.jsx` - Admin dashboard
+- `/app/frontend/src/pages/cooperative/Dashboard.jsx` - Cooperative dashboard
+- `/app/frontend/src/pages/cooperative/MembersPage.jsx` - Members management
+- `/app/frontend/src/pages/cooperative/LotsPage.jsx` - Grouped sales lots
+- `/app/frontend/src/pages/cooperative/DistributionsPage.jsx` - Premium distributions
+- `/app/frontend/src/pages/cooperative/ReportsPage.jsx` - EUDR compliance reports
+- `/app/frontend/src/services/cooperativeApi.js` - Cooperative API service
 - `/app/frontend/src/components/PartnersSection.jsx` - Partners display
 - `/app/frontend/src/pages/ConditionsPage.jsx` - Terms page
 - `/app/frontend/src/pages/ConfidentialitePage.jsx` - Privacy page
@@ -270,3 +277,14 @@ yarn build:android
 - `/app/mobile/greenlink-farmer/src/services/notifications.js` - Push notification service
 - `/app/mobile/greenlink-farmer/src/services/sync.js` - Background sync service
 - `/app/mobile/greenlink-farmer/src/screens/profile/ProfileScreen.js` - Profile with sync button
+
+## Recent Changes (December 2025) - Cooperative Profile
+11. **Coopérative agricole profile** - Complete agricultural cooperative management system
+    - Backend routes in `/app/backend/routes/cooperative.py`
+    - Dashboard with real-time statistics
+    - Member management (CRUD, validation, CSV import)
+    - Grouped sales lots management
+    - Carbon premium distribution with simulated Orange Money payments
+    - EUDR compliance reporting
+    - Field agent management
+    - Village-wise statistics
