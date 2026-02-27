@@ -34,7 +34,7 @@ class UserBase(BaseModel):
     
     @validator('user_type')
     def validate_user_type(cls, v):
-        allowed_types = ['producteur', 'acheteur', 'entreprise_rse', 'fournisseur', 'admin']
+        allowed_types = ['producteur', 'acheteur', 'entreprise_rse', 'fournisseur', 'cooperative', 'admin']
         if v not in allowed_types:
             raise ValueError(f'Type d\'utilisateur invalide. Types autorisés: {", ".join(allowed_types)}')
         return v
