@@ -795,3 +795,235 @@ async def get_dashboard_stats(
         "top_products": top_products_data,
         "revenue_chart": revenue_chart
     }
+
+
+# ============= PRODUCT REVIEWS =============
+
+@router.get("/products/{product_id}/reviews")
+async def get_product_reviews(product_id: str):
+    """Get all reviews for a product"""
+    reviews = await db.product_reviews.find({"product_id": product_id}).sort("created_at", -1).to_list(100)
+    return [{**r, "_id": str(r["_id"])} for r in reviews]
+
+@router.post("/products/{product_id}/reviews")
+async def add_product_review(
+    product_id: str,
+    rating: int,
+    comment: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Add a review for a product"""
+    # Check if product exists
+    product = await db.products.find_one({"_id": ObjectId(product_id)})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    # Check if user already reviewed this product
+    existing = await db.product_reviews.find_one({
+        "product_id": product_id,
+        "user_id": current_user["_id"]
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Vous avez déjà noté ce produit")
+    
+    review = {
+        "product_id": product_id,
+        "user_id": current_user["_id"],
+        "user_name": current_user["full_name"],
+        "rating": min(5, max(1, rating)),
+        "comment": comment,
+        "created_at": datetime.utcnow()
+    }
+    
+    await db.product_reviews.insert_one(review)
+    
+    # Update product average rating
+    all_reviews = await db.product_reviews.find({"product_id": product_id}).to_list(1000)
+    avg_rating = sum(r["rating"] for r in all_reviews) / len(all_reviews) if all_reviews else 0
+    
+    await db.products.update_one(
+        {"_id": ObjectId(product_id)},
+        {"$set": {"rating": round(avg_rating, 1), "reviews_count": len(all_reviews)}}
+    )
+    
+    return {"message": "Avis ajouté avec succès"}
+
+# ============= WISHLIST =============
+
+@router.get("/wishlist")
+async def get_wishlist(current_user: dict = Depends(get_current_user)):
+    """Get user's wishlist"""
+    wishlist = await db.wishlists.find({"user_id": current_user["_id"]}).to_list(100)
+    
+    # Enrich with product details
+    result = []
+    for item in wishlist:
+        product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+        if product:
+            result.append({
+                "_id": str(item["_id"]),
+                "product_id": item["product_id"],
+                "added_at": item["added_at"],
+                "product": {
+                    "_id": str(product["_id"]),
+                    "name": product["name"],
+                    "price": product["price"],
+                    "unit": product["unit"],
+                    "images": product.get("images", []),
+                    "category": product["category"],
+                    "supplier_name": product.get("supplier_name", ""),
+                    "rating": product.get("rating", 0),
+                    "stock_quantity": product.get("stock_quantity", 0)
+                }
+            })
+    
+    return result
+
+@router.post("/wishlist/add")
+async def add_to_wishlist(
+    product_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Add product to wishlist"""
+    # Check if already in wishlist
+    existing = await db.wishlists.find_one({
+        "user_id": current_user["_id"],
+        "product_id": product_id
+    })
+    if existing:
+        return {"message": "Produit déjà dans les favoris"}
+    
+    await db.wishlists.insert_one({
+        "user_id": current_user["_id"],
+        "product_id": product_id,
+        "added_at": datetime.utcnow()
+    })
+    
+    return {"message": "Ajouté aux favoris"}
+
+@router.delete("/wishlist/remove/{product_id}")
+async def remove_from_wishlist(
+    product_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove product from wishlist"""
+    await db.wishlists.delete_one({
+        "user_id": current_user["_id"],
+        "product_id": product_id
+    })
+    return {"message": "Retiré des favoris"}
+
+# ============= ORDER TRACKING =============
+
+@router.get("/orders/{order_id}/tracking")
+async def get_order_tracking(order_id: str, current_user: dict = Depends(get_current_user)):
+    """Get order tracking information"""
+    order = await db.orders.find_one({
+        "_id": ObjectId(order_id),
+        "$or": [
+            {"buyer_id": current_user["_id"]},
+            {"supplier_id": current_user["_id"]}
+        ]
+    })
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Commande non trouvée")
+    
+    # Get tracking history
+    tracking = await db.order_tracking.find({"order_id": order_id}).sort("timestamp", 1).to_list(100)
+    
+    # Build tracking timeline
+    statuses = [
+        {"status": "pending", "label": "Commande reçue", "description": "Votre commande a été reçue"},
+        {"status": "confirmed", "label": "Confirmée", "description": "Le fournisseur a confirmé la commande"},
+        {"status": "processing", "label": "En préparation", "description": "Votre commande est en cours de préparation"},
+        {"status": "shipped", "label": "Expédiée", "description": "Votre commande est en route"},
+        {"status": "delivered", "label": "Livrée", "description": "Commande livrée avec succès"}
+    ]
+    
+    current_status = order.get("status", "pending")
+    status_index = next((i for i, s in enumerate(statuses) if s["status"] == current_status), 0)
+    
+    timeline = []
+    for i, s in enumerate(statuses):
+        tracking_entry = next((t for t in tracking if t["status"] == s["status"]), None)
+        timeline.append({
+            **s,
+            "completed": i <= status_index,
+            "current": i == status_index,
+            "timestamp": tracking_entry["timestamp"] if tracking_entry else None
+        })
+    
+    return {
+        "order_id": str(order["_id"]),
+        "order_number": order["order_number"],
+        "status": current_status,
+        "timeline": timeline,
+        "estimated_delivery": order.get("estimated_delivery"),
+        "delivery_address": order.get("delivery_address"),
+        "delivery_phone": order.get("delivery_phone")
+    }
+
+@router.put("/orders/{order_id}/status")
+async def update_order_status(
+    order_id: str,
+    new_status: str,
+    note: str = "",
+    current_user: dict = Depends(get_current_user)
+):
+    """Update order status (for supplier)"""
+    valid_statuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Statut invalide")
+    
+    order = await db.orders.find_one({
+        "_id": ObjectId(order_id),
+        "supplier_id": current_user["_id"]
+    })
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Commande non trouvée")
+    
+    # Update order status
+    await db.orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {"status": new_status, "updated_at": datetime.utcnow()}}
+    )
+    
+    # Add tracking entry
+    await db.order_tracking.insert_one({
+        "order_id": order_id,
+        "status": new_status,
+        "note": note,
+        "timestamp": datetime.utcnow(),
+        "updated_by": current_user["_id"]
+    })
+    
+    # Notify buyer
+    status_labels = {
+        "confirmed": "Commande confirmée",
+        "processing": "Commande en préparation",
+        "shipped": "Commande expédiée",
+        "delivered": "Commande livrée",
+        "cancelled": "Commande annulée"
+    }
+    
+    await db.notifications.insert_one({
+        "user_id": order["buyer_id"],
+        "title": status_labels.get(new_status, "Mise à jour commande"),
+        "message": f"Commande #{order['order_number']}: {status_labels.get(new_status, new_status)}",
+        "type": "order_update",
+        "action_url": f"/order-tracking/{order_id}",
+        "created_at": datetime.utcnow(),
+        "is_read": False
+    })
+    
+    return {"message": "Statut mis à jour"}
+
+# ============= PRICE HISTORY =============
+
+@router.get("/products/{product_id}/price-history")
+async def get_price_history(product_id: str):
+    """Get price history for a product"""
+    history = await db.price_history.find({"product_id": product_id}).sort("date", -1).limit(30).to_list(30)
+    return [{**h, "_id": str(h["_id"])} for h in history]
