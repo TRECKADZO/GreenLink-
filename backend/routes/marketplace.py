@@ -200,6 +200,268 @@ async def delete_product(
     
     return {"message": "Produit supprimé avec succès"}
 
+# ============= SHOPPING CART =============
+
+@router.get("/cart")
+async def get_cart(current_user: dict = Depends(get_current_user)):
+    """Get user's shopping cart"""
+    cart = await db.carts.find_one({"user_id": current_user["_id"]})
+    if not cart:
+        return {"items": [], "total": 0, "items_count": 0}
+    
+    # Enrich cart items with product details
+    enriched_items = []
+    total = 0
+    
+    for item in cart.get("items", []):
+        product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+        if product:
+            item_total = product["price"] * item["quantity"]
+            enriched_items.append({
+                "product_id": item["product_id"],
+                "quantity": item["quantity"],
+                "product": {
+                    "_id": str(product["_id"]),
+                    "name": product["name"],
+                    "price": product["price"],
+                    "unit": product["unit"],
+                    "category": product["category"],
+                    "supplier_name": product.get("supplier_name", ""),
+                    "images": product.get("images", []),
+                    "stock_quantity": product.get("stock_quantity", 0)
+                },
+                "item_total": item_total
+            })
+            total += item_total
+    
+    return {
+        "items": enriched_items,
+        "total": total,
+        "items_count": len(enriched_items)
+    }
+
+@router.post("/cart/add")
+async def add_to_cart(
+    product_id: str,
+    quantity: int = 1,
+    current_user: dict = Depends(get_current_user)
+):
+    """Add product to cart"""
+    # Verify product exists and has stock
+    product = await db.products.find_one({"_id": ObjectId(product_id), "is_active": True})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    if product.get("stock_quantity", 0) < quantity:
+        raise HTTPException(status_code=400, detail="Stock insuffisant")
+    
+    # Get or create cart
+    cart = await db.carts.find_one({"user_id": current_user["_id"]})
+    
+    if not cart:
+        # Create new cart
+        cart = {
+            "user_id": current_user["_id"],
+            "items": [{"product_id": product_id, "quantity": quantity}],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        await db.carts.insert_one(cart)
+    else:
+        # Check if product already in cart
+        existing_item = None
+        for item in cart.get("items", []):
+            if item["product_id"] == product_id:
+                existing_item = item
+                break
+        
+        if existing_item:
+            # Update quantity
+            new_quantity = existing_item["quantity"] + quantity
+            if product.get("stock_quantity", 0) < new_quantity:
+                raise HTTPException(status_code=400, detail="Stock insuffisant")
+            
+            await db.carts.update_one(
+                {"user_id": current_user["_id"], "items.product_id": product_id},
+                {"$set": {"items.$.quantity": new_quantity, "updated_at": datetime.utcnow()}}
+            )
+        else:
+            # Add new item
+            await db.carts.update_one(
+                {"user_id": current_user["_id"]},
+                {
+                    "$push": {"items": {"product_id": product_id, "quantity": quantity}},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+    
+    return {"message": "Produit ajouté au panier", "product_name": product["name"]}
+
+@router.put("/cart/update")
+async def update_cart_item(
+    product_id: str,
+    quantity: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update cart item quantity"""
+    if quantity <= 0:
+        # Remove item
+        await db.carts.update_one(
+            {"user_id": current_user["_id"]},
+            {"$pull": {"items": {"product_id": product_id}}}
+        )
+        return {"message": "Produit retiré du panier"}
+    
+    # Verify stock
+    product = await db.products.find_one({"_id": ObjectId(product_id)})
+    if product and product.get("stock_quantity", 0) < quantity:
+        raise HTTPException(status_code=400, detail="Stock insuffisant")
+    
+    await db.carts.update_one(
+        {"user_id": current_user["_id"], "items.product_id": product_id},
+        {"$set": {"items.$.quantity": quantity, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"message": "Panier mis à jour"}
+
+@router.delete("/cart/remove/{product_id}")
+async def remove_from_cart(
+    product_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove product from cart"""
+    await db.carts.update_one(
+        {"user_id": current_user["_id"]},
+        {"$pull": {"items": {"product_id": product_id}}}
+    )
+    return {"message": "Produit retiré du panier"}
+
+@router.delete("/cart/clear")
+async def clear_cart(current_user: dict = Depends(get_current_user)):
+    """Clear entire cart"""
+    await db.carts.delete_one({"user_id": current_user["_id"]})
+    return {"message": "Panier vidé"}
+
+@router.post("/cart/checkout")
+async def checkout_cart(
+    delivery_address: str,
+    delivery_phone: str,
+    payment_method: str = "cash_on_delivery",
+    notes: str = "",
+    current_user: dict = Depends(get_current_user)
+):
+    """Checkout cart and create order"""
+    cart = await db.carts.find_one({"user_id": current_user["_id"]})
+    if not cart or not cart.get("items"):
+        raise HTTPException(status_code=400, detail="Panier vide")
+    
+    # Group items by supplier
+    supplier_orders = {}
+    
+    for item in cart["items"]:
+        product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+        if not product:
+            continue
+        
+        # Check stock
+        if product.get("stock_quantity", 0) < item["quantity"]:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Stock insuffisant pour {product['name']}"
+            )
+        
+        supplier_id = product["supplier_id"]
+        if supplier_id not in supplier_orders:
+            supplier_orders[supplier_id] = {
+                "supplier_id": supplier_id,
+                "supplier_name": product.get("supplier_name", ""),
+                "items": [],
+                "total": 0
+            }
+        
+        item_total = product["price"] * item["quantity"]
+        supplier_orders[supplier_id]["items"].append({
+            "product_id": item["product_id"],
+            "product_name": product["name"],
+            "quantity": item["quantity"],
+            "unit_price": product["price"],
+            "unit": product["unit"],
+            "total": item_total
+        })
+        supplier_orders[supplier_id]["total"] += item_total
+    
+    # Create orders for each supplier
+    created_orders = []
+    order_number_base = f"CMD{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+    
+    for idx, (supplier_id, order_data) in enumerate(supplier_orders.items()):
+        order = {
+            "order_number": f"{order_number_base}-{idx+1}",
+            "buyer_id": current_user["_id"],
+            "buyer_name": current_user["full_name"],
+            "buyer_email": current_user.get("email", ""),
+            "buyer_phone": delivery_phone,
+            "supplier_id": supplier_id,
+            "supplier_name": order_data["supplier_name"],
+            "items": order_data["items"],
+            "total_amount": order_data["total"],
+            "delivery_address": delivery_address,
+            "delivery_phone": delivery_phone,
+            "payment_method": payment_method,
+            "notes": notes,
+            "status": "pending",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        result = await db.orders.insert_one(order)
+        order["_id"] = str(result.inserted_id)
+        created_orders.append(order)
+        
+        # Update product stock
+        for item in order_data["items"]:
+            await db.products.update_one(
+                {"_id": ObjectId(item["product_id"])},
+                {"$inc": {"stock_quantity": -item["quantity"], "total_sales": item["quantity"]}}
+            )
+        
+        # Create notification for supplier
+        await db.notifications.insert_one({
+            "user_id": supplier_id,
+            "title": "Nouvelle commande reçue",
+            "message": f"Commande #{order['order_number']} de {current_user['full_name']} - {order_data['total']:,.0f} FCFA",
+            "type": "order",
+            "action_url": f"/supplier/orders",
+            "created_at": datetime.utcnow(),
+            "is_read": False
+        })
+    
+    # Clear cart
+    await db.carts.delete_one({"user_id": current_user["_id"]})
+    
+    return {
+        "message": "Commande passée avec succès",
+        "orders": created_orders,
+        "total_orders": len(created_orders)
+    }
+
+# ============= BUYER ORDERS =============
+
+@router.get("/buyer/orders")
+async def get_buyer_orders(current_user: dict = Depends(get_current_user)):
+    """Get orders for the current buyer"""
+    orders = await db.orders.find({"buyer_id": current_user["_id"]}).sort("created_at", -1).to_list(100)
+    return [{**o, "_id": str(o["_id"])} for o in orders]
+
+@router.get("/buyer/orders/{order_id}")
+async def get_buyer_order_detail(order_id: str, current_user: dict = Depends(get_current_user)):
+    """Get specific order details"""
+    order = await db.orders.find_one({"_id": ObjectId(order_id), "buyer_id": current_user["_id"]})
+    if not order:
+        raise HTTPException(status_code=404, detail="Commande non trouvée")
+    order["_id"] = str(order["_id"])
+    return order
+
 # ============= ORDERS =============
 
 @router.post("/orders", response_model=Order)
