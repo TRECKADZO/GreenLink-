@@ -341,6 +341,61 @@ const MyProducts = () => {
                   </div>
                 </div>
 
+                {/* Image Upload Section */}
+                <div>
+                  <Label>Photos du produit</Label>
+                  <div className="mt-2">
+                    {/* Uploaded Images Preview */}
+                    {formData.images.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {formData.images.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img 
+                              src={`${process.env.REACT_APP_BACKEND_URL}${url}`}
+                              alt={`Produit ${index + 1}`}
+                              className="w-20 h-20 object-cover rounded-lg border"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Upload Button */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#2d5a4d] hover:bg-gray-50 transition-colors w-full justify-center"
+                    >
+                      {uploading ? (
+                        <span className="text-gray-500">Upload en cours...</span>
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-gray-400" />
+                          <span className="text-gray-600">Ajouter une photo</span>
+                        </>
+                      )}
+                    </button>
+                    <p className="text-xs text-gray-500 mt-1">
+                      JPG, PNG ou WebP. Max 5MB
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex gap-2 pt-4">
                   <Button
                     type="button"
