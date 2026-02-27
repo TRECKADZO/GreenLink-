@@ -1,19 +1,29 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, EmailStr
 from typing import Optional
 from datetime import datetime
 import re
 
 class UserBase(BaseModel):
-    phone_number: str
+    phone_number: Optional[str] = None
+    email: Optional[EmailStr] = None
     user_type: str  # producteur, acheteur, entreprise_rse, fournisseur
     full_name: str
     
     @validator('phone_number')
-    def validate_phone(cls, v):
+    def validate_phone(cls, v, values):
+        if v is None:
+            return v
         # Accept international format with + or without
         phone_pattern = r'^\+?[0-9]{8,15}$'
         if not re.match(phone_pattern, v):
             raise ValueError('Numéro de téléphone invalide. Format attendu: +225XXXXXXXXXX ou XXXXXXXXXX')
+        return v
+    
+    @validator('email')
+    def validate_contact(cls, v, values):
+        # At least one of phone_number or email must be provided
+        if v is None and values.get('phone_number') is None:
+            raise ValueError('Vous devez fournir un numéro de téléphone ou un email')
         return v
     
     @validator('user_type')
@@ -33,7 +43,7 @@ class UserCreate(UserBase):
         return v
 
 class UserLogin(BaseModel):
-    phone_number: str
+    identifier: str  # Can be phone or email
     password: str
 
 class User(UserBase):
