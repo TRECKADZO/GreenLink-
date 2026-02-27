@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from greenlink_models import (
     Parcel, ParcelCreate, Harvest, HarvestCreate, PaymentRequest,
     BuyerOrder, BuyerOrderCreate, BuyerOrderInDB, TraceabilityReport,
-    CarbonCredit, CarbonCreditCreate, CarbonPurchase, CarbonPurchaseInDB,
+    CarbonCredit, CarbonCreditCreate, CarbonPurchaseCreate, CarbonPurchaseInDB,
     ImpactDashboard, USSDSession
 )
 from routes.auth import get_current_user
