@@ -289,3 +289,13 @@ yarn build:android
     - EUDR compliance reporting
     - Field agent management
     - Village-wise statistics
+
+12. **Super Admin Strategic Dashboard** - High-value analytics for institutional stakeholders
+    - Backend routes in `/app/backend/routes/admin_analytics.py`
+    - Frontend in `/app/frontend/src/pages/admin/SuperAdminDashboard.jsx`
+    - 7 strategic sections: Production, Sustainability, EUDR, Social Impact, Market, Macroeconomic, Cooperatives
+    - Targets: Governments, World Bank, IMF, WTO, NGOs, Bourse Café-Cacao, Global buyers
+    - Reports: Production, Carbon, Social Impact, Trade, EUDR Compliance, Regional
+    - Export capabilities (CSV/PDF)
+    - Period filters (month, quarter, year, all)
+    - Dark theme professional design
