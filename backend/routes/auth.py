@@ -44,13 +44,26 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 @router.post("/register", response_model=Token)
 async def register(user_data: UserCreate):
-    # Check if user already exists
-    existing_user = await db.users.find_one({"phone_number": user_data.phone_number})
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ce numéro de téléphone est déjà enregistré"
-        )
+    # Check if user already exists (by phone or email)
+    query = []
+    if user_data.phone_number:
+        query.append({"phone_number": user_data.phone_number})
+    if user_data.email:
+        query.append({"email": user_data.email})
+    
+    if query:
+        existing_user = await db.users.find_one({"$or": query})
+        if existing_user:
+            if existing_user.get("phone_number") == user_data.phone_number:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Ce numéro de téléphone est déjà enregistré"
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cet email est déjà enregistré"
+                )
     
     # Create user
     hashed_password = get_password_hash(user_data.password)
@@ -92,19 +105,25 @@ async def register(user_data: UserCreate):
 
 @router.post("/login", response_model=Token)
 async def login(credentials: UserLogin):
-    # Find user by phone number
-    user = await db.users.find_one({"phone_number": credentials.phone_number})
+    # Find user by phone number or email
+    user = await db.users.find_one({
+        "$or": [
+            {"phone_number": credentials.identifier},
+            {"email": credentials.identifier}
+        ]
+    })
+    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Numéro de téléphone ou mot de passe incorrect"
+            detail="Identifiant ou mot de passe incorrect"
         )
     
     # Verify password
     if not verify_password(credentials.password, user["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Numéro de téléphone ou mot de passe incorrect"
+            detail="Identifiant ou mot de passe incorrect"
         )
     
     # Check if user is active
