@@ -89,6 +89,8 @@ function App() {
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/analytics" element={<SuperAdminDashboard />} />
+              <Route path="/admin/strategic" element={<SuperAdminDashboard />} />
 
               {/* Cooperative Routes */}
               <Route path="/cooperative/dashboard" element={<CooperativeDashboard />} />
