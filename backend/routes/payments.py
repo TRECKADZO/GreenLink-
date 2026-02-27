@@ -296,7 +296,7 @@ async def payment_webhook(
     try:
         import json
         payload = json.loads(body)
-    except:
+    except json.JSONDecodeError:
         return {"status": "rejected", "reason": "invalid_json"}
     
     merchant_reference = payload.get("reference") or payload.get("merchant_reference")
