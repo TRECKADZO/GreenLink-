@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const register = async (identifier, password, fullName, userType, isEmail = false) => {
+  const register = async (identifier, password, fullName, userType, isEmail = false, legalAcceptance = null) => {
     try {
       const payload = {
         password,
@@ -45,6 +45,11 @@ export const AuthProvider = ({ children }) => {
         payload.email = identifier;
       } else {
         payload.phone_number = identifier;
+      }
+
+      // Add legal acceptance data if provided
+      if (legalAcceptance) {
+        payload.legal_acceptance = legalAcceptance;
       }
       
       const response = await axios.post(`${API}/auth/register`, payload);
