@@ -559,18 +559,23 @@ async def create_coop_lot(
     verify_cooperative(current_user)
     coop_id = current_user["_id"]
     
-    # Get eligible members and their parcels
+    # Get eligible members
     members = await db.coop_members.find({
         "coop_id": coop_id,
-        "status": "active",
-        "is_active": True
+        "status": "active"
     }).to_list(10000)
     
-    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    member_ids = [m["_id"] for m in members]
+    member_user_ids = [str(m.get("user_id")) for m in members if m.get("user_id")]
+    member_str_ids = [str(m["_id"]) for m in members]
     
-    # Get parcels with minimum carbon score
+    # Get parcels with minimum carbon score - search by member_id OR farmer_id
     eligible_parcels = await db.parcels.find({
-        "farmer_id": {"$in": member_user_ids},
+        "$or": [
+            {"member_id": {"$in": member_ids}},
+            {"farmer_id": {"$in": member_user_ids + member_str_ids}},
+            {"coop_id": coop_id}
+        ],
         "carbon_score": {"$gte": lot.min_carbon_score}
     }).to_list(10000)
     
