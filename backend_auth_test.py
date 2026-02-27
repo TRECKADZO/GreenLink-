@@ -227,7 +227,7 @@ def test_different_user_types():
         {
             "name": "acheteur",
             "data": {
-                "phone_number": "+225 08 11 22 33 44",
+                "phone_number": "+22508112233445",
                 "password": "acheteur123",
                 "full_name": "Test Acheteur",
                 "user_type": "acheteur"
@@ -237,7 +237,7 @@ def test_different_user_types():
         {
             "name": "entreprise_rse",
             "data": {
-                "phone_number": "+225 09 55 66 77 88",
+                "phone_number": "+22509556677889",
                 "password": "rse123",
                 "full_name": "Test Entreprise RSE",
                 "user_type": "entreprise_rse"
@@ -247,7 +247,7 @@ def test_different_user_types():
         {
             "name": "fournisseur",
             "data": {
-                "phone_number": "+225 07 99 88 77 66",
+                "phone_number": "+22507998877667",
                 "password": "fournisseur123",
                 "full_name": "Test Fournisseur",
                 "user_type": "fournisseur"
