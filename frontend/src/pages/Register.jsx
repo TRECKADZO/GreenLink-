@@ -5,8 +5,8 @@ import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Badge } from '../components/ui/badge';
-import { Sprout, Phone, Lock, User, Mail } from 'lucide-react';
+import { Checkbox } from '../components/ui/checkbox';
+import { Sprout, Phone, Lock, User, Mail, FileText, Shield } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const userTypes = [
@@ -20,17 +20,29 @@ const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
   const { toast } = useToast();
-  const [contactMethod, setContactMethod] = useState('phone'); // 'phone' or 'email'
+  const [contactMethod, setContactMethod] = useState('phone');
   const [formData, setFormData] = useState({
     identifier: '',
     password: '',
     fullName: '',
     userType: ''
   });
+  const [acceptConditions, setAcceptConditions] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!acceptConditions || !acceptPrivacy) {
+      toast({
+        title: 'Acceptation requise',
+        description: 'Vous devez accepter les conditions d\'utilisation et la politique de confidentialité',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setLoading(true);
 
     const result = await register(
@@ -38,7 +50,8 @@ const Register = () => {
       formData.password,
       formData.fullName,
       formData.userType,
-      contactMethod === 'email'
+      contactMethod === 'email',
+      { acceptedConditions: true, acceptedPrivacy: true, acceptedAt: new Date().toISOString() }
     );
 
     setLoading(false);
@@ -57,6 +70,8 @@ const Register = () => {
       });
     }
   };
+
+  const canSubmit = formData.userType && formData.fullName && formData.identifier && formData.password && acceptConditions && acceptPrivacy;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2d5a4d] via-[#235043] to-[#1a4038] flex items-center justify-center p-6">
@@ -85,6 +100,7 @@ const Register = () => {
                       ? 'border-[#2d5a4d] bg-[#2d5a4d]/5'
                       : 'border-gray-200 hover:border-[#2d5a4d]/50'
                   }`}
+                  data-testid={`user-type-${type.value}`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">{type.icon}</span>
@@ -109,6 +125,7 @@ const Register = () => {
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 className="pl-10"
                 required
+                data-testid="fullname-input"
               />
             </div>
           </div>
@@ -148,6 +165,7 @@ const Register = () => {
                   onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
                   className="pl-10"
                   required
+                  data-testid="phone-input"
                 />
                 <p className="text-xs text-gray-500 mt-1">Format: +225XXXXXXXXXX ou XXXXXXXXXX</p>
               </div>
@@ -161,6 +179,7 @@ const Register = () => {
                   onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
                   className="pl-10"
                   required
+                  data-testid="email-input"
                 />
               </div>
             )}
@@ -180,17 +199,73 @@ const Register = () => {
                 className="pl-10"
                 required
                 minLength={6}
+                data-testid="password-input"
               />
+            </div>
+          </div>
+
+          {/* Terms & Privacy Acceptance */}
+          <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#2d5a4d]" />
+              Acceptation des conditions
+            </h3>
+            
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="conditions"
+                checked={acceptConditions}
+                onCheckedChange={setAcceptConditions}
+                data-testid="accept-conditions"
+              />
+              <label htmlFor="conditions" className="text-sm text-gray-700 cursor-pointer">
+                J'accepte les{' '}
+                <Link 
+                  to="/conditions" 
+                  target="_blank"
+                  className="text-[#2d5a4d] font-semibold hover:underline"
+                >
+                  Conditions Générales d'Utilisation
+                </Link>
+                {' '}*
+              </label>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="privacy"
+                checked={acceptPrivacy}
+                onCheckedChange={setAcceptPrivacy}
+                data-testid="accept-privacy"
+              />
+              <label htmlFor="privacy" className="text-sm text-gray-700 cursor-pointer">
+                J'accepte la{' '}
+                <Link 
+                  to="/confidentialite" 
+                  target="_blank"
+                  className="text-[#2d5a4d] font-semibold hover:underline"
+                >
+                  Politique de Confidentialité
+                </Link>
+                {' '}et je consens au traitement de mes données personnelles *
+              </label>
             </div>
           </div>
 
           <Button
             type="submit"
             className="w-full bg-[#2d5a4d] hover:bg-[#1a4038] text-white py-6 text-lg"
-            disabled={loading || !formData.userType}
+            disabled={loading || !canSubmit}
+            data-testid="submit-register"
           >
             {loading ? 'Création en cours...' : 'Créer mon compte'}
           </Button>
+
+          {!canSubmit && formData.userType && (
+            <p className="text-xs text-center text-amber-600">
+              Veuillez accepter les conditions pour continuer
+            </p>
+          )}
         </form>
 
         <div className="mt-6 text-center">
