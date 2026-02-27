@@ -135,6 +135,10 @@ Build a comprehensive agritech platform connecting:
 - `product_reviews` - Product ratings and reviews
 - `wishlists` - User wishlists
 - `partners` - Platform partners
+- `coop_members` - Cooperative members
+- `coop_lots` - Grouped sale lots for cooperatives
+- `coop_distributions` - Carbon premium distributions
+- `coop_agents` - Field agents for cooperatives
 
 ## Prioritized Backlog
 
@@ -151,12 +155,14 @@ Build a comprehensive agritech platform connecting:
 - ✅ Camera & Geolocation for parcel photos (mobile)
 - ✅ Firebase Cloud Messaging (FCM) service with Expo fallback
 - ✅ EAS Build configuration for production APK/IPA
+- ✅ **Coopérative agricole profile** - Complete backend + frontend dashboard
 
 ### P1 (High Priority)
 - Real Orange Money API integration (requires merchant registration)
 - Real USSD/SMS integration (Orange API)
 - PDF certificate generation
 - ⚠️ Configure Firebase project and upload `google-services.json` for production FCM
+- Mobile app for cooperative field agents
 
 ### P2 (Medium Priority)
 - Product price history tracking
