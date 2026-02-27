@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -7,10 +7,14 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useOffline } from '../../context/OfflineContext';
 import { Button } from '../../components/UI';
 import { farmerApi } from '../../services/api';
+import { cameraService } from '../../services/camera';
+import { locationService } from '../../services/location';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const REGIONS = [
@@ -30,6 +34,8 @@ const CROP_TYPES = [
 const AddParcelScreen = ({ navigation }) => {
   const { isOnline, addPendingAction } = useOffline();
   const [loading, setLoading] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [photos, setPhotos] = useState([]);
   const [formData, setFormData] = useState({
     location: '',
     region: '',
@@ -39,7 +45,60 @@ const AddParcelScreen = ({ navigation }) => {
     has_shade_trees: false,
     uses_organic_fertilizer: false,
     has_erosion_control: false,
+    latitude: null,
+    longitude: null,
   });
+
+  // Obtenir la position automatiquement au chargement
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = async () => {
+    setGettingLocation(true);
+    try {
+      const location = await locationService.getCurrentLocation();
+      if (location) {
+        // Obtenir l'adresse
+        const address = await locationService.reverseGeocode(
+          location.latitude,
+          location.longitude
+        );
+        
+        setFormData((prev) => ({
+          ...prev,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          location: address?.formattedAddress || prev.location,
+          region: address?.region || prev.region,
+        }));
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+    } finally {
+      setGettingLocation(false);
+    }
+  };
+
+  const handleAddPhoto = async () => {
+    if (photos.length >= 5) {
+      Alert.alert('Limite atteinte', 'Vous pouvez ajouter maximum 5 photos');
+      return;
+    }
+
+    const image = await cameraService.showImagePicker({
+      allowsEditing: true,
+      quality: 0.6,
+    });
+
+    if (image) {
+      setPhotos((prev) => [...prev, image]);
+    }
+  };
+
+  const handleRemovePhoto = (index) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async () => {
     // Validation
@@ -52,16 +111,31 @@ const AddParcelScreen = ({ navigation }) => {
       ...formData,
       size: parseFloat(formData.size),
       planting_year: formData.planting_year ? parseInt(formData.planting_year) : null,
+      photos: photos.map((p) => p.uri), // URIs des photos
     };
 
     setLoading(true);
 
     if (!isOnline) {
-      // Mode offline: sauvegarder pour synchronisation ultérieure
+      // Mode offline: sauvegarder localement
+      // Sauvegarder les photos localement
+      const localPhotos = [];
+      for (const photo of photos) {
+        const localUri = await cameraService.saveImageLocally(
+          photo.uri,
+          `parcel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`
+        );
+        if (localUri) {
+          localPhotos.push(localUri);
+        }
+      }
+      parcelData.photos = localPhotos;
+
       await addPendingAction({
         type: 'CREATE_PARCEL',
         data: parcelData,
       });
+      
       Alert.alert(
         'Enregistré localement',
         'Votre parcelle sera synchronisée dès que vous serez connecté.',
@@ -72,6 +146,20 @@ const AddParcelScreen = ({ navigation }) => {
     }
 
     try {
+      // Upload des photos si en ligne
+      const uploadedPhotos = [];
+      for (const photo of photos) {
+        try {
+          const result = await cameraService.uploadImage(photo.uri, '/upload');
+          if (result?.url) {
+            uploadedPhotos.push(result.url);
+          }
+        } catch (uploadError) {
+          console.error('Photo upload failed:', uploadError);
+        }
+      }
+      parcelData.photos = uploadedPhotos;
+
       await farmerApi.createParcel(parcelData);
       Alert.alert(
         'Succès',
@@ -101,6 +189,34 @@ const AddParcelScreen = ({ navigation }) => {
 
       {/* Form */}
       <View style={styles.form}>
+        {/* GPS Location */}
+        <View style={styles.gpsSection}>
+          <View style={styles.gpsHeader}>
+            <Text style={styles.gpsIcon}>📍</Text>
+            <View style={styles.gpsInfo}>
+              <Text style={styles.gpsTitle}>Position GPS</Text>
+              {formData.latitude ? (
+                <Text style={styles.gpsCoords}>
+                  {locationService.formatCoordinates(formData.latitude, formData.longitude)}
+                </Text>
+              ) : (
+                <Text style={styles.gpsNoData}>Non disponible</Text>
+              )}
+            </View>
+            <TouchableOpacity 
+              style={styles.gpsButton}
+              onPress={getCurrentLocation}
+              disabled={gettingLocation}
+            >
+              {gettingLocation ? (
+                <ActivityIndicator color={COLORS.primary} size="small" />
+              ) : (
+                <Text style={styles.gpsButtonText}>📡</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Location */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Localisation / Village *</Text>
@@ -175,6 +291,33 @@ const AddParcelScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+
+        {/* Photos */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Photos de la parcelle</Text>
+          <Text style={styles.photoHint}>Ajoutez jusqu'à 5 photos de votre exploitation</Text>
+          
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
+            {photos.map((photo, index) => (
+              <View key={index} style={styles.photoContainer}>
+                <Image source={{ uri: photo.uri }} style={styles.photoThumb} />
+                <TouchableOpacity
+                  style={styles.photoRemove}
+                  onPress={() => handleRemovePhoto(index)}
+                >
+                  <Text style={styles.photoRemoveText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            
+            {photos.length < 5 && (
+              <TouchableOpacity style={styles.addPhotoButton} onPress={handleAddPhoto}>
+                <Text style={styles.addPhotoIcon}>📷</Text>
+                <Text style={styles.addPhotoText}>Ajouter</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
         </View>
 
         {/* Planting Year */}
@@ -283,6 +426,49 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     paddingTop: SPACING.xl,
   },
+  gpsSection: {
+    backgroundColor: COLORS.gray[100],
+    borderRadius: 12,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  gpsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  gpsIcon: {
+    fontSize: 32,
+    marginRight: SPACING.md,
+  },
+  gpsInfo: {
+    flex: 1,
+  },
+  gpsTitle: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: 'bold',
+    color: COLORS.gray[800],
+  },
+  gpsCoords: {
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.success,
+    marginTop: 2,
+  },
+  gpsNoData: {
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.gray[500],
+    marginTop: 2,
+  },
+  gpsButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gpsButtonText: {
+    fontSize: 20,
+  },
   inputContainer: {
     marginBottom: SPACING.lg,
   },
@@ -350,6 +536,58 @@ const styles = StyleSheet.create({
   cropLabelSelected: {
     color: COLORS.white,
     fontWeight: 'bold',
+  },
+  photoHint: {
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.gray[500],
+    marginBottom: SPACING.sm,
+  },
+  photoScroll: {
+    flexDirection: 'row',
+  },
+  photoContainer: {
+    marginRight: SPACING.sm,
+    position: 'relative',
+  },
+  photoThumb: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  photoRemove: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoRemoveText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  addPhotoButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: COLORS.gray[300],
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.gray[50],
+  },
+  addPhotoIcon: {
+    fontSize: 24,
+  },
+  addPhotoText: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.gray[500],
+    marginTop: 2,
   },
   sectionTitle: {
     fontSize: FONTS.sizes.lg,
