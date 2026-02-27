@@ -186,7 +186,16 @@ const AdminDashboard = () => {
                 <p className="text-gray-600">Gestion de la plateforme GreenLink</p>
               </div>
             </div>
-            <Badge className="bg-red-100 text-red-700">Super Admin</Badge>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={() => navigate('/admin/analytics')}
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Centre de Données Stratégiques
+              </Button>
+              <Badge className="bg-red-100 text-red-700">Super Admin</Badge>
+            </div>
           </div>
 
           {/* Stats Cards */}
