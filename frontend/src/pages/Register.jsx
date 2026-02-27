@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
-import { Sprout, Phone, Lock, User, Briefcase } from 'lucide-react';
+import { Sprout, Phone, Lock, User, Mail } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const userTypes = [
@@ -20,8 +20,9 @@ const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
   const { toast } = useToast();
+  const [contactMethod, setContactMethod] = useState('phone'); // 'phone' or 'email'
   const [formData, setFormData] = useState({
-    phoneNumber: '',
+    identifier: '',
     password: '',
     fullName: '',
     userType: ''
@@ -33,10 +34,11 @@ const Register = () => {
     setLoading(true);
 
     const result = await register(
-      formData.phoneNumber,
+      formData.identifier,
       formData.password,
       formData.fullName,
-      formData.userType
+      formData.userType,
+      contactMethod === 'email'
     );
 
     setLoading(false);
@@ -111,22 +113,57 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Phone Number */}
+          {/* Contact Method Toggle */}
           <div>
-            <Label htmlFor="phoneNumber">Numéro de téléphone *</Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <Input
-                id="phoneNumber"
-                type="tel"
-                placeholder="+225 0707070707"
-                value={formData.phoneNumber}
-                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                className="pl-10"
-                required
-              />
+            <Label className="mb-3 block">Méthode de contact *</Label>
+            <div className="flex gap-2 mb-3">
+              <Button
+                type="button"
+                variant={contactMethod === 'phone' ? 'default' : 'outline'}
+                className={contactMethod === 'phone' ? 'bg-[#2d5a4d] hover:bg-[#1a4038]' : ''}
+                onClick={() => setContactMethod('phone')}
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                Téléphone
+              </Button>
+              <Button
+                type="button"
+                variant={contactMethod === 'email' ? 'default' : 'outline'}
+                className={contactMethod === 'email' ? 'bg-[#2d5a4d] hover:bg-[#1a4038]' : ''}
+                onClick={() => setContactMethod('email')}
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Email
+              </Button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Format: +225XXXXXXXXXX ou XXXXXXXXXX</p>
+
+            {/* Phone or Email Input */}
+            {contactMethod === 'phone' ? (
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <Input
+                  type="tel"
+                  placeholder="+225 0707070707"
+                  value={formData.identifier}
+                  onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+                  className="pl-10"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">Format: +225XXXXXXXXXX ou XXXXXXXXXX</p>
+              </div>
+            ) : (
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <Input
+                  type="email"
+                  placeholder="exemple@email.com"
+                  value={formData.identifier}
+                  onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            )}
           </div>
 
           {/* Password */}
