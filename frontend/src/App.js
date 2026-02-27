@@ -1,11 +1,14 @@
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 import { Toaster } from "./components/ui/sonner";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import CheckoutPage from "./pages/CheckoutPage";
+import BuyerOrders from "./pages/buyer/BuyerOrders";
 
 // Supplier Routes
 import SupplierDashboard from "./pages/supplier/Dashboard";
@@ -29,33 +32,37 @@ function App() {
   return (
     <div className="App">
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            
-            {/* Supplier/Fournisseur Routes */}
-            <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
-            <Route path="/supplier/products" element={<MyProducts />} />
-            <Route path="/supplier/marketplace" element={<Marketplace />} />
-            <Route path="/supplier/orders" element={<Orders />} />
-            <Route path="/supplier/messages" element={<Messages />} />
-            <Route path="/supplier/notifications" element={<Notifications />} />
+        <CartProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              
+              {/* Supplier/Fournisseur Routes */}
+              <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
+              <Route path="/supplier/products" element={<MyProducts />} />
+              <Route path="/supplier/marketplace" element={<Marketplace />} />
+              <Route path="/supplier/orders" element={<Orders />} />
+              <Route path="/supplier/messages" element={<Messages />} />
+              <Route path="/supplier/notifications" element={<Notifications />} />
 
-            {/* Farmer/Producteur Routes */}
-            <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
-            <Route path="/farmer/ussd" element={<USSDSimulator />} />
+              {/* Farmer/Producteur Routes */}
+              <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
+              <Route path="/farmer/ussd" element={<USSDSimulator />} />
 
-            {/* Buyer/Acheteur Routes */}
-            <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
+              {/* Buyer/Acheteur Routes */}
+              <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
+              <Route path="/buyer/orders" element={<BuyerOrders />} />
 
-            {/* RSE/Enterprise Routes */}
-            <Route path="/rse/dashboard" element={<RSEDashboard />} />
-          </Routes>
-        </BrowserRouter>
-        <Toaster />
+              {/* RSE/Enterprise Routes */}
+              <Route path="/rse/dashboard" element={<RSEDashboard />} />
+            </Routes>
+          </BrowserRouter>
+          <Toaster />
+        </CartProvider>
       </AuthProvider>
     </div>
   );
