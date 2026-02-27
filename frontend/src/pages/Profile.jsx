@@ -8,8 +8,23 @@ import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { Textarea } from '../components/ui/textarea';
 import Navbar from '../components/Navbar';
-import { User, Phone, Sprout, Building2, Package, LogOut, Edit, Save } from 'lucide-react';
+import { 
+  User, 
+  Phone, 
+  Sprout, 
+  Building2, 
+  Package, 
+  LogOut, 
+  Edit, 
+  Save, 
+  Trash2,
+  AlertTriangle,
+  Shield
+} from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Profile = () => {
   const { user, logout, updateProfile } = useAuth();
@@ -17,6 +32,9 @@ const Profile = () => {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
     // Producteur
@@ -48,7 +66,6 @@ const Profile = () => {
   const handleSave = async () => {
     setLoading(true);
     
-    // Prepare data based on user type
     const updateData = {
       full_name: formData.full_name
     };
@@ -87,12 +104,49 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'SUPPRIMER') {
+      toast({
+        title: 'Confirmation invalide',
+        description: 'Veuillez taper SUPPRIMER pour confirmer',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/api/auth/account`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast({
+        title: 'Compte supprimé',
+        description: 'Votre compte a été supprimé définitivement'
+      });
+      
+      logout();
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.detail || 'Impossible de supprimer le compte',
+        variant: 'destructive'
+      });
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   const getUserTypeIcon = () => {
     switch (user.user_type) {
       case 'producteur': return <Sprout className="w-6 h-6" />;
       case 'acheteur': return <Building2 className="w-6 h-6" />;
       case 'entreprise_rse': return <Building2 className="w-6 h-6" />;
       case 'fournisseur': return <Package className="w-6 h-6" />;
+      case 'admin': return <Shield className="w-6 h-6" />;
       default: return <User className="w-6 h-6" />;
     }
   };
@@ -103,6 +157,7 @@ const Profile = () => {
       case 'acheteur': return 'Acheteur';
       case 'entreprise_rse': return 'Entreprise RSE';
       case 'fournisseur': return 'Fournisseur';
+      case 'admin': return 'Administrateur';
       default: return user.user_type;
     }
   };
@@ -325,9 +380,100 @@ const Profile = () => {
                 {user.is_active ? 'Actif' : 'Inactif'}
               </Badge>
             </div>
+            {user.legal_acceptance && (
+              <>
+                <div>
+                  <p className="text-gray-600">Conditions acceptées</p>
+                  <p className="font-medium text-green-600">✓ Acceptées</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Date d'acceptation</p>
+                  <p className="font-medium">
+                    {user.legal_acceptance.acceptedAt 
+                      ? new Date(user.legal_acceptance.acceptedAt).toLocaleDateString('fr-FR')
+                      : new Date(user.created_at).toLocaleDateString('fr-FR')}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </Card>
+
+        {/* Danger Zone - Delete Account */}
+        <Card className="p-6 mt-6 border-red-200 bg-red-50">
+          <h3 className="text-lg font-semibold text-red-800 mb-2 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            Zone de danger
+          </h3>
+          <p className="text-sm text-red-700 mb-4">
+            La suppression de votre compte est irréversible. Toutes vos données seront définitivement effacées.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => setShowDeleteModal(true)}
+            className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+            data-testid="delete-account-btn"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Supprimer mon compte
+          </Button>
+        </Card>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-8 h-8 text-red-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                Supprimer votre compte?
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Cette action est <strong>irréversible</strong>. Toutes vos données, commandes, 
+                et informations seront définitivement supprimées.
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <Label className="text-sm text-gray-700">
+                Tapez <strong>SUPPRIMER</strong> pour confirmer
+              </Label>
+              <Input
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder="SUPPRIMER"
+                className="mt-2"
+                data-testid="delete-confirmation-input"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmation('');
+                }}
+                className="flex-1"
+                disabled={deleting}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmation !== 'SUPPRIMER' || deleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                data-testid="confirm-delete-btn"
+              >
+                {deleting ? 'Suppression...' : 'Supprimer définitivement'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
