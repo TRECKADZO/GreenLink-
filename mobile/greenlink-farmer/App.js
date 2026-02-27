@@ -13,9 +13,11 @@ import { OfflineProvider } from './src/context/OfflineContext';
 import { notificationService } from './src/services/notifications';
 import { syncService } from './src/services/sync';
 
-// Screens
+// Screens - Auth
 import LoginScreen from './src/screens/auth/LoginScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
+
+// Screens - Main
 import HomeScreen from './src/screens/home/HomeScreen';
 import ParcelsScreen from './src/screens/parcels/ParcelsScreen';
 import AddParcelScreen from './src/screens/parcels/AddParcelScreen';
@@ -23,6 +25,16 @@ import HarvestScreen from './src/screens/harvest/HarvestScreen';
 import PaymentsScreen from './src/screens/payments/PaymentsScreen';
 import NotificationsScreen from './src/screens/notifications/NotificationsScreen';
 import ProfileScreen from './src/screens/profile/ProfileScreen';
+
+// Screens - Marketplace
+import {
+  MarketplaceScreen,
+  ProductDetailScreen,
+  CartScreen,
+  CheckoutScreen,
+  OrdersScreen,
+  WishlistScreen,
+} from './src/screens/marketplace';
 
 import { Loader } from './src/components/UI';
 import { COLORS } from './src/config';
