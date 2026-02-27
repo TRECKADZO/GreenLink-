@@ -1,126 +1,173 @@
 # GreenLink Farmer - Application Mobile
 
-Application mobile React Native pour les producteurs agricoles en Côte d'Ivoire.
+Application mobile React Native pour les agriculteurs de GreenLink en Côte d'Ivoire.
 
-## Caractéristiques
+## 🌱 Fonctionnalités
 
-### 🌱 Fonctionnalités
-- **Authentification** : Connexion par téléphone ou email
-- **Gestion des Parcelles** : Déclaration et suivi des exploitations
-- **Déclaration de Récoltes** : Enregistrement de la production
-- **Paiements Orange Money** : Demande et suivi des primes carbone
-- **Notifications** : Alertes et messages importants
-- **Mode Hors-ligne** : Fonctionne sans connexion internet
+- **Authentification** : Connexion par téléphone/email
+- **Gestion des parcelles** : Déclaration avec photos et géolocalisation GPS
+- **Suivi des récoltes** : Enregistrement de la production
+- **Score carbone** : Calcul automatique et primes associées
+- **Paiements** : Suivi des primes Orange Money
+- **Notifications push** : Alertes pour nouvelles primes, statuts, etc.
+- **Mode hors-ligne** : Fonctionne sans connexion internet
+- **Synchronisation automatique** : Sync en arrière-plan quand connecté
 
-### 📱 Optimisé pour
-- Faible connectivité (2G/3G)
-- Écrans tactiles simples
-- Interface style USSD
-- Économie de données
-
-## Installation
-
-### Prérequis
-- Node.js 18+
-- npm ou yarn
-- Expo CLI
-- Expo Go (pour le test)
-
-### Démarrage rapide
+## 📱 Installation pour développement
 
 ```bash
-# Aller dans le dossier
-cd mobile/greenlink-farmer
-
 # Installer les dépendances
-npm install
+cd /app/mobile/greenlink-farmer
+yarn install
 
-# Démarrer en mode développement
+# Lancer en mode développement
 npx expo start
+
+# Pour Android
+npx expo start --android
+
+# Pour iOS (Mac requis)
+npx expo start --ios
 ```
 
-### Test sur appareil
-1. Téléchargez "Expo Go" sur votre téléphone
-2. Scannez le QR code affiché
-3. L'application se charge automatiquement
+## 🔨 Build de production avec EAS
 
-## Structure du projet
+### Prérequis
+
+1. **Créer un compte Expo** : https://expo.dev/signup
+2. **Se connecter à EAS** :
+   ```bash
+   npx eas-cli login
+   ```
+
+3. **Configurer le projet** (première fois uniquement) :
+   ```bash
+   npx eas-cli init
+   ```
+
+### Build Android (APK)
+
+```bash
+# Build de preview (pour tests internes)
+npx eas-cli build --platform android --profile preview
+
+# Build de production
+npx eas-cli build --platform android --profile production
+```
+
+Le fichier APK sera disponible en téléchargement sur le dashboard Expo.
+
+### Build iOS (IPA)
+
+Nécessite un compte Apple Developer ($99/an).
+
+```bash
+# Build pour simulateur
+npx eas-cli build --platform ios --profile development
+
+# Build de production
+npx eas-cli build --platform ios --profile production
+```
+
+## 📲 Distribution aux agriculteurs
+
+### Option 1 : QR Code (recommandé)
+
+Après le build, Expo génère un QR code que les agriculteurs peuvent scanner :
+
+1. Ouvrir l'app **Expo Go** sur leur téléphone
+2. Scanner le QR code
+3. L'application se télécharge automatiquement
+
+### Option 2 : Lien de téléchargement direct
+
+Expo fournit un lien `.apk` direct après chaque build :
+```
+https://expo.dev/artifacts/eas/xxxxx.apk
+```
+
+Partagez ce lien via WhatsApp, SMS, ou affichez-le sur votre site.
+
+### Option 3 : Google Play Store
+
+Pour une distribution officielle sur le Play Store :
+
+1. Créer un compte Google Play Console ($25 une fois)
+2. Configurer `eas.json` avec les credentials
+3. ```bash
+   npx eas-cli submit --platform android
+   ```
+
+## ⚙️ Configuration requise
+
+### Variables d'environnement
+
+L'application utilise l'API backend GreenLink. L'URL est configurée dans :
+- `/app/mobile/greenlink-farmer/src/config.js`
+
+```javascript
+API_URL: 'https://greenlink-farmer-app.preview.emergentagent.com/api'
+```
+
+### Notifications Push
+
+Pour activer les notifications push en production :
+
+1. Créer un projet Firebase
+2. Télécharger `google-services.json`
+3. Placer le fichier à la racine du projet
+4. Configurer les credentials dans EAS
+
+## 🧪 Test de l'application
+
+### Credentials de test
+
+```
+Email: farmer1@test.com
+Mot de passe: test123
+```
+
+### Tester les notifications
+
+```bash
+# Envoyer une notification de test via Expo
+npx expo push:send --to ExponentPushToken[xxx] --title "Test" --body "Notification de test"
+```
+
+## 📁 Structure du projet
 
 ```
 greenlink-farmer/
-├── App.js                    # Point d'entrée
-├── src/
-│   ├── config.js            # Configuration (API, couleurs, etc.)
-│   ├── components/
-│   │   └── UI.js            # Composants réutilisables
-│   ├── context/
-│   │   ├── AuthContext.js   # Gestion authentification
-│   │   └── OfflineContext.js # Mode hors-ligne
-│   ├── services/
-│   │   └── api.js           # Appels API
-│   └── screens/
-│       ├── auth/            # Connexion/Inscription
-│       ├── home/            # Écran principal
-│       ├── parcels/         # Gestion parcelles
-│       ├── harvest/         # Déclaration récoltes
-│       ├── payments/        # Paiements
-│       ├── notifications/   # Notifications
-│       └── profile/         # Profil utilisateur
-└── assets/                  # Images et icônes
+├── App.js                 # Point d'entrée avec navigation
+├── app.json               # Configuration Expo
+├── eas.json               # Configuration EAS Build
+├── assets/                # Icônes et images
+└── src/
+    ├── components/        # Composants UI réutilisables
+    ├── config.js          # Configuration (API URL, couleurs)
+    ├── context/           # Contexts React (Auth, Offline)
+    ├── screens/           # Écrans de l'application
+    │   ├── auth/          # Login, Register
+    │   ├── home/          # Accueil
+    │   ├── parcels/       # Gestion parcelles
+    │   ├── harvest/       # Déclaration récoltes
+    │   ├── payments/      # Historique paiements
+    │   ├── notifications/ # Notifications
+    │   └── profile/       # Profil utilisateur
+    └── services/          # Services API et utilitaires
+        ├── api.js         # Client HTTP
+        ├── camera.js      # Service caméra
+        ├── location.js    # Service géolocalisation
+        ├── notifications.js # Push notifications
+        └── sync.js        # Synchronisation offline
 ```
 
-## Configuration API
+## 🆘 Support
 
-L'application se connecte à l'API backend GreenLink. 
-Modifier `src/config.js` pour changer l'URL :
+Pour toute question :
+- **Téléphone** : +225 07 87 76 10 23
+- **Email** : support@greenlink.ci
 
-```javascript
-export const CONFIG = {
-  API_URL: 'https://votre-api.com/api',
-  // ...
-};
-```
+## 📜 Licence
 
-## Mode Hors-ligne
-
-L'application supporte le mode hors-ligne :
-- Les données sont mises en cache localement
-- Les actions sont enregistrées et synchronisées plus tard
-- Indicateur visuel du statut de connexion
-
-## Build Production
-
-### Android (APK)
-```bash
-npx expo build:android -t apk
-```
-
-### iOS
-```bash
-npx expo build:ios
-```
-
-### EAS Build (recommandé)
-```bash
-npx eas build --platform all
-```
-
-## Publication
-
-### Google Play Store
-1. Générer un APK signé
-2. Créer une fiche sur Google Play Console
-3. Soumettre pour review
-
-### Apple App Store
-1. Générer un build iOS
-2. Soumettre via App Store Connect
-3. Attendre la validation Apple
-
-## Contact
-
-Support : +225 07 87 76 10 23
-Email : support@greenlink-agritech.com
-
----
-© 2026 GreenLink CI - Agriculture durable en Côte d'Ivoire
+Propriétaire - GreenLink Agritech © 2026
