@@ -199,7 +199,8 @@ async def get_traceability_report(
     current_user: dict = Depends(get_current_user)
 ):
     """Générer rapport de traçabilité EUDR"""
-    order = await db.buyer_orders.find_one({"_id": ObjectId(order_id)})\n    if not order:
+    order = await db.buyer_orders.find_one({"_id": ObjectId(order_id)})
+    if not order:
         raise HTTPException(status_code=404, detail="Commande non trouvée")
     
     # Get all matched parcels
