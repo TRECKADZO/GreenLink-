@@ -14,7 +14,9 @@ import {
   Award,
   Plus,
   Smartphone,
-  CheckCircle
+  CheckCircle,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -23,7 +25,9 @@ const FarmerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState(null);
+  const [smsHistory, setSmsHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sendingSummary, setSendingSummary] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -32,6 +36,7 @@ const FarmerDashboard = () => {
       return;
     }
     fetchDashboard();
+    fetchSmsHistory();
   }, [user, authLoading]);
 
   const fetchDashboard = async () => {
@@ -42,6 +47,37 @@ const FarmerDashboard = () => {
       console.error('Error fetching dashboard:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSmsHistory = async () => {
+    try {
+      const data = await greenlinkApi.getSmsHistory();
+      setSmsHistory(data.sms_history || []);
+    } catch (error) {
+      console.error('Error fetching SMS history:', error);
+    }
+  };
+
+  const sendWeeklySummary = async () => {
+    setSendingSummary(true);
+    try {
+      const result = await greenlinkApi.sendWeeklySummary();
+      if (result.success) {
+        toast({
+          title: 'SMS envoyé!',
+          description: 'Votre résumé hebdomadaire a été envoyé par SMS'
+        });
+        fetchSmsHistory(); // Refresh SMS history
+      }
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'envoyer le SMS',
+        variant: 'destructive'
+      });
+    } finally {
+      setSendingSummary(false);
     }
   };
 
