@@ -179,25 +179,18 @@ Supplier: supplier1@test.com / test123
 
 ## Recent Changes (February 27, 2026)
 1. **Carbon Marketplace** - New dedicated page at `/carbon-marketplace` accessible to all users
-   - RSE companies can purchase credits
-   - Farmers see info about their carbon potential
-2. **Partners Section** - Replaced "Nos membres actifs" with "Nos Partenaires"
-   - Added Orange Côte d'Ivoire as first partner
-   - Dynamic loading from database
-3. **Admin Dashboard** - Super admin at `/admin/dashboard`
-   - Manage partners (CRUD operations)
-   - Admin account: klenakan.eric@gmail.com
+2. **Partners Section** - Replaced "Nos membres actifs" with "Nos Partenaires" (Orange CI)
+3. **Admin Dashboard** - Super admin at `/admin/dashboard` for partner management
 4. **Legal Pages** - Created `/conditions`, `/confidentialite`, `/securite`
 5. **Removed Emergent Badge** - Watermark removed from footer
-6. **Updated Navigation** - Added "Crédits Carbone" link in navbar
-7. **Updated Footer** - Links to legal pages and marketplaces
-8. **Legal Acceptance at Registration** - Users must accept Terms & Privacy Policy
-   - Checkboxes with links to legal pages
-   - Acceptance stored in user profile with timestamp
-9. **Account Deletion** - Users can delete their own account
-   - "Zone de danger" section on profile page
-   - Confirmation modal requiring "SUPPRIMER" to confirm
-   - Deletes all user data (orders, products, reviews, etc.)
+6. **Legal Acceptance at Registration** - Checkboxes for Terms & Privacy
+7. **Account Deletion** - Users can delete their own account
+8. **Mobile App (React Native)** - Complete farmer-focused mobile application
+   - Location: `/app/mobile/greenlink-farmer/`
+   - Features: Authentication, Parcels, Harvests, Payments, Notifications
+   - Optimized for low connectivity
+   - Offline mode support
+   - USSD-like simple interface
 
 ## Files of Reference
 - `/app/backend/routes/admin.py` - Admin and partners routes
