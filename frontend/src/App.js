@@ -37,6 +37,7 @@ import CarbonMarketplace from "./pages/rse/CarbonMarketplace";
 
 // Admin Routes
 import AdminDashboard from "./pages/admin/Dashboard";
+import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 
 // Cooperative Routes
 import CooperativeDashboard from "./pages/cooperative/Dashboard";
