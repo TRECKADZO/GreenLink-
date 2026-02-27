@@ -411,19 +411,6 @@ async def simulate_payment_completion(
     # Create simulated transaction ID
     transaction_id = f"SIMTX_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
     
-    # Call our own webhook handler
-    webhook_payload = {
-        "merchant_reference": payment["merchant_reference"],
-        "transaction_id": transaction_id,
-        "status": status_map.get(action, "SUCCESSFUL"),
-        "amount": payment["amount"]
-    }
-    
-    # Update payment directly (simulating webhook)
-    import json
-    from starlette.requests import Request as StarletteRequest
-    from starlette.datastructures import Headers
-    
     # Process the simulated payment
     new_status = "paid" if action == "success" else ("failed" if action == "fail" else "cancelled")
     
@@ -455,7 +442,7 @@ async def simulate_payment_completion(
                     "title": "Paiement reçu (Simulation)",
                     "message": f"Paiement simulé de {order['total_amount']:,.0f} FCFA pour #{order['order_number']}",
                     "type": "payment",
-                    "action_url": f"/supplier/orders",
+                    "action_url": "/supplier/orders",
                     "created_at": datetime.utcnow(),
                     "is_read": False
                 })
