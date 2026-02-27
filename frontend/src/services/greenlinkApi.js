@@ -101,5 +101,20 @@ export const greenlinkApi = {
       headers: getAuthHeader()
     });
     return response.data;
+  },
+
+  // SMS Notifications APIs
+  getSmsHistory: async () => {
+    const response = await axios.get(`${API}/sms/history`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  sendWeeklySummary: async () => {
+    const response = await axios.post(`${API}/sms/send-weekly-summary`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
   }
 };
