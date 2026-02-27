@@ -264,6 +264,9 @@ const Navbar = () => {
           )}
         </div>
       </div>
+
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </nav>
   );
 };
