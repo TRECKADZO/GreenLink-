@@ -12,7 +12,7 @@ import { MessageSquare, Send, User } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
 const Messages = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [conversations, setConversations] = useState([]);
@@ -23,12 +23,13 @@ const Messages = () => {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
       navigate('/');
       return;
     }
     fetchConversations();
-  }, [user]);
+  }, [user, authLoading]);
 
   useEffect(() => {
     if (selectedConversation) {

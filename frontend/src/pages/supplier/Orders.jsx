@@ -11,7 +11,7 @@ import { ShoppingCart, Package, Clock, CheckCircle, Truck, XCircle } from 'lucid
 import { useToast } from '../../hooks/use-toast';
 
 const Orders = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [orders, setOrders] = useState([]);
@@ -19,12 +19,13 @@ const Orders = () => {
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
       navigate('/');
       return;
     }
     fetchOrders();
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchOrders = async () => {
     try {

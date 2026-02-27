@@ -11,13 +11,14 @@ import { Bell, ShoppingCart, MessageSquare, Package, CheckCheck } from 'lucide-r
 import { useToast } from '../../hooks/use-toast';
 
 const Notifications = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
       navigate('/');
       return;
@@ -27,7 +28,7 @@ const Notifications = () => {
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchNotifications = async () => {
     try {
