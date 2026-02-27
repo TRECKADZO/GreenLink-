@@ -34,9 +34,9 @@ def test_register_producteur():
     """Test 1: Register Endpoint - POST /api/auth/register (producteur)"""
     print("\n🧪 TEST 1: Register Producteur Account")
     
-    # Test data from review request
+    # Test data from review request (fixed phone format)
     register_data = {
-        "phone_number": "+225 07 12 34 56 78",
+        "phone_number": "+22507123456789",
         "password": "test123",
         "full_name": "Test Producteur",
         "user_type": "producteur"
