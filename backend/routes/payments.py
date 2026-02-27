@@ -353,7 +353,7 @@ async def payment_webhook(
                     "title": "Paiement reçu",
                     "message": f"Paiement de {order['total_amount']:,.0f} FCFA reçu pour commande #{order['order_number']}",
                     "type": "payment",
-                    "action_url": f"/supplier/orders",
+                    "action_url": "/supplier/orders",
                     "created_at": datetime.utcnow(),
                     "is_read": False
                 })
@@ -364,7 +364,7 @@ async def payment_webhook(
                     "title": "Paiement confirmé",
                     "message": f"Votre paiement de {order['total_amount']:,.0f} FCFA a été confirmé",
                     "type": "payment",
-                    "action_url": f"/buyer/orders",
+                    "action_url": "/buyer/orders",
                     "created_at": datetime.utcnow(),
                     "is_read": False
                 })
