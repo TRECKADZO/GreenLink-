@@ -17,11 +17,15 @@ import {
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import CartDrawer from './CartDrawer';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { cart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const menuRef = useRef(null);
 
   // Close menu when clicking outside
