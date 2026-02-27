@@ -181,6 +181,7 @@ Buyer: buyer@test.com / password123
 Farmer: farmer1@test.com / test123
 RSE: rse1@test.com / test123
 Supplier: supplier1@test.com / test123
+Cooperative: coop-gagnoa@test.com / password123
 ```
 
 ## Known Limitations
