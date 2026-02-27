@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from './ui/card';
 import { Sprout, Phone, MessageSquare, Zap } from 'lucide-react';
 import { Switch } from './ui/switch';
@@ -73,31 +74,54 @@ const Footer = () => {
             
             {/* Links */}
             <div>
+              <h4 className="font-semibold mb-4">Légal</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
-                    Conditions
-                  </a>
+                  <Link to="/conditions" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
+                    Conditions d'utilisation
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
-                    Confidentialité
-                  </a>
+                  <Link to="/confidentialite" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
+                    Politique de confidentialité
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
+                  <Link to="/securite" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
                     Sécurité
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
             
-            {/* Copyright */}
-            <div className="text-right">
-              <p className="text-white/60 text-sm">
-                © 2025 GreenLink. Agriculture durable.
-              </p>
+            {/* Quick Links */}
+            <div>
+              <h4 className="font-semibold mb-4">Navigation</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/marketplace" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
+                    Marketplace Intrants
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/carbon-marketplace" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
+                    Crédits Carbone
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/register" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
+                    S'inscrire
+                  </Link>
+                </li>
+              </ul>
             </div>
+          </div>
+          
+          {/* Copyright */}
+          <div className="border-t border-white/20 mt-8 pt-8 text-center">
+            <p className="text-white/60 text-sm">
+              © 2026 GreenLink CI. Agriculture durable pour la Côte d'Ivoire.
+            </p>
           </div>
         </div>
       </div>
