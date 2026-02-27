@@ -506,11 +506,12 @@ def test_user_type_protection():
             "delivery_location": "Test Location",
             "delivery_date": "2026-03-29T02:26:45.170304"
         }
+        print_info(f"Testing producer access to buyer endpoint - Expected: 403 Forbidden")
         response = make_request("POST", f"{BASE_URL}/greenlink/buyer/orders", 
                               json=valid_order_data, 
                               headers=headers)
         
-        print_info(f"Testing producer access to buyer endpoint - Expected: 403 Forbidden")
+        print_info(f"Response object: {response}")
         if response:
             print_info(f"Response status: {response.status_code}")
             if response.status_code == 403:
