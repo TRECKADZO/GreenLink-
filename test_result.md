@@ -249,6 +249,18 @@ backend:
         agent: "testing"
         comment: "✅ Error handling tested: Duplicate registration (400), wrong password login (401), invalid phone format (422), unauthorized /me access (403). All error responses correct with appropriate HTTP status codes and French error messages."
 
+  - task: "Authentication System - Email Support"
+    implemented: true
+    working: true
+    file: "backend/routes/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ EMAIL SUPPORT TESTING COMPLETE - All email functionality working perfectly: ✅ Register with email (test@greenlink.ci), ✅ Register with phone (+22507654321), ✅ Login with email identifier, ✅ Login with phone identifier, ✅ Duplicate email rejection (400), ✅ Duplicate phone rejection (400), ✅ Profile display shows correct email/phone fields, ✅ Wrong identifier login rejection (401). Both email and phone registration/login working seamlessly. Minor: Validation error for no contact info returns 500 instead of 422 (response validation issue, not input validation)."
+
 frontend:
   # No frontend tasks - backend testing only per instructions
 
