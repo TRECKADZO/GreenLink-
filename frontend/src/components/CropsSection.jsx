@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
-import { Coffee, Leaf, MapPin } from 'lucide-react';
+import { api } from '../services/api';
+import { MapPin } from 'lucide-react';
 
-const crops = [
+// Fallback mock data
+const mockCrops = [
   {
     icon: '🍫',
     title: 'Cacao',
@@ -43,6 +45,18 @@ const crops = [
 ];
 
 const CropsSection = () => {
+  const [crops, setCrops] = useState(mockCrops);
+
+  useEffect(() => {
+    const fetchCrops = async () => {
+      const data = await api.getCrops();
+      if (data) {
+        setCrops(data);
+      }
+    };
+    fetchCrops();
+  }, []);
+  
   return (
     <section className="py-24 bg-gradient-to-b from-white to-gray-50">
       <div className="max-w-7xl mx-auto px-6">
