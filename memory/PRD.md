@@ -191,6 +191,13 @@ Supplier: supplier1@test.com / test123
 5. **Removed Emergent Badge** - Watermark removed from footer
 6. **Updated Navigation** - Added "Crédits Carbone" link in navbar
 7. **Updated Footer** - Links to legal pages and marketplaces
+8. **Legal Acceptance at Registration** - Users must accept Terms & Privacy Policy
+   - Checkboxes with links to legal pages
+   - Acceptance stored in user profile with timestamp
+9. **Account Deletion** - Users can delete their own account
+   - "Zone de danger" section on profile page
+   - Confirmation modal requiring "SUPPRIMER" to confirm
+   - Deletes all user data (orders, products, reviews, etc.)
 
 ## Files of Reference
 - `/app/backend/routes/admin.py` - Admin and partners routes
