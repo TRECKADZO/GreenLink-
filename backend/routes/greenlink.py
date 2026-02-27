@@ -608,3 +608,43 @@ async def mark_notification_read(
         raise HTTPException(status_code=404, detail="Notification not found")
     
     return {"message": "Notification marked as read"}
+
+
+# ============= PUSH NOTIFICATION ROUTES =============
+
+from services.fcm_service import fcm_service, send_notification_to_user
+
+class PushNotificationRequest(BaseModel):
+    title: str
+    body: str
+    data: Optional[dict] = None
+
+@router.post("/notifications/send-push")
+async def send_push_notification(
+    request: PushNotificationRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send a push notification to the current user's registered devices"""
+    result = await send_notification_to_user(
+        db=db,
+        user_id=current_user["_id"],
+        title=request.title,
+        body=request.body,
+        data=request.data
+    )
+    return result
+
+@router.post("/notifications/test-push")
+async def test_push_notification(
+    current_user: dict = Depends(get_current_user)
+):
+    """Send a test push notification to verify FCM setup"""
+    result = await send_notification_to_user(
+        db=db,
+        user_id=current_user["_id"],
+        title="Test GreenLink 🌱",
+        body="Les notifications push fonctionnent correctement !",
+        data={"type": "test", "screen": "Home"}
+    )
+    return result
+
