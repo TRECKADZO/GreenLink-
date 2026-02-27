@@ -17,9 +17,12 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.greenlink.farmer",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "GreenLink utilise l'appareil photo pour prendre des photos de vos parcelles et récoltes.",
-        "NSLocationWhenInUseUsageDescription": "GreenLink utilise votre position pour localiser vos parcelles."
+        "NSLocationWhenInUseUsageDescription": "GreenLink utilise votre position pour localiser vos parcelles.",
+        "NSPhotoLibraryUsageDescription": "GreenLink utilise votre galerie pour sélectionner des photos de vos parcelles.",
+        "UIBackgroundModes": ["fetch", "remote-notification"]
       }
     },
     "android": {
@@ -28,23 +31,48 @@
         "backgroundColor": "#2d5a4d"
       },
       "package": "com.greenlink.farmer",
+      "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE"
-      ]
+        "android.permission.VIBRATE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.INTERNET"
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [
+        "expo-camera",
+        {
+          "cameraPermission": "GreenLink utilise l'appareil photo pour photographier vos parcelles."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "GreenLink utilise votre position pour localiser vos parcelles."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#2d5a4d"
+          "color": "#2d5a4d",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "GreenLink accède à vos photos pour les ajouter à vos parcelles."
         }
       ]
     ],
@@ -53,6 +81,13 @@
         "projectId": "greenlink-farmer"
       }
     },
-    "owner": "greenlink"
+    "owner": "greenlink",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/greenlink-farmer",
+      "fallbackToCacheTimeout": 30000
+    }
   }
 }
