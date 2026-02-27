@@ -8,7 +8,10 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import CheckoutPage from "./pages/CheckoutPage";
+import MarketplacePage from "./pages/MarketplacePage";
+import WishlistPage from "./pages/WishlistPage";
 import BuyerOrders from "./pages/buyer/BuyerOrders";
+import OrderTracking from "./pages/OrderTracking";
 
 // Supplier Routes
 import SupplierDashboard from "./pages/supplier/Dashboard";
