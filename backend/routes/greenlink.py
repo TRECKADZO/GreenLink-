@@ -75,6 +75,24 @@ async def declare_parcel(
         except Exception as e:
             logger.error(f"SMS notification failed: {e}")
     
+    # Send push notification to farmer's registered devices
+    try:
+        push_result = await send_notification_to_user(
+            db=db,
+            user_id=current_user["_id"],
+            title="Parcelle déclarée 🌳",
+            body=f"Parcelle de {parcel.area_hectares} ha enregistrée. Score carbone: {carbon_score:.1f}/10",
+            data={
+                "type": "parcel_created",
+                "parcel_id": str(result.inserted_id),
+                "carbon_score": carbon_score,
+                "screen": "Parcels"
+            }
+        )
+        logger.info(f"Push notification sent: {push_result}")
+    except Exception as e:
+        logger.error(f"Push notification failed: {e}")
+    
     return parcel_dict
 
 @router.get("/parcels/my-parcels", response_model=List[Parcel])
