@@ -56,6 +56,7 @@ Build a comprehensive agritech platform connecting:
 - [x] RSE dashboard with impact metrics
 - [x] Supplier dashboard with full marketplace
 - [x] Auth timing bug fixed in all dashboards
+- [x] **SMS Notifications for farmers** (auto-send when carbon score ≥7)
 
 ### Mocked/Simulated
 - Orange Money payments (backend simulation only)
