@@ -1,0 +1,421 @@
+from fastapi import APIRouter, HTTPException, Depends, status
+from typing import List, Optional
+import os
+from motor.motor_asyncio import AsyncIOMotorClient
+from greenlink_models import (
+    Parcel, ParcelCreate, Harvest, HarvestCreate, PaymentRequest,
+    BuyerOrder, BuyerOrderCreate, BuyerOrderInDB, TraceabilityReport,
+    CarbonCredit, CarbonCreditCreate, CarbonPurchase, CarbonPurchaseInDB,
+    ImpactDashboard, USSDSession
+)
+from routes.auth import get_current_user
+from datetime import datetime, timedelta
+from bson import ObjectId
+import random
+import hashlib
+
+router = APIRouter(prefix="/api/greenlink", tags=["greenlink"])
+
+# MongoDB connection
+mongo_url = os.environ.get('MONGO_URL')
+db_name = os.environ.get('DB_NAME', 'test_database')
+client = AsyncIOMotorClient(mongo_url)
+db = client[db_name]
+
+# ============= AGRICULTEUR ROUTES =============
+
+@router.post("/parcels", response_model=Parcel)
+async def declare_parcel(
+    parcel: ParcelCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Déclarer une nouvelle parcelle agricole"""
+    parcel_dict = parcel.dict()
+    parcel_dict["farmer_id"] = current_user["_id"]
+    parcel_dict["created_at"] = datetime.utcnow()
+    parcel_dict["updated_at"] = datetime.utcnow()
+    parcel_dict["is_active"] = True
+    parcel_dict["verification_status"] = "pending"
+    
+    # Calculate carbon score based on practices
+    carbon_score = calculate_carbon_score(parcel_dict["farming_practices"], parcel_dict["area_hectares"])
+    parcel_dict["carbon_score"] = carbon_score
+    parcel_dict["carbon_credits_earned"] = carbon_score * parcel_dict["area_hectares"] * 0.5  # tonnes CO2
+    
+    result = await db.parcels.insert_one(parcel_dict)
+    parcel_dict["_id"] = str(result.inserted_id)
+    
+    # Create notification
+    await db.notifications.insert_one({
+        "user_id": current_user["_id"],
+        "title": "Parcelle déclarée",
+        "message": f"Votre parcelle de {parcel.area_hectares} ha a été enregistrée. Score carbone: {carbon_score:.1f}/10",
+        "type": "parcel",
+        "action_url": f"/farmer/parcels/{str(result.inserted_id)}",
+        "created_at": datetime.utcnow(),
+        "is_read": False
+    })
+    
+    return parcel_dict
+
+@router.get("/parcels/my-parcels", response_model=List[Parcel])
+async def get_my_parcels(current_user: dict = Depends(get_current_user)):
+    """Obtenir mes parcelles"""
+    parcels = await db.parcels.find({"farmer_id": current_user["_id"]}).to_list(100)
+    return [{**p, "_id": str(p["_id"])} for p in parcels]
+
+@router.post("/harvests", response_model=Harvest)
+async def declare_harvest(
+    harvest: HarvestCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Déclarer une récolte"""
+    # Get parcel info
+    parcel = await db.parcels.find_one({"_id": ObjectId(harvest.parcel_id)})
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcelle non trouvée")
+    
+    harvest_dict = harvest.dict()
+    harvest_dict["farmer_id"] = current_user["_id"]
+    harvest_dict["harvest_date"] = datetime.utcnow()
+    harvest_dict["created_at"] = datetime.utcnow()
+    
+    # Calculate carbon premium (10% bonus for high carbon score)
+    if parcel["carbon_score"] >= 7:
+        harvest_dict["carbon_premium"] = harvest.quantity_kg * harvest.price_per_kg * 0.10
+    else:
+        harvest_dict["carbon_premium"] = 0
+    
+    harvest_dict["total_amount"] = (harvest.quantity_kg * harvest.price_per_kg) + harvest_dict["carbon_premium"]
+    harvest_dict["payment_status"] = "pending"
+    harvest_dict["payment_method"] = "orange_money"  # Default
+    
+    result = await db.harvests.insert_one(harvest_dict)
+    harvest_dict["_id"] = str(result.inserted_id)
+    
+    return harvest_dict
+
+@router.post("/payments/request")
+async def request_payment(
+    payment: PaymentRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Demander paiement mobile money"""
+    harvest = await db.harvests.find_one({"_id": ObjectId(payment.harvest_id)})
+    if not harvest:
+        raise HTTPException(status_code=404, detail="Récolte non trouvée")
+    
+    # Simulate mobile money payment
+    transaction_id = f"OM{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{random.randint(1000, 9999)}"
+    
+    await db.harvests.update_one(
+        {"_id": ObjectId(payment.harvest_id)},
+        {"$set": {
+            "payment_status": "paid",
+            "transaction_id": transaction_id,
+            "payment_method": payment.payment_method
+        }}
+    )
+    
+    # Create notification
+    await db.notifications.insert_one({
+        "user_id": current_user["_id"],
+        "title": "Paiement reçu",
+        "message": f"Paiement de {payment.amount:,.0f} FCFA reçu via {payment.payment_method}. Ref: {transaction_id}",
+        "type": "payment",
+        "created_at": datetime.utcnow(),
+        "is_read": False
+    })
+    
+    return {
+        "success": True,
+        "transaction_id": transaction_id,
+        "amount": payment.amount,
+        "message": f"Paiement de {payment.amount:,.0f} FCFA envoyé à {payment.phone_number}"
+    }
+
+@router.get("/farmer/dashboard")
+async def get_farmer_dashboard(current_user: dict = Depends(get_current_user)):
+    """Tableau de bord agriculteur"""
+    parcels = await db.parcels.find({"farmer_id": current_user["_id"]}).to_list(100)
+    harvests = await db.harvests.find({"farmer_id": current_user["_id"]}).to_list(1000)
+    
+    total_area = sum([p["area_hectares"] for p in parcels])
+    total_trees = sum([p["trees_count"] for p in parcels])
+    avg_carbon_score = sum([p["carbon_score"] for p in parcels]) / len(parcels) if parcels else 0
+    total_carbon_credits = sum([p["carbon_credits_earned"] for p in parcels])
+    
+    total_revenue = sum([h["total_amount"] for h in harvests])
+    total_carbon_premium = sum([h["carbon_premium"] for h in harvests])
+    
+    return {
+        "total_parcels": len(parcels),
+        "total_area_hectares": total_area,
+        "total_trees": total_trees,
+        "average_carbon_score": avg_carbon_score,
+        "total_carbon_credits": total_carbon_credits,
+        "total_revenue": total_revenue,
+        "carbon_premium_earned": total_carbon_premium,
+        "recent_harvests": sorted(harvests, key=lambda x: x["created_at"], reverse=True)[:5]
+    }
+
+# ============= ACHETEUR ROUTES =============
+
+@router.post("/buyer/orders", response_model=BuyerOrderInDB)
+async def create_buyer_order(
+    order: BuyerOrderCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Créer une commande d'achat"""
+    if current_user.get("user_type") != "acheteur":
+        raise HTTPException(status_code=403, detail="Réservé aux acheteurs")
+    
+    order_dict = order.dict()
+    order_dict["buyer_id"] = current_user["_id"]
+    order_dict["buyer_company"] = current_user.get("company_name", current_user["full_name"])
+    order_dict["status"] = "open"
+    order_dict["matched_parcels"] = []
+    order_dict["total_carbon_credits"] = 0
+    order_dict["created_at"] = datetime.utcnow()
+    order_dict["updated_at"] = datetime.utcnow()
+    
+    result = await db.buyer_orders.insert_one(order_dict)
+    order_dict["_id"] = str(result.inserted_id)
+    
+    # Match with available parcels
+    await match_order_with_parcels(str(result.inserted_id))
+    
+    return order_dict
+
+@router.get("/buyer/orders", response_model=List[BuyerOrderInDB])
+async def get_buyer_orders(current_user: dict = Depends(get_current_user)):
+    """Obtenir mes commandes"""
+    orders = await db.buyer_orders.find({"buyer_id": current_user["_id"]}).sort("created_at", -1).to_list(100)
+    return [{**o, "_id": str(o["_id"])} for o in orders]
+
+@router.get("/buyer/traceability/{order_id}")
+async def get_traceability_report(
+    order_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Générer rapport de traçabilité EUDR"""
+    order = await db.buyer_orders.find_one({"_id": ObjectId(order_id)})\n    if not order:
+        raise HTTPException(status_code=404, detail="Commande non trouvée")
+    
+    # Get all matched parcels
+    parcels = []
+    farmers = []
+    total_carbon = 0
+    
+    for parcel_id in order.get("matched_parcels", []):
+        parcel = await db.parcels.find_one({"_id": ObjectId(parcel_id)})
+        if parcel:
+            parcels.append({
+                "id": str(parcel["_id"]),
+                "location": parcel["location"],
+                "area": parcel["area_hectares"],
+                "carbon_score": parcel["carbon_score"],
+                "practices": parcel["farming_practices"]
+            })
+            total_carbon += parcel.get("carbon_credits_earned", 0)
+            
+            # Get farmer info
+            farmer = await db.users.find_one({"_id": ObjectId(parcel["farmer_id"])})
+            if farmer:
+                farmers.append({
+                    "name": farmer["full_name"],
+                    "phone": farmer.get("phone_number", "N/A")
+                })
+    
+    avg_carbon_score = sum([p["carbon_score"] for p in parcels]) / len(parcels) if parcels else 0
+    
+    # Generate blockchain hash for verification
+    data_to_hash = f"{order_id}{len(parcels)}{total_carbon}{datetime.utcnow().isoformat()}"
+    blockchain_hash = hashlib.sha256(data_to_hash.encode()).hexdigest()
+    
+    return {
+        "order_id": order_id,
+        "parcels": parcels,
+        "farmers": farmers,
+        "total_quantity_kg": order["quantity_needed_kg"],
+        "average_carbon_score": avg_carbon_score,
+        "total_carbon_credits": total_carbon,
+        "eudr_compliant": avg_carbon_score >= 6.0,
+        "verification_documents": ["certificate_origin.pdf", "carbon_audit.pdf"],
+        "blockchain_hash": blockchain_hash,
+        "generated_at": datetime.utcnow().isoformat()
+    }
+
+@router.get("/buyer/dashboard")
+async def get_buyer_dashboard(current_user: dict = Depends(get_current_user)):
+    """Tableau de bord acheteur"""
+    orders = await db.buyer_orders.find({"buyer_id": current_user["_id"]}).to_list(1000)
+    
+    total_orders = len(orders)
+    active_orders = len([o for o in orders if o["status"] == "open"])
+    total_quantity = sum([o["quantity_needed_kg"] for o in orders if o["status"] == "completed"])
+    total_carbon_offset = sum([o.get("total_carbon_credits", 0) for o in orders])
+    
+    return {
+        "total_orders": total_orders,
+        "active_orders": active_orders,
+        "completed_orders": len([o for o in orders if o["status"] == "completed"]),
+        "total_quantity_purchased_kg": total_quantity,
+        "total_carbon_offset_tonnes": total_carbon_offset,
+        "average_carbon_score": 7.5,  # Calculate from matched parcels
+        "eudr_compliance_rate": 92.5
+    }
+
+# ============= ENTREPRISE RSE ROUTES =============
+
+@router.get("/carbon-credits", response_model=List[CarbonCredit])
+async def get_carbon_credits(
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    standard: Optional[str] = None
+):
+    """Marketplace crédits carbone"""
+    query = {"status": "available"}
+    if min_price:
+        query["price_per_tonne"] = {"$gte": min_price}
+    if max_price:
+        query.setdefault("price_per_tonne", {})["$lte"] = max_price
+    if standard:
+        query["verification_standard"] = standard
+    
+    credits = await db.carbon_credits.find(query).to_list(100)
+    return [{**c, "_id": str(c["_id"])} for c in credits]
+
+@router.post("/carbon-credits/purchase", response_model=CarbonPurchaseInDB)
+async def purchase_carbon_credits(
+    purchase: CarbonPurchase,
+    current_user: dict = Depends(get_current_user)
+):
+    """Acheter crédits carbone"""
+    if current_user.get("user_type") != "entreprise_rse":
+        raise HTTPException(status_code=403, detail="Réservé aux entreprises RSE")
+    
+    credit = await db.carbon_credits.find_one({"_id": ObjectId(purchase.credit_id)})
+    if not credit or credit["status"] != "available":
+        raise HTTPException(status_code=400, detail="Crédit non disponible")
+    
+    purchase_dict = purchase.dict()
+    purchase_dict["buyer_id"] = current_user["_id"]
+    purchase_dict["buyer_company"] = current_user.get("company_name_rse", current_user["full_name"])
+    purchase_dict["transaction_date"] = datetime.utcnow()
+    purchase_dict["status"] = "completed"
+    
+    # Generate certificate
+    cert_number = f"GRC{datetime.utcnow().year}{random.randint(10000, 99999)}"
+    purchase_dict["certificate_url"] = f"/certificates/{cert_number}.pdf"
+    
+    if purchase.retirement_requested:
+        purchase_dict["status"] = "retired"
+        purchase_dict["retirement_certificate_url"] = f"/retirement/{cert_number}.pdf"
+    
+    result = await db.carbon_purchases.insert_one(purchase_dict)
+    purchase_dict["_id"] = str(result.inserted_id)
+    
+    # Update credit status
+    await db.carbon_credits.update_one(
+        {"_id": ObjectId(purchase.credit_id)},
+        {"$set": {"status": "sold" if not purchase.retirement_requested else "retired"}}
+    )
+    
+    return purchase_dict
+
+@router.get("/rse/impact-dashboard")
+async def get_impact_dashboard(current_user: dict = Depends(get_current_user)):
+    """Dashboard impact RSE"""
+    purchases = await db.carbon_purchases.find({"buyer_id": current_user["_id"]}).to_list(1000)
+    
+    total_co2 = sum([p["quantity_tonnes"] for p in purchases])
+    
+    # Get impact from related parcels
+    parcels = await db.parcels.find({"is_active": True}).to_list(1000)
+    total_farmers = len(set([p["farmer_id"] for p in parcels]))
+    total_trees = sum([p["trees_count"] for p in parcels])
+    
+    # Mock women percentage
+    women_percentage = 42.5
+    
+    regions = list(set([p["region"] for p in parcels]))
+    
+    # Monthly breakdown
+    monthly_data = []
+    for i in range(6):
+        month_date = datetime.utcnow() - timedelta(days=30 * i)
+        month_purchases = [p for p in purchases if 
+                          datetime.fromisoformat(p["transaction_date"].isoformat()).month == month_date.month]
+        monthly_data.append({
+            "month": month_date.strftime("%B %Y"),
+            "co2_offset": sum([p["quantity_tonnes"] for p in month_purchases]),
+            "investment": sum([p["total_price"] for p in month_purchases])
+        })
+    
+    return {
+        "total_co2_offset_tonnes": total_co2,
+        "total_farmers_impacted": total_farmers,
+        "women_farmers_percentage": women_percentage,
+        "total_trees_planted": total_trees,
+        "regions_covered": regions,
+        "impact_stories": [
+            {
+                "farmer": "Aminata K.",
+                "location": "Bouaflé",
+                "story": "Grâce aux primes carbone, j'ai pu scolariser mes 3 enfants et diversifier mes cultures"
+            }
+        ],
+        "monthly_breakdown": monthly_data[::-1]
+    }
+
+# Helper functions
+
+def calculate_carbon_score(practices: List[str], area: float) -> float:
+    """Calculate carbon score based on farming practices"""
+    base_score = 5.0
+    
+    score_map = {
+        "agroforesterie": 2.0,
+        "compost": 1.5,
+        "zero_pesticides": 1.0,
+        "couverture_vegetale": 1.0,
+        "rotation_cultures": 0.5
+    }
+    
+    for practice in practices:
+        base_score += score_map.get(practice, 0)
+    
+    # Bonus for larger areas
+    if area > 5:
+        base_score += 0.5
+    
+    return min(base_score, 10.0)
+
+async def match_order_with_parcels(order_id: str):
+    """Match buyer order with suitable parcels"""
+    order = await db.buyer_orders.find_one({"_id": ObjectId(order_id)})
+    if not order:
+        return
+    
+    query = {
+        "crop_type": order["crop_type"],
+        "is_active": True,
+        "verification_status": "verified"
+    }
+    
+    if order.get("carbon_requirement"):
+        query["carbon_score"] = {"$gte": order.get("min_carbon_score", 7.0)}
+    
+    parcels = await db.parcels.find(query).to_list(100)
+    matched_ids = [str(p["_id"]) for p in parcels[:10]]  # Top 10
+    total_carbon = sum([p["carbon_credits_earned"] for p in parcels[:10]])
+    
+    await db.buyer_orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {
+            "matched_parcels": matched_ids,
+            "total_carbon_credits": total_carbon,
+            "status": "matched" if matched_ids else "open"
+        }}
+    )
