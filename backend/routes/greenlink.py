@@ -130,6 +130,35 @@ async def declare_harvest(
     result = await db.harvests.insert_one(harvest_dict)
     harvest_dict["_id"] = str(result.inserted_id)
     
+    # Create in-app notification
+    await db.notifications.insert_one({
+        "user_id": current_user["_id"],
+        "title": "Récolte déclarée",
+        "message": f"Récolte de {harvest.quantity_kg} kg enregistrée. Prime carbone: {harvest_dict['carbon_premium']:,.0f} FCFA",
+        "type": "harvest",
+        "action_url": f"/farmer/harvests/{str(result.inserted_id)}",
+        "created_at": datetime.utcnow(),
+        "is_read": False
+    })
+    
+    # Send push notification
+    try:
+        push_result = await send_notification_to_user(
+            db=db,
+            user_id=current_user["_id"],
+            title="Récolte enregistrée 🌾",
+            body=f"{harvest.quantity_kg} kg déclarés. Prime carbone: {harvest_dict['carbon_premium']:,.0f} FCFA",
+            data={
+                "type": "harvest_created",
+                "harvest_id": str(result.inserted_id),
+                "carbon_premium": harvest_dict['carbon_premium'],
+                "screen": "Harvest"
+            }
+        )
+        logger.info(f"Harvest push notification sent: {push_result}")
+    except Exception as e:
+        logger.error(f"Harvest push notification failed: {e}")
+    
     return harvest_dict
 
 @router.post("/payments/request")
