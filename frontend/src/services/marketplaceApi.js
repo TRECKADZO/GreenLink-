@@ -208,5 +208,66 @@ export const marketplaceApi = {
       headers: getAuthHeader()
     });
     return response.data;
+  },
+
+  // Product Reviews
+  getProductReviews: async (productId) => {
+    const response = await axios.get(`${API}/products/${productId}/reviews`);
+    return response.data;
+  },
+
+  addProductReview: async (productId, reviewData) => {
+    const params = new URLSearchParams({
+      rating: reviewData.rating,
+      comment: reviewData.comment
+    });
+    const response = await axios.post(`${API}/products/${productId}/reviews?${params}`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  // Wishlist
+  getWishlist: async () => {
+    const response = await axios.get(`${API}/wishlist`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  addToWishlist: async (productId) => {
+    const response = await axios.post(`${API}/wishlist/add?product_id=${productId}`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  removeFromWishlist: async (productId) => {
+    const response = await axios.delete(`${API}/wishlist/remove/${productId}`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  // Order Tracking
+  getOrderTracking: async (orderId) => {
+    const response = await axios.get(`${API}/orders/${orderId}/tracking`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  updateOrderStatus: async (orderId, status, note = '') => {
+    const params = new URLSearchParams({ new_status: status, note });
+    const response = await axios.put(`${API}/orders/${orderId}/status?${params}`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  // Price History
+  getPriceHistory: async (productId) => {
+    const response = await axios.get(`${API}/products/${productId}/price-history`);
+    return response.data;
   }
 };
