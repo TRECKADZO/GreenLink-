@@ -80,9 +80,7 @@
       ]
     ],
     "extra": {
-      "eas": {
-        "projectId": "0ccac3f2-4449-414c-bf8d-f3f87dcdb07b"
-      }
+      "eas": {}
     },
     "owner": "treckadzo",
     "runtimeVersion": {
