@@ -19,10 +19,13 @@
       "bundleIdentifier": "com.greenlink.farmer",
       "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "GreenLink utilise l'appareil photo pour prendre des photos de vos parcelles et récoltes.",
+        "NSCameraUsageDescription": "GreenLink utilise l'appareil photo pour prendre des photos de vos parcelles et r\u00e9coltes.",
         "NSLocationWhenInUseUsageDescription": "GreenLink utilise votre position pour localiser vos parcelles.",
-        "NSPhotoLibraryUsageDescription": "GreenLink utilise votre galerie pour sélectionner des photos de vos parcelles.",
-        "UIBackgroundModes": ["fetch", "remote-notification"]
+        "NSPhotoLibraryUsageDescription": "GreenLink utilise votre galerie pour s\u00e9lectionner des photos de vos parcelles.",
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -72,7 +75,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "GreenLink accède à vos photos pour les ajouter à vos parcelles."
+          "photosPermission": "GreenLink acc\u00e8de \u00e0 vos photos pour les ajouter \u00e0 vos parcelles."
         }
       ]
     ],
@@ -81,7 +84,7 @@
         "projectId": "greenlink-farmer"
       }
     },
-    "owner": "greenlink",
+    "owner": "treckadzo",
     "runtimeVersion": {
       "policy": "appVersion"
     },
