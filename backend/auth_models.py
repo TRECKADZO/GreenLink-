@@ -1,13 +1,19 @@
 from pydantic import BaseModel, Field, validator, EmailStr
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 import re
+
+class LegalAcceptance(BaseModel):
+    acceptedConditions: bool = False
+    acceptedPrivacy: bool = False
+    acceptedAt: Optional[str] = None
 
 class UserBase(BaseModel):
     phone_number: Optional[str] = None
     email: Optional[EmailStr] = None
     user_type: str  # producteur, acheteur, entreprise_rse, fournisseur
     full_name: str
+    legal_acceptance: Optional[LegalAcceptance] = None
     
     @validator('phone_number')
     def validate_phone(cls, v, values):
