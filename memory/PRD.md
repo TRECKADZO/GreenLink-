@@ -61,6 +61,9 @@ Build a comprehensive agritech platform connecting:
 - [x] **Carbon Premium Calculator** - Interactive calculator on homepage
 - [x] **User Profile Menu** - Dropdown menu with role-specific navigation
 - [x] **Homepage Marketplace** - B2B marketplace with filters, search, and ordering
+- [x] **Product Image Upload** - Suppliers can upload photos (JPG/PNG/WebP, max 5MB)
+- [x] **Shopping Cart System** - Full cart with add/update/remove/checkout
+- [x] **Order Management** - Checkout page, order confirmation, buyer orders list
 
 ### Mocked/Simulated
 - Orange Money payments (backend simulation only)
