@@ -5,19 +5,13 @@ Super Admin management for partners, users, and platform settings
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from database import db
 from routes.auth import get_current_user
 from datetime import datetime
 from bson import ObjectId
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api", tags=["admin"])
-
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-db_name = os.environ.get('DB_NAME', 'test_database')
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
 
 # ============= PYDANTIC MODELS =============
 
