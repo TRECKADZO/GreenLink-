@@ -113,3 +113,12 @@ class UserProfileUpdate(BaseModel):
     # Fournisseur fields
     supplier_company: Optional[str] = None
     products_offered: Optional[list] = None
+    # Coopérative fields
+    coop_name: Optional[str] = None
+    coop_code: Optional[str] = None
+    registration_number: Optional[str] = None
+    certifications: Optional[list] = None
+    headquarters_address: Optional[str] = None
+    headquarters_region: Optional[str] = None
+    commission_rate: Optional[float] = None
+    orange_money_business: Optional[str] = None
