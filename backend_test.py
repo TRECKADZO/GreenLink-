@@ -496,33 +496,46 @@ def test_user_type_protection():
     """Test that users can only access their respective endpoints"""
     print_test_header("INTEGRATION TEST 1: User Type Protection")
     
-    # Test producer trying to access buyer endpoint
+    # Test producer trying to access buyer endpoint with valid data
     if "producteur" in test_tokens:
         headers = {"Authorization": f"Bearer {test_tokens['producteur']}"}
+        valid_order_data = {
+            "crop_type": "cacao",
+            "quantity_needed_kg": 100,
+            "max_price_per_kg": 1500,
+            "delivery_location": "Test Location",
+            "delivery_date": "2026-03-29T02:26:45.170304"
+        }
         response = make_request("POST", f"{BASE_URL}/greenlink/buyer/orders", 
-                              json={"crop_type": "cacao", "quantity_needed_kg": 100}, 
+                              json=valid_order_data, 
                               headers=headers)
         
         if response and response.status_code == 403:
             print_success("Producer correctly blocked from buyer endpoint")
             protection_working = True
         else:
-            print_error("Producer not blocked from buyer endpoint")
+            print_error(f"Producer not blocked from buyer endpoint - got status {response.status_code if response else 'None'}")
             protection_working = False
     else:
         protection_working = False
     
-    # Test buyer trying to access CSR endpoint  
+    # Test buyer trying to access CSR endpoint with valid data
     if "acheteur" in test_tokens and protection_working:
         headers = {"Authorization": f"Bearer {test_tokens['acheteur']}"}
+        valid_purchase_data = {
+            "credit_id": "69a0ffe601140ffe9d7ce709",
+            "quantity_tonnes": 10,
+            "total_price": 120000,
+            "purpose": "scope3_compensation"
+        }
         response = make_request("POST", f"{BASE_URL}/greenlink/carbon-credits/purchase",
-                              json={"credit_id": "test", "quantity_tonnes": 10, "total_price": 1000},
+                              json=valid_purchase_data,
                               headers=headers)
         
         if response and response.status_code == 403:
             print_success("Buyer correctly blocked from CSR endpoint")
         else:
-            print_error("Buyer not blocked from CSR endpoint")
+            print_error(f"Buyer not blocked from CSR endpoint - got status {response.status_code if response else 'None'}")
             protection_working = False
     
     tracker.add_result("User Type Protection", protection_working, "Access control validation")
