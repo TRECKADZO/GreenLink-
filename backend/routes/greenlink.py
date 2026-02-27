@@ -478,6 +478,88 @@ async def purchase_carbon_credits(
     
     return purchase_dict
 
+@router.get("/carbon/my-purchases")
+async def get_my_carbon_purchases(current_user: dict = Depends(get_current_user)):
+    """Get user's carbon credit purchases"""
+    purchases = await db.carbon_purchases.find({"buyer_id": current_user["_id"]}).sort("transaction_date", -1).to_list(100)
+    
+    result = []
+    for p in purchases:
+        # Get credit details
+        credit = await db.carbon_credits.find_one({"_id": ObjectId(p.get("credit_id"))}) if p.get("credit_id") else None
+        result.append({
+            "_id": str(p["_id"]),
+            "credit_id": p.get("credit_id"),
+            "project_name": credit.get("project_name", "Projet Carbone GreenLink") if credit else "Projet Carbone GreenLink",
+            "quantity_tonnes": p.get("quantity_tonnes", 0),
+            "total_price": p.get("total_price", 0),
+            "certification_standard": credit.get("verification_standard", "Verra VCS") if credit else "Verra VCS",
+            "status": p.get("status", "completed"),
+            "certificate_url": p.get("certificate_url"),
+            "created_at": p.get("transaction_date", datetime.utcnow()).isoformat() if isinstance(p.get("transaction_date"), datetime) else p.get("transaction_date", datetime.utcnow().isoformat())
+        })
+    
+    return result
+
+@router.get("/carbon/my-score")
+async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
+    """Get farmer's carbon score and statistics"""
+    # Get user's parcels
+    parcels = await db.parcels.find({"farmer_id": current_user["_id"]}).to_list(100)
+    
+    if not parcels:
+        return {
+            "average_score": 0,
+            "total_credits": 0,
+            "total_premium": 0,
+            "parcels_count": 0
+        }
+    
+    # Calculate average score
+    scores = [p.get("carbon_score", 0) for p in parcels]
+    avg_score = sum(scores) / len(scores) if scores else 0
+    
+    # Calculate total credits and premium
+    total_credits = sum([p.get("carbon_credits_earned", 0) for p in parcels])
+    
+    # Get harvests for premium calculation
+    harvests = await db.harvests.find({"farmer_id": current_user["_id"]}).to_list(100)
+    total_premium = sum([h.get("carbon_premium", 0) for h in harvests])
+    
+    return {
+        "average_score": round(avg_score, 1),
+        "total_credits": round(total_credits, 2),
+        "total_premium": total_premium,
+        "parcels_count": len(parcels),
+        "parcels": [{
+            "id": str(p["_id"]),
+            "location": p.get("location", ""),
+            "area_hectares": p.get("area_hectares", 0),
+            "carbon_score": p.get("carbon_score", 0),
+            "carbon_credits_earned": p.get("carbon_credits_earned", 0)
+        } for p in parcels[:5]]
+    }
+
+@router.get("/carbon/my-credits")
+async def get_my_carbon_credits(current_user: dict = Depends(get_current_user)):
+    """Get farmer's generated carbon credits"""
+    parcels = await db.parcels.find({"farmer_id": current_user["_id"]}).to_list(100)
+    
+    credits = []
+    for p in parcels:
+        if p.get("carbon_credits_earned", 0) > 0:
+            credits.append({
+                "parcel_id": str(p["_id"]),
+                "location": p.get("location", ""),
+                "area_hectares": p.get("area_hectares", 0),
+                "credits_tonnes_co2": p.get("carbon_credits_earned", 0),
+                "carbon_score": p.get("carbon_score", 0),
+                "verification_status": p.get("verification_status", "pending"),
+                "created_at": p.get("created_at", datetime.utcnow()).isoformat() if isinstance(p.get("created_at"), datetime) else str(p.get("created_at", ""))
+            })
+    
+    return credits
+
 @router.get("/rse/impact-dashboard")
 async def get_impact_dashboard(current_user: dict = Depends(get_current_user)):
     """Dashboard impact RSE"""
