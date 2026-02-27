@@ -139,20 +139,20 @@ const InteractiveMap = ({ activeRegions = [], onRegionClick }) => {
 
           {/* Major cities markers */}
           <g>
-            <circle cx="370" cy="320" r="8" fill="#d32f2f" />
-            <text x="370" y="340" textAnchor="middle" fill="#333" fontSize="14" fontWeight="bold">
+            <circle cx="470" cy="320" r="8" fill="#d32f2f" />
+            <text x="470" y="340" textAnchor="middle" fill="#333" fontSize="14" fontWeight="bold">
               Abidjan
             </text>
           </g>
           <g>
-            <circle cx="280" cy="140" r="6" fill="#1976d2" />
-            <text x="280" y="130" textAnchor="middle" fill="#333" fontSize="11" fontWeight="bold">
+            <circle cx="380" cy="140" r="6" fill="#1976d2" />
+            <text x="380" y="130" textAnchor="middle" fill="#333" fontSize="11" fontWeight="bold">
               Yamoussoukro
             </text>
           </g>
 
           {/* Legend */}
-          <g transform="translate(90, 130)">
+          <g transform="translate(190, 130)">
             <rect x="0" y="0" width="100" height="70" fill="white" rx="5" opacity="0.9" />
             <text x="10" y="18" fontSize="10" fontWeight="bold" fill="#333">Légende</text>
             <rect x="10" y="25" width="15" height="15" fill="#66bb6a" />
