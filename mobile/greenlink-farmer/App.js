@@ -60,6 +60,7 @@ function AppNavigator() {
         animation: 'slide_from_right',
       }}
     >
+      {/* Main Screens */}
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Parcels" component={ParcelsScreen} />
       <Stack.Screen name="AddParcel" component={AddParcelScreen} />
@@ -67,6 +68,14 @@ function AppNavigator() {
       <Stack.Screen name="Payments" component={PaymentsScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      
+      {/* Marketplace Screens */}
+      <Stack.Screen name="Marketplace" component={MarketplaceScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      <Stack.Screen name="Orders" component={OrdersScreen} />
+      <Stack.Screen name="Wishlist" component={WishlistScreen} />
     </Stack.Navigator>
   );
 }
