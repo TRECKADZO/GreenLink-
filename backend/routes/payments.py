@@ -402,12 +402,6 @@ async def simulate_payment_completion(
         raise HTTPException(status_code=404, detail="Paiement non trouvé")
     
     # Simulate webhook
-    status_map = {
-        "success": "SUCCESSFUL",
-        "fail": "FAILED",
-        "cancel": "CANCELLED"
-    }
-    
     # Create simulated transaction ID
     transaction_id = f"SIMTX_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
     
