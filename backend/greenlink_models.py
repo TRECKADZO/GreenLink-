@@ -126,6 +126,13 @@ class CarbonCredit(CarbonCreditBase):
     created_at: datetime
     updated_at: datetime
 
+class CarbonPurchaseCreate(BaseModel):
+    credit_id: str
+    quantity_tonnes: float
+    total_price: float
+    purpose: str  # scope3_compensation, csrd_reporting, voluntary
+    retirement_requested: bool = False
+
 class CarbonPurchase(BaseModel):
     buyer_id: str
     buyer_company: str
