@@ -11,7 +11,7 @@ import httpx
 import hmac
 import hashlib
 import base64
-from motor.motor_asyncio import AsyncIOMotorClient
+from database import db
 from routes.auth import get_current_user
 from datetime import datetime
 from bson import ObjectId
@@ -20,12 +20,6 @@ from pydantic import BaseModel, EmailStr
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
-
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-db_name = os.environ.get('DB_NAME', 'test_database')
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
 
 # Orange Money Configuration
 ORANGE_MERCHANT_KEY = os.environ.get('ORANGE_MERCHANT_KEY', '')
