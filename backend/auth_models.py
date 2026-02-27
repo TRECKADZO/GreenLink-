@@ -57,6 +57,9 @@ class User(UserBase):
     created_at: datetime
     is_active: bool
     
+    # Legal acceptance tracking
+    legal_acceptance: Optional[Dict[str, Any]] = None
+    
     # Profile fields based on user_type
     # Producteur fields
     crops: Optional[list] = None
