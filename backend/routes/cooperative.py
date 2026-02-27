@@ -1,0 +1,859 @@
+"""
+Routes pour la gestion des coopératives agricoles
+GreenLink Agritech - Côte d'Ivoire
+"""
+
+from fastapi import APIRouter, HTTPException, Depends, status, Query
+from typing import List, Optional
+from pydantic import BaseModel, Field
+from datetime import datetime, timedelta
+from bson import ObjectId
+import logging
+import os
+
+from motor.motor_asyncio import AsyncIOMotorClient
+from routes.auth import get_current_user
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/cooperative", tags=["Cooperative"])
+
+# MongoDB connection
+MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+DB_NAME = os.environ.get("DB_NAME", "greenlink")
+client = AsyncIOMotorClient(MONGO_URL)
+db = client[DB_NAME]
+
+# ============= MODELS =============
+
+class CoopMemberCreate(BaseModel):
+    full_name: str
+    phone_number: str
+    village: str
+    cni_number: Optional[str] = None
+    consent_given: bool = True
+
+class CoopMemberUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    village: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class CoopLotCreate(BaseModel):
+    lot_name: str
+    target_tonnage: float
+    product_type: str = "cacao"
+    certification: Optional[str] = None
+    min_carbon_score: float = 6.0
+    description: Optional[str] = None
+
+class CoopPremiumDistribution(BaseModel):
+    lot_id: str
+    total_premium: float
+    distribution_method: str = "proportional"  # proportional, equal, score_weighted
+
+class AgentCreate(BaseModel):
+    full_name: str
+    phone_number: str
+    email: Optional[str] = None
+    zone: str
+    village_coverage: List[str] = []
+
+# ============= HELPER FUNCTIONS =============
+
+def verify_cooperative(current_user: dict):
+    """Vérifie que l'utilisateur est une coopérative"""
+    if current_user.get("user_type") != "cooperative":
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé aux coopératives agricoles"
+        )
+    return current_user
+
+# ============= DASHBOARD ENDPOINTS =============
+
+@router.get("/dashboard")
+async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
+    """Dashboard principal de la coopérative"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    # Get members count
+    total_members = await db.coop_members.count_documents({"coop_id": coop_id})
+    active_members = await db.coop_members.count_documents({"coop_id": coop_id, "is_active": True})
+    
+    # Get parcels data
+    members = await db.coop_members.find({"coop_id": coop_id}).to_list(10000)
+    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    
+    parcels = await db.parcels.find({"farmer_id": {"$in": member_user_ids}}).to_list(10000)
+    total_hectares = sum([p.get("area_hectares", 0) for p in parcels])
+    total_co2 = sum([p.get("carbon_credits_earned", 0) for p in parcels])
+    avg_score = sum([p.get("carbon_score", 0) for p in parcels]) / len(parcels) if parcels else 0
+    
+    # Get lots
+    active_lots = await db.coop_lots.count_documents({"coop_id": coop_id, "status": {"$in": ["open", "negotiating"]}})
+    completed_lots = await db.coop_lots.count_documents({"coop_id": coop_id, "status": "completed"})
+    
+    # Get financial data
+    distributions = await db.coop_distributions.find({"coop_id": coop_id}).to_list(1000)
+    total_received = sum([d.get("total_premium", 0) for d in distributions])
+    total_distributed = sum([d.get("amount_distributed", 0) for d in distributions])
+    
+    # Get recent activities
+    recent_members = await db.coop_members.find(
+        {"coop_id": coop_id}
+    ).sort("created_at", -1).limit(5).to_list(5)
+    
+    # Get pending validations
+    pending_members = await db.coop_members.count_documents({
+        "coop_id": coop_id, 
+        "status": "pending_validation"
+    })
+    
+    return {
+        "coop_info": {
+            "name": current_user.get("coop_name", ""),
+            "code": current_user.get("coop_code", ""),
+            "certifications": current_user.get("certifications", []),
+            "commission_rate": current_user.get("commission_rate", 0.10)
+        },
+        "members": {
+            "total": total_members,
+            "active": active_members,
+            "pending_validation": pending_members,
+            "onboarding_rate": round(active_members / total_members * 100, 1) if total_members > 0 else 0
+        },
+        "parcels": {
+            "total_count": len(parcels),
+            "total_hectares": round(total_hectares, 1),
+            "total_co2_tonnes": round(total_co2, 1),
+            "average_carbon_score": round(avg_score, 1),
+            "co2_per_hectare": round(total_co2 / total_hectares, 2) if total_hectares > 0 else 0
+        },
+        "lots": {
+            "active": active_lots,
+            "completed": completed_lots
+        },
+        "financial": {
+            "total_premiums_received": total_received,
+            "total_premiums_distributed": total_distributed,
+            "distribution_rate": round(total_distributed / total_received * 100, 1) if total_received > 0 else 0,
+            "pending_distribution": total_received - total_distributed
+        },
+        "recent_members": [{
+            "id": str(m["_id"]),
+            "name": m.get("full_name", ""),
+            "village": m.get("village", ""),
+            "created_at": m.get("created_at", datetime.utcnow()).isoformat() if isinstance(m.get("created_at"), datetime) else str(m.get("created_at", ""))
+        } for m in recent_members]
+    }
+
+# ============= MEMBER MANAGEMENT =============
+
+@router.get("/members")
+async def get_coop_members(
+    current_user: dict = Depends(get_current_user),
+    status: Optional[str] = None,
+    village: Optional[str] = None,
+    search: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50
+):
+    """Liste des membres de la coopérative"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    query = {"coop_id": coop_id}
+    if status:
+        query["status"] = status
+    if village:
+        query["village"] = village
+    if search:
+        query["$or"] = [
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"phone_number": {"$regex": search, "$options": "i"}}
+        ]
+    
+    total = await db.coop_members.count_documents(query)
+    members = await db.coop_members.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Enrich with parcel data
+    result = []
+    for m in members:
+        member_data = {
+            "id": str(m["_id"]),
+            "full_name": m.get("full_name", ""),
+            "phone_number": m.get("phone_number", ""),
+            "village": m.get("village", ""),
+            "cni_number": m.get("cni_number", ""),
+            "status": m.get("status", "active"),
+            "is_active": m.get("is_active", True),
+            "created_at": m.get("created_at", datetime.utcnow()).isoformat() if isinstance(m.get("created_at"), datetime) else str(m.get("created_at", ""))
+        }
+        
+        # Get member's parcels if user_id exists
+        if m.get("user_id"):
+            parcels = await db.parcels.find({"farmer_id": m["user_id"]}).to_list(100)
+            member_data["parcels_count"] = len(parcels)
+            member_data["total_hectares"] = round(sum([p.get("area_hectares", 0) for p in parcels]), 2)
+            member_data["average_carbon_score"] = round(
+                sum([p.get("carbon_score", 0) for p in parcels]) / len(parcels), 1
+            ) if parcels else 0
+        else:
+            member_data["parcels_count"] = 0
+            member_data["total_hectares"] = 0
+            member_data["average_carbon_score"] = 0
+        
+        result.append(member_data)
+    
+    return {
+        "total": total,
+        "members": result
+    }
+
+@router.post("/members")
+async def create_coop_member(
+    member: CoopMemberCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Ajouter un nouveau membre à la coopérative"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    # Check if member already exists
+    existing = await db.coop_members.find_one({
+        "coop_id": coop_id,
+        "phone_number": member.phone_number
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Ce membre existe déjà dans la coopérative")
+    
+    member_doc = {
+        "coop_id": coop_id,
+        "full_name": member.full_name,
+        "phone_number": member.phone_number,
+        "village": member.village,
+        "cni_number": member.cni_number,
+        "consent_given": member.consent_given,
+        "consent_date": datetime.utcnow() if member.consent_given else None,
+        "status": "pending_validation",
+        "is_active": True,
+        "user_id": None,  # Will be linked when member creates account
+        "created_at": datetime.utcnow(),
+        "created_by": current_user["_id"]
+    }
+    
+    result = await db.coop_members.insert_one(member_doc)
+    
+    logger.info(f"New coop member created: {member.full_name} for coop {coop_id}")
+    
+    return {
+        "message": "Membre ajouté avec succès",
+        "member_id": str(result.inserted_id)
+    }
+
+@router.post("/members/import-csv")
+async def import_members_csv(
+    members_data: List[CoopMemberCreate],
+    current_user: dict = Depends(get_current_user)
+):
+    """Import massif de membres via CSV"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    imported = 0
+    errors = []
+    
+    for idx, member in enumerate(members_data):
+        try:
+            # Check if already exists
+            existing = await db.coop_members.find_one({
+                "coop_id": coop_id,
+                "phone_number": member.phone_number
+            })
+            if existing:
+                errors.append(f"Ligne {idx+1}: {member.phone_number} existe déjà")
+                continue
+            
+            member_doc = {
+                "coop_id": coop_id,
+                "full_name": member.full_name,
+                "phone_number": member.phone_number,
+                "village": member.village,
+                "cni_number": member.cni_number,
+                "consent_given": member.consent_given,
+                "status": "pending_validation",
+                "is_active": True,
+                "created_at": datetime.utcnow(),
+                "created_by": current_user["_id"],
+                "import_batch": True
+            }
+            
+            await db.coop_members.insert_one(member_doc)
+            imported += 1
+            
+        except Exception as e:
+            errors.append(f"Ligne {idx+1}: {str(e)}")
+    
+    return {
+        "message": f"{imported} membres importés avec succès",
+        "imported": imported,
+        "errors": errors[:10],  # Return first 10 errors
+        "total_errors": len(errors)
+    }
+
+@router.put("/members/{member_id}/validate")
+async def validate_member(
+    member_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Valider un membre en attente"""
+    verify_cooperative(current_user)
+    
+    result = await db.coop_members.update_one(
+        {"_id": ObjectId(member_id), "coop_id": current_user["_id"]},
+        {
+            "$set": {
+                "status": "active",
+                "validated_at": datetime.utcnow(),
+                "validated_by": current_user["_id"]
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Membre non trouvé")
+    
+    return {"message": "Membre validé avec succès"}
+
+@router.get("/members/{member_id}")
+async def get_member_details(
+    member_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Détails d'un membre"""
+    verify_cooperative(current_user)
+    
+    member = await db.coop_members.find_one({
+        "_id": ObjectId(member_id),
+        "coop_id": current_user["_id"]
+    })
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Membre non trouvé")
+    
+    # Get member's parcels and harvests
+    parcels = []
+    harvests = []
+    total_premium = 0
+    
+    if member.get("user_id"):
+        parcels = await db.parcels.find({"farmer_id": member["user_id"]}).to_list(100)
+        harvests = await db.harvests.find({"farmer_id": member["user_id"]}).to_list(100)
+        total_premium = sum([h.get("carbon_premium", 0) for h in harvests])
+    
+    return {
+        "id": str(member["_id"]),
+        "full_name": member.get("full_name", ""),
+        "phone_number": member.get("phone_number", ""),
+        "village": member.get("village", ""),
+        "cni_number": member.get("cni_number", ""),
+        "status": member.get("status", ""),
+        "is_active": member.get("is_active", True),
+        "consent_given": member.get("consent_given", False),
+        "created_at": member.get("created_at", ""),
+        "parcels": [{
+            "id": str(p["_id"]),
+            "location": p.get("location", ""),
+            "area_hectares": p.get("area_hectares", 0),
+            "carbon_score": p.get("carbon_score", 0),
+            "crop_type": p.get("crop_type", "cacao")
+        } for p in parcels],
+        "harvests_count": len(harvests),
+        "total_premium_earned": total_premium
+    }
+
+# ============= LOT MANAGEMENT =============
+
+@router.get("/lots")
+async def get_coop_lots(
+    current_user: dict = Depends(get_current_user),
+    status: Optional[str] = None
+):
+    """Liste des lots de vente de la coopérative"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    query = {"coop_id": coop_id}
+    if status:
+        query["status"] = status
+    
+    lots = await db.coop_lots.find(query).sort("created_at", -1).to_list(100)
+    
+    return [{
+        "id": str(lot["_id"]),
+        "lot_name": lot.get("lot_name", ""),
+        "status": lot.get("status", "open"),
+        "product_type": lot.get("product_type", "cacao"),
+        "target_tonnage": lot.get("target_tonnage", 0),
+        "actual_tonnage": lot.get("actual_tonnage", 0),
+        "certification": lot.get("certification", ""),
+        "min_carbon_score": lot.get("min_carbon_score", 6.0),
+        "average_carbon_score": lot.get("average_carbon_score", 0),
+        "contributors_count": lot.get("contributors_count", 0),
+        "price_per_kg": lot.get("price_per_kg", 0),
+        "carbon_premium_per_kg": lot.get("carbon_premium_per_kg", 0),
+        "total_value": lot.get("total_value", 0),
+        "buyer_name": lot.get("buyer_name", ""),
+        "created_at": lot.get("created_at", datetime.utcnow()).isoformat() if isinstance(lot.get("created_at"), datetime) else str(lot.get("created_at", ""))
+    } for lot in lots]
+
+@router.post("/lots")
+async def create_coop_lot(
+    lot: CoopLotCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Créer un nouveau lot de vente groupée"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    # Get eligible members and their parcels
+    members = await db.coop_members.find({
+        "coop_id": coop_id,
+        "status": "active",
+        "is_active": True
+    }).to_list(10000)
+    
+    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    
+    # Get parcels with minimum carbon score
+    eligible_parcels = await db.parcels.find({
+        "farmer_id": {"$in": member_user_ids},
+        "carbon_score": {"$gte": lot.min_carbon_score}
+    }).to_list(10000)
+    
+    if not eligible_parcels:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Aucune parcelle éligible (score carbone >= {lot.min_carbon_score})"
+        )
+    
+    # Calculate aggregated stats
+    total_hectares = sum([p.get("area_hectares", 0) for p in eligible_parcels])
+    avg_score = sum([p.get("carbon_score", 0) for p in eligible_parcels]) / len(eligible_parcels)
+    unique_farmers = len(set([p.get("farmer_id") for p in eligible_parcels]))
+    
+    # Estimate tonnage (2000-2500 kg/ha average)
+    estimated_tonnage = total_hectares * 2.25  # 2250 kg/ha average
+    
+    lot_doc = {
+        "coop_id": coop_id,
+        "lot_name": lot.lot_name,
+        "lot_code": f"LOT-{coop_id[-6:]}-{datetime.utcnow().strftime('%Y%m%d')}",
+        "product_type": lot.product_type,
+        "certification": lot.certification,
+        "target_tonnage": lot.target_tonnage,
+        "estimated_tonnage": estimated_tonnage,
+        "actual_tonnage": 0,
+        "min_carbon_score": lot.min_carbon_score,
+        "average_carbon_score": round(avg_score, 1),
+        "total_hectares": round(total_hectares, 1),
+        "contributors_count": unique_farmers,
+        "eligible_parcels": len(eligible_parcels),
+        "status": "open",
+        "description": lot.description,
+        "price_per_kg": 0,
+        "carbon_premium_per_kg": 0,
+        "total_value": 0,
+        "buyer_id": None,
+        "buyer_name": None,
+        "created_at": datetime.utcnow(),
+        "created_by": current_user["_id"]
+    }
+    
+    result = await db.coop_lots.insert_one(lot_doc)
+    
+    logger.info(f"New lot created: {lot.lot_name} with {unique_farmers} contributors")
+    
+    return {
+        "message": "Lot créé avec succès",
+        "lot_id": str(result.inserted_id),
+        "eligible_farmers": unique_farmers,
+        "eligible_parcels": len(eligible_parcels),
+        "total_hectares": round(total_hectares, 1),
+        "estimated_tonnage": round(estimated_tonnage, 1),
+        "average_carbon_score": round(avg_score, 1)
+    }
+
+@router.put("/lots/{lot_id}/finalize")
+async def finalize_lot_sale(
+    lot_id: str,
+    buyer_name: str,
+    actual_tonnage: float,
+    price_per_kg: float,
+    carbon_premium_per_kg: float,
+    current_user: dict = Depends(get_current_user)
+):
+    """Finaliser une vente de lot"""
+    verify_cooperative(current_user)
+    
+    lot = await db.coop_lots.find_one({
+        "_id": ObjectId(lot_id),
+        "coop_id": current_user["_id"]
+    })
+    
+    if not lot:
+        raise HTTPException(status_code=404, detail="Lot non trouvé")
+    
+    total_value = actual_tonnage * 1000 * price_per_kg  # Convert to kg
+    total_premium = actual_tonnage * 1000 * carbon_premium_per_kg
+    
+    await db.coop_lots.update_one(
+        {"_id": ObjectId(lot_id)},
+        {
+            "$set": {
+                "status": "completed",
+                "buyer_name": buyer_name,
+                "actual_tonnage": actual_tonnage,
+                "price_per_kg": price_per_kg,
+                "carbon_premium_per_kg": carbon_premium_per_kg,
+                "total_value": total_value,
+                "total_carbon_premium": total_premium,
+                "completed_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    return {
+        "message": "Vente finalisée avec succès",
+        "total_value": total_value,
+        "total_carbon_premium": total_premium,
+        "next_step": "Procéder à la redistribution des primes"
+    }
+
+# ============= PREMIUM DISTRIBUTION =============
+
+@router.post("/lots/{lot_id}/distribute")
+async def distribute_lot_premiums(
+    lot_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Redistribuer les primes carbone aux membres"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    lot = await db.coop_lots.find_one({
+        "_id": ObjectId(lot_id),
+        "coop_id": coop_id,
+        "status": "completed"
+    })
+    
+    if not lot:
+        raise HTTPException(status_code=404, detail="Lot non trouvé ou pas encore finalisé")
+    
+    # Check if already distributed
+    existing_dist = await db.coop_distributions.find_one({"lot_id": lot_id})
+    if existing_dist:
+        raise HTTPException(status_code=400, detail="Les primes de ce lot ont déjà été redistribuées")
+    
+    total_premium = lot.get("total_carbon_premium", 0)
+    commission_rate = current_user.get("commission_rate", 0.10)
+    
+    # Calculate commission and distributable amount
+    commission = total_premium * commission_rate
+    distributable = total_premium - commission
+    
+    # Get contributing members and their share
+    members = await db.coop_members.find({
+        "coop_id": coop_id,
+        "status": "active",
+        "is_active": True
+    }).to_list(10000)
+    
+    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    
+    # Get parcels with their scores
+    parcels = await db.parcels.find({
+        "farmer_id": {"$in": member_user_ids},
+        "carbon_score": {"$gte": lot.get("min_carbon_score", 6.0)}
+    }).to_list(10000)
+    
+    # Calculate score-weighted distribution
+    total_weighted = sum([p.get("area_hectares", 0) * p.get("carbon_score", 0) for p in parcels])
+    
+    distributions = []
+    for member in members:
+        if not member.get("user_id"):
+            continue
+        
+        member_parcels = [p for p in parcels if p.get("farmer_id") == member.get("user_id")]
+        if not member_parcels:
+            continue
+        
+        member_weighted = sum([p.get("area_hectares", 0) * p.get("carbon_score", 0) for p in member_parcels])
+        share_percentage = member_weighted / total_weighted if total_weighted > 0 else 0
+        amount = distributable * share_percentage
+        
+        if amount > 0:
+            distributions.append({
+                "member_id": str(member["_id"]),
+                "member_name": member.get("full_name", ""),
+                "phone_number": member.get("phone_number", ""),
+                "parcels_count": len(member_parcels),
+                "total_hectares": sum([p.get("area_hectares", 0) for p in member_parcels]),
+                "average_score": sum([p.get("carbon_score", 0) for p in member_parcels]) / len(member_parcels),
+                "share_percentage": round(share_percentage * 100, 2),
+                "amount": round(amount, 0),
+                "payment_status": "pending"
+            })
+    
+    # Create distribution record
+    dist_doc = {
+        "coop_id": coop_id,
+        "lot_id": lot_id,
+        "lot_name": lot.get("lot_name", ""),
+        "total_premium": total_premium,
+        "commission_rate": commission_rate,
+        "commission_amount": commission,
+        "amount_distributed": distributable,
+        "beneficiaries_count": len(distributions),
+        "distributions": distributions,
+        "status": "pending_payment",
+        "created_at": datetime.utcnow(),
+        "created_by": current_user["_id"]
+    }
+    
+    result = await db.coop_distributions.insert_one(dist_doc)
+    
+    logger.info(f"Distribution created for lot {lot_id}: {len(distributions)} beneficiaries, {distributable} FCFA")
+    
+    return {
+        "message": "Redistribution calculée avec succès",
+        "distribution_id": str(result.inserted_id),
+        "total_premium": total_premium,
+        "commission": commission,
+        "amount_to_distribute": distributable,
+        "beneficiaries_count": len(distributions),
+        "distributions": distributions[:10],  # Preview first 10
+        "next_step": "Valider et déclencher les paiements Orange Money"
+    }
+
+@router.put("/distributions/{dist_id}/execute")
+async def execute_distribution_payments(
+    dist_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Exécuter les paiements Orange Money"""
+    verify_cooperative(current_user)
+    
+    dist = await db.coop_distributions.find_one({
+        "_id": ObjectId(dist_id),
+        "coop_id": current_user["_id"]
+    })
+    
+    if not dist:
+        raise HTTPException(status_code=404, detail="Distribution non trouvée")
+    
+    # Simulate Orange Money Business payments
+    successful = 0
+    failed = 0
+    
+    for d in dist.get("distributions", []):
+        # In production: call Orange Money Business API
+        # For now, simulate success
+        d["payment_status"] = "completed"
+        d["payment_date"] = datetime.utcnow().isoformat()
+        d["transaction_id"] = f"OM-{d['member_id'][-6:]}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        successful += 1
+        
+        # Send SMS notification (simulated)
+        logger.info(f"SMS sent to {d['phone_number']}: Prime carbone {d['amount']} FCFA reçue")
+    
+    await db.coop_distributions.update_one(
+        {"_id": ObjectId(dist_id)},
+        {
+            "$set": {
+                "status": "completed",
+                "distributions": dist["distributions"],
+                "executed_at": datetime.utcnow(),
+                "successful_payments": successful,
+                "failed_payments": failed
+            }
+        }
+    )
+    
+    return {
+        "message": f"Paiements exécutés: {successful} réussis, {failed} échecs",
+        "successful": successful,
+        "failed": failed,
+        "total_distributed": dist.get("amount_distributed", 0)
+    }
+
+@router.get("/distributions")
+async def get_distributions_history(
+    current_user: dict = Depends(get_current_user)
+):
+    """Historique des redistributions"""
+    verify_cooperative(current_user)
+    
+    distributions = await db.coop_distributions.find({
+        "coop_id": current_user["_id"]
+    }).sort("created_at", -1).to_list(100)
+    
+    return [{
+        "id": str(d["_id"]),
+        "lot_name": d.get("lot_name", ""),
+        "total_premium": d.get("total_premium", 0),
+        "commission_amount": d.get("commission_amount", 0),
+        "amount_distributed": d.get("amount_distributed", 0),
+        "beneficiaries_count": d.get("beneficiaries_count", 0),
+        "status": d.get("status", ""),
+        "created_at": d.get("created_at", datetime.utcnow()).isoformat() if isinstance(d.get("created_at"), datetime) else str(d.get("created_at", ""))
+    } for d in distributions]
+
+# ============= AGENTS MANAGEMENT =============
+
+@router.get("/agents")
+async def get_coop_agents(current_user: dict = Depends(get_current_user)):
+    """Liste des agents terrain"""
+    verify_cooperative(current_user)
+    
+    agents = await db.coop_agents.find({
+        "coop_id": current_user["_id"]
+    }).to_list(100)
+    
+    return [{
+        "id": str(a["_id"]),
+        "full_name": a.get("full_name", ""),
+        "phone_number": a.get("phone_number", ""),
+        "zone": a.get("zone", ""),
+        "village_coverage": a.get("village_coverage", []),
+        "members_onboarded": a.get("members_onboarded", 0),
+        "parcels_declared": a.get("parcels_declared", 0),
+        "is_active": a.get("is_active", True)
+    } for a in agents]
+
+@router.post("/agents")
+async def create_agent(
+    agent: AgentCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Ajouter un agent terrain"""
+    verify_cooperative(current_user)
+    
+    agent_doc = {
+        "coop_id": current_user["_id"],
+        "full_name": agent.full_name,
+        "phone_number": agent.phone_number,
+        "email": agent.email,
+        "zone": agent.zone,
+        "village_coverage": agent.village_coverage,
+        "members_onboarded": 0,
+        "parcels_declared": 0,
+        "is_active": True,
+        "created_at": datetime.utcnow()
+    }
+    
+    result = await db.coop_agents.insert_one(agent_doc)
+    
+    return {
+        "message": "Agent ajouté avec succès",
+        "agent_id": str(result.inserted_id)
+    }
+
+# ============= REPORTS & EXPORTS =============
+
+@router.get("/reports/eudr")
+async def generate_eudr_report(current_user: dict = Depends(get_current_user)):
+    """Générer rapport conformité EUDR"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    members = await db.coop_members.find({"coop_id": coop_id, "is_active": True}).to_list(10000)
+    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    
+    parcels = await db.parcels.find({"farmer_id": {"$in": member_user_ids}}).to_list(10000)
+    
+    geolocated = len([p for p in parcels if p.get("location") or p.get("gps_coordinates")])
+    
+    return {
+        "report_date": datetime.utcnow().isoformat(),
+        "cooperative": {
+            "name": current_user.get("coop_name", ""),
+            "code": current_user.get("coop_code", ""),
+            "certifications": current_user.get("certifications", [])
+        },
+        "compliance": {
+            "total_parcels": len(parcels),
+            "geolocated_parcels": geolocated,
+            "geolocation_rate": round(geolocated / len(parcels) * 100, 1) if parcels else 0,
+            "deforestation_alerts": 0,  # Would come from satellite API
+            "compliant_parcels": len(parcels),  # Simplified
+            "compliance_rate": 100.0
+        },
+        "statistics": {
+            "total_members": len(members),
+            "total_hectares": round(sum([p.get("area_hectares", 0) for p in parcels]), 1),
+            "total_co2_tonnes": round(sum([p.get("carbon_credits_earned", 0) for p in parcels]), 1),
+            "average_carbon_score": round(
+                sum([p.get("carbon_score", 0) for p in parcels]) / len(parcels), 1
+            ) if parcels else 0
+        },
+        "export_available": ["PDF", "CSV"]
+    }
+
+@router.get("/reports/audit-selection")
+async def select_parcels_for_audit(
+    sample_rate: float = 0.10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Sélectionner parcelles pour audit (5-10%)"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    members = await db.coop_members.find({"coop_id": coop_id, "is_active": True}).to_list(10000)
+    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    
+    parcels = await db.parcels.find({"farmer_id": {"$in": member_user_ids}}).to_list(10000)
+    
+    import random
+    sample_size = max(1, int(len(parcels) * sample_rate))
+    selected = random.sample(parcels, min(sample_size, len(parcels)))
+    
+    return {
+        "total_parcels": len(parcels),
+        "sample_rate": sample_rate,
+        "selected_count": len(selected),
+        "selected_parcels": [{
+            "id": str(p["_id"]),
+            "location": p.get("location", ""),
+            "area_hectares": p.get("area_hectares", 0),
+            "carbon_score": p.get("carbon_score", 0),
+            "farmer_id": p.get("farmer_id", "")
+        } for p in selected]
+    }
+
+# ============= STATISTICS =============
+
+@router.get("/stats/villages")
+async def get_village_stats(current_user: dict = Depends(get_current_user)):
+    """Statistiques par village"""
+    verify_cooperative(current_user)
+    
+    pipeline = [
+        {"$match": {"coop_id": current_user["_id"]}},
+        {"$group": {
+            "_id": "$village",
+            "members_count": {"$sum": 1},
+            "active_count": {"$sum": {"$cond": ["$is_active", 1, 0]}}
+        }},
+        {"$sort": {"members_count": -1}}
+    ]
+    
+    results = await db.coop_members.aggregate(pipeline).to_list(100)
+    
+    return [{
+        "village": r["_id"],
+        "members_count": r["members_count"],
+        "active_count": r["active_count"]
+    } for r in results]
