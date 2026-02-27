@@ -59,6 +59,8 @@ Build a comprehensive agritech platform connecting:
 - [x] Auth timing bug fixed in all dashboards
 - [x] **SMS Notifications for farmers** (auto-send when carbon score ≥7)
 - [x] **Carbon Premium Calculator** - Interactive calculator on homepage
+- [x] **User Profile Menu** - Dropdown menu with role-specific navigation
+- [x] **Homepage Marketplace** - B2B marketplace with filters, search, and ordering
 
 ### Mocked/Simulated
 - Orange Money payments (backend simulation only)
