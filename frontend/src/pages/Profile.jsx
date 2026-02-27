@@ -181,8 +181,14 @@ const Profile = () => {
 
             <div>
               <Label>Numéro de téléphone</Label>
-              <Input value={user.phone_number} disabled />
+              <Input value={user.phone_number || 'Non renseigné'} disabled />
               <p className="text-xs text-gray-500 mt-1">Le numéro de téléphone ne peut pas être modifié</p>
+            </div>
+
+            <div>
+              <Label>Email</Label>
+              <Input value={user.email || 'Non renseigné'} disabled />
+              <p className="text-xs text-gray-500 mt-1">L'email ne peut pas être modifié</p>
             </div>
 
             {/* Producteur Fields */}
