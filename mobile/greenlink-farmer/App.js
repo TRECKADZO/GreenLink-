@@ -83,6 +83,11 @@ function AppNavigator() {
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="Orders" component={OrdersScreen} />
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
+      
+      {/* Carbon/RSE Screens */}
+      <Stack.Screen name="CarbonMarketplace" component={CarbonMarketplaceScreen} />
+      <Stack.Screen name="MyCarbonPurchases" component={MyCarbonPurchasesScreen} />
+      <Stack.Screen name="MyCarbonScore" component={MyCarbonScoreScreen} />
     </Stack.Navigator>
   );
 }
