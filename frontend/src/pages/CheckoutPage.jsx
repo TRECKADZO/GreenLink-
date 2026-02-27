@@ -91,13 +91,25 @@ const CheckoutPage = () => {
     }
   };
 
+  // Handle redirects in useEffect to avoid React warnings
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (cart.items.length === 0 && !orderSuccess && !paymentStatus && user) {
+      navigate('/marketplace');
+    }
+  }, [cart.items.length, orderSuccess, paymentStatus, user, navigate]);
+
+  // Early returns after hooks
   if (!user) {
-    navigate('/login');
     return null;
   }
 
   if (cart.items.length === 0 && !orderSuccess && !paymentStatus) {
-    navigate('/marketplace');
     return null;
   }
 
