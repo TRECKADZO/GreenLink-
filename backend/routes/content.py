@@ -8,8 +8,9 @@ router = APIRouter(prefix="/api", tags=["content"])
 
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL')
+db_name = os.environ.get('DB_NAME', 'test_database')
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME')]
+db = client[db_name]
 
 @router.get("/steps", response_model=List[StepInDB])
 async def get_steps():
