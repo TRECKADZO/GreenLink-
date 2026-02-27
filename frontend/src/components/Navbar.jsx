@@ -53,6 +53,7 @@ const Navbar = () => {
       case 'acheteur': return '/buyer/dashboard';
       case 'entreprise_rse': return '/rse/dashboard';
       case 'fournisseur': return '/supplier/dashboard';
+      case 'cooperative': return '/cooperative/dashboard';
       case 'admin': return '/admin/dashboard';
       default: return '/profile';
     }
@@ -66,6 +67,7 @@ const Navbar = () => {
       case 'acheteur': return 'Acheteur';
       case 'entreprise_rse': return 'Entreprise RSE';
       case 'fournisseur': return 'Fournisseur';
+      case 'cooperative': return 'Coopérative';
       case 'admin': return 'Administrateur';
       default: return 'Utilisateur';
     }
@@ -79,6 +81,7 @@ const Navbar = () => {
       case 'acheteur': return ShoppingCart;
       case 'entreprise_rse': return Building2;
       case 'fournisseur': return Package;
+      case 'cooperative': return Building2;
       default: return User;
     }
   };
