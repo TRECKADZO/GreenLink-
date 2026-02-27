@@ -117,6 +117,15 @@ const Navbar = () => {
 
   const UserIcon = getUserTypeIcon();
 
+  const scrollToMarketplace = () => {
+    const element = document.getElementById('marketplace');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/#marketplace');
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 bg-[#2d5a4d]/95 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -131,6 +140,22 @@ const Navbar = () => {
             <h1 className="text-white text-lg font-bold">GreenLink</h1>
             <p className="text-white/70 text-xs">Agriculture durable</p>
           </div>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="hidden md:flex items-center gap-6">
+          <button 
+            onClick={scrollToMarketplace}
+            className="text-white/80 hover:text-white transition-colors font-medium"
+          >
+            Marketplace
+          </button>
+          <button 
+            onClick={() => navigate('/#features')}
+            className="text-white/80 hover:text-white transition-colors font-medium"
+          >
+            Services
+          </button>
         </div>
         
         <div className="flex items-center gap-3">
