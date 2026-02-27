@@ -311,7 +311,7 @@ async def purchase_carbon_credits(
     
     purchase_dict = purchase.dict()
     purchase_dict["buyer_id"] = current_user["_id"]
-    purchase_dict["buyer_company"] = current_user.get("company_name_rse", current_user["full_name"])
+    purchase_dict["buyer_company"] = current_user.get("company_name_rse") or current_user.get("full_name") or "Entreprise Inconnue"
     purchase_dict["transaction_date"] = datetime.utcnow()
     purchase_dict["status"] = "completed"
     
