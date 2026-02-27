@@ -149,7 +149,7 @@ const Navbar = () => {
         {/* Navigation Links */}
         <div className="hidden md:flex items-center gap-6">
           <button 
-            onClick={scrollToMarketplace}
+            onClick={() => navigate('/marketplace')}
             className="text-white/80 hover:text-white transition-colors font-medium"
           >
             Marketplace
