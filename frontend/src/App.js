@@ -98,6 +98,8 @@ function App() {
               <Route path="/cooperative/dashboard" element={<CooperativeDashboard />} />
               <Route path="/cooperative/members" element={<CooperativeMembersPage />} />
               <Route path="/cooperative/members/new" element={<CooperativeMembersPage />} />
+              <Route path="/cooperative/members/import" element={<ImportMembersPage />} />
+              <Route path="/cooperative/members/:memberId/parcels" element={<MemberParcelsPage />} />
               <Route path="/cooperative/lots" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/lots/new" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />
