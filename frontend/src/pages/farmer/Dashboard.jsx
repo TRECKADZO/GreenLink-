@@ -19,19 +19,20 @@ import {
 import { useToast } from '../../hooks/use-toast';
 
 const FarmerDashboard = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user || user.user_type !== 'producteur') {
       navigate('/');
       return;
     }
     fetchDashboard();
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchDashboard = async () => {
     try {

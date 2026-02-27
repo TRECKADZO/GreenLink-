@@ -20,7 +20,7 @@ import {
 import { useToast } from '../../hooks/use-toast';
 
 const RSEDashboard = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [impact, setImpact] = useState(null);
@@ -28,12 +28,13 @@ const RSEDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user || user.user_type !== 'entreprise_rse') {
       navigate('/');
       return;
     }
     fetchData();
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchData = async () => {
     try {
