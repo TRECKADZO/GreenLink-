@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
 import { marketplaceApi } from '../services/marketplaceApi';
 import { 
@@ -31,6 +32,7 @@ const categories = [
 const MarketplaceSection = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const { toast } = useToast();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +57,7 @@ const MarketplaceSection = () => {
     }
   };
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = async (product) => {
     if (!user) {
       toast({
         title: 'Connexion requise',
