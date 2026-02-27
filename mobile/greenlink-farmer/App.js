@@ -14,6 +14,7 @@ import RegisterScreen from './src/screens/auth/RegisterScreen';
 import HomeScreen from './src/screens/home/HomeScreen';
 import ParcelsScreen from './src/screens/parcels/ParcelsScreen';
 import AddParcelScreen from './src/screens/parcels/AddParcelScreen';
+import HarvestScreen from './src/screens/harvest/HarvestScreen';
 import PaymentsScreen from './src/screens/payments/PaymentsScreen';
 import NotificationsScreen from './src/screens/notifications/NotificationsScreen';
 import ProfileScreen from './src/screens/profile/ProfileScreen';
@@ -42,6 +43,7 @@ const AppNavigator = () => (
     <Stack.Screen name="Home" component={HomeScreen} />
     <Stack.Screen name="Parcels" component={ParcelsScreen} />
     <Stack.Screen name="AddParcel" component={AddParcelScreen} />
+    <Stack.Screen name="Harvest" component={HarvestScreen} />
     <Stack.Screen name="Payments" component={PaymentsScreen} />
     <Stack.Screen name="Notifications" component={NotificationsScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
