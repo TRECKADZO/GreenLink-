@@ -1,52 +1,43 @@
 import React, { useState } from 'react';
-import { MapPin, TreePine, Users, Leaf } from 'lucide-react';
+import { MapPin, TreePine, Users, Leaf, X } from 'lucide-react';
 
-// Coordonnées SVG simplifiées des régions cacaoyères de Côte d'Ivoire
+// Positions des régions cacaoyères sur la carte de Côte d'Ivoire
 const REGIONS_DATA = {
   'Daloa': { 
-    path: 'M 280 200 L 320 180 L 350 200 L 340 240 L 300 250 L 270 230 Z',
-    center: { x: 310, y: 215 },
+    x: 35, y: 45,
     stats: { farmers: 450, trees: 25000, hectares: 1200, co2: 150 }
   },
   'Bouaflé': { 
-    path: 'M 350 160 L 390 150 L 410 180 L 400 220 L 360 230 L 340 200 Z',
-    center: { x: 375, y: 190 },
+    x: 45, y: 35,
     stats: { farmers: 320, trees: 18000, hectares: 850, co2: 95 }
   },
   'Soubré': { 
-    path: 'M 250 260 L 290 250 L 310 280 L 300 320 L 260 330 L 240 300 Z',
-    center: { x: 275, y: 290 },
+    x: 28, y: 58,
     stats: { farmers: 580, trees: 32000, hectares: 1500, co2: 180 }
   },
   'San-Pédro': { 
-    path: 'M 220 330 L 260 320 L 280 350 L 270 390 L 230 400 L 210 370 Z',
-    center: { x: 245, y: 360 },
+    x: 22, y: 70,
     stats: { farmers: 420, trees: 22000, hectares: 980, co2: 120 }
   },
   'Gagnoa': { 
-    path: 'M 320 230 L 360 220 L 380 250 L 370 290 L 330 300 L 310 270 Z',
-    center: { x: 345, y: 260 },
+    x: 40, y: 52,
     stats: { farmers: 380, trees: 20000, hectares: 920, co2: 110 }
   },
   'Divo': { 
-    path: 'M 380 240 L 420 230 L 440 260 L 430 300 L 390 310 L 370 280 Z',
-    center: { x: 405, y: 270 },
+    x: 52, y: 55,
     stats: { farmers: 290, trees: 15000, hectares: 680, co2: 85 }
   },
   'Abengourou': { 
-    path: 'M 480 180 L 520 170 L 540 200 L 530 240 L 490 250 L 470 220 Z',
-    center: { x: 505, y: 210 },
+    x: 72, y: 42,
     stats: { farmers: 340, trees: 19000, hectares: 870, co2: 100 }
   },
   'Marahoué': { 
-    path: 'M 300 140 L 340 130 L 360 160 L 350 200 L 310 210 L 290 180 Z',
-    center: { x: 325, y: 170 },
+    x: 38, y: 38,
     stats: { farmers: 260, trees: 14000, hectares: 620, co2: 75 }
   }
 };
 
 const InteractiveMap = ({ activeRegions = [], onRegionClick }) => {
-  const [hoveredRegion, setHoveredRegion] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
 
   const handleRegionClick = (regionName) => {
@@ -60,112 +51,140 @@ const InteractiveMap = ({ activeRegions = [], onRegionClick }) => {
 
   return (
     <div className="relative">
-      {/* SVG Map */}
-      <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4 overflow-hidden">
+      {/* Map Container */}
+      <div className="relative bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-2xl p-6 overflow-hidden min-h-[450px]">
+        
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2322c55e' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}></div>
+        </div>
+
+        {/* Côte d'Ivoire SVG Shape */}
         <svg 
-          viewBox="180 100 450 350" 
-          className="w-full h-auto max-h-[500px]"
-          style={{ minHeight: '400px' }}
+          viewBox="0 0 100 100" 
+          className="absolute inset-0 w-full h-full"
+          preserveAspectRatio="xMidYMid meet"
         >
-          {/* Background - Côte d'Ivoire outline */}
+          {/* Country outline */}
           <path
-            d="M 200 120 L 300 100 L 450 110 L 550 150 L 580 250 L 560 350 L 500 420 L 400 450 L 250 430 L 200 350 L 190 250 Z"
-            fill="#e8f5e9"
-            stroke="#81c784"
-            strokeWidth="2"
+            d="M 15 15 Q 30 8, 55 10 Q 80 12, 88 25 Q 92 45, 90 60 Q 85 78, 70 88 Q 50 95, 30 90 Q 15 85, 10 70 Q 8 50, 12 30 Q 14 20, 15 15"
+            fill="#dcfce7"
+            stroke="#22c55e"
+            strokeWidth="1"
+            opacity="0.6"
           />
           
-          {/* Ocean/Gulf of Guinea */}
+          {/* Ocean */}
           <path
-            d="M 180 380 Q 300 450, 500 420 L 500 480 L 180 480 Z"
-            fill="#bbdefb"
-            opacity="0.5"
+            d="M 8 75 Q 40 95, 75 85 L 75 100 L 8 100 Z"
+            fill="#bfdbfe"
+            opacity="0.4"
           />
-          <text x="300" y="460" fill="#1976d2" fontSize="12" fontWeight="bold">
-            Golfe de Guinée
-          </text>
-
-          {/* Regions */}
-          {Object.entries(REGIONS_DATA).map(([name, data]) => {
-            const isActive = isRegionActive(name);
-            const isHovered = hoveredRegion === name;
-            const isSelected = selectedRegion === name;
-            
-            return (
-              <g key={name}>
-                <path
-                  d={data.path}
-                  fill={isActive ? (isSelected ? '#2e7d32' : isHovered ? '#4caf50' : '#66bb6a') : '#e0e0e0'}
-                  stroke={isActive ? '#1b5e20' : '#9e9e9e'}
-                  strokeWidth={isSelected ? 3 : 2}
-                  className={`transition-all duration-300 ${isActive ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                  onMouseEnter={() => setHoveredRegion(name)}
-                  onMouseLeave={() => setHoveredRegion(null)}
-                  onClick={() => isActive && handleRegionClick(name)}
-                  style={{
-                    filter: isHovered && isActive ? 'brightness(1.1)' : 'none',
-                    transform: isSelected ? 'scale(1.02)' : 'scale(1)',
-                    transformOrigin: `${data.center.x}px ${data.center.y}px`
-                  }}
-                />
-                {/* Region Label */}
-                <text
-                  x={data.center.x}
-                  y={data.center.y}
-                  textAnchor="middle"
-                  fill={isActive ? '#fff' : '#666'}
-                  fontSize="11"
-                  fontWeight="bold"
-                  className="pointer-events-none"
-                  style={{ textShadow: isActive ? '1px 1px 2px rgba(0,0,0,0.5)' : 'none' }}
-                >
-                  {name}
-                </text>
-                {/* Active indicator */}
-                {isActive && (
-                  <circle
-                    cx={data.center.x + 25}
-                    cy={data.center.y - 15}
-                    r="6"
-                    fill="#ffeb3b"
-                    stroke="#f57f17"
-                    strokeWidth="2"
-                    className="animate-pulse"
-                  />
-                )}
-              </g>
-            );
-          })}
-
-          {/* Major cities markers */}
-          <g>
-            <circle cx="470" cy="320" r="8" fill="#d32f2f" />
-            <text x="470" y="340" textAnchor="middle" fill="#333" fontSize="14" fontWeight="bold">
-              Abidjan
-            </text>
-          </g>
-          <g>
-            <circle cx="380" cy="140" r="6" fill="#1976d2" />
-            <text x="380" y="130" textAnchor="middle" fill="#333" fontSize="11" fontWeight="bold">
-              Yamoussoukro
-            </text>
-          </g>
-
-          {/* Legend */}
-          <g transform="translate(190, 130)">
-            <rect x="0" y="0" width="100" height="70" fill="white" rx="5" opacity="0.9" />
-            <text x="10" y="18" fontSize="10" fontWeight="bold" fill="#333">Légende</text>
-            <rect x="10" y="25" width="15" height="15" fill="#66bb6a" />
-            <text x="30" y="37" fontSize="9" fill="#333">Région active</text>
-            <rect x="10" y="45" width="15" height="15" fill="#e0e0e0" />
-            <text x="30" y="57" fontSize="9" fill="#333">Région inactive</text>
-          </g>
         </svg>
+
+        {/* Region Markers */}
+        {Object.entries(REGIONS_DATA).map(([name, data]) => {
+          const isActive = isRegionActive(name);
+          const isSelected = selectedRegion === name;
+          
+          return (
+            <div
+              key={name}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300"
+              style={{ 
+                left: `${data.x}%`, 
+                top: `${data.y}%`,
+                zIndex: isSelected ? 20 : 10
+              }}
+              onClick={() => isActive && handleRegionClick(name)}
+            >
+              {/* Pulse animation for active regions */}
+              {isActive && (
+                <div className="absolute inset-0 -m-2">
+                  <div className={`w-12 h-12 rounded-full ${isSelected ? 'bg-green-400' : 'bg-green-300'} animate-ping opacity-30`}></div>
+                </div>
+              )}
+              
+              {/* Region Circle */}
+              <div 
+                className={`
+                  relative w-10 h-10 rounded-full flex items-center justify-center
+                  transition-all duration-300 shadow-lg
+                  ${isActive 
+                    ? isSelected 
+                      ? 'bg-green-600 scale-125 ring-4 ring-green-300' 
+                      : 'bg-green-500 hover:bg-green-600 hover:scale-110'
+                    : 'bg-gray-300 cursor-not-allowed'
+                  }
+                `}
+              >
+                {isActive && (
+                  <MapPin className="w-5 h-5 text-white" />
+                )}
+              </div>
+              
+              {/* Region Label */}
+              <div className={`
+                absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap
+                text-xs font-bold px-2 py-0.5 rounded
+                ${isActive 
+                  ? 'bg-green-800 text-white' 
+                  : 'bg-gray-200 text-gray-500'
+                }
+              `}>
+                {name}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Major Cities */}
+        <div 
+          className="absolute transform -translate-x-1/2 -translate-y-1/2"
+          style={{ left: '65%', top: '60%' }}
+        >
+          <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-md"></div>
+          <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-700 whitespace-nowrap">
+            Abidjan
+          </span>
+        </div>
+        
+        <div 
+          className="absolute transform -translate-x-1/2 -translate-y-1/2"
+          style={{ left: '50%', top: '30%' }}
+        >
+          <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-md"></div>
+          <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-gray-600 whitespace-nowrap">
+            Yamoussoukro
+          </span>
+        </div>
+
+        {/* Legend */}
+        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+          <h4 className="text-xs font-bold text-gray-700 mb-2">Légende</h4>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-4 h-4 rounded-full bg-green-500"></div>
+            <span className="text-xs text-gray-600">Région active</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-gray-300"></div>
+            <span className="text-xs text-gray-600">Région inactive</span>
+          </div>
+        </div>
+        
+        {/* Ocean Label */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+          <span className="text-sm text-blue-400 font-medium opacity-70">
+            🌊 Golfe de Guinée
+          </span>
+        </div>
       </div>
 
       {/* Region Details Panel */}
       {selectedRegion && REGIONS_DATA[selectedRegion] && (
-        <div className="absolute top-4 right-4 bg-white rounded-xl shadow-2xl p-5 w-72 border-l-4 border-green-500 animate-in slide-in-from-right">
+        <div className="absolute top-4 right-4 bg-white rounded-xl shadow-2xl p-5 w-72 border-l-4 border-green-500 z-30 animate-in slide-in-from-right duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-green-600" />
@@ -173,9 +192,9 @@ const InteractiveMap = ({ activeRegions = [], onRegionClick }) => {
             </h3>
             <button 
               onClick={() => setSelectedRegion(null)}
-              className="text-gray-400 hover:text-gray-600"
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
             >
-              ✕
+              <X className="w-4 h-4 text-gray-400" />
             </button>
           </div>
           
@@ -209,14 +228,12 @@ const InteractiveMap = ({ activeRegions = [], onRegionClick }) => {
               <p className="text-xs text-purple-600">CO₂ compensé</p>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Hover tooltip */}
-      {hoveredRegion && !selectedRegion && isRegionActive(hoveredRegion) && (
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-4 py-2 pointer-events-none">
-          <p className="text-sm font-semibold text-gray-900">{hoveredRegion}</p>
-          <p className="text-xs text-gray-500">Cliquez pour voir les détails</p>
+          
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              📍 Zone cacaoyère majeure
+            </p>
+          </div>
         </div>
       )}
     </div>
