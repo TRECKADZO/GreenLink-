@@ -163,6 +163,20 @@ const Navbar = () => {
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Shopping Cart Button */}
+          <button
+            onClick={() => setCartOpen(true)}
+            className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+            data-testid="cart-button"
+          >
+            <ShoppingCart className="w-6 h-6 text-white" />
+            {cart.items_count > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#d4a574] text-[#2d5a4d] text-xs font-bold rounded-full flex items-center justify-center">
+                {cart.items_count}
+              </span>
+            )}
+          </button>
+
           {user ? (
             <div className="relative" ref={menuRef}>
               {/* User Button */}
