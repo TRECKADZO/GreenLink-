@@ -17,6 +17,7 @@
     "expo": "~52.0.38",
     "expo-background-fetch": "^55.0.9",
     "expo-camera": "^55.0.9",
+    "expo-constants": "^55.0.7",
     "expo-file-system": "^55.0.10",
     "expo-image-picker": "^55.0.10",
     "expo-location": "^55.1.2",
