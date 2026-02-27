@@ -135,7 +135,7 @@ const HomeScreen = ({ navigation }) => {
         
         <MenuItem
           number="3"
-          title="Marketplace"
+          title="Marketplace Intrants"
           subtitle="Achetez intrants & équipements"
           icon="🛒"
           onPress={() => navigation.navigate('Marketplace')}
@@ -144,6 +144,23 @@ const HomeScreen = ({ navigation }) => {
         
         <MenuItem
           number="4"
+          title="Marketplace Carbone RSE"
+          subtitle="Crédits carbone & impact climat"
+          icon="🌍"
+          onPress={() => navigation.navigate('CarbonMarketplace')}
+          highlight={true}
+        />
+        
+        <MenuItem
+          number="5"
+          title="Mon Score Carbone"
+          subtitle={`Score: ${dashboard?.average_carbon_score?.toFixed(1) || '0'}/10`}
+          icon="🌱"
+          onPress={() => navigation.navigate('MyCarbonScore')}
+        />
+        
+        <MenuItem
+          number="6"
           title="Mes Commandes"
           subtitle="Suivez vos achats"
           icon="📦"
@@ -151,7 +168,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="5"
+          number="7"
           title="Mes Paiements"
           subtitle="Primes et historique"
           icon="💳"
@@ -159,7 +176,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="6"
+          number="8"
           title="Notifications"
           subtitle={`${dashboard?.unread_notifications || 0} non lue(s)`}
           icon="🔔"
@@ -167,7 +184,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="7"
+          number="9"
           title="Mon Profil"
           subtitle="Gérer mon compte"
           icon="👤"
