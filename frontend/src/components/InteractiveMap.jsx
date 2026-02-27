@@ -63,7 +63,7 @@ const InteractiveMap = ({ activeRegions = [], onRegionClick }) => {
       {/* SVG Map */}
       <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4 overflow-hidden">
         <svg 
-          viewBox="80 100 400 350" 
+          viewBox="180 100 450 350" 
           className="w-full h-auto max-h-[500px]"
           style={{ minHeight: '400px' }}
         >
