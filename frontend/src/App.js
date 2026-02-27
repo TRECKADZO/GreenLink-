@@ -12,6 +12,9 @@ import MarketplacePage from "./pages/MarketplacePage";
 import WishlistPage from "./pages/WishlistPage";
 import BuyerOrders from "./pages/buyer/BuyerOrders";
 import OrderTracking from "./pages/OrderTracking";
+import ConditionsPage from "./pages/ConditionsPage";
+import ConfidentialitePage from "./pages/ConfidentialitePage";
+import SecuritePage from "./pages/SecuritePage";
 
 // Supplier Routes
 import SupplierDashboard from "./pages/supplier/Dashboard";
@@ -30,6 +33,10 @@ import BuyerDashboard from "./pages/buyer/Dashboard";
 
 // RSE Routes
 import RSEDashboard from "./pages/rse/Dashboard";
+import CarbonMarketplace from "./pages/rse/CarbonMarketplace";
+
+// Admin Routes
+import AdminDashboard from "./pages/admin/Dashboard";
 
 function App() {
   return (
@@ -46,6 +53,9 @@ function App() {
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
+              <Route path="/conditions" element={<ConditionsPage />} />
+              <Route path="/confidentialite" element={<ConfidentialitePage />} />
+              <Route path="/securite" element={<SecuritePage />} />
               
               {/* Supplier/Fournisseur Routes */}
               <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
@@ -65,6 +75,12 @@ function App() {
 
               {/* RSE/Enterprise Routes */}
               <Route path="/rse/dashboard" element={<RSEDashboard />} />
+              <Route path="/rse/carbon-marketplace" element={<CarbonMarketplace />} />
+              <Route path="/carbon-marketplace" element={<CarbonMarketplace />} />
+
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
             </Routes>
           </BrowserRouter>
           <Toaster />
