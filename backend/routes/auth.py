@@ -181,3 +181,58 @@ async def update_profile(
     updated_user.pop("hashed_password", None)
     
     return updated_user
+
+@router.delete("/account")
+async def delete_account(current_user: dict = Depends(get_current_user)):
+    """
+    Delete user account and all associated data.
+    This action is irreversible.
+    """
+    user_id = current_user["_id"]
+    
+    # Delete user's related data
+    try:
+        # Delete user's orders
+        await db.orders.delete_many({"buyer_id": user_id})
+        await db.orders.delete_many({"supplier_id": user_id})
+        
+        # Delete user's products (if supplier)
+        await db.products.delete_many({"supplier_id": user_id})
+        
+        # Delete user's cart
+        await db.carts.delete_many({"user_id": user_id})
+        
+        # Delete user's wishlist
+        await db.wishlists.delete_many({"user_id": user_id})
+        
+        # Delete user's reviews
+        await db.product_reviews.delete_many({"user_id": user_id})
+        
+        # Delete user's parcels (if farmer)
+        await db.parcels.delete_many({"farmer_id": user_id})
+        
+        # Delete user's harvests (if farmer)
+        await db.harvests.delete_many({"farmer_id": user_id})
+        
+        # Delete user's notifications
+        await db.notifications.delete_many({"user_id": user_id})
+        
+        # Delete user's payments
+        await db.payments.delete_many({"user_id": user_id})
+        
+        # Finally, delete the user account
+        result = await db.users.delete_one({"_id": ObjectId(user_id)})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Utilisateur non trouvé"
+            )
+        
+        return {"message": "Compte supprimé avec succès", "deleted": True}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la suppression: {str(e)}"
+        )
