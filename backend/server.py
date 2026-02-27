@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime, timezone
 
 # Import routes
-from routes import features, content, contact, auth, marketplace
+from routes import features, content, contact, auth, marketplace, greenlink
 
 
 ROOT_DIR = Path(__file__).parent
@@ -78,6 +78,7 @@ app.include_router(content.router)
 app.include_router(contact.router)
 app.include_router(auth.router)
 app.include_router(marketplace.router)
+app.include_router(greenlink.router)
 
 app.add_middleware(
     CORSMiddleware,
