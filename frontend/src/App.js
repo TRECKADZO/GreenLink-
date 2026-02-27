@@ -45,6 +45,8 @@ import CooperativeMembersPage from "./pages/cooperative/MembersPage";
 import CooperativeLotsPage from "./pages/cooperative/LotsPage";
 import CooperativeDistributionsPage from "./pages/cooperative/DistributionsPage";
 import CooperativeReportsPage from "./pages/cooperative/ReportsPage";
+import MemberParcelsPage from "./pages/cooperative/MemberParcelsPage";
+import ImportMembersPage from "./pages/cooperative/ImportMembersPage";
 
 function App() {
   return (
