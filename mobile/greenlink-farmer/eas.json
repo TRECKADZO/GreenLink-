@@ -8,8 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleDebug"
+        "buildType": "apk"
       },
       "ios": {
         "simulator": true
@@ -18,11 +17,7 @@
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "credentialsSource": "remote"
-      },
-      "ios": {
-        "simulator": false
+        "buildType": "apk"
       },
       "channel": "preview"
     },
@@ -31,23 +26,11 @@
       "android": {
         "buildType": "apk"
       },
-      "ios": {
-        "resourceClass": "m-medium"
-      },
       "channel": "production",
       "autoIncrement": true
     }
   },
   "submit": {
-    "production": {
-      "android": {
-        "serviceAccountKeyPath": "./google-services.json",
-        "track": "internal"
-      },
-      "ios": {
-        "appleId": "your-apple-id@email.com",
-        "ascAppId": "your-app-store-connect-app-id"
-      }
-    }
+    "production": {}
   }
 }
