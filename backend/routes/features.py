@@ -1,16 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from database import db
 from models import Feature, FeatureInDB
 
 router = APIRouter(prefix="/api/features", tags=["features"])
-
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-db_name = os.environ.get('DB_NAME', 'test_database')
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
 
 @router.get("", response_model=List[FeatureInDB])
 async def get_features():
