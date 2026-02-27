@@ -56,13 +56,17 @@ export const Button = ({
 };
 
 // Menu item style USSD
-export const MenuItem = ({ number, title, subtitle, onPress, icon }) => (
-  <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
-    <View style={styles.menuNumber}>
-      <Text style={styles.menuNumberText}>{number}</Text>
+export const MenuItem = ({ number, title, subtitle, onPress, icon, highlight = false }) => (
+  <TouchableOpacity 
+    style={[styles.menuItem, highlight && styles.menuItemHighlight]} 
+    onPress={onPress} 
+    activeOpacity={0.7}
+  >
+    <View style={[styles.menuNumber, highlight && styles.menuNumberHighlight]}>
+      <Text style={[styles.menuNumberText, highlight && styles.menuNumberTextHighlight]}>{number}</Text>
     </View>
     <View style={styles.menuContent}>
-      <Text style={styles.menuTitle}>{title}</Text>
+      <Text style={[styles.menuTitle, highlight && styles.menuTitleHighlight]}>{title}</Text>
       {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
     </View>
     {icon && <Text style={styles.menuIcon}>{icon}</Text>}
