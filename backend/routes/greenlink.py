@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List, Optional
 import os
+import logging
 from motor.motor_asyncio import AsyncIOMotorClient
 from greenlink_models import (
     Parcel, ParcelCreate, Harvest, HarvestCreate, PaymentRequest,
@@ -9,10 +10,13 @@ from greenlink_models import (
     ImpactDashboard, USSDSession
 )
 from routes.auth import get_current_user
+from services.sms_service import SMSService
 from datetime import datetime, timedelta
 from bson import ObjectId
 import random
 import hashlib
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/greenlink", tags=["greenlink"])
 
