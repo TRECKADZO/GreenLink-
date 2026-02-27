@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -6,16 +6,58 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Button, NetworkStatus } from '../../components/UI';
+import { syncService } from '../../services/sync';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout, updateProfile } = useAuth();
   const { isOnline, pendingActions } = useOffline();
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(null);
+
+  useEffect(() => {
+    loadSyncStatus();
+  }, []);
+
+  const loadSyncStatus = async () => {
+    const status = await syncService.getSyncStatus();
+    setSyncStatus(status);
+  };
+
+  const handleManualSync = async () => {
+    if (!isOnline) {
+      Alert.alert('Hors ligne', 'Vous devez être connecté pour synchroniser');
+      return;
+    }
+
+    setSyncing(true);
+    try {
+      const result = await syncService.syncNow();
+      if (result.success) {
+        if (result.synced > 0) {
+          Alert.alert(
+            'Synchronisation terminée',
+            `${result.synced} élément(s) synchronisé(s)${result.failed > 0 ? `, ${result.failed} échec(s)` : ''}`
+          );
+        } else {
+          Alert.alert('À jour', 'Rien à synchroniser');
+        }
+      } else {
+        Alert.alert('Erreur', result.error || 'Échec de la synchronisation');
+      }
+      await loadSyncStatus();
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de synchroniser');
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
