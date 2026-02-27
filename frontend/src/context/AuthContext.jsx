@@ -32,14 +32,22 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const register = async (phoneNumber, password, fullName, userType) => {
+  const register = async (identifier, password, fullName, userType, isEmail = false) => {
     try {
-      const response = await axios.post(`${API}/auth/register`, {
-        phone_number: phoneNumber,
+      const payload = {
         password,
         full_name: fullName,
         user_type: userType
-      });
+      };
+      
+      // Add either phone_number or email
+      if (isEmail) {
+        payload.email = identifier;
+      } else {
+        payload.phone_number = identifier;
+      }
+      
+      const response = await axios.post(`${API}/auth/register`, payload);
       const { access_token, user: userData } = response.data;
       setToken(access_token);
       setUser(userData);
@@ -53,10 +61,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (phoneNumber, password) => {
+  const login = async (identifier, password) => {
     try {
       const response = await axios.post(`${API}/auth/login`, {
-        phone_number: phoneNumber,
+        identifier,
         password
       });
       const { access_token, user: userData } = response.data;
