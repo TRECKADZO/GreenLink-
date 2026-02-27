@@ -38,6 +38,9 @@
         "projectId": "69cdf51e-6916-433e-99ed-bfdc2e852057"
       }
     },
-    "owner": "treckadzo"
+    "owner": "treckadzo",
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }
