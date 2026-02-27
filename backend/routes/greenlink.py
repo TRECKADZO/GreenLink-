@@ -210,6 +210,24 @@ async def request_payment(
     except Exception as e:
         logger.error(f"Payment SMS notification failed: {e}")
     
+    # Send push notification for payment
+    try:
+        push_result = await send_notification_to_user(
+            db=db,
+            user_id=current_user["_id"],
+            title="Paiement reçu 💰",
+            body=f"{payment.amount:,.0f} FCFA reçus via {payment.payment_method.replace('_', ' ').title()}",
+            data={
+                "type": "payment_received",
+                "amount": payment.amount,
+                "transaction_id": transaction_id,
+                "screen": "Payments"
+            }
+        )
+        logger.info(f"Payment push notification sent: {push_result}")
+    except Exception as e:
+        logger.error(f"Payment push notification failed: {e}")
+    
     return {
         "success": True,
         "transaction_id": transaction_id,
