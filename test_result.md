@@ -314,15 +314,15 @@ frontend:
 
 metadata:
   created_by: "testing_agent"
-  version: "1.1"
-  test_sequence: 2
+  version: "2.0"
+  test_sequence: 3
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Authentication System - Email Support"
+    - "GreenLink Multi-Profile Platform Testing Complete"
   stuck_tasks: []
-  test_all: false
+  test_all: true
   test_priority: "high_first"
 
 agent_communication:
@@ -332,3 +332,5 @@ agent_communication:
     message: "🔐 AUTHENTICATION SYSTEM TESTING COMPLETE - All authentication endpoints working perfectly: ✅ Registration (all user types), ✅ Login with JWT tokens, ✅ Profile access with Bearer auth, ✅ Profile updates, ✅ Error handling (duplicate users, wrong passwords, invalid formats, unauthorized access). All 4 user types (producteur, acheteur, entreprise_rse, fournisseur) properly initialize their specific fields. Phone validation requires format without spaces (e.g., +22507123456789). Complete authentication flow verified and operational."
   - agent: "testing"
     message: "🆕 EMAIL SUPPORT TESTING COMPLETE - Updated GreenLink authentication system with email support working perfectly. ✅ Email registration (test@greenlink.ci), ✅ Phone registration (+22507654321), ✅ Email login, ✅ Phone login, ✅ Duplicate detection for both, ✅ Profile display shows email/phone correctly. 9/10 tests passed. Minor issue: validation error returns 500 instead of 422 for no contact info (backend response validation, not critical). All core email + phone functionality operational."
+  - agent: "testing"
+    message: "🌱 GREENLINK MULTI-PROFILE PLATFORM TESTING COMPLETE - Comprehensive test of entire GreenLink system with 13/13 tests passing (100% success rate). All three user profiles fully functional: ✅ PRODUCER (parcel declaration, harvest management, mobile money payments, dashboard with carbon scoring), ✅ BUYER (order creation, EUDR traceability reports, compliance tracking), ✅ CSR COMPANY (carbon credits marketplace, certificate purchases, impact dashboards). Integration tests confirm proper user type protection (403 Forbidden for unauthorized access). Carbon score calculations, premium calculations, blockchain hash generation, and mobile money simulation all working correctly. Platform ready for production use."
