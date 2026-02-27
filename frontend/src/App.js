@@ -88,6 +88,15 @@ function App() {
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+              {/* Cooperative Routes */}
+              <Route path="/cooperative/dashboard" element={<CooperativeDashboard />} />
+              <Route path="/cooperative/members" element={<CooperativeMembersPage />} />
+              <Route path="/cooperative/members/new" element={<CooperativeMembersPage />} />
+              <Route path="/cooperative/lots" element={<CooperativeLotsPage />} />
+              <Route path="/cooperative/lots/new" element={<CooperativeLotsPage />} />
+              <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />
+              <Route path="/cooperative/reports" element={<CooperativeReportsPage />} />
             </Routes>
           </BrowserRouter>
           <Toaster />
