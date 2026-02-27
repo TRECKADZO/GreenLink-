@@ -54,9 +54,11 @@ Build a comprehensive agritech platform connecting:
 - [x] Farmer dashboard with USSD simulator
 - [x] Buyer dashboard with EUDR export
 - [x] RSE dashboard with impact metrics
+- [x] **RSE Interactive Map** - Clickable map of Côte d'Ivoire with regional statistics
 - [x] Supplier dashboard with full marketplace
 - [x] Auth timing bug fixed in all dashboards
 - [x] **SMS Notifications for farmers** (auto-send when carbon score ≥7)
+- [x] **Carbon Premium Calculator** - Interactive calculator on homepage
 
 ### Mocked/Simulated
 - Orange Money payments (backend simulation only)
