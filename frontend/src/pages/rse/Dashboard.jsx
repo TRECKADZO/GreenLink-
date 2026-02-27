@@ -213,23 +213,32 @@ www.greenlink-agritech.com
 
         {/* Interactive Map Section */}
         <Card className="p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Impact Territorial</h2>
-          <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg p-8 mb-4">
-            <div className="grid md:grid-cols-3 gap-6">
-              {impact.regions_covered.map((region, index) => (
-                <div key={index} className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-sm">
-                  <MapPin className="w-6 h-6 text-green-600" />
-                  <div>
-                    <p className="font-semibold text-gray-900">{region}</p>
-                    <p className="text-xs text-gray-500">Région active</p>
-                  </div>
-                </div>
-              ))}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Map className="w-6 h-6 text-green-600" />
+              <h2 className="text-xl font-bold text-gray-900">Carte d'Impact Territorial</h2>
             </div>
+            <Badge className="bg-green-100 text-green-700">
+              {impact.regions_covered.length} régions actives
+            </Badge>
           </div>
-          <p className="text-sm text-gray-600">
-            📍 Votre impact couvre <strong>{impact.regions_covered.length} régions</strong> cacaoyères et anacarde en Côte d'Ivoire
-          </p>
+          
+          <InteractiveMap 
+            activeRegions={impact.regions_covered}
+            onRegionClick={(region) => {
+              toast({
+                title: `Région: ${region}`,
+                description: 'Données de la région chargées'
+              });
+            }}
+          />
+          
+          <div className="mt-4 p-4 bg-green-50 rounded-lg">
+            <p className="text-sm text-green-800">
+              <strong>📍 Votre impact carbone</strong> couvre {impact.regions_covered.length} régions cacaoyères 
+              et anacarde en Côte d'Ivoire. Cliquez sur une région pour voir les détails des projets.
+            </p>
+          </div>
         </Card>
 
         {/* Monthly Trend */}
