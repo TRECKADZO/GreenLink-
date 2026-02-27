@@ -73,10 +73,12 @@ Build a comprehensive agritech platform connecting:
 - `PUT /api/auth/profile` - Update profile
 
 ### Farmer (Greenlink)
-- `POST /api/greenlink/parcels` - Declare parcel
+- `POST /api/greenlink/parcels` - Declare parcel (auto SMS if score ≥7)
 - `GET /api/greenlink/parcels/my-parcels` - Get my parcels
 - `POST /api/greenlink/harvests` - Declare harvest
 - `GET /api/greenlink/farmer/dashboard` - Dashboard stats
+- `GET /api/greenlink/sms/history` - SMS notification history
+- `POST /api/greenlink/sms/send-weekly-summary` - Send weekly summary SMS
 
 ### Buyer
 - `POST /api/greenlink/buyer/orders` - Create order
