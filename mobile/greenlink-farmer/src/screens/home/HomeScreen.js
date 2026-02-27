@@ -135,6 +135,23 @@ const HomeScreen = ({ navigation }) => {
         
         <MenuItem
           number="3"
+          title="Marketplace"
+          subtitle="Achetez intrants & équipements"
+          icon="🛒"
+          onPress={() => navigation.navigate('Marketplace')}
+          highlight={true}
+        />
+        
+        <MenuItem
+          number="4"
+          title="Mes Commandes"
+          subtitle="Suivez vos achats"
+          icon="📦"
+          onPress={() => navigation.navigate('Orders')}
+        />
+        
+        <MenuItem
+          number="5"
           title="Mes Paiements"
           subtitle="Primes et historique"
           icon="💳"
@@ -142,7 +159,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="4"
+          number="6"
           title="Notifications"
           subtitle={`${dashboard?.unread_notifications || 0} non lue(s)`}
           icon="🔔"
@@ -150,7 +167,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="5"
+          number="7"
           title="Mon Profil"
           subtitle="Gérer mon compte"
           icon="👤"
