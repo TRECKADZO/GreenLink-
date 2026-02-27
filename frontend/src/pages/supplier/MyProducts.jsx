@@ -30,7 +30,7 @@ const units = [
 ];
 
 const MyProducts = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [products, setProducts] = useState([]);
@@ -50,12 +50,13 @@ const MyProducts = () => {
   });
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
       navigate('/');
       return;
     }
     fetchProducts();
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchProducts = async () => {
     try {
