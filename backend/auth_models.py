@@ -79,6 +79,16 @@ class User(UserBase):
     supplier_company: Optional[str] = None
     products_offered: Optional[list] = None
     
+    # Coopérative fields
+    coop_name: Optional[str] = None
+    coop_code: Optional[str] = None
+    registration_number: Optional[str] = None
+    certifications: Optional[list] = None  # ["UTZ", "Rainforest", "Fairtrade"]
+    headquarters_address: Optional[str] = None
+    headquarters_region: Optional[str] = None
+    commission_rate: Optional[float] = None  # 0.10 = 10%
+    orange_money_business: Optional[str] = None
+    
 class UserInDB(User):
     hashed_password: str
 
