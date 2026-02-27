@@ -15,7 +15,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from routes.auth import get_current_user
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/cooperative", tags=["Cooperative"])
+router = APIRouter(prefix="/api/cooperative", tags=["Cooperative"])
 
 # MongoDB connection
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
