@@ -60,6 +60,20 @@ async def declare_parcel(
         "is_read": False
     })
     
+    # Send SMS notification if carbon score is premium eligible (>=7)
+    if carbon_score >= 7 and parcel.phone_number:
+        try:
+            sms_result = await SMSService.notify_carbon_premium_eligible(
+                phone_number=parcel.phone_number,
+                farmer_name=parcel.farmer_name,
+                parcel_id=str(result.inserted_id),
+                carbon_score=carbon_score,
+                language=parcel.language
+            )
+            logger.info(f"SMS sent for premium eligible parcel: {sms_result}")
+        except Exception as e:
+            logger.error(f"SMS notification failed: {e}")
+    
     return parcel_dict
 
 @router.get("/parcels/my-parcels", response_model=List[Parcel])
