@@ -20,7 +20,7 @@ Build a comprehensive agritech platform connecting:
 ### 2. Acheteur Responsable (Responsible Buyer)
 - **Needs**: Traceable commodities, EUDR compliance reports, carbon certificates
 - **Features**: Order management, traceability reports, CSV/PDF export
-- **Key Routes**: `/buyer/dashboard`
+- **Key Routes**: `/buyer/dashboard`, `/buyer/orders`
 
 ### 3. Entreprise RSE (CSR Company)
 - **Needs**: Verified carbon credits, impact tracking, CSRD reporting
@@ -39,7 +39,8 @@ Build a comprehensive agritech platform connecting:
 - **Routes**:
   - `/api/auth/*` - Authentication
   - `/api/greenlink/*` - Farmer, Buyer, RSE endpoints
-  - `/api/marketplace/*` - Supplier endpoints
+  - `/api/marketplace/*` - Supplier and marketplace endpoints
+  - `/api/payments/*` - Orange Money payment integration
 
 ### Frontend (React)
 - **Components**: Shadcn UI library
@@ -53,29 +54,32 @@ Build a comprehensive agritech platform connecting:
 - [x] Authentication (email + phone, all 4 user types)
 - [x] Farmer dashboard with USSD simulator
 - [x] Buyer dashboard with EUDR export
-- [x] RSE dashboard with impact metrics
-- [x] **RSE Interactive Map** - Clickable map of Côte d'Ivoire with regional statistics
+- [x] RSE dashboard with impact metrics and interactive map
 - [x] Supplier dashboard with full marketplace
-- [x] Auth timing bug fixed in all dashboards
-- [x] **SMS Notifications for farmers** (auto-send when carbon score ≥7)
+- [x] **SMS Notifications for farmers** (simulated - ready for Orange API)
 - [x] **Carbon Premium Calculator** - Interactive calculator on homepage
 - [x] **User Profile Menu** - Dropdown menu with role-specific navigation
-- [x] **Homepage Marketplace** - B2B marketplace with filters, search, and ordering
+- [x] **Marketplace Page** - B2B marketplace with filters, search, and ordering
 - [x] **Product Image Upload** - Suppliers can upload photos (JPG/PNG/WebP, max 5MB)
 - [x] **Shopping Cart System** - Full cart with add/update/remove/checkout
 - [x] **Order Management** - Checkout page, order confirmation, buyer orders list
+- [x] **Product Reviews & Ratings** - Users can rate and review products
+- [x] **Wishlist/Favorites** - Save products for later
+- [x] **Order Tracking** - Timeline-based order status tracking
+- [x] **Supplier Notifications** - Notifications on new orders and payments
+- [x] **Orange Money Integration (SIMULATION)** - Full payment flow with simulation mode
 
 ### Mocked/Simulated
-- Orange Money payments (backend simulation only)
-- USSD interface (web simulator, no telecom integration)
-- Carbon credit certificates (text format, no PDF)
-- **SMS notifications** (simulated, stored in DB, ready for Orange API)
+- **Orange Money payments** - Simulation mode active (no real API keys yet)
+- **USSD interface** - Web simulator, no telecom integration
+- **SMS notifications** - Logged to console, ready for Orange API
+- **Carbon credit certificates** - Text format, no PDF generation yet
 
 ## API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - Create account
-- `POST /api/auth/login` - Login (email or phone)
+- `POST /api/auth/login` - Login (identifier field: email or phone)
 - `GET /api/auth/me` - Get current user
 - `PUT /api/auth/profile` - Update profile
 
@@ -85,23 +89,31 @@ Build a comprehensive agritech platform connecting:
 - `POST /api/greenlink/harvests` - Declare harvest
 - `GET /api/greenlink/farmer/dashboard` - Dashboard stats
 - `GET /api/greenlink/sms/history` - SMS notification history
-- `POST /api/greenlink/sms/send-weekly-summary` - Send weekly summary SMS
 
-### Buyer
-- `POST /api/greenlink/buyer/orders` - Create order
-- `GET /api/greenlink/buyer/orders` - Get orders
-- `GET /api/greenlink/buyer/traceability/{order_id}` - EUDR report
-- `GET /api/greenlink/buyer/dashboard` - Dashboard stats
+### Marketplace
+- `GET /api/marketplace/products` - List all products
+- `POST /api/marketplace/products` - Create product (supplier)
+- `GET /api/marketplace/products/{id}/reviews` - Get reviews
+- `POST /api/marketplace/products/{id}/reviews` - Add review
+- `GET /api/marketplace/wishlist` - Get wishlist
+- `POST /api/marketplace/wishlist/add` - Add to wishlist
+- `DELETE /api/marketplace/wishlist/remove/{id}` - Remove from wishlist
 
-### RSE
-- `GET /api/greenlink/carbon-credits` - Marketplace
-- `POST /api/greenlink/carbon-credits/purchase` - Buy credits
-- `GET /api/greenlink/rse/impact-dashboard` - Impact metrics
+### Cart & Orders
+- `GET /api/marketplace/cart` - Get cart
+- `POST /api/marketplace/cart/add` - Add to cart
+- `PUT /api/marketplace/cart/update` - Update quantity
+- `DELETE /api/marketplace/cart/remove/{id}` - Remove item
+- `POST /api/marketplace/cart/checkout` - Create orders
+- `GET /api/marketplace/buyer/orders` - Get buyer orders
+- `GET /api/marketplace/orders/{id}/tracking` - Get order tracking
 
-### Supplier
-- `POST /api/marketplace/products` - Create product
-- `GET /api/marketplace/products/my-products` - My products
-- `GET /api/marketplace/dashboard/stats` - Dashboard
+### Payments (Orange Money)
+- `GET /api/payments/simulation-status` - Check if simulation mode
+- `POST /api/payments/initiate` - Initiate payment
+- `GET /api/payments/status/{ref}` - Get payment status
+- `POST /api/payments/simulate/{token}` - Simulate payment (test mode)
+- `POST /api/payments/webhook` - Webhook for real payments
 
 ## Database Collections
 - `users` - All user types with profile fields
@@ -112,21 +124,27 @@ Build a comprehensive agritech platform connecting:
 - `carbon_purchases` - Purchase records
 - `products` - Supplier products
 - `orders` - Marketplace orders
-- `messages` - User messaging
-- `notifications` - Push notifications
+- `payments` - Payment records
+- `product_reviews` - Product ratings and reviews
+- `wishlists` - User wishlists
+- `order_tracking` - Order status history
+- `notifications` - User notifications
 
 ## Prioritized Backlog
 
-### P0 (Critical)
-- None - Core functionality complete
+### P0 (Critical) - COMPLETED
+- ✅ Orange Money integration (simulation mode)
+- ✅ Product reviews and ratings
+- ✅ Wishlist functionality
+- ✅ Order tracking
 
 ### P1 (High Priority)
+- Real Orange Money API integration (requires merchant registration)
 - Real USSD/SMS integration (Orange API)
 - PDF certificate generation
-- Real mobile money integration
 
 ### P2 (Medium Priority)
-- Interactive maps for RSE impact
+- Product price history tracking
 - CSV/PDF export for EUDR reports
 - Multi-language support (Baoulé, Dioula, Sénoufo)
 
@@ -137,14 +155,28 @@ Build a comprehensive agritech platform connecting:
 
 ## Test Credentials
 ```
+Buyer: buyer@test.com / password123
 Farmer: farmer1@test.com / test123
-Buyer: buyer1@test.com / test123
 RSE: rse1@test.com / test123
 Supplier: supplier1@test.com / test123
 ```
 
 ## Known Limitations
+- Orange Money is in SIMULATION MODE (use `/api/payments/simulate/{token}?action=success`)
 - USSD is web-based simulation only
-- Payments are mocked (no real money)
+- SMS notifications are logged, not sent to real phones
 - Certificates are text, not PDF
-- No real carbon credit verification (Verra/Gold Standard)
+
+## Recent Changes (February 27, 2026)
+1. **Orange Money Payment Integration** - Full payment flow with simulation mode
+   - `/app/backend/routes/payments.py` - New payment routes
+   - `/app/frontend/src/pages/CheckoutPage.jsx` - Updated with Orange Money option
+2. **Bug Fix** - Fixed React warning in CheckoutPage (navigate in useEffect)
+3. **Bug Fix** - Fixed star rating z-index issue in product reviews
+
+## Files of Reference
+- `/app/backend/routes/payments.py` - Orange Money integration
+- `/app/backend/routes/marketplace.py` - Marketplace features
+- `/app/frontend/src/pages/CheckoutPage.jsx` - Checkout with Orange Money
+- `/app/frontend/src/pages/MarketplacePage.jsx` - Products with reviews/wishlist
+- `/app/frontend/src/pages/WishlistPage.jsx` - Wishlist page
