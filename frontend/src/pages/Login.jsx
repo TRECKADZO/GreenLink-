@@ -5,7 +5,7 @@ import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Sprout, Phone, Lock } from 'lucide-react';
+import { Sprout, Mail, Lock } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const Login = () => {
@@ -13,7 +13,7 @@ const Login = () => {
   const { login } = useAuth();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    phoneNumber: '',
+    identifier: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    const result = await login(formData.phoneNumber, formData.password);
+    const result = await login(formData.identifier, formData.password);
 
     setLoading(false);
 
@@ -55,17 +55,17 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Phone Number */}
+          {/* Email or Phone */}
           <div>
-            <Label htmlFor="phoneNumber">Numéro de téléphone</Label>
+            <Label htmlFor="identifier">Email ou Téléphone</Label>
             <div className="relative">
-              <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+              <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <Input
-                id="phoneNumber"
-                type="tel"
-                placeholder="+225 0707070707"
-                value={formData.phoneNumber}
-                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                id="identifier"
+                type="text"
+                placeholder="exemple@email.com ou +225 0707070707"
+                value={formData.identifier}
+                onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
                 className="pl-10"
                 required
               />
