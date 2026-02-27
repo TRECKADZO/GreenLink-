@@ -41,6 +41,15 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    # Coopérative fields (optional, used only for cooperative type)
+    coop_name: Optional[str] = None
+    coop_code: Optional[str] = None
+    registration_number: Optional[str] = None
+    certifications: Optional[list] = None
+    headquarters_address: Optional[str] = None
+    headquarters_region: Optional[str] = None
+    commission_rate: Optional[float] = None
+    orange_money_business: Optional[str] = None
     
     @validator('password')
     def validate_password(cls, v):
