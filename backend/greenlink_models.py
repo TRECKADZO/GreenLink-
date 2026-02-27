@@ -71,8 +71,16 @@ class BuyerOrder(BaseModel):
     delivery_date: datetime
     notes: Optional[str] = None
 
-class BuyerOrderCreate(BuyerOrder):
-    pass
+class BuyerOrderCreate(BaseModel):
+    crop_type: str
+    quantity_needed_kg: float
+    max_price_per_kg: float
+    carbon_requirement: bool = False
+    min_carbon_score: Optional[float] = None
+    certifications_required: List[str] = []  # UTZ, Rainforest, FairTrade
+    delivery_location: str
+    delivery_date: datetime
+    notes: Optional[str] = None
 
 class BuyerOrderInDB(BuyerOrder):
     id: str = Field(alias="_id")
