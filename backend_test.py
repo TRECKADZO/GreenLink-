@@ -527,6 +527,7 @@ def test_user_type_protection():
     
     # Test buyer trying to access CSR endpoint with valid data
     if "acheteur" in test_tokens and protection_working:
+        print_info(f"Testing buyer access to CSR endpoint - Expected: 403 Forbidden")
         headers = {"Authorization": f"Bearer {test_tokens['acheteur']}"}
         valid_purchase_data = {
             "credit_id": "69a0ffe601140ffe9d7ce709",
@@ -538,10 +539,15 @@ def test_user_type_protection():
                               json=valid_purchase_data,
                               headers=headers)
         
-        if response and response.status_code == 403:
-            print_success("Buyer correctly blocked from CSR endpoint")
+        if response:
+            print_info(f"Response status: {response.status_code}")
+            if response.status_code == 403:
+                print_success("Buyer correctly blocked from CSR endpoint (403 Forbidden)")
+            else:
+                print_error(f"Buyer not blocked - got status {response.status_code} (expected 403)")
+                protection_working = False
         else:
-            print_error(f"Buyer not blocked from CSR endpoint - got status {response.status_code if response else 'None'}")
+            print_error("Buyer test failed - no response received")
             protection_working = False
     
     tracker.add_result("User Type Protection", protection_working, "Access control validation")
