@@ -145,6 +145,23 @@ async def request_payment(
         "is_read": False
     })
     
+    # Send SMS notification for payment
+    try:
+        carbon_premium = harvest.get("carbon_premium", 0)
+        user_phone = current_user.get("phone_number")
+        if user_phone:
+            sms_result = await SMSService.notify_harvest_payment(
+                phone_number=user_phone,
+                amount=payment.amount,
+                payment_method=payment.payment_method.replace("_", " ").title(),
+                reference=transaction_id,
+                premium=carbon_premium,
+                language="francais"
+            )
+            logger.info(f"Payment SMS sent: {sms_result}")
+    except Exception as e:
+        logger.error(f"Payment SMS notification failed: {e}")
+    
     return {
         "success": True,
         "transaction_id": transaction_id,
