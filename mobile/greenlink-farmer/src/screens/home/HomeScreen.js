@@ -113,6 +113,25 @@ const HomeScreen = ({ navigation }) => {
         />
       </View>
 
+      {/* Carbon RSE Banner */}
+      <View style={styles.carbonBanner}>
+        <View style={styles.carbonBannerLeft}>
+          <Text style={styles.carbonBannerEmoji}>🌍</Text>
+          <View>
+            <Text style={styles.carbonBannerTitle}>Marketplace Carbone RSE</Text>
+            <Text style={styles.carbonBannerSubtitle}>
+              Compensez votre empreinte carbone
+            </Text>
+          </View>
+        </View>
+        <Text 
+          style={styles.carbonBannerArrow}
+          onPress={() => navigation.navigate('CarbonMarketplace')}
+        >
+          →
+        </Text>
+      </View>
+
       {/* Menu principal style USSD */}
       <View style={styles.menuContainer}>
         <Text style={styles.menuTitle}>{MESSAGES.selectOption}</Text>
