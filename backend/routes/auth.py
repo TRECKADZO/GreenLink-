@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from database import db, client
 from auth_models import UserCreate, UserLogin, Token, User, UserProfileUpdate
 from auth_utils import get_password_hash, verify_password, create_access_token, verify_token
 from datetime import datetime
@@ -9,12 +9,6 @@ from bson import ObjectId
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 security = HTTPBearer()
-
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-db_name = os.environ.get('DB_NAME', 'test_database')
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
