@@ -1,8 +1,11 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { Users, ShoppingCart, Building2, Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const CTASection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-24 bg-gradient-to-br from-[#2d5a4d] via-[#235043] to-[#1a4038] relative overflow-hidden">
       <div className="absolute top-20 right-20 w-72 h-72 bg-[#d4a574]/10 rounded-full blur-3xl"></div>
@@ -22,6 +25,7 @@ const CTASection = () => {
           <Button 
             size="lg" 
             className="bg-[#d4a574] hover:bg-[#c49564] text-[#2d5a4d] font-semibold px-6 py-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            onClick={() => navigate('/register')}
           >
             <Users className="w-5 h-5 mr-2" />
             Je suis producteur
@@ -30,6 +34,7 @@ const CTASection = () => {
             size="lg" 
             variant="outline"
             className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold px-6 py-6 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+            onClick={() => navigate('/register')}
           >
             <ShoppingCart className="w-5 h-5 mr-2" />
             Je suis acheteur
@@ -38,6 +43,7 @@ const CTASection = () => {
             size="lg" 
             variant="outline"
             className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold px-6 py-6 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+            onClick={() => navigate('/register')}
           >
             <Building2 className="w-5 h-5 mr-2" />
             Entreprise RSE
@@ -46,6 +52,7 @@ const CTASection = () => {
             size="lg" 
             variant="outline"
             className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold px-6 py-6 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+            onClick={() => navigate('/register')}
           >
             <Package className="w-5 h-5 mr-2" />
             Fournisseur intrants
