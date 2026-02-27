@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Alert, AppState } from 'react-native';
 
 // Context Providers
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { OfflineProvider } from './src/context/OfflineContext';
+import { OfflineProvider, useOffline } from './src/context/OfflineContext';
+
+// Services
+import { notificationService } from './src/services/notifications';
+import { syncService } from './src/services/sync';
 
 // Screens
 import LoginScreen from './src/screens/auth/LoginScreen';
@@ -50,15 +55,115 @@ const AppNavigator = () => (
   </Stack.Navigator>
 );
 
-// Root Navigator
+// Root Navigator with notification and sync handling
 const RootNavigator = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+  const navigationRef = useRef(null);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+  const appState = useRef(AppState.currentState);
+
+  // Setup push notifications when user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    const setupNotifications = async () => {
+      try {
+        // Register for push notifications
+        await notificationService.registerForPushNotifications();
+
+        // Listen for incoming notifications
+        notificationListener.current = notificationService.addNotificationReceivedListener(
+          (notification) => {
+            console.log('[App] Notification received:', notification);
+          }
+        );
+
+        // Listen for notification interactions
+        responseListener.current = notificationService.addNotificationResponseReceivedListener(
+          (response) => {
+            const data = response.notification.request.content.data;
+            console.log('[App] Notification clicked:', data);
+            
+            // Navigate based on notification type
+            if (data?.screen && navigationRef.current) {
+              navigationRef.current.navigate(data.screen, data.params || {});
+            }
+          }
+        );
+      } catch (error) {
+        console.error('[App] Error setting up notifications:', error);
+      }
+    };
+
+    setupNotifications();
+
+    return () => {
+      if (notificationListener.current) {
+        notificationListener.current.remove();
+      }
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+    };
+  }, [isAuthenticated, user]);
+
+  // Setup background sync
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const setupSync = async () => {
+      try {
+        await syncService.registerBackgroundSync();
+        console.log('[App] Background sync registered');
+      } catch (error) {
+        console.error('[App] Error registering background sync:', error);
+      }
+    };
+
+    setupSync();
+  }, [isAuthenticated]);
+
+  // Sync when app comes to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active' &&
+        isAuthenticated
+      ) {
+        console.log('[App] App came to foreground, syncing...');
+        try {
+          const result = await syncService.syncNow();
+          if (result.synced > 0) {
+            Alert.alert(
+              'Synchronisation',
+              `${result.synced} élément(s) synchronisé(s)`,
+              [{ text: 'OK' }]
+            );
+          }
+        } catch (error) {
+          console.error('[App] Sync on foreground error:', error);
+        }
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isAuthenticated]);
 
   if (loading) {
     return <Loader message="Chargement..." />;
   }
 
-  return isAuthenticated ? <AppNavigator /> : <AuthNavigator />;
+  return (
+    <NavigationContainer ref={navigationRef}>
+      <StatusBar style="light" backgroundColor={COLORS.primary} />
+      {isAuthenticated ? <AppNavigator /> : <AuthNavigator />}
+    </NavigationContainer>
+  );
 };
 
 // Main App Component
@@ -67,10 +172,7 @@ export default function App() {
     <SafeAreaProvider>
       <AuthProvider>
         <OfflineProvider>
-          <NavigationContainer>
-            <StatusBar style="light" backgroundColor={COLORS.primary} />
-            <RootNavigator />
-          </NavigationContainer>
+          <RootNavigator />
         </OfflineProvider>
       </AuthProvider>
     </SafeAreaProvider>
