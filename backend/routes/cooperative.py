@@ -11,17 +11,11 @@ from bson import ObjectId
 import logging
 import os
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from database import db
 from routes.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/cooperative", tags=["Cooperative"])
-
-# MongoDB connection
-MONGO_URL = os.environ.get("MONGO_URL")
-DB_NAME = os.environ.get("DB_NAME", "greenlink")
-client = AsyncIOMotorClient(MONGO_URL)
-db = client[DB_NAME]
 
 # ============= MODELS =============
 
