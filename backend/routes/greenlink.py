@@ -11,6 +11,7 @@ from greenlink_models import (
 )
 from routes.auth import get_current_user
 from services.sms_service import SMSService
+from services.fcm_service import send_notification_to_user
 from datetime import datetime, timedelta
 from bson import ObjectId
 import random
