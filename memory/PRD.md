@@ -248,6 +248,7 @@ yarn build:android
 - `/app/backend/routes/admin.py` - Admin and partners routes
 - `/app/backend/routes/payments.py` - Orange Money integration
 - `/app/backend/routes/greenlink.py` - Farmer endpoints including notifications
+- `/app/backend/services/fcm_service.py` - Firebase Cloud Messaging service
 - `/app/frontend/src/pages/rse/CarbonMarketplace.jsx` - Carbon marketplace
 - `/app/frontend/src/pages/admin/Dashboard.jsx` - Admin dashboard
 - `/app/frontend/src/components/PartnersSection.jsx` - Partners display
@@ -256,6 +257,7 @@ yarn build:android
 - `/app/frontend/src/pages/SecuritePage.jsx` - Security page
 - `/app/mobile/greenlink-farmer/App.js` - Mobile app entry point with notifications
 - `/app/mobile/greenlink-farmer/README.md` - Complete build and distribution guide
+- `/app/mobile/greenlink-farmer/FIREBASE_SETUP.md` - Firebase/FCM configuration guide
 - `/app/mobile/greenlink-farmer/eas.json` - EAS Build configuration
 - `/app/mobile/greenlink-farmer/app.json` - Expo configuration with plugins
 - `/app/mobile/greenlink-farmer/src/services/notifications.js` - Push notification service
