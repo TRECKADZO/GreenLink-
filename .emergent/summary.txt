@@ -1,100 +1,86 @@
 <analysis>**original_problem_statement:**
-The user initially requested to create a pixel-perfect clone of the website .
+The user's initial request was to create a pixel-perfect clone of the website . This evolved into building a complex, multi-persona agritech platform for Côte d'Ivoire.
 
-The scope was later expanded with the following product requirements:
-1.  **Authentication**: Add account creation and login using both  and .
-2.  **Supplier Profile ()**: Create a comprehensive dashboard for agricultural input suppliers, including:
-    *   Dashboard with key metrics.
-    *   Marketplace to display products.
-    *   Product management ().
-    *   Order management ().
-    *   A messaging system between the supplier and their clients.
-    *   Push notifications.
-    *   Profile management ().
-3.  **Expanded User Profiles**: Based on a detailed prompt, create functionalities for three additional user profiles targeting the agritech sector in Côte d'Ivoire:
-    *   **Farmer/Planter ()**:
-        *   Focus on simplicity for users with feature phones (USSD-first approach).
-        *   Features: Declare parcels, get carbon premiums, sell produce, and receive payments via mobile money (Orange Money).
-        *   Must be accessible, low-data, and secure.
-    *   **Responsible Buyer ()**:
-        *   For corporate buyers (e.g., Nestlé, Cargill) to access traceable, low-carbon commodity lots.
-        *   Features: Advanced filtering, group purchasing, verified carbon credits for Scope 3/EUDR compliance, reporting, and ERP integration.
-    *   **CSR/Carbon Offset Company ()**:
-        *   For companies to buy verified carbon credits from local agroforestry projects.
-        *   Features: Carbon credit marketplace, interactive impact maps, automated certificates, and CSRD reporting.
+PRODUCT REQUIREMENTS:
+1.  **Authentication**: Account creation and login using both  and .
+2.  **Four User Profiles**:
+    *   **Supplier ()**: A dashboard to manage and sell agricultural products, including product/order management and image uploads.
+    *   **Farmer ()**: A simple, USSD-focused interface to manage land parcels, earn carbon premiums, and receive mobile money payments. Includes SMS notifications.
+    *   **Responsible Buyer ()**: A B2B marketplace to buy traceable agricultural inputs, with a shopping cart, checkout, and order history.
+    *   **CSR/Carbon Offset Company ()**: A dashboard to view territorial impact via an interactive map and purchase carbon credits.
+3.  **Homepage Features**:
+    *   A carbon premium calculator for prospective farmers.
+    *   A link to a dedicated marketplace page.
+4.  **Marketplace Features**:
+    *   Move the marketplace to its own dedicated page.
+    *   Shopping cart and checkout system.
+    *   Product image uploads by suppliers.
+    *   Product reviews and ratings.
+    *   Wishlist/Favorites for products.
+5.  **Integrations**:
+    *   Real payment processing via Orange Money.
+    *   Notifications for suppliers upon receiving a new order.
+    *   Real-time order tracking for buyers.
 
 **User's preferred language**: French
 
 **what currently exists?**
-The agent has successfully built a full-stack application that started as a clone of  and evolved into a complex multi-persona platform.
-
-Key implemented features include:
-- A complete frontend UI for the main site and all user profiles.
-- A FastAPI backend with a MongoDB database.
-- A dual authentication system supporting email/password and phone/password.
-- A detailed dashboard and marketplace for the **Supplier** profile.
-- Dashboards and specific features for the **Farmer**, **Responsible Buyer**, and **CSR Company** profiles.
-- A web-based simulator for the **Farmer's** USSD menu experience.
-- Backend models, API routes, and seed data for all functionalities.
+A full-stack application (React, FastAPI, MongoDB) that implements the core functionalities for all four user profiles. Key features include a dual email/phone authentication system, dedicated dashboards for each profile, a USSD simulator for farmers, and SMS notifications (mocked). A complete e-commerce flow has been implemented, including a dedicated marketplace page, product image uploads, a shopping cart, and a checkout process with payment on delivery. The CSR dashboard features an interactive map of Côte d'Ivoire, and the homepage includes a functional carbon premium calculator.
 
 **Last working item**:
-- Last item agent was working: The agent was about to perform a comprehensive audit of all created user profiles (, , , ) to ensure consistency and functionality across the platform. It created a Python script  to seed realistic data and test the backend logic for each profile.
+- Last item agent was working: The agent was in the middle of a large feature implementation batch requested by the user. It had created the backend routes for product reviews, wishlists, and order tracking, and had just called the  subagent to get the implementation plan for Orange Money integration.
 - Status: 
-- Agent Testing Done:  (The test script was created but not yet executed).
-- Which testing method agent to use?  (by executing the newly created script ).
+- Agent Testing Done: 
+- Which testing method agent to use? . The backend API endpoints for the new features (reviews, wishlist) can be tested with . Once the frontend is implemented, the  should be used to test the complete end-to-end flows.
 - User Testing Done: 
 
 **All Pending/In progress Issue list**:
-- Issue 1: (P0) Complete the coherence audit and functional testing of all user profiles.
-
-  - Issues Detail:
-    - Issue 1: Coherence and Functionality Audit
-      - Attempted fixes: A test script  was created to facilitate this audit.
-      - Next debug checklist:
-        1. Execute the script: .
-        2. Analyze the output for any errors or failures.
-        3. Manually verify the seeded data in the MongoDB collections (, , , ) to ensure it reflects the logic for each profile.
-        4. Navigate the frontend for each user type to confirm the UI correctly interacts with the newly seeded data and backend logic.
-      - Why fix this issue and what will be achieved with the fix?: This is a user-requested audit to ensure that the complex, multi-profile system is coherent and that all features work as expected before moving on to new tasks.
-      - Status: 
-      - Is recurring issue?: N
-      - Should Test frontend/backend/both after fix?: . The script tests the backend, but frontend verification via screenshots is needed to confirm the end-to-end user flows.
-      - Blocked on other issue: None.
+There are no outstanding bugs. The work is focused on implementing new features.
 
 **In progress Task List**:
-- Task 1: Audit and test the multi-profile system.
-  - Where to resume: Execute the  script.
-  - What will be achieved with this?: Validation of the entire platform's functionality across all four user personas.
+- Task 1: (P0) Implement Orange Money Integration
+  - Where to resume: Await and analyze the response from the  subagent. Implement the payment logic into the  and the corresponding backend order confirmation endpoint.
+  - What will be achieved with this?: Users will be able to complete real payments for their orders using Orange Money.
+  - Status: 
+  - Should Test frontend/backend/both after fix?: 
+  - Blocked on something: Waiting for the  response.
+
+- Task 2: (P1) Implement Product Reviews and Ratings
+  - Where to resume: Backend routes () exist in . The frontend needs to be implemented. This involves creating a form for buyers to submit reviews on their purchased items and displaying the ratings/reviews on product pages.
+  - What will be achieved with this?: Buyers will be able to rate and review products, providing social proof and feedback.
+  - Status: 
+  - Should Test frontend/backend/both after fix?: 
+  - Blocked on something: No.
+
+- Task 3: (P2) Implement Wishlist / Favorites Functionality
+  - Where to resume: Backend routes () and a placeholder frontend page () exist. The UI needs to be built to allow users to add/remove products from their wishlist and view them on the wishlist page.
+  - What will be achieved with this?: Users can save products they are interested in for later purchase.
   - Status: 
   - Should Test frontend/backend/both after fix?: 
   - Blocked on something: No.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - **(P0) Frontend Verification**: After backend tests pass, take screenshots of all dashboards (Farmer, Buyer, CSR, Supplier) to verify the UI renders correctly with the new test data.
-  - **(P1) Real USSD/SMS Integration**: Replace the current web-based USSD simulator with a real integration using an external API like Orange API for farmers.
-  - **(P1) PDF Generation**: Implement PDF generation for carbon certificates for CSR companies and reports for Buyers.
+  - (P1) **Notifications for Suppliers**: Implement a system to notify suppliers when a new order for their products is placed. This could be a notification area in their dashboard.
+  - (P2) **Order Delivery Tracking**: Build the functionality for suppliers to update the delivery status of an order and for buyers to view this status.
 - **Future Tasks:**
-  - **(P2) Interactive Maps**: Develop the interactive maps for the CSR dashboard to visualize territorial impact.
-  - **(P2) Data Export**: Implement CSV/PDF export functionality for EUDR compliance reports for the Buyer profile.
-  - **(P3) Payment Gateway Integration**: Integrate Orange Money or another mobile money provider for farmer payments.
-  - **(P3) Production-Ready Backend**: Refactor and harden the backend for a production environment.
+  - (P2) **Product Price History**: Track and display price changes for products in the marketplace.
+  - (P1) **Real USSD/SMS Integration**: Replace the current web-based USSD simulator and mocked SMS service with a real integration using an external provider like Orange API.
+  - (P1) **PDF Generation**: Implement PDF generation for carbon certificates (CSR profile) and compliance reports (Buyer profile).
+  - (P2) **Data Export**: Implement CSV/PDF export functionality for EUDR compliance reports for the Buyer profile.
 
 **Completed work in this session**
-- **Website Clone**: Cloned the frontend of .
-- **Full-Stack Integration**: Built a FastAPI backend and connected it to the frontend, replacing mock data.
-- **Authentication System**:
-  - Implemented user registration and login with . (, , )
-  - Extended authentication to also support .
-- **Supplier Marketplace ()**:
-  - Created backend models and routes for products, orders, and messaging. ()
-  - Built frontend pages for Supplier Dashboard, Product Management, Order List, and Messaging. ()
-- **Advanced User Profiles**:
-  - Designed and implemented backend models and API routes for Farmers, Buyers, and CSR Companies. (, , )
-  - Created corresponding frontend pages and dashboards for each profile, including a **USSD Simulator** for farmers. (, , , )
+- **Coherence Audit & Bug Fix**: Audited all four user profiles and fixed a critical authentication race condition that was preventing dashboards from loading correctly.
+- **Shopping Cart & Checkout Flow**: Implemented a complete e-commerce experience, including a cart, checkout page, and order creation (, ).
+- **Product Image Uploads**: Enabled suppliers to upload images for their products ().
+- **Marketplace Refactor**: Moved the marketplace from the homepage to a dedicated route () and updated navigation.
+- **Dynamic User Profile Menu**: Created a dropdown menu in the navbar that shows profile-specific links (e.g., My Products for suppliers, Simulator USSD for farmers).
+- **Interactive CSR Map**: Implemented an interactive map on the CSR dashboard to visualize regional impact, using clickable SVG markers ().
+- **Carbon Premium Calculator**: Added a multi-step calculator modal to the homepage to estimate carbon premiums for farmers ().
+- **Farmer SMS Notifications**: Built the backend and frontend for farmers to receive (mock) SMS notifications and view their history.
 
 **Earlier issues found/mentioned but not fixed**
-None. All identified issues (incorrect DB_NAME handling, wrong import paths) were resolved during the session.
+None.
 
 **Known issue recurrence from previous fork**
 N/A
@@ -103,52 +89,54 @@ N/A
 
 
 **Key Technical Concepts**
-- **Frontend**: React,  for routing,  for API calls, Shadcn components for UI.
-- **Backend**: FastAPI, Pydantic for data validation.
-- **Database**: MongoDB with  for asynchronous access.
-- **Authentication**: JWT (JSON Web Tokens) for securing API endpoints.
-- **Architecture**: Multi-persona, service-oriented architecture with distinct modules for each user type.
+- **Frontend**: React, , , Shadcn UI,  (icons),  (toasts).
+- **Backend**: FastAPI, Pydantic.
+- **Database**: MongoDB with .
+- **Authentication**: JWT stored in browser local storage.
+- **State Management**: React Context API for authentication () and shopping cart ().
+- **File Handling**: Backend endpoint for file uploads, storing images locally in .
 
 **key DB schema**
-- : {, , , ,  ('supplier', 'farmer', 'buyer', 'csr'), }
-- : {, , , , , , }
+- : {, , , , , }
 - : {, , , , }
+- : {, , , , }
+- : {, : [{, }]}
 - : {, , , , }
 - : {, , , }
-- : {, , , ,  ('available', 'sold')}
+- : {, : []}
 
 **changes in tech stack**
-None. The stack has been consistent (React, FastAPI, MongoDB).
+None.
 
 **All files of reference**
-- : Newly created script to test all user profiles. **This is the next file to be executed.**
-- : Main FastAPI application file, includes all routers.
-- : Directory containing API endpoint logic for each user profile.
-- : Directory containing Pydantic models for each user profile.
-- : Main frontend router defining all page routes.
-- : Directory containing all top-level page components for different user profiles.
-- : The web-based simulation of the farmer's USSD interface.
-- : Initial planning document for the backend API.
+- : Contains all backend logic for all features.
+- : The dedicated marketplace UI.
+- : The user-facing checkout flow.
+- : Global state management for the shopping cart.
+- : Contains the user profile menu and cart icon.
+- : Supplier form for creating products, including image upload.
+- : The interactive map component for the CSR dashboard.
+- : The product requirements document, updated with completed work.
 
 **Areas that need refactoring**:
-- The agent had to fix relative import paths in the frontend multiple times. A review of the file structure in  and  might be beneficial to prevent future issues.
-- The CSS for animations was added to , which could be moved to a more specific file or component style.
+- The backend files  and  have become monoliths containing logic for all user profiles and features. They should be broken down into smaller, feature-specific files (e.g., , , ) for better maintainability.
+- The local  folder for images is not suitable for production. It should be replaced with a cloud storage solution like S3 in the future.
 
 **key api endpoints**
 - 
 - 
-- 
-- 
-- 
-- 
-- 
-- 
+-  (for images)
+-  (GET, POST, DELETE)
+-  (POST, GET)
+-  (GET, POST)
+-  (GET, POST, DELETE)
 - 
 
 **Critical Info for New Agent**
-- The project has four distinct user personas, each with a unique set of features and UI. The context provided by the user for , , and  is critical for future development.
-- The USSD functionality for farmers is currently a **simulation** (). The next step is to integrate it with a real SMS/USSD gateway provider.
-- The agent has just created a comprehensive test script . Your immediate first step should be to execute this script to validate the current state of the backend before proceeding.
+- The immediate priority is to handle the response from the  for Orange Money and complete the payment integration.
+- Several features are in a partially implemented state (backend routes exist, but frontend UI is missing). Refer to the **In progress Task List** to continue development on reviews and wishlists.
+- The backend architecture consists of two main files ( in  and ). Do not look for separate files per profile.
+- All mock functionalities (SMS, USSD) use simple console logs or web simulators and are candidates for replacement with real third-party integrations.
 
 **documents and test reports created in this job**
 - 
@@ -156,37 +144,38 @@ None. The stack has been consistent (React, FastAPI, MongoDB).
 - 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: User requested a coherence and functionality audit of all profiles. (IN PROGRESS)
-2.  ****: User provided detailed specifications for the Farmer, Responsible Buyer, and CSR Company profiles. (COMPLETED)
-3.  ****: User provided detailed specifications for the Supplier profile. (COMPLETED)
-4.  ****: User provided detailed specifications for the Supplier profile. (COMPLETED)
-5.  ****: User pointed out the missing email+password auth option. (COMPLETED)
-6.  ****: User requested account creation with phone number and profiles. (COMPLETED)
-7.  ****: User confirmed to proceed with creating the remaining pages for the supplier profile. (COMPLETED)
+1.  **User**: Requested to move the marketplace to a separate page, add product reviews/ratings, and integrate Orange Money, supplier notifications, delivery tracking, wishlists, and price history. (IN PROGRESS)
+2.  **User**:  (The supplier must be able to add a photo. Add a shopping cart for buyers. Require an account to order). (COMPLETED)
+3.  **User**:  (The marketplace must appear on the homepage, accessible to buyers). (COMPLETED, then superseded by moving to its own page).
+4.  **User**:  (I'm logged in but don't see my user profile menu). (COMPLETED)
+5.  **User**:  (Why is 'Calculate my carbon premium' not active on the homepage?). (COMPLETED)
+6.  **User**:  (I haven't seen the CSR dashboard, how suppliers add products, or the interactive maps). (COMPLETED)
 
 **Project Health Check:**
-- **Implemented**: A significant portion of the features for all four user profiles has been implemented, including UI, backend APIs, and database models.
+- **Broken**: None.
 - **Mocked/Simulated**:
-  - The USSD interface for farmers is a web simulation, not a real telecom integration.
-  - All data is currently seeded via scripts (, ), not from live user input.
-  - Payment, notification, and external reporting (PDF/CSV) functionalities are not yet integrated.
+  - The farmer's USSD interface is a web simulation.
+  - SMS notifications are printed to the backend console, not sent via a real gateway.
+  - Payment processing is currently limited to Payment on Delivery.
 
 **3rd Party Integrations**
-None are currently integrated. The following have been identified for future work:
-- **Orange Money / Mobile Money API**: For farmer payments.
-- **Verra/Gold Standard**: For carbon credit verification.
-- **Orange API**: For USSD/SMS gateway.
+- **In Progress**: **Orange Money**. The  has been called to get the implementation playbook.
+- **Planned**:
+  - Real USSD/SMS Gateway (e.g., Orange API).
+  - Carbon Credit Verification (e.g., Verra, Gold Standard).
 
 **Testing status**
-- **Testing agent used after significant changes**: YES (for initial backend and auth).
+- **Testing agent used after significant changes**: YES. It successfully identified and led to the fixing of a critical authentication bug in the dashboards.
 - **Troubleshoot agent used after agent stuck in loop**: NO.
-- **Test files created**:
-  - 
-  - 
+- **Test files created**:  was created to perform a full backend audit.
 - **Known regressions**: None.
 
 **Credentials to test flow:**
-The test script  creates test users. The credentials can be found within that script. For example: . The next agent should inspect this file for a full list of test users for each profile.
+Test users with different profiles are created by the  script.
+- **Buyer**:  / 
+- **Farmer**:  / 
+- **Supplier**:  / 
+- **CSR**:  / 
 
 **What agent forgot to execute**
-The agent created the test script  in its last step but did not execute it. The immediate next action should be to run  to complete the user-requested audit.</analysis>
+The agent's last action was to call the  subagent. It has not yet received or processed the response. The immediate next step is to get and act on the Orange Money integration playbook.</analysis>
