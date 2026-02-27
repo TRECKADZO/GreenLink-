@@ -79,4 +79,8 @@ export const farmerApi = {
   
   // Score carbone
   getCarbonScore: () => api.get('/greenlink/carbon/my-score'),
+  
+  // Device registration for push notifications
+  registerDevice: (data) => api.post('/greenlink/notifications/register-device', data),
+  unregisterDevice: (token) => api.delete(`/greenlink/notifications/unregister-device?push_token=${token}`),
 };
