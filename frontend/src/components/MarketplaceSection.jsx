@@ -68,10 +68,7 @@ const MarketplaceSection = () => {
       return;
     }
     
-    toast({
-      title: 'Produit ajouté',
-      description: `${product.name} ajouté au panier`
-    });
+    await addToCart(product._id, 1);
   };
 
   const handleViewProduct = (product) => {
