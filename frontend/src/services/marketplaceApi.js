@@ -131,5 +131,82 @@ export const marketplaceApi = {
       headers: getAuthHeader()
     });
     return response.data;
+  },
+
+  // Image Upload
+  uploadImage: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post(`${API}/upload-image`, formData, {
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  // Shopping Cart
+  getCart: async () => {
+    const response = await axios.get(`${API}/cart`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  addToCart: async (productId, quantity = 1) => {
+    const response = await axios.post(`${API}/cart/add?product_id=${productId}&quantity=${quantity}`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  updateCartItem: async (productId, quantity) => {
+    const response = await axios.put(`${API}/cart/update?product_id=${productId}&quantity=${quantity}`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  removeFromCart: async (productId) => {
+    const response = await axios.delete(`${API}/cart/remove/${productId}`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  clearCart: async () => {
+    const response = await axios.delete(`${API}/cart/clear`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  checkout: async (deliveryInfo) => {
+    const params = new URLSearchParams({
+      delivery_address: deliveryInfo.address,
+      delivery_phone: deliveryInfo.phone,
+      payment_method: deliveryInfo.payment_method || 'cash_on_delivery',
+      notes: deliveryInfo.notes || ''
+    });
+    const response = await axios.post(`${API}/cart/checkout?${params}`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  // Buyer Orders
+  getBuyerOrders: async () => {
+    const response = await axios.get(`${API}/buyer/orders`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  getBuyerOrder: async (orderId) => {
+    const response = await axios.get(`${API}/buyer/orders/${orderId}`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
   }
 };
