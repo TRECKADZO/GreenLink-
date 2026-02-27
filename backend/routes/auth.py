@@ -87,6 +87,15 @@ async def register(user_data: UserCreate):
     elif user_data.user_type == "fournisseur":
         user_dict["supplier_company"] = None
         user_dict["products_offered"] = []
+    elif user_data.user_type == "cooperative":
+        user_dict["coop_name"] = getattr(user_data, 'coop_name', None)
+        user_dict["coop_code"] = getattr(user_data, 'coop_code', None)
+        user_dict["registration_number"] = getattr(user_data, 'registration_number', None)
+        user_dict["certifications"] = getattr(user_data, 'certifications', [])
+        user_dict["headquarters_address"] = getattr(user_data, 'headquarters_address', None)
+        user_dict["headquarters_region"] = getattr(user_data, 'headquarters_region', None)
+        user_dict["commission_rate"] = getattr(user_data, 'commission_rate', 0.10)
+        user_dict["orange_money_business"] = getattr(user_data, 'orange_money_business', None)
     
     result = await db.users.insert_one(user_dict)
     user_dict["_id"] = str(result.inserted_id)
