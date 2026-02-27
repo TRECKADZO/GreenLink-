@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Quote } from 'lucide-react';
+import { api } from '../services/api';
 
-const testimonials = [
+// Fallback mock data
+const mockTestimonials = [
   {
     text: 'Grâce à GreenLink, j\'ai augmenté mes revenus de 40% avec les primes carbone.',
     author: 'Kouadio Yao',
@@ -22,6 +24,18 @@ const testimonials = [
 ];
 
 const TestimonialsSection = () => {
+  const [testimonials, setTestimonials] = useState(mockTestimonials);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      const data = await api.getTestimonials();
+      if (data) {
+        setTestimonials(data);
+      }
+    };
+    fetchTestimonials();
+  }, []);
+  
   return (
     <section className="py-24 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-6">

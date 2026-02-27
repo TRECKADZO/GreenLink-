@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Check } from 'lucide-react';
+import { api } from '../services/api';
 
-const pricingPlans = [
+// Fallback mock data
+const mockPricingPlans = [
   {
     name: 'Producteurs',
     price: 'GRATUIT',
@@ -79,6 +81,18 @@ const pricingPlans = [
 ];
 
 const PricingSection = () => {
+  const [pricingPlans, setPricingPlans] = useState(mockPricingPlans);
+
+  useEffect(() => {
+    const fetchPricingPlans = async () => {
+      const data = await api.getPricingPlans();
+      if (data) {
+        setPricingPlans(data);
+      }
+    };
+    fetchPricingPlans();
+  }, []);
+  
   return (
     <section className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6">

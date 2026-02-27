@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { ArrowRight } from 'lucide-react';
+import { api } from '../services/api';
 
-const producers = [
+// Fallback mock data
+const mockProducers = [
   { name: 'Kouadio Yao', initial: 'KY', crop: 'Cacao', location: 'Soubré', color: 'bg-amber-600' },
   { name: 'Aminata Koné', initial: 'AK', crop: 'Anacarde', location: 'Korhogo', color: 'bg-orange-600' },
   { name: 'Jean Bakayoko', initial: 'JB', crop: 'Café', location: 'Man', color: 'bg-amber-700' },
@@ -13,6 +15,18 @@ const producers = [
 ];
 
 const CommunitySection = () => {
+  const [producers, setProducers] = useState(mockProducers);
+
+  useEffect(() => {
+    const fetchProducers = async () => {
+      const data = await api.getProducers(4);
+      if (data) {
+        setProducers(data);
+      }
+    };
+    fetchProducers();
+  }, []);
+  
   return (
     <section className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6">
