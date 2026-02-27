@@ -148,6 +148,15 @@ async def get_farmer_dashboard(current_user: dict = Depends(get_current_user)):
     total_revenue = sum([h["total_amount"] for h in harvests])
     total_carbon_premium = sum([h["carbon_premium"] for h in harvests])
     
+    # Convert ObjectIds to strings for JSON serialization
+    serialized_harvests = []
+    for h in sorted(harvests, key=lambda x: x["created_at"], reverse=True)[:5]:
+        harvest_dict = dict(h)
+        harvest_dict["_id"] = str(harvest_dict["_id"])
+        if "parcel_id" in harvest_dict and hasattr(harvest_dict["parcel_id"], "__str__"):
+            harvest_dict["parcel_id"] = str(harvest_dict["parcel_id"])
+        serialized_harvests.append(harvest_dict)
+    
     return {
         "total_parcels": len(parcels),
         "total_area_hectares": total_area,
@@ -156,7 +165,7 @@ async def get_farmer_dashboard(current_user: dict = Depends(get_current_user)):
         "total_carbon_credits": total_carbon_credits,
         "total_revenue": total_revenue,
         "carbon_premium_earned": total_carbon_premium,
-        "recent_harvests": sorted(harvests, key=lambda x: x["created_at"], reverse=True)[:5]
+        "recent_harvests": serialized_harvests
     }
 
 # ============= ACHETEUR ROUTES =============
