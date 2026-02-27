@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List, Optional
 import os
 import logging
-from motor.motor_asyncio import AsyncIOMotorClient
+from database import db
 from greenlink_models import (
     Parcel, ParcelCreate, Harvest, HarvestCreate, PaymentRequest,
     BuyerOrder, BuyerOrderCreate, BuyerOrderInDB, TraceabilityReport,
@@ -20,12 +20,6 @@ import hashlib
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/greenlink", tags=["greenlink"])
-
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-db_name = os.environ.get('DB_NAME', 'test_database')
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
 
 # ============= AGRICULTEUR ROUTES =============
 
