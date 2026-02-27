@@ -1,16 +1,10 @@
 from fastapi import APIRouter
 from typing import List
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from database import db
 from models import StepInDB, CropInDB, ProducerInDB, TestimonialInDB, PricingPlanInDB
 
 router = APIRouter(prefix="/api", tags=["content"])
-
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-db_name = os.environ.get('DB_NAME', 'test_database')
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
 
 @router.get("/steps", response_model=List[StepInDB])
 async def get_steps():
