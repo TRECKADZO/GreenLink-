@@ -135,7 +135,7 @@ class CarbonPurchaseCreate(BaseModel):
 
 class CarbonPurchase(BaseModel):
     buyer_id: str
-    buyer_company: str
+    buyer_company: Optional[str] = None
     credit_id: str
     quantity_tonnes: float
     total_price: float
