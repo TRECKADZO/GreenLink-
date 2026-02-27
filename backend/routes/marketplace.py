@@ -3,7 +3,7 @@ from typing import List, Optional
 import os
 import uuid
 import base64
-from motor.motor_asyncio import AsyncIOMotorClient
+from database import db
 from marketplace_models import (
     Product, ProductCreate, Order, OrderCreate, 
     Message, MessageCreate, Notification, Review, ReviewCreate,
@@ -15,12 +15,6 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 
 router = APIRouter(prefix="/api/marketplace", tags=["marketplace"])
-
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-db_name = os.environ.get('DB_NAME', 'test_database')
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
 
 # Ensure upload directory exists
 UPLOAD_DIR = "/app/backend/uploads/products"
