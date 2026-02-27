@@ -246,6 +246,14 @@ const MembersPage = () => {
                       {getStatusBadge(member.status)}
                       <div className="flex gap-2">
                         <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/cooperative/members/${member.id}/parcels`)}
+                          title="Gérer les parcelles"
+                        >
+                          <Layers className="h-4 w-4" />
+                        </Button>
+                        <Button 
                           variant="ghost" 
                           size="sm"
                           onClick={() => handleViewDetails(member.id)}
