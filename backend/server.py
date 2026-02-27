@@ -82,6 +82,7 @@ app.include_router(marketplace.router)
 app.include_router(greenlink.router)
 app.include_router(payments.router)
 app.include_router(admin.router)
+app.include_router(admin_analytics.router)
 app.include_router(cooperative.router)
 
 app.add_middleware(
