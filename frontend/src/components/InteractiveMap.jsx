@@ -4,43 +4,43 @@ import { MapPin, TreePine, Users, Leaf } from 'lucide-react';
 // Coordonnées SVG simplifiées des régions cacaoyères de Côte d'Ivoire
 const REGIONS_DATA = {
   'Daloa': { 
-    path: 'M 180 220 L 220 200 L 250 220 L 240 260 L 200 270 L 170 250 Z',
-    center: { x: 210, y: 235 },
+    path: 'M 280 200 L 320 180 L 350 200 L 340 240 L 300 250 L 270 230 Z',
+    center: { x: 310, y: 215 },
     stats: { farmers: 450, trees: 25000, hectares: 1200, co2: 150 }
   },
   'Bouaflé': { 
-    path: 'M 250 180 L 290 170 L 310 200 L 300 240 L 260 250 L 240 220 Z',
-    center: { x: 275, y: 210 },
+    path: 'M 350 160 L 390 150 L 410 180 L 400 220 L 360 230 L 340 200 Z',
+    center: { x: 375, y: 190 },
     stats: { farmers: 320, trees: 18000, hectares: 850, co2: 95 }
   },
   'Soubré': { 
-    path: 'M 150 280 L 190 270 L 210 300 L 200 340 L 160 350 L 140 320 Z',
-    center: { x: 175, y: 310 },
+    path: 'M 250 260 L 290 250 L 310 280 L 300 320 L 260 330 L 240 300 Z',
+    center: { x: 275, y: 290 },
     stats: { farmers: 580, trees: 32000, hectares: 1500, co2: 180 }
   },
   'San-Pédro': { 
-    path: 'M 120 350 L 160 340 L 180 370 L 170 410 L 130 420 L 110 390 Z',
-    center: { x: 145, y: 380 },
+    path: 'M 220 330 L 260 320 L 280 350 L 270 390 L 230 400 L 210 370 Z',
+    center: { x: 245, y: 360 },
     stats: { farmers: 420, trees: 22000, hectares: 980, co2: 120 }
   },
   'Gagnoa': { 
-    path: 'M 220 250 L 260 240 L 280 270 L 270 310 L 230 320 L 210 290 Z',
-    center: { x: 245, y: 280 },
+    path: 'M 320 230 L 360 220 L 380 250 L 370 290 L 330 300 L 310 270 Z',
+    center: { x: 345, y: 260 },
     stats: { farmers: 380, trees: 20000, hectares: 920, co2: 110 }
   },
   'Divo': { 
-    path: 'M 280 260 L 320 250 L 340 280 L 330 320 L 290 330 L 270 300 Z',
-    center: { x: 305, y: 290 },
+    path: 'M 380 240 L 420 230 L 440 260 L 430 300 L 390 310 L 370 280 Z',
+    center: { x: 405, y: 270 },
     stats: { farmers: 290, trees: 15000, hectares: 680, co2: 85 }
   },
   'Abengourou': { 
-    path: 'M 380 200 L 420 190 L 440 220 L 430 260 L 390 270 L 370 240 Z',
-    center: { x: 405, y: 230 },
+    path: 'M 480 180 L 520 170 L 540 200 L 530 240 L 490 250 L 470 220 Z',
+    center: { x: 505, y: 210 },
     stats: { farmers: 340, trees: 19000, hectares: 870, co2: 100 }
   },
   'Marahoué': { 
-    path: 'M 200 160 L 240 150 L 260 180 L 250 220 L 210 230 L 190 200 Z',
-    center: { x: 225, y: 190 },
+    path: 'M 300 140 L 340 130 L 360 160 L 350 200 L 310 210 L 290 180 Z',
+    center: { x: 325, y: 170 },
     stats: { farmers: 260, trees: 14000, hectares: 620, co2: 75 }
   }
 };
