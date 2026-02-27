@@ -283,6 +283,39 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     marginTop: -SPACING.lg,
   },
+  carbonBanner: {
+    marginHorizontal: SPACING.md,
+    marginBottom: SPACING.sm,
+    backgroundColor: '#065f46',
+    borderRadius: 12,
+    padding: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  carbonBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  carbonBannerEmoji: {
+    fontSize: 32,
+    marginRight: SPACING.sm,
+  },
+  carbonBannerTitle: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: 'bold',
+    color: COLORS.white,
+  },
+  carbonBannerSubtitle: {
+    fontSize: FONTS.sizes.xs,
+    color: '#a7f3d0',
+  },
+  carbonBannerArrow: {
+    fontSize: 24,
+    color: COLORS.white,
+    fontWeight: 'bold',
+  },
   menuContainer: {
     padding: SPACING.md,
   },
