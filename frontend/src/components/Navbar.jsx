@@ -119,6 +119,13 @@ const Navbar = () => {
           { icon: ShoppingCart, label: 'Commandes', route: '/supplier/orders' },
           { icon: Bell, label: 'Notifications', route: '/supplier/notifications' },
         ];
+      case 'cooperative':
+        return [
+          ...commonItems,
+          { icon: User, label: 'Membres', route: '/cooperative/members' },
+          { icon: Package, label: 'Ventes Groupées', route: '/cooperative/lots' },
+          { icon: Bell, label: 'Rapports EUDR', route: '/cooperative/reports' },
+        ];
       default:
         return commonItems;
     }
