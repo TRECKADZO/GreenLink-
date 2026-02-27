@@ -507,3 +507,104 @@ async def match_order_with_parcels(order_id: str):
             "status": "matched" if matched_ids else "open"
         }}
     )
+
+
+
+# ============= MOBILE APP ROUTES =============
+
+from pydantic import BaseModel
+
+class DeviceRegistration(BaseModel):
+    push_token: str
+    platform: str  # 'ios' or 'android'
+    device_name: Optional[str] = None
+
+@router.post("/notifications/register-device")
+async def register_device_for_push(
+    device: DeviceRegistration,
+    current_user: dict = Depends(get_current_user)
+):
+    """Register a device for push notifications"""
+    user_id = current_user["_id"]
+    
+    # Check if device already registered
+    existing = await db.device_tokens.find_one({
+        "user_id": user_id,
+        "push_token": device.push_token
+    })
+    
+    if existing:
+        # Update last seen
+        await db.device_tokens.update_one(
+            {"_id": existing["_id"]},
+            {"$set": {"last_seen": datetime.utcnow()}}
+        )
+        return {"message": "Device already registered", "token_id": str(existing["_id"])}
+    
+    # Register new device
+    token_doc = {
+        "user_id": user_id,
+        "push_token": device.push_token,
+        "platform": device.platform,
+        "device_name": device.device_name,
+        "created_at": datetime.utcnow(),
+        "last_seen": datetime.utcnow(),
+        "is_active": True
+    }
+    
+    result = await db.device_tokens.insert_one(token_doc)
+    logger.info(f"Device registered for push notifications: user={user_id}, platform={device.platform}")
+    
+    return {"message": "Device registered successfully", "token_id": str(result.inserted_id)}
+
+@router.delete("/notifications/unregister-device")
+async def unregister_device(
+    push_token: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Unregister a device from push notifications"""
+    result = await db.device_tokens.delete_one({
+        "user_id": current_user["_id"],
+        "push_token": push_token
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Device not found")
+    
+    return {"message": "Device unregistered successfully"}
+
+@router.get("/notifications")
+async def get_farmer_notifications(
+    current_user: dict = Depends(get_current_user),
+    limit: int = 50
+):
+    """Get notifications for the current farmer"""
+    notifications = await db.notifications.find({
+        "user_id": current_user["_id"]
+    }).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return [{
+        "id": str(n["_id"]),
+        "title": n.get("title", ""),
+        "message": n.get("message", ""),
+        "type": n.get("type", "info"),
+        "action_url": n.get("action_url"),
+        "is_read": n.get("is_read", False),
+        "created_at": n.get("created_at", datetime.utcnow()).isoformat()
+    } for n in notifications]
+
+@router.put("/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark a notification as read"""
+    result = await db.notifications.update_one(
+        {"_id": ObjectId(notification_id), "user_id": current_user["_id"]},
+        {"$set": {"is_read": True, "read_at": datetime.utcnow()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    return {"message": "Notification marked as read"}
