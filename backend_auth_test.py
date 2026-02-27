@@ -16,16 +16,26 @@ def make_request(method: str, endpoint: str, data: Dict[Any, Any] = None, header
     """Helper function to make HTTP requests with error handling"""
     url = f"{BACKEND_URL}{endpoint}"
     try:
+        # Set shorter timeout and better session handling
+        session = requests.Session()
+        session.timeout = 10
+        
         if method.upper() == "GET":
-            response = requests.get(url, headers=headers, timeout=30)
+            response = session.get(url, headers=headers, timeout=10)
         elif method.upper() == "POST":
-            response = requests.post(url, json=data, headers=headers, timeout=30)
+            response = session.post(url, json=data, headers=headers, timeout=10)
         elif method.upper() == "PUT":
-            response = requests.put(url, json=data, headers=headers, timeout=30)
+            response = session.put(url, json=data, headers=headers, timeout=10)
         else:
             raise ValueError(f"Unsupported HTTP method: {method}")
         
         return response
+    except requests.Timeout as e:
+        print(f"❌ Timeout for {method} {url}: {e}")
+        return None
+    except requests.ConnectionError as e:
+        print(f"❌ Connection error for {method} {url}: {e}")
+        return None
     except requests.RequestException as e:
         print(f"❌ Request failed for {method} {url}: {e}")
         return None
