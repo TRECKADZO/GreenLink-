@@ -287,9 +287,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  statusLeft: {
+    flex: 1,
+  },
   pendingText: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.warning,
+    marginTop: SPACING.xs,
+  },
+  lastSyncText: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.gray[500],
+    marginTop: 2,
+  },
+  syncButton: {
+    backgroundColor: COLORS.white,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  syncButtonDisabled: {
+    opacity: 0.6,
+  },
+  syncButtonText: {
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.primary,
+    fontWeight: 'bold',
   },
   infoSection: {
     marginBottom: SPACING.lg,
