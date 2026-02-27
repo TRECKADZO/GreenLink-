@@ -203,6 +203,49 @@ async def get_farmer_dashboard(current_user: dict = Depends(get_current_user)):
         "recent_harvests": serialized_harvests
     }
 
+# ============= SMS NOTIFICATIONS =============
+
+@router.get("/sms/history")
+async def get_sms_history(current_user: dict = Depends(get_current_user)):
+    """Obtenir l'historique des SMS envoyés"""
+    phone = current_user.get("phone_number")
+    if not phone:
+        return {"sms_history": [], "message": "Aucun numéro de téléphone associé au compte"}
+    
+    history = await SMSService.get_sms_history(phone, limit=20)
+    return {"sms_history": history}
+
+@router.post("/sms/send-weekly-summary")
+async def send_weekly_summary(current_user: dict = Depends(get_current_user)):
+    """Envoyer le résumé hebdomadaire au producteur"""
+    if current_user.get("user_type") != "producteur":
+        raise HTTPException(status_code=403, detail="Réservé aux producteurs")
+    
+    phone = current_user.get("phone_number")
+    if not phone:
+        raise HTTPException(status_code=400, detail="Aucun numéro de téléphone associé")
+    
+    # Get farmer stats
+    parcels = await db.parcels.find({"farmer_id": current_user["_id"]}).to_list(100)
+    harvests = await db.harvests.find({"farmer_id": current_user["_id"]}).to_list(1000)
+    
+    total_parcels = len(parcels)
+    total_credits = sum([p.get("carbon_credits_earned", 0) for p in parcels])
+    total_revenue = sum([h.get("total_amount", 0) for h in harvests])
+    avg_score = sum([p.get("carbon_score", 0) for p in parcels]) / len(parcels) if parcels else 0
+    
+    result = await SMSService.send_weekly_summary(
+        phone_number=phone,
+        farmer_name=current_user.get("full_name", "Producteur"),
+        total_parcels=total_parcels,
+        total_credits=total_credits,
+        total_revenue=total_revenue,
+        avg_score=avg_score,
+        language="francais"
+    )
+    
+    return result
+
 # ============= ACHETEUR ROUTES =============
 
 @router.post("/buyer/orders", response_model=BuyerOrderInDB)
