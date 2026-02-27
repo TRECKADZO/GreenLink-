@@ -512,7 +512,9 @@ def test_user_type_protection():
                               headers=headers)
         
         print_info(f"Response object: {response}")
-        if response:
+        print_info(f"Response is None: {response is None}")
+        print_info(f"Response bool value: {bool(response)}")
+        if response is not None:
             print_info(f"Response status: {response.status_code}")
             if response.status_code == 403:
                 print_success("Producer correctly blocked from buyer endpoint (403 Forbidden)")
