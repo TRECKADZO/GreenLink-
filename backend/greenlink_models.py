@@ -60,7 +60,7 @@ class PaymentRequest(BaseModel):
 
 class BuyerOrder(BaseModel):
     buyer_id: str
-    buyer_company: str
+    buyer_company: Optional[str] = None
     crop_type: str
     quantity_needed_kg: float
     max_price_per_kg: float
