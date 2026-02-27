@@ -53,6 +53,7 @@ const Navbar = () => {
       case 'acheteur': return '/buyer/dashboard';
       case 'entreprise_rse': return '/rse/dashboard';
       case 'fournisseur': return '/supplier/dashboard';
+      case 'admin': return '/admin/dashboard';
       default: return '/profile';
     }
   };
@@ -65,6 +66,7 @@ const Navbar = () => {
       case 'acheteur': return 'Acheteur';
       case 'entreprise_rse': return 'Entreprise RSE';
       case 'fournisseur': return 'Fournisseur';
+      case 'admin': return 'Administrateur';
       default: return 'Utilisateur';
     }
   };
