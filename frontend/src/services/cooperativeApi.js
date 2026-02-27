@@ -47,6 +47,28 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  // Member Parcels
+  getMemberParcels: async (memberId) => {
+    const response = await axios.get(`${API}/members/${memberId}/parcels`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  addMemberParcel: async (memberId, parcelData) => {
+    const response = await axios.post(`${API}/members/${memberId}/parcels`, parcelData, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  deleteMemberParcel: async (memberId, parcelId) => {
+    const response = await axios.delete(`${API}/members/${memberId}/parcels/${parcelId}`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   validateMember: async (memberId) => {
     const response = await axios.put(`${API}/members/${memberId}/validate`, {}, {
       headers: getAuthHeader()
