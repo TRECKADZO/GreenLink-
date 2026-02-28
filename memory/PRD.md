@@ -154,6 +154,31 @@
 
 ---
 
+### 0.7 Photo Producteur + Export PDF Cartes en Lot - ✅ COMPLETED (NEW)
+- **Purpose**: Ajouter photo producteur sur les cartes et permettre l'export PDF en lot
+
+**Key Features Implemented:**
+- Upload de photo profil sur le composant QR Code (bouton camera)
+- Cartes PDF professionnelles avec photo/initiales + QR code + infos
+- Export PDF individuel depuis le profil producteur (bouton "Carte PDF")
+- Export PDF en lot depuis la page coopérative (6 cartes/page par défaut)
+- Design professionnel avec logo GreenLink, couleurs, bordures
+- Instructions d'utilisation sur les cartes PDF
+
+**API Endpoints:**
+- `GET /api/farmer-cards/export-pdf?cards_per_page=6` - Export lot PDF
+- `GET /api/farmer-cards/export-single/{farmer_id}` - Carte individuelle PDF
+
+**Files Created:**
+- `/app/backend/routes/farmer_cards_pdf.py` - Génération PDF cartes
+
+**UI Updates:**
+- Bouton "Carte PDF" sur profil producteur
+- Bouton "Export PDF tout" sur page coopérative QR codes
+- Upload photo avec preview sur composant QR
+
+---
+
 ## Previous Updates - Feb 28, 2026
 
 ### 0. Dashboard Coopérative SSRTE - ✅ COMPLETED (NEW)
