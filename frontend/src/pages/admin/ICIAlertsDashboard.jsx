@@ -110,6 +110,42 @@ const ICIAlertsDashboard = () => {
     }
   };
 
+  const exportCSV = async (type) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/ici-export/${type}/csv`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${type}_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Export CSV téléchargé');
+    } catch (error) {
+      toast.error('Erreur lors de l\'export');
+    }
+  };
+
+  const exportFullJSON = async () => {
+    try {
+      const response = await apiClient.get('/api/ici-export/full-report/json');
+      const dataStr = JSON.stringify(response.data, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapport_ici_complet_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      toast.success('Rapport JSON téléchargé');
+    } catch (error) {
+      toast.error('Erreur lors de l\'export');
+    }
+  };
+
   const formatDate = (date) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('fr-FR', {
