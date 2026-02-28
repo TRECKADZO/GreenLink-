@@ -147,7 +147,7 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
 @router.get("/members")
 async def get_coop_members(
     current_user: dict = Depends(get_current_user),
-    status: Optional[str] = None,
+    status_filter: Optional[str] = Query(None, alias="status"),
     village: Optional[str] = None,
     search: Optional[str] = None,
     skip: int = 0,
@@ -158,8 +158,8 @@ async def get_coop_members(
     coop_id = current_user["_id"]
     
     query = {"coop_id": coop_id}
-    if status:
-        query["status"] = status
+    if status_filter:
+        query["status"] = status_filter
     if village:
         query["village"] = village
     if search:
