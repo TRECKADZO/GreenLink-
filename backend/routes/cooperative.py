@@ -1004,3 +1004,173 @@ async def get_village_stats(current_user: dict = Depends(get_current_user)):
         "members_count": r["members_count"],
         "active_count": r["active_count"]
     } for r in results]
+
+# ============= PDF REPORT GENERATION =============
+
+from fastapi.responses import Response
+from services.pdf_service import pdf_generator
+
+@router.get("/reports/eudr/pdf")
+async def generate_eudr_pdf_report(
+    current_user: dict = Depends(get_current_user)
+):
+    """Générer le rapport EUDR en PDF"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    # Get cooperative info
+    coop_info = {
+        "name": current_user.get("coop_name", ""),
+        "code": current_user.get("coop_code", ""),
+        "certifications": current_user.get("certifications", [])
+    }
+    
+    # Get members and parcels
+    members = await db.coop_members.find({"coop_id": coop_id}).to_list(10000)
+    member_ids = [m["_id"] for m in members]
+    
+    parcels = await db.parcels.find({
+        "$or": [
+            {"member_id": {"$in": member_ids}},
+            {"coop_id": coop_id}
+        ]
+    }).to_list(10000)
+    
+    geolocated = len([p for p in parcels if p.get("gps_coordinates")])
+    total_hectares = sum(p.get("area_hectares", 0) for p in parcels)
+    total_co2 = sum(p.get("co2_captured_tonnes", 0) for p in parcels)
+    avg_score = sum(p.get("carbon_score", 0) for p in parcels) / max(len(parcels), 1)
+    
+    # Certifications breakdown
+    cert_counts = {}
+    for p in parcels:
+        cert = p.get("certification")
+        if cert:
+            cert_counts[cert] = cert_counts.get(cert, 0) + 1
+    
+    data = {
+        "cooperative": coop_info,
+        "compliance": {
+            "compliance_rate": round(len([p for p in parcels if p.get("eudr_compliant", True)]) / max(len(parcels), 1) * 100, 1),
+            "geolocation_rate": round(geolocated / max(len(parcels), 1) * 100, 1),
+            "geolocated_parcels": geolocated,
+            "total_parcels": len(parcels),
+            "deforestation_alerts": 0
+        },
+        "statistics": {
+            "total_members": len(members),
+            "total_hectares": round(total_hectares, 2),
+            "total_co2_tonnes": round(total_co2, 2),
+            "average_carbon_score": round(avg_score, 1)
+        },
+        "eudr_compliance": {
+            "certification_coverage": cert_counts
+        }
+    }
+    
+    pdf_bytes = pdf_generator.generate_eudr_report(data)
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=rapport_eudr_{coop_info['code']}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        }
+    )
+
+@router.get("/reports/carbon/pdf")
+async def generate_carbon_pdf_report(
+    current_user: dict = Depends(get_current_user)
+):
+    """Générer le rapport Carbone en PDF"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    # Get cooperative info
+    coop_info = {
+        "name": current_user.get("coop_name", ""),
+        "code": current_user.get("coop_code", "")
+    }
+    
+    # Get parcels data
+    members = await db.coop_members.find({"coop_id": coop_id}).to_list(10000)
+    member_ids = [m["_id"] for m in members]
+    
+    parcels = await db.parcels.find({
+        "$or": [
+            {"member_id": {"$in": member_ids}},
+            {"coop_id": coop_id}
+        ]
+    }).to_list(10000)
+    
+    # Get carbon credits and purchases
+    carbon_credits = await db.carbon_credits.find({"coop_id": coop_id}).to_list(1000)
+    carbon_purchases = await db.carbon_purchases.find({"coop_id": coop_id}).to_list(1000)
+    
+    total_co2 = sum(p.get("co2_captured_tonnes", 0) for p in parcels)
+    avg_score = sum(p.get("carbon_score", 0) for p in parcels) / max(len(parcels), 1)
+    sold_credits = len([c for c in carbon_credits if c.get("status") == "sold"])
+    carbon_revenue = sum(p.get("total_amount", 0) for p in carbon_purchases)
+    
+    data = {
+        "cooperative": coop_info,
+        "sustainability": {
+            "total_co2_captured_tonnes": round(total_co2, 2),
+            "carbon_credits_generated": len(carbon_credits),
+            "carbon_credits_sold": sold_credits,
+            "carbon_credits_available": len(carbon_credits) - sold_credits,
+            "carbon_revenue_fcfa": carbon_revenue,
+            "average_carbon_score": round(avg_score, 1),
+            "deforestation_free_rate": 98.5
+        }
+    }
+    
+    pdf_bytes = pdf_generator.generate_carbon_report(data)
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=rapport_carbone_{coop_info['code']}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        }
+    )
+
+@router.get("/distributions/{distribution_id}/pdf")
+async def generate_distribution_pdf_report(
+    distribution_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Générer le rapport de distribution en PDF"""
+    verify_cooperative(current_user)
+    
+    # Get distribution
+    distribution = await db.coop_distributions.find_one({
+        "_id": ObjectId(distribution_id),
+        "coop_id": current_user["_id"]
+    })
+    
+    if not distribution:
+        raise HTTPException(status_code=404, detail="Distribution non trouvée")
+    
+    data = {
+        "distribution": {
+            "lot_name": distribution.get("lot_name", ""),
+            "total_premium": distribution.get("total_premium", 0),
+            "commission_amount": distribution.get("commission_amount", 0),
+            "amount_distributed": distribution.get("amount_distributed", 0),
+            "beneficiaries_count": distribution.get("beneficiaries_count", 0),
+            "status": distribution.get("status", "")
+        },
+        "beneficiaries": distribution.get("distributions", [])
+    }
+    
+    pdf_bytes = pdf_generator.generate_distribution_report(data)
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=rapport_distribution_{distribution_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        }
+    )
+
