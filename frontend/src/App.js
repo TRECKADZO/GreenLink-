@@ -110,6 +110,7 @@ function App() {
               <Route path="/admin/billing" element={<BillingDashboard />} />
               <Route path="/admin/premium-analytics" element={<PremiumAnalyticsDashboard />} />
               <Route path="/admin/ici-analytics" element={<ICIAnalyticsDashboard />} />
+              <Route path="/admin/ici-alerts" element={<ICIAlertsDashboard />} />
 
               {/* Cooperative Routes */}
               <Route path="/cooperative/dashboard" element={<CooperativeDashboard />} />
