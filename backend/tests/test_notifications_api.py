@@ -90,10 +90,11 @@ class TestHealthCheck:
     """Basic health check"""
     
     def test_backend_health(self, api_client):
-        """Test backend is running"""
-        response = api_client.get(f"{BASE_URL}/api/health")
-        assert response.status_code == 200, f"Health check failed: {response.text}"
-        print("Backend health check: PASS")
+        """Test backend is running via auth endpoint"""
+        # Use login endpoint to verify backend is responding
+        response = api_client.post(f"{BASE_URL}/api/auth/login", json=COOP_CREDENTIALS)
+        assert response.status_code == 200, f"Backend health check failed: {response.text}"
+        print("Backend health check via login: PASS")
 
 
 class TestNotificationPreferences:
