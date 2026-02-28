@@ -57,12 +57,6 @@ const WelcomeScreen = ({ navigation }) => {
     },
   ];
 
-  const stats = [
-    { value: '5000+', label: 'Producteurs' },
-    { value: '150+', label: 'Coopératives' },
-    { value: '25K', label: 'Hectares' },
-  ];
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
