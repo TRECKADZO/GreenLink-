@@ -1,6 +1,30 @@
 # GreenLink PRD - Updated February 28, 2026
 
-## Latest Updates - Feb 28, 2026 (Session 2)
+## Latest Updates - Feb 28, 2026 (Session 3)
+
+### Bug Fix: SSRTE Visits Cooperative Association - ✅ FIXED
+- **Issue**: Les visites SSRTE enregistrées n'étaient pas associées à la coopérative, ce qui rendait le dashboard analytics vide
+- **Fix**: Ajout automatique du `cooperative_id`, `agent_name`, `agent_id` et `farmer_name` lors de l'enregistrement d'une visite SSRTE
+
+**Files Updated:**
+- `/app/backend/routes/ici_data_collection.py` - Endpoint `POST /api/ici-data/ssrte/visit`
+
+### Bug Fix: QR Codes Page Empty - ✅ FIXED
+- **Issue**: La page QR Codes coopérative affichait "Aucun membre trouvé" car la requête utilisait `cooperative_id` au lieu de `coop_id`
+- **Fix**: Correction de la requête pour utiliser le bon champ (`coop_id` pour `coop_members`)
+
+**Files Updated:**
+- `/app/backend/routes/qrcode_generator.py` - Endpoint `GET /api/qrcode/cooperative/members`
+
+### Data Population: SSRTE Test Data - ✅ COMPLETED
+- Création de 6 visites SSRTE de test avec différents niveaux de risque
+- 1 critique, 2 élevé, 1 modéré, 2 faible
+- 8 enfants identifiés au total
+- Tâches dangereuses et supports fournis variés
+
+---
+
+## Previous Updates - Feb 28, 2026 (Session 2)
 
 ### 0. PDF Reports Generation - ✅ COMPLETED (NEW)
 - **Purpose**: Générer des rapports PDF professionnels combinant tous les analytics ICI
