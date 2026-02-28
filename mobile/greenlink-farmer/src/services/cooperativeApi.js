@@ -85,6 +85,51 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  // ============= SSRTE VISITS =============
+  
+  /**
+   * Create SSRTE visit report
+   */
+  createSSRTEVisit: async (token, visitData) => {
+    const response = await api.post('/ici-data/ssrte/visit', visitData);
+    return response.data;
+  },
+
+  /**
+   * Get SSRTE visits list
+   */
+  getSSRTEVisits: async (params = {}) => {
+    const response = await api.get('/ici-data/ssrte/visits', { params });
+    return response.data;
+  },
+
+  /**
+   * Get member detail by ID
+   */
+  getMemberDetail: async (token, memberId) => {
+    const response = await api.get(`/cooperative/members/${memberId}`);
+    return response;
+  },
+
+  /**
+   * Sync offline visits
+   */
+  syncOfflineVisits: async (visits) => {
+    const response = await api.post('/ici-export/offline/sync', { 
+      visits, 
+      sync_timestamp: new Date().toISOString() 
+    });
+    return response.data;
+  },
+
+  /**
+   * Get data for offline mode
+   */
+  getOfflineData: async () => {
+    const response = await api.get('/ici-export/offline/pending');
+    return response.data;
+  },
+
   // ============= PDF DOWNLOADS =============
   
   /**
