@@ -129,6 +129,13 @@ const RegisterScreen = ({ navigation, route }) => {
     coopCode: '',
     departement: '',
     zone: '',
+    // ICI Data Fields for producers
+    village: '',
+    genre: '',
+    anneeNaissance: '',
+    niveauEducation: '',
+    tailleMenage: '',
+    nombreEnfants: '',
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
