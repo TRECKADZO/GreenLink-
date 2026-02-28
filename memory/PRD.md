@@ -279,16 +279,30 @@ yarn build:android
 - `/app/mobile/greenlink-farmer/src/services/sync.js` - Background sync service
 - `/app/mobile/greenlink-farmer/src/screens/profile/ProfileScreen.js` - Profile with sync button
 
-## Recent Changes (February 28, 2026) - PDF Report Generation
+## Recent Changes (February 28, 2026) - PDF Report Generation & Mobile Cooperative
 13. **PDF Report Generation for EUDR Compliance** - Cooperatives can now download official PDF reports
     - Backend service in `/app/backend/services/pdf_service.py`
     - Endpoints: `/api/cooperative/reports/eudr/pdf`, `/api/cooperative/reports/carbon/pdf`
+    - **NEW: Individual Member Payment Receipt** - `/api/cooperative/members/{id}/receipt/pdf`
     - Uses `reportlab` library for professional PDF generation
     - EUDR compliance reports with cooperative info, compliance metrics, statistics
     - Carbon reports with CO2 capture data, environmental impact equivalents, SDG alignment
     - Distribution reports with beneficiary lists and payment status
+    - **Individual payment receipts** with member info, amount, environmental impact, EUDR certification
     - Frontend integration with download buttons in ReportsPage.jsx
     - CSV export also available for data analysis
+
+14. **Mobile App - Cooperative Agent Features (React Native)**
+    - New screens for cooperative field agents in `/app/mobile/greenlink-farmer/src/screens/cooperative/`
+    - **CoopDashboardScreen**: Overview with stats, quick actions, financial summary
+    - **CoopMembersScreen**: Member list with search, filters, status badges
+    - **CoopMemberDetailScreen**: Full member profile with parcels, carbon stats, payment history
+    - **AddCoopMemberScreen**: Form to register new members with GDPR consent
+    - **AddMemberParcelScreen**: Declare parcels with GPS capture using device location
+    - **CoopReportsScreen**: View compliance data and download PDF reports on mobile
+    - New API service `/app/mobile/greenlink-farmer/src/services/cooperativeApi.js`
+    - PDF download with expo-file-system and expo-sharing for mobile devices
+    - Added `expo-sharing` dependency for PDF sharing functionality
 
 ## Recent Changes (December 2025) - Cooperative Profile
 11. **Coopérative agricole profile** - Complete agricultural cooperative management system
