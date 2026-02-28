@@ -41,6 +41,14 @@ const LoginScreen = ({ navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Back button */}
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.navigate('Welcome')}
+        >
+          <Text style={styles.backButtonText}>← Accueil</Text>
+        </TouchableOpacity>
+        
         {/* Logo et titre */}
         <View style={styles.header}>
           <Text style={styles.logo}>🌱</Text>
