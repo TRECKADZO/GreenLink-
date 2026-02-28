@@ -16,6 +16,7 @@ import OrderTracking from "./pages/OrderTracking";
 import ConditionsPage from "./pages/ConditionsPage";
 import ConfidentialitePage from "./pages/ConfidentialitePage";
 import SecuritePage from "./pages/SecuritePage";
+import FAQPage from "./pages/FAQPage";
 
 // Supplier Routes
 import SupplierDashboard from "./pages/supplier/Dashboard";
