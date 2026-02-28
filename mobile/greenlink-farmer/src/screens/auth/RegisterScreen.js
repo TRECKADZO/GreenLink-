@@ -12,13 +12,22 @@ import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/UI';
 import { COLORS, FONTS, SPACING } from '../../config';
 
+const USER_TYPES = [
+  { id: 'producteur', label: 'Producteur', icon: '🌱', description: 'Je cultive et vends mes récoltes' },
+  { id: 'cooperative', label: 'Coopérative', icon: '🤝', description: 'Je gère une coopérative agricole' },
+];
+
 const RegisterScreen = ({ navigation }) => {
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
+    email: '',
     password: '',
     confirmPassword: '',
+    userType: 'producteur',
+    coopName: '',
+    coopCode: '',
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,12 +54,37 @@ const RegisterScreen = ({ navigation }) => {
       return;
     }
 
+    // Validation spécifique coopérative
+    if (formData.userType === 'cooperative') {
+      if (!formData.coopName) {
+        Alert.alert('Erreur', 'Veuillez entrer le nom de la coopérative');
+        return;
+      }
+      if (!formData.email) {
+        Alert.alert('Erreur', 'L\'email est obligatoire pour les coopératives');
+        return;
+      }
+    }
+
     setLoading(true);
-    const result = await register({
+    
+    const registerData = {
       full_name: formData.fullName,
       phone_number: formData.phone,
       password: formData.password,
-    });
+      user_type: formData.userType,
+    };
+
+    // Ajouter les champs email et coopérative si nécessaire
+    if (formData.email) {
+      registerData.email = formData.email;
+    }
+    if (formData.userType === 'cooperative') {
+      registerData.coop_name = formData.coopName;
+      registerData.coop_code = formData.coopCode || `COOP-${Date.now().toString().slice(-6)}`;
+    }
+
+    const result = await register(registerData);
     setLoading(false);
 
     if (!result.success) {
@@ -66,11 +100,35 @@ const RegisterScreen = ({ navigation }) => {
           <Text style={styles.backButton}>← Retour</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Créer un compte</Text>
-        <Text style={styles.subtitle}>Rejoignez GreenLink en tant que producteur</Text>
+        <Text style={styles.subtitle}>Rejoignez GreenLink</Text>
       </View>
 
       {/* Form */}
       <View style={styles.form}>
+        {/* User Type Selection */}
+        <Text style={styles.sectionTitle}>Type de compte *</Text>
+        <View style={styles.userTypeContainer}>
+          {USER_TYPES.map((type) => (
+            <TouchableOpacity
+              key={type.id}
+              style={[
+                styles.userTypeCard,
+                formData.userType === type.id && styles.userTypeCardSelected,
+              ]}
+              onPress={() => setFormData({ ...formData, userType: type.id })}
+            >
+              <Text style={styles.userTypeIcon}>{type.icon}</Text>
+              <Text style={[
+                styles.userTypeLabel,
+                formData.userType === type.id && styles.userTypeLabelSelected,
+              ]}>
+                {type.label}
+              </Text>
+              <Text style={styles.userTypeDescription}>{type.description}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Nom complet *</Text>
           <TextInput
@@ -81,6 +139,47 @@ const RegisterScreen = ({ navigation }) => {
             placeholderTextColor={COLORS.gray[400]}
           />
         </View>
+
+        {/* Cooperative specific fields */}
+        {formData.userType === 'cooperative' && (
+          <>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Nom de la Coopérative *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.coopName}
+                onChangeText={(text) => setFormData({ ...formData, coopName: text })}
+                placeholder="Coopérative Agricole de..."
+                placeholderTextColor={COLORS.gray[400]}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Code Coopérative (optionnel)</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.coopCode}
+                onChangeText={(text) => setFormData({ ...formData, coopCode: text })}
+                placeholder="Ex: CI-GAG-001"
+                placeholderTextColor={COLORS.gray[400]}
+                autoCapitalize="characters"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.email}
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
+                placeholder="contact@cooperative.ci"
+                placeholderTextColor={COLORS.gray[400]}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          </>
+        )}
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Numéro de téléphone *</Text>
@@ -187,6 +286,48 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     padding: SPACING.lg,
     paddingTop: SPACING.xl,
+  },
+  sectionTitle: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: 'bold',
+    color: COLORS.gray[700],
+    marginBottom: SPACING.md,
+  },
+  userTypeContainer: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  userTypeCard: {
+    flex: 1,
+    padding: SPACING.md,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.gray[300],
+    backgroundColor: COLORS.gray[50],
+    alignItems: 'center',
+  },
+  userTypeCardSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary + '10',
+  },
+  userTypeIcon: {
+    fontSize: 32,
+    marginBottom: SPACING.xs,
+  },
+  userTypeLabel: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: 'bold',
+    color: COLORS.gray[700],
+    marginBottom: 4,
+  },
+  userTypeLabelSelected: {
+    color: COLORS.primary,
+  },
+  userTypeDescription: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.gray[500],
+    textAlign: 'center',
   },
   inputContainer: {
     marginBottom: SPACING.md,
