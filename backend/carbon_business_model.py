@@ -324,35 +324,40 @@ def calculate_revenue_distribution(
     """
     Calculate how revenue is distributed between GreenLink, farmers, and cooperatives
     
-    Model:
-    1. Gross revenue from sale
-    2. Deduct costs (audits, verification, buffer, fees)
-    3. Net revenue split:
-       - 25% GreenLink margin
-       - 70% Farmers (pro-rata based on their credits)
-       - 5% Cooperatives
+    Model (realistic carbon credit distribution):
+    1. Gross revenue from sale = 100%
+    2. Deduct costs (27% of gross) = audits, verification, buffer, fees
+    3. Net revenue (73% of gross) split into:
+       - 20% GreenLink margin (= ~14.6% of gross)
+       - 75% Farmers pro-rata (= ~54.75% of gross)
+       - 5% Cooperatives (= ~3.65% of gross)
+    
+    TOTAL = 27% costs + 73% net = 100% ✓
+    NET = 20% + 75% + 5% = 100% ✓
     """
     # Gross revenue
     gross_usd = total_tonnes * price_per_tonne_usd
     gross_fcfa = gross_usd * USD_TO_FCFA
     
-    # Calculate costs
+    # Calculate costs (deducted from gross)
     costs = {}
     total_costs = 0
     for cost_name, rate in COST_STRUCTURE.items():
         cost_amount = gross_usd * rate
         costs[cost_name] = {
-            "rate": rate,
+            "rate": f"{rate*100:.0f}%",
             "amount_usd": round(cost_amount, 2),
             "amount_fcfa": round(cost_amount * USD_TO_FCFA, 0)
         }
         total_costs += cost_amount
     
+    total_cost_rate = sum(COST_STRUCTURE.values())
+    
     # Net after costs
     net_usd = gross_usd - total_costs
     net_fcfa = net_usd * USD_TO_FCFA
     
-    # Distribution
+    # Distribution of NET revenue
     greenlink_share = net_usd * GREENLINK_MARGIN_RATE
     farmers_pool = net_usd * FARMER_SHARE_RATE
     coop_share = net_usd * COOPERATIVE_SHARE_RATE
