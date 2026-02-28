@@ -42,10 +42,15 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (identifier, password) => {
     try {
+      console.log('[Auth] Login attempt with:', identifier);
+      console.log('[Auth] API URL:', CONFIG.API_URL);
+      
       const response = await api.post('/auth/login', {
         identifier,
         password,
       });
+      
+      console.log('[Auth] Login response received');
       
       const { access_token, user: userData } = response.data;
       
@@ -56,8 +61,11 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       api.setToken(access_token);
       
+      console.log('[Auth] Login successful');
       return { success: true };
     } catch (error) {
+      console.error('[Auth] Login error:', error.message);
+      console.error('[Auth] Error response:', error.response?.data);
       return {
         success: false,
         error: error.response?.data?.detail || 'Erreur de connexion',
