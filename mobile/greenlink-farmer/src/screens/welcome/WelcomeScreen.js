@@ -282,32 +282,10 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     lineHeight: 24,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: SPACING.lg,
-    marginHorizontal: SPACING.lg,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 16,
-    marginBottom: SPACING.xl,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: FONTS.sizes.xxl,
-    fontWeight: 'bold',
-    color: COLORS.secondary,
-  },
-  statLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.white,
-    opacity: 0.8,
-    marginTop: 4,
-  },
   featuresContainer: {
     paddingHorizontal: SPACING.lg,
     marginBottom: SPACING.xl,
+    marginTop: SPACING.lg,
   },
   sectionTitle: {
     fontSize: FONTS.sizes.xl,
