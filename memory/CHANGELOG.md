@@ -1,5 +1,48 @@
 # GreenLink CHANGELOG
 
+## [Feb 28, 2026] - Export, Notifications & Offline Support
+
+### Added
+- **Export données ICI** (CSV/JSON)
+  - Export alertes CSV
+  - Export visites SSRTE CSV  
+  - Export profils ICI CSV
+  - Export rapport complet JSON
+  
+- **Tableau Comparatif Coopératives** (`/admin/cooperative-comparison`)
+  - Moyennes nationales (membres, taux ICI, visites)
+  - Rankings avec trophées (🏆🥈🥉)
+  - Classement par taux complétion ICI
+  - Métriques détaillées par coopérative
+
+- **Mode Offline SSRTE** (`/cooperative/ssrte`)
+  - Détection automatique connexion (online/offline)
+  - Sauvegarde locale des visites hors-ligne
+  - Synchronisation automatique à la reconnexion
+  - Cache des membres pour mode offline
+  - Bouton "Sync" pour synchronisation manuelle
+
+### New API Endpoints
+- `/api/ici-export/alerts/csv`
+- `/api/ici-export/ssrte-visits/csv`
+- `/api/ici-export/profiles/csv`
+- `/api/ici-export/full-report/json`
+- `/api/ici-export/cooperatives/compare`
+- `/api/ici-export/offline/sync`
+- `/api/ici-export/offline/pending`
+- `/api/ici-export/notifications/preferences`
+- `/api/ici-export/notifications/unread`
+
+### Files Created
+- `/app/backend/routes/ici_export.py`
+- `/app/frontend/src/pages/admin/CooperativeComparison.jsx`
+
+### Files Updated
+- `ICIAlertsDashboard.jsx` - Section export ajoutée
+- `SSRTEDashboard.jsx` - Support offline ajouté
+
+---
+
 ## [Feb 28, 2026] - ICI Profile Page & Mobile Update
 
 ### Added
