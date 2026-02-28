@@ -202,8 +202,6 @@ class TestDeviceRegistration:
         assert data.get("message") in ["Device registered", "Device updated"], f"Unexpected message: {data.get('message')}"
         
         print(f"POST /api/notifications/register-device: PASS - Token registered: {test_token[:40]}...")
-        
-        return test_token
     
     def test_register_device_requires_auth(self, api_client):
         """POST /api/notifications/register-device requires authentication"""
