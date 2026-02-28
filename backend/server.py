@@ -19,6 +19,7 @@ from routes import features, content, contact, auth, marketplace, greenlink, pay
 from routes import admin_analytics
 from routes import tracking, analytics_advanced, notifications, subscriptions, carbon_sales, billing, sms
 from routes import premium_analytics, ici_analytics, ici_data_collection, ici_export
+from routes import pdf_reports, websocket_routes
 
 
 ROOT_DIR = Path(__file__).parent
@@ -106,6 +107,8 @@ app.include_router(premium_analytics.router)
 app.include_router(ici_analytics.router)
 app.include_router(ici_data_collection.router)
 app.include_router(ici_export.router)
+app.include_router(pdf_reports.router)
+app.include_router(websocket_routes.router)
 
 app.add_middleware(
     CORSMiddleware,
