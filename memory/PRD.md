@@ -37,6 +37,51 @@
 
 ---
 
+### 0.1. ICI Data Collection & Alerts System - ✅ COMPLETED (NEW)
+- **Purpose**: Système de collecte de données terrain et alertes automatiques basé sur indicateurs ICI
+
+**Key Features Implemented:**
+- Collecte profils ICI producteurs (données démographiques, ménage, enfants, main-d'œuvre)
+- Système SSRTE (Suivi et Remédiation du Travail des Enfants) - enregistrement visites terrain
+- Classification automatique des zones à risque selon département
+- Calcul automatique du score de risque (0-100) basé sur:
+  - Enfants travaillant sur exploitation
+  - Tâches dangereuses effectuées (Convention OIT 182)
+  - Zone géographique (catégorie 1/2/3)
+  - Formation sécurité reçue
+- Génération automatique d'alertes (critique, haute, moyenne, basse)
+- Dashboard d'alertes avec filtres et gestion (prise en charge, résolution)
+- Métriques temps réel alimentées par les données collectées
+- Génération de rapports hebdomadaires automatiques
+
+**API Endpoints:**
+- `POST /api/ici-data/farmers/{id}/ici-profile` - Créer/MAJ profil ICI producteur
+- `GET /api/ici-data/farmers/{id}/ici-profile` - Obtenir profil ICI
+- `POST /api/ici-data/ssrte/visit` - Enregistrer visite SSRTE
+- `GET /api/ici-data/ssrte/visits` - Liste des visites SSRTE
+- `GET /api/ici-data/alerts` - Liste des alertes avec stats
+- `PUT /api/ici-data/alerts/{id}/acknowledge` - Prendre en charge alerte
+- `PUT /api/ici-data/alerts/{id}/resolve` - Résoudre alerte
+- `GET /api/ici-data/metrics/calculate` - Calculer métriques temps réel
+- `GET /api/ici-data/reference/dangerous-tasks` - Référentiel tâches dangereuses
+- `POST /api/ici-data/reports/weekly-summary` - Générer rapport hebdomadaire
+
+**Collections MongoDB créées:**
+- `ici_profiles` - Profils ICI des producteurs
+- `ssrte_visits` - Visites SSRTE terrain
+- `ici_alerts` - Alertes générées
+- `ici_reports` - Rapports générés
+
+**Files Created:**
+- `/app/backend/routes/ici_data_collection.py` - Backend API routes
+- `/app/frontend/src/pages/admin/ICIAlertsDashboard.jsx` - Frontend dashboard alertes
+- Route `/admin/ici-alerts` in App.js
+
+**Modèles de données mis à jour:**
+- `auth_models.py` - Ajout champs ICI (department, village, date_naissance, genre, niveau_education, taille_menage, nombre_enfants)
+
+---
+
 ### 1. Mobile Welcome Screen - ✅ COMPLETED
 - New landing page for mobile app with hero section
 - User type selection (Producteur/Coopérative) with direct navigation
