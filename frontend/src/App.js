@@ -118,6 +118,7 @@ function App() {
             </Routes>
           </BrowserRouter>
           <Toaster />
+          <ToasterUI />
         </CartProvider>
       </AuthProvider>
     </div>
