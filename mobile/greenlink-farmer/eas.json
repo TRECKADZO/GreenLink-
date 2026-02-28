@@ -33,7 +33,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://agritech-ci-1.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://invoice-tracker-328.preview.emergentagent.com"
       }
     }
   },
