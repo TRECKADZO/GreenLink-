@@ -72,18 +72,27 @@ BUYER_PRICING = {
 }
 
 # GreenLink business model parameters
-GREENLINK_MARGIN_RATE = 0.25       # 25% margin for GreenLink
-FARMER_SHARE_RATE = 0.70           # 70% goes to farmers
-COOPERATIVE_SHARE_RATE = 0.05      # 5% for cooperative management
+# Distribution is % of NET REVENUE (after costs)
+GREENLINK_MARGIN_RATE = 0.20       # 20% margin for GreenLink (of NET)
+FARMER_SHARE_RATE = 0.75           # 75% goes to farmers (of NET)
+COOPERATIVE_SHARE_RATE = 0.05      # 5% for cooperative management (of NET)
+# Total = 100% of NET
 
-# Cost structure (% of gross revenue)
+# Cost structure (% of GROSS revenue) - deducted first
 COST_STRUCTURE = {
-    "verification_audit": 0.08,     # 8% for Verra/Gold Standard audits
+    "verification_audit": 0.07,     # 7% for Verra/Gold Standard audits
     "field_verification": 0.05,     # 5% for drone/terrain verification
-    "permanence_buffer": 0.10,      # 10% held as permanence buffer
+    "permanence_buffer": 0.10,      # 10% held as permanence buffer (standard)
     "bmc_fees": 0.02,              # 2% BMC/registry fees
-    "operational": 0.05,           # 5% operational costs
+    "operational": 0.03,           # 3% operational costs
 }
+# Total costs = 27% of gross → Net = 73% of gross
+
+# Summary of final distribution (% of GROSS):
+# - Costs: 27%
+# - GreenLink: 20% × 73% = ~14.6% of gross
+# - Farmers: 75% × 73% = ~54.75% of gross
+# - Cooperatives: 5% × 73% = ~3.65% of gross
 
 # USD to FCFA conversion
 USD_TO_FCFA = 655  # 1 USD = 655 FCFA (approximate)
