@@ -124,6 +124,7 @@ function AppNavigator() {
       <Stack.Screen name="AddParcel" component={AddParcelScreen} />
       <Stack.Screen name="Harvest" component={HarvestScreen} />
       <Stack.Screen name="Payments" component={PaymentsScreen} />
+      <Stack.Screen name="CarbonPayments" component={CarbonPaymentsDashboard} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       
