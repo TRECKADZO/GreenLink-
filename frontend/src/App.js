@@ -127,6 +127,7 @@ function App() {
               <Route path="/admin/cooperative-comparison" element={<CooperativeComparison />} />
               <Route path="/admin/realtime" element={<RealTimeDashboard />} />
               <Route path="/admin/ssrte-analytics" element={<SSRTEAnalytics />} />
+              <Route path="/admin/notifications" element={<AdminNotifications />} />
 
               {/* Cooperative Routes */}
               <Route path="/cooperative/dashboard" element={<CooperativeDashboard />} />
@@ -140,6 +141,13 @@ function App() {
               <Route path="/cooperative/reports" element={<CooperativeReportsPage />} />
               <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
               <Route path="/cooperative/qrcodes" element={<QRCodeGenerator />} />
+              <Route path="/cooperative/notifications" element={<CooperativeNotifications />} />
+
+              {/* Shared Notifications */}
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/farmer/notifications" element={<NotificationsPage />} />
+              <Route path="/rse/notifications" element={<NotificationsPage />} />
+              <Route path="/buyer/notifications" element={<NotificationsPage />} />
             </Routes>
           </BrowserRouter>
           <Toaster />
