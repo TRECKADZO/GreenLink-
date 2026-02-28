@@ -1,0 +1,365 @@
+# Push Notifications pour Alertes Critiques ICI
+# Backend service pour envoyer des notifications push via Expo
+
+import os
+import logging
+import httpx
+from typing import List, Optional
+from datetime import datetime
+from database import db
+
+logger = logging.getLogger(__name__)
+
+EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
+
+class PushNotificationService:
+    """Service pour envoyer des notifications push via Expo Push API"""
+    
+    def __init__(self):
+        self.session = None
+    
+    async def _get_session(self):
+        if self.session is None:
+            self.session = httpx.AsyncClient(timeout=30.0)
+        return self.session
+    
+    async def send_push_notification(
+        self,
+        tokens: List[str],
+        title: str,
+        body: str,
+        data: Optional[dict] = None,
+        priority: str = "high",
+        channel_id: str = "default"
+    ) -> dict:
+        """
+        Envoyer une notification push via Expo Push API
+        
+        Args:
+            tokens: Liste de Expo push tokens
+            title: Titre de la notification
+            body: Corps de la notification
+            data: Données additionnelles (pour navigation)
+            priority: Priorité (default, normal, high)
+            channel_id: Android channel ID
+        """
+        if not tokens:
+            return {"success": False, "error": "No tokens provided"}
+        
+        # Construire les messages
+        messages = []
+        for token in tokens:
+            if not token.startswith("ExponentPushToken["):
+                continue
+                
+            message = {
+                "to": token,
+                "title": title,
+                "body": body,
+                "sound": "default",
+                "priority": priority,
+                "channelId": channel_id,
+            }
+            
+            if data:
+                message["data"] = data
+            
+            messages.append(message)
+        
+        if not messages:
+            return {"success": False, "error": "No valid tokens"}
+        
+        try:
+            session = await self._get_session()
+            response = await session.post(
+                EXPO_PUSH_URL,
+                json=messages,
+                headers={
+                    "Accept": "application/json",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Content-Type": "application/json",
+                }
+            )
+            
+            result = response.json()
+            
+            # Log les résultats
+            success_count = sum(1 for r in result.get("data", []) if r.get("status") == "ok")
+            logger.info(f"Push notification sent: {success_count}/{len(messages)} successful")
+            
+            return {
+                "success": True,
+                "sent": len(messages),
+                "successful": success_count,
+                "results": result.get("data", [])
+            }
+            
+        except Exception as e:
+            logger.error(f"Error sending push notification: {e}")
+            return {"success": False, "error": str(e)}
+    
+    async def get_device_tokens(
+        self,
+        user_ids: Optional[List[str]] = None,
+        user_types: Optional[List[str]] = None
+    ) -> List[str]:
+        """
+        Récupérer les tokens de push des utilisateurs
+        
+        Args:
+            user_ids: Liste d'IDs utilisateurs spécifiques
+            user_types: Liste de types d'utilisateurs (admin, cooperative, farmer)
+        """
+        query = {"push_token": {"$exists": True, "$ne": None}}
+        
+        if user_ids:
+            from bson import ObjectId
+            query["_id"] = {"$in": [ObjectId(uid) for uid in user_ids]}
+        
+        if user_types:
+            query["user_type"] = {"$in": user_types}
+        
+        users = await db.users.find(query, {"push_token": 1}).to_list(1000)
+        tokens = [u["push_token"] for u in users if u.get("push_token")]
+        
+        return tokens
+    
+    async def send_critical_alert_notification(self, alert_data: dict) -> dict:
+        """
+        Envoyer une notification pour une alerte critique ICI
+        
+        Notifie les admins et coopératives concernées
+        """
+        severity = alert_data.get("severity", "medium")
+        alert_type = alert_data.get("type", "general")
+        message = alert_data.get("message", "Nouvelle alerte ICI")
+        farmer_id = alert_data.get("farmer_id")
+        
+        # Déterminer le titre selon la sévérité
+        if severity == "critical":
+            title = "🚨 ALERTE CRITIQUE ICI"
+            priority = "high"
+            channel_id = "alerts"
+        elif severity == "high":
+            title = "⚠️ Alerte Haute Priorité ICI"
+            priority = "high"
+            channel_id = "alerts"
+        else:
+            title = "📋 Nouvelle Alerte ICI"
+            priority = "normal"
+            channel_id = "default"
+        
+        # Récupérer les tokens des admins et coopératives
+        tokens = await self.get_device_tokens(user_types=["admin", "super_admin", "cooperative"])
+        
+        # Données pour la navigation dans l'app
+        data = {
+            "type": "ici_alert",
+            "alert_id": str(alert_data.get("_id", "")),
+            "severity": severity,
+            "screen": "ICIAlerts",
+            "params": {"alertId": str(alert_data.get("_id", ""))}
+        }
+        
+        if farmer_id:
+            data["farmer_id"] = farmer_id
+        
+        # Envoyer la notification
+        result = await self.send_push_notification(
+            tokens=tokens,
+            title=title,
+            body=message[:200],  # Limiter la longueur
+            data=data,
+            priority=priority,
+            channel_id=channel_id
+        )
+        
+        # Logger dans la base
+        await db.push_notifications_log.insert_one({
+            "type": "ici_alert",
+            "alert_data": alert_data,
+            "tokens_count": len(tokens),
+            "result": result,
+            "created_at": datetime.utcnow()
+        })
+        
+        return result
+    
+    async def send_ssrte_visit_notification(self, visit_data: dict) -> dict:
+        """
+        Notifier d'une nouvelle visite SSRTE
+        """
+        farmer_name = visit_data.get("farmer_name", "Producteur")
+        risk_level = visit_data.get("niveau_risque", "faible")
+        children_count = visit_data.get("enfants_observes_travaillant", 0)
+        
+        # Titre selon le niveau de risque
+        if risk_level in ["critique", "eleve"]:
+            title = f"⚠️ Visite SSRTE à risque - {farmer_name}"
+            body = f"Niveau de risque: {risk_level.upper()}, {children_count} enfant(s) en travail détecté(s)"
+            priority = "high"
+        else:
+            title = f"📋 Nouvelle visite SSRTE - {farmer_name}"
+            body = f"Visite enregistrée avec niveau de risque {risk_level}"
+            priority = "normal"
+        
+        # Notifier les admins seulement pour les cas à risque
+        user_types = ["admin", "super_admin"]
+        if risk_level in ["critique", "eleve"]:
+            user_types.append("cooperative")
+        
+        tokens = await self.get_device_tokens(user_types=user_types)
+        
+        data = {
+            "type": "ssrte_visit",
+            "visit_id": str(visit_data.get("_id", "")),
+            "risk_level": risk_level,
+            "screen": "SSRTEVisits",
+        }
+        
+        return await self.send_push_notification(
+            tokens=tokens,
+            title=title,
+            body=body,
+            data=data,
+            priority=priority
+        )
+    
+    async def broadcast_to_all_field_agents(self, title: str, body: str, data: dict = None) -> dict:
+        """
+        Diffuser un message à tous les agents de terrain (coopératives)
+        """
+        tokens = await self.get_device_tokens(user_types=["cooperative"])
+        
+        return await self.send_push_notification(
+            tokens=tokens,
+            title=title,
+            body=body,
+            data=data or {},
+            priority="normal"
+        )
+
+
+# Instance singleton
+push_service = PushNotificationService()
+
+
+# ============= API Routes =============
+
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+from typing import Optional, List
+from routes.auth import get_current_user
+
+router = APIRouter(prefix="/api/push-notifications", tags=["Push Notifications"])
+
+class SendPushRequest(BaseModel):
+    title: str
+    body: str
+    user_types: Optional[List[str]] = None
+    user_ids: Optional[List[str]] = None
+    data: Optional[dict] = None
+    priority: str = "normal"
+
+class AlertNotificationRequest(BaseModel):
+    alert_id: str
+    severity: str
+    type: str
+    message: str
+    farmer_id: Optional[str] = None
+
+
+async def get_admin_user(current_user: dict = Depends(get_current_user)):
+    if current_user.get('user_type') not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+
+@router.post("/send")
+async def send_push_notification(
+    request: SendPushRequest,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Envoyer une notification push personnalisée (admin only)"""
+    tokens = await push_service.get_device_tokens(
+        user_ids=request.user_ids,
+        user_types=request.user_types
+    )
+    
+    if not tokens:
+        raise HTTPException(status_code=404, detail="No devices found for the specified criteria")
+    
+    result = await push_service.send_push_notification(
+        tokens=tokens,
+        title=request.title,
+        body=request.body,
+        data=request.data,
+        priority=request.priority
+    )
+    
+    return result
+
+
+@router.post("/alert/critical")
+async def send_critical_alert(
+    request: AlertNotificationRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Envoyer une notification pour une alerte critique ICI"""
+    alert_data = {
+        "_id": request.alert_id,
+        "severity": request.severity,
+        "type": request.type,
+        "message": request.message,
+        "farmer_id": request.farmer_id
+    }
+    
+    result = await push_service.send_critical_alert_notification(alert_data)
+    return result
+
+
+@router.post("/broadcast/field-agents")
+async def broadcast_to_field_agents(
+    request: SendPushRequest,
+    current_user: dict = Depends(get_admin_user)
+):
+    """Diffuser un message à tous les agents de terrain"""
+    result = await push_service.broadcast_to_all_field_agents(
+        title=request.title,
+        body=request.body,
+        data=request.data
+    )
+    return result
+
+
+@router.get("/stats")
+async def get_push_notification_stats(
+    current_user: dict = Depends(get_admin_user)
+):
+    """Obtenir les statistiques des notifications push"""
+    # Compter les devices enregistrés
+    total_devices = await db.users.count_documents({"push_token": {"$exists": True, "$ne": None}})
+    admin_devices = await db.users.count_documents({"push_token": {"$exists": True, "$ne": None}, "user_type": {"$in": ["admin", "super_admin"]}})
+    coop_devices = await db.users.count_documents({"push_token": {"$exists": True, "$ne": None}, "user_type": "cooperative"})
+    farmer_devices = await db.users.count_documents({"push_token": {"$exists": True, "$ne": None}, "user_type": "farmer"})
+    
+    # Dernières notifications envoyées
+    recent_logs = await db.push_notifications_log.find().sort("created_at", -1).limit(10).to_list(10)
+    
+    return {
+        "registered_devices": {
+            "total": total_devices,
+            "admins": admin_devices,
+            "cooperatives": coop_devices,
+            "farmers": farmer_devices
+        },
+        "recent_notifications": [
+            {
+                "type": log.get("type"),
+                "tokens_count": log.get("tokens_count"),
+                "success": log.get("result", {}).get("success"),
+                "sent_at": log.get("created_at")
+            }
+            for log in recent_logs
+        ]
+    }
