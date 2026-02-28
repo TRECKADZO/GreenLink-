@@ -133,6 +133,9 @@ function AppNavigator() {
       <Stack.Screen name="AddMemberParcel" component={AddMemberParcelScreen} />
       <Stack.Screen name="CoopReports" component={CoopReportsScreen} />
       <Stack.Screen name="CoopLots" component={CoopReportsScreen} />
+      
+      {/* Settings Screens */}
+      <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
     </Stack.Navigator>
   );
 }
