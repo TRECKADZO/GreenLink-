@@ -1,6 +1,82 @@
 # GreenLink PRD - Updated February 28, 2026
 
-## Latest Updates - Feb 28, 2026
+## Latest Updates - Feb 28, 2026 (Session 2)
+
+### 0. PDF Reports Generation - ✅ COMPLETED (NEW)
+- **Purpose**: Générer des rapports PDF professionnels combinant tous les analytics ICI
+
+**Key Features Implemented:**
+- Rapport ICI Complet multi-pages avec métriques clés, alertes, risques, SSRTE, due diligence
+- Rapport Alertes avec statistiques et liste détaillée des alertes actives
+- Rapport SSRTE avec historique des visites terrain et statistiques
+- Styles professionnels avec tables colorées et mise en page soignée
+- Génération automatique via `reportlab`
+
+**API Endpoints:**
+- `GET /api/pdf-reports/ici-complete` - Rapport PDF complet ICI
+- `GET /api/pdf-reports/ici-alerts` - Rapport PDF alertes (filtrable par ?severity= et ?status=)
+- `GET /api/pdf-reports/ici-ssrte` - Rapport PDF visites SSRTE
+
+**Files Created:**
+- `/app/backend/routes/pdf_reports.py` - Backend API routes PDF
+
+---
+
+### 0.1 Dashboard Temps Réel - ✅ COMPLETED (NEW)
+- **Purpose**: Dashboard temps réel avec statistiques actualisées et alertes
+
+**Key Features Implemented:**
+- Dashboard `/admin/realtime` avec badge "EN DIRECT"
+- WebSocket pour connexions temps réel + fallback polling REST
+- 4 cartes stats principales : Producteurs, Profils ICI, Visites SSRTE, Alertes actives
+- Alertes par sévérité : Critiques, Hautes, Nouvelles avec compteurs
+- Distribution des risques avec barres de progression (Élevé, Modéré, Faible)
+- Couverture SSRTE avec pourcentage et totaux
+- Téléchargement rapide des 3 rapports PDF
+- Bouton "Temps Réel" ajouté au Centre d'Alertes ICI
+
+**API Endpoints:**
+- `GET /api/ws/connections` - État des connexions WebSocket
+- `POST /api/ws/broadcast-stats` - Diffusion des statistiques temps réel
+- `POST /api/ws/notify-alert` - Notification d'alerte via WebSocket
+- `WebSocket /ws/dashboard` - Connexion temps réel avec channels (alerts, stats, ssrte)
+
+**Files Created:**
+- `/app/backend/routes/websocket_routes.py` - Routes WebSocket
+- `/app/backend/services/websocket_manager.py` - Gestionnaire de connexions
+- `/app/frontend/src/pages/admin/RealTimeDashboard.jsx` - Dashboard frontend
+
+---
+
+### 0.2 Application Mobile Agents de Terrain - ✅ COMPLETED (NEW)
+- **Purpose**: Application mobile pour agents de terrain avec QR code, photos géolocalisées et mode offline
+
+**Key Features Implemented:**
+- **FieldAgentDashboard**: Dashboard principal agents de terrain avec stats, actions rapides, indicateur online/offline
+- **QRScannerScreen**: Scanner QR code pour identifier producteurs rapidement avec expo-camera
+- **GeoPhotoScreen**: Capture photos géolocalisées avec coordonnées GPS, type de photo, sauvegarde offline
+- **SSRTEVisitFormScreen**: Formulaire complet visite SSRTE avec:
+  - Sélection producteur (picker ou QR scan)
+  - Compteur enfants observés travaillant
+  - 8 tâches dangereuses (Convention OIT 182) avec checkboxes
+  - Calcul automatique niveau risque (faible/modéré/élevé/critique)
+  - 8 types de support fourni
+  - Recommandations et notes
+  - Mode offline avec synchronisation automatique
+
+**Mobile Files Created:**
+- `/app/mobile/greenlink-farmer/src/screens/field-agent/FieldAgentDashboard.js`
+- `/app/mobile/greenlink-farmer/src/screens/field-agent/QRScannerScreen.js`
+- `/app/mobile/greenlink-farmer/src/screens/field-agent/GeoPhotoScreen.js`
+- `/app/mobile/greenlink-farmer/src/screens/field-agent/SSRTEVisitFormScreen.js`
+- `/app/mobile/greenlink-farmer/src/screens/field-agent/index.js`
+
+**Mobile Dependencies Added:**
+- `@react-native-community/netinfo` - Détection état connexion
+
+---
+
+## Previous Updates - Feb 28, 2026
 
 ### 0. Dashboard Coopérative SSRTE - ✅ COMPLETED (NEW)
 - **Purpose**: Permettre aux coopératives d'enregistrer les visites SSRTE terrain
