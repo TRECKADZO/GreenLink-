@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from routes import features, content, contact, auth, marketplace, greenlink, payments, admin, cooperative
 from routes import admin_analytics
 from routes import tracking, analytics_advanced, notifications, subscriptions, carbon_sales, billing, sms
+from routes import premium_analytics
 
 
 ROOT_DIR = Path(__file__).parent
