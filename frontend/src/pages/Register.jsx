@@ -209,6 +209,62 @@ const Register = () => {
             </div>
           </div>
 
+          {/* Department Selection - Only for Producteur and Cooperative */}
+          {showDepartmentSelection && (
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Zone et Département de production
+              </Label>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {/* Zone Filter */}
+                <div>
+                  <Label className="text-xs text-gray-500 mb-1 block">Filtrer par zone</Label>
+                  <select
+                    className="w-full p-2 border rounded-md text-sm"
+                    value={formData.zone}
+                    onChange={(e) => setFormData({ ...formData, zone: e.target.value, departement: '' })}
+                  >
+                    <option value="">Toutes les zones</option>
+                    {zones.map(zone => (
+                      <option key={zone} value={zone}>{zone}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Department Selection */}
+                <div>
+                  <Label className="text-xs text-gray-500 mb-1 block">Département *</Label>
+                  <select
+                    className="w-full p-2 border rounded-md text-sm"
+                    value={formData.departement}
+                    onChange={(e) => {
+                      const dept = DEPARTEMENTS.find(d => d.code === e.target.value);
+                      setFormData({ 
+                        ...formData, 
+                        departement: e.target.value,
+                        zone: dept ? dept.zone : formData.zone
+                      });
+                    }}
+                    required={showDepartmentSelection}
+                  >
+                    <option value="">-- Sélectionner --</option>
+                    {filteredDepartements.map(dept => (
+                      <option key={dept.code} value={dept.code}>
+                        {dept.nom} ({dept.zone})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <p className="text-xs text-gray-500">
+                51 départements producteurs de Côte d'Ivoire disponibles
+              </p>
+            </div>
+          )}
+
           {/* Contact Method Toggle */}
           <div>
             <Label className="mb-3 block">Méthode de contact *</Label>
