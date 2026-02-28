@@ -43,6 +43,16 @@ import {
   MyCarbonScoreScreen,
 } from './src/screens/carbon';
 
+// Screens - Cooperative (Agent de terrain)
+import {
+  CoopDashboardScreen,
+  CoopMembersScreen,
+  CoopMemberDetailScreen,
+  AddCoopMemberScreen,
+  AddMemberParcelScreen,
+  CoopReportsScreen,
+} from './src/screens/cooperative';
+
 import { Loader } from './src/components/UI';
 import { COLORS } from './src/config';
 
