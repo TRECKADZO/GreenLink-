@@ -88,7 +88,19 @@ Un dashboard complet pour les producteurs permettant de suivre leurs revenus car
 
 ---
 
-### APK Mobile v1.6.0 - ✅ BUILD COMPLETED
+### APK Mobile v1.7.0 - ✅ BUILD COMPLETED
+**Download URL**: https://expo.dev/artifacts/eas/xzqhxGLTsGp2AfVbLJ8kdH.apk
+
+**Nouvelles fonctionnalités v1.7.0:**
+- Activation compte agent terrain (écran dédié)
+- Dashboard agent terrain avec statistiques et objectifs mensuels
+- Système de badges/achievements pour les agents
+- Classement des agents par performance
+- Score de performance global (Débutant/Confirmé/Expert)
+
+---
+
+### APK Mobile v1.6.0 (Précédent)
 **Download URL**: https://expo.dev/artifacts/eas/b1cyGikPYLV8WETeBuSq6w.apk
 
 **Nouvelles fonctionnalités v1.6.0:**
