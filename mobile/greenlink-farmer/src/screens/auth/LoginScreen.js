@@ -184,6 +184,15 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
     marginBottom: SPACING.lg,
   },
+  forgotPassword: {
+    alignItems: 'flex-end',
+    marginBottom: SPACING.sm,
+  },
+  forgotPasswordText: {
+    color: COLORS.primary,
+    fontSize: FONTS.sizes.sm,
+    fontWeight: '500',
+  },
   noAccount: {
     textAlign: 'center',
     color: COLORS.gray[600],
