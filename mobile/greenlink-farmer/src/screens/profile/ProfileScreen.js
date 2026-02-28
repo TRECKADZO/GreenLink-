@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Button, NetworkStatus } from '../../components/UI';
+import { MainLayout } from '../../components/navigation';
 import { syncService } from '../../services/sync';
 import { COLORS, FONTS, SPACING } from '../../config';
 
