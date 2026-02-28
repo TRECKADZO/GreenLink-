@@ -262,7 +262,8 @@ class PasswordResetVerify(BaseModel):
     new_password: str
 
 @router.post("/forgot-password")
-async def request_password_reset(request: PasswordResetRequest):
+@limiter.limit("3/minute")
+async def request_password_reset(request_obj: Request, request: PasswordResetRequest):
     """Request a password reset code"""
     # Find user by email or phone
     user = await db.users.find_one({
@@ -302,21 +303,25 @@ async def request_password_reset(request: PasswordResetRequest):
     )
     
     # In production: Send SMS or Email
-    # For now, log the code (SIMULATION)
     user_email = user.get("email", "")
     user_phone = user.get("phone_number", "")
     
-    logger.info(f"[PASSWORD RESET] Code {reset_code} sent to {user_email or user_phone}")
+    logger.info(f"[PASSWORD RESET] Code sent to {user_email or user_phone}")
     
-    # SIMULATION: Also store in a way the frontend can access for testing
-    # In production, remove this and use real SMS/Email
+    # NOTE: In production with SIMULATION_MODE=false, code is NOT exposed
+    # The code is only sent via SMS/Email
+    simulation_mode = os.environ.get("SIMULATION_MODE", "false").lower() == "true"
     
-    return {
+    response = {
         "message": "Si un compte existe avec cet identifiant, un code de réinitialisation a été envoyé",
-        "sent": True,
-        # SIMULATION MODE: Include code for testing (remove in production)
-        "simulation_code": reset_code if os.environ.get("SIMULATION_MODE", "true").lower() == "true" else None
+        "sent": True
     }
+    
+    # Only include code in development/testing mode
+    if simulation_mode:
+        response["simulation_code"] = reset_code
+    
+    return response
 
 @router.post("/verify-reset-code")
 async def verify_reset_code(data: dict):
