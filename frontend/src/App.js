@@ -123,6 +123,7 @@ function App() {
               <Route path="/cooperative/lots/new" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />
               <Route path="/cooperative/reports" element={<CooperativeReportsPage />} />
+              <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
             </Routes>
           </BrowserRouter>
           <Toaster />
