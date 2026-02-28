@@ -2,6 +2,34 @@
 
 ## Latest Updates - Feb 28, 2026 (Session 3)
 
+### NEW: Tableau de Bord Paiements Carbone - ✅ COMPLETED
+Un dashboard complet pour les producteurs permettant de suivre leurs revenus carbone en temps réel.
+
+**Fonctionnalités:**
+- Affichage du total reçu, en attente, et projection annuelle
+- Score carbone par parcelle avec qualité (standard/verified/premium)
+- Prime par kg de cacao calculée dynamiquement
+- Historique des 12 derniers mois avec graphique
+- Bouton de demande de versement (via coopérative → Orange Money)
+- Modèle de distribution transparent (75% producteur, 5% coopérative)
+
+**API Endpoints:**
+- `GET /api/carbon-payments/dashboard` - Dashboard principal
+- `GET /api/carbon-payments/history` - Historique paginé
+- `GET /api/carbon-payments/projections` - Projections sur 5 ans
+- `POST /api/carbon-payments/request-payment` - Demande de versement
+
+**Files Created:**
+- `/app/backend/routes/carbon_payments_dashboard.py`
+- `/app/frontend/src/pages/farmer/CarbonPaymentsDashboard.jsx`
+- `/app/mobile/greenlink-farmer/src/screens/payments/CarbonPaymentsDashboard.js`
+
+**Routes:**
+- Web: `/carbon-payments` ou `/farmer/carbon-payments`
+- Mobile: Menu "+" → "Mes Revenus Carbone"
+
+---
+
 ### APK Mobile v1.5.0 - ✅ BUILD COMPLETED
 **Download URL**: https://expo.dev/artifacts/eas/cw8BYberdCHpKfrSjY5XPB.apk
 
