@@ -31,6 +31,7 @@ import SupplierAnalytics from "./pages/supplier/Analytics";
 // Farmer Routes
 import FarmerDashboard from "./pages/farmer/Dashboard";
 import USSDSimulator from "./pages/farmer/USSDSimulator";
+import CarbonPaymentsDashboard from "./pages/farmer/CarbonPaymentsDashboard";
 
 // Buyer Routes
 import BuyerDashboard from "./pages/buyer/Dashboard";
