@@ -193,11 +193,11 @@ class PDFReportGenerator:
         
         Ce rapport est généré automatiquement par la plateforme GreenLink Agritech.
         """
-        story.append(Paragraph(declaration_text, self.styles['BodyText']))
+        story.append(Paragraph(declaration_text, self.styles['CustomBodyText']))
         story.append(Spacer(1, 30))
         
         # Signature
-        story.append(Paragraph("_" * 40, self.styles['BodyText']))
+        story.append(Paragraph("_" * 40, self.styles['CustomBodyText']))
         story.append(Paragraph("Signature du représentant", self.styles['SmallText']))
         story.append(Spacer(1, 10))
         story.append(Paragraph(f"Date: {datetime.now().strftime('%d/%m/%Y')}", self.styles['SmallText']))
@@ -235,7 +235,7 @@ class PDFReportGenerator:
         # Cooperative Info
         coop = data.get('cooperative', {})
         story.append(Paragraph("Coopérative", self.styles['SectionTitle']))
-        story.append(Paragraph(f"<b>{coop.get('name', 'N/A')}</b> - Code: {coop.get('code', 'N/A')}", self.styles['BodyText']))
+        story.append(Paragraph(f"<b>{coop.get('name', 'N/A')}</b> - Code: {coop.get('code', 'N/A')}", self.styles['CustomBodyText']))
         story.append(Paragraph(f"Date: {datetime.now().strftime('%d/%m/%Y')}", self.styles['SmallText']))
         story.append(Spacer(1, 20))
         
@@ -307,7 +307,7 @@ class PDFReportGenerator:
         • <b>ODD 13</b> - Action climatique: Séquestration du carbone
         • <b>ODD 15</b> - Vie terrestre: Protection des forêts et biodiversité
         """
-        story.append(Paragraph(sdg_text, self.styles['BodyText']))
+        story.append(Paragraph(sdg_text, self.styles['CustomBodyText']))
         
         # Footer
         story.append(Spacer(1, 30))
