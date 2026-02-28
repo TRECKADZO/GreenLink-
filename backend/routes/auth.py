@@ -98,11 +98,25 @@ async def register(user_data: UserCreate):
     result = await db.users.insert_one(user_dict)
     user_dict["_id"] = str(result.inserted_id)
     
+    # Create subscription based on user type
+    from subscription_models import create_subscription_for_user
+    subscription = create_subscription_for_user(str(result.inserted_id), user_data.user_type)
+    await db.subscriptions.insert_one(subscription)
+    logger.info(f"Created subscription for new user {result.inserted_id}: plan={subscription['plan']}, is_trial={subscription['is_trial']}")
+    
     # Create access token
     access_token = create_access_token(data={"sub": str(result.inserted_id)})
     
     # Remove hashed_password from response
     user_dict.pop("hashed_password", None)
+    
+    # Add subscription info to response
+    user_dict["subscription"] = {
+        "plan": subscription["plan"],
+        "status": subscription["status"],
+        "is_trial": subscription["is_trial"],
+        "trial_end": subscription.get("trial_end").isoformat() if subscription.get("trial_end") else None,
+    }
     
     return {
         "access_token": access_token,
