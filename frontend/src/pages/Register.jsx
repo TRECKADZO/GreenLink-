@@ -87,7 +87,14 @@ const Register = () => {
     fullName: '',
     userType: '',
     departement: '',
-    zone: ''
+    zone: '',
+    // ICI Data Fields for producers
+    genre: '',
+    dateNaissance: '',
+    niveauEducation: '',
+    tailleMenage: '',
+    nombreEnfants: '',
+    village: ''
   });
   const [acceptConditions, setAcceptConditions] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
