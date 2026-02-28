@@ -2,6 +2,25 @@
 
 ## Latest Updates - Feb 28, 2026 (Session 3)
 
+### NEW: Système de création de compte Agent Terrain - ✅ COMPLETED
+Modèle hybride similaire aux producteurs : La coopérative enregistre l'agent, l'agent active son compte.
+
+**Flux:**
+1. **Coopérative** crée l'agent via `POST /api/cooperative/agents` (nom, téléphone, zone, villages)
+2. **Agent** télécharge l'app mobile et clique "Agent terrain ? Activer mon compte agent"
+3. **Agent** entre son numéro de téléphone → Vérification du profil
+4. **Agent** crée son mot de passe → Compte activé avec permissions
+
+**Permissions agent terrain:**
+- Visites SSRTE, Scanner QR, Photos géolocalisées, Enregistrement membres, Déclaration parcelles
+
+**API Endpoints:**
+- `POST /api/cooperative/agents` - Création agent par coopérative
+- `GET /api/auth/check-agent-phone/{phone}` - Vérifier profil agent
+- `POST /api/auth/activate-agent-account` - Activer compte agent
+
+---
+
 ### NEW: Pages de Notifications pour tous les utilisateurs - ✅ COMPLETED
 Un système de notifications complet et personnalisé pour chaque type d'utilisateur.
 
