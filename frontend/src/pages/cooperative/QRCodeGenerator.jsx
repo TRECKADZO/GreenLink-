@@ -87,6 +87,39 @@ const QRCodeGenerator = () => {
     printQRCodes(selected);
   };
 
+  const exportPDFCards = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      let url = `${API_URL}/api/farmer-cards/export-pdf?cards_per_page=6`;
+      
+      // Si des membres sont sélectionnés, les exporter spécifiquement
+      if (selectedMembers.length > 0) {
+        url += `&farmer_ids=${selectedMembers.join(',')}`;
+      }
+      
+      toast.info('Génération du PDF en cours...');
+      
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `cartes_producteurs_${new Date().toISOString().split('T')[0]}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      toast.success('PDF des cartes téléchargé!');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error('Erreur lors de l\'export PDF');
+    }
+  };
+
   const printQRCodes = (membersToPrint = null) => {
     const toPrint = membersToPrint || members.filter(m => selectedMembers.includes(m.id));
     if (toPrint.length === 0) {
