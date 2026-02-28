@@ -55,9 +55,18 @@ import {
 } from './src/screens/cooperative';
 
 import { Loader } from './src/components/UI';
+import BottomTabBar from './src/components/navigation/BottomTabBar';
 import { COLORS } from './src/config';
 
 const Stack = createNativeStackNavigator();
+
+// Screens that should show the bottom tab bar
+const SCREENS_WITH_TAB_BAR = [
+  'Home', 'MyParcels', 'DeclareHarvest', 'Payments', 'Profile',
+  'CoopDashboard', 'CoopMembers', 'CoopReports',
+  'Parcels', 'Harvest', 'Marketplace', 'Notifications',
+  'CarbonMarketplace', 'MyCarbonScore', 'MyCarbonPurchases',
+];
 
 // Auth Navigator (Login/Register)
 function AuthNavigator() {
@@ -67,6 +76,18 @@ function AuthNavigator() {
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </Stack.Navigator>
+  );
+}
+
+// Screen wrapper with bottom tab bar
+function ScreenWithTabBar({ children, route, userType }) {
+  const showTabBar = SCREENS_WITH_TAB_BAR.includes(route?.name);
+  
+  return (
+    <View style={{ flex: 1 }}>
+      {children}
+      {showTabBar && <BottomTabBar userType={userType} />}
+    </View>
   );
 }
 
