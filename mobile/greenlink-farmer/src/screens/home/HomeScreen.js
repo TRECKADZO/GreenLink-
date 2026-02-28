@@ -59,10 +59,13 @@ const HomeScreen = ({ navigation }) => {
     return <Loader message="Chargement du tableau de bord..." />;
   }
 
+  const userType = user?.user_type === 'cooperative' ? 'cooperative' : 'farmer';
+
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
+    <MainLayout userType={userType}>
+      <ScrollView 
+        style={styles.container}
+        refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
