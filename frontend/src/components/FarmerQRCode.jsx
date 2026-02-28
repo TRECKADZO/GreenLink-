@@ -123,27 +123,35 @@ const FarmerQRCode = ({ farmerId, farmerName, showActions = true, size = 200 }) 
         const base64 = event.target?.result;
         setPhotoPreview(base64);
 
-        // Envoyer au serveur
+        // Envoyer au serveur via l'API de stockage cloud
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/users/me/photo`, {
-          method: 'PUT',
+        const response = await fetch(`${API_URL}/api/photos/upload`, {
+          method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ photo_url: base64 })
+          body: JSON.stringify({ 
+            photo_base64: base64,
+            photo_type: 'profile'
+          })
         });
 
         if (response.ok) {
-          toast.success('Photo mise à jour');
+          const data = await response.json();
+          toast.success('Photo enregistrée dans le cloud');
+          // Mettre à jour le preview avec l'URL cloud
+          if (data.photo_url) {
+            setPhotoPreview(`${API_URL}${data.photo_url}`);
+          }
         } else {
-          // Si l'API n'existe pas encore, on garde juste le preview local
-          console.log('Photo stored locally');
+          toast.error('Erreur lors de l\'enregistrement');
         }
       };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error uploading photo:', error);
+      toast.error('Erreur lors de l\'upload');
     } finally {
       setUploading(false);
     }
