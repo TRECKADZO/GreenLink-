@@ -105,6 +105,7 @@ app.include_router(sms.router)
 app.include_router(premium_analytics.router)
 app.include_router(ici_analytics.router)
 app.include_router(ici_data_collection.router)
+app.include_router(ici_export.router)
 
 app.add_middleware(
     CORSMiddleware,
