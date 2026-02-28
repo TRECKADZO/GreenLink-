@@ -263,6 +263,14 @@ const RealTimeDashboard = () => {
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
+                className="border-purple-700 text-purple-400 hover:bg-purple-800/20"
+                onClick={() => navigate('/admin/ssrte-analytics')}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Analytics SSRTE
+              </Button>
+              <Button 
+                variant="outline" 
                 className="border-slate-700 text-slate-300 hover:bg-slate-800"
                 onClick={() => navigate('/admin/ici-alerts')}
               >
