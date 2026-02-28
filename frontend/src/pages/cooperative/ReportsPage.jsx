@@ -142,13 +142,13 @@ const ReportsPage = () => {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleExportCSV}>
+              <Button variant="outline" onClick={handleExportCSV} disabled={exportingCSV}>
                 <Download className="h-4 w-4 mr-2" />
-                Export CSV
+                {exportingCSV ? 'Export...' : 'Export CSV'}
               </Button>
-              <Button onClick={handleExportPDF}>
+              <Button onClick={handleExportPDF} disabled={exportingPDF}>
                 <FileText className="h-4 w-4 mr-2" />
-                Export PDF
+                {exportingPDF ? 'Téléchargement...' : 'Export PDF EUDR'}
               </Button>
             </div>
           </div>
