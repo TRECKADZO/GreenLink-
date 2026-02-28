@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/card';
@@ -6,8 +6,11 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
-import { Sprout, Phone, Lock, User, Mail, FileText, Shield } from 'lucide-react';
+import { Sprout, Phone, Lock, User, Mail, FileText, Shield, MapPin, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const userTypes = [
   { value: 'producteur', label: 'Producteur', icon: '🌱', desc: 'Je vends mes récoltes' },
@@ -17,20 +20,86 @@ const userTypes = [
   { value: 'cooperative', label: 'Coopérative', icon: '🤝', desc: 'Je gère une coopérative agricole' }
 ];
 
+// Liste des 51 départements de Côte d'Ivoire
+const DEPARTEMENTS = [
+  { code: "ABEN", nom: "Abengourou", zone: "Est" },
+  { code: "ABID", nom: "Abidjan", zone: "Sud" },
+  { code: "ABOI", nom: "Aboisso", zone: "Sud-Est" },
+  { code: "ADIA", nom: "Adiaké", zone: "Sud-Est" },
+  { code: "ADZO", nom: "Adzopé", zone: "Sud-Est" },
+  { code: "AGBO", nom: "Agboville", zone: "Sud" },
+  { code: "AGNI", nom: "Agnibilékro", zone: "Est" },
+  { code: "ALEP", nom: "Alépé", zone: "Sud-Est" },
+  { code: "BANG", nom: "Bangolo", zone: "Ouest" },
+  { code: "BEOU", nom: "Béoumi", zone: "Centre" },
+  { code: "BIAN", nom: "Biankouma", zone: "Ouest" },
+  { code: "BOCA", nom: "Bocanda", zone: "Centre" },
+  { code: "BOND", nom: "Bondoukou", zone: "Nord-Est" },
+  { code: "BONG", nom: "Bongouanou", zone: "Centre-Est" },
+  { code: "BOUA", nom: "Bouaflé", zone: "Centre-Ouest" },
+  { code: "BOUK", nom: "Bouaké", zone: "Centre" },
+  { code: "DABA", nom: "Dabakala", zone: "Nord" },
+  { code: "DABO", nom: "Dabou", zone: "Sud" },
+  { code: "DANA", nom: "Danané", zone: "Ouest" },
+  { code: "DAOU", nom: "Daoukro", zone: "Centre-Est" },
+  { code: "DIMB", nom: "Dimbokro", zone: "Centre" },
+  { code: "DALO", nom: "Daloa", zone: "Centre-Ouest" },
+  { code: "DIVO", nom: "Divo", zone: "Sud" },
+  { code: "DOUE", nom: "Duékoué", zone: "Ouest" },
+  { code: "GAGN", nom: "Gagnoa", zone: "Centre-Ouest" },
+  { code: "BASS", nom: "Grand-Bassam", zone: "Sud" },
+  { code: "LAHO", nom: "Grand-Lahou", zone: "Sud" },
+  { code: "GUIG", nom: "Guiglo", zone: "Ouest" },
+  { code: "ISSI", nom: "Issia", zone: "Centre-Ouest" },
+  { code: "JACQ", nom: "Jacqueville", zone: "Sud" },
+  { code: "LAKO", nom: "Lakota", zone: "Sud-Ouest" },
+  { code: "MAN", nom: "Man", zone: "Ouest" },
+  { code: "MANK", nom: "Mankono", zone: "Nord" },
+  { code: "MBAH", nom: "M'Bahiakro", zone: "Centre" },
+  { code: "OUME", nom: "Oumé", zone: "Centre-Ouest" },
+  { code: "SAKA", nom: "Sakassou", zone: "Centre" },
+  { code: "SANP", nom: "San-Pédro", zone: "Sud-Ouest" },
+  { code: "SASS", nom: "Sassandra", zone: "Sud-Ouest" },
+  { code: "SEGU", nom: "Séguéla", zone: "Nord-Ouest" },
+  { code: "SINF", nom: "Sinfra", zone: "Centre-Ouest" },
+  { code: "SOUB", nom: "Soubré", zone: "Sud-Ouest" },
+  { code: "TABO", nom: "Tabou", zone: "Sud-Ouest" },
+  { code: "TAND", nom: "Tanda", zone: "Nord-Est" },
+  { code: "TIAS", nom: "Tiassalé", zone: "Sud" },
+  { code: "TOUL", nom: "Touleupleu", zone: "Ouest" },
+  { code: "TIEB", nom: "Tiébissou", zone: "Centre" },
+  { code: "TOUB", nom: "Touba", zone: "Nord-Ouest" },
+  { code: "TOUM", nom: "Toumodi", zone: "Centre" },
+  { code: "VAVO", nom: "Vavoua", zone: "Centre-Ouest" },
+  { code: "YAMO", nom: "Yamoussoukro", zone: "Centre" },
+  { code: "ZUEN", nom: "Zuénoula", zone: "Centre-Ouest" },
+];
+
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
   const { toast } = useToast();
   const [contactMethod, setContactMethod] = useState('phone');
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     identifier: '',
     password: '',
     fullName: '',
-    userType: ''
+    userType: '',
+    departement: '',
+    zone: ''
   });
   const [acceptConditions, setAcceptConditions] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Get unique zones for filtering
+  const zones = [...new Set(DEPARTEMENTS.map(d => d.zone))].sort();
+  
+  // Filter departments by selected zone
+  const filteredDepartements = formData.zone 
+    ? DEPARTEMENTS.filter(d => d.zone === formData.zone)
+    : DEPARTEMENTS;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,7 +121,13 @@ const Register = () => {
       formData.fullName,
       formData.userType,
       contactMethod === 'email',
-      { acceptedConditions: true, acceptedPrivacy: true, acceptedAt: new Date().toISOString() }
+      { 
+        acceptedConditions: true, 
+        acceptedPrivacy: true, 
+        acceptedAt: new Date().toISOString(),
+        departement: formData.departement,
+        zone: formData.zone
+      }
     );
 
     setLoading(false);
@@ -71,6 +146,9 @@ const Register = () => {
       });
     }
   };
+
+  // Show department selection for producteur and cooperative
+  const showDepartmentSelection = ['producteur', 'cooperative'].includes(formData.userType);
 
   const canSubmit = formData.userType && formData.fullName && formData.identifier && formData.password && acceptConditions && acceptPrivacy;
 
