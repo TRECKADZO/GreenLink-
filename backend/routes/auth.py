@@ -263,13 +263,13 @@ class PasswordResetVerify(BaseModel):
 
 @router.post("/forgot-password")
 @limiter.limit("3/minute")
-async def request_password_reset(request_obj: Request, request: PasswordResetRequest):
+async def request_password_reset(request_obj: Request, data: PasswordResetRequest):
     """Request a password reset code"""
     # Find user by email or phone
     user = await db.users.find_one({
         "$or": [
-            {"email": request.identifier},
-            {"phone_number": request.identifier}
+            {"email": data.identifier},
+            {"phone_number": data.identifier}
         ]
     })
     
@@ -293,7 +293,7 @@ async def request_password_reset(request_obj: Request, request: PasswordResetReq
             "$set": {
                 "user_id": str(user["_id"]),
                 "code": reset_code,
-                "identifier": request.identifier,
+                "identifier": data.identifier,
                 "expires_at": expiration,
                 "used": False,
                 "created_at": datetime.utcnow()
