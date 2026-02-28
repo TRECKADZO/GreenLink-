@@ -119,6 +119,9 @@ class Token(BaseModel):
 
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
+    # Localisation
+    department: Optional[str] = None
+    village: Optional[str] = None
     # Producteur fields
     crops: Optional[list] = None
     farm_location: Optional[str] = None
@@ -142,3 +145,9 @@ class UserProfileUpdate(BaseModel):
     headquarters_region: Optional[str] = None
     commission_rate: Optional[float] = None
     orange_money_business: Optional[str] = None
+    # ICI Data Fields
+    date_naissance: Optional[str] = None
+    genre: Optional[str] = None
+    niveau_education: Optional[str] = None
+    taille_menage: Optional[int] = None
+    nombre_enfants: Optional[int] = None
