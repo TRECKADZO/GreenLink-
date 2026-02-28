@@ -22,7 +22,7 @@ class FCMService:
     """Firebase Cloud Messaging Service for sending push notifications"""
     
     def __init__(self):
-        self.fcm_url = f"https://fcm.googleapis.com/fcm/send"
+        self.fcm_url = "https://fcm.googleapis.com/fcm/send"
         self.server_key = FIREBASE_SERVER_KEY
         self.use_expo_fallback = not bool(FIREBASE_SERVER_KEY)
         
