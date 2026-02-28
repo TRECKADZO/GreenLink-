@@ -448,3 +448,153 @@ async def reset_password(request: PasswordResetVerify):
     logger.info(f"[PASSWORD RESET] Password reset successful for user {user_id}")
     
     return {"message": "Mot de passe réinitialisé avec succès", "success": True}
+
+
+# ============= ACTIVATION COMPTE MEMBRE COOPÉRATIVE =============
+
+class MemberActivationRequest(BaseModel):
+    phone_number: str
+    password: str
+    coop_code: str = None  # Optional: Code de la coopérative pour vérification
+
+@router.post("/activate-member-account")
+async def activate_member_account(request: MemberActivationRequest):
+    """
+    Permet à un membre de coopérative de créer son compte utilisateur
+    en utilisant son numéro de téléphone enregistré par la coopérative.
+    
+    Le membre doit utiliser le même numéro de téléphone que celui
+    enregistré par la coopérative.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"[MEMBER ACTIVATION] Attempting activation for phone: {request.phone_number}")
+    
+    # Vérifier si ce numéro existe déjà dans les users
+    existing_user = await db.users.find_one({"phone_number": request.phone_number})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ce numéro de téléphone a déjà un compte actif. Veuillez vous connecter."
+        )
+    
+    # Chercher le membre dans coop_members
+    member = await db.coop_members.find_one({"phone_number": request.phone_number})
+    
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Aucun profil membre trouvé avec ce numéro. Contactez votre coopérative."
+        )
+    
+    # Récupérer les infos de la coopérative
+    coop = await db.users.find_one({"_id": ObjectId(member.get("coop_id"))})
+    coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
+    
+    # Créer le compte utilisateur
+    hashed_password = get_password_hash(request.password)
+    
+    user_dict = {
+        "phone_number": request.phone_number,
+        "email": member.get("email"),
+        "full_name": member.get("full_name") or member.get("name"),
+        "hashed_password": hashed_password,
+        "user_type": "producteur",
+        "created_at": datetime.utcnow(),
+        "is_active": True,
+        # Copier les données du membre
+        "village": member.get("village"),
+        "region": member.get("region"),
+        "department": member.get("department"),
+        "cni_number": member.get("cni_number"),
+        # Lien vers la coopérative
+        "cooperative_id": str(member.get("coop_id")),
+        "cooperative_name": coop_name,
+        "coop_member_id": str(member.get("_id")),
+        # Données ICI si présentes
+        "genre": member.get("genre"),
+        "date_naissance": member.get("date_naissance"),
+        "taille_menage": member.get("taille_menage"),
+        "nombre_enfants": member.get("nombre_enfants"),
+        # Parcelles héritées
+        "parcels_count": member.get("parcels_count", 0),
+        "total_hectares": member.get("total_hectares", 0),
+        # Marqueur d'activation
+        "activated_from_member": True,
+        "activation_date": datetime.utcnow(),
+    }
+    
+    result = await db.users.insert_one(user_dict)
+    user_id = str(result.inserted_id)
+    
+    # Mettre à jour le coop_member avec le user_id
+    await db.coop_members.update_one(
+        {"_id": member["_id"]},
+        {"$set": {
+            "user_id": user_id,
+            "account_activated": True,
+            "activation_date": datetime.utcnow()
+        }}
+    )
+    
+    # Créer l'abonnement gratuit producteur
+    from subscription_models import create_subscription_for_user
+    subscription = create_subscription_for_user(user_id, "producteur")
+    await db.subscriptions.insert_one(subscription)
+    
+    # Créer le token d'accès
+    access_token = create_access_token(data={"sub": user_id})
+    
+    user_dict["_id"] = user_id
+    user_dict.pop("hashed_password", None)
+    
+    logger.info(f"[MEMBER ACTIVATION] Successfully activated account for member {member.get('_id')}, new user_id: {user_id}")
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user_dict,
+        "message": f"Compte activé avec succès! Bienvenue {user_dict.get('full_name')}.",
+        "cooperative": coop_name
+    }
+
+
+@router.get("/check-member-phone/{phone_number}")
+async def check_member_phone(phone_number: str):
+    """
+    Vérifie si un numéro de téléphone est enregistré comme membre de coopérative
+    et s'il peut activer son compte.
+    """
+    # Vérifier si déjà un user
+    existing_user = await db.users.find_one({"phone_number": phone_number})
+    if existing_user:
+        return {
+            "found": True,
+            "can_activate": False,
+            "reason": "has_account",
+            "message": "Ce numéro a déjà un compte. Veuillez vous connecter."
+        }
+    
+    # Chercher dans coop_members
+    member = await db.coop_members.find_one({"phone_number": phone_number})
+    if not member:
+        return {
+            "found": False,
+            "can_activate": False,
+            "reason": "not_found",
+            "message": "Aucun profil membre trouvé. Contactez votre coopérative."
+        }
+    
+    # Récupérer le nom de la coopérative
+    coop = await db.users.find_one({"_id": ObjectId(member.get("coop_id"))})
+    coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
+    
+    return {
+        "found": True,
+        "can_activate": True,
+        "member_name": member.get("full_name") or member.get("name"),
+        "cooperative_name": coop_name,
+        "village": member.get("village"),
+        "message": f"Profil trouvé chez {coop_name}. Vous pouvez activer votre compte."
+    }
