@@ -257,6 +257,22 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     fontSize: FONTS.sizes.md,
   },
+  memberActivationButton: {
+    marginTop: SPACING.lg,
+    padding: SPACING.md,
+    backgroundColor: COLORS.primary + '10',
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  memberActivationText: {
+    color: COLORS.gray[600],
+    fontSize: FONTS.sizes.sm,
+    textAlign: 'center',
+  },
+  memberActivationLink: {
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
   footer: {
     padding: SPACING.lg,
     alignItems: 'center',
