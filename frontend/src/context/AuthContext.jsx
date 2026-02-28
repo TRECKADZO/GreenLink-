@@ -34,6 +34,9 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (identifier, password, fullName, userType, isEmail = false, legalAcceptance = null) => {
     try {
+      console.log('[Auth] Attempting registration:', { identifier, fullName, userType, isEmail });
+      console.log('[Auth] API URL:', API);
+      
       const payload = {
         password,
         full_name: fullName,
@@ -52,13 +55,22 @@ export const AuthProvider = ({ children }) => {
         payload.legal_acceptance = legalAcceptance;
       }
       
+      console.log('[Auth] Registration payload:', payload);
+      
       const response = await axios.post(`${API}/auth/register`, payload);
+      
+      console.log('[Auth] Registration response:', response.data);
+      
       const { access_token, user: userData } = response.data;
       setToken(access_token);
       setUser(userData);
       localStorage.setItem('token', access_token);
+      
+      console.log('[Auth] Registration successful, token saved');
       return { success: true };
     } catch (error) {
+      console.error('[Auth] Registration error:', error);
+      console.error('[Auth] Error response:', error.response?.data);
       return {
         success: false,
         error: error.response?.data?.detail || 'Erreur lors de l\'inscription'
