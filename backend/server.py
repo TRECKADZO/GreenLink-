@@ -20,6 +20,7 @@ from routes import admin_analytics
 from routes import tracking, analytics_advanced, notifications, subscriptions, carbon_sales, billing, sms
 from routes import premium_analytics, ici_analytics, ici_data_collection, ici_export
 from routes import pdf_reports, websocket_routes
+from services.push_notifications import router as push_notifications_router
 
 
 ROOT_DIR = Path(__file__).parent
@@ -109,6 +110,7 @@ app.include_router(ici_data_collection.router)
 app.include_router(ici_export.router)
 app.include_router(pdf_reports.router)
 app.include_router(websocket_routes.router)
+app.include_router(push_notifications_router)
 
 app.add_middleware(
     CORSMiddleware,
