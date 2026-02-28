@@ -106,7 +106,6 @@ class PDFReportGenerator:
         story.append(Paragraph("État de Conformité", self.styles['SectionTitle']))
         
         compliance_rate = compliance.get('compliance_rate', 0)
-        status_color = colors.green if compliance_rate >= 90 else colors.orange if compliance_rate >= 70 else colors.red
         
         compliance_data = [
             ['Indicateur', 'Valeur', 'Statut'],
