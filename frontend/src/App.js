@@ -113,6 +113,7 @@ function App() {
               <Route path="/admin/premium-analytics" element={<PremiumAnalyticsDashboard />} />
               <Route path="/admin/ici-analytics" element={<ICIAnalyticsDashboard />} />
               <Route path="/admin/ici-alerts" element={<ICIAlertsDashboard />} />
+              <Route path="/admin/cooperative-comparison" element={<CooperativeComparison />} />
 
               {/* Cooperative Routes */}
               <Route path="/cooperative/dashboard" element={<CooperativeDashboard />} />
