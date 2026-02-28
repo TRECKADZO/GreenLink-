@@ -26,20 +26,90 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
     return current_user
 
-# ============= REGIONS ET CULTURES =============
+# ============= RÉGIONS ET DÉPARTEMENTS PRODUCTEURS DE CACAO =============
 
-REGIONS_CI = {
-    "Daloa": {"code": "DLA", "zone": "Centre-Ouest", "cultures": ["cacao", "cafe"]},
-    "Soubre": {"code": "SBR", "zone": "Sud-Ouest", "cultures": ["cacao", "hevea"]},
-    "San-Pedro": {"code": "SPD", "zone": "Sud-Ouest", "cultures": ["cacao", "cafe"]},
+# Liste officielle des 51 départements producteurs de cacao en Côte d'Ivoire
+DEPARTEMENTS_CACAO = {
+    "Abengourou": {"code": "ABEN", "zone": "Est", "cultures": ["cacao", "cafe"]},
+    "Abidjan": {"code": "ABID", "zone": "Sud", "cultures": ["maraichage"]},
+    "Aboisso": {"code": "ABOI", "zone": "Sud-Est", "cultures": ["cacao", "palmier"]},
+    "Adiake": {"code": "ADIA", "zone": "Sud-Est", "cultures": ["cacao", "palmier"]},
+    "Adzope": {"code": "ADZO", "zone": "Sud-Est", "cultures": ["cacao", "cafe"]},
+    "Agboville": {"code": "AGBO", "zone": "Sud", "cultures": ["cacao", "hevea"]},
+    "Agnibilekro": {"code": "AGNI", "zone": "Est", "cultures": ["cacao", "cafe"]},
+    "Alepe": {"code": "ALEP", "zone": "Sud-Est", "cultures": ["cacao", "palmier"]},
+    "Bangolo": {"code": "BANG", "zone": "Ouest", "cultures": ["cacao", "cafe"]},
+    "Beoumi": {"code": "BEOU", "zone": "Centre", "cultures": ["anacarde", "igname"]},
+    "Biankouma": {"code": "BIAN", "zone": "Ouest", "cultures": ["cafe", "riz"]},
+    "Bocanda": {"code": "BOCA", "zone": "Centre", "cultures": ["anacarde", "igname"]},
+    "Bondoukou": {"code": "BOND", "zone": "Nord-Est", "cultures": ["anacarde", "cacao"]},
+    "Bongouanou": {"code": "BONG", "zone": "Centre-Est", "cultures": ["cacao", "cafe"]},
+    "Bouafle": {"code": "BOUA", "zone": "Centre-Ouest", "cultures": ["cacao", "hevea"]},
+    "Bouake": {"code": "BOUK", "zone": "Centre", "cultures": ["anacarde", "maraichage"]},
+    "Dabakala": {"code": "DABA", "zone": "Nord", "cultures": ["anacarde", "coton"]},
+    "Dabou": {"code": "DABO", "zone": "Sud", "cultures": ["cacao", "palmier", "hevea"]},
+    "Danane": {"code": "DANA", "zone": "Ouest", "cultures": ["cafe", "cacao"]},
+    "Daoukro": {"code": "DAOU", "zone": "Centre-Est", "cultures": ["cacao", "cafe"]},
+    "Dimbokro": {"code": "DIMB", "zone": "Centre", "cultures": ["cacao", "cafe"]},
+    "Daloa": {"code": "DALO", "zone": "Centre-Ouest", "cultures": ["cacao", "cafe"]},
+    "Divo": {"code": "DIVO", "zone": "Sud", "cultures": ["cacao", "hevea"]},
+    "Duekoue": {"code": "DOUE", "zone": "Ouest", "cultures": ["cacao", "cafe"]},
+    "Gagnoa": {"code": "GAGN", "zone": "Centre-Ouest", "cultures": ["cacao", "hevea"]},
+    "Grand-Bassam": {"code": "BASS", "zone": "Sud", "cultures": ["palmier", "coco"]},
+    "Grand-Lahou": {"code": "LAHO", "zone": "Sud", "cultures": ["cacao", "palmier", "hevea"]},
+    "Guiglo": {"code": "GUIG", "zone": "Ouest", "cultures": ["cacao", "hevea"]},
+    "Issia": {"code": "ISSI", "zone": "Centre-Ouest", "cultures": ["cacao", "hevea"]},
+    "Jacqueville": {"code": "JACQ", "zone": "Sud", "cultures": ["coco", "palmier"]},
+    "Lakota": {"code": "LAKO", "zone": "Sud-Ouest", "cultures": ["cacao", "hevea"]},
     "Man": {"code": "MAN", "zone": "Ouest", "cultures": ["cafe", "riz"]},
-    "Korhogo": {"code": "KRH", "zone": "Nord", "cultures": ["anacarde", "coton", "riz"]},
-    "Bouake": {"code": "BKE", "zone": "Centre", "cultures": ["anacarde", "maraichage"]},
-    "Abengourou": {"code": "ABG", "zone": "Est", "cultures": ["cacao", "cafe"]},
-    "Gagnoa": {"code": "GNA", "zone": "Centre-Ouest", "cultures": ["cacao", "hevea"]},
-    "Divo": {"code": "DIV", "zone": "Sud", "cultures": ["cacao", "hevea"]},
-    "Yamoussoukro": {"code": "YAM", "zone": "Centre", "cultures": ["maraichage", "riz"]}
+    "Mankono": {"code": "MANK", "zone": "Nord", "cultures": ["anacarde", "coton"]},
+    "MBahiakro": {"code": "MBAH", "zone": "Centre", "cultures": ["anacarde", "igname"]},
+    "Oume": {"code": "OUME", "zone": "Centre-Ouest", "cultures": ["cacao", "hevea"]},
+    "Sakassou": {"code": "SAKA", "zone": "Centre", "cultures": ["anacarde", "igname"]},
+    "San-Pedro": {"code": "SANP", "zone": "Sud-Ouest", "cultures": ["cacao", "cafe", "palmier"]},
+    "Sassandra": {"code": "SASS", "zone": "Sud-Ouest", "cultures": ["cacao", "palmier"]},
+    "Seguela": {"code": "SEGU", "zone": "Nord-Ouest", "cultures": ["anacarde", "mangue"]},
+    "Sinfra": {"code": "SINF", "zone": "Centre-Ouest", "cultures": ["cacao", "hevea"]},
+    "Soubre": {"code": "SOUB", "zone": "Sud-Ouest", "cultures": ["cacao", "hevea"]},
+    "Tabou": {"code": "TABO", "zone": "Sud-Ouest", "cultures": ["cacao", "palmier"]},
+    "Tanda": {"code": "TAND", "zone": "Nord-Est", "cultures": ["anacarde", "cacao"]},
+    "Tiassale": {"code": "TIAS", "zone": "Sud", "cultures": ["cacao", "hevea", "palmier"]},
+    "Touleupleu": {"code": "TOUL", "zone": "Ouest", "cultures": ["cacao", "hevea"]},
+    "Tiebissou": {"code": "TIEB", "zone": "Centre", "cultures": ["anacarde", "igname"]},
+    "Touba": {"code": "TOUB", "zone": "Nord-Ouest", "cultures": ["anacarde", "mangue"]},
+    "Toumodi": {"code": "TOUM", "zone": "Centre", "cultures": ["cacao", "cafe"]},
+    "Vavoua": {"code": "VAVO", "zone": "Centre-Ouest", "cultures": ["cacao", "cafe"]},
+    "Yamoussoukro": {"code": "YAMO", "zone": "Centre", "cultures": ["maraichage", "riz"]},
+    "Zuenoula": {"code": "ZUEN", "zone": "Centre-Ouest", "cultures": ["cacao", "hevea"]}
 }
+
+# Zones de production principales par culture
+ZONES_PRODUCTION = {
+    "cacao": {
+        "principale": ["Soubre", "San-Pedro", "Daloa", "Gagnoa", "Divo", "Abengourou"],
+        "secondaire": ["Agboville", "Lakota", "Issia", "Oume", "Guiglo", "Duekoue"],
+        "emergente": ["Bondoukou", "Tanda", "Danane", "Bangolo"]
+    },
+    "cafe": {
+        "principale": ["Man", "Danane", "Biankouma", "Bangolo"],
+        "secondaire": ["Daloa", "Abengourou", "Daoukro"]
+    },
+    "anacarde": {
+        "principale": ["Korhogo", "Boundiali", "Ferkessedougou", "Odienne"],
+        "secondaire": ["Seguela", "Mankono", "Dabakala", "Touba", "Bouake"]
+    },
+    "hevea": {
+        "principale": ["San-Pedro", "Soubre", "Dabou", "Grand-Lahou"],
+        "secondaire": ["Divo", "Agboville", "Lakota", "Gagnoa"]
+    },
+    "palmier": {
+        "principale": ["Aboisso", "Adiake", "Grand-Lahou", "Dabou"],
+        "secondaire": ["San-Pedro", "Sassandra", "Tabou"]
+    }
+}
+
+# Anciennes régions (conservées pour compatibilité)
+REGIONS_CI = DEPARTEMENTS_CACAO
 
 CULTURES = ["cacao", "cafe", "anacarde", "hevea", "riz", "maraichage"]
 
