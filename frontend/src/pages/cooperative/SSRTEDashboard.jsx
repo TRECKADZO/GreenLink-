@@ -165,50 +165,117 @@ const CooperativeSSRTEDashboard = () => {
     }
 
     setSubmitting(true);
-    try {
-      const visitData = {
-        farmer_id: selectedMember._id || selectedMember.id,
-        date_visite: new Date().toISOString(),
-        enfants_observes_travaillant: parseInt(visitForm.enfants_observes_travaillant) || 0,
-        taches_dangereuses_observees: visitForm.taches_dangereuses_observees,
-        support_fourni: visitForm.support_fourni,
-        kit_scolaire_distribue: visitForm.kit_scolaire_distribue,
-        certificat_naissance_aide: visitForm.certificat_naissance_aide,
-        niveau_risque: visitForm.niveau_risque,
-        recommandations: visitForm.recommandations.split('\n').filter(r => r.trim()),
-        visite_suivi_requise: visitForm.visite_suivi_requise
-      };
+    
+    const visitData = {
+      farmer_id: selectedMember._id || selectedMember.id,
+      date_visite: new Date().toISOString(),
+      enfants_observes_travaillant: parseInt(visitForm.enfants_observes_travaillant) || 0,
+      taches_dangereuses_observees: visitForm.taches_dangereuses_observees,
+      support_fourni: visitForm.support_fourni,
+      kit_scolaire_distribue: visitForm.kit_scolaire_distribue,
+      certificat_naissance_aide: visitForm.certificat_naissance_aide,
+      niveau_risque: visitForm.niveau_risque,
+      recommandations: visitForm.recommandations.split('\n').filter(r => r.trim()),
+      visite_suivi_requise: visitForm.visite_suivi_requise,
+      offline_id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      offline_recorded_at: new Date().toISOString()
+    };
 
+    // If offline, save locally
+    if (!isOnline) {
+      const newOfflineVisits = [...offlineVisits, visitData];
+      setOfflineVisits(newOfflineVisits);
+      localStorage.setItem('ssrte_offline_visits', JSON.stringify(newOfflineVisits));
+      
+      toast.success('Visite sauvegardée hors-ligne', {
+        description: `Sera synchronisée quand la connexion sera rétablie`,
+        icon: <CloudOff className="w-4 h-4" />
+      });
+      
+      // Reset form
+      resetForm();
+      setSubmitting(false);
+      return;
+    }
+
+    try {
       await apiClient.post('/api/ici-data/ssrte/visit', visitData);
       
       toast.success('Visite SSRTE enregistrée', {
         description: `Producteur: ${selectedMember.full_name || selectedMember.name}`
       });
 
-      // Reset form
-      setVisitForm({
-        enfants_observes_travaillant: 0,
-        taches_dangereuses_observees: [],
-        support_fourni: [],
-        kit_scolaire_distribue: false,
-        certificat_naissance_aide: false,
-        niveau_risque: 'faible',
-        recommandations: '',
-        visite_suivi_requise: false,
-        notes: ''
-      });
-      setSelectedMember(null);
-      
-      // Refresh visits list
+      resetForm();
       fetchData();
       setActiveTab('history');
     } catch (error) {
       console.error('Error submitting visit:', error);
-      toast.error('Erreur lors de l\'enregistrement', {
-        description: error.response?.data?.detail || 'Veuillez réessayer'
-      });
+      
+      // If network error, save offline
+      if (!error.response) {
+        const newOfflineVisits = [...offlineVisits, visitData];
+        setOfflineVisits(newOfflineVisits);
+        localStorage.setItem('ssrte_offline_visits', JSON.stringify(newOfflineVisits));
+        
+        toast.warning('Connexion perdue - Visite sauvegardée localement', {
+          description: 'Sera synchronisée automatiquement'
+        });
+        resetForm();
+      } else {
+        toast.error('Erreur lors de l\'enregistrement', {
+          description: error.response?.data?.detail || 'Veuillez réessayer'
+        });
+      }
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setVisitForm({
+      enfants_observes_travaillant: 0,
+      taches_dangereuses_observees: [],
+      support_fourni: [],
+      kit_scolaire_distribue: false,
+      certificat_naissance_aide: false,
+      niveau_risque: 'faible',
+      recommandations: '',
+      visite_suivi_requise: false,
+      notes: ''
+    });
+    setSelectedMember(null);
+  };
+
+  const syncOfflineData = async () => {
+    if (offlineVisits.length === 0) {
+      toast.info('Aucune donnée à synchroniser');
+      return;
+    }
+
+    setSyncing(true);
+    try {
+      const response = await apiClient.post('/api/ici-export/offline/sync', {
+        visits: offlineVisits,
+        sync_timestamp: new Date().toISOString()
+      });
+      
+      toast.success(`${response.data.synced_count} visite(s) synchronisée(s)`, {
+        description: response.data.errors_count > 0 ? `${response.data.errors_count} erreur(s)` : 'Toutes les données sont à jour'
+      });
+      
+      // Clear offline storage
+      setOfflineVisits([]);
+      localStorage.removeItem('ssrte_offline_visits');
+      
+      // Refresh data
+      fetchData();
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast.error('Erreur de synchronisation', {
+        description: 'Réessayez plus tard'
+      });
+    } finally {
+      setSyncing(false);
     }
   };
 
