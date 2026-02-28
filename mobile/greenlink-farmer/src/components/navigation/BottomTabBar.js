@@ -517,6 +517,57 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: '600',
   },
+  // Menu Modal Styles
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  menuContainer: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 32,
+    maxHeight: '70%',
+  },
+  menuHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  menuTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.gray[800],
+  },
+  menuGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  menuItem: {
+    width: (SCREEN_WIDTH - 48) / 4,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  menuItemIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  menuItemLabel: {
+    fontSize: 11,
+    color: COLORS.gray[600],
+    textAlign: 'center',
+    fontWeight: '500',
+  },
 });
 
 export default BottomTabBar;
