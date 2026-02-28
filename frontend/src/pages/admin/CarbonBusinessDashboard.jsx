@@ -101,23 +101,38 @@ const CarbonBusinessDashboard = () => {
       {/* Business Model Overview */}
       <Card className="bg-gradient-to-r from-[#2d5a4d] to-[#1a4038] text-white">
         <CardContent className="p-6">
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold">25%</div>
-              <div className="text-green-200">Marge GreenLink</div>
+          <div className="text-center mb-4">
+            <p className="text-green-200 text-sm">Distribution du revenu brut</p>
+          </div>
+          <div className="grid md:grid-cols-5 gap-4">
+            <div className="text-center p-3 bg-white/10 rounded-lg">
+              <div className="text-2xl font-bold">27%</div>
+              <div className="text-green-200 text-xs">Coûts</div>
+              <div className="text-green-300 text-xs">(audits, vérif.)</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold">70%</div>
-              <div className="text-green-200">Part Planteurs</div>
+            <div className="text-center p-3 bg-white/10 rounded-lg">
+              <div className="text-2xl font-bold">~15%</div>
+              <div className="text-green-200 text-xs">GreenLink</div>
+              <div className="text-green-300 text-xs">(20% du net)</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold">5%</div>
-              <div className="text-green-200">Part Coopératives</div>
+            <div className="text-center p-3 bg-white/10 rounded-lg">
+              <div className="text-2xl font-bold">~55%</div>
+              <div className="text-green-200 text-xs">Planteurs</div>
+              <div className="text-green-300 text-xs">(75% du net)</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold">20-40</div>
-              <div className="text-green-200">USD/tonne CO2</div>
+            <div className="text-center p-3 bg-white/10 rounded-lg">
+              <div className="text-2xl font-bold">~3%</div>
+              <div className="text-green-200 text-xs">Coopératives</div>
+              <div className="text-green-300 text-xs">(5% du net)</div>
             </div>
+            <div className="text-center p-3 bg-green-500/30 rounded-lg border border-green-400">
+              <div className="text-2xl font-bold">20-40</div>
+              <div className="text-green-200 text-xs">USD/tonne</div>
+              <div className="text-green-300 text-xs">(prix marché)</div>
+            </div>
+          </div>
+          <div className="text-center mt-4">
+            <p className="text-green-300 text-xs">Total = 27% (coûts) + 73% (net distribué) = 100% ✓</p>
           </div>
         </CardContent>
       </Card>
