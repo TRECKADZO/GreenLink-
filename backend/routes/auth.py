@@ -702,3 +702,163 @@ async def check_member_phone(phone_number: str):
         "village": member.get("village"),
         "message": f"Profil trouvé chez {coop_name}. Vous pouvez activer votre compte."
     }
+
+
+
+# ============= ACTIVATION COMPTE AGENT TERRAIN =============
+
+class AgentActivationRequest(BaseModel):
+    phone_number: str
+    password: str
+
+
+@router.get("/check-agent-phone/{phone_number}")
+async def check_agent_phone(phone_number: str):
+    """
+    Vérifie si un numéro de téléphone est enregistré comme agent terrain
+    et s'il peut activer son compte.
+    """
+    # Vérifier si déjà un user
+    existing_user = await db.users.find_one({"phone_number": phone_number})
+    if existing_user:
+        return {
+            "found": True,
+            "can_activate": False,
+            "reason": "has_account",
+            "message": "Ce numéro a déjà un compte. Veuillez vous connecter."
+        }
+    
+    # Chercher dans coop_agents
+    agent = await db.coop_agents.find_one({"phone_number": phone_number})
+    if not agent:
+        return {
+            "found": False,
+            "can_activate": False,
+            "reason": "not_found",
+            "message": "Aucun profil agent trouvé. Contactez votre coopérative."
+        }
+    
+    # Récupérer le nom de la coopérative
+    coop = await db.users.find_one({"_id": agent.get("coop_id")})
+    coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
+    
+    return {
+        "found": True,
+        "can_activate": True,
+        "agent_name": agent.get("full_name"),
+        "cooperative_name": coop_name,
+        "zone": agent.get("zone"),
+        "account_type": "field_agent",
+        "message": f"Profil agent trouvé chez {coop_name}. Vous pouvez activer votre compte."
+    }
+
+
+@router.post("/activate-agent-account")
+async def activate_agent_account(request: AgentActivationRequest):
+    """
+    Permet à un agent terrain de créer son compte utilisateur
+    en utilisant son numéro de téléphone enregistré par la coopérative.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"[AGENT ACTIVATION] Attempting activation for phone: {request.phone_number}")
+    
+    # Vérifier si ce numéro existe déjà dans les users
+    existing_user = await db.users.find_one({"phone_number": request.phone_number})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ce numéro de téléphone a déjà un compte actif. Veuillez vous connecter."
+        )
+    
+    # Chercher l'agent dans coop_agents
+    agent = await db.coop_agents.find_one({"phone_number": request.phone_number})
+    
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Aucun profil agent trouvé avec ce numéro. Contactez votre coopérative."
+        )
+    
+    # Récupérer les infos de la coopérative
+    coop = await db.users.find_one({"_id": agent.get("coop_id")})
+    coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
+    coop_id = str(agent.get("coop_id"))
+    
+    # Créer le compte utilisateur
+    hashed_password = get_password_hash(request.password)
+    
+    user_dict = {
+        "phone_number": request.phone_number,
+        "email": agent.get("email"),
+        "full_name": agent.get("full_name"),
+        "hashed_password": hashed_password,
+        "user_type": "field_agent",
+        "created_at": datetime.utcnow(),
+        "is_active": True,
+        # Lien vers la coopérative
+        "cooperative_id": coop_id,
+        "cooperative_name": coop_name,
+        "agent_profile_id": str(agent.get("_id")),
+        # Données de l'agent
+        "zone": agent.get("zone"),
+        "village_coverage": agent.get("village_coverage", []),
+        # Statistiques
+        "members_onboarded": agent.get("members_onboarded", 0),
+        "parcels_declared": agent.get("parcels_declared", 0),
+        "ssrte_visits_count": 0,
+        # Marqueur d'activation
+        "activated_from_agent": True,
+        "activation_date": datetime.utcnow(),
+    }
+    
+    result = await db.users.insert_one(user_dict)
+    user_id = str(result.inserted_id)
+    
+    # Mettre à jour le coop_agent avec le user_id
+    await db.coop_agents.update_one(
+        {"_id": agent["_id"]},
+        {"$set": {
+            "user_id": user_id,
+            "account_activated": True,
+            "activation_date": datetime.utcnow()
+        }}
+    )
+    
+    # Créer le token d'accès
+    access_token = create_access_token(data={"sub": user_id})
+    
+    # Envoyer notification de bienvenue
+    try:
+        await db.notifications.insert_one({
+            "user_id": user_id,
+            "title": f"Bienvenue Agent {user_dict.get('full_name')}!",
+            "body": f"Votre compte agent terrain est activé. Vous pouvez maintenant effectuer des visites SSRTE, scanner des QR codes et enregistrer des photos géolocalisées.",
+            "type": "welcome",
+            "data": {"role": "field_agent"},
+            "created_at": datetime.utcnow(),
+            "is_read": False
+        })
+    except Exception as e:
+        logger.error(f"[AGENT ACTIVATION] Failed to send welcome notification: {e}")
+    
+    user_dict["_id"] = user_id
+    user_dict.pop("hashed_password", None)
+    
+    logger.info(f"[AGENT ACTIVATION] Successfully activated account for agent {agent.get('_id')}, new user_id: {user_id}")
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user_dict,
+        "message": f"Compte agent activé avec succès! Bienvenue {user_dict.get('full_name')}.",
+        "cooperative": coop_name,
+        "permissions": [
+            "ssrte_visits",
+            "qr_scanner",
+            "geotagged_photos",
+            "member_registration",
+            "parcel_declaration"
+        ]
+    }
