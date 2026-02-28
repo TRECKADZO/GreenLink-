@@ -56,6 +56,7 @@ import CooperativeDistributionsPage from "./pages/cooperative/DistributionsPage"
 import CooperativeReportsPage from "./pages/cooperative/ReportsPage";
 import MemberParcelsPage from "./pages/cooperative/MemberParcelsPage";
 import ImportMembersPage from "./pages/cooperative/ImportMembersPage";
+import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 
 function App() {
   return (
