@@ -7,26 +7,55 @@ import {
   Platform,
   Animated,
   Easing,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS } from '../../config';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Configuration des onglets principaux
 const TAB_CONFIG = {
   farmer: [
     { name: 'Home', icon: 'home', iconOutline: 'home-outline', label: 'Accueil', hasBadge: true },
-    { name: 'MyParcels', icon: 'map', iconOutline: 'map-outline', label: 'Parcelles' },
-    { name: 'DeclareHarvest', icon: 'add-circle', iconOutline: 'add-circle-outline', label: 'Récolte', isMain: true },
+    { name: 'Parcels', icon: 'map', iconOutline: 'map-outline', label: 'Parcelles' },
+    { name: 'QuickActions', icon: 'add-circle', iconOutline: 'add-circle-outline', label: 'Plus', isMain: true },
     { name: 'Payments', icon: 'wallet', iconOutline: 'wallet-outline', label: 'Paiements', hasBadge: true },
     { name: 'Profile', icon: 'person', iconOutline: 'person-outline', label: 'Profil' },
   ],
   cooperative: [
     { name: 'CoopDashboard', icon: 'home', iconOutline: 'home-outline', label: 'Accueil', hasBadge: true },
     { name: 'CoopMembers', icon: 'people', iconOutline: 'people-outline', label: 'Membres', hasBadge: true },
-    { name: 'AddCoopMember', icon: 'add-circle', iconOutline: 'add-circle-outline', label: 'Nouveau', isMain: true },
+    { name: 'QuickActions', icon: 'add-circle', iconOutline: 'add-circle-outline', label: 'Plus', isMain: true },
     { name: 'CoopReports', icon: 'document-text', iconOutline: 'document-text-outline', label: 'Rapports' },
     { name: 'Profile', icon: 'person', iconOutline: 'person-outline', label: 'Profil' },
+  ],
+};
+
+// Menu d'actions rapides selon le type d'utilisateur
+const QUICK_ACTIONS = {
+  farmer: [
+    { name: 'Harvest', icon: 'leaf', label: 'Déclarer Récolte', color: '#10b981' },
+    { name: 'AddParcel', icon: 'add-circle', label: 'Nouvelle Parcelle', color: '#3b82f6' },
+    { name: 'MyCarbonScore', icon: 'analytics', label: 'Score Carbone', color: '#8b5cf6' },
+    { name: 'CarbonMarketplace', icon: 'storefront', label: 'Marché Carbone', color: '#f59e0b' },
+    { name: 'Marketplace', icon: 'cart', label: 'Marketplace', color: '#ec4899' },
+    { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
+    { name: 'Orders', icon: 'receipt', label: 'Mes Commandes', color: '#06b6d4' },
+    { name: 'Wishlist', icon: 'heart', label: 'Favoris', color: '#f43f5e' },
+  ],
+  cooperative: [
+    { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#10b981' },
+    { name: 'SSRTEVisitForm', icon: 'clipboard', label: 'Visite SSRTE', color: '#f59e0b' },
+    { name: 'QRScanner', icon: 'qr-code', label: 'Scanner QR', color: '#3b82f6' },
+    { name: 'GeoPhoto', icon: 'camera', label: 'Photo Géolocalisée', color: '#8b5cf6' },
+    { name: 'FieldAgentDashboard', icon: 'shield-checkmark', label: 'Agent Terrain', color: '#06b6d4' },
+    { name: 'CoopLots', icon: 'layers', label: 'Lots Groupés', color: '#ec4899' },
+    { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
+    { name: 'VisitsHistory', icon: 'time', label: 'Historique Visites', color: '#64748b' },
   ],
 };
 
