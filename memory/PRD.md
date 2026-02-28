@@ -162,8 +162,10 @@ Build a comprehensive agritech platform connecting:
 - Real Orange Money API integration (requires merchant registration)
 - Real USSD/SMS integration (Orange API)
 - ✅ PDF certificate generation - **COMPLETED** (EUDR, Carbon, Distribution reports)
+- ✅ Password Reset Feature - **COMPLETED** (forgot-password flow)
+- ✅ Push Notifications for Carbon Premiums - **COMPLETED** (FCM integration)
 - ⚠️ Configure Firebase project and upload `google-services.json` for production FCM
-- Mobile app for cooperative field agents
+- ✅ Mobile app for cooperative field agents - **COMPLETED** (6 screens)
 
 ### P2 (Medium Priority)
 - Product price history tracking
