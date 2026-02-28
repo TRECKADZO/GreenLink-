@@ -71,6 +71,7 @@ function App() {
               <Route path="/conditions" element={<ConditionsPage />} />
               <Route path="/confidentialite" element={<ConfidentialitePage />} />
               <Route path="/securite" element={<SecuritePage />} />
+              <Route path="/faq" element={<FAQPage />} />
               
               {/* Supplier/Fournisseur Routes */}
               <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
