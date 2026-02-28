@@ -98,6 +98,15 @@ function AppNavigator() {
       <Stack.Screen name="CarbonMarketplace" component={CarbonMarketplaceScreen} />
       <Stack.Screen name="MyCarbonPurchases" component={MyCarbonPurchasesScreen} />
       <Stack.Screen name="MyCarbonScore" component={MyCarbonScoreScreen} />
+      
+      {/* Cooperative Screens (Agent de terrain) */}
+      <Stack.Screen name="CoopDashboard" component={CoopDashboardScreen} />
+      <Stack.Screen name="CoopMembers" component={CoopMembersScreen} />
+      <Stack.Screen name="CoopMemberDetail" component={CoopMemberDetailScreen} />
+      <Stack.Screen name="AddCoopMember" component={AddCoopMemberScreen} />
+      <Stack.Screen name="AddMemberParcel" component={AddMemberParcelScreen} />
+      <Stack.Screen name="CoopReports" component={CoopReportsScreen} />
+      <Stack.Screen name="CoopLots" component={CoopReportsScreen} />
     </Stack.Navigator>
   );
 }
