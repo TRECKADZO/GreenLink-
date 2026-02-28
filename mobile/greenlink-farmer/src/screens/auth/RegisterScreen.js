@@ -754,6 +754,34 @@ const styles = StyleSheet.create({
     color: COLORS.gray[500],
     marginTop: SPACING.xs,
   },
+  // ICI Section Styles
+  iciSection: {
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: '#a5d6a7',
+  },
+  iciTitle: {
+    fontSize: FONTS.sizes.lg,
+    fontWeight: 'bold',
+    color: '#2e7d32',
+    marginBottom: SPACING.xs,
+  },
+  iciSubtitle: {
+    fontSize: FONTS.sizes.sm,
+    color: '#558b2f',
+    marginBottom: SPACING.md,
+  },
+  iciInfo: {
+    fontSize: FONTS.sizes.xs,
+    color: '#33691e',
+    backgroundColor: '#c8e6c9',
+    padding: SPACING.sm,
+    borderRadius: 8,
+    marginTop: SPACING.sm,
+  },
   termsContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
