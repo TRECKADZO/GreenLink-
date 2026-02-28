@@ -307,6 +307,21 @@ yarn build:android
     - PDF download with expo-file-system and expo-sharing for mobile devices
     - Added `expo-sharing` dependency for PDF sharing functionality
 
+15. **Password Reset Feature (Mot de passe oublié)**
+    - Backend endpoints: `/api/auth/forgot-password`, `/api/auth/verify-reset-code`, `/api/auth/reset-password`
+    - 6-digit verification code system with 15-minute expiration
+    - Simulation mode with code display for testing (production: SMS/Email)
+    - Frontend page `/forgot-password` with 3-step wizard (request > verify > reset)
+    - Mobile screen `ForgotPasswordScreen.js` with same 3-step flow
+    - Link added to login pages on web and mobile
+
+16. **Push Notifications for Carbon Premiums**
+    - Extended FCM service with cooperative notifications in `/app/backend/services/fcm_service.py`
+    - `notify_members_premium_available()`: Notifies all members when distribution is ready
+    - `notify_coop_distribution_complete()`: Notifies cooperative admin on completion
+    - Automatically triggered when executing distribution payments
+    - Fallback to SMS queue for members not using the mobile app
+
 ## Recent Changes (December 2025) - Cooperative Profile
 11. **Coopérative agricole profile** - Complete agricultural cooperative management system
     - Backend routes in `/app/backend/routes/cooperative.py`
