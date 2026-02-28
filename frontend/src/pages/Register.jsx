@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
-import { Sprout, Phone, Lock, User, Mail, FileText, Shield, MapPin, Eye, EyeOff } from 'lucide-react';
+import { Sprout, Phone, Lock, User, Mail, FileText, Shield, MapPin, Eye, EyeOff, Users, Baby, Calendar, GraduationCap } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import axios from 'axios';
 
