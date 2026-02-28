@@ -1,453 +1,497 @@
-// Écran principal des agents de terrain avec SSRTE et fonctionnalités offline
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
   ScrollView,
-  TouchableOpacity,
   RefreshControl,
-  Alert,
-  ActivityIndicator,
+  TouchableOpacity,
+  Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { cooperativeApi } from '../../services/cooperativeApi';
+import { useOffline } from '../../context/OfflineContext';
+import { Loader } from '../../components/UI';
+import { COLORS, FONTS, SPACING, API_URL } from '../../config';
 
-const OFFLINE_VISITS_KEY = 'offline_ssrte_visits';
-const OFFLINE_PHOTOS_KEY = 'offline_photos';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const FieldAgentDashboard = ({ navigation }) => {
-  const { user, token } = useAuth();
+  const { token, user } = useAuth();
+  const { isOnline, getCachedData, cacheData } = useOffline();
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-  const [stats, setStats] = useState(null);
-  const [pendingVisits, setPendingVisits] = useState([]);
-  const [pendingPhotos, setPendingPhotos] = useState([]);
+
+  const fetchDashboard = useCallback(async () => {
+    try {
+      if (!isOnline) {
+        const cached = await getCachedData('field_agent_dashboard');
+        if (cached) {
+          setData(cached);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const response = await fetch(`${API_URL}/api/field-agent/dashboard`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setData(result);
+        await cacheData('field_agent_dashboard', result);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard:', error);
+      const cached = await getCachedData('field_agent_dashboard');
+      if (cached) setData(cached);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [token, isOnline]);
 
   useEffect(() => {
-    loadData();
-    
-    // Écouter les changements de connexion
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsOnline(state.isConnected);
-      if (state.isConnected) {
-        syncOfflineData();
-      }
-    });
-    
-    return () => unsubscribe();
-  }, []);
+    fetchDashboard();
+  }, [fetchDashboard]);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      // Charger les données offline
-      await loadOfflineData();
-      
-      // Charger les stats si en ligne
-      if (isOnline) {
-        const response = await cooperativeApi.getDashboard(token);
-        setStats(response.data);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadOfflineData = async () => {
-    try {
-      const visitsJson = await AsyncStorage.getItem(OFFLINE_VISITS_KEY);
-      const photosJson = await AsyncStorage.getItem(OFFLINE_PHOTOS_KEY);
-      
-      if (visitsJson) setPendingVisits(JSON.parse(visitsJson));
-      if (photosJson) setPendingPhotos(JSON.parse(photosJson));
-    } catch (error) {
-      console.error('Error loading offline data:', error);
-    }
-  };
-
-  const syncOfflineData = async () => {
-    if (pendingVisits.length === 0 && pendingPhotos.length === 0) return;
-    
-    Alert.alert(
-      'Données hors ligne détectées',
-      `${pendingVisits.length} visite(s) et ${pendingPhotos.length} photo(s) en attente de synchronisation.`,
-      [
-        { text: 'Plus tard', style: 'cancel' },
-        { text: 'Synchroniser', onPress: performSync }
-      ]
-    );
-  };
-
-  const performSync = async () => {
-    setLoading(true);
-    try {
-      // Synchroniser les visites
-      for (const visit of pendingVisits) {
-        await cooperativeApi.createSSRTEVisit(token, visit);
-      }
-      
-      // Synchroniser les photos (à implémenter avec le backend)
-      // Pour l'instant, les photos sont stockées localement
-      
-      // Nettoyer le stockage local
-      await AsyncStorage.removeItem(OFFLINE_VISITS_KEY);
-      setPendingVisits([]);
-      
-      Alert.alert('Succès', 'Données synchronisées avec succès!');
-      loadData();
-    } catch (error) {
-      Alert.alert('Erreur', 'Échec de la synchronisation. Réessayez plus tard.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onRefresh = useCallback(() => {
+  const onRefresh = () => {
     setRefreshing(true);
-    loadData().finally(() => setRefreshing(false));
-  }, []);
+    fetchDashboard();
+  };
 
-  const QuickActionCard = ({ icon, title, subtitle, color, onPress, badge }) => (
-    <TouchableOpacity style={[styles.quickAction, { borderLeftColor: color }]} onPress={onPress}>
-      <View style={styles.quickActionContent}>
-        <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-          <Ionicons name={icon} size={24} color={color} />
-        </View>
-        <View style={styles.quickActionText}>
-          <Text style={styles.quickActionTitle}>{title}</Text>
-          <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
-        </View>
-      </View>
-      {badge > 0 && (
-        <View style={[styles.badge, { backgroundColor: color }]}>
-          <Text style={styles.badgeText}>{badge}</Text>
-        </View>
-      )}
-      <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
-    </TouchableOpacity>
-  );
+  const getRiskColor = (level) => {
+    switch (level) {
+      case 'critique': return '#ef4444';
+      case 'eleve': return '#f97316';
+      case 'modere': return '#f59e0b';
+      case 'faible': return '#10b981';
+      default: return COLORS.gray[400];
+    }
+  };
 
-  if (loading && !refreshing) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#10b981" />
-          <Text style={styles.loadingText}>Chargement...</Text>
-        </View>
-      </SafeAreaView>
-    );
+  if (loading) {
+    return <Loader message="Chargement du tableau de bord..." />;
   }
 
+  const { agent_info, performance, statistics, risk_distribution, recent_activities, achievements } = data || {};
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
-        }
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Agent de Terrain</Text>
-            <Text style={styles.userName}>{user?.full_name || 'Agent'}</Text>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+        </TouchableOpacity>
+        
+        <View style={styles.headerContent}>
+          <View style={styles.avatarContainer}>
+            <Ionicons name="shield-checkmark" size={32} color={COLORS.white} />
           </View>
-          <View style={styles.connectionStatus}>
-            <View style={[styles.statusDot, { backgroundColor: isOnline ? '#10b981' : '#ef4444' }]} />
-            <Text style={[styles.statusText, { color: isOnline ? '#10b981' : '#ef4444' }]}>
-              {isOnline ? 'En ligne' : 'Hors ligne'}
+          <Text style={styles.agentName}>{agent_info?.name || user?.full_name}</Text>
+          <Text style={styles.agentZone}>{agent_info?.zone || 'Agent Terrain'}</Text>
+          
+          {/* Performance Badge */}
+          <View style={[styles.performanceBadge, { backgroundColor: performance?.badge_color || '#6b7280' }]}>
+            <Ionicons name="star" size={14} color={COLORS.white} />
+            <Text style={styles.performanceText}>
+              {performance?.level || 'Débutant'} • {performance?.score || 0}%
             </Text>
           </View>
         </View>
+      </View>
 
-        {/* Offline Alert */}
-        {!isOnline && (
-          <View style={styles.offlineAlert}>
-            <Ionicons name="cloud-offline" size={20} color="#f59e0b" />
-            <Text style={styles.offlineText}>
-              Mode hors ligne actif. Les données seront synchronisées automatiquement.
-            </Text>
+      <ScrollView 
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: '#06b6d4' }]}
+            onPress={() => navigation.navigate('SSRTEVisitForm')}
+          >
+            <Ionicons name="clipboard" size={28} color={COLORS.white} />
+            <Text style={styles.statValue}>{statistics?.ssrte_visits?.total || 0}</Text>
+            <Text style={styles.statLabel}>Visites SSRTE</Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${statistics?.ssrte_visits?.progress || 0}%` }]} />
+            </View>
+            <Text style={styles.progressText}>{statistics?.ssrte_visits?.this_month || 0}/{statistics?.ssrte_visits?.target || 20} ce mois</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: '#10b981' }]}
+            onPress={() => navigation.navigate('AddCoopMember')}
+          >
+            <Ionicons name="people" size={28} color={COLORS.white} />
+            <Text style={styles.statValue}>{statistics?.members_onboarded?.total || 0}</Text>
+            <Text style={styles.statLabel}>Membres inscrits</Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${statistics?.members_onboarded?.progress || 0}%` }]} />
+            </View>
+            <Text style={styles.progressText}>Objectif: {statistics?.members_onboarded?.target || 10}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: '#8b5cf6' }]}
+            onPress={() => navigation.navigate('GeoPhoto')}
+          >
+            <Ionicons name="camera" size={28} color={COLORS.white} />
+            <Text style={styles.statValue}>{statistics?.geotagged_photos?.total || 0}</Text>
+            <Text style={styles.statLabel}>Photos géo</Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${statistics?.geotagged_photos?.progress || 0}%` }]} />
+            </View>
+            <Text style={styles.progressText}>Objectif: {statistics?.geotagged_photos?.target || 30}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.statCard, { backgroundColor: '#f59e0b' }]}
+            onPress={() => navigation.navigate('QRScanner')}
+          >
+            <Ionicons name="qr-code" size={28} color={COLORS.white} />
+            <Text style={styles.statValue}>{statistics?.qr_scans || 0}</Text>
+            <Text style={styles.statLabel}>QR Scannés</Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: '100%' }]} />
+            </View>
+            <Text style={styles.progressText}>Scanner un producteur</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Children Identified Alert */}
+        {statistics?.children_identified > 0 && (
+          <View style={styles.alertCard}>
+            <Ionicons name="warning" size={24} color="#ef4444" />
+            <View style={styles.alertContent}>
+              <Text style={styles.alertTitle}>{statistics.children_identified} enfants identifiés</Text>
+              <Text style={styles.alertText}>En situation de travail dangereux</Text>
+            </View>
           </View>
         )}
 
-        {/* Pending Sync Banner */}
-        {(pendingVisits.length > 0 || pendingPhotos.length > 0) && (
-          <TouchableOpacity style={styles.syncBanner} onPress={performSync} disabled={!isOnline}>
-            <View style={styles.syncBannerContent}>
-              <Ionicons name="sync" size={24} color="#3b82f6" />
-              <View style={styles.syncBannerText}>
-                <Text style={styles.syncBannerTitle}>Données en attente</Text>
-                <Text style={styles.syncBannerSubtitle}>
-                  {pendingVisits.length} visite(s) • {pendingPhotos.length} photo(s)
+        {/* Risk Distribution */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Répartition des Risques</Text>
+          <View style={styles.riskGrid}>
+            {Object.entries(risk_distribution || {}).map(([level, count]) => (
+              <View key={level} style={styles.riskItem}>
+                <View style={[styles.riskDot, { backgroundColor: getRiskColor(level) }]} />
+                <Text style={styles.riskCount}>{count}</Text>
+                <Text style={styles.riskLabel}>{level.charAt(0).toUpperCase() + level.slice(1)}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Recent Activities */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Dernières Activités</Text>
+          {recent_activities?.length > 0 ? (
+            recent_activities.map((activity, index) => (
+              <View key={index} style={styles.activityItem}>
+                <View style={[styles.activityDot, { backgroundColor: getRiskColor(activity.risk_level) }]} />
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityName}>{activity.farmer_name}</Text>
+                  <Text style={styles.activityMeta}>
+                    {activity.children_count} enfant(s) • Risque {activity.risk_level}
+                  </Text>
+                </View>
+                <Text style={styles.activityDate}>
+                  {activity.date ? new Date(activity.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : ''}
                 </Text>
               </View>
-            </View>
-            <Text style={[styles.syncButton, { opacity: isOnline ? 1 : 0.5 }]}>
-              {isOnline ? 'Synchroniser' : 'Attente connexion'}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Stats Cards */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats?.total_members || 0}</Text>
-            <Text style={styles.statLabel}>Producteurs</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={[styles.statValue, { color: '#10b981' }]}>{stats?.total_parcels || 0}</Text>
-            <Text style={styles.statLabel}>Parcelles</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={[styles.statValue, { color: '#f59e0b' }]}>{pendingVisits.length}</Text>
-            <Text style={styles.statLabel}>En attente</Text>
-          </View>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>Aucune activité récente</Text>
+          )}
         </View>
 
+        {/* Achievements */}
+        {achievements?.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Badges Débloqués</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {achievements.map((badge, index) => (
+                <View key={index} style={styles.badge}>
+                  <View style={styles.badgeIcon}>
+                    <Ionicons name={badge.icon} size={20} color="#06b6d4" />
+                  </View>
+                  <Text style={styles.badgeName}>{badge.name}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Actions rapides</Text>
-        
-        <QuickActionCard
-          icon="qr-code"
-          title="Scanner QR Code"
-          subtitle="Identifier un producteur rapidement"
-          color="#8b5cf6"
-          onPress={() => navigation.navigate('QRScanner')}
-        />
-        
-        <QuickActionCard
-          icon="clipboard-outline"
-          title="Nouvelle visite SSRTE"
-          subtitle="Enregistrer une visite de suivi"
-          color="#10b981"
-          onPress={() => navigation.navigate('SSRTEVisitForm')}
-          badge={pendingVisits.length}
-        />
-        
-        <QuickActionCard
-          icon="camera"
-          title="Capture géolocalisée"
-          subtitle="Prendre une photo avec GPS"
-          color="#3b82f6"
-          onPress={() => navigation.navigate('GeoPhoto')}
-          badge={pendingPhotos.length}
-        />
-        
-        <QuickActionCard
-          icon="people"
-          title="Liste des producteurs"
-          subtitle="Voir tous les membres"
-          color="#f59e0b"
-          onPress={() => navigation.navigate('CoopMembers')}
-        />
-        
-        <QuickActionCard
-          icon="document-text"
-          title="Mes visites"
-          subtitle="Historique des visites SSRTE"
-          color="#ec4899"
-          onPress={() => navigation.navigate('VisitsHistory')}
-        />
+        <View style={styles.quickActions}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('SSRTEVisitForm')}
+          >
+            <Ionicons name="add-circle" size={24} color={COLORS.white} />
+            <Text style={styles.actionText}>Nouvelle Visite</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: '#10b981' }]}
+            onPress={() => navigation.navigate('QRScanner')}
+          >
+            <Ionicons name="qr-code" size={24} color={COLORS.white} />
+            <Text style={styles.actionText}>Scanner QR</Text>
+          </TouchableOpacity>
+        </View>
 
-        <QuickActionCard
-          icon="download"
-          title="Données offline"
-          subtitle="Télécharger pour travail hors ligne"
-          color="#6366f1"
-          onPress={() => navigation.navigate('OfflineData')}
-        />
-
-        <View style={styles.footer} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: '#94a3b8',
-    marginTop: 10,
+    backgroundColor: COLORS.gray[100],
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: '#06b6d4',
+    paddingTop: 50,
+    paddingBottom: SPACING.xl,
+    paddingHorizontal: SPACING.lg,
+  },
+  backButton: {
+    marginBottom: SPACING.md,
+  },
+  headerContent: {
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
   },
-  greeting: {
-    color: '#94a3b8',
-    fontSize: 14,
+  avatarContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
   },
-  userName: {
-    color: '#fff',
+  agentName: {
     fontSize: 22,
     fontWeight: 'bold',
+    color: COLORS.white,
   },
-  connectionStatus: {
+  agentZone: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+  performanceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1e293b',
-    paddingHorizontal: 12,
+    gap: 6,
+    paddingHorizontal: SPACING.md,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 16,
+    marginTop: SPACING.sm,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 12,
+  performanceText: {
+    color: COLORS.white,
+    fontSize: 13,
     fontWeight: '600',
   },
-  offlineAlert: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#422006',
-    marginHorizontal: 20,
-    marginBottom: 15,
-    padding: 12,
-    borderRadius: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: '#f59e0b',
-  },
-  offlineText: {
-    color: '#fcd34d',
-    marginLeft: 10,
+  content: {
     flex: 1,
-    fontSize: 13,
+    padding: SPACING.md,
+    marginTop: -SPACING.md,
   },
-  syncBanner: {
+  statsGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#1e3a5f',
-    marginHorizontal: 20,
-    marginBottom: 15,
-    padding: 15,
-    borderRadius: 12,
-  },
-  syncBannerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  syncBannerText: {
-    marginLeft: 12,
-  },
-  syncBannerTitle: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  syncBannerSubtitle: {
-    color: '#93c5fd',
-    fontSize: 12,
-  },
-  syncButton: {
-    color: '#60a5fa',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 15,
-    marginBottom: 20,
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
   },
   statCard: {
-    flex: 1,
-    backgroundColor: '#1e293b',
-    marginHorizontal: 5,
-    padding: 15,
-    borderRadius: 12,
+    width: (SCREEN_WIDTH - SPACING.md * 3) / 2,
+    borderRadius: 16,
+    padding: SPACING.md,
     alignItems: 'center',
   },
   statValue: {
-    color: '#fff',
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    color: COLORS.white,
+    marginTop: SPACING.xs,
   },
   statLabel: {
-    color: '#94a3b8',
     fontSize: 12,
-    marginTop: 4,
-  },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    paddingHorizontal: 20,
-    marginBottom: 15,
-  },
-  quickAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1e293b',
-    marginHorizontal: 20,
-    marginBottom: 10,
-    padding: 15,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-  },
-  quickActionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconContainer: {
-    width: 45,
-    height: 45,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quickActionText: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  quickActionTitle: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  quickActionSubtitle: {
-    color: '#94a3b8',
-    fontSize: 12,
+    color: 'rgba(255,255,255,0.9)',
     marginTop: 2,
   },
-  badge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    justifyContent: 'center',
+  progressBar: {
+    width: '100%',
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 2,
+    marginTop: SPACING.sm,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: COLORS.white,
+    borderRadius: 2,
+  },
+  progressText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+  },
+  alertCard: {
+    backgroundColor: '#fef2f2',
+    borderRadius: 12,
+    padding: SPACING.md,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 10,
+    gap: SPACING.md,
+    marginBottom: SPACING.md,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ef4444',
   },
-  badgeText: {
-    color: '#fff',
-    fontSize: 11,
+  alertContent: {
+    flex: 1,
+  },
+  alertTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
+    color: '#dc2626',
   },
-  footer: {
-    height: 30,
+  alertText: {
+    fontSize: 13,
+    color: '#991b1b',
+    marginTop: 2,
+  },
+  card: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.gray[800],
+    marginBottom: SPACING.md,
+  },
+  riskGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  riskItem: {
+    alignItems: 'center',
+  },
+  riskDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginBottom: 4,
+  },
+  riskCount: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.gray[800],
+  },
+  riskLabel: {
+    fontSize: 11,
+    color: COLORS.gray[500],
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray[100],
+  },
+  activityDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: SPACING.sm,
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.gray[800],
+  },
+  activityMeta: {
+    fontSize: 12,
+    color: COLORS.gray[500],
+    marginTop: 2,
+  },
+  activityDate: {
+    fontSize: 11,
+    color: COLORS.gray[400],
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: COLORS.gray[400],
+    paddingVertical: SPACING.lg,
+  },
+  badge: {
+    alignItems: 'center',
+    marginRight: SPACING.md,
+    width: 70,
+  },
+  badgeIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#06b6d420',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  badgeName: {
+    fontSize: 10,
+    color: COLORS.gray[600],
+    textAlign: 'center',
+  },
+  quickActions: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    backgroundColor: '#06b6d4',
+    paddingVertical: SPACING.md,
+    borderRadius: 12,
+  },
+  actionText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  bottomSpacer: {
+    height: 100,
   },
 });
 
