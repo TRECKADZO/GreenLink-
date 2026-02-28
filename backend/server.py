@@ -87,6 +87,7 @@ app.include_router(admin_analytics.router)
 app.include_router(cooperative.router)
 app.include_router(tracking.router)
 app.include_router(analytics_advanced.router)
+app.include_router(notifications.router)
 
 app.add_middleware(
     CORSMiddleware,
