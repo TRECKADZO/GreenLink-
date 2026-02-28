@@ -4,10 +4,22 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { 
-  TrendingUp, DollarSign, Leaf, Users, Calculator, 
+  TrendingUp, DollarSign, Leaf, Calculator, 
   Building2, Globe2, ArrowUpRight, Info
 } from 'lucide-react';
-import api from '../../services/api';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+// Simple API helper with auth
+const apiClient = {
+  get: async (url) => {
+    const token = localStorage.getItem('token');
+    return axios.get(`${API_URL}${url}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+  }
+};
 
 const CarbonBusinessDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
