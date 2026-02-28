@@ -2,6 +2,45 @@
 
 ## Latest Updates - Feb 28, 2026 (Session 3)
 
+### NEW: Pages de Notifications pour tous les utilisateurs - ✅ COMPLETED
+Un système de notifications complet et personnalisé pour chaque type d'utilisateur.
+
+**Pages créées:**
+1. **Producteur** (`/notifications`, `/farmer/notifications`)
+   - Filtres: Toutes, Non lues, Paiements, Carbone, Commandes, Alertes
+   - Affichage avec indicateurs visuels (icônes, couleurs, badges "Nouveau")
+   - Bouton "Tout marquer lu"
+
+2. **Coopérative** (`/cooperative/notifications`)
+   - Onglets: Reçues / Envoyées
+   - Statistiques: Total reçues, Non lues, Envoyées
+   - **Envoi aux membres**: Rappel collecte, Annonce générale, Prime carbone
+   - Modal d'envoi personnalisé
+
+3. **Admin** (`/admin/notifications`)
+   - Design sombre professionnel
+   - Statistiques: Reçues, Non lues, SMS en attente, Taux livraison
+   - Navigation: Boîte réception, Alertes critiques, File SMS, Paramètres
+   - Actions: Rappels hebdo, Notifications système
+   - Ciblage: Tous, Coopératives, Producteurs
+
+4. **Mobile** (écran amélioré)
+   - Filtres horizontaux scrollables
+   - Icônes et couleurs par type
+   - Support offline avec cache
+   - Pull-to-refresh
+
+**Files Created:**
+- `/app/frontend/src/pages/NotificationsPage.jsx` - Page générique (Producteur, RSE, Buyer)
+- `/app/frontend/src/pages/cooperative/Notifications.jsx` - Coopérative avec envoi
+- `/app/frontend/src/pages/admin/Notifications.jsx` - Admin avec statistiques
+
+**Files Updated:**
+- `/app/mobile/greenlink-farmer/src/screens/notifications/NotificationsScreen.js`
+- `/app/frontend/src/App.js` - Routes ajoutées
+
+---
+
 ### NEW: Tableau de Bord Paiements Carbone - ✅ COMPLETED
 Un dashboard complet pour les producteurs permettant de suivre leurs revenus carbone en temps réel.
 
