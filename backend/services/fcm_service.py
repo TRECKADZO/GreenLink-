@@ -387,3 +387,127 @@ async def send_notification_to_user(
         "devices_notified": success_count,
         "total_devices": len(devices)
     }
+
+
+# ============= COOPERATIVE PREMIUM NOTIFICATIONS =============
+
+async def notify_members_premium_available(
+    db,
+    distribution_id: str,
+    coop_name: str,
+    lot_name: str,
+    distributions: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Send notifications to all members when their carbon premiums are ready
+    
+    Args:
+        db: MongoDB database instance
+        distribution_id: The distribution ID
+        coop_name: Cooperative name
+        lot_name: Name of the sales lot
+        distributions: List of member distributions with member_id, amount, etc.
+        
+    Returns:
+        Summary of notification results
+    """
+    notifications_sent = 0
+    notifications_failed = 0
+    
+    for dist in distributions:
+        member_id = dist.get("member_id")
+        amount = dist.get("amount", 0)
+        member_name = dist.get("member_name", "")
+        
+        if not member_id or amount <= 0:
+            continue
+        
+        # Get member's phone number to find their user account
+        member = await db.coop_members.find_one({"_id": member_id if isinstance(member_id, str) == False else {"$exists": True}})
+        if not member:
+            # Try finding by string ID
+            from bson import ObjectId
+            try:
+                member = await db.coop_members.find_one({"_id": ObjectId(member_id)})
+            except:
+                pass
+        
+        if member:
+            phone = member.get("phone_number")
+            
+            # Find user by phone number
+            user = await db.users.find_one({"phone_number": phone}) if phone else None
+            
+            if user:
+                user_id = str(user["_id"])
+                
+                # Send notification
+                result = await send_notification_to_user(
+                    db=db,
+                    user_id=user_id,
+                    title="Prime Carbone Disponible! 🌱💰",
+                    body=f"Félicitations {member_name}! Votre prime de {amount:,.0f} FCFA de {coop_name} est prête.",
+                    data={
+                        "type": "carbon_premium_available",
+                        "distribution_id": distribution_id,
+                        "amount": amount,
+                        "lot_name": lot_name,
+                        "coop_name": coop_name,
+                        "screen": "Payments"
+                    }
+                )
+                
+                if result.get("success"):
+                    notifications_sent += 1
+                    logger.info(f"Premium notification sent to {member_name} ({phone})")
+                else:
+                    notifications_failed += 1
+                    logger.warning(f"Failed to send notification to {member_name}: {result.get('error')}")
+            else:
+                # User not in system - log for SMS sending
+                logger.info(f"Member {member_name} ({phone}) not in app - would send SMS")
+                
+                # Store notification for SMS service
+                await db.pending_sms_notifications.insert_one({
+                    "phone_number": phone,
+                    "member_name": member_name,
+                    "message": f"GreenLink: Votre prime carbone de {amount:,.0f} FCFA de {coop_name} est disponible. Lot: {lot_name}",
+                    "type": "carbon_premium",
+                    "distribution_id": distribution_id,
+                    "created_at": datetime.utcnow(),
+                    "status": "pending"
+                })
+                notifications_sent += 1  # Count SMS as pending
+    
+    return {
+        "success": notifications_sent > 0,
+        "notifications_sent": notifications_sent,
+        "notifications_failed": notifications_failed,
+        "total_members": len(distributions)
+    }
+
+
+async def notify_coop_distribution_complete(
+    db,
+    coop_user_id: str,
+    coop_name: str,
+    lot_name: str,
+    total_distributed: float,
+    beneficiaries_count: int
+) -> Dict[str, Any]:
+    """
+    Send notification to cooperative admin when distribution is complete
+    """
+    return await send_notification_to_user(
+        db=db,
+        user_id=coop_user_id,
+        title="Distribution Terminée ✅",
+        body=f"La distribution de {total_distributed:,.0f} FCFA à {beneficiaries_count} membres ({lot_name}) est terminée.",
+        data={
+            "type": "distribution_complete",
+            "lot_name": lot_name,
+            "total_distributed": total_distributed,
+            "beneficiaries_count": beneficiaries_count,
+            "screen": "CoopDistributions"
+        }
+    )
