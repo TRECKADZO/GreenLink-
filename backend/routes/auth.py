@@ -543,6 +543,13 @@ async def activate_member_account(request: MemberActivationRequest):
     subscription = create_subscription_for_user(user_id, "producteur")
     await db.subscriptions.insert_one(subscription)
     
+    # Envoyer notification push de bienvenue avec tutoriel
+    try:
+        await send_welcome_notification(user_id, user_dict.get('full_name'), coop_name)
+        logger.info(f"[MEMBER ACTIVATION] Welcome notification sent to user {user_id}")
+    except Exception as e:
+        logger.error(f"[MEMBER ACTIVATION] Failed to send welcome notification: {e}")
+    
     # Créer le token d'accès
     access_token = create_access_token(data={"sub": user_id})
     
