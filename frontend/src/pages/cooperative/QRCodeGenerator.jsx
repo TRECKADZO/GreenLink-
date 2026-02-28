@@ -373,6 +373,14 @@ const QRCodeGenerator = () => {
                 </div>
                 <div className="flex gap-2">
                   <Button
+                    className="bg-purple-600 hover:bg-purple-700"
+                    onClick={exportPDFCards}
+                    disabled={loading}
+                  >
+                    <FileDown className="w-4 h-4 mr-2" />
+                    Export PDF {selectedMembers.length > 0 ? `(${selectedMembers.length})` : 'tout'}
+                  </Button>
+                  <Button
                     className="bg-emerald-600 hover:bg-emerald-700"
                     onClick={() => printQRCodes()}
                     disabled={loading}
