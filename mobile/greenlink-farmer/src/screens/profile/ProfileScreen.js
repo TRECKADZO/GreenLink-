@@ -228,8 +228,12 @@ const ProfileScreen = ({ navigation }) => {
 
         {/* Version */}
         <Text style={styles.version}>GreenLink Farmer v1.0.0</Text>
+        
+        {/* Bottom spacing for tab bar */}
+        <View style={{ height: 100 }} />
       </View>
     </ScrollView>
+    </MainLayout>
   );
 };
 
