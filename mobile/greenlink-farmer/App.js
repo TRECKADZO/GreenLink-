@@ -28,6 +28,7 @@ import ParcelsScreen from './src/screens/parcels/ParcelsScreen';
 import AddParcelScreen from './src/screens/parcels/AddParcelScreen';
 import HarvestScreen from './src/screens/harvest/HarvestScreen';
 import PaymentsScreen from './src/screens/payments/PaymentsScreen';
+import CarbonPaymentsDashboard from './src/screens/payments/CarbonPaymentsDashboard';
 import NotificationsScreen from './src/screens/notifications/NotificationsScreen';
 import ProfileScreen from './src/screens/profile/ProfileScreen';
 
