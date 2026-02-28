@@ -16,7 +16,7 @@ class TestPDFReports:
         """Login as admin before each test"""
         self.session = requests.Session()
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "klenakan.eric@gmail.com",
+            "identifier": "klenakan.eric@gmail.com",
             "password": "474Treckadzo"
         })
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
@@ -89,7 +89,7 @@ class TestWebSocketEndpoints:
         """Login as admin before each test"""
         self.session = requests.Session()
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "klenakan.eric@gmail.com",
+            "identifier": "klenakan.eric@gmail.com",
             "password": "474Treckadzo"
         })
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
@@ -207,7 +207,7 @@ class TestRealTimeDashboardData:
         """Login as admin before each test"""
         self.session = requests.Session()
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "klenakan.eric@gmail.com",
+            "identifier": "klenakan.eric@gmail.com",
             "password": "474Treckadzo"
         })
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
