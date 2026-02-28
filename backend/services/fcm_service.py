@@ -423,13 +423,17 @@ async def notify_members_premium_available(
             continue
         
         # Get member's phone number to find their user account
-        member = await db.coop_members.find_one({"_id": member_id if isinstance(member_id, str) == False else {"$exists": True}})
+        from bson import ObjectId
+        member = None
+        
+        # Try to find member by ObjectId or string
+        if not isinstance(member_id, str):
+            member = await db.coop_members.find_one({"_id": member_id})
+        
         if not member:
-            # Try finding by string ID
-            from bson import ObjectId
             try:
                 member = await db.coop_members.find_one({"_id": ObjectId(member_id)})
-            except:
+            except Exception:
                 pass
         
         if member:
