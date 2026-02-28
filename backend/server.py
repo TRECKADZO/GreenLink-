@@ -85,6 +85,8 @@ app.include_router(payments.router)
 app.include_router(admin.router)
 app.include_router(admin_analytics.router)
 app.include_router(cooperative.router)
+app.include_router(tracking.router)
+app.include_router(analytics_advanced.router)
 
 app.add_middleware(
     CORSMiddleware,
