@@ -111,7 +111,53 @@ ZONES_PRODUCTION = {
 # Anciennes régions (conservées pour compatibilité)
 REGIONS_CI = DEPARTEMENTS_CACAO
 
-CULTURES = ["cacao", "cafe", "anacarde", "hevea", "riz", "maraichage"]
+CULTURES = ["cacao", "cafe", "anacarde", "hevea", "riz", "maraichage", "palmier", "coco", "coton", "mangue", "igname"]
+
+# ============= ENDPOINT: LISTE DES DÉPARTEMENTS =============
+
+@router.get("/departements")
+async def get_departements(
+    culture: Optional[str] = None,
+    zone: Optional[str] = None
+):
+    """
+    Retourne la liste complète des 51 départements producteurs de Côte d'Ivoire
+    Filtrable par culture ou zone géographique
+    """
+    result = []
+    
+    for nom, data in DEPARTEMENTS_CACAO.items():
+        # Filtre par culture si spécifié
+        if culture and culture.lower() not in [c.lower() for c in data.get("cultures", [])]:
+            continue
+        # Filtre par zone si spécifié
+        if zone and zone.lower() not in data.get("zone", "").lower():
+            continue
+            
+        result.append({
+            "nom": nom,
+            "code": data["code"],
+            "zone": data["zone"],
+            "cultures": data["cultures"]
+        })
+    
+    return {
+        "total": len(result),
+        "departements": sorted(result, key=lambda x: x["nom"]),
+        "zones_disponibles": list(set(d["zone"] for d in DEPARTEMENTS_CACAO.values())),
+        "cultures_disponibles": CULTURES
+    }
+
+@router.get("/zones-production")
+async def get_zones_production():
+    """
+    Retourne les zones de production par culture avec classification
+    """
+    return {
+        "zones": ZONES_PRODUCTION,
+        "total_departements": len(DEPARTEMENTS_CACAO),
+        "description": "Classification des zones de production en Côte d'Ivoire"
+    }
 
 # ============= ANALYTIC 1: TENDANCES VOLUMÉTRIQUES ET PRIX =============
 
