@@ -120,6 +120,17 @@ const LoginScreen = ({ navigation }) => {
             variant="outline"
             onPress={() => navigation.navigate('Register')}
           />
+
+          {/* Member Activation Button */}
+          <TouchableOpacity 
+            style={styles.memberActivationButton}
+            onPress={() => navigation.navigate('MemberActivation')}
+          >
+            <Text style={styles.memberActivationText}>
+              Membre d'une coopérative ?{' '}
+              <Text style={styles.memberActivationLink}>Activer mon compte</Text>
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Footer */}
