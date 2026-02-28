@@ -18,6 +18,9 @@ import LoginScreen from './src/screens/auth/LoginScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
 
+// Screens - Welcome (Landing Page)
+import WelcomeScreen from './src/screens/welcome/WelcomeScreen';
+
 // Screens - Main
 import HomeScreen from './src/screens/home/HomeScreen';
 import ParcelsScreen from './src/screens/parcels/ParcelsScreen';
