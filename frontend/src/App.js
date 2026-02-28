@@ -91,6 +91,7 @@ function App() {
               {/* Buyer/Acheteur Routes */}
               <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
               <Route path="/buyer/orders" element={<BuyerOrders />} />
+              <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
 
               {/* RSE/Enterprise Routes */}
               <Route path="/rse/dashboard" element={<RSEDashboard />} />
