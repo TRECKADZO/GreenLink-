@@ -829,11 +829,41 @@ async def execute_distribution_payments(
         }
     )
     
+    # Send push notifications to members
+    from services.fcm_service import notify_members_premium_available, notify_coop_distribution_complete
+    
+    coop_name = current_user.get("coop_name", "Coopérative")
+    lot_name = dist.get("lot_name", "")
+    
+    try:
+        # Notify all members about their premiums
+        notif_result = await notify_members_premium_available(
+            db=db,
+            distribution_id=dist_id,
+            coop_name=coop_name,
+            lot_name=lot_name,
+            distributions=dist.get("distributions", [])
+        )
+        logger.info(f"Premium notifications: {notif_result}")
+        
+        # Notify the cooperative admin
+        await notify_coop_distribution_complete(
+            db=db,
+            coop_user_id=current_user["_id"],
+            coop_name=coop_name,
+            lot_name=lot_name,
+            total_distributed=dist.get("amount_distributed", 0),
+            beneficiaries_count=successful
+        )
+    except Exception as e:
+        logger.error(f"Error sending premium notifications: {e}")
+    
     return {
         "message": f"Paiements exécutés: {successful} réussis, {failed} échecs",
         "successful": successful,
         "failed": failed,
-        "total_distributed": dist.get("amount_distributed", 0)
+        "total_distributed": dist.get("amount_distributed", 0),
+        "notifications_sent": True
     }
 
 @router.get("/distributions")
