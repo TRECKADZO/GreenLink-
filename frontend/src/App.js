@@ -96,6 +96,8 @@ function App() {
               {/* Farmer/Producteur Routes */}
               <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
               <Route path="/farmer/ussd" element={<USSDSimulator />} />
+              <Route path="/farmer/carbon-payments" element={<CarbonPaymentsDashboard />} />
+              <Route path="/carbon-payments" element={<CarbonPaymentsDashboard />} />
 
               {/* Buyer/Acheteur Routes */}
               <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
