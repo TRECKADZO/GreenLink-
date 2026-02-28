@@ -533,6 +533,25 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.lg,
     backgroundColor: COLORS.gray[50],
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.gray[300],
+    borderRadius: 12,
+    backgroundColor: COLORS.gray[50],
+  },
+  passwordInput: {
+    flex: 1,
+    padding: SPACING.md,
+    fontSize: FONTS.sizes.lg,
+  },
+  eyeButton: {
+    padding: SPACING.md,
+  },
+  eyeIcon: {
+    fontSize: 20,
+  },
   hint: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.gray[500],
