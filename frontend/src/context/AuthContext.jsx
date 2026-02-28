@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const register = async (identifier, password, fullName, userType, isEmail = false, legalAcceptance = null) => {
+  const register = async (identifier, password, fullName, userType, isEmail = false, additionalData = null) => {
     try {
       console.log('[Auth] Attempting registration:', { identifier, fullName, userType, isEmail });
       console.log('[Auth] API URL:', API);
@@ -50,9 +50,44 @@ export const AuthProvider = ({ children }) => {
         payload.phone_number = identifier;
       }
 
-      // Add legal acceptance data if provided
-      if (legalAcceptance) {
-        payload.legal_acceptance = legalAcceptance;
+      // Add additional data (legal acceptance + ICI data) if provided
+      if (additionalData) {
+        // Legal acceptance fields
+        if (additionalData.acceptedConditions !== undefined) {
+          payload.legal_acceptance = {
+            acceptedConditions: additionalData.acceptedConditions,
+            acceptedPrivacy: additionalData.acceptedPrivacy,
+            acceptedAt: additionalData.acceptedAt
+          };
+        }
+        
+        // Location fields
+        if (additionalData.departement) {
+          payload.department = additionalData.departement;
+        }
+        if (additionalData.zone) {
+          payload.zone = additionalData.zone;
+        }
+        if (additionalData.village) {
+          payload.village = additionalData.village;
+        }
+        
+        // ICI demographic fields for producers
+        if (additionalData.genre) {
+          payload.genre = additionalData.genre;
+        }
+        if (additionalData.date_naissance) {
+          payload.date_naissance = additionalData.date_naissance;
+        }
+        if (additionalData.niveau_education) {
+          payload.niveau_education = additionalData.niveau_education;
+        }
+        if (additionalData.taille_menage) {
+          payload.taille_menage = additionalData.taille_menage;
+        }
+        if (additionalData.nombre_enfants) {
+          payload.nombre_enfants = additionalData.nombre_enfants;
+        }
       }
       
       console.log('[Auth] Registration payload:', payload);
