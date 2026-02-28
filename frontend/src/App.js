@@ -77,6 +77,7 @@ function App() {
               <Route path="/supplier/orders" element={<Orders />} />
               <Route path="/supplier/messages" element={<Messages />} />
               <Route path="/supplier/notifications" element={<Notifications />} />
+              <Route path="/supplier/analytics" element={<SupplierAnalytics />} />
 
               {/* Farmer/Producteur Routes */}
               <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
