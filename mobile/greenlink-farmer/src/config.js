@@ -3,7 +3,7 @@
 
 export const CONFIG = {
   // API Backend - Utilise la même API que le web
-  API_URL: 'https://coop-agritech.preview.emergentagent.com/api',
+  API_URL: 'https://agritech-ci-1.preview.emergentagent.com/api',
   
   // Timeouts adaptés à la faible connectivité
   REQUEST_TIMEOUT: 30000, // 30 secondes

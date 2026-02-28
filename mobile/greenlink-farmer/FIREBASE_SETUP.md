@@ -58,12 +58,12 @@ FIREBASE_SERVER_KEY=votre-server-key-fcm
 ### Via l'API backend :
 ```bash
 # Login pour obtenir un token
-TOKEN=$(curl -s -X POST "https://coop-agritech.preview.emergentagent.com/api/auth/login" \
+TOKEN=$(curl -s -X POST "https://agritech-ci-1.preview.emergentagent.com/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"identifier":"farmer1@test.com","password":"test123"}' | jq -r '.access_token')
 
 # Envoyer une notification de test
-curl -X POST "https://coop-agritech.preview.emergentagent.com/api/greenlink/notifications/test-push" \
+curl -X POST "https://agritech-ci-1.preview.emergentagent.com/api/greenlink/notifications/test-push" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
