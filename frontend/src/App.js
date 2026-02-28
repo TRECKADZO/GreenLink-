@@ -24,6 +24,7 @@ import Marketplace from "./pages/supplier/Marketplace";
 import Orders from "./pages/supplier/Orders";
 import Messages from "./pages/supplier/Messages";
 import Notifications from "./pages/supplier/Notifications";
+import SupplierAnalytics from "./pages/supplier/Analytics";
 
 // Farmer Routes
 import FarmerDashboard from "./pages/farmer/Dashboard";
