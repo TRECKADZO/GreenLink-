@@ -20,6 +20,7 @@ from routes import admin_analytics
 from routes import tracking, analytics_advanced, notifications, subscriptions, carbon_sales, billing, sms
 from routes import premium_analytics, ici_analytics, ici_data_collection, ici_export
 from routes import pdf_reports, websocket_routes
+from routes import qrcode_generator
 from services.push_notifications import router as push_notifications_router
 
 
@@ -111,6 +112,7 @@ app.include_router(ici_export.router)
 app.include_router(pdf_reports.router)
 app.include_router(websocket_routes.router)
 app.include_router(push_notifications_router)
+app.include_router(qrcode_generator.router)
 
 app.add_middleware(
     CORSMiddleware,
