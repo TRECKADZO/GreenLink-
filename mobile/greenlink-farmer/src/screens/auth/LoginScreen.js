@@ -284,6 +284,22 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: '700',
   },
+  agentActivationButton: {
+    marginTop: SPACING.sm,
+    padding: SPACING.md,
+    backgroundColor: '#06b6d410',
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  agentActivationText: {
+    color: COLORS.gray[600],
+    fontSize: FONTS.sizes.sm,
+    textAlign: 'center',
+  },
+  agentActivationLink: {
+    color: '#06b6d4',
+    fontWeight: '700',
+  },
   footer: {
     padding: SPACING.lg,
     alignItems: 'center',
