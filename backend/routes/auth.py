@@ -239,3 +239,163 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur lors de la suppression: {str(e)}"
         )
+
+
+# ============= PASSWORD RESET =============
+
+import secrets
+import logging
+
+logger = logging.getLogger(__name__)
+
+class PasswordResetRequest(BaseModel):
+    identifier: str  # Email or phone
+
+class PasswordResetVerify(BaseModel):
+    identifier: str
+    code: str
+    new_password: str
+
+from pydantic import BaseModel
+
+class PasswordResetRequest(BaseModel):
+    identifier: str
+
+class PasswordResetVerify(BaseModel):
+    identifier: str
+    code: str
+    new_password: str
+
+@router.post("/forgot-password")
+async def request_password_reset(request: PasswordResetRequest):
+    """Request a password reset code"""
+    # Find user by email or phone
+    user = await db.users.find_one({
+        "$or": [
+            {"email": request.identifier},
+            {"phone_number": request.identifier}
+        ]
+    })
+    
+    if not user:
+        # For security, don't reveal if user exists
+        return {
+            "message": "Si un compte existe avec cet identifiant, un code de réinitialisation a été envoyé",
+            "sent": True
+        }
+    
+    # Generate 6-digit reset code
+    reset_code = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+    
+    # Store reset code with expiration (15 minutes)
+    from datetime import timedelta
+    expiration = datetime.utcnow() + timedelta(minutes=15)
+    
+    await db.password_resets.update_one(
+        {"user_id": str(user["_id"])},
+        {
+            "$set": {
+                "user_id": str(user["_id"]),
+                "code": reset_code,
+                "identifier": request.identifier,
+                "expires_at": expiration,
+                "used": False,
+                "created_at": datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
+    
+    # In production: Send SMS or Email
+    # For now, log the code (SIMULATION)
+    user_email = user.get("email", "")
+    user_phone = user.get("phone_number", "")
+    
+    logger.info(f"[PASSWORD RESET] Code {reset_code} sent to {user_email or user_phone}")
+    
+    # SIMULATION: Also store in a way the frontend can access for testing
+    # In production, remove this and use real SMS/Email
+    
+    return {
+        "message": "Si un compte existe avec cet identifiant, un code de réinitialisation a été envoyé",
+        "sent": True,
+        # SIMULATION MODE: Include code for testing (remove in production)
+        "simulation_code": reset_code if os.environ.get("SIMULATION_MODE", "true").lower() == "true" else None
+    }
+
+@router.post("/verify-reset-code")
+async def verify_reset_code(data: dict):
+    """Verify the reset code is valid"""
+    identifier = data.get("identifier")
+    code = data.get("code")
+    
+    if not identifier or not code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Identifiant et code requis"
+        )
+    
+    # Find the reset request
+    reset_request = await db.password_resets.find_one({
+        "identifier": identifier,
+        "code": code,
+        "used": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+    
+    if not reset_request:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Code invalide ou expiré"
+        )
+    
+    return {"valid": True, "message": "Code valide"}
+
+@router.post("/reset-password")
+async def reset_password(request: PasswordResetVerify):
+    """Reset password with valid code"""
+    # Verify the code again
+    reset_request = await db.password_resets.find_one({
+        "identifier": request.identifier,
+        "code": request.code,
+        "used": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+    
+    if not reset_request:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Code invalide ou expiré"
+        )
+    
+    # Validate new password
+    if len(request.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le mot de passe doit contenir au moins 6 caractères"
+        )
+    
+    # Update password
+    user_id = reset_request["user_id"]
+    hashed_password = get_password_hash(request.new_password)
+    
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"hashed_password": hashed_password, "updated_at": datetime.utcnow()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la mise à jour du mot de passe"
+        )
+    
+    # Mark code as used
+    await db.password_resets.update_one(
+        {"_id": reset_request["_id"]},
+        {"$set": {"used": True}}
+    )
+    
+    logger.info(f"[PASSWORD RESET] Password reset successful for user {user_id}")
+    
+    return {"message": "Mot de passe réinitialisé avec succès", "success": True}
