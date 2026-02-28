@@ -6,7 +6,7 @@ import {
   Users, MapPin, Leaf, DollarSign, Package, 
   TrendingUp, FileText, Plus, ChevronRight,
   CheckCircle, Clock, AlertTriangle, Building2,
-  ClipboardCheck
+  ClipboardCheck, QrCode
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -235,6 +235,18 @@ const Dashboard = () => {
                   Rapports EUDR
                 </span>
                 <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
+                onClick={() => navigate('/cooperative/qrcodes')}
+                data-testid="quick-action-qrcodes"
+              >
+                <span className="flex items-center text-emerald-700">
+                  <QrCode className="h-4 w-4 mr-2" />
+                  QR Codes Membres
+                </span>
+                <ChevronRight className="h-4 w-4 text-emerald-700" />
               </Button>
             </CardContent>
           </Card>
