@@ -12,7 +12,7 @@ import axios from 'axios';
 import { 
   AlertTriangle, Bell, CheckCircle2, Clock, Filter,
   Shield, Users, Eye, RefreshCcw, Search, ChevronRight,
-  AlertCircle, XCircle, FileText, TrendingUp
+  AlertCircle, XCircle, FileText, TrendingUp, Download, BarChart3
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
