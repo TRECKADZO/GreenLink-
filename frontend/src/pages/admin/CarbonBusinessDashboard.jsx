@@ -40,8 +40,8 @@ const CarbonBusinessDashboard = () => {
   const fetchData = async () => {
     try {
       const [dashboardRes, pricesRes] = await Promise.all([
-        api.get('/carbon/analytics/dashboard'),
-        api.get('/carbon/market-prices')
+        apiClient.get('/api/carbon/analytics/dashboard'),
+        apiClient.get('/api/carbon/market-prices')
       ]);
       setDashboard(dashboardRes.data);
       setMarketPrices(pricesRes.data);
@@ -57,7 +57,7 @@ const CarbonBusinessDashboard = () => {
 
   const fetchProjection = async (numFarmers) => {
     try {
-      const res = await api.get(`/carbon/analytics/revenue-projection?num_farmers=${numFarmers}&avg_hectares=${projectionParams.avgHectares}&avg_trees=${projectionParams.avgTrees}&price_usd=${projectionParams.priceUsd}`);
+      const res = await apiClient.get(`/api/carbon/analytics/revenue-projection?num_farmers=${numFarmers}&avg_hectares=${projectionParams.avgHectares}&avg_trees=${projectionParams.avgTrees}&price_usd=${projectionParams.priceUsd}`);
       setProjection(res.data);
     } catch (error) {
       console.error('Error fetching projection:', error);
