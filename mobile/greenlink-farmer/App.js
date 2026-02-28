@@ -16,6 +16,7 @@ import { syncService } from './src/services/sync';
 // Screens - Auth
 import LoginScreen from './src/screens/auth/LoginScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
+import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
 
 // Screens - Main
 import HomeScreen from './src/screens/home/HomeScreen';
