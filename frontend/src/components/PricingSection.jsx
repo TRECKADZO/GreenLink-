@@ -133,7 +133,7 @@ const PricingSection = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
           {pricingPlans.map((plan, index) => (
             <Card 
               key={index} 
@@ -155,16 +155,20 @@ const PricingSection = () => {
                 </h3>
                 
                 <div className="mb-4">
-                  <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
-                  {plan.period && <span className="text-gray-600">{plan.period}</span>}
+                  <span className="text-2xl font-bold text-gray-900">{plan.price}</span>
+                  {plan.period && <span className="text-gray-600 text-sm">{plan.period}</span>}
                   {plan.badge && (
-                    <Badge className="ml-2 bg-green-100 text-green-700 text-xs">
+                    <Badge className={`ml-2 text-xs ${
+                      plan.badgeColor === 'green' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
                       {plan.badge}
                     </Badge>
                   )}
                 </div>
                 
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-2 mb-6">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start text-sm text-gray-600">
                       <Check className="w-4 h-4 text-[#2d5a4d] mr-2 mt-0.5 flex-shrink-0" />
