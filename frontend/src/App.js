@@ -59,6 +59,7 @@ import CooperativeReportsPage from "./pages/cooperative/ReportsPage";
 import MemberParcelsPage from "./pages/cooperative/MemberParcelsPage";
 import ImportMembersPage from "./pages/cooperative/ImportMembersPage";
 import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
+import QRCodeGenerator from "./pages/cooperative/QRCodeGenerator";
 
 function App() {
   return (
@@ -128,6 +129,7 @@ function App() {
               <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />
               <Route path="/cooperative/reports" element={<CooperativeReportsPage />} />
               <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
+              <Route path="/cooperative/qrcodes" element={<QRCodeGenerator />} />
             </Routes>
           </BrowserRouter>
           <Toaster />
