@@ -69,13 +69,20 @@ Un dashboard complet pour les producteurs permettant de suivre leurs revenus car
 
 ---
 
-### APK Mobile v1.5.0 - ✅ BUILD COMPLETED
-**Download URL**: https://expo.dev/artifacts/eas/cw8BYberdCHpKfrSjY5XPB.apk
+### APK Mobile v1.6.0 - ✅ BUILD COMPLETED
+**Download URL**: https://expo.dev/artifacts/eas/b1cyGikPYLV8WETeBuSq6w.apk
 
-**Nouvelles fonctionnalités v1.5.0:**
-- Menu Actions Rapides "+" avec grille de fonctionnalités
+**Nouvelles fonctionnalités v1.6.0:**
+- Menu Actions Rapides "+" avec grille de 8 fonctionnalités
 - Écran d'activation compte membre coopérative
+- Dashboard paiements carbone complet
+- Écran notifications amélioré avec filtres et icônes
 - Notification push de bienvenue avec tutoriel
+
+---
+
+### APK Mobile v1.5.0 (Précédent)
+**Download URL**: https://expo.dev/artifacts/eas/cw8BYberdCHpKfrSjY5XPB.apk
 
 ---
 
