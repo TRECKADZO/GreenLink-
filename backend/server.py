@@ -102,6 +102,7 @@ app.include_router(subscriptions.router)
 app.include_router(carbon_sales.router)
 app.include_router(billing.router)
 app.include_router(sms.router)
+app.include_router(premium_analytics.router)
 
 app.add_middleware(
     CORSMiddleware,
