@@ -172,7 +172,7 @@ async def download_farmer_qr_code(
     Télécharger le QR code d'un producteur (PNG haute qualité)
     """
     # Vérifier que le producteur existe
-    farmer = await db.users.find_one({"_id": ObjectId(farmer_id), "user_type": "farmer"})
+    farmer = await db.users.find_one({"_id": ObjectId(farmer_id), "user_type": {"$in": ["farmer", "producteur"]}})
     if not farmer:
         farmer = await db.coop_members.find_one({"_id": ObjectId(farmer_id)})
     
@@ -208,7 +208,7 @@ async def get_farmer_card_data(
     """
     Obtenir les données complètes pour une carte producteur avec QR code
     """
-    farmer = await db.users.find_one({"_id": ObjectId(farmer_id), "user_type": "farmer"})
+    farmer = await db.users.find_one({"_id": ObjectId(farmer_id), "user_type": {"$in": ["farmer", "producteur"]}})
     if not farmer:
         farmer = await db.coop_members.find_one({"_id": ObjectId(farmer_id)})
     
@@ -272,7 +272,7 @@ async def get_cooperative_members_qr_codes(
     members = []
     
     # From users collection
-    farmers = await db.users.find({**query, "user_type": "farmer"}).skip(skip).limit(limit).to_list(limit)
+    farmers = await db.users.find({**query, "user_type": {"$in": ["farmer", "producteur"]}}).skip(skip).limit(limit).to_list(limit)
     for f in farmers:
         members.append({
             "id": str(f["_id"]),
@@ -309,7 +309,7 @@ async def get_cooperative_members_qr_codes(
             "qr_code": f"data:image/png;base64,{qr_base64}"
         })
     
-    total_farmers = await db.users.count_documents({**query, "user_type": "farmer"})
+    total_farmers = await db.users.count_documents({**query, "user_type": {"$in": ["farmer", "producteur"]}})
     total_members = await db.coop_members.count_documents(query)
     
     return {
