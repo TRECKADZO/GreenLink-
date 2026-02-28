@@ -2,7 +2,7 @@
   "expo": {
     "name": "GreenLink Farmer",
     "slug": "greenlink-farmer",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,10 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.greenlink.farmer"
+      "bundleIdentifier": "com.greenlink.farmer",
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,20 +29,55 @@
       "permissions": [
         "CAMERA",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
-      ]
+        "ACCESS_FINE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#2d5a4d",
+          "sounds": ["./assets/notification.wav"]
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "GreenLink a besoin de votre position pour localiser vos parcelles."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "GreenLink a besoin d'accéder à la caméra pour photographier vos parcelles."
+        }
+      ]
     ],
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#2d5a4d",
+      "androidMode": "default",
+      "androidCollapsedTitle": "GreenLink"
+    },
     "extra": {
       "eas": {
         "projectId": "69cdf51e-6916-433e-99ed-bfdc2e852057"
       }
     },
-    "owner": "treckadzo"
+    "owner": "treckadzo",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/69cdf51e-6916-433e-99ed-bfdc2e852057"
+    }
   }
 }
