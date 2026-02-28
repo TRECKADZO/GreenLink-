@@ -106,6 +106,7 @@ function App() {
               <Route path="/admin/strategic" element={<SuperAdminDashboard />} />
               <Route path="/admin/carbon-business" element={<CarbonBusinessDashboard />} />
               <Route path="/admin/billing" element={<BillingDashboard />} />
+              <Route path="/admin/premium-analytics" element={<PremiumAnalyticsDashboard />} />
 
               {/* Cooperative Routes */}
               <Route path="/cooperative/dashboard" element={<CooperativeDashboard />} />
