@@ -8,9 +8,9 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 import logging
 
-from ..database import get_db
-from ..auth import get_current_user
-from ..services.fcm_service import (
+from database import db
+from routes.auth import get_current_user
+from services.fcm_service import (
     fcm_service,
     send_notification_to_user,
     notify_members_premium_available,
