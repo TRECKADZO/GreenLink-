@@ -1,62 +1,83 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to create a pixel-perfect clone of . This evolved into building a multi-persona agritech platform for Côte d'Ivoire.
+The user's initial request was to build a multi-persona agritech platform for Côte d'Ivoire, inspired by .
 
-During this session, the user's requests included:
-1.  Implement a billing and payment tracking module for the Super Admin.
-2.  Fix various login and account creation errors on both web and mobile platforms.
-3.  Add a welcome/landing page to the mobile application.
-4.  Enhance mobile registration with clickable links for legal documents and a show/hide password feature.
-5.  Implement a comprehensive, monetizable analytics dashboard for the Super Admin based on a detailed prompt.
-6.  Expand the list of cocoa-producing departments to all 51 regions of Côte d'Ivoire and integrate this list into the web and mobile registration forms.
-7.  Generate multiple new APKs for the mobile app with the requested fixes and features.
-8.  Analyze official documents to identify and implement new strategic metrics and features.
+During this session, the user's requests evolved significantly based on the analysis of two official documents ( and a government report on production zones). The core tasks were:
+1.  Analyze the provided PDFs to extract strategic data and insights.
+2.  Implement a new, comprehensive analytics dashboard for the Super Admin based on the analysis (the ICI Dashboard).
+3.  Modify the platform to collect the necessary data from users (producers) to power these new analytics.
+4.  Integrate this new data collection into the web and mobile registration forms, as well as the producer's profile page.
+5.  Create a dashboard for Cooperatives to perform and log field visits for the Child Labor Monitoring and Remediation System (SSRTE), including an offline mode.
+6.  Build a comparative dashboard for the Super Admin to rank and compare cooperative performance.
+7.  Implement data export (CSV/JSON) functionalities for the new analytics.
+8.  Generate a new mobile APK () including all the new features.
+9.  Begin implementation of push notifications, automated PDF reports, and a real-time dashboard.
 
 **User's preferred language**: French
 
 **what currently exists?**
-The project is a full-stack application with a React frontend, FastAPI backend, and a production MongoDB Atlas database.
-*   **Web App**: Supports multiple user profiles with authentication. It now features an e-commerce marketplace, a carbon credit dashboard, a detailed FAQ page, a Forgot Password flow, a pricing section, a complete billing and invoicing module for the Super Admin, and a new Premium Analytics dashboard. The user registration form now includes a dropdown to select from all 51 cocoa-producing departments in Côte d'Ivoire.
-*   **Mobile App (React Native)**: Supports Farmer and Cooperative profiles. It now features a new welcome screen shown before login, a professional bottom tab bar, cooperative management tools, PDF report downloads, a Forgot Password flow, and push notification capabilities. The login and registration screens have been enhanced with a show/hide password toggle, clickable modal links for legal documents, and a dropdown for department selection.
-*   **Backend**: Provides robust APIs for all application features. It now includes extensive new logic and endpoints for the billing module (), the premium analytics module (), and a metadata endpoint to serve the list of departments (). A mocked SMS OTP service has also been added for future integration.
+The full-stack application (React/FastAPI/MongoDB) has been significantly enhanced with a suite of features derived from the International Cocoa Initiative (ICI) reports.
+*   **Backend**: The backend now includes several new API modules:
+    *   : Serves aggregated data for the new strategic dashboards.
+    *   : Manages the creation and updating of detailed ICI Profiles for producers and generates risk-based alerts. Includes a fix for handling department names with and without accents.
+    *   : Handles data exports (CSV, JSON) and provides data for inter-cooperative comparisons.
+    *   , : Placeholder files for upcoming features.
+    The  and  models have been updated to capture new household data points (gender, birth year, education level, etc.) during registration and profile updates.
+*   **Frontend (Web)**:
+    *   **Super Admin**: Has access to several new dashboards:
+        *   : Visualizes high-level strategic data from the ICI reports across four tabs (Key Metrics, Risk Zones, Social Impact, Due Diligence).
+        *   : A real-time center for viewing high-risk alerts, tracking producer profiles, and exporting data.
+        *   : A leaderboard to compare and rank cooperatives on key performance indicators.
+    *   **Cooperative**: Has a new  dashboard to log field monitoring visits. This page features an **offline mode** using  to allow data entry without an internet connection, with a button to sync later.
+    *   **Producer**: The registration form () and profile page () now include an optional section to collect key household information, which directly feeds the ICI analytics.
+*   **Mobile App (React Native)**:
+    *   The registration screen () for producers has been updated to include the same optional household data collection fields as the web app.
+    *   A new APK, **v1.3.0**, has been successfully built and the download link was provided.
 
 **Last working item**:
-- Last item agent was working: The user uploaded two PDF documents ( and ) and asked the agent to analyze them to extract strategic data and insights for implementation as new metrics or features. The agent acknowledged the request and began the analysis.
+- Last item agent was working: The user requested the implementation of three backlog items: automatic PDF reports, a real-time dashboard with WebSockets, and a native mobile app for field agents. The agent started this task by creating the necessary backend placeholder files:  and . The implementation of the logic inside these files has not started.
 - Status: 
 - Agent Testing Done: 
-- Which testing method agent to use? This will be a full-stack feature. After identifying features, the agent should use  to test any new backend API endpoints and the  tool to visually verify new frontend components or dashboards. For a large set of new metrics, using the  would be appropriate.
+- Which testing method agent to use? For the PDF reports, use  to trigger the generation and check for the file. For the WebSocket dashboard, use the  tool to verify the real-time updates on the frontend.
 - User Testing Done: 
 
 **All Pending/In progress Issue list**:
-There are no pending issues. All user-reported bugs from this session (related to web/mobile authentication and UI) have been investigated and resolved.
+There are no pending or in-progress issues.
 
 **In progress Task List**:
--   **Task 1: (P0) Implement New Features/Metrics from PDF Analysis**
-    -   **Where to resume**: The agent has started analyzing the provided PDF documents. The next step is to complete the analysis, synthesize the findings, and propose a concrete implementation plan to the user. This will likely involve creating new backend endpoints for the extracted metrics and building new frontend components for the Super Admin dashboard to visualize them.
-    -   **What will be achieved with this?**: This will significantly enhance the platform's value by incorporating official data and insights from governmental and international industry reports, making the analytics more robust, credible, and valuable for institutional stakeholders.
+-   **Task 1: (P0) Implement Final Backlog Features**
+    -   **Where to resume**: The agent has created  and . The next steps are:
+        1.  Implement the logic in  using a library like  to generate PDF reports from the analytics data.
+        2.  Implement the WebSocket logic in  and connect it to the frontend to create a real-time dashboard (e.g., for alerts).
+        3.  Clarify requirements for the native mobile app for field agents and plan its implementation.
+    -   **What will be achieved with this?**: This will complete the user's requested features for this development cycle, adding advanced reporting, real-time monitoring, and potentially a dedicated tool for field operations.
     -   **Status**: 
     -   **Should Test frontend/backend/both after fix?**: Both
     -   **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - (P1) **Real USSD/SMS Integration**: Replace the current mocked USSD/SMS OTP system () with a live integration using a provider like Orange API to support users without smartphone access.
-    - (P1) **Finalize and Verify Order Tracking**: The backend routes () and frontend UI () for order tracking exist and have been connected. This feature needs to be fully tested and integrated into the user flow (e.g., linked from a user's order history page).
+    - (P1) **Push Notifications for Critical Alerts**: Implement the logic to send push notifications to admins/cooperatives when a critical ICI alert is generated. The backend placeholder for this exists.
 
 - **Future Tasks:**
-    - (P2) **Enhanced Analytics & Data Export**: While a significant Premium Analytics dashboard was added, further enhancements like data export (CSV/PDF) and more granular filtering could be implemented.
-    - (P2) **Refactor Backend Routes**: Continue breaking down the monolithic  into smaller, more manageable modules based on functionality. The recent addition of new route files is a good start.
+    - (P2) **Real USSD/SMS Integration**: Replace the current mocked USSD/SMS OTP system.
+    - (P2) **Finalize and Verify Order Tracking**: The feature exists but needs full end-to-end testing and integration into the user journey.
+    - (P2) **Synchronization Offline for SSRTE Mobile**: Implement the offline capabilities, currently on the web cooperative dashboard, for the mobile app for field agents.
+    - (P2) **Refactor Backend Routes**: Continue modularizing the backend code.
 
 **Completed work in this session**
-- **Billing & Invoicing Module**: Implemented a complete billing module for the Super Admin, including backend APIs for invoice/payment management and a functional frontend dashboard.
-- **Premium Analytics Dashboard**: Implemented a new dashboard with 10 advanced, monetizable analytics for the Super Admin, based on a detailed user prompt.
-- **Department Data Integration**: Expanded the list of cocoa-producing departments to all 51 and integrated it as a dropdown in both web and mobile registration forms via a new API endpoint.
-- **Mobile App Enhancements (v1.2.3)**:
-    - Added a new  that appears before login.
-    - Implemented a show/hide password feature on  and .
-    - Made legal document links clickable (opening modals) on .
-    - Updated UI content (replaced an emoji, removed a stats section).
-    - Successfully generated and provided the link for the new APK (, build ).
-- **Authentication Bug Fixes**: Diagnosed and resolved multiple user-reported login and registration issues on both web and mobile. Issues were traced to user-side problems (cache, forgotten password, existing account) and a minor frontend component conflict, all of which were fixed or clarified.
+- **ICI Strategic Analytics**: Analyzed official documents and implemented a multi-tab analytics dashboard () for the Super Admin.
+- **ICI Data Collection & Alerts**:
+    - Integrated optional household data collection into the web (, ) and mobile () forms for producers.
+    - Created an automated system to create ICI Profiles from this data, calculate risk scores based on department, and generate alerts.
+    - Built an  to view and manage these alerts and track metrics in real-time.
+- **Cooperative SSRTE Dashboard**:
+    - Developed a dashboard () for cooperatives to log field monitoring visits.
+    - Implemented an **offline-first capability** for this dashboard, allowing data to be saved locally and synced later.
+- **Comparative & Export Features**:
+    - Created a  to rank cooperatives.
+    - Added functionality to export alerts, visits, and profiles as CSV/JSON from the .
+- **Bug Fix**: Fixed a bug in the risk classification logic by normalizing strings to handle accents correctly ().
+- **Mobile App v1.3.0**: Successfully built and delivered the APK for the mobile app, which includes the new data collection features.
 
 **Earlier issues found/mentioned but not fixed**
 None.
@@ -68,58 +89,59 @@ N/A
 
 
 **Key Technical Concepts**
-- **Full-stack Feature Development**: Adding complete features from backend API (FastAPI) to frontend UI (React, React Native).
-- **Mobile Development (React Native/Expo)**: Creating new screens, modifying existing ones, managing stack navigation, installing dependencies (), and running builds with EAS CLI.
-- **API-Driven UI**: Populating frontend components, like the department selection dropdowns, with data fetched from backend APIs.
-- **User-Centric Debugging**: Diagnosing issues that are specific to a user's environment by guiding them through client-side checks (cache, console) and cross-referencing with backend data.
+- **Data-Driven Feature Development**: Analyzing external documents (PDFs) to define and implement core application features.
+- **Full-Stack Implementation**: Building features end-to-end, from backend models and APIs (FastAPI) to frontend components (React, React Native).
+- **Offline-First Functionality**: Using  and state management in React to allow users to work without an internet connection and sync data later.
+- **Data Normalization**: Cleaning input data (e.g., removing accents from strings) to prevent logic errors during comparisons.
+- **Background Tasks**: Initiating long-running processes like the mobile app build () while continuing with other development tasks.
 
 **key DB schema**
-- ****: 
-- ****: 
-- ****: 
-- ****: Schema updated to include  on registration.
+- ****: Schema updated to include optional ICI-related fields: , , , , .
+- **** (New, implicit collection): 
+- **** (New, implicit collection): 
+- **** (New, implicit collection): 
 
 **changes in tech stack**
-- : Added to the mobile app for dropdown components.
+- : Installed in the backend to handle string normalization (removing accents).
+- : Installed in the backend for the upcoming PDF generation task.
 
 **All files of reference**
-- : New backend logic for advanced analytics.
-- : New endpoint for serving metadata like department lists.
-- : New frontend dashboard for analytics.
-- : Updated web registration form.
-- : New mobile landing page.
+- : Backend logic for the ICI strategic dashboard.
+- : Core logic for creating profiles, calculating risk, and generating alerts.
+- : Frontend for the alerts center.
+- : Frontend for the offline-capable SSRTE field visit form.
+- : Updated web registration form with ICI fields.
 - : Updated mobile registration screen.
-- : Updated with completed tasks.
+- : Updated with all completed features and the new backlog.
 
 **Critical Info for New Agent**
-- **User Environment Issues**: The user frequently reports authentication issues that are not reproducible in the agent's environment. Before assuming a code bug, guide the user to perform client-side checks (clear cache, check browser console, confirm credentials) as the root cause is often on their end.
-- **Mobile Build Process**: Changes to the mobile app require generating a new APK using the  command. This process takes 10-15 minutes. The agent can work on other tasks while waiting for the build to complete. The latest version is  (build ).
-- **Prioritize PDF Analysis**: The user's latest and most important request is to extract actionable features and metrics from the two provided PDF documents. This should be the immediate focus.
+- **Data Flow is Automated**: The new analytics are not static. Data entered by producers during web/mobile registration or profile updates automatically creates/updates their ICI Profile, recalculates risk scores, feeds the dashboards, and can trigger alerts. This is a core loop of the new system.
+- **Accent-Insensitive Matching**: When working with department or location names, ensure comparisons are robust against accents. The  library was used in  for this purpose and this pattern should be followed.
+- **User Is Driving the Roadmap**: The user is very hands-on and provides clear, multi-step backlogs. The current  and  are directly from their latest messages.
 
 **documents and test reports created in this job**
-- 
 -  (Updated)
 -  (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Analyze these two PDF documents and implement valuable metrics/features based on them. (IN PROGRESS)
-2.  **User**: Add the department list to the registration dropdowns. (Completed)
-3.  **User**: Complete the list of cocoa-producing departments. (Completed)
-4.  **User**: Analyze a detailed prompt and implement 10 advanced analytics for the super admin. (Completed)
-5.  **User**: Change a UI image, add show/hide password to mobile, and asked if a feature was active. (Completed)
-6.  **User**: Reported an account creation error with a screenshot. (Completed - agent found the account was already created).
-7.  **User**: Reported a login failure in deployment with a screenshot. (Completed - agent diagnosed it as a forgotten password and reset it).
-8.  **User**: Requested removal of UI elements from the mobile app and reported login/signup errors. (Completed)
-9.  **User**: Requested a new welcome screen for the mobile app. (Completed)
-10. **User**: Reported that login/signup buttons were not working in production/incognito. (Completed - agent could not reproduce, likely a user-side issue).
+1.  **User**: Defined the next backlog: Automatic PDF reports, real-time WebSocket dashboard, and a native mobile app for field agents. (IN PROGRESS)
+2.  **User**: Acknowledged the work done and confirmed the next priorities.
+3.  **User**: Confirmed the plan and provided the final backlog items (push notifications, PDF export, etc.). (Completed)
+4.  **User**: Acknowledged the SSRTE dashboard.
+5.  **User**: Acknowledged the APK link and instructed to start on the cooperative SSRTE dashboard. (Completed)
+6.  **User**: Confirmed the plan to build the APK and work on the producer profile page. (Completed)
+7.  **User**: Acknowledged the mobile form and requested the producer profile page be updated, and provided a backlog (SSRTE dashboard, push notifications, export). (Completed)
+8.  **User**: Acknowledged the work done and confirmed the next steps.
+9.  **User**: Acknowledged the ICI alerts dashboard and requested the simplified data collection be integrated into registration/profile pages. (Completed)
+10. **User**: Acknowledged the initial ICI dashboard and asked the agent to modify the app to collect the necessary data to power the new metrics. (Completed)
 
 **Project Health Check:**
 - **Broken**: None.
 - **Mocked/Simulated**:
     - Farmer's USSD interface.
-    - SMS/Email notifications (A mocked API now exists at ).
+    - SMS/Email notifications (though a push notification system is now in the backlog).
     - Orange Money payments.
-- **Healthy**: The web application, mobile application, backend services, billing module, and analytics dashboards are all functional.
+- **Healthy**: The entire web application, including the new ICI analytics suite, data collection forms, cooperative tools, and offline features, is functional. The mobile app (v1.3.0) is built and contains the latest registration updates.
 
 **3rd Party Integrations**
 - **Expo / EAS**: Core framework and build service for the React Native mobile app.
@@ -127,17 +149,19 @@ N/A
 - **MongoDB Atlas**: The primary production database.
 - **React Navigation**: Used for routing in the mobile app.
 - **@react-native-picker/picker**: Used for dropdowns in the mobile app.
+- **unidecode**: Python library for string normalization in the backend.
+- **reportlab**: Python library for PDF generation in the backend.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES, for the billing module.
+- **Testing agent used after significant changes**: NO, agent performed extensive self-testing.
 - **Troubleshoot agent used after agent stuck in loop**: NO.
-- **Test files created**: 
+- **Test files created**: None.
 - **Known regressions**: None.
 
 **Credentials to test flow:**
 - **Super Admin**:  / 
 - **Cooperative**:  / 
-- **Buyer**:  / 
+- **Producer (with ICI data)**:  / 
 
 **What agent forgot to execute**
-The agent started the analysis of the two PDF files provided by the user but did not finish extracting all potential features or proposing a concrete implementation plan. This is the main task to be resumed.</analysis>
+The agent correctly identified the user's final set of requests and created placeholder files (, ) but did not have time to implement the actual logic for PDF generation or WebSocket communication. This is the main handoff point to the next agent.</analysis>
