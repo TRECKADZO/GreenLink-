@@ -42,6 +42,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 @router.post("/register", response_model=Token)
 async def register(user_data: UserCreate):
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"[REGISTER] Attempting registration for phone: {user_data.phone_number}, email: {user_data.email}")
+    
     # Check if user already exists (by phone or email)
     query = []
     if user_data.phone_number:
@@ -51,7 +56,9 @@ async def register(user_data: UserCreate):
     
     if query:
         existing_user = await db.users.find_one({"$or": query})
+        logger.info(f"[REGISTER] Existing user check result: {existing_user is not None}")
         if existing_user:
+            logger.info(f"[REGISTER] Found existing user with phone: {existing_user.get('phone_number')}, email: {existing_user.get('email')}")
             if existing_user.get("phone_number") == user_data.phone_number:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
