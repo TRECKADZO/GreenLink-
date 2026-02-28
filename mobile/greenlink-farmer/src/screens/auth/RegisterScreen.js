@@ -99,8 +99,8 @@ const RegisterScreen = ({ navigation, route }) => {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Retour</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Welcome')}>
+          <Text style={styles.backButton}>← Accueil</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Créer un compte</Text>
         <Text style={styles.subtitle}>Rejoignez GreenLink</Text>
