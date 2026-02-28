@@ -355,6 +355,15 @@ yarn build:android
     - `/api/analytics/platform/overview`: Platform-wide stats (super admin)
     - Frontend page `/pages/supplier/Analytics.jsx`: Interactive analytics dashboard
 
+20. **Mobile Bottom Tab Navigation & Logout**
+    - Professional bottom navigation bar component `/src/components/navigation/BottomTabBar.js`
+    - MainLayout wrapper component for consistent app layout
+    - Tab configuration for Farmer and Cooperative user types
+    - 5 main tabs: Accueil, Parcelles/Membres, Action (central button), Paiements/Rapports, Profil
+    - Active tab indicator with icons and labels
+    - Logout functionality on both web (Navbar) and mobile (ProfileScreen)
+    - Safe area handling for iOS notch and Android navigation bar
+
 ## Recent Changes (December 2025) - Cooperative Profile
 11. **Coopérative agricole profile** - Complete agricultural cooperative management system
     - Backend routes in `/app/backend/routes/cooperative.py`
