@@ -332,17 +332,38 @@ const ReportsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Export Info */}
+        {/* Export Info & Actions */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
           <div className="flex items-start gap-3">
             <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div className="text-sm text-blue-800">
-              <p className="font-medium">Formats d'export disponibles</p>
+            <div className="flex-1 text-sm text-blue-800">
+              <p className="font-medium">Rapports disponibles</p>
               <p className="mt-1">
                 Les rapports peuvent être exportés en PDF (pour présentation) ou CSV (pour analyse). 
                 Ces documents sont conformes aux exigences de la réglementation EUDR pour la traçabilité 
                 des matières premières.
               </p>
+              <div className="flex gap-3 mt-4">
+                <Button 
+                  size="sm" 
+                  onClick={handleExportPDF} 
+                  disabled={exportingPDF}
+                  data-testid="export-eudr-pdf-btn"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  {exportingPDF ? 'Téléchargement...' : 'Rapport EUDR (PDF)'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={handleExportCarbonPDF} 
+                  disabled={exportingPDF}
+                  data-testid="export-carbon-pdf-btn"
+                >
+                  <Leaf className="h-4 w-4 mr-2" />
+                  Rapport Carbone (PDF)
+                </Button>
+              </div>
             </div>
           </div>
         </div>
