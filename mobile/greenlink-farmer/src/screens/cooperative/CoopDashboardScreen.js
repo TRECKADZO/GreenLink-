@@ -264,36 +264,8 @@ export default function CoopDashboardScreen({ navigation }) {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={() => {}}>
-          <Ionicons name="home" size={24} color={COLORS.primary} />
-          <Text style={[styles.navLabel, { color: COLORS.primary }]}>Accueil</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('CoopMembers')}
-        >
-          <Ionicons name="people-outline" size={24} color={COLORS.gray} />
-          <Text style={styles.navLabel}>Membres</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('CoopLots')}
-        >
-          <Ionicons name="layers-outline" size={24} color={COLORS.gray} />
-          <Text style={styles.navLabel}>Lots</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('CoopReports')}
-        >
-          <Ionicons name="document-text-outline" size={24} color={COLORS.gray} />
-          <Text style={styles.navLabel}>Rapports</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </MainLayout>
   );
 }
 
