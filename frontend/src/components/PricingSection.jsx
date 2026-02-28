@@ -111,7 +111,8 @@ const PricingSection = () => {
   useEffect(() => {
     const fetchPricingPlans = async () => {
       const data = await api.getPricingPlans();
-      if (data) {
+      // Only use API data if it has plans, otherwise keep mock
+      if (data && data.length > 0) {
         setPricingPlans(data);
       }
     };
