@@ -347,6 +347,179 @@ const Profile = () => {
                     disabled={!editing}
                   />
                 </div>
+
+                {/* ICI Data Section */}
+                <div className="mt-8 pt-6 border-t border-green-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users className="w-5 h-5 text-green-600" />
+                    <h3 className="text-lg font-semibold text-green-800">Informations du ménage (ICI)</h3>
+                    <Badge className="bg-green-100 text-green-700 text-xs">Pour le suivi ODD</Badge>
+                  </div>
+                  
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200 space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Département */}
+                      <div>
+                        <Label className="flex items-center gap-1 text-green-700">
+                          <MapPin className="w-3 h-3" />
+                          Département
+                        </Label>
+                        <Input
+                          placeholder="Ex: Soubré, Man, Daloa"
+                          value={formData.department}
+                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                          disabled={!editing}
+                          className="mt-1"
+                        />
+                      </div>
+
+                      {/* Village */}
+                      <div>
+                        <Label className="flex items-center gap-1 text-green-700">
+                          <MapPin className="w-3 h-3" />
+                          Village/Localité
+                        </Label>
+                        <Input
+                          placeholder="Nom du village"
+                          value={formData.village}
+                          onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+                          disabled={!editing}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Genre */}
+                      <div>
+                        <Label className="flex items-center gap-1 text-green-700">
+                          <User className="w-3 h-3" />
+                          Genre
+                        </Label>
+                        <select
+                          className="w-full mt-1 p-2 border rounded-md text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          value={formData.genre}
+                          onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                          disabled={!editing}
+                        >
+                          <option value="">-- Sélectionner --</option>
+                          <option value="homme">Homme</option>
+                          <option value="femme">Femme</option>
+                        </select>
+                      </div>
+
+                      {/* Année de naissance */}
+                      <div>
+                        <Label className="flex items-center gap-1 text-green-700">
+                          <Calendar className="w-3 h-3" />
+                          Année de naissance
+                        </Label>
+                        <select
+                          className="w-full mt-1 p-2 border rounded-md text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          value={formData.date_naissance}
+                          onChange={(e) => setFormData({ ...formData, date_naissance: e.target.value })}
+                          disabled={!editing}
+                        >
+                          <option value="">-- Sélectionner --</option>
+                          {Array.from({ length: 70 }, (_, i) => 2006 - i).map(year => (
+                            <option key={year} value={`${year}-01-01`}>{year}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-4">
+                      {/* Niveau d'éducation */}
+                      <div>
+                        <Label className="flex items-center gap-1 text-green-700">
+                          <GraduationCap className="w-3 h-3" />
+                          Niveau d'éducation
+                        </Label>
+                        <select
+                          className="w-full mt-1 p-2 border rounded-md text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          value={formData.niveau_education}
+                          onChange={(e) => setFormData({ ...formData, niveau_education: e.target.value })}
+                          disabled={!editing}
+                        >
+                          <option value="">-- Sélectionner --</option>
+                          <option value="aucun">Aucun</option>
+                          <option value="primaire">Primaire</option>
+                          <option value="secondaire">Secondaire</option>
+                          <option value="superieur">Supérieur</option>
+                        </select>
+                      </div>
+
+                      {/* Taille du ménage */}
+                      <div>
+                        <Label className="flex items-center gap-1 text-green-700">
+                          <Users className="w-3 h-3" />
+                          Taille du ménage
+                        </Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="20"
+                          placeholder="Ex: 5"
+                          value={formData.taille_menage}
+                          onChange={(e) => setFormData({ ...formData, taille_menage: e.target.value })}
+                          disabled={!editing}
+                          className="mt-1"
+                        />
+                      </div>
+
+                      {/* Nombre d'enfants */}
+                      <div>
+                        <Label className="flex items-center gap-1 text-green-700">
+                          <Baby className="w-3 h-3" />
+                          Enfants (&lt;18 ans)
+                        </Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="15"
+                          placeholder="Ex: 3"
+                          value={formData.nombre_enfants}
+                          onChange={(e) => setFormData({ ...formData, nombre_enfants: e.target.value })}
+                          disabled={!editing}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-green-700 bg-green-100 p-2 rounded">
+                      Ces informations permettent de suivre les indicateurs de développement durable (ODD) et d'améliorer l'accompagnement des producteurs.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ICI Risk Status */}
+                {iciProfile && iciProfile.zone_risque && (
+                  <div className="mt-4 p-4 rounded-lg border" style={{
+                    backgroundColor: iciProfile.zone_risque.niveau_risque === 'ÉLEVÉ' ? '#fef2f2' :
+                                    iciProfile.zone_risque.niveau_risque === 'MODÉRÉ' ? '#fffbeb' : '#f0fdf4',
+                    borderColor: iciProfile.zone_risque.niveau_risque === 'ÉLEVÉ' ? '#fecaca' :
+                                 iciProfile.zone_risque.niveau_risque === 'MODÉRÉ' ? '#fde68a' : '#bbf7d0'
+                  }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-gray-800">Classification ICI</h4>
+                        <p className="text-sm text-gray-600">
+                          Zone: {iciProfile.zone_risque.categorie?.replace('_', ' ').toUpperCase()}
+                        </p>
+                      </div>
+                      <Badge className={`${
+                        iciProfile.zone_risque.niveau_risque === 'ÉLEVÉ' ? 'bg-red-500' :
+                        iciProfile.zone_risque.niveau_risque === 'MODÉRÉ' ? 'bg-amber-500' :
+                        iciProfile.zone_risque.niveau_risque === 'FAIBLE' ? 'bg-green-500' : 'bg-gray-500'
+                      } text-white`}>
+                        Risque {iciProfile.zone_risque.niveau_risque}
+                      </Badge>
+                    </div>
+                    {iciProfile.risk_score !== undefined && (
+                      <p className="text-xs text-gray-500 mt-2">Score de risque: {iciProfile.risk_score}/100</p>
+                    )}
+                  </div>
+                )}
               </>
             )}
 
