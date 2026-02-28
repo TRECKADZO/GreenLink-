@@ -94,6 +94,7 @@ function AuthNavigator() {
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="MemberActivation" component={MemberActivationScreen} />
+      <Stack.Screen name="AgentActivation" component={AgentActivationScreen} />
     </Stack.Navigator>
   );
 }
