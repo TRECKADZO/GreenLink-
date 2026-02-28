@@ -54,6 +54,9 @@ import {
   CoopReportsScreen,
 } from './src/screens/cooperative';
 
+// Screens - Settings
+import { NotificationPreferencesScreen } from './src/screens/settings';
+
 import { Loader } from './src/components/UI';
 import BottomTabBar from './src/components/navigation/BottomTabBar';
 import { COLORS } from './src/config';
