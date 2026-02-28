@@ -312,6 +312,107 @@ const RegisterScreen = ({ navigation, route }) => {
           </View>
         </View>
 
+        {/* ICI Data Collection - Only for Producteurs */}
+        {formData.userType === 'producteur' && (
+          <View style={styles.iciSection}>
+            <Text style={styles.iciTitle}>📋 Informations du ménage</Text>
+            <Text style={styles.iciSubtitle}>Optionnel - Pour le suivi ICI</Text>
+            
+            {/* Village */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Village/Localité</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.village}
+                onChangeText={(text) => setFormData({ ...formData, village: text })}
+                placeholder="Nom du village"
+                placeholderTextColor={COLORS.gray[400]}
+              />
+            </View>
+
+            {/* Genre */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Genre</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={formData.genre}
+                  onValueChange={(value) => setFormData({ ...formData, genre: value })}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="-- Sélectionner --" value="" />
+                  <Picker.Item label="Homme" value="homme" />
+                  <Picker.Item label="Femme" value="femme" />
+                </Picker>
+              </View>
+            </View>
+
+            {/* Année de naissance */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Année de naissance</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={formData.anneeNaissance}
+                  onValueChange={(value) => setFormData({ ...formData, anneeNaissance: value })}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="-- Sélectionner --" value="" />
+                  {Array.from({ length: 70 }, (_, i) => 2006 - i).map(year => (
+                    <Picker.Item key={year} label={year.toString()} value={`${year}-01-01`} />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+
+            {/* Niveau d'éducation */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Niveau d'éducation</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={formData.niveauEducation}
+                  onValueChange={(value) => setFormData({ ...formData, niveauEducation: value })}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="-- Sélectionner --" value="" />
+                  <Picker.Item label="Aucun" value="aucun" />
+                  <Picker.Item label="Primaire" value="primaire" />
+                  <Picker.Item label="Secondaire" value="secondaire" />
+                  <Picker.Item label="Supérieur" value="superieur" />
+                </Picker>
+              </View>
+            </View>
+
+            {/* Taille du ménage */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Taille du ménage</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.tailleMenage}
+                onChangeText={(text) => setFormData({ ...formData, tailleMenage: text })}
+                placeholder="Ex: 5"
+                placeholderTextColor={COLORS.gray[400]}
+                keyboardType="number-pad"
+              />
+            </View>
+
+            {/* Nombre d'enfants */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Nombre d'enfants (&lt;18 ans)</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.nombreEnfants}
+                onChangeText={(text) => setFormData({ ...formData, nombreEnfants: text })}
+                placeholder="Ex: 3"
+                placeholderTextColor={COLORS.gray[400]}
+                keyboardType="number-pad"
+              />
+            </View>
+
+            <Text style={styles.iciInfo}>
+              Ces informations permettent de mieux vous accompagner et de suivre les indicateurs ODD.
+            </Text>
+          </View>
+        )}
+
         {/* Cooperative specific fields */}
         {formData.userType === 'cooperative' && (
           <>
