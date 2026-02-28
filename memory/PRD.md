@@ -390,3 +390,57 @@ yarn build:android
     - Export capabilities (CSV/PDF)
     - Period filters (month, quarter, year, all)
     - Dark theme professional design
+
+
+## Recent Changes (February 28, 2026) - Push Notifications System
+
+21. **Expo Push Notifications System** - ✅ COMPLETED
+    - Full push notification system using Expo Push Service
+    - Backend routes in `/app/backend/routes/notifications.py`
+    - Mobile service in `/app/mobile/greenlink-farmer/src/services/notifications.js`
+    
+    **Notification Types:**
+    - Primes carbone disponibles (quand une distribution est prête)
+    - Confirmations de paiement Orange Money
+    - Rappels hebdomadaires pour primes non récupérées
+    - Annonces de la coopérative
+    - Mises à jour parcelles/récoltes
+    
+    **Features:**
+    - Enregistrement automatique des appareils
+    - Préférences de notifications par utilisateur
+    - Historique des notifications
+    - Canaux Android (default, payments, reminders)
+    - Queue SMS pour membres sans smartphone
+    - Notification de test
+    
+    **API Endpoints:**
+    - `POST /api/notifications/register-device`: Enregistre un appareil
+    - `GET/PUT /api/notifications/preferences`: Gestion des préférences
+    - `GET /api/notifications/history`: Historique des notifications
+    - `POST /api/notifications/test`: Envoie une notification test
+    - `POST /api/notifications/send-to-all-members`: Notifie tous les membres (coop)
+    - `POST /api/notifications/trigger-weekly-reminders`: Lance les rappels (admin)
+    
+    **Mobile Screen:**
+    - `NotificationPreferencesScreen.js`: Écran de préférences avec toggles
+
+22. **Mobile App Version 1.1.0** - Ready for Production Build
+    - Updated `app.json` with notification plugins
+    - Updated `eas.json` for production build
+    - Created `BUILD_GUIDE.md` with build instructions
+    - Version bump: 1.0.0 → 1.1.0
+
+## Build Instructions
+
+### APK Production
+```bash
+cd /app/mobile/greenlink-farmer
+npx eas-cli login  # First time only
+npx eas-cli build --platform android --profile production
+```
+
+### OTA Updates (sans nouveau build)
+```bash
+npx eas-cli update --branch production --message "Description"
+```
