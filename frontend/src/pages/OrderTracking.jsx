@@ -1,252 +1,306 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useParams, Link } from 'react-router-dom';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import Navbar from '../components/Navbar';
-import { marketplaceApi } from '../services/marketplaceApi';
 import { 
-  Package, 
-  Truck, 
-  CheckCircle, 
-  Clock,
-  MapPin,
-  Phone,
-  ArrowLeft,
-  Box
+  Package, Truck, MapPin, CheckCircle, Clock, AlertCircle,
+  Phone, Navigation, Calendar, ArrowLeft, RefreshCw
 } from 'lucide-react';
+import { toast } from 'sonner';
+import axios from 'axios';
 
-const statusIcons = {
-  pending: Clock,
-  confirmed: Package,
-  processing: Box,
-  shipped: Truck,
-  delivered: CheckCircle
-};
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const OrderTracking = () => {
   const { orderId } = useParams();
-  const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
   const [tracking, setTracking] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    fetchTracking();
-  }, [user, authLoading, orderId]);
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return { Authorization: `Bearer ${token}` };
+  };
 
   const fetchTracking = async () => {
     try {
-      const data = await marketplaceApi.getOrderTracking(orderId);
-      setTracking(data);
+      setRefreshing(true);
+      const response = await axios.get(
+        `${API_URL}/api/tracking/orders/${orderId}`,
+        { headers: getAuthHeaders() }
+      );
+      setTracking(response.data);
     } catch (error) {
-      setError('Impossible de charger le suivi de commande');
       console.error('Error fetching tracking:', error);
+      toast.error('Impossible de charger le suivi');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return null;
-    return new Date(dateString).toLocaleString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  useEffect(() => {
+    if (orderId) {
+      fetchTracking();
+    }
+  }, [orderId]);
+
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: 'bg-yellow-500',
+      confirmed: 'bg-blue-500',
+      processing: 'bg-indigo-500',
+      shipped: 'bg-purple-500',
+      in_transit: 'bg-cyan-500',
+      out_for_delivery: 'bg-orange-500',
+      delivered: 'bg-green-500',
+      cancelled: 'bg-red-500'
+    };
+    return colors[status] || 'bg-gray-500';
+  };
+
+  const getStatusIcon = (status, completed, current) => {
+    if (completed && !current) {
+      return <CheckCircle className="w-6 h-6 text-green-500" />;
+    }
+    if (current) {
+      const icons = {
+        pending: <Clock className="w-6 h-6 text-yellow-500" />,
+        confirmed: <CheckCircle className="w-6 h-6 text-blue-500" />,
+        processing: <Package className="w-6 h-6 text-indigo-500" />,
+        shipped: <Truck className="w-6 h-6 text-purple-500" />,
+        in_transit: <Navigation className="w-6 h-6 text-cyan-500" />,
+        out_for_delivery: <Truck className="w-6 h-6 text-orange-500 animate-pulse" />,
+        delivered: <CheckCircle className="w-6 h-6 text-green-500" />
+      };
+      return icons[status] || <Clock className="w-6 h-6 text-gray-500" />;
+    }
+    return <div className="w-6 h-6 rounded-full border-2 border-gray-300" />;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="pt-24 pb-12 px-6">
-          <div className="max-w-3xl mx-auto">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/3 mb-8"></div>
-              <Card className="p-6">
-                <div className="space-y-6">
-                  {[1,2,3,4,5].map(i => (
-                    <div key={i} className="flex gap-4">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 text-[#2d5a4d] animate-spin mx-auto" />
+          <p className="mt-4 text-gray-600">Chargement du suivi...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !tracking) {
+  if (!tracking) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="pt-24 pb-12 px-6">
-          <div className="max-w-3xl mx-auto text-center">
-            <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {error || 'Commande non trouvée'}
-            </h1>
-            <Button onClick={() => navigate('/buyer/orders')} className="mt-4">
-              Voir mes commandes
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <Card className="max-w-md w-full p-8 text-center">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Commande introuvable</h2>
+          <p className="text-gray-600 mb-6">
+            Cette commande n'existe pas ou vous n'avez pas accès à ses informations.
+          </p>
+          <Link to="/">
+            <Button className="bg-[#2d5a4d] hover:bg-[#1a4038]">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour à l'accueil
             </Button>
-          </div>
-        </div>
+          </Link>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="pt-24 pb-12 px-6">
-        <div className="max-w-3xl mx-auto">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="mb-6"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <Link to="/" className="text-[#2d5a4d] hover:underline flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" />
             Retour
+          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchTracking}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Actualiser
           </Button>
+        </div>
 
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Truck className="w-8 h-8 text-[#2d5a4d]" />
-              <h1 className="text-3xl font-bold text-gray-900">Suivi de commande</h1>
+        {/* Order Info Card */}
+        <Card className="p-6 mb-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Commande #{tracking.order_number}
+              </h1>
+              <p className="text-gray-500 mt-1">
+                Créée le {new Date(tracking.created_at).toLocaleDateString('fr-FR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
             </div>
-            <p className="text-gray-600">
-              Commande <span className="font-mono font-semibold">#{tracking.order_number}</span>
-            </p>
+            <div className={`px-4 py-2 rounded-full text-white font-medium ${getStatusColor(tracking.status)}`}>
+              {tracking.timeline.find(t => t.current)?.label || tracking.status}
+            </div>
           </div>
 
-          {/* Timeline */}
-          <Card className="p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              État de la livraison
-            </h2>
-
-            <div className="relative">
-              {/* Progress Line */}
-              <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200">
-                <div 
-                  className="bg-[#2d5a4d] w-full transition-all duration-500"
-                  style={{ 
-                    height: `${(tracking.timeline.filter(t => t.completed).length - 1) / (tracking.timeline.length - 1) * 100}%` 
-                  }}
-                />
+          {/* Shipment Info */}
+          {tracking.shipment && tracking.shipment.carrier && (
+            <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Truck className="w-5 h-5 text-blue-600" />
+                <span className="font-medium text-blue-900">Informations d'expédition</span>
               </div>
-
-              <div className="space-y-8">
-                {tracking.timeline.map((step, index) => {
-                  const Icon = statusIcons[step.status] || Package;
-                  
-                  return (
-                    <div key={step.status} className="relative flex gap-4">
-                      {/* Icon */}
-                      <div 
-                        className={`
-                          relative z-10 w-10 h-10 rounded-full flex items-center justify-center
-                          transition-all duration-300
-                          ${step.completed 
-                            ? step.current 
-                              ? 'bg-[#2d5a4d] ring-4 ring-[#2d5a4d]/20' 
-                              : 'bg-[#2d5a4d]'
-                            : 'bg-gray-200'
-                          }
-                        `}
-                      >
-                        <Icon className={`w-5 h-5 ${step.completed ? 'text-white' : 'text-gray-400'}`} />
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 pb-2">
-                        <div className="flex items-center gap-3">
-                          <h3 className={`font-semibold ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
-                            {step.label}
-                          </h3>
-                          {step.current && (
-                            <Badge className="bg-[#d4a574] text-[#2d5a4d] animate-pulse">
-                              En cours
-                            </Badge>
-                          )}
-                        </div>
-                        <p className={`text-sm ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
-                          {step.description}
-                        </p>
-                        {step.timestamp && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {formatDate(step.timestamp)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-blue-700">Transporteur:</span>
+                  <span className="ml-2 font-medium text-blue-900">{tracking.shipment.carrier}</span>
+                </div>
+                <div>
+                  <span className="text-blue-700">N° suivi:</span>
+                  <span className="ml-2 font-medium text-blue-900">{tracking.shipment.tracking_number}</span>
+                </div>
+                {tracking.shipment.estimated_delivery && (
+                  <div className="col-span-2">
+                    <span className="text-blue-700">Livraison estimée:</span>
+                    <span className="ml-2 font-medium text-blue-900">{tracking.shipment.estimated_delivery}</span>
+                  </div>
+                )}
               </div>
             </div>
-          </Card>
+          )}
 
           {/* Delivery Info */}
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Informations de livraison
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-500">Adresse de livraison</p>
-                  <p className="font-medium text-gray-900">{tracking.delivery_address}</p>
-                </div>
+          {tracking.delivery && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="w-5 h-5 text-gray-600" />
+                <span className="font-medium text-gray-900">Adresse de livraison</span>
               </div>
-              
-              <div className="flex items-start gap-3">
-                <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-500">Téléphone</p>
-                  <p className="font-medium text-gray-900">{tracking.delivery_phone}</p>
-                </div>
-              </div>
-
-              {tracking.estimated_delivery && (
-                <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">Livraison estimée</p>
-                    <p className="font-medium text-gray-900">{formatDate(tracking.estimated_delivery)}</p>
-                  </div>
+              <p className="text-gray-700">{tracking.delivery.address}</p>
+              {tracking.delivery.city && (
+                <p className="text-gray-600">{tracking.delivery.city}</p>
+              )}
+              {tracking.delivery.phone && (
+                <div className="flex items-center gap-2 mt-2 text-gray-600">
+                  <Phone className="w-4 h-4" />
+                  {tracking.delivery.phone}
                 </div>
               )}
+              {tracking.delivery.instructions && (
+                <p className="mt-2 text-sm text-gray-500 italic">
+                  Instructions: {tracking.delivery.instructions}
+                </p>
+              )}
+            </div>
+          )}
+        </Card>
+
+        {/* Timeline */}
+        <Card className="p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Suivi de la commande</h2>
+          
+          <div className="relative">
+            {tracking.timeline.map((step, index) => (
+              <div key={step.status} className="flex items-start mb-8 last:mb-0">
+                {/* Line connector */}
+                {index < tracking.timeline.length - 1 && (
+                  <div 
+                    className={`absolute left-3 mt-8 w-0.5 h-16 ${
+                      step.completed ? 'bg-green-500' : 'bg-gray-200'
+                    }`}
+                    style={{ top: `${index * 80 + 24}px` }}
+                  />
+                )}
+                
+                {/* Icon */}
+                <div className="relative z-10 flex-shrink-0">
+                  {getStatusIcon(step.status, step.completed, step.current)}
+                </div>
+                
+                {/* Content */}
+                <div className="ml-4 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className={`font-medium ${
+                      step.completed ? 'text-gray-900' : 'text-gray-400'
+                    }`}>
+                      {step.label}
+                    </h3>
+                    {step.timestamp && (
+                      <span className="text-sm text-gray-500">
+                        {new Date(step.timestamp).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    )}
+                  </div>
+                  {step.location && (
+                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {step.location}
+                    </p>
+                  )}
+                  {step.current && !step.timestamp && (
+                    <p className="text-sm text-yellow-600 mt-1">En attente...</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Recent Events */}
+        {tracking.events && tracking.events.length > 0 && (
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Historique des mises à jour</h2>
+            <div className="space-y-4">
+              {tracking.events.slice(0, 10).map((event, index) => (
+                <div key={index} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
+                  <div className={`w-2 h-2 rounded-full mt-2 ${getStatusColor(event.status)}`} />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-900 capitalize">
+                        {event.status.replace(/_/g, ' ')}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {event.timestamp && new Date(event.timestamp).toLocaleString('fr-FR')}
+                      </span>
+                    </div>
+                    {event.note && (
+                      <p className="text-sm text-gray-600 mt-1">{event.note}</p>
+                    )}
+                    {event.location && (
+                      <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                        <MapPin className="w-3 h-3" />
+                        {event.location}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </Card>
+        )}
 
-          {/* Help */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-600 mb-2">Un problème avec votre commande?</p>
-            <Button variant="outline">
-              Contacter le support
-            </Button>
+        {/* Order Summary */}
+        <Card className="p-6 mt-6">
+          <div className="flex items-center justify-between text-gray-600">
+            <span>{tracking.items_count} article(s)</span>
+            <span className="text-xl font-bold text-[#2d5a4d]">
+              {tracking.total_amount?.toLocaleString()} FCFA
+            </span>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
