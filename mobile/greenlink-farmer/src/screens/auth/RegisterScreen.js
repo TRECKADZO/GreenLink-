@@ -129,6 +129,8 @@ const RegisterScreen = ({ navigation, route }) => {
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const handleRegister = async () => {
     // Validation
