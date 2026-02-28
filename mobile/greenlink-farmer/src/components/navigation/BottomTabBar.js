@@ -193,10 +193,15 @@ const AnimatedTab = ({ tab, isActive, onPress, badgeCount }) => {
   );
 };
 
-// Animated Main Button Component
-const AnimatedMainButton = ({ tab, onPress }) => {
+// Animated Main Button Component with Quick Actions Menu
+const AnimatedMainButton = ({ tab, onPress, userType }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
+  const [showMenu, setShowMenu] = useState(false);
+  const navigation = useNavigation();
+  const menuSlideAnim = useRef(new Animated.Value(0)).current;
+
+  const quickActions = QUICK_ACTIONS[userType] || QUICK_ACTIONS.farmer;
 
   const handlePress = () => {
     // Scale and rotate animation
@@ -228,35 +233,117 @@ const AnimatedMainButton = ({ tab, onPress }) => {
       ]),
     ]).start();
     
-    onPress();
+    setShowMenu(true);
   };
+
+  const handleCloseMenu = () => {
+    Animated.timing(menuSlideAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setShowMenu(false));
+  };
+
+  const handleActionPress = (actionName) => {
+    setShowMenu(false);
+    navigation.navigate(actionName);
+  };
+
+  useEffect(() => {
+    if (showMenu) {
+      Animated.spring(menuSlideAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 65,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showMenu]);
 
   const rotate = rotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '90deg'],
+    outputRange: ['0deg', '45deg'],
   });
 
   return (
-    <TouchableOpacity
-      style={styles.mainButton}
-      onPress={handlePress}
-      activeOpacity={1}
-    >
-      <Animated.View 
-        style={[
-          styles.mainButtonInner,
-          { 
-            transform: [
-              { scale: scaleAnim },
-              { rotate: rotate }
-            ] 
-          }
-        ]}
+    <>
+      <TouchableOpacity
+        style={styles.mainButton}
+        onPress={handlePress}
+        activeOpacity={1}
       >
-        <Ionicons name={tab.icon} size={28} color={COLORS.white} />
-      </Animated.View>
-      <Text style={styles.mainButtonLabel}>{tab.label}</Text>
-    </TouchableOpacity>
+        <Animated.View 
+          style={[
+            styles.mainButtonInner,
+            { 
+              transform: [
+                { scale: scaleAnim },
+                { rotate: rotate }
+              ] 
+            }
+          ]}
+        >
+          <Ionicons name={showMenu ? 'close' : tab.icon} size={28} color={COLORS.white} />
+        </Animated.View>
+        <Text style={styles.mainButtonLabel}>{tab.label}</Text>
+      </TouchableOpacity>
+
+      {/* Quick Actions Modal */}
+      <Modal
+        visible={showMenu}
+        transparent={true}
+        animationType="none"
+        onRequestClose={handleCloseMenu}
+      >
+        <TouchableOpacity 
+          style={styles.menuOverlay} 
+          activeOpacity={1} 
+          onPress={handleCloseMenu}
+        >
+          <Animated.View 
+            style={[
+              styles.menuContainer,
+              {
+                transform: [
+                  {
+                    translateY: menuSlideAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [300, 0],
+                    }),
+                  },
+                ],
+                opacity: menuSlideAnim,
+              },
+            ]}
+          >
+            <View style={styles.menuHeader}>
+              <Text style={styles.menuTitle}>Actions Rapides</Text>
+              <TouchableOpacity onPress={handleCloseMenu}>
+                <Ionicons name="close-circle" size={28} color={COLORS.gray[400]} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.menuGrid}>
+              {quickActions.map((action, index) => (
+                <TouchableOpacity
+                  key={action.name}
+                  style={styles.menuItem}
+                  onPress={() => handleActionPress(action.name)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.menuItemIcon, { backgroundColor: action.color + '20' }]}>
+                    <Ionicons name={action.icon} size={24} color={action.color} />
+                  </View>
+                  <Text style={styles.menuItemLabel} numberOfLines={2}>
+                    {action.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 };
 
