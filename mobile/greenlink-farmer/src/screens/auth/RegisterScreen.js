@@ -298,26 +298,42 @@ const RegisterScreen = ({ navigation, route }) => {
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Mot de passe *</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.password}
-            onChangeText={(text) => setFormData({ ...formData, password: text })}
-            placeholder="Minimum 6 caractères"
-            placeholderTextColor={COLORS.gray[400]}
-            secureTextEntry
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              value={formData.password}
+              onChangeText={(text) => setFormData({ ...formData, password: text })}
+              placeholder="Minimum 6 caractères"
+              placeholderTextColor={COLORS.gray[400]}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity 
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Confirmer le mot de passe *</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.confirmPassword}
-            onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-            placeholder="Confirmez votre mot de passe"
-            placeholderTextColor={COLORS.gray[400]}
-            secureTextEntry
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              value={formData.confirmPassword}
+              onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+              placeholder="Confirmez votre mot de passe"
+              placeholderTextColor={COLORS.gray[400]}
+              secureTextEntry={!showConfirmPassword}
+            />
+            <TouchableOpacity 
+              style={styles.eyeButton}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              <Text style={styles.eyeIcon}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Terms checkbox */}
