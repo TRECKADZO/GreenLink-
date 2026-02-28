@@ -57,6 +57,17 @@ class NotificationService {
         importance: Notifications.AndroidImportance.DEFAULT,
         description: 'Rappels hebdomadaires et notifications',
       });
+      
+      // Channel for critical ICI alerts
+      await Notifications.setNotificationChannelAsync('alerts', {
+        name: 'Alertes ICI',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 500, 200, 500, 200, 500],
+        lightColor: '#ef4444',
+        description: 'Alertes critiques du système SSRTE et ICI',
+        enableVibrate: true,
+        showBadge: true,
+      });
     }
 
     if (!Device.isDevice) {
