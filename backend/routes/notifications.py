@@ -11,12 +11,11 @@ import logging
 from database import db
 from routes.auth import get_current_user
 from services.fcm_service import (
-    fcm_service
-    send_notification_to_user
-    notify_members_premium_available
-    notify_payment_confirmed
-    notify_payment_pending
-    send_weekly_premium_reminders
+    fcm_service,
+    send_notification_to_user,
+    notify_payment_confirmed,
+    notify_payment_pending,
+    send_weekly_premium_reminders,
     notify_all_coop_members
 )
 
@@ -47,9 +46,8 @@ class BulkNotificationRequest(BaseModel):
 
 @router.post("/register-device")
 async def register_device(
-    registration: DeviceRegistration
+    registration: DeviceRegistration,
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Register a device for push notifications"""
     
@@ -63,13 +61,13 @@ async def register_device(
     if existing:
         # Update existing registration
         await db.device_tokens.update_one(
-            {"_id": existing["_id"]}
+            {"_id": existing["_id"]},
             {
                 "$set": {
-                    "user_id": user_id
-                    "platform": registration.platform
-                    "device_name": registration.device_name
-                    "is_active": True
+                    "user_id": user_id,
+                    "platform": registration.platform,
+                    "device_name": registration.device_name,
+                    "is_active": True,
                     "updated_at": datetime.utcnow()
                 }
             }
@@ -78,13 +76,13 @@ async def register_device(
     
     # Create new registration
     await db.device_tokens.insert_one({
-        "user_id": user_id
-        "push_token": registration.push_token
-        "platform": registration.platform
-        "device_name": registration.device_name
-        "is_active": True
-        "created_at": datetime.utcnow()
-        "updated_at": datetime.utcnow()
+        "user_id": user_id,
+        "push_token": registration.push_token,
+        "platform": registration.platform,
+        "device_name": registration.device_name,
+        "is_active": True,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
         "last_notification": None
     })
     
@@ -95,14 +93,13 @@ async def register_device(
 
 @router.delete("/unregister-device/{push_token}")
 async def unregister_device(
-    push_token: str
+    push_token: str,
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Unregister a device from push notifications"""
     
     result = await db.device_tokens.update_one(
-        {"push_token": push_token}
+        {"push_token": push_token},
         {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
     )
     
@@ -116,9 +113,8 @@ async def unregister_device(
 
 @router.get("/history")
 async def get_notification_history(
-    limit: int = 50
+    limit: int = 50,
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Get user's notification history"""
     
@@ -133,24 +129,23 @@ async def get_notification_history(
         notif["_id"] = str(notif["_id"])
     
     return {
-        "notifications": notifications
+        "notifications": notifications,
         "count": len(notifications)
     }
 
 
 @router.put("/history/{notification_id}/read")
 async def mark_notification_read(
-    notification_id: str
+    notification_id: str,
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Mark a notification as read"""
     
     result = await db.notification_history.update_one(
         {
-            "_id": ObjectId(notification_id)
+            "_id": ObjectId(notification_id),
             "user_id": str(current_user["_id"])
-        }
+        },
         {"$set": {"read": True, "read_at": datetime.utcnow()}}
     )
     
@@ -163,12 +158,11 @@ async def mark_notification_read(
 @router.put("/history/read-all")
 async def mark_all_notifications_read(
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Mark all notifications as read"""
     
     result = await db.notification_history.update_many(
-        {"user_id": str(current_user["_id"]), "read": False}
+        {"user_id": str(current_user["_id"]), "read": False},
         {"$set": {"read": True, "read_at": datetime.utcnow()}}
     )
     
@@ -179,10 +173,9 @@ async def mark_all_notifications_read(
 
 @router.post("/send-to-member/{member_id}")
 async def send_notification_to_member(
-    member_id: str
-    notification: NotificationRequest
+    member_id: str,
+    notification: NotificationRequest,
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Send a notification to a specific cooperative member (cooperative admin only)"""
     
@@ -201,33 +194,33 @@ async def send_notification_to_member(
     if not user:
         # Queue SMS instead
         await db.pending_sms_notifications.insert_one({
-            "phone_number": phone
-            "member_name": member.get("full_name", "")
-            "message": f"GreenLink: {notification.body[:160]}"
-            "type": "direct_message"
-            "created_at": datetime.utcnow()
+            "phone_number": phone,
+            "member_name": member.get("full_name", ""),
+            "message": f"GreenLink: {notification.body[:160]}",
+            "type": "direct_message",
+            "created_at": datetime.utcnow(),
             "status": "pending"
         })
         return {"success": True, "method": "sms_queued"}
     
     # Send push notification
     result = await send_notification_to_user(
-        db=db
-        user_id=str(user["_id"])
-        title=notification.title
-        body=notification.body
+        db=db,
+        user_id=str(user["_id"]),
+        title=notification.title,
+        body=notification.body,
         data=notification.data
     )
     
     # Log notification
     await db.notification_history.insert_one({
-        "user_id": str(user["_id"])
-        "title": notification.title
-        "body": notification.body
-        "data": notification.data
-        "type": "direct_message"
-        "sender_id": str(current_user["_id"])
-        "read": False
+        "user_id": str(user["_id"]),
+        "title": notification.title,
+        "body": notification.body,
+        "data": notification.data,
+        "type": "direct_message",
+        "sender_id": str(current_user["_id"]),
+        "read": False,
         "created_at": datetime.utcnow()
     })
     
@@ -236,10 +229,9 @@ async def send_notification_to_member(
 
 @router.post("/send-to-all-members")
 async def send_to_all_coop_members(
-    notification: BulkNotificationRequest
-    background_tasks: BackgroundTasks
+    notification: BulkNotificationRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Send a notification to all cooperative members (cooperative admin only)"""
     
@@ -255,10 +247,10 @@ async def send_to_all_coop_members(
     # Send notifications in background
     async def send_bulk():
         result = await notify_all_coop_members(
-            db=db
-            coop_id=coop_id
-            title=notification.title
-            body=notification.body
+            db=db,
+            coop_id=coop_id,
+            title=notification.title,
+            body=notification.body,
             data=notification.data
         )
         logger.info(f"Bulk notification result: {result}")
@@ -266,8 +258,8 @@ async def send_to_all_coop_members(
     background_tasks.add_task(send_bulk)
     
     return {
-        "success": True
-        "message": "Notifications en cours d'envoi"
+        "success": True,
+        "message": "Notifications en cours d'envoi",
         "coop_name": coop_name
     }
 
@@ -276,9 +268,8 @@ async def send_to_all_coop_members(
 
 @router.post("/trigger-weekly-reminders")
 async def trigger_weekly_reminders(
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user)
-    
 ):
     """
     Manually trigger weekly premium reminders (admin only)
@@ -295,7 +286,7 @@ async def trigger_weekly_reminders(
     background_tasks.add_task(run_reminders)
     
     return {
-        "success": True
+        "success": True,
         "message": "Rappels hebdomadaires lancés en arrière-plan"
     }
 
@@ -305,7 +296,6 @@ async def trigger_weekly_reminders(
 @router.get("/preferences")
 async def get_notification_preferences(
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Get user's notification preferences"""
     
@@ -316,25 +306,25 @@ async def get_notification_preferences(
     if not prefs:
         # Return default preferences
         return {
-            "premium_available": True
-            "payment_confirmed": True
-            "weekly_reminders": True
-            "coop_announcements": True
-            "harvest_updates": True
+            "premium_available": True,
+            "payment_confirmed": True,
+            "weekly_reminders": True,
+            "coop_announcements": True,
+            "harvest_updates": True,
             "marketing": False
         }
     
-    del prefs["_id"]
-    del prefs["user_id"]
+    # Remove internal fields
+    prefs.pop("_id", None)
+    prefs.pop("user_id", None)
     
     return prefs
 
 
 @router.put("/preferences")
 async def update_notification_preferences(
-    preferences: Dict[str, bool]
+    preferences: Dict[str, bool],
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Update user's notification preferences"""
     
@@ -342,7 +332,7 @@ async def update_notification_preferences(
     
     # Validate preference keys
     valid_keys = {
-        "premium_available", "payment_confirmed", "weekly_reminders"
+        "premium_available", "payment_confirmed", "weekly_reminders",
         "coop_announcements", "harvest_updates", "marketing"
     }
     
@@ -351,8 +341,8 @@ async def update_notification_preferences(
     filtered_prefs["updated_at"] = datetime.utcnow()
     
     await db.notification_preferences.update_one(
-        {"user_id": user_id}
-        {"$set": filtered_prefs}
+        {"user_id": user_id},
+        {"$set": filtered_prefs},
         upsert=True
     )
     
@@ -363,9 +353,8 @@ async def update_notification_preferences(
 
 @router.get("/pending-sms")
 async def get_pending_sms(
-    limit: int = 100
+    limit: int = 100,
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Get pending SMS notifications (admin/coop only) - for integration with SMS gateway"""
     
@@ -384,9 +373,8 @@ async def get_pending_sms(
 
 @router.put("/pending-sms/{sms_id}/mark-sent")
 async def mark_sms_sent(
-    sms_id: str
+    sms_id: str,
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Mark an SMS as sent (for SMS gateway integration)"""
     
@@ -394,10 +382,10 @@ async def mark_sms_sent(
         raise HTTPException(status_code=403, detail="Accès non autorisé")
     
     result = await db.pending_sms_notifications.update_one(
-        {"_id": ObjectId(sms_id)}
+        {"_id": ObjectId(sms_id)},
         {
             "$set": {
-                "status": "sent"
+                "status": "sent",
                 "sent_at": datetime.utcnow()
             }
         }
@@ -414,20 +402,19 @@ async def mark_sms_sent(
 @router.post("/test")
 async def send_test_notification(
     current_user: dict = Depends(get_current_user)
-    
 ):
     """Send a test notification to current user's devices"""
     
     user_id = str(current_user["_id"])
     
     result = await send_notification_to_user(
-        db=db
-        user_id=user_id
-        title="Test GreenLink 🌱"
-        body="Ceci est une notification de test. Si vous voyez ce message, les notifications fonctionnent!"
+        db=db,
+        user_id=user_id,
+        title="Test GreenLink 🌱",
+        body="Ceci est une notification de test. Si vous voyez ce message, les notifications fonctionnent!",
         data={
-            "type": "test"
-            "timestamp": datetime.utcnow().isoformat()
+            "type": "test",
+            "timestamp": datetime.utcnow().isoformat(),
             "screen": "Home"
         }
     )
