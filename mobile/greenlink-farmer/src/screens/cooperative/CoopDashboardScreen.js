@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { cooperativeApi } from '../../services/cooperativeApi';
 import { COLORS, FONTS } from '../../config';
 import { Loader } from '../../components/UI';
+import { MainLayout } from '../../components/navigation';
 
 const StatCard = ({ icon, value, label, color, onPress }) => (
   <TouchableOpacity
