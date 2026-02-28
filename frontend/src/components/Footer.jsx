@@ -91,6 +91,11 @@ const Footer = () => {
                     Sécurité
                   </Link>
                 </li>
+                <li>
+                  <Link to="/faq" className="text-white/80 hover:text-white text-sm transition-colors duration-300">
+                    FAQ
+                  </Link>
+                </li>
               </ul>
             </div>
             
