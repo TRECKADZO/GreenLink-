@@ -1,0 +1,395 @@
+# Dashboard spécifique pour les agents terrain
+# Statistiques, classement et suivi des performances
+
+from fastapi import APIRouter, HTTPException, Depends, Query
+from typing import Optional, List
+from datetime import datetime, timedelta
+from bson import ObjectId
+import logging
+
+from database import db
+from routes.auth import get_current_user
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/api/field-agent", tags=["Field Agent Dashboard"])
+
+
+def verify_field_agent(user: dict):
+    """Vérifie que l'utilisateur est un agent terrain"""
+    if user.get('user_type') not in ['field_agent', 'cooperative', 'admin']:
+        raise HTTPException(status_code=403, detail="Accès réservé aux agents terrain")
+
+
+@router.get("/dashboard")
+async def get_agent_dashboard(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Tableau de bord principal de l'agent terrain avec statistiques personnelles
+    """
+    verify_field_agent(current_user)
+    
+    user_id = str(current_user.get('_id'))
+    user_type = current_user.get('user_type')
+    
+    # Si c'est une coopérative ou admin, on récupère les stats globales
+    if user_type in ['cooperative', 'admin']:
+        return await get_coop_agents_overview(current_user)
+    
+    # Agent terrain - ses propres statistiques
+    coop_id = current_user.get('cooperative_id')
+    
+    # Récupérer les visites SSRTE de l'agent
+    ssrte_visits = await db.ssrte_visits.find({
+        "$or": [
+            {"agent_id": user_id},
+            {"recorded_by": user_id}
+        ]
+    }).to_list(500)
+    
+    # Statistiques des visites
+    total_visits = len(ssrte_visits)
+    visits_this_month = len([v for v in ssrte_visits if v.get('recorded_at', datetime.min) > datetime.utcnow() - timedelta(days=30)])
+    visits_this_week = len([v for v in ssrte_visits if v.get('recorded_at', datetime.min) > datetime.utcnow() - timedelta(days=7)])
+    
+    # Répartition par niveau de risque
+    risk_distribution = {
+        "critique": 0,
+        "eleve": 0,
+        "modere": 0,
+        "faible": 0
+    }
+    for v in ssrte_visits:
+        risk = v.get('niveau_risque', 'faible')
+        if risk in risk_distribution:
+            risk_distribution[risk] += 1
+    
+    # Enfants identifiés
+    children_identified = sum(v.get('enfants_observes_travaillant', 0) for v in ssrte_visits)
+    
+    # Photos géolocalisées
+    geotagged_photos = await db.geotagged_photos.count_documents({
+        "$or": [
+            {"agent_id": user_id},
+            {"uploaded_by": user_id}
+        ]
+    })
+    
+    # Membres enregistrés/onboardés
+    members_onboarded = await db.coop_members.count_documents({
+        "registered_by": user_id
+    })
+    
+    # Parcelles déclarées
+    parcels_declared = await db.parcels.count_documents({
+        "declared_by": user_id
+    })
+    
+    # QR codes scannés (logs de scans)
+    qr_scans = await db.qr_scan_logs.count_documents({
+        "scanned_by": user_id
+    })
+    
+    # Objectifs mensuels (configurable)
+    monthly_targets = {
+        "visits": 20,
+        "members": 10,
+        "parcels": 15,
+        "photos": 30
+    }
+    
+    # Calcul des progressions
+    progress = {
+        "visits": min(100, round(visits_this_month / monthly_targets["visits"] * 100)),
+        "members": min(100, round(members_onboarded / monthly_targets["members"] * 100)),
+        "parcels": min(100, round(parcels_declared / monthly_targets["parcels"] * 100)),
+        "photos": min(100, round(geotagged_photos / monthly_targets["photos"] * 100))
+    }
+    
+    # Score de performance global
+    performance_score = round((progress["visits"] + progress["members"] + progress["parcels"] + progress["photos"]) / 4)
+    
+    # Dernières activités
+    recent_visits = sorted(ssrte_visits, key=lambda x: x.get('recorded_at', datetime.min), reverse=True)[:5]
+    recent_activities = [
+        {
+            "type": "ssrte_visit",
+            "farmer_name": v.get('farmer_name', 'Producteur'),
+            "risk_level": v.get('niveau_risque'),
+            "children_count": v.get('enfants_observes_travaillant', 0),
+            "date": v.get('recorded_at')
+        }
+        for v in recent_visits
+    ]
+    
+    return {
+        "agent_info": {
+            "id": user_id,
+            "name": current_user.get('full_name'),
+            "zone": current_user.get('zone'),
+            "cooperative": current_user.get('cooperative_name'),
+            "cooperative_id": coop_id,
+            "activation_date": current_user.get('activation_date')
+        },
+        "performance": {
+            "score": performance_score,
+            "level": "Expert" if performance_score >= 80 else "Confirmé" if performance_score >= 50 else "Débutant",
+            "badge_color": "#10b981" if performance_score >= 80 else "#f59e0b" if performance_score >= 50 else "#6b7280"
+        },
+        "statistics": {
+            "ssrte_visits": {
+                "total": total_visits,
+                "this_month": visits_this_month,
+                "this_week": visits_this_week,
+                "target": monthly_targets["visits"],
+                "progress": progress["visits"]
+            },
+            "members_onboarded": {
+                "total": members_onboarded,
+                "target": monthly_targets["members"],
+                "progress": progress["members"]
+            },
+            "parcels_declared": {
+                "total": parcels_declared,
+                "target": monthly_targets["parcels"],
+                "progress": progress["parcels"]
+            },
+            "geotagged_photos": {
+                "total": geotagged_photos,
+                "target": monthly_targets["photos"],
+                "progress": progress["photos"]
+            },
+            "qr_scans": qr_scans,
+            "children_identified": children_identified
+        },
+        "risk_distribution": risk_distribution,
+        "recent_activities": recent_activities,
+        "achievements": get_achievements(total_visits, members_onboarded, parcels_declared, children_identified)
+    }
+
+
+def get_achievements(visits: int, members: int, parcels: int, children: int) -> list:
+    """Calcule les badges/achievements débloqués"""
+    achievements = []
+    
+    if visits >= 1:
+        achievements.append({"id": "first_visit", "name": "Première visite", "icon": "clipboard", "unlocked": True})
+    if visits >= 10:
+        achievements.append({"id": "10_visits", "name": "10 visites", "icon": "star", "unlocked": True})
+    if visits >= 50:
+        achievements.append({"id": "50_visits", "name": "50 visites", "icon": "trophy", "unlocked": True})
+    if visits >= 100:
+        achievements.append({"id": "100_visits", "name": "Centenaire", "icon": "medal", "unlocked": True})
+    
+    if members >= 5:
+        achievements.append({"id": "5_members", "name": "Recruteur", "icon": "people", "unlocked": True})
+    if members >= 20:
+        achievements.append({"id": "20_members", "name": "Super Recruteur", "icon": "person-add", "unlocked": True})
+    
+    if children >= 1:
+        achievements.append({"id": "child_protector", "name": "Protecteur", "icon": "shield", "unlocked": True})
+    if children >= 10:
+        achievements.append({"id": "guardian", "name": "Gardien", "icon": "shield-checkmark", "unlocked": True})
+    
+    return achievements
+
+
+async def get_coop_agents_overview(coop_user: dict):
+    """Vue d'ensemble des agents pour une coopérative"""
+    coop_id = coop_user.get('_id')
+    
+    # Récupérer tous les agents de la coopérative
+    agents = await db.coop_agents.find({"coop_id": coop_id}).to_list(100)
+    
+    agents_stats = []
+    for agent in agents:
+        agent_user_id = agent.get('user_id')
+        
+        # Statistiques de l'agent
+        visits_count = 0
+        if agent_user_id:
+            visits_count = await db.ssrte_visits.count_documents({
+                "$or": [
+                    {"agent_id": agent_user_id},
+                    {"recorded_by": agent_user_id}
+                ]
+            })
+        
+        agents_stats.append({
+            "id": str(agent['_id']),
+            "user_id": agent_user_id,
+            "name": agent.get('full_name'),
+            "phone": agent.get('phone_number'),
+            "zone": agent.get('zone'),
+            "is_active": agent.get('is_active', True),
+            "account_activated": agent.get('account_activated', False),
+            "ssrte_visits": visits_count,
+            "members_onboarded": agent.get('members_onboarded', 0),
+            "parcels_declared": agent.get('parcels_declared', 0)
+        })
+    
+    # Trier par nombre de visites
+    agents_stats.sort(key=lambda x: x['ssrte_visits'], reverse=True)
+    
+    # Statistiques globales
+    total_visits = sum(a['ssrte_visits'] for a in agents_stats)
+    total_members = sum(a['members_onboarded'] for a in agents_stats)
+    activated_agents = len([a for a in agents_stats if a['account_activated']])
+    
+    return {
+        "cooperative_info": {
+            "id": str(coop_id),
+            "name": coop_user.get('coop_name') or coop_user.get('full_name'),
+            "total_agents": len(agents)
+        },
+        "global_stats": {
+            "total_ssrte_visits": total_visits,
+            "total_members_onboarded": total_members,
+            "activated_agents": activated_agents,
+            "pending_activation": len(agents) - activated_agents
+        },
+        "agents_ranking": agents_stats[:10],
+        "all_agents": agents_stats
+    }
+
+
+@router.get("/leaderboard")
+async def get_agents_leaderboard(
+    period: str = Query(default="month", regex="^(week|month|all)$"),
+    limit: int = Query(default=10, ge=1, le=50),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Classement des agents terrain par performance
+    """
+    coop_id = current_user.get('cooperative_id') or str(current_user.get('_id'))
+    
+    # Période de filtrage
+    date_filter = {}
+    if period == "week":
+        date_filter = {"recorded_at": {"$gte": datetime.utcnow() - timedelta(days=7)}}
+    elif period == "month":
+        date_filter = {"recorded_at": {"$gte": datetime.utcnow() - timedelta(days=30)}}
+    
+    # Agrégation des visites par agent
+    pipeline = [
+        {"$match": {**date_filter, "cooperative_id": coop_id}},
+        {"$group": {
+            "_id": "$agent_id",
+            "visits_count": {"$sum": 1},
+            "children_identified": {"$sum": "$enfants_observes_travaillant"},
+            "critical_visits": {"$sum": {"$cond": [{"$eq": ["$niveau_risque", "critique"]}, 1, 0]}}
+        }},
+        {"$sort": {"visits_count": -1}},
+        {"$limit": limit}
+    ]
+    
+    results = await db.ssrte_visits.aggregate(pipeline).to_list(limit)
+    
+    # Enrichir avec les infos des agents
+    leaderboard = []
+    for i, result in enumerate(results):
+        agent_id = result['_id']
+        if agent_id:
+            agent = await db.users.find_one({"_id": ObjectId(agent_id)})
+            if agent:
+                leaderboard.append({
+                    "rank": i + 1,
+                    "agent_id": agent_id,
+                    "name": agent.get('full_name', 'Agent'),
+                    "zone": agent.get('zone'),
+                    "visits_count": result['visits_count'],
+                    "children_identified": result['children_identified'],
+                    "critical_visits": result['critical_visits'],
+                    "score": result['visits_count'] * 10 + result['children_identified'] * 5 + result['critical_visits'] * 20
+                })
+    
+    return {
+        "period": period,
+        "leaderboard": leaderboard,
+        "updated_at": datetime.utcnow().isoformat()
+    }
+
+
+@router.get("/my-visits")
+async def get_my_visits(
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, le=100),
+    risk_level: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Historique des visites SSRTE de l'agent
+    """
+    verify_field_agent(current_user)
+    user_id = str(current_user.get('_id'))
+    
+    query = {
+        "$or": [
+            {"agent_id": user_id},
+            {"recorded_by": user_id}
+        ]
+    }
+    
+    if risk_level:
+        query["niveau_risque"] = risk_level
+    
+    skip = (page - 1) * limit
+    
+    total = await db.ssrte_visits.count_documents(query)
+    visits = await db.ssrte_visits.find(query).sort("recorded_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    return {
+        "total": total,
+        "page": page,
+        "pages": (total + limit - 1) // limit,
+        "visits": [
+            {
+                "id": str(v['_id']),
+                "farmer_id": v.get('farmer_id'),
+                "farmer_name": v.get('farmer_name', 'Producteur'),
+                "risk_level": v.get('niveau_risque'),
+                "children_count": v.get('enfants_observes_travaillant', 0),
+                "dangerous_tasks": v.get('taches_dangereuses_observees', []),
+                "support_provided": v.get('support_fourni', []),
+                "follow_up_required": v.get('visite_suivi_requise', False),
+                "date": v.get('recorded_at')
+            }
+            for v in visits
+        ]
+    }
+
+
+@router.post("/log-activity")
+async def log_agent_activity(
+    activity_type: str,
+    details: dict = {},
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Enregistre une activité de l'agent (scan QR, photo, etc.)
+    """
+    verify_field_agent(current_user)
+    user_id = str(current_user.get('_id'))
+    
+    activity = {
+        "agent_id": user_id,
+        "agent_name": current_user.get('full_name'),
+        "cooperative_id": current_user.get('cooperative_id'),
+        "activity_type": activity_type,
+        "details": details,
+        "timestamp": datetime.utcnow()
+    }
+    
+    await db.agent_activities.insert_one(activity)
+    
+    # Mettre à jour les compteurs si nécessaire
+    if activity_type == "qr_scan":
+        await db.qr_scan_logs.insert_one({
+            "scanned_by": user_id,
+            "scanned_at": datetime.utcnow(),
+            **details
+        })
+    
+    return {"success": True, "message": "Activité enregistrée"}
