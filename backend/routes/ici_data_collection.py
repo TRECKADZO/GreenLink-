@@ -244,8 +244,23 @@ async def record_ssrte_visit(
     """Enregistrer une visite SSRTE"""
     
     visit_dict = visit.dict()
-    visit_dict["recorded_by"] = current_user["_id"]
+    visit_dict["recorded_by"] = str(current_user["_id"])
     visit_dict["recorded_at"] = datetime.utcnow()
+    
+    # Ajouter l'ID de la coopérative si l'utilisateur est une coopérative
+    if current_user.get('user_type') == 'cooperative':
+        visit_dict["cooperative_id"] = str(current_user["_id"])
+    
+    # Ajouter le nom de l'agent (nom de la coopérative ou de l'admin)
+    visit_dict["agent_name"] = current_user.get("full_name") or current_user.get("coop_name") or "Agent"
+    visit_dict["agent_id"] = str(current_user["_id"])
+    
+    # Récupérer le nom du producteur
+    farmer = await db.users.find_one({"_id": ObjectId(visit.farmer_id)})
+    if not farmer:
+        farmer = await db.coop_members.find_one({"_id": ObjectId(visit.farmer_id)})
+    if farmer:
+        visit_dict["farmer_name"] = farmer.get("full_name") or farmer.get("name") or "Producteur"
     
     # Calculer le nombre de tâches dangereuses
     taches_dangereuses_count = len([
