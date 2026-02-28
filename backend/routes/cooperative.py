@@ -915,11 +915,27 @@ async def create_agent(
     agent: AgentCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    """Ajouter un agent terrain"""
+    """Ajouter un agent terrain - L'agent pourra activer son compte via son téléphone"""
     verify_cooperative(current_user)
+    
+    # Vérifier si le numéro existe déjà
+    existing_agent = await db.coop_agents.find_one({"phone_number": agent.phone_number})
+    if existing_agent:
+        raise HTTPException(
+            status_code=400,
+            detail="Un agent avec ce numéro de téléphone existe déjà"
+        )
+    
+    existing_user = await db.users.find_one({"phone_number": agent.phone_number})
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Ce numéro de téléphone est déjà associé à un compte utilisateur"
+        )
     
     agent_doc = {
         "coop_id": current_user["_id"],
+        "coop_name": current_user.get("coop_name") or current_user.get("full_name"),
         "full_name": agent.full_name,
         "phone_number": agent.phone_number,
         "email": agent.email,
@@ -927,15 +943,19 @@ async def create_agent(
         "village_coverage": agent.village_coverage,
         "members_onboarded": 0,
         "parcels_declared": 0,
+        "ssrte_visits_count": 0,
         "is_active": True,
+        "account_activated": False,  # L'agent doit activer son compte
+        "user_id": None,  # Sera rempli lors de l'activation
         "created_at": datetime.utcnow()
     }
     
     result = await db.coop_agents.insert_one(agent_doc)
     
     return {
-        "message": "Agent ajouté avec succès",
-        "agent_id": str(result.inserted_id)
+        "message": "Agent ajouté avec succès. L'agent peut maintenant activer son compte via l'application mobile avec son numéro de téléphone.",
+        "agent_id": str(result.inserted_id),
+        "activation_instructions": f"L'agent {agent.full_name} doit télécharger l'application GreenLink et utiliser le numéro {agent.phone_number} pour activer son compte."
     }
 
 # ============= REPORTS & EXPORTS =============
