@@ -122,6 +122,14 @@ const Dashboard = () => {
             </div>
             <div className="mt-4 md:mt-0 flex gap-2">
               <Button 
+                onClick={() => navigate('/cooperative/ssrte')}
+                className="bg-amber-500 text-white hover:bg-amber-600"
+                data-testid="ssrte-btn"
+              >
+                <ClipboardCheck className="h-4 w-4 mr-2" />
+                Suivi SSRTE
+              </Button>
+              <Button 
                 onClick={() => navigate('/cooperative/members/new')}
                 className="bg-white text-green-700 hover:bg-green-50"
                 data-testid="add-member-btn"
