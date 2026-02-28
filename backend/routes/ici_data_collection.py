@@ -103,18 +103,32 @@ TACHES_DANGEREUSES = [
 
 # ============= CLASSIFICATION ZONES À RISQUE =============
 
+import unicodedata
+
+def normalize_text(text: str) -> str:
+    """Normalise le texte en supprimant les accents pour comparaison"""
+    if not text:
+        return ""
+    # Décompose les caractères accentués et supprime les diacritiques
+    nfkd = unicodedata.normalize('NFKD', text)
+    return ''.join([c for c in nfkd if not unicodedata.combining(c)]).lower()
+
 def get_zone_risk_category(department: str) -> dict:
     """Retourne la catégorie de risque ICI selon le département"""
     from routes.ici_analytics import CATEGORIES_ZONES
     
+    # Normaliser le département recherché
+    dept_normalized = normalize_text(department)
+    
     for cat_key, cat_data in CATEGORIES_ZONES.items():
-        if department in cat_data.get("departements", []):
-            return {
-                "categorie": cat_key,
-                "niveau_risque": cat_data.get("risque_travail_enfants", "INCONNU"),
-                "priorite_intervention": cat_data.get("priorite_intervention", 0),
-                "part_production": cat_data.get("part_production_nationale", 0)
-            }
+        for dept in cat_data.get("departements", []):
+            if normalize_text(dept) == dept_normalized:
+                return {
+                    "categorie": cat_key,
+                    "niveau_risque": cat_data.get("risque_travail_enfants", "INCONNU"),
+                    "priorite_intervention": cat_data.get("priorite_intervention", 0),
+                    "part_production": cat_data.get("part_production_nationale", 0)
+                }
     
     # Département non classifié
     return {
