@@ -1,5 +1,36 @@
 # GreenLink CHANGELOG
 
+## [Feb 28, 2026] - ICI Data Collection & Alerts System
+
+### Added
+- **ICI Data Collection Module** (`/api/ici-data/...`)
+  - Profils ICI producteurs (démographie, ménage, main-d'œuvre)
+  - Système SSRTE (visites terrain, remédiation)
+  - Classification automatique zones à risque
+  - Calcul score de risque (0-100)
+  - Génération automatique d'alertes
+  
+- **ICI Alerts Dashboard** (`/admin/ici-alerts`)
+  - Dashboard alertes avec filtres
+  - Métriques temps réel
+  - Gestion alertes (prise en charge, résolution)
+  - Génération rapports hebdomadaires
+
+### New API Endpoints
+- `/api/ici-data/farmers/{id}/ici-profile` - Profils ICI
+- `/api/ici-data/ssrte/visit` - Visites SSRTE
+- `/api/ici-data/alerts` - Gestion alertes
+- `/api/ici-data/metrics/calculate` - Métriques temps réel
+
+### Files Created
+- `/app/backend/routes/ici_data_collection.py`
+- `/app/frontend/src/pages/admin/ICIAlertsDashboard.jsx`
+
+### Models Updated
+- `auth_models.py` - Champs ICI ajoutés (department, genre, date_naissance, etc.)
+
+---
+
 ## [Feb 28, 2026] - ICI Analytics Module
 
 ### Added
