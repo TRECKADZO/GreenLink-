@@ -2,6 +2,16 @@
 
 ## Latest Updates - Feb 28, 2026 (Session 3)
 
+### APK Mobile v1.5.0 - ✅ BUILD COMPLETED
+**Download URL**: https://expo.dev/artifacts/eas/cw8BYberdCHpKfrSjY5XPB.apk
+
+**Nouvelles fonctionnalités v1.5.0:**
+- Menu Actions Rapides "+" avec grille de fonctionnalités
+- Écran d'activation compte membre coopérative
+- Notification push de bienvenue avec tutoriel
+
+---
+
 ### NEW: Menu Actions Rapides "+" Mobile - ✅ COMPLETED
 - **Purpose**: Permettre l'accès rapide à toutes les fonctionnalités depuis le bouton "+" central
 - **Implementation**: Menu modal animé avec grille d'icônes
