@@ -104,6 +104,7 @@ app.include_router(billing.router)
 app.include_router(sms.router)
 app.include_router(premium_analytics.router)
 app.include_router(ici_analytics.router)
+app.include_router(ici_data_collection.router)
 
 app.add_middleware(
     CORSMiddleware,
