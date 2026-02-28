@@ -22,6 +22,8 @@ from routes import premium_analytics, ici_analytics, ici_data_collection, ici_ex
 from routes import pdf_reports, websocket_routes
 from routes import qrcode_generator
 from routes import farmer_cards_pdf
+from routes import photo_storage
+from routes import ssrte_analytics
 from services.push_notifications import router as push_notifications_router
 
 
@@ -115,6 +117,8 @@ app.include_router(websocket_routes.router)
 app.include_router(push_notifications_router)
 app.include_router(qrcode_generator.router)
 app.include_router(farmer_cards_pdf.router)
+app.include_router(photo_storage.router)
+app.include_router(ssrte_analytics.router)
 
 app.add_middleware(
     CORSMiddleware,
