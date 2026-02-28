@@ -903,11 +903,16 @@ async def get_coop_agents(current_user: dict = Depends(get_current_user)):
         "id": str(a["_id"]),
         "full_name": a.get("full_name", ""),
         "phone_number": a.get("phone_number", ""),
+        "email": a.get("email", ""),
         "zone": a.get("zone", ""),
         "village_coverage": a.get("village_coverage", []),
         "members_onboarded": a.get("members_onboarded", 0),
         "parcels_declared": a.get("parcels_declared", 0),
-        "is_active": a.get("is_active", True)
+        "ssrte_visits_count": a.get("ssrte_visits_count", 0),
+        "is_active": a.get("is_active", True),
+        "account_activated": a.get("account_activated", False),
+        "user_id": a.get("user_id"),
+        "created_at": a.get("created_at", datetime.utcnow()).isoformat() if isinstance(a.get("created_at"), datetime) else str(a.get("created_at", ""))
     } for a in agents]
 
 @router.post("/agents")
