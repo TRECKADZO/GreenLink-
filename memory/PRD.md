@@ -2,7 +2,22 @@
 
 ## Latest Updates - Feb 28, 2026
 
-### 0. ICI Analytics Dashboard - ✅ COMPLETED (NEW)
+### 0. Profile Page ICI Edition - ✅ COMPLETED (NEW)
+- **Purpose**: Permettre aux producteurs de visualiser et modifier leurs données ICI depuis leur profil
+
+**Key Features Implemented:**
+- Section "Informations du ménage (ICI)" intégrée à la page profil
+- Édition complète des données ICI : département, village, genre, année de naissance, niveau d'éducation, taille ménage, nombre d'enfants
+- Affichage de la classification de risque ICI avec score (0-100) et catégorie (1/2/3)
+- Mise à jour automatique du profil ICI lors de la sauvegarde
+- Style vert cohérent avec l'identité ICI
+
+**Files Updated:**
+- `/app/frontend/src/pages/Profile.jsx` - Section ICI complète
+
+---
+
+### 0.1 ICI Analytics Dashboard - ✅ COMPLETED
 - **Source**: Rapport ICI 2024 + Catégorisation Gouvernement CI 2006
 - **Purpose**: Métriques officielles travail des enfants, zones à risque, due diligence EUDR
 
