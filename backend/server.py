@@ -25,6 +25,7 @@ from routes import farmer_cards_pdf
 from routes import photo_storage
 from routes import ssrte_analytics
 from routes import carbon_payments_dashboard
+from routes import field_agent_dashboard
 from services.push_notifications import router as push_notifications_router
 
 
