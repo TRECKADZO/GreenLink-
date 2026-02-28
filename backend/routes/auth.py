@@ -457,6 +457,103 @@ class MemberActivationRequest(BaseModel):
     password: str
     coop_code: str = None  # Optional: Code de la coopérative pour vérification
 
+
+async def send_welcome_notification(user_id: str, user_name: str, coop_name: str):
+    """
+    Envoie une notification push de bienvenue avec tutoriel au nouveau membre activé
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Récupérer le push token de l'utilisateur
+    device = await db.user_devices.find_one({"user_id": user_id})
+    
+    if not device or not device.get("push_token"):
+        logger.info(f"[WELCOME] No push token for user {user_id}, storing notification for later")
+        # Stocker la notification pour quand l'utilisateur enregistrera son appareil
+        await db.pending_notifications.insert_one({
+            "user_id": user_id,
+            "type": "welcome_tutorial",
+            "created_at": datetime.utcnow(),
+            "data": {
+                "user_name": user_name,
+                "coop_name": coop_name
+            }
+        })
+        return
+    
+    # Contenu du tutoriel
+    tutorial_steps = [
+        "1️⃣ Déclarez vos parcelles pour calculer votre score carbone",
+        "2️⃣ Enregistrez vos récoltes pour la traçabilité",
+        "3️⃣ Suivez vos primes carbone dans l'onglet Paiements",
+        "4️⃣ Accédez au Marketplace pour vos intrants agricoles"
+    ]
+    
+    # Notification de bienvenue
+    welcome_notification = {
+        "to": device["push_token"],
+        "title": f"🌱 Bienvenue {user_name}!",
+        "body": f"Votre compte GreenLink est activé. Membre de {coop_name}.",
+        "data": {
+            "screen": "Home",
+            "type": "welcome",
+            "tutorial": tutorial_steps,
+            "show_tutorial": True
+        },
+        "sound": "default",
+        "badge": 1,
+        "channelId": "default"
+    }
+    
+    # Envoyer via Expo Push Service
+    try:
+        import httpx
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://exp.host/--/api/v2/push/send",
+                json=welcome_notification,
+                headers={"Content-Type": "application/json"}
+            )
+            logger.info(f"[WELCOME] Push notification sent: {response.status_code}")
+    except Exception as e:
+        logger.error(f"[WELCOME] Failed to send push: {e}")
+    
+    # Stocker dans l'historique des notifications
+    await db.notifications.insert_one({
+        "user_id": user_id,
+        "title": welcome_notification["title"],
+        "body": welcome_notification["body"],
+        "type": "welcome_tutorial",
+        "data": welcome_notification["data"],
+        "created_at": datetime.utcnow(),
+        "is_read": False
+    })
+    
+    # Envoyer une deuxième notification avec le tutoriel détaillé après 5 secondes
+    tutorial_notification = {
+        "to": device["push_token"],
+        "title": "📚 Guide de démarrage GreenLink",
+        "body": "Découvrez comment utiliser l'application en 4 étapes simples",
+        "data": {
+            "screen": "Tutorial",
+            "type": "tutorial",
+            "steps": tutorial_steps
+        },
+        "sound": "default",
+        "channelId": "default"
+    }
+    
+    await db.notifications.insert_one({
+        "user_id": user_id,
+        "title": tutorial_notification["title"],
+        "body": tutorial_notification["body"],
+        "type": "tutorial",
+        "data": tutorial_notification["data"],
+        "created_at": datetime.utcnow(),
+        "is_read": False
+    })
+
 @router.post("/activate-member-account")
 async def activate_member_account(request: MemberActivationRequest):
     """
