@@ -74,7 +74,12 @@ const Login = () => {
 
           {/* Password */}
           <div>
-            <Label htmlFor="password">Mot de passe</Label>
+            <div className="flex justify-between items-center mb-1">
+              <Label htmlFor="password">Mot de passe</Label>
+              <Link to="/forgot-password" className="text-xs text-[#2d5a4d] hover:underline">
+                Mot de passe oublié?
+              </Link>
+            </div>
             <div className="relative">
               <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <Input
