@@ -118,16 +118,6 @@ const WelcomeScreen = ({ navigation }) => {
             </Text>
           </Animated.View>
 
-          {/* Stats Section */}
-          <View style={styles.statsContainer}>
-            {stats.map((stat, index) => (
-              <View key={index} style={styles.statItem}>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            ))}
-          </View>
-
           {/* Features Section */}
           <View style={styles.featuresContainer}>
             <Text style={styles.sectionTitle}>Pourquoi GreenLink ?</Text>
