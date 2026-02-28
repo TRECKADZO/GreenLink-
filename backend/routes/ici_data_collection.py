@@ -356,7 +356,7 @@ async def create_alert(
     message: str,
     data: dict = None
 ):
-    """Créer une alerte dans le système"""
+    """Créer une alerte dans le système et envoyer les notifications push"""
     
     alert_doc = {
         "type": alert_type,
@@ -375,6 +375,7 @@ async def create_alert(
     }
     
     result = await db.ici_alerts.insert_one(alert_doc)
+    alert_id = str(result.inserted_id)
     
     # Notifier les admins si sévérité critique ou haute
     if severity in ["critical", "high"]:
@@ -387,14 +388,23 @@ async def create_alert(
                 "title": f"Alerte ICI - {severity.upper()}",
                 "message": message,
                 "type": "ici_alert",
-                "alert_id": str(result.inserted_id),
+                "alert_id": alert_id,
                 "created_at": datetime.utcnow(),
                 "is_read": False
             })
+        
+        # Envoyer push notifications pour alertes critiques
+        try:
+            from services.push_notifications import push_service
+            alert_doc["_id"] = alert_id
+            await push_service.send_critical_alert_notification(alert_doc)
+            logger.info(f"Push notification sent for alert: {alert_id}")
+        except Exception as e:
+            logger.error(f"Failed to send push notification: {e}")
     
     logger.warning(f"ICI Alert created: {alert_type} - {severity} - {message}")
     
-    return str(result.inserted_id)
+    return alert_id
 
 @router.get("/alerts")
 async def get_ici_alerts(
