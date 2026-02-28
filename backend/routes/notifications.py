@@ -49,7 +49,7 @@ class BulkNotificationRequest(BaseModel):
 async def register_device(
     registration: DeviceRegistration,
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Register a device for push notifications"""
     
@@ -97,7 +97,7 @@ async def register_device(
 async def unregister_device(
     push_token: str,
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Unregister a device from push notifications"""
     
@@ -118,7 +118,7 @@ async def unregister_device(
 async def get_notification_history(
     limit: int = 50,
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Get user's notification history"""
     
@@ -142,7 +142,7 @@ async def get_notification_history(
 async def mark_notification_read(
     notification_id: str,
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Mark a notification as read"""
     
@@ -163,7 +163,7 @@ async def mark_notification_read(
 @router.put("/history/read-all")
 async def mark_all_notifications_read(
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Mark all notifications as read"""
     
@@ -182,7 +182,7 @@ async def send_notification_to_member(
     member_id: str,
     notification: NotificationRequest,
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Send a notification to a specific cooperative member (cooperative admin only)"""
     
@@ -239,7 +239,7 @@ async def send_to_all_coop_members(
     notification: BulkNotificationRequest,
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Send a notification to all cooperative members (cooperative admin only)"""
     
@@ -278,7 +278,7 @@ async def send_to_all_coop_members(
 async def trigger_weekly_reminders(
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """
     Manually trigger weekly premium reminders (admin only)
@@ -305,7 +305,7 @@ async def trigger_weekly_reminders(
 @router.get("/preferences")
 async def get_notification_preferences(
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Get user's notification preferences"""
     
@@ -334,7 +334,7 @@ async def get_notification_preferences(
 async def update_notification_preferences(
     preferences: Dict[str, bool],
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Update user's notification preferences"""
     
@@ -365,7 +365,7 @@ async def update_notification_preferences(
 async def get_pending_sms(
     limit: int = 100,
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Get pending SMS notifications (admin/coop only) - for integration with SMS gateway"""
     
@@ -386,7 +386,7 @@ async def get_pending_sms(
 async def mark_sms_sent(
     sms_id: str,
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Mark an SMS as sent (for SMS gateway integration)"""
     
@@ -414,7 +414,7 @@ async def mark_sms_sent(
 @router.post("/test")
 async def send_test_notification(
     current_user: dict = Depends(get_current_user),
-    db = Depends(get_db)
+    
 ):
     """Send a test notification to current user's devices"""
     
