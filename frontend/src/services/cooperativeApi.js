@@ -188,6 +188,22 @@ export const cooperativeApi = {
     link.remove();
   },
 
+  downloadMemberReceipt: async (memberId, distributionId, memberName = 'membre') => {
+    const response = await axios.get(`${API}/members/${memberId}/receipt/pdf`, {
+      headers: getAuthHeader(),
+      params: { distribution_id: distributionId },
+      responseType: 'blob'
+    });
+    const safeName = memberName.replace(/\s+/g, '_');
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `recu_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  },
+
   getAuditSelection: async (sampleRate = 0.10) => {
     const response = await axios.get(`${API}/reports/audit-selection`, {
       headers: getAuthHeader(),
