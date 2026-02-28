@@ -111,7 +111,8 @@ async def register(user_data: UserCreate):
     }
 
 @router.post("/login", response_model=Token)
-async def login(credentials: UserLogin):
+@limiter.limit("5/minute")
+async def login(request: Request, credentials: UserLogin):
     # Find user by phone number or email
     user = await db.users.find_one({
         "$or": [
