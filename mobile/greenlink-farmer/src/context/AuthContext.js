@@ -76,6 +76,9 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (data) => {
     try {
+      console.log('[Auth] Register attempt:', data.full_name, data.user_type);
+      console.log('[Auth] API URL:', CONFIG.API_URL);
+      
       const response = await api.post('/auth/register', {
         ...data,
         // Use provided user_type or default to 'producteur'
@@ -87,6 +90,8 @@ export const AuthProvider = ({ children }) => {
         },
       });
       
+      console.log('[Auth] Register response received');
+      
       const { access_token, user: userData } = response.data;
       
       await SecureStore.setItemAsync('token', access_token);
@@ -96,8 +101,11 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       api.setToken(access_token);
       
+      console.log('[Auth] Registration successful');
       return { success: true };
     } catch (error) {
+      console.error('[Auth] Register error:', error.message);
+      console.error('[Auth] Error response:', error.response?.data);
       return {
         success: false,
         error: error.response?.data?.detail || 'Erreur d\'inscription',
