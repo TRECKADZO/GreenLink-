@@ -279,6 +279,17 @@ yarn build:android
 - `/app/mobile/greenlink-farmer/src/services/sync.js` - Background sync service
 - `/app/mobile/greenlink-farmer/src/screens/profile/ProfileScreen.js` - Profile with sync button
 
+## Recent Changes (February 28, 2026) - PDF Report Generation
+13. **PDF Report Generation for EUDR Compliance** - Cooperatives can now download official PDF reports
+    - Backend service in `/app/backend/services/pdf_service.py`
+    - Endpoints: `/api/cooperative/reports/eudr/pdf`, `/api/cooperative/reports/carbon/pdf`
+    - Uses `reportlab` library for professional PDF generation
+    - EUDR compliance reports with cooperative info, compliance metrics, statistics
+    - Carbon reports with CO2 capture data, environmental impact equivalents, SDG alignment
+    - Distribution reports with beneficiary lists and payment status
+    - Frontend integration with download buttons in ReportsPage.jsx
+    - CSV export also available for data analysis
+
 ## Recent Changes (December 2025) - Cooperative Profile
 11. **Coopérative agricole profile** - Complete agricultural cooperative management system
     - Backend routes in `/app/backend/routes/cooperative.py`
