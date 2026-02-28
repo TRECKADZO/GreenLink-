@@ -26,17 +26,18 @@ const RealTimeDashboard = () => {
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const pollingRef = useRef(null);
 
-  // Connexion WebSocket
+  // Connexion WebSocket ou fallback vers polling
   const connectWebSocket = useCallback(() => {
-    if (!user || wsRef.current?.readyState === WebSocket.OPEN) return;
+    if (!user) return;
 
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const wsUrl = `${WS_URL}/ws/dashboard?token=${token}&channels=alerts,stats,ssrte`;
-    
+    // Try WebSocket first
     try {
+      const wsUrl = `${WS_URL}/ws/dashboard?token=${token}&channels=alerts,stats,ssrte`;
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
@@ -56,24 +57,65 @@ const RealTimeDashboard = () => {
 
       wsRef.current.onclose = (event) => {
         setConnected(false);
-        if (event.code !== 1000 && connectionAttempts < 5) {
-          // Reconnexion automatique
-          reconnectTimeoutRef.current = setTimeout(() => {
-            setConnectionAttempts(prev => prev + 1);
-            connectWebSocket();
-          }, 3000 * (connectionAttempts + 1));
+        // Fallback to polling
+        if (event.code !== 1000) {
+          startPolling();
         }
       };
 
       wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('WebSocket error, falling back to polling:', error);
         setConnected(false);
+        startPolling();
       };
 
     } catch (error) {
-      console.error('WebSocket connection failed:', error);
+      console.error('WebSocket connection failed, using polling:', error);
+      startPolling();
     }
-  }, [user, connectionAttempts]);
+  }, [user]);
+
+  // Fallback polling
+  const startPolling = () => {
+    if (pollingRef.current) return;
+    
+    const pollData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/ws/broadcast-stats`, {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.stats) {
+            setStats(data.stats);
+            setLastUpdate(new Date());
+            setConnected(true);
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    };
+
+    // Initial poll
+    pollData();
+    
+    // Poll every 30 seconds
+    pollingRef.current = setInterval(pollData, 30000);
+  };
+
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
 
   const handleWebSocketMessage = (message) => {
     const { type, data, timestamp } = message;
@@ -165,6 +207,7 @@ const RealTimeDashboard = () => {
       if (wsRef.current) {
         wsRef.current.close(1000, 'Component unmounting');
       }
+      stopPolling();
     };
   }, [user, authLoading, connectWebSocket, navigate]);
 
