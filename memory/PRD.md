@@ -161,7 +161,7 @@ Build a comprehensive agritech platform connecting:
 ### P1 (High Priority)
 - Real Orange Money API integration (requires merchant registration)
 - Real USSD/SMS integration (Orange API)
-- PDF certificate generation
+- ✅ PDF certificate generation - **COMPLETED** (EUDR, Carbon, Distribution reports)
 - ⚠️ Configure Firebase project and upload `google-services.json` for production FCM
 - Mobile app for cooperative field agents
 
