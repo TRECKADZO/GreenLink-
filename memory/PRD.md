@@ -324,6 +324,34 @@ yarn build:android
     - Automatically triggered when executing distribution payments
     - Fallback to SMS queue for members not using the mobile app
 
+17. **SMS OTP Verification System**
+    - Backend endpoints in `/app/backend/routes/tracking.py`
+    - `/api/tracking/otp/request`: Generate 6-digit OTP with 5-minute expiration
+    - `/api/tracking/otp/verify`: Verify OTP and get verification token (10min validity)
+    - `/api/tracking/otp/validate-token`: Validate token before sensitive operations
+    - Simulation mode for testing (code displayed), production: SMS via Orange API
+    - Secure payments and transfers for farmers with basic phones
+
+18. **Real Order Tracking System**
+    - Backend routes in `/app/backend/routes/tracking.py`
+    - `/api/tracking/orders/{id}`: Detailed tracking with timeline, location, carrier info
+    - `/api/tracking/orders/{id}/ship`: Add shipment info (carrier, tracking number)
+    - `/api/tracking/orders/{id}/update`: Add tracking updates with location
+    - `/api/tracking/supplier/orders`: Supplier order management view
+    - Frontend page `/pages/OrderTracking.jsx`: Real-time tracking UI with timeline
+    - Automatic notifications at each status change
+
+19. **Advanced Analytics & Data Export**
+    - Backend routes in `/app/backend/routes/analytics_advanced.py`
+    - `/api/analytics/supplier/dashboard`: Full supplier analytics (revenue, orders, products, trends)
+    - `/api/analytics/buyer/dashboard`: Buyer purchase analytics
+    - `/api/analytics/export/orders`: CSV export of orders
+    - `/api/analytics/export/products`: CSV export of product catalog
+    - `/api/analytics/export/members`: CSV export for cooperatives
+    - `/api/analytics/export/transactions`: Financial transactions export
+    - `/api/analytics/platform/overview`: Platform-wide stats (super admin)
+    - Frontend page `/pages/supplier/Analytics.jsx`: Interactive analytics dashboard
+
 ## Recent Changes (December 2025) - Cooperative Profile
 11. **Coopérative agricole profile** - Complete agricultural cooperative management system
     - Backend routes in `/app/backend/routes/cooperative.py`
