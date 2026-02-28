@@ -329,25 +329,94 @@ const CooperativeSSRTEDashboard = () => {
       <div className="pt-24 pb-12 px-6">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-green-500/20 rounded-lg">
                   <ClipboardCheck className="w-6 h-6 text-green-400" />
                 </div>
                 <h1 className="text-2xl font-bold">Suivi SSRTE Terrain</h1>
+                {/* Online Status Indicator */}
+                <Badge className={`${isOnline ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'}`}>
+                  {isOnline ? (
+                    <><Wifi className="w-3 h-3 mr-1" /> En ligne</>
+                  ) : (
+                    <><WifiOff className="w-3 h-3 mr-1" /> Hors ligne</>
+                  )}
+                </Badge>
               </div>
               <p className="text-slate-400">Système de Suivi et Remédiation du Travail des Enfants</p>
             </div>
-            <Button 
-              variant="outline" 
-              className="border-slate-700 text-slate-300 hover:bg-slate-800"
-              onClick={fetchData}
-            >
-              <RefreshCcw className="w-4 h-4 mr-2" />
-              Actualiser
-            </Button>
+            <div className="flex gap-2">
+              {/* Offline Sync Button */}
+              {offlineVisits.length > 0 && (
+                <Button 
+                  className="bg-orange-500 text-white hover:bg-orange-600"
+                  onClick={syncOfflineData}
+                  disabled={!isOnline || syncing}
+                >
+                  {syncing ? (
+                    <>Synchronisation...</>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Sync ({offlineVisits.length})
+                    </>
+                  )}
+                </Button>
+              )}
+              <Button 
+                variant="outline" 
+                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                onClick={fetchData}
+                disabled={!isOnline}
+              >
+                <RefreshCcw className="w-4 h-4 mr-2" />
+                Actualiser
+              </Button>
+            </div>
           </div>
+
+          {/* Offline Alert */}
+          {!isOnline && (
+            <Card className="bg-orange-500/10 border-orange-500/30">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <CloudOff className="w-6 h-6 text-orange-400" />
+                  <div>
+                    <p className="font-medium text-orange-400">Mode hors-ligne actif</p>
+                    <p className="text-sm text-slate-400">
+                      Les visites seront sauvegardées localement et synchronisées automatiquement à la reconnexion.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pending Sync Alert */}
+          {offlineVisits.length > 0 && isOnline && (
+            <Card className="bg-blue-500/10 border-blue-500/30">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Upload className="w-6 h-6 text-blue-400" />
+                    <div>
+                      <p className="font-medium text-blue-400">{offlineVisits.length} visite(s) en attente</p>
+                      <p className="text-sm text-slate-400">Cliquez sur "Sync" pour envoyer les données au serveur</p>
+                    </div>
+                  </div>
+                  <Button 
+                    className="bg-blue-500 text-white hover:bg-blue-600"
+                    onClick={syncOfflineData}
+                    disabled={syncing}
+                  >
+                    {syncing ? 'Synchronisation...' : 'Synchroniser maintenant'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Stats Overview */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
