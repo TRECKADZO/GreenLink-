@@ -2,7 +2,26 @@
 
 ## Latest Updates - Feb 28, 2026
 
-### 0. Profile Page ICI Edition - ✅ COMPLETED (NEW)
+### 0. Dashboard Coopérative SSRTE - ✅ COMPLETED (NEW)
+- **Purpose**: Permettre aux coopératives d'enregistrer les visites SSRTE terrain
+
+**Key Features Implemented:**
+- Dashboard complet `/cooperative/ssrte` avec formulaire de visite SSRTE
+- Sélection du producteur membre avec recherche
+- Formulaire de rapport : enfants observés, niveau risque, tâches dangereuses, support fourni
+- Liste des 8 tâches dangereuses (Convention OIT 182)
+- Liste des 8 types de support (kit scolaire, certificat naissance, etc.)
+- Historique des visites avec statistiques
+- Bouton "Suivi SSRTE" ajouté au dashboard coopérative principal
+
+**Files Created:**
+- `/app/frontend/src/pages/cooperative/SSRTEDashboard.jsx`
+- Route `/cooperative/ssrte` in App.js
+- Bouton SSRTE dans `Dashboard.jsx`
+
+---
+
+### 0.1 Profile Page ICI Edition - ✅ COMPLETED
 - **Purpose**: Permettre aux producteurs de visualiser et modifier leurs données ICI depuis leur profil
 
 **Key Features Implemented:**
