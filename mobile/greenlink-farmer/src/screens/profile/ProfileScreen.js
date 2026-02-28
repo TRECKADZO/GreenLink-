@@ -100,13 +100,16 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
+  const userType = user?.user_type === 'cooperative' ? 'cooperative' : 'farmer';
+
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Retour</Text>
-        </TouchableOpacity>
+    <MainLayout userType={userType}>
+      <ScrollView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.backButton}>← Retour</Text>
+          </TouchableOpacity>
         
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
