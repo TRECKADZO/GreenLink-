@@ -515,3 +515,215 @@ async def notify_coop_distribution_complete(
             "screen": "CoopDistributions"
         }
     )
+
+
+# ============= PAYMENT CONFIRMATION NOTIFICATIONS =============
+
+async def notify_payment_confirmed(
+    db,
+    user_id: str,
+    member_name: str,
+    amount: float,
+    transaction_id: str,
+    payment_method: str = "Orange Money"
+) -> Dict[str, Any]:
+    """
+    Send notification when a payment has been successfully processed
+    """
+    return await send_notification_to_user(
+        db=db,
+        user_id=user_id,
+        title="Paiement Confirmé ✅💰",
+        body=f"{member_name}, votre paiement de {amount:,.0f} FCFA via {payment_method} a été effectué avec succès!",
+        data={
+            "type": "payment_confirmed",
+            "amount": amount,
+            "transaction_id": transaction_id,
+            "payment_method": payment_method,
+            "screen": "Payments"
+        }
+    )
+
+
+async def notify_payment_pending(
+    db,
+    user_id: str,
+    member_name: str,
+    amount: float,
+    coop_name: str
+) -> Dict[str, Any]:
+    """
+    Send notification when a payment is pending collection
+    """
+    return await send_notification_to_user(
+        db=db,
+        user_id=user_id,
+        title="Paiement en Attente ⏳",
+        body=f"{member_name}, {amount:,.0f} FCFA de {coop_name} sont en attente de retrait sur Orange Money.",
+        data={
+            "type": "payment_pending",
+            "amount": amount,
+            "coop_name": coop_name,
+            "screen": "Payments"
+        }
+    )
+
+
+# ============= WEEKLY REMINDER NOTIFICATIONS =============
+
+async def send_weekly_premium_reminders(db) -> Dict[str, Any]:
+    """
+    Send weekly reminders to members who haven't collected their premiums
+    Called by a scheduled task (e.g., every Monday at 9 AM)
+    
+    Returns:
+        Summary of reminders sent
+    """
+    from datetime import timedelta
+    
+    reminders_sent = 0
+    reminders_failed = 0
+    
+    # Find uncollected premiums older than 3 days
+    cutoff_date = datetime.utcnow() - timedelta(days=3)
+    
+    # Get distributions with uncollected amounts
+    pending_distributions = await db.coop_distributions.find({
+        "status": "executed",
+        "created_at": {"$lt": cutoff_date}
+    }).to_list(100)
+    
+    for dist in pending_distributions:
+        member_distributions = dist.get("member_distributions", [])
+        coop_name = dist.get("coop_name", "Coopérative")
+        lot_name = dist.get("lot_name", "")
+        
+        for member_dist in member_distributions:
+            # Check if payment was collected
+            if member_dist.get("payment_status") == "pending":
+                member_id = member_dist.get("member_id")
+                amount = member_dist.get("amount", 0)
+                member_name = member_dist.get("member_name", "")
+                
+                if not member_id or amount <= 0:
+                    continue
+                
+                # Find member's user account
+                from bson import ObjectId
+                member = None
+                try:
+                    member = await db.coop_members.find_one({"_id": ObjectId(str(member_id))})
+                except Exception:
+                    pass
+                
+                if member:
+                    phone = member.get("phone_number")
+                    user = await db.users.find_one({"phone_number": phone}) if phone else None
+                    
+                    if user:
+                        user_id = str(user["_id"])
+                        
+                        # Send reminder notification
+                        result = await send_notification_to_user(
+                            db=db,
+                            user_id=user_id,
+                            title="Rappel: Prime Non Récupérée 🔔",
+                            body=f"{member_name}, n'oubliez pas de récupérer votre prime de {amount:,.0f} FCFA de {coop_name}!",
+                            data={
+                                "type": "premium_reminder",
+                                "amount": amount,
+                                "coop_name": coop_name,
+                                "lot_name": lot_name,
+                                "screen": "Payments"
+                            }
+                        )
+                        
+                        if result.get("success"):
+                            reminders_sent += 1
+                        else:
+                            reminders_failed += 1
+                    else:
+                        # Queue SMS reminder
+                        await db.pending_sms_notifications.insert_one({
+                            "phone_number": phone,
+                            "member_name": member_name,
+                            "message": f"GreenLink Rappel: Votre prime de {amount:,.0f} FCFA de {coop_name} vous attend! Retirez-la via Orange Money.",
+                            "type": "premium_reminder",
+                            "created_at": datetime.utcnow(),
+                            "status": "pending"
+                        })
+                        reminders_sent += 1
+    
+    logger.info(f"Weekly reminders: {reminders_sent} sent, {reminders_failed} failed")
+    
+    return {
+        "success": True,
+        "reminders_sent": reminders_sent,
+        "reminders_failed": reminders_failed
+    }
+
+
+# ============= BULK NOTIFICATION TO ALL MEMBERS =============
+
+async def notify_all_coop_members(
+    db,
+    coop_id: str,
+    title: str,
+    body: str,
+    data: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    Send notification to all members of a cooperative
+    """
+    from bson import ObjectId
+    
+    # Get all active members
+    members = await db.coop_members.find({
+        "cooperative_id": ObjectId(coop_id),
+        "status": "active"
+    }).to_list(1000)
+    
+    notifications_sent = 0
+    notifications_failed = 0
+    
+    for member in members:
+        phone = member.get("phone_number")
+        member_name = member.get("full_name", "")
+        
+        if not phone:
+            continue
+        
+        # Find user by phone
+        user = await db.users.find_one({"phone_number": phone})
+        
+        if user:
+            result = await send_notification_to_user(
+                db=db,
+                user_id=str(user["_id"]),
+                title=title,
+                body=body.replace("{member_name}", member_name),
+                data=data
+            )
+            
+            if result.get("success"):
+                notifications_sent += 1
+            else:
+                notifications_failed += 1
+        else:
+            # Queue SMS
+            await db.pending_sms_notifications.insert_one({
+                "phone_number": phone,
+                "member_name": member_name,
+                "message": f"GreenLink: {body.replace('{member_name}', member_name)[:160]}",
+                "type": data.get("type", "general") if data else "general",
+                "created_at": datetime.utcnow(),
+                "status": "pending"
+            })
+            notifications_sent += 1
+    
+    return {
+        "success": notifications_sent > 0,
+        "notifications_sent": notifications_sent,
+        "notifications_failed": notifications_failed,
+        "total_members": len(members)
+    }
