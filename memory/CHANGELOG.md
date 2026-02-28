@@ -1,5 +1,26 @@
 # GreenLink CHANGELOG
 
+## [Feb 28, 2026] - ICI Profile Page & Mobile Update
+
+### Added
+- **Profile Page ICI Section** (`/profile`)
+  - Section "Informations du ménage (ICI)" pour producteurs
+  - Édition complète des données ICI (département, village, genre, naissance, éducation, ménage, enfants)
+  - Affichage de la classification de risque ICI (avec score et catégorie)
+  - Mise à jour automatique du profil ICI lors de la sauvegarde
+
+- **Mobile App v1.3.0** (Build en cours)
+  - Formulaire d'inscription avec champs ICI pour producteurs
+  - Section vert styled pour données ménage
+  - Pickers natifs pour sélections
+
+### Updated
+- `Profile.jsx` - Section ICI complète avec classification de risque
+- `RegisterScreen.js` (Mobile) - Champs ICI ajoutés
+- `app.json` - Version 1.3.0
+
+---
+
 ## [Feb 28, 2026] - ICI Data Collection & Alerts System
 
 ### Added
