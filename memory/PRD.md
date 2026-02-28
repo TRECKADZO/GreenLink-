@@ -2,6 +2,38 @@
 
 ## Latest Updates - Feb 28, 2026 (Session 3)
 
+### NEW: Menu Actions Rapides "+" Mobile - ✅ COMPLETED
+- **Purpose**: Permettre l'accès rapide à toutes les fonctionnalités depuis le bouton "+" central
+- **Implementation**: Menu modal animé avec grille d'icônes
+- **Features par type d'utilisateur**:
+  - **Producteur**: Déclarer Récolte, Nouvelle Parcelle, Score Carbone, Marché Carbone, Marketplace, Notifications, Commandes, Favoris
+  - **Coopérative**: Nouveau Membre, Visite SSRTE, Scanner QR, Photo Géolocalisée, Agent Terrain, Lots Groupés, Notifications, Historique Visites
+
+**Files Updated:**
+- `/app/mobile/greenlink-farmer/src/components/navigation/BottomTabBar.js`
+
+### NEW: Activation Compte Membre Coopérative - ✅ COMPLETED
+- **Purpose**: Permettre aux membres enregistrés par leur coopérative de créer leur propre compte
+- **Flow**:
+  1. Membre entre son numéro de téléphone (celui enregistré par la coopérative)
+  2. Système vérifie et affiche le profil trouvé (nom, coopérative, village)
+  3. Membre crée son mot de passe
+  4. Compte activé et lié automatiquement au profil membre existant
+
+**API Endpoints:**
+- `GET /api/auth/check-member-phone/{phone}` - Vérifie si le numéro est un membre de coopérative
+- `POST /api/auth/activate-member-account` - Active le compte avec mot de passe
+
+**Files Created:**
+- `/app/mobile/greenlink-farmer/src/screens/auth/MemberActivationScreen.js` - Écran d'activation
+
+**Files Updated:**
+- `/app/backend/routes/auth.py` - Endpoints d'activation
+- `/app/mobile/greenlink-farmer/App.js` - Navigation
+- `/app/mobile/greenlink-farmer/src/screens/auth/LoginScreen.js` - Bouton d'accès
+
+---
+
 ### Bug Fix: SSRTE Visits Cooperative Association - ✅ FIXED
 - **Issue**: Les visites SSRTE enregistrées n'étaient pas associées à la coopérative, ce qui rendait le dashboard analytics vide
 - **Fix**: Ajout automatique du `cooperative_id`, `agent_name`, `agent_id` et `farmer_name` lors de l'enregistrement d'une visite SSRTE
