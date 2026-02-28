@@ -62,6 +62,11 @@ import MemberParcelsPage from "./pages/cooperative/MemberParcelsPage";
 import ImportMembersPage from "./pages/cooperative/ImportMembersPage";
 import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 import QRCodeGenerator from "./pages/cooperative/QRCodeGenerator";
+import CooperativeNotifications from "./pages/cooperative/Notifications";
+
+// Notifications (shared)
+import NotificationsPage from "./pages/NotificationsPage";
+import AdminNotifications from "./pages/admin/Notifications";
 
 function App() {
   return (
