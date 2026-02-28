@@ -277,8 +277,129 @@ const Register = () => {
                 </div>
               </div>
               
+              {/* Village Input */}
+              <div>
+                <Label className="text-xs text-gray-500 mb-1 block">Village/Localité</Label>
+                <Input
+                  type="text"
+                  placeholder="Nom du village"
+                  value={formData.village}
+                  onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+                  className="text-sm"
+                />
+              </div>
+              
               <p className="text-xs text-gray-500">
                 51 départements producteurs de Côte d'Ivoire disponibles
+              </p>
+            </div>
+          )}
+
+          {/* ICI Data Collection - Only for Producteurs */}
+          {formData.userType === 'producteur' && (
+            <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+              <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                <Users className="w-4 h-4 text-green-600" />
+                Informations du ménage (optionnel)
+                <span className="text-xs font-normal text-gray-500 ml-2">Pour le suivi ICI</span>
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {/* Genre */}
+                <div>
+                  <Label className="text-xs text-gray-600 mb-1 block flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    Genre
+                  </Label>
+                  <select
+                    className="w-full p-2 border rounded-md text-sm"
+                    value={formData.genre}
+                    onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                  >
+                    <option value="">-- Sélectionner --</option>
+                    <option value="homme">Homme</option>
+                    <option value="femme">Femme</option>
+                  </select>
+                </div>
+
+                {/* Date de naissance */}
+                <div>
+                  <Label className="text-xs text-gray-600 mb-1 block flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    Année de naissance
+                  </Label>
+                  <select
+                    className="w-full p-2 border rounded-md text-sm"
+                    value={formData.dateNaissance}
+                    onChange={(e) => setFormData({ ...formData, dateNaissance: e.target.value })}
+                  >
+                    <option value="">-- Sélectionner --</option>
+                    {Array.from({ length: 70 }, (_, i) => 2006 - i).map(year => (
+                      <option key={year} value={`${year}-01-01`}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Niveau d'éducation */}
+                <div>
+                  <Label className="text-xs text-gray-600 mb-1 block flex items-center gap-1">
+                    <GraduationCap className="w-3 h-3" />
+                    Niveau d'éducation
+                  </Label>
+                  <select
+                    className="w-full p-2 border rounded-md text-sm"
+                    value={formData.niveauEducation}
+                    onChange={(e) => setFormData({ ...formData, niveauEducation: e.target.value })}
+                  >
+                    <option value="">-- Sélectionner --</option>
+                    <option value="aucun">Aucun</option>
+                    <option value="primaire">Primaire</option>
+                    <option value="secondaire">Secondaire</option>
+                    <option value="superieur">Supérieur</option>
+                  </select>
+                </div>
+
+                {/* Taille du ménage */}
+                <div>
+                  <Label className="text-xs text-gray-600 mb-1 block flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    Taille du ménage
+                  </Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="20"
+                    placeholder="Ex: 5"
+                    value={formData.tailleMenage}
+                    onChange={(e) => setFormData({ ...formData, tailleMenage: e.target.value })}
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Nombre d'enfants */}
+                <div>
+                  <Label className="text-xs text-gray-600 mb-1 block flex items-center gap-1">
+                    <Baby className="w-3 h-3" />
+                    Nombre d'enfants (&lt;18 ans)
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="15"
+                    placeholder="Ex: 3"
+                    value={formData.nombreEnfants}
+                    onChange={(e) => setFormData({ ...formData, nombreEnfants: e.target.value })}
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-green-700 bg-green-100 p-2 rounded">
+                Ces informations permettent de mieux vous accompagner et de suivre les indicateurs de développement durable (ODD) dans le secteur cacao.
               </p>
             </div>
           )}
