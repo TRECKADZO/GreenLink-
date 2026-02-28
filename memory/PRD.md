@@ -392,7 +392,33 @@ yarn build:android
     - Dark theme professional design
 
 
-## Recent Changes (February 28, 2026) - Push Notifications System
+## Recent Changes (February 28, 2026) - Business Model Implementation
+
+23. **Subscription/Business Model System** - ✅ COMPLETED
+    - Full subscription management system
+    - Backend routes in `/app/backend/routes/subscriptions.py`
+    - Models in `/app/backend/subscription_models.py`
+    
+    **Business Model:**
+    | User Type | Plan | Price | Trial |
+    |-----------|------|-------|-------|
+    | Producteur | Gratuit | 0 FCFA | ❌ Gratuit à vie |
+    | Coopérative | Gratuit | 0 FCFA | ❌ Gratuit à vie |
+    | Acheteur | Starter | 49,000 FCFA/mois | ✅ 15 jours |
+    | Fournisseur | Business | 29,000 FCFA/mois + 5% | ✅ 15 jours |
+    | Entreprise RSE | Enterprise | Sur devis | ✅ 15 jours |
+    
+    **API Endpoints:**
+    - `GET /api/subscriptions/plans` - Liste tous les plans
+    - `GET /api/subscriptions/my-subscription` - Abonnement utilisateur
+    - `GET /api/subscriptions/trial-status` - Status de la période d'essai
+    - `POST /api/subscriptions/upgrade` - Mise à niveau du plan
+    - `POST /api/subscriptions/cancel` - Annulation
+    
+    **Auto-création à l'inscription:**
+    - Les abonnements sont créés automatiquement lors de l'inscription
+    - Le plan est déterminé par le `user_type`
+    - Les plans payants démarrent avec 15 jours d'essai gratuit
 
 21. **Expo Push Notifications System** - ✅ COMPLETED
     - Full push notification system using Expo Push Service
