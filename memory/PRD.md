@@ -252,6 +252,9 @@ yarn build:android
 2. **Direct APK link** - Share via WhatsApp/SMS
 3. **Google Play Store** - Use `yarn submit:android`
 
+- `/app/mobile/greenlink-farmer/src/screens/cooperative/` - Mobile cooperative screens
+- `/app/mobile/greenlink-farmer/src/services/cooperativeApi.js` - Mobile cooperative API service
+
 ## Files of Reference
 - `/app/backend/routes/admin.py` - Admin and partners routes
 - `/app/backend/routes/payments.py` - Orange Money integration
