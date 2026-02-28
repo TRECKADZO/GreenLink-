@@ -146,6 +146,48 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  downloadEUDRPdf: async () => {
+    const response = await axios.get(`${API}/reports/eudr/pdf`, {
+      headers: getAuthHeader(),
+      responseType: 'blob'
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `rapport_eudr_${new Date().toISOString().split('T')[0]}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  },
+
+  downloadCarbonPdf: async () => {
+    const response = await axios.get(`${API}/reports/carbon/pdf`, {
+      headers: getAuthHeader(),
+      responseType: 'blob'
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `rapport_carbone_${new Date().toISOString().split('T')[0]}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  },
+
+  downloadDistributionPdf: async (distributionId) => {
+    const response = await axios.get(`${API}/distributions/${distributionId}/pdf`, {
+      headers: getAuthHeader(),
+      responseType: 'blob'
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `rapport_distribution_${distributionId}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  },
+
   getAuditSelection: async (sampleRate = 0.10) => {
     const response = await axios.get(`${API}/reports/audit-selection`, {
       headers: getAuthHeader(),
