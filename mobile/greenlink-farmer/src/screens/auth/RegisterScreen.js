@@ -596,6 +596,16 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.lg,
     backgroundColor: COLORS.gray[50],
   },
+  pickerContainer: {
+    borderWidth: 2,
+    borderColor: COLORS.gray[300],
+    borderRadius: 12,
+    backgroundColor: COLORS.gray[50],
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+  },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
