@@ -38,12 +38,75 @@ const ReportsPage = () => {
     fetchData();
   }, []);
 
-  const handleExportPDF = () => {
-    toast.info('Export PDF - Fonctionnalité à venir');
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const [exportingCSV, setExportingCSV] = useState(false);
+
+  const handleExportPDF = async () => {
+    try {
+      setExportingPDF(true);
+      await cooperativeApi.downloadEUDRPdf();
+      toast.success('Rapport PDF téléchargé avec succès');
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast.error('Erreur lors du téléchargement du PDF');
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
+  const handleExportCarbonPDF = async () => {
+    try {
+      setExportingPDF(true);
+      await cooperativeApi.downloadCarbonPdf();
+      toast.success('Rapport Carbone PDF téléchargé avec succès');
+    } catch (error) {
+      console.error('Carbon PDF export error:', error);
+      toast.error('Erreur lors du téléchargement du PDF Carbone');
+    } finally {
+      setExportingPDF(false);
+    }
   };
 
   const handleExportCSV = () => {
-    toast.info('Export CSV - Fonctionnalité à venir');
+    // Generate CSV from current data
+    if (!eudrReport) return;
+    
+    try {
+      setExportingCSV(true);
+      const csvData = [
+        ['Rapport EUDR - ' + cooperative?.name],
+        ['Date', new Date().toLocaleDateString('fr-FR')],
+        [''],
+        ['CONFORMITE'],
+        ['Taux de conformité', compliance?.compliance_rate + '%'],
+        ['Taux de géolocalisation', compliance?.geolocation_rate + '%'],
+        ['Parcelles géolocalisées', compliance?.geolocated_parcels],
+        ['Total parcelles', compliance?.total_parcels],
+        ['Alertes déforestation', compliance?.deforestation_alerts],
+        [''],
+        ['STATISTIQUES'],
+        ['Total membres', statistics?.total_members],
+        ['Total hectares', statistics?.total_hectares],
+        ['CO2 capturé (tonnes)', statistics?.total_co2_tonnes],
+        ['Score carbone moyen', statistics?.average_carbon_score]
+      ];
+      
+      const csvContent = csvData.map(row => row.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `rapport_eudr_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Rapport CSV téléchargé avec succès');
+    } catch (error) {
+      console.error('CSV export error:', error);
+      toast.error('Erreur lors de l\'export CSV');
+    } finally {
+      setExportingCSV(false);
+    }
   };
 
   if (loading) {
