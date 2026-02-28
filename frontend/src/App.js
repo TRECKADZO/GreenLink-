@@ -45,6 +45,7 @@ import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import CarbonBusinessDashboard from "./pages/admin/CarbonBusinessDashboard";
 import BillingDashboard from "./pages/admin/BillingDashboard";
 import PremiumAnalyticsDashboard from "./pages/admin/PremiumAnalyticsDashboard";
+import ICIAnalyticsDashboard from "./pages/admin/ICIAnalyticsDashboard";
 
 // Cooperative Routes
 import CooperativeDashboard from "./pages/cooperative/Dashboard";
