@@ -549,6 +549,18 @@ const styles = StyleSheet.create({
     color: COLORS.gray[600],
     lineHeight: 20,
   },
+  termsTextContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  termsLink: {
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.primary,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
   registerButton: {
     marginBottom: SPACING.lg,
   },
@@ -560,6 +572,59 @@ const styles = StyleSheet.create({
   loginLink: {
     color: COLORS.primary,
     fontWeight: 'bold',
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: SPACING.lg,
+    paddingTop: 60,
+    backgroundColor: COLORS.primary,
+  },
+  modalTitle: {
+    fontSize: FONTS.sizes.xl,
+    fontWeight: 'bold',
+    color: COLORS.white,
+    flex: 1,
+  },
+  modalCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    fontSize: FONTS.sizes.lg,
+    color: COLORS.white,
+    fontWeight: 'bold',
+  },
+  modalContent: {
+    flex: 1,
+    padding: SPACING.lg,
+  },
+  modalText: {
+    fontSize: FONTS.sizes.md,
+    color: COLORS.gray[700],
+    lineHeight: 24,
+  },
+  modalAcceptButton: {
+    backgroundColor: COLORS.primary,
+    margin: SPACING.lg,
+    padding: SPACING.md,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalAcceptText: {
+    fontSize: FONTS.sizes.lg,
+    fontWeight: 'bold',
+    color: COLORS.white,
   },
 });
 
