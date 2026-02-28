@@ -1,3 +1,40 @@
+# GreenLink PRD - Updated February 28, 2026
+
+## Carbon Credit Business Model - ✅ COMPLETED (Latest Feature)
+
+### Business Model Summary
+- **GreenLink Margin**: 25% of net revenue
+- **Farmer Share**: 70% redistributed to farmers
+- **Cooperative Share**: 5% for management
+- **Cost Structure**: 30% (audits, verification, buffer, fees)
+
+### Carbon Sequestration Rates (FAO Ex-Act based)
+- Low shade (≤20 trees/ha): 1.5 t CO2/ha/year
+- Medium shade (21-40 trees/ha): 3.0 t CO2/ha/year  
+- High shade (41-80 trees/ha): 4.8 t CO2/ha/year
+- Bonuses: organic (+0.5), soil residues (+0.3), cover crops (+0.4), biochar (+2.0)
+
+### Market Pricing (2025-2026)
+- Standard: 5-15 USD/t
+- Verified (Verra VCS): 15-25 USD/t
+- Premium (Gold Standard): 25-40 USD/t
+- Biochar Enhanced: 40-60 USD/t
+
+### Revenue Projections
+| Phase | Farmers | Tonnes CO2 | Gross Revenue | GreenLink Margin |
+|-------|---------|-----------|---------------|------------------|
+| Pilot | 1,000 | 12,500 | 375,000 USD | 65,625 USD |
+| Growth | 5,000 | 62,500 | 1,875,000 USD | 328,125 USD |
+| Scale | 20,000 | 250,000 | 7,500,000 USD | 1,312,500 USD |
+| Maturity | 50,000 | 625,000 | 18,750,000 USD | 3,281,250 USD |
+
+### Files Created
+- `/app/backend/carbon_business_model.py` - Core calculations
+- `/app/backend/routes/carbon_sales.py` - API endpoints
+- `/app/frontend/src/pages/admin/CarbonBusinessDashboard.jsx` - Dashboard UI
+
+---
+
 # GreenLink Agritech Platform - PRD
 
 ## Project Overview
