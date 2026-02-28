@@ -14,7 +14,7 @@ import sys
 from datetime import datetime, timedelta
 
 # Get backend URL from environment
-BACKEND_URL = "https://cooperative-mvp.preview.emergentagent.com"
+BACKEND_URL = "https://coop-agritech.preview.emergentagent.com"
 BASE_URL = f"{BACKEND_URL}/api"
 
 class Colors:
