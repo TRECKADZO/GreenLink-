@@ -520,15 +520,15 @@ async def delete_member_parcel(
 @router.get("/lots")
 async def get_coop_lots(
     current_user: dict = Depends(get_current_user),
-    status: Optional[str] = None
+    status_filter: Optional[str] = Query(None, alias="status")
 ):
     """Liste des lots de vente de la coopérative"""
     verify_cooperative(current_user)
     coop_id = current_user["_id"]
     
     query = {"coop_id": coop_id}
-    if status:
-        query["status"] = status
+    if status_filter:
+        query["status"] = status_filter
     
     lots = await db.coop_lots.find(query).sort("created_at", -1).to_list(100)
     
