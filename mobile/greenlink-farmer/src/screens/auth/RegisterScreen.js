@@ -17,15 +17,18 @@ const USER_TYPES = [
   { id: 'cooperative', label: 'Coopérative', icon: '🤝', description: 'Je gère une coopérative agricole' },
 ];
 
-const RegisterScreen = ({ navigation }) => {
+const RegisterScreen = ({ navigation, route }) => {
   const { register } = useAuth();
+  // Get userType from route params if provided (from Welcome screen)
+  const initialUserType = route?.params?.userType || 'producteur';
+  
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
     email: '',
     password: '',
     confirmPassword: '',
-    userType: 'producteur',
+    userType: initialUserType,
     coopName: '',
     coopCode: '',
   });
