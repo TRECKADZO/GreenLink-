@@ -82,6 +82,11 @@ async def register(user_data: UserCreate):
         user_dict["crops"] = []
         user_dict["farm_location"] = None
         user_dict["farm_size"] = None
+        # ICI Data fields for producers
+        user_dict["ici_profile_complete"] = bool(
+            user_data.genre or user_data.date_naissance or 
+            user_data.taille_menage or user_data.nombre_enfants
+        )
     elif user_data.user_type == "acheteur":
         user_dict["company_name"] = None
         user_dict["purchase_volume"] = None
@@ -104,6 +109,29 @@ async def register(user_data: UserCreate):
     
     result = await db.users.insert_one(user_dict)
     user_dict["_id"] = str(result.inserted_id)
+    
+    # Create ICI profile automatically for producers with ICI data
+    if user_data.user_type == "producteur" and user_dict.get("ici_profile_complete"):
+        from routes.ici_data_collection import get_zone_risk_category
+        
+        zone_risk = get_zone_risk_category(user_data.department or "")
+        
+        ici_profile = {
+            "farmer_id": str(result.inserted_id),
+            "date_naissance": user_data.date_naissance,
+            "genre": user_data.genre,
+            "niveau_education": user_data.niveau_education,
+            "taille_menage": user_data.taille_menage,
+            "household_children": {
+                "total_enfants": user_data.nombre_enfants or 0
+            } if user_data.nombre_enfants else None,
+            "zone_risque": zone_risk,
+            "updated_at": datetime.utcnow(),
+            "created_at": datetime.utcnow()
+        }
+        
+        await db.ici_profiles.insert_one(ici_profile)
+        logger.info(f"Created ICI profile for producer {result.inserted_id}")
     
     # Create subscription based on user type
     from subscription_models import create_subscription_for_user
