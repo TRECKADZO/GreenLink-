@@ -113,11 +113,11 @@
 
 ---
 
-### 0.5 APK v1.4.0 - ✅ BUILD IN PROGRESS
+### 0.5 APK v1.4.0 - ✅ COMPLETED
 - **Build ID**: d2212137-e612-4367-a5f4-6e92bd6076e9
 - **Version**: 1.4.0 (versionCode: 12)
-- **Status**: In Progress
-- **Link**: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/d2212137-e612-4367-a5f4-6e92bd6076e9
+- **Status**: ✅ FINISHED
+- **Download APK**: https://expo.dev/artifacts/eas/rWXYUYimyeN33dAEiByNap.apk
 
 **New Features in v1.4.0:**
 - Dashboard agents de terrain avec mode offline
@@ -126,6 +126,31 @@
 - Formulaire visite SSRTE complet avec offline
 - Canal notifications pour alertes critiques
 - Permissions camera et storage étendues
+
+---
+
+### 0.6 QR Codes Producteurs - ✅ COMPLETED (NEW)
+- **Purpose**: Générer des QR codes uniques pour chaque producteur, scannables par les agents de terrain
+
+**Key Features Implemented:**
+- QR code unique par producteur avec données encodées (ID, nom, coopérative)
+- Affichage sur le profil producteur (web) avec boutons Télécharger/Imprimer/Copier
+- Page coopérative `/cooperative/qrcodes` pour génération en lot
+- API de décodage pour valider les QR codes scannés
+- Style GreenLink vert avec options (default, rounded, gradient)
+- Impression PDF de cartes producteurs en lot
+
+**API Endpoints:**
+- `GET /api/qrcode/farmer/{id}` - QR code PNG d'un producteur
+- `GET /api/qrcode/farmer/{id}/card` - Données complètes avec QR base64
+- `GET /api/qrcode/farmer/{id}/download` - Télécharger QR haute qualité
+- `GET /api/qrcode/cooperative/members` - QR codes de tous les membres
+- `POST /api/qrcode/decode?qr_data=...` - Décoder et valider un QR
+
+**Files Created:**
+- `/app/backend/routes/qrcode_generator.py` - Backend génération QR
+- `/app/frontend/src/components/FarmerQRCode.jsx` - Composant QR profil
+- `/app/frontend/src/pages/cooperative/QRCodeGenerator.jsx` - Page génération lot
 
 ---
 
