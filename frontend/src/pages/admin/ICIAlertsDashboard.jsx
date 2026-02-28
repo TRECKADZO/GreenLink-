@@ -12,7 +12,7 @@ import axios from 'axios';
 import { 
   AlertTriangle, Bell, CheckCircle2, Clock, Filter,
   Shield, Users, Eye, RefreshCcw, Search, ChevronRight,
-  AlertCircle, XCircle, FileText, TrendingUp, Download, BarChart3
+  AlertCircle, XCircle, FileText, TrendingUp, Download, BarChart3, Radio
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -212,6 +212,14 @@ const ICIAlertsDashboard = () => {
               <p className="text-slate-400">Système de suivi et alertes travail des enfants</p>
             </div>
             <div className="flex gap-2 flex-wrap">
+              <Button 
+                variant="outline" 
+                className="border-green-700 text-green-400 hover:bg-green-800/20"
+                onClick={() => navigate('/admin/realtime')}
+              >
+                <Radio className="w-4 h-4 mr-2" />
+                Temps Réel
+              </Button>
               <Button 
                 variant="outline" 
                 className="border-slate-700 text-slate-300 hover:bg-slate-800"
