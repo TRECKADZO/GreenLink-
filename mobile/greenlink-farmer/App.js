@@ -57,6 +57,14 @@ import {
   CoopReportsScreen,
 } from './src/screens/cooperative';
 
+// Screens - Field Agent (SSRTE, QR Scanner, Geo Photos)
+import {
+  FieldAgentDashboard,
+  QRScannerScreen,
+  GeoPhotoScreen,
+  SSRTEVisitFormScreen,
+} from './src/screens/field-agent';
+
 // Screens - Settings
 import { NotificationPreferencesScreen } from './src/screens/settings';
 
@@ -69,7 +77,7 @@ const Stack = createNativeStackNavigator();
 // Screens that should show the bottom tab bar
 const SCREENS_WITH_TAB_BAR = [
   'Home', 'MyParcels', 'DeclareHarvest', 'Payments', 'Profile',
-  'CoopDashboard', 'CoopMembers', 'CoopReports',
+  'CoopDashboard', 'CoopMembers', 'CoopReports', 'FieldAgentDashboard',
   'Parcels', 'Harvest', 'Marketplace', 'Notifications',
   'CarbonMarketplace', 'MyCarbonScore', 'MyCarbonPurchases',
 ];
@@ -137,6 +145,13 @@ function AppNavigator() {
       <Stack.Screen name="AddMemberParcel" component={AddMemberParcelScreen} />
       <Stack.Screen name="CoopReports" component={CoopReportsScreen} />
       <Stack.Screen name="CoopLots" component={CoopReportsScreen} />
+      
+      {/* Field Agent Screens (SSRTE, QR, Geo Photos) */}
+      <Stack.Screen name="FieldAgentDashboard" component={FieldAgentDashboard} />
+      <Stack.Screen name="QRScanner" component={QRScannerScreen} />
+      <Stack.Screen name="GeoPhoto" component={GeoPhotoScreen} />
+      <Stack.Screen name="SSRTEVisitForm" component={SSRTEVisitFormScreen} />
+      <Stack.Screen name="VisitsHistory" component={CoopReportsScreen} />
       
       {/* Settings Screens */}
       <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
