@@ -194,6 +194,14 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.actionText}>Modifier mes informations</Text>
           </TouchableOpacity>
           
+          <TouchableOpacity 
+            style={styles.actionItem}
+            onPress={() => navigation.navigate('NotificationPreferences')}
+          >
+            <Text style={styles.actionIcon}>🔔</Text>
+            <Text style={styles.actionText}>Préférences notifications</Text>
+          </TouchableOpacity>
+          
           <TouchableOpacity style={styles.actionItem}>
             <Text style={styles.actionIcon}>📜</Text>
             <Text style={styles.actionText}>Conditions d'utilisation</Text>
@@ -227,7 +235,7 @@ const ProfileScreen = ({ navigation }) => {
         </TouchableOpacity>
 
         {/* Version */}
-        <Text style={styles.version}>GreenLink Farmer v1.0.0</Text>
+        <Text style={styles.version}>GreenLink Farmer v1.1.0</Text>
         
         {/* Bottom spacing for tab bar */}
         <View style={{ height: 100 }} />
