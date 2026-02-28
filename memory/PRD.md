@@ -189,7 +189,7 @@ Cooperative: coop-gagnoa@test.com / password123
 - Orange Money is in SIMULATION MODE
 - USSD is web-based simulation only
 - SMS notifications are logged, not sent to real phones
-- Certificates are text, not PDF
+- ✅ PDF reports now available for EUDR, Carbon, and Distributions
 
 ## Recent Changes (February 27, 2026)
 1. **Carbon Marketplace** - New dedicated page at `/carbon-marketplace` accessible to all users
