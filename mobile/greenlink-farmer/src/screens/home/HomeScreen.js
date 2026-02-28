@@ -227,6 +227,9 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.helpPhone}>+225 07 87 76 10 23</Text>
         </Text>
       </View>
+      
+      {/* Bottom spacing for tab bar */}
+      <View style={{ height: 100 }} />
     </ScrollView>
   );
 };
