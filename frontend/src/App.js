@@ -48,6 +48,7 @@ import PremiumAnalyticsDashboard from "./pages/admin/PremiumAnalyticsDashboard";
 import ICIAnalyticsDashboard from "./pages/admin/ICIAnalyticsDashboard";
 import ICIAlertsDashboard from "./pages/admin/ICIAlertsDashboard";
 import CooperativeComparison from "./pages/admin/CooperativeComparison";
+import RealTimeDashboard from "./pages/admin/RealTimeDashboard";
 
 // Cooperative Routes
 import CooperativeDashboard from "./pages/cooperative/Dashboard";
@@ -114,6 +115,7 @@ function App() {
               <Route path="/admin/ici-analytics" element={<ICIAnalyticsDashboard />} />
               <Route path="/admin/ici-alerts" element={<ICIAlertsDashboard />} />
               <Route path="/admin/cooperative-comparison" element={<CooperativeComparison />} />
+              <Route path="/admin/realtime" element={<RealTimeDashboard />} />
 
               {/* Cooperative Routes */}
               <Route path="/cooperative/dashboard" element={<CooperativeDashboard />} />
