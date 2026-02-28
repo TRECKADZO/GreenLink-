@@ -5,7 +5,8 @@ import { cooperativeApi } from '../../services/cooperativeApi';
 import { 
   Users, MapPin, Leaf, DollarSign, Package, 
   TrendingUp, FileText, Plus, ChevronRight,
-  CheckCircle, Clock, AlertTriangle, Building2
+  CheckCircle, Clock, AlertTriangle, Building2,
+  ClipboardCheck
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
