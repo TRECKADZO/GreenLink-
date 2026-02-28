@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/card';
@@ -19,7 +19,13 @@ import {
   Save, 
   Trash2,
   AlertTriangle,
-  Shield
+  Shield,
+  Users,
+  Baby,
+  GraduationCap,
+  MapPin,
+  Calendar,
+  RefreshCcw
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import axios from 'axios';
