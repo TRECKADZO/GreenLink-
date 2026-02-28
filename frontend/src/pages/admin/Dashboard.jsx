@@ -194,6 +194,13 @@ const AdminDashboard = () => {
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Centre de Données Stratégiques
               </Button>
+              <Button 
+                onClick={() => navigate('/admin/billing')}
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Facturation & Paiements
+              </Button>
               <Badge className="bg-red-100 text-red-700">Super Admin</Badge>
             </div>
           </div>
