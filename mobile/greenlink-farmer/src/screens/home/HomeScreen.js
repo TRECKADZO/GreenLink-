@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { MenuItem, InfoCard, NetworkStatus, Loader } from '../../components/UI';
+import { MainLayout } from '../../components/navigation';
 import { farmerApi } from '../../services/api';
 import { COLORS, FONTS, SPACING, MESSAGES } from '../../config';
 
