@@ -10,9 +10,10 @@ import {
   Modal,
   Linking,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/UI';
-import { COLORS, FONTS, SPACING } from '../../config';
+import { COLORS, FONTS, SPACING, DEPARTEMENTS } from '../../config';
 
 const USER_TYPES = [
   { id: 'producteur', label: 'Producteur', icon: '🌱', description: 'Je cultive et vends mes récoltes' },
