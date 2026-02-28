@@ -12,6 +12,8 @@ const mockPricingPlans = [
     price: 'GRATUIT',
     period: '',
     popular: false,
+    badge: 'Gratuit à vie',
+    badgeColor: 'green',
     features: [
       'Profil producteur vérifié',
       'Vente de récoltes illimitée',
@@ -25,10 +27,30 @@ const mockPricingPlans = [
     ctaVariant: 'outline'
   },
   {
+    name: 'Coopératives',
+    price: 'GRATUIT',
+    period: '',
+    popular: false,
+    badge: 'Gratuit à vie',
+    badgeColor: 'green',
+    features: [
+      'Gestion complète des membres',
+      'Distribution des primes carbone',
+      'Rapports EUDR automatiques',
+      'Génération de reçus PDF',
+      'Notifications push aux membres',
+      'Application mobile dédiée',
+      'Support prioritaire'
+    ],
+    cta: 'Créer ma coopérative',
+    ctaVariant: 'outline'
+  },
+  {
     name: 'Acheteurs',
     price: '49 000 FCFA',
     period: '/mois',
-    badge: '1 mois gratuit',
+    badge: '15 jours gratuits',
+    badgeColor: 'blue',
     popular: true,
     features: [
       'Recommandations IA',
@@ -39,13 +61,34 @@ const mockPricingPlans = [
       'Support prioritaire',
       'Badge vérifié'
     ],
-    cta: 'Essayer gratuitement',
+    cta: 'Essai gratuit 15 jours',
     ctaVariant: 'default'
+  },
+  {
+    name: 'Fournisseurs',
+    price: '29 000 FCFA',
+    period: '/mois',
+    badge: '15 jours gratuits + 5% commission',
+    badgeColor: 'blue',
+    popular: false,
+    features: [
+      'Boutique en ligne dédiée',
+      'Gestion catalogue produits',
+      'Système de commandes',
+      'Paiement sécurisé',
+      'Statistiques de ventes',
+      'Notifications temps réel',
+      'Support marchand'
+    ],
+    cta: 'Essai gratuit 15 jours',
+    ctaVariant: 'outline'
   },
   {
     name: 'Entreprises RSE',
     price: 'Sur devis',
     period: '',
+    badge: '15 jours gratuits',
+    badgeColor: 'blue',
     popular: false,
     features: [
       'Publication demandes illimitées',
@@ -58,24 +101,6 @@ const mockPricingPlans = [
       'Accompagnement RSE'
     ],
     cta: 'Demander un devis',
-    ctaVariant: 'outline'
-  },
-  {
-    name: 'Fournisseurs',
-    price: '29 000 FCFA',
-    period: '/mois',
-    badge: '+ 5% commission/vente',
-    popular: false,
-    features: [
-      'Boutique en ligne dédiée',
-      'Gestion catalogue produits',
-      'Système de commandes',
-      'Paiement sécurisé',
-      'Statistiques de ventes',
-      'Notifications temps réel',
-      'Support marchand'
-    ],
-    cta: 'Devenir fournisseur',
     ctaVariant: 'outline'
   }
 ];
