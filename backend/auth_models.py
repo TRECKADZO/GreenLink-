@@ -41,6 +41,10 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    # Département (pour classification zone risque ICI)
+    department: Optional[str] = None
+    village: Optional[str] = None
+    
     # Coopérative fields (optional, used only for cooperative type)
     coop_name: Optional[str] = None
     coop_code: Optional[str] = None
@@ -50,6 +54,13 @@ class UserCreate(UserBase):
     headquarters_region: Optional[str] = None
     commission_rate: Optional[float] = None
     orange_money_business: Optional[str] = None
+    
+    # ICI Data Fields (for producteurs)
+    date_naissance: Optional[str] = None
+    genre: Optional[str] = None  # homme/femme
+    niveau_education: Optional[str] = None  # aucun/primaire/secondaire/superieur
+    taille_menage: Optional[int] = None
+    nombre_enfants: Optional[int] = None
     
     @validator('password')
     def validate_password(cls, v):
