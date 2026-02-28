@@ -98,6 +98,7 @@ app.include_router(tracking.router)
 app.include_router(analytics_advanced.router)
 app.include_router(notifications.router)
 app.include_router(subscriptions.router)
+app.include_router(carbon_sales.router)
 
 app.add_middleware(
     CORSMiddleware,
