@@ -518,6 +518,59 @@ const ICIAlertsDashboard = () => {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* Export Section */}
+          <Card className="bg-slate-900 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Download className="w-5 h-5 text-green-400" />
+                Exporter les données ICI
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-4 gap-4">
+                <Button 
+                  variant="outline" 
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800 h-auto py-3"
+                  onClick={() => exportCSV('alerts')}
+                >
+                  <div className="text-left">
+                    <p className="font-medium">Alertes CSV</p>
+                    <p className="text-xs text-slate-500">Toutes les alertes</p>
+                  </div>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800 h-auto py-3"
+                  onClick={() => exportCSV('ssrte-visits')}
+                >
+                  <div className="text-left">
+                    <p className="font-medium">Visites SSRTE CSV</p>
+                    <p className="text-xs text-slate-500">Historique visites</p>
+                  </div>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800 h-auto py-3"
+                  onClick={() => exportCSV('profiles')}
+                >
+                  <div className="text-left">
+                    <p className="font-medium">Profils ICI CSV</p>
+                    <p className="text-xs text-slate-500">Données producteurs</p>
+                  </div>
+                </Button>
+                <Button 
+                  className="bg-green-500 text-white hover:bg-green-600 h-auto py-3"
+                  onClick={exportFullJSON}
+                >
+                  <div className="text-left">
+                    <p className="font-medium">Rapport Complet JSON</p>
+                    <p className="text-xs text-green-200">Toutes les données</p>
+                  </div>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
