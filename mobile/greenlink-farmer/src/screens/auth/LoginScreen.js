@@ -132,6 +132,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+  },
+  backButtonText: {
+    color: COLORS.white,
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+  },
   header: {
     alignItems: 'center',
     paddingTop: 60,
