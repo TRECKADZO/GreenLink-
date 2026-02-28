@@ -41,6 +41,8 @@ const Profile = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [iciProfile, setIciProfile] = useState(null);
+  const [loadingIci, setLoadingIci] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
     // Producteur
@@ -56,8 +58,38 @@ const Profile = () => {
     carbon_goals: user?.carbon_goals || '',
     // Fournisseur
     supplier_company: user?.supplier_company || '',
-    products_offered: user?.products_offered?.join(', ') || ''
+    products_offered: user?.products_offered?.join(', ') || '',
+    // ICI Data
+    department: user?.department || '',
+    village: user?.village || '',
+    genre: user?.genre || '',
+    date_naissance: user?.date_naissance || '',
+    niveau_education: user?.niveau_education || '',
+    taille_menage: user?.taille_menage || '',
+    nombre_enfants: user?.nombre_enfants || ''
   });
+
+  // Fetch ICI profile for producers
+  useEffect(() => {
+    if (user?.user_type === 'producteur' && user?._id) {
+      fetchIciProfile();
+    }
+  }, [user]);
+
+  const fetchIciProfile = async () => {
+    setLoadingIci(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/ici-data/farmers/${user._id}/ici-profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIciProfile(response.data);
+    } catch (error) {
+      console.log('No ICI profile found or error:', error);
+    } finally {
+      setLoadingIci(false);
+    }
+  };
 
   if (!user) {
     navigate('/login');
