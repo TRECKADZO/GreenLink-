@@ -196,6 +196,12 @@ const RegisterScreen = ({ navigation, route }) => {
       user_type: formData.userType,
     };
 
+    // Ajouter le département si sélectionné
+    if (formData.departement) {
+      const dept = DEPARTEMENTS.find(d => d.code === formData.departement);
+      registerData.department = dept ? dept.nom : formData.departement;
+    }
+
     // Ajouter les champs email et coopérative si nécessaire
     if (formData.email) {
       registerData.email = formData.email;
@@ -203,6 +209,16 @@ const RegisterScreen = ({ navigation, route }) => {
     if (formData.userType === 'cooperative') {
       registerData.coop_name = formData.coopName;
       registerData.coop_code = formData.coopCode || `COOP-${Date.now().toString().slice(-6)}`;
+    }
+
+    // Ajouter les données ICI pour les producteurs
+    if (formData.userType === 'producteur') {
+      if (formData.village) registerData.village = formData.village;
+      if (formData.genre) registerData.genre = formData.genre;
+      if (formData.anneeNaissance) registerData.date_naissance = formData.anneeNaissance;
+      if (formData.niveauEducation) registerData.niveau_education = formData.niveauEducation;
+      if (formData.tailleMenage) registerData.taille_menage = parseInt(formData.tailleMenage);
+      if (formData.nombreEnfants) registerData.nombre_enfants = parseInt(formData.nombreEnfants);
     }
 
     const result = await register(registerData);
