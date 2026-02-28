@@ -112,6 +112,14 @@ const Profile = () => {
       updateData.farm_location = formData.farm_location;
       updateData.farm_size = formData.farm_size ? parseFloat(formData.farm_size) : null;
       updateData.crops = formData.crops ? formData.crops.split(',').map(c => c.trim()).filter(c => c) : [];
+      // ICI Data
+      updateData.department = formData.department;
+      updateData.village = formData.village;
+      updateData.genre = formData.genre;
+      updateData.date_naissance = formData.date_naissance;
+      updateData.niveau_education = formData.niveau_education;
+      updateData.taille_menage = formData.taille_menage ? parseInt(formData.taille_menage) : null;
+      updateData.nombre_enfants = formData.nombre_enfants ? parseInt(formData.nombre_enfants) : null;
     } else if (user.user_type === 'acheteur') {
       updateData.company_name = formData.company_name;
       updateData.purchase_volume = formData.purchase_volume;
@@ -125,6 +133,29 @@ const Profile = () => {
     }
 
     const result = await updateProfile(updateData);
+    
+    // Update ICI profile if producer
+    if (user.user_type === 'producteur' && result.success) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(`${API_URL}/api/ici-data/farmers/${user._id}/ici-profile`, {
+          genre: formData.genre || null,
+          date_naissance: formData.date_naissance || null,
+          niveau_education: formData.niveau_education || null,
+          taille_menage: formData.taille_menage ? parseInt(formData.taille_menage) : null,
+          household_children: formData.nombre_enfants ? {
+            total_enfants: parseInt(formData.nombre_enfants)
+          } : null,
+          consent_rgpd: true
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        fetchIciProfile(); // Refresh ICI profile
+      } catch (error) {
+        console.log('ICI profile update error:', error);
+      }
+    }
+
     setLoading(false);
 
     if (result.success) {
