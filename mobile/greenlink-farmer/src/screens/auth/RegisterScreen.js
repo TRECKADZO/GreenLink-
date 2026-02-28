@@ -127,6 +127,8 @@ const RegisterScreen = ({ navigation, route }) => {
     userType: initialUserType,
     coopName: '',
     coopCode: '',
+    departement: '',
+    zone: '',
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -134,6 +136,15 @@ const RegisterScreen = ({ navigation, route }) => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDepartementPicker, setShowDepartementPicker] = useState(false);
+
+  // Get unique zones
+  const zones = [...new Set(DEPARTEMENTS.map(d => d.zone))].sort();
+  
+  // Filter departments by zone
+  const filteredDepartements = formData.zone 
+    ? DEPARTEMENTS.filter(d => d.zone === formData.zone)
+    : DEPARTEMENTS;
 
   const handleRegister = async () => {
     // Validation
