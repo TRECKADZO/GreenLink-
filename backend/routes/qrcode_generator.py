@@ -258,40 +258,51 @@ async def get_cooperative_members_qr_codes(
     
     # Déterminer la coopérative
     if user_type == 'cooperative':
-        coop_id = current_user.get('_id')
+        coop_id = str(current_user.get('_id'))
     else:
         # Admin peut spécifier une coopérative
         coop_id = None  # Retourne tous les producteurs
     
-    # Query
-    query = {}
-    if coop_id:
-        query["cooperative_id"] = ObjectId(coop_id)
-    
     # Récupérer les membres (users farmers + coop_members)
     members = []
     
-    # From users collection
-    farmers = await db.users.find({**query, "user_type": {"$in": ["farmer", "producteur"]}}).skip(skip).limit(limit).to_list(limit)
+    # From users collection - chercher par cooperative_id string ou ObjectId
+    user_query = {"user_type": {"$in": ["farmer", "producteur"]}}
+    if coop_id:
+        user_query["$or"] = [
+            {"cooperative_id": coop_id},
+            {"cooperative_id": ObjectId(coop_id)},
+            {"coop_id": coop_id}
+        ]
+    
+    farmers = await db.users.find(user_query).skip(skip).limit(limit).to_list(limit)
     for f in farmers:
         members.append({
             "id": str(f["_id"]),
             "name": f.get('full_name'),
             "phone": f.get('phone_number'),
             "village": f.get('village'),
+            "photo_url": f.get('photo_url'),
             "source": "users"
         })
     
-    # From coop_members collection
-    coop_members = await db.coop_members.find(query).skip(skip).limit(limit - len(members)).to_list(limit - len(members))
-    for m in coop_members:
-        members.append({
-            "id": str(m["_id"]),
-            "name": m.get('full_name') or m.get('name'),
-            "phone": m.get('phone_number'),
-            "village": m.get('village'),
-            "source": "coop_members"
-        })
+    # From coop_members collection - chercher par coop_id (string)
+    coop_member_query = {}
+    if coop_id:
+        coop_member_query["coop_id"] = coop_id
+    
+    remaining = limit - len(members)
+    if remaining > 0:
+        coop_members = await db.coop_members.find(coop_member_query).skip(max(0, skip - len(farmers))).limit(remaining).to_list(remaining)
+        for m in coop_members:
+            members.append({
+                "id": str(m["_id"]),
+                "name": m.get('full_name') or m.get('name'),
+                "phone": m.get('phone_number'),
+                "village": m.get('village'),
+                "photo_url": m.get('photo_url'),
+                "source": "coop_members"
+            })
     
     # Générer les QR codes
     result = []
@@ -299,7 +310,7 @@ async def get_cooperative_members_qr_codes(
         qr_data = create_farmer_qr_data(
             farmer_id=member["id"],
             farmer_name=member["name"],
-            cooperative_id=str(coop_id) if coop_id else None
+            cooperative_id=coop_id
         )
         img_buffer = generate_qr_code_image(qr_data, size=200, style="default")
         qr_base64 = base64.b64encode(img_buffer.read()).decode()
@@ -309,13 +320,14 @@ async def get_cooperative_members_qr_codes(
             "qr_code": f"data:image/png;base64,{qr_base64}"
         })
     
-    total_farmers = await db.users.count_documents({**query, "user_type": {"$in": ["farmer", "producteur"]}})
-    total_members = await db.coop_members.count_documents(query)
+    # Compter les totaux
+    total_farmers = await db.users.count_documents(user_query)
+    total_members = await db.coop_members.count_documents(coop_member_query)
     
     return {
         "total": total_farmers + total_members,
         "members": result,
-        "cooperative_id": str(coop_id) if coop_id else None
+        "cooperative_id": coop_id
     }
 
 
