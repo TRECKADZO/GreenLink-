@@ -326,9 +326,16 @@ const RegisterScreen = ({ navigation, route }) => {
           <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
             {acceptTerms && <Text style={styles.checkmark}>✓</Text>}
           </View>
-          <Text style={styles.termsText}>
-            J'accepte les conditions d'utilisation et la politique de confidentialité
-          </Text>
+          <View style={styles.termsTextContainer}>
+            <Text style={styles.termsText}>J'accepte les </Text>
+            <TouchableOpacity onPress={() => setShowTermsModal(true)}>
+              <Text style={styles.termsLink}>conditions d'utilisation</Text>
+            </TouchableOpacity>
+            <Text style={styles.termsText}> et la </Text>
+            <TouchableOpacity onPress={() => setShowPrivacyModal(true)}>
+              <Text style={styles.termsLink}>politique de confidentialité</Text>
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
 
         <Button
@@ -348,6 +355,68 @@ const RegisterScreen = ({ navigation, route }) => {
           </Text>
         </Text>
       </View>
+
+      {/* Terms of Service Modal */}
+      <Modal
+        visible={showTermsModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowTermsModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Conditions d'utilisation</Text>
+            <TouchableOpacity 
+              style={styles.modalCloseButton}
+              onPress={() => setShowTermsModal(false)}
+            >
+              <Text style={styles.modalCloseText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            <Text style={styles.modalText}>{TERMS_CONTENT}</Text>
+          </ScrollView>
+          <TouchableOpacity 
+            style={styles.modalAcceptButton}
+            onPress={() => {
+              setShowTermsModal(false);
+            }}
+          >
+            <Text style={styles.modalAcceptText}>J'ai compris</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Privacy Policy Modal */}
+      <Modal
+        visible={showPrivacyModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPrivacyModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Politique de confidentialité</Text>
+            <TouchableOpacity 
+              style={styles.modalCloseButton}
+              onPress={() => setShowPrivacyModal(false)}
+            >
+              <Text style={styles.modalCloseText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            <Text style={styles.modalText}>{PRIVACY_CONTENT}</Text>
+          </ScrollView>
+          <TouchableOpacity 
+            style={styles.modalAcceptButton}
+            onPress={() => {
+              setShowPrivacyModal(false);
+            }}
+          >
+            <Text style={styles.modalAcceptText}>J'ai compris</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
