@@ -69,7 +69,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/register', {
         ...data,
-        user_type: 'producteur',
+        // Use provided user_type or default to 'producteur'
+        user_type: data.user_type || 'producteur',
         legal_acceptance: {
           acceptedConditions: true,
           acceptedPrivacy: true,
