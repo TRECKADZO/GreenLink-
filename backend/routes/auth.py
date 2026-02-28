@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 import os
@@ -7,9 +7,12 @@ from auth_models import UserCreate, UserLogin, Token, User, UserProfileUpdate
 from auth_utils import get_password_hash, verify_password, create_access_token, verify_token
 from datetime import datetime
 from bson import ObjectId
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 security = HTTPBearer()
+limiter = Limiter(key_func=get_remote_address)
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
