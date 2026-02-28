@@ -254,6 +254,57 @@ const RegisterScreen = ({ navigation, route }) => {
           />
         </View>
 
+        {/* Department Selection */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Département de production *</Text>
+          <Text style={styles.hint}>51 départements de Côte d'Ivoire</Text>
+          
+          {/* Zone Filter */}
+          <Text style={[styles.label, { fontSize: FONTS.sizes.sm, marginTop: SPACING.sm }]}>
+            Filtrer par zone:
+          </Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={formData.zone}
+              onValueChange={(value) => setFormData({ ...formData, zone: value, departement: '' })}
+              style={styles.picker}
+            >
+              <Picker.Item label="-- Toutes les zones --" value="" />
+              {zones.map(zone => (
+                <Picker.Item key={zone} label={zone} value={zone} />
+              ))}
+            </Picker>
+          </View>
+          
+          {/* Department Picker */}
+          <Text style={[styles.label, { fontSize: FONTS.sizes.sm, marginTop: SPACING.sm }]}>
+            Département:
+          </Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={formData.departement}
+              onValueChange={(value) => {
+                const dept = DEPARTEMENTS.find(d => d.code === value);
+                setFormData({ 
+                  ...formData, 
+                  departement: value,
+                  zone: dept ? dept.zone : formData.zone
+                });
+              }}
+              style={styles.picker}
+            >
+              <Picker.Item label="-- Sélectionner --" value="" />
+              {filteredDepartements.map(dept => (
+                <Picker.Item 
+                  key={dept.code} 
+                  label={`${dept.nom} (${dept.zone})`} 
+                  value={dept.code} 
+                />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
         {/* Cooperative specific fields */}
         {formData.userType === 'cooperative' && (
           <>
