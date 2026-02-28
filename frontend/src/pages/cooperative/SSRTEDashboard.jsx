@@ -69,6 +69,9 @@ const CooperativeSSRTEDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMember, setSelectedMember] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [offlineVisits, setOfflineVisits] = useState([]);
+  const [syncing, setSyncing] = useState(false);
 
   // Form state for new SSRTE visit
   const [visitForm, setVisitForm] = useState({
@@ -82,6 +85,39 @@ const CooperativeSSRTEDashboard = () => {
     visite_suivi_requise: false,
     notes: ''
   });
+
+  // Monitor online status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Load offline visits from localStorage
+    const savedOffline = localStorage.getItem('ssrte_offline_visits');
+    if (savedOffline) {
+      setOfflineVisits(JSON.parse(savedOffline));
+    }
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Auto-sync when coming back online
+  useEffect(() => {
+    if (isOnline && offlineVisits.length > 0) {
+      toast.info('Connexion rétablie', { 
+        description: `${offlineVisits.length} visite(s) en attente de synchronisation`,
+        action: {
+          label: 'Synchroniser',
+          onClick: syncOfflineData
+        }
+      });
+    }
+  }, [isOnline]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -102,9 +138,21 @@ const CooperativeSSRTEDashboard = () => {
       ]);
       setMembers(membersRes.data.members || []);
       setVisits(visitsRes.data.visits || []);
+      
+      // Save members locally for offline use
+      localStorage.setItem('ssrte_members_cache', JSON.stringify(membersRes.data.members || []));
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Erreur lors du chargement des données');
+      // Try to load from cache if offline
+      if (!isOnline) {
+        const cachedMembers = localStorage.getItem('ssrte_members_cache');
+        if (cachedMembers) {
+          setMembers(JSON.parse(cachedMembers));
+          toast.info('Mode hors-ligne', { description: 'Données chargées depuis le cache' });
+        }
+      } else {
+        toast.error('Erreur lors du chargement des données');
+      }
     } finally {
       setLoading(false);
     }
