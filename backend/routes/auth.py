@@ -257,16 +257,6 @@ class PasswordResetVerify(BaseModel):
     code: str
     new_password: str
 
-from pydantic import BaseModel
-
-class PasswordResetRequest(BaseModel):
-    identifier: str
-
-class PasswordResetVerify(BaseModel):
-    identifier: str
-    code: str
-    new_password: str
-
 @router.post("/forgot-password")
 async def request_password_reset(request: PasswordResetRequest):
     """Request a password reset code"""
