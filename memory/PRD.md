@@ -1,5 +1,33 @@
 # GreenLink PRD - Updated February 28, 2026
 
+## Billing & Payment Tracking Module - ✅ COMPLETED (Latest Feature - Feb 28, 2026)
+
+### Module Summary
+Complete billing and payment tracking system for Super Admin to manage carbon credit invoices and farmer distributions.
+
+### Key Features
+- **Invoice Management**: Create, send, and track carbon credit invoices
+- **Payment Recording**: Record payments with multiple methods (bank transfer, wire, check, escrow, Orange Money)
+- **Distribution Tracking**: Automatic distribution creation when invoices are paid
+- **Financial Dashboard**: Overview with total invoiced, paid, pending, overdue amounts
+- **Monthly Reports**: Detailed financial reports by period
+
+### API Endpoints
+- `GET /api/billing/dashboard` - Financial overview
+- `POST /api/billing/invoices/create` - Create new invoice
+- `GET /api/billing/invoices` - List invoices with filters
+- `PUT /api/billing/invoices/{id}/send` - Mark invoice as sent
+- `POST /api/billing/payments/record` - Record a payment
+- `GET /api/billing/payments/history` - Payment history
+- `GET /api/billing/distributions` - Farmer distributions
+
+### Files Created
+- `/app/backend/routes/billing.py` - Backend API routes
+- `/app/frontend/src/pages/admin/BillingDashboard.jsx` - Frontend dashboard
+- Route `/admin/billing` in App.js
+
+---
+
 ## Carbon Credit Business Model - ✅ COMPLETED (Latest Feature)
 
 ### Business Model Summary
