@@ -211,7 +211,15 @@ const ICIAlertsDashboard = () => {
               </div>
               <p className="text-slate-400">Système de suivi et alertes travail des enfants</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <Button 
+                variant="outline" 
+                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                onClick={() => navigate('/admin/cooperative-comparison')}
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Comparatif
+              </Button>
               <Button 
                 variant="outline" 
                 className="border-slate-700 text-slate-300 hover:bg-slate-800"
