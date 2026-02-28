@@ -1,6 +1,41 @@
 # GreenLink PRD - Updated February 28, 2026
 
-## Billing & Payment Tracking Module - ✅ COMPLETED (Latest Feature - Feb 28, 2026)
+## Latest Updates - Feb 28, 2026
+
+### 1. Mobile Welcome Screen - ✅ COMPLETED
+- New landing page for mobile app with hero section
+- User type selection (Producteur/Coopérative) with direct navigation
+- Stats display (5000+ Producteurs, 150+ Coopératives, 25K Hectares)
+- Features showcase and CTA buttons
+- Files: `/app/mobile/greenlink-farmer/src/screens/welcome/WelcomeScreen.js`
+
+### 2. Terms & Privacy Links - ✅ COMPLETED
+- Clickable links on mobile registration for Terms and Privacy Policy
+- Modal popups with full legal text content
+- Professional UI with read and close buttons
+- Files: `/app/mobile/greenlink-farmer/src/screens/auth/RegisterScreen.js`
+
+### 3. SMS OTP Integration - ✅ COMPLETED (Mock Mode)
+- Orange CI SMS API integration service
+- Ready for production with environment variables
+- Mock mode for development/testing
+- API endpoints: `/api/sms/send-otp`, `/api/sms/verify-otp`, `/api/sms/status`
+- Files: `/app/backend/services/orange_sms.py`, `/app/backend/routes/sms.py`
+- **Configuration Required**: `ORANGE_CLIENT_ID`, `ORANGE_CLIENT_SECRET` in `.env`
+
+### 4. Order Tracking Route - ✅ COMPLETED
+- Route `/order-tracking/:orderId` added to App.js
+- Full tracking UI with timeline, shipment info, delivery address
+- Supplier can update status and add shipment details
+
+### 5. APK Build v1.2.0 (Build Code 7) - 🔄 IN PROGRESS
+- Page d'accueil mobile ajoutée
+- Liens conditions/confidentialité cliquables
+- Build en cours sur Expo EAS
+
+---
+
+## Billing & Payment Tracking Module - ✅ COMPLETED (Feb 28, 2026)
 
 ### Module Summary
 Complete billing and payment tracking system for Super Admin to manage carbon credit invoices and farmer distributions.
