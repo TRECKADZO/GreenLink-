@@ -17,6 +17,7 @@ import { syncService } from './src/services/sync';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
+import MemberActivationScreen from './src/screens/auth/MemberActivationScreen';
 
 // Screens - Welcome (Landing Page)
 import WelcomeScreen from './src/screens/welcome/WelcomeScreen';
