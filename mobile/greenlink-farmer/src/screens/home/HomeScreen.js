@@ -152,7 +152,7 @@ const HomeScreen = ({ navigation }) => {
           number="2"
           title="Déclarer une Récolte"
           subtitle="Enregistrez votre production"
-          icon="🌾"
+          icon="🍫"
           onPress={() => navigation.navigate('Harvest')}
         />
         
