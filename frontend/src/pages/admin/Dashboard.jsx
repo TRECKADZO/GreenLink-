@@ -22,7 +22,8 @@ import {
   Handshake,
   Building2,
   BarChart3,
-  Globe
+  Globe,
+  DollarSign
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
