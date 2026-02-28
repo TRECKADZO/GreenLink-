@@ -33,7 +33,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://ici-analytics.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://greenlink-analytics.preview.emergentagent.com"
       }
     }
   },
