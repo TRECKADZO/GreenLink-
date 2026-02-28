@@ -45,7 +45,7 @@ const LoginScreen = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={styles.logo}>🌱</Text>
           <Text style={styles.title}>GreenLink</Text>
-          <Text style={styles.subtitle}>Espace Producteur</Text>
+          <Text style={styles.subtitle}>Agriculture durable</Text>
         </View>
 
         {/* Formulaire */}
