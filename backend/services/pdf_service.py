@@ -406,6 +406,167 @@ class PDFReportGenerator:
         doc.build(story)
         buffer.seek(0)
         return buffer.getvalue()
+    
+    def generate_member_receipt(self, data: dict) -> bytes:
+        """Generate Individual Member Payment Receipt PDF"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
+        )
+        
+        story = []
+        
+        # Title
+        story.append(Paragraph("REÇU DE PAIEMENT", self.styles['ReportTitle']))
+        story.append(Paragraph("Prime Carbone - Certification Durable", self.styles['SubTitle']))
+        story.append(Spacer(1, 20))
+        
+        # Cooperative Info
+        coop = data.get('cooperative', {})
+        story.append(Paragraph("Coopérative Émettrice", self.styles['SectionTitle']))
+        
+        coop_data = [
+            ['Nom:', coop.get('name', 'N/A')],
+            ['Code:', coop.get('code', 'N/A')],
+            ['Région:', coop.get('headquarters_region', 'N/A')]
+        ]
+        
+        coop_table = Table(coop_data, colWidths=[4*cm, 12*cm])
+        coop_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#2d5a4d')),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(coop_table)
+        story.append(Spacer(1, 20))
+        
+        # Member/Beneficiary Info
+        member = data.get('member', {})
+        story.append(Paragraph("Bénéficiaire", self.styles['SectionTitle']))
+        
+        member_data = [
+            ['Nom complet:', member.get('name', 'N/A')],
+            ['Téléphone:', member.get('phone', 'N/A')],
+            ['Village:', member.get('village', 'N/A')],
+            ['N° CNI:', member.get('cni_number', 'N/A') or 'Non renseigné']
+        ]
+        
+        member_table = Table(member_data, colWidths=[4*cm, 12*cm])
+        member_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f9f7')),
+        ]))
+        story.append(member_table)
+        story.append(Spacer(1, 20))
+        
+        # Payment Details
+        payment = data.get('payment', {})
+        story.append(Paragraph("Détails du Paiement", self.styles['SectionTitle']))
+        
+        # Main payment amount - highlighted
+        amount = payment.get('amount', 0)
+        story.append(Paragraph(
+            f"<b>Montant reçu: {amount:,.0f} FCFA</b>",
+            ParagraphStyle(
+                'AmountStyle',
+                parent=self.styles['Normal'],
+                fontSize=18,
+                textColor=colors.HexColor('#1a5f4a'),
+                spaceAfter=15,
+                alignment=TA_CENTER
+            )
+        ))
+        
+        payment_data = [
+            ['Information', 'Valeur'],
+            ['Lot de vente', payment.get('lot_name', 'N/A')],
+            ['Part de distribution', f"{payment.get('share_percentage', 0)}%"],
+            ['Parcelles contributives', str(payment.get('parcels_count', 0))],
+            ['Surface totale', f"{payment.get('total_hectares', 0)} ha"],
+            ['Score carbone moyen', f"{payment.get('average_score', 0)}/10"],
+            ['Statut du paiement', payment.get('payment_status', 'N/A').replace('_', ' ').title()],
+            ['N° Transaction', payment.get('transaction_id', 'N/A') or 'En attente'],
+        ]
+        
+        payment_table = Table(payment_data, colWidths=[8*cm, 8*cm])
+        payment_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2d5a4d')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.gray),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(payment_table)
+        story.append(Spacer(1, 20))
+        
+        # Environmental Impact
+        story.append(Paragraph("Impact Environnemental", self.styles['SectionTitle']))
+        
+        hectares = payment.get('total_hectares', 0)
+        score = payment.get('average_score', 0)
+        estimated_co2 = round(hectares * score * 2.5, 1)
+        
+        impact_text = f"""
+        Grâce à vos pratiques agricoles durables:<br/><br/>
+        • <b>CO₂ capturé estimé:</b> {estimated_co2} tonnes<br/>
+        • <b>Équivalent arbres plantés:</b> {int(estimated_co2 * 45)} arbres<br/>
+        • <b>Contribution au climat:</b> Vous aidez à lutter contre le changement climatique<br/><br/>
+        Votre engagement dans une agriculture durable permet de préserver l'environnement 
+        tout en améliorant vos revenus.
+        """
+        story.append(Paragraph(impact_text, self.styles['CustomBodyText']))
+        story.append(Spacer(1, 20))
+        
+        # Certification
+        story.append(Paragraph("Certification", self.styles['SectionTitle']))
+        
+        dist_date = data.get('distribution_date')
+        if isinstance(dist_date, datetime):
+            date_str = dist_date.strftime('%d/%m/%Y à %H:%M')
+        else:
+            date_str = str(dist_date) if dist_date else datetime.now().strftime('%d/%m/%Y')
+        
+        cert_text = f"""
+        Ce document certifie que le paiement ci-dessus a été effectué dans le cadre 
+        du programme de primes carbone de la coopérative {coop.get('name', '')}.<br/><br/>
+        Ce paiement est conforme aux exigences de traçabilité et de durabilité
+        du Règlement (UE) 2023/1115 (EUDR).<br/><br/>
+        <b>Date de distribution:</b> {date_str}<br/>
+        <b>Date d'émission du reçu:</b> {datetime.now().strftime('%d/%m/%Y à %H:%M')}
+        """
+        story.append(Paragraph(cert_text, self.styles['CustomBodyText']))
+        story.append(Spacer(1, 30))
+        
+        # Signature area
+        story.append(Paragraph("Cachet et signature de la coopérative:", self.styles['SmallText']))
+        story.append(Spacer(1, 40))
+        story.append(Paragraph("_" * 30, self.styles['CustomBodyText']))
+        story.append(Spacer(1, 20))
+        
+        # Footer
+        story.append(Paragraph(
+            f"Reçu généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')} - GreenLink Agritech Platform",
+            self.styles['SmallText']
+        ))
+        story.append(Paragraph(
+            "Ce document fait foi pour justifier le paiement de la prime carbone au bénéficiaire mentionné.",
+            self.styles['SmallText']
+        ))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
 
 
 # Create singleton instance
