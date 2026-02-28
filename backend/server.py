@@ -100,6 +100,7 @@ app.include_router(notifications.router)
 app.include_router(subscriptions.router)
 app.include_router(carbon_sales.router)
 app.include_router(billing.router)
+app.include_router(sms.router)
 
 app.add_middleware(
     CORSMiddleware,
