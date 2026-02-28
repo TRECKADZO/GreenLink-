@@ -113,6 +113,8 @@ Build a comprehensive agritech platform connecting:
   - `/api/payments/*` - Orange Money payment integration
   - `/api/admin/*` - Admin management
   - `/api/partners` - Public partners list
+  - `/api/billing/*` - Invoice and payment management (NEW)
+  - `/api/carbon/*` - Carbon credit sales and analytics
 
 ### Frontend (React)
 - **Components**: Shadcn UI library
