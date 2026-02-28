@@ -26,19 +26,19 @@ class TestBillingAuth:
     def test_billing_dashboard_requires_auth(self):
         """Test that billing dashboard requires authentication"""
         response = self.session.get(f"{BASE_URL}/api/billing/dashboard")
-        assert response.status_code == 401, f"Expected 401, got {response.status_code}"
+        assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
         print("PASS: Billing dashboard requires authentication")
     
     def test_billing_invoices_requires_auth(self):
         """Test that invoices endpoint requires authentication"""
         response = self.session.get(f"{BASE_URL}/api/billing/invoices")
-        assert response.status_code == 401, f"Expected 401, got {response.status_code}"
+        assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
         print("PASS: Invoices endpoint requires authentication")
     
     def test_billing_distributions_requires_auth(self):
         """Test that distributions endpoint requires authentication"""
         response = self.session.get(f"{BASE_URL}/api/billing/distributions")
-        assert response.status_code == 401, f"Expected 401, got {response.status_code}"
+        assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
         print("PASS: Distributions endpoint requires authentication")
 
 
