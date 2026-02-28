@@ -122,6 +122,16 @@ const Register = () => {
 
     setLoading(true);
 
+    // Prepare ICI data for producers
+    const iciData = formData.userType === 'producteur' ? {
+      genre: formData.genre || null,
+      date_naissance: formData.dateNaissance || null,
+      niveau_education: formData.niveauEducation || null,
+      taille_menage: formData.tailleMenage ? parseInt(formData.tailleMenage) : null,
+      nombre_enfants: formData.nombreEnfants ? parseInt(formData.nombreEnfants) : null,
+      village: formData.village || null
+    } : {};
+
     const result = await register(
       formData.identifier,
       formData.password,
@@ -133,7 +143,8 @@ const Register = () => {
         acceptedPrivacy: true, 
         acceptedAt: new Date().toISOString(),
         departement: formData.departement,
-        zone: formData.zone
+        zone: formData.zone,
+        ...iciData
       }
     );
 
