@@ -86,31 +86,32 @@ export default function CoopDashboardScreen({ navigation }) {
   const { coop_info, members, parcels, lots, financial } = dashboard || {};
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.coopName}>{coop_info?.name || 'Coopérative'}</Text>
-          <Text style={styles.coopCode}>Code: {coop_info?.code || 'N/A'}</Text>
+    <MainLayout userType="cooperative">
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.coopName}>{coop_info?.name || 'Coopérative'}</Text>
+            <Text style={styles.coopCode}>Code: {coop_info?.code || 'N/A'}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.profileButton}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Ionicons name="person-circle" size={40} color={COLORS.primary} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.profileButton}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Ionicons name="person-circle" size={40} color={COLORS.primary} />
-        </TouchableOpacity>
-      </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[COLORS.primary]}
-          />
-        }
-      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.primary]}
+            />
+          }
+        >
         {/* Statistics Grid */}
         <View style={styles.statsGrid}>
           <StatCard
