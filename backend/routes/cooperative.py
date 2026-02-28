@@ -1174,3 +1174,80 @@ async def generate_distribution_pdf_report(
         }
     )
 
+
+@router.get("/members/{member_id}/receipt/pdf")
+async def generate_member_payment_receipt(
+    member_id: str,
+    distribution_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Générer le reçu de paiement individuel pour un membre"""
+    verify_cooperative(current_user)
+    
+    # Get the member
+    member = await db.coop_members.find_one({
+        "_id": ObjectId(member_id),
+        "coop_id": current_user["_id"]
+    })
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Membre non trouvé")
+    
+    # Get the distribution
+    distribution = await db.coop_distributions.find_one({
+        "_id": ObjectId(distribution_id),
+        "coop_id": current_user["_id"]
+    })
+    
+    if not distribution:
+        raise HTTPException(status_code=404, detail="Distribution non trouvée")
+    
+    # Find the member's payment in the distribution
+    member_payment = None
+    for d in distribution.get("distributions", []):
+        if d.get("member_id") == member_id:
+            member_payment = d
+            break
+    
+    if not member_payment:
+        raise HTTPException(status_code=404, detail="Paiement non trouvé pour ce membre")
+    
+    # Get cooperative info
+    coop_info = {
+        "name": current_user.get("coop_name", ""),
+        "code": current_user.get("coop_code", ""),
+        "headquarters_region": current_user.get("headquarters_region", "")
+    }
+    
+    data = {
+        "cooperative": coop_info,
+        "member": {
+            "name": member.get("full_name", ""),
+            "phone": member.get("phone_number", ""),
+            "village": member.get("village", ""),
+            "cni_number": member.get("cni_number", "")
+        },
+        "payment": {
+            "lot_name": distribution.get("lot_name", ""),
+            "amount": member_payment.get("amount", 0),
+            "share_percentage": member_payment.get("share_percentage", 0),
+            "parcels_count": member_payment.get("parcels_count", 0),
+            "total_hectares": member_payment.get("total_hectares", 0),
+            "average_score": member_payment.get("average_score", 0),
+            "payment_status": member_payment.get("payment_status", ""),
+            "transaction_id": member_payment.get("transaction_id", ""),
+            "payment_date": member_payment.get("payment_date", "")
+        },
+        "distribution_date": distribution.get("executed_at") or distribution.get("created_at")
+    }
+    
+    pdf_bytes = pdf_generator.generate_member_receipt(data)
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=recu_paiement_{member.get('full_name', '').replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        }
+    )
+
