@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { 
   TrendingUp, DollarSign, Leaf, Users, Calculator, 
   Building2, Globe2, ArrowUpRight, Info
 } from 'lucide-react';
-import api from '../services/api';
+import api from '../../services/api';
 
 const CarbonBusinessDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
