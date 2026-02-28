@@ -131,6 +131,17 @@ const LoginScreen = ({ navigation }) => {
               <Text style={styles.memberActivationLink}>Activer mon compte</Text>
             </Text>
           </TouchableOpacity>
+
+          {/* Agent Activation Button */}
+          <TouchableOpacity 
+            style={styles.agentActivationButton}
+            onPress={() => navigation.navigate('AgentActivation')}
+          >
+            <Text style={styles.agentActivationText}>
+              Agent terrain ?{' '}
+              <Text style={styles.agentActivationLink}>Activer mon compte agent</Text>
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Footer */}
