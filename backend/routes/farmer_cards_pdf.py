@@ -242,26 +242,29 @@ async def export_farmer_cards_pdf(
     if farmer_ids:
         ids = [ObjectId(fid.strip()) for fid in farmer_ids.split(',') if fid.strip()]
         query["_id"] = {"$in": ids}
-    elif coop_id:
-        query["cooperative_id"] = ObjectId(coop_id)
     
     # Récupérer les producteurs
     farmers = []
     
     # From users collection
-    user_farmers = await db.users.find({
-        **query, 
-        "user_type": {"$in": ["farmer", "producteur"]}
-    }).to_list(200)
+    user_query = {**query, "user_type": {"$in": ["farmer", "producteur"]}}
+    if coop_id and not farmer_ids:
+        user_query["$or"] = [
+            {"cooperative_id": str(coop_id)},
+            {"coop_id": str(coop_id)}
+        ]
+    user_farmers = await db.users.find(user_query).to_list(200)
     farmers.extend(user_farmers)
     
     # From coop_members collection
-    if coop_id or not farmer_ids:
-        member_query = {"cooperative_id": ObjectId(coop_id)} if coop_id else {}
-        if farmer_ids:
-            member_query["_id"] = query.get("_id", {})
-        coop_members = await db.coop_members.find(member_query).to_list(200)
-        farmers.extend(coop_members)
+    member_query = {}
+    if farmer_ids:
+        member_query["_id"] = query.get("_id", {})
+    elif coop_id:
+        member_query["coop_id"] = str(coop_id)
+    
+    coop_members = await db.coop_members.find(member_query).to_list(200)
+    farmers.extend(coop_members)
     
     if not farmers:
         raise HTTPException(status_code=404, detail="Aucun producteur trouvé")
