@@ -396,7 +396,8 @@ const BottomTabBar = ({ userType = 'farmer', notifications = {} }) => {
             <AnimatedMainButton
               key={tab.name}
               tab={tab}
-              onPress={() => handleTabPress(tab.name)}
+              onPress={() => {}}
+              userType={userType}
             />
           );
         }
