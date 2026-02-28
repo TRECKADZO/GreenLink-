@@ -47,6 +47,7 @@ import BillingDashboard from "./pages/admin/BillingDashboard";
 import PremiumAnalyticsDashboard from "./pages/admin/PremiumAnalyticsDashboard";
 import ICIAnalyticsDashboard from "./pages/admin/ICIAnalyticsDashboard";
 import ICIAlertsDashboard from "./pages/admin/ICIAlertsDashboard";
+import CooperativeComparison from "./pages/admin/CooperativeComparison";
 
 // Cooperative Routes
 import CooperativeDashboard from "./pages/cooperative/Dashboard";
