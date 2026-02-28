@@ -76,6 +76,59 @@
 
 ---
 
+### 0.3 Push Notifications Alertes Critiques - ✅ COMPLETED (NEW)
+- **Purpose**: Notifier automatiquement les admins et coopératives lors d'alertes critiques ICI
+
+**Key Features Implemented:**
+- Service backend push notifications via Expo Push API
+- Intégration automatique dans le système d'alertes ICI existant
+- Notifications envoyées pour alertes "critical" et "high"
+- Canal Android dédié "alerts" avec vibration et badge
+- Statistiques des devices enregistrés et notifications envoyées
+- Support multi-plateforme (iOS/Android)
+
+**API Endpoints:**
+- `POST /api/push-notifications/send` - Envoyer notification personnalisée (admin)
+- `POST /api/push-notifications/alert/critical` - Notifier alerte critique
+- `POST /api/push-notifications/broadcast/field-agents` - Diffuser aux agents
+- `GET /api/push-notifications/stats` - Statistiques push notifications
+
+**Files Created:**
+- `/app/backend/services/push_notifications.py` - Service et routes push
+
+---
+
+### 0.4 Intégration Écrans Mobile Agents de Terrain - ✅ COMPLETED (NEW)
+- **Purpose**: Connecter les écrans field-agent à la navigation React Native
+
+**Key Features Implemented:**
+- Ajout des 4 écrans field-agent dans App.js
+- Routes: FieldAgentDashboard, QRScanner, GeoPhoto, SSRTEVisitForm, VisitsHistory
+- Canal notification "alerts" ajouté au service notifications mobile
+- Bottom tab bar configuré pour FieldAgentDashboard
+
+**Files Updated:**
+- `/app/mobile/greenlink-farmer/App.js` - Navigation complète
+- `/app/mobile/greenlink-farmer/src/services/notifications.js` - Canal alerts
+
+---
+
+### 0.5 APK v1.4.0 - ✅ BUILD IN PROGRESS
+- **Build ID**: d2212137-e612-4367-a5f4-6e92bd6076e9
+- **Version**: 1.4.0 (versionCode: 12)
+- **Status**: In Progress
+- **Link**: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/d2212137-e612-4367-a5f4-6e92bd6076e9
+
+**New Features in v1.4.0:**
+- Dashboard agents de terrain avec mode offline
+- Scanner QR code pour identification producteurs
+- Capture photos géolocalisées avec GPS
+- Formulaire visite SSRTE complet avec offline
+- Canal notifications pour alertes critiques
+- Permissions camera et storage étendues
+
+---
+
 ## Previous Updates - Feb 28, 2026
 
 ### 0. Dashboard Coopérative SSRTE - ✅ COMPLETED (NEW)
