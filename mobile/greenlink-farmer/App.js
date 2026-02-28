@@ -74,10 +74,11 @@ const SCREENS_WITH_TAB_BAR = [
   'CarbonMarketplace', 'MyCarbonScore', 'MyCarbonPurchases',
 ];
 
-// Auth Navigator (Login/Register)
+// Auth Navigator (Welcome/Login/Register)
 function AuthNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
