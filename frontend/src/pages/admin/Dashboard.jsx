@@ -196,6 +196,13 @@ const AdminDashboard = () => {
                 Centre de Données Stratégiques
               </Button>
               <Button 
+                onClick={() => navigate('/admin/premium-analytics')}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              >
+                <Globe className="w-4 h-4 mr-2" />
+                Premium Analytics
+              </Button>
+              <Button 
                 onClick={() => navigate('/admin/billing')}
                 className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
               >
