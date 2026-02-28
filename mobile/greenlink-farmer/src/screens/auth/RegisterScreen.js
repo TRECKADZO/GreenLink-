@@ -7,6 +7,8 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Modal,
+  Linking,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/UI';
@@ -16,6 +18,99 @@ const USER_TYPES = [
   { id: 'producteur', label: 'Producteur', icon: '🌱', description: 'Je cultive et vends mes récoltes' },
   { id: 'cooperative', label: 'Coopérative', icon: '🤝', description: 'Je gère une coopérative agricole' },
 ];
+
+// Terms of Service content
+const TERMS_CONTENT = `CONDITIONS GÉNÉRALES D'UTILISATION
+
+Dernière mise à jour : Février 2026
+
+1. OBJET
+Les présentes Conditions Générales d'Utilisation (CGU) régissent l'utilisation de l'application mobile GreenLink et de tous les services associés.
+
+2. INSCRIPTION
+- L'inscription est gratuite pour les producteurs et coopératives
+- Les informations fournies doivent être exactes et à jour
+- Chaque utilisateur est responsable de la confidentialité de ses identifiants
+
+3. SERVICES PROPOSÉS
+- Gestion des parcelles agricoles
+- Déclaration des récoltes
+- Suivi des primes carbone
+- Marketplace d'intrants agricoles
+- Marketplace de crédits carbone RSE
+
+4. DONNÉES PERSONNELLES
+Les données collectées sont utilisées uniquement dans le cadre des services GreenLink et ne sont jamais vendues à des tiers.
+
+5. PROPRIÉTÉ INTELLECTUELLE
+Tous les contenus de l'application sont la propriété exclusive de GreenLink Agritech.
+
+6. RESPONSABILITÉS
+- GreenLink s'engage à fournir un service de qualité
+- L'utilisateur s'engage à utiliser l'application de manière légale
+- GreenLink ne peut être tenu responsable des pertes de données
+
+7. MODIFICATION DES CGU
+GreenLink se réserve le droit de modifier ces CGU à tout moment. Les utilisateurs seront informés des modifications.
+
+8. LOI APPLICABLE
+Les présentes CGU sont régies par le droit ivoirien.
+
+Contact : support@greenlink.ci
+Téléphone : +225 07 87 76 10 23`;
+
+const PRIVACY_CONTENT = `POLITIQUE DE CONFIDENTIALITÉ
+
+Dernière mise à jour : Février 2026
+
+1. INTRODUCTION
+GreenLink Agritech s'engage à protéger la vie privée de ses utilisateurs. Cette politique explique comment nous collectons, utilisons et protégeons vos données.
+
+2. DONNÉES COLLECTÉES
+Nous collectons :
+- Informations d'identification (nom, téléphone, email)
+- Données de localisation des parcelles
+- Informations sur les récoltes et productions
+- Données de transaction
+
+3. UTILISATION DES DONNÉES
+Vos données sont utilisées pour :
+- Fournir nos services de traçabilité
+- Calculer et verser les primes carbone
+- Améliorer nos services
+- Communiquer avec vous
+
+4. PARTAGE DES DONNÉES
+Nous ne vendons JAMAIS vos données. Elles peuvent être partagées avec :
+- Les coopératives (pour les membres)
+- Les acheteurs certifiés (données de traçabilité)
+- Les autorités compétentes (si requis par la loi)
+
+5. SÉCURITÉ
+- Chiffrement des données sensibles
+- Serveurs sécurisés en Côte d'Ivoire
+- Accès restreint aux données
+
+6. VOS DROITS
+Vous avez le droit de :
+- Accéder à vos données
+- Les corriger ou supprimer
+- Retirer votre consentement
+- Demander la portabilité
+
+7. CONSERVATION
+Les données sont conservées pendant la durée de votre inscription, puis 5 ans après la clôture du compte.
+
+8. COOKIES ET TRACEURS
+L'application mobile utilise des identifiants techniques pour son fonctionnement.
+
+9. CONTACT
+Pour toute question sur vos données :
+Email : privacy@greenlink.ci
+Téléphone : +225 07 87 76 10 23
+
+10. MODIFICATIONS
+Cette politique peut être mise à jour. Vous serez notifié des changements importants.`;
 
 const RegisterScreen = ({ navigation, route }) => {
   const { register } = useAuth();
