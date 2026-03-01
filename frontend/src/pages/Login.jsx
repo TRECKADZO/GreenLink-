@@ -5,7 +5,7 @@ import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Sprout, Mail, Lock } from 'lucide-react';
+import { Sprout, Mail, Lock, UserPlus, Shield } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const Login = () => {
@@ -110,6 +110,35 @@ const Login = () => {
               S'inscrire
             </Link>
           </p>
+        </div>
+
+        {/* Activation Buttons */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <p className="text-xs text-gray-500 text-center mb-3">
+            Déjà enregistré par une coopérative?
+          </p>
+          <div className="space-y-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start border-green-200 hover:bg-green-50 text-green-700"
+              onClick={() => navigate('/activate-member')}
+              data-testid="activate-member-btn"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Activer mon compte Membre Coopérative
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start border-cyan-200 hover:bg-cyan-50 text-cyan-700"
+              onClick={() => navigate('/activate-agent')}
+              data-testid="activate-agent-btn"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Activer mon compte Agent Terrain
+            </Button>
+          </div>
         </div>
       </Card>
     </div>
