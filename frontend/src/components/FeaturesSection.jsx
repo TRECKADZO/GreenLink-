@@ -7,50 +7,51 @@ import { getIconComponent } from '../utils/iconMapper';
 // Fallback mock data
 const mockFeatures = [
   {
-    icon: 'ShoppingBag',
-    title: 'Marché digital',
-    description: 'Achetez et vendez des récoltes avec photos, descriptions détaillées et enchères en temps réel',
-    badge: 'Nouveau',
+    icon: 'Leaf',
+    title: 'Audits Carbone Certifiés',
+    description: 'Auditeurs indépendants évaluent vos parcelles pour la certification carbone et l\'éligibilité aux primes environnementales',
+    badge: 'GreenLink',
     badgeColor: 'bg-emerald-100 text-emerald-700'
   },
   {
-    icon: 'Building2',
-    title: 'Marketplace RSE',
-    description: 'Entreprises RSE : publiez vos besoins en crédits carbone. Producteurs : répondez aux demandes et vendez vos crédits',
-    badge: 'B2B',
-    badgeColor: 'bg-blue-100 text-blue-700'
-  },
-  {
-    icon: 'Sparkles',
-    title: 'Recommandations IA',
-    description: 'Suggestions personnalisées de produits et producteurs basées sur votre historique d\'achats',
-    badge: 'IA',
-    badgeColor: 'bg-purple-100 text-purple-700'
-  },
-  {
-    icon: 'Award',
-    title: 'Vérification carbone',
-    description: 'Évaluation IA des pratiques durables avec génération de certificats vérifiables conformes aux standards internationaux',
-    badge: 'Gold Standard',
+    icon: 'Wallet',
+    title: 'Primes Carbone',
+    description: 'Recevez des paiements Orange Money basés sur votre score carbone : jusqu\'à 60 000 FCFA/ha pour les meilleures pratiques',
+    badge: 'Nouveau',
     badgeColor: 'bg-amber-100 text-amber-700'
   },
   {
-    icon: 'GitCompare',
-    title: 'Comparateur avancé',
-    description: 'Comparez jusqu\'à 4 produits côte à côte : prix, qualité, score carbone, certifications et bien plus',
-    badge: 'Nouveau',
-    badgeColor: 'bg-emerald-100 text-emerald-700'
+    icon: 'Smartphone',
+    title: 'Accès USSD/SMS',
+    description: 'Consultez vos parcelles, primes et paiements sans internet via *123*45# ou SMS au 1234. Disponible en français, baoulé et dioula',
+    badge: 'Offline',
+    badgeColor: 'bg-orange-100 text-orange-700'
   },
   {
-    icon: 'MessageSquare',
-    title: 'Messagerie & Contrats',
-    description: 'Communication intégrée et contrats numériques sécurisés avec signatures électroniques',
-    badge: null
+    icon: 'Shield',
+    title: 'Conformité SSRTE/ICI',
+    description: 'Outils pour les coopératives et agents de terrain pour le monitoring du travail des enfants selon les standards ICI',
+    badge: 'ICI',
+    badgeColor: 'bg-blue-100 text-blue-700'
   },
   {
-    icon: 'BarChart3',
-    title: 'Analytics & Rapports',
-    description: 'Tableaux de bord détaillés, export de données, rapports automatiques et insights personnalisés',
+    icon: 'Award',
+    title: 'Badges Auditeurs',
+    description: 'Système de gamification pour récompenser les auditeurs les plus performants : Débutant, Bronze, Argent, Or, Platine',
+    badge: 'Gamification',
+    badgeColor: 'bg-purple-100 text-purple-700'
+  },
+  {
+    icon: 'Building2',
+    title: 'Gestion Coopérative',
+    description: 'Dashboard complet pour gérer membres, parcelles, primes et conformité EUDR avec export CSV et rapports PDF',
+    badge: 'Pro',
+    badgeColor: 'bg-slate-100 text-slate-700'
+  },
+  {
+    icon: 'FileText',
+    title: 'Rapports & Analytics',
+    description: 'Tableaux de bord en temps réel, export de données, rapports de conformité et analyses de performance par région',
     badge: null
   }
 ];
