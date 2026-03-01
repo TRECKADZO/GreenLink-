@@ -1,5 +1,54 @@
 # GreenLink PRD - Updated March 1, 2026
 
+## Latest Updates - March 1, 2026 (Session 6 - Primes Carbone & USSD)
+
+### ✅ FONCTIONNALITÉS IMPLÉMENTÉES
+
+**1. Dashboard Primes Carbone (Coopérative)**
+- Page `/cooperative/carbon-premiums` avec tableau de bord complet
+- Calcul automatique: Prime = Surface × 50 000 FCFA/ha × (Score/10) + Bonus 20% si score ≥ 8
+- Export CSV des primes avec format français
+- Export rapport PDF mensuel
+- Bouton "Payer" avec confirmation et enregistrement en DB
+- Onglet historique des paiements avec références
+
+**2. API USSD Backend**
+- Endpoint `/api/ussd/callback` compatible Africa's Talking / Orange API
+- Endpoint `/api/ussd/test?phone=XXX` pour tests
+- Menu en 6 options: Parcelles, Primes, Historique, Récolte, Score, Aide
+- Support multi-langues (français, baoulé, dioula)
+- Données réelles du producteur (pas de simulation)
+
+**3. API SMS**
+- Endpoint `/api/ussd/sms/incoming` pour commandes SMS
+- Commandes: SOLDE, PRIME, PARCELLE, RECOLTE, AIDE
+- Stockage des requêtes en DB
+
+**4. Page d'Accueil Mise à Jour**
+- Nouveau Hero: "Primes Carbone pour l'Agriculture Durable"
+- Badges: 50 000 FCFA/ha | Conforme EUDR | ICI Certified
+- Section fonctionnalités mise à jour avec focus carbone
+
+**5. Correction Contact**
+- Numéro corrigé: +1 514 475-7340 (au lieu de 476)
+
+### ✅ TESTS PASSÉS (iteration_13.json)
+- Backend: 100% (16/16 tests)
+- Frontend: 100%
+- APIs Carbon Premiums: ✅
+- APIs USSD: ✅ (toutes les 6 options)
+- Page d'accueil: ✅
+
+### 📱 APK v1.10.0 DISPONIBLE
+- **Téléchargement**: https://expo.dev/artifacts/eas/eMU9MLxKY9squB94EUkgqF.apk
+- Contient: Sélection membre obligatoire pour parcelle, mode offline audit
+
+### 🔶 APIs SIMULÉES (MOCKED)
+- Orange Money: Paiement enregistré en DB, pas de vrai transfert
+- SMS: Stocké en DB, pas envoyé (Orange SMS API non configuré)
+
+---
+
 ## Latest Updates - March 1, 2026 (Session 5 - Complet)
 
 ### ✅ TOUTES LES FONCTIONNALITÉS P1 IMPLÉMENTÉES
