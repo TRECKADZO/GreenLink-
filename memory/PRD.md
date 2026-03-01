@@ -1,5 +1,36 @@
 # GreenLink PRD - Updated March 1, 2026
 
+## Latest Updates - March 1, 2026 (Session 5 - Badges + Offline + Notifications)
+
+### ✅ SYSTÈME DE BADGES AUDITEUR (Gamification)
+- **Niveaux implémentés**:
+  - 🌱 Débutant: 1+ audit
+  - 🥉 Bronze: 10+ audits
+  - 🥈 Argent: 50+ audits
+  - 🥇 Or: 100+ audits
+- Barre de progression vers le prochain niveau
+- Affichage sur dashboard web et mobile
+
+### ✅ MODE HORS-LIGNE AUDIT (Mobile)
+- Service `auditOfflineService.js`
+- Stockage local des audits et photos
+- Sync automatique au retour en ligne
+- Badge indicateur de connexion
+
+### ✅ NOTIFICATIONS PUSH
+- Notification à la coopérative: audit complété
+- Notification à l'auditeur: nouveau badge obtenu
+
+### 📱 APK v1.9.0 DISPONIBLE
+- **Téléchargement**: https://expo.dev/artifacts/eas/dAaTCFqGqFMos1WJUZRqcd.apk
+- Contient: Mode offline, badges, formulaire d'audit amélioré
+
+### ✅ TESTS PASSÉS
+- Backend: 100% (10/10 tests)
+- Frontend: 100% (toutes les fonctionnalités vérifiées)
+
+---
+
 ## Latest Updates - March 1, 2026 (Session 5 - Formulaire Audit + Offline)
 
 ### ✅ FORMULAIRES D'AUDIT IMPLÉMENTÉS (Web + Mobile)
