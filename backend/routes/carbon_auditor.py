@@ -696,3 +696,179 @@ async def get_audit_stats_overview():
             "monthly": monthly_audits
         }
     }
+
+
+# ============== PDF REPORTS ==============
+
+@router.get("/audit/{audit_id}/pdf")
+async def get_audit_pdf_report(audit_id: str):
+    """Générer le rapport PDF d'un audit"""
+    from fastapi.responses import Response
+    from services.pdf_service import pdf_generator
+    
+    audit = db.carbon_audits.find_one({"_id": ObjectId(audit_id)})
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit non trouvé")
+    
+    # Get related data
+    parcel = db.parcels.find_one({"_id": ObjectId(audit["parcel_id"])})
+    mission = db.audit_missions.find_one({"_id": ObjectId(audit.get("mission_id", ""))})
+    auditor = db.users.find_one({"_id": ObjectId(audit["auditor_id"])})
+    
+    farmer = None
+    if parcel and parcel.get("member_id"):
+        farmer = db.users.find_one({"_id": ObjectId(parcel["member_id"])})
+    
+    data = {
+        "audit_id": str(audit["_id"]),
+        "audit_date": audit.get("audit_date", datetime.now(timezone.utc)).strftime("%d/%m/%Y"),
+        "mission": {
+            "cooperative_name": mission.get("cooperative_name", "N/A") if mission else "N/A",
+            "auditor_name": auditor.get("full_name", "N/A") if auditor else "N/A"
+        },
+        "parcel": {
+            "location": parcel.get("location", "N/A") if parcel else "N/A",
+            "farmer_name": farmer.get("full_name", "N/A") if farmer else parcel.get("farmer_name", "N/A") if parcel else "N/A",
+            "declared_area": parcel.get("area_hectares", 0) if parcel else 0
+        },
+        "actual_area_hectares": audit.get("actual_area_hectares", 0),
+        "gps_lat": audit.get("gps_coordinates", {}).get("lat", "N/A"),
+        "gps_lng": audit.get("gps_coordinates", {}).get("lng", "N/A"),
+        "shade_trees_count": audit.get("shade_trees_count", 0),
+        "shade_trees_density": audit.get("shade_trees_density", "N/A"),
+        "organic_practices": audit.get("organic_practices", False),
+        "soil_cover": audit.get("soil_cover", False),
+        "composting": audit.get("composting", False),
+        "erosion_control": audit.get("erosion_control", False),
+        "crop_health": audit.get("crop_health", "N/A"),
+        "carbon_score": audit.get("carbon_score", 0),
+        "recommendation": audit.get("recommendation", "pending"),
+        "observations": audit.get("observations", ""),
+        "rejection_reason": audit.get("rejection_reason", "")
+    }
+    
+    pdf_bytes = pdf_generator.generate_audit_report(data)
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=audit_report_{audit_id}.pdf"
+        }
+    )
+
+
+@router.get("/auditor/{auditor_id}/badge-certificate")
+async def get_badge_certificate(auditor_id: str):
+    """Générer le certificat de badge d'un auditeur"""
+    from fastapi.responses import Response
+    from services.pdf_service import pdf_generator
+    
+    auditor = db.users.find_one({"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"})
+    if not auditor:
+        raise HTTPException(status_code=404, detail="Auditeur non trouvé")
+    
+    total_audits = db.carbon_audits.count_documents({"auditor_id": auditor_id})
+    approved = db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "approved"})
+    
+    badge = calculate_auditor_badge(total_audits)
+    if not badge:
+        raise HTTPException(status_code=400, detail="Aucun badge obtenu")
+    
+    data = {
+        "auditor_name": auditor.get("full_name", "N/A"),
+        "badge": badge,
+        "total_audits": total_audits,
+        "approval_rate": round((approved / total_audits * 100) if total_audits > 0 else 0, 1),
+        "badge_date": auditor.get("badge_earned_at", datetime.now(timezone.utc)).strftime("%d/%m/%Y") if auditor.get("badge_earned_at") else datetime.now(timezone.utc).strftime("%d/%m/%Y")
+    }
+    
+    pdf_bytes = pdf_generator.generate_auditor_badge_certificate(data)
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=badge_certificate_{auditor_id}.pdf"
+        }
+    )
+
+
+# ============== ANALYTICS DASHBOARD ==============
+
+@router.get("/admin/analytics/badges")
+async def get_badges_analytics():
+    """Dashboard Analytics des badges auditeurs"""
+    
+    # Badge distribution
+    all_auditors = list(db.users.find({"user_type": "carbon_auditor"}))
+    
+    badge_counts = {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0,
+        "starter": 0,
+        "none": 0
+    }
+    
+    auditor_details = []
+    
+    for auditor in all_auditors:
+        auditor_id = str(auditor["_id"])
+        total_audits = db.carbon_audits.count_documents({"auditor_id": auditor_id})
+        approved = db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "approved"})
+        
+        badge = calculate_auditor_badge(total_audits)
+        if badge:
+            badge_counts[badge] += 1
+        else:
+            badge_counts["none"] += 1
+        
+        auditor_details.append({
+            "id": auditor_id,
+            "full_name": auditor.get("full_name"),
+            "email": auditor.get("email"),
+            "badge": badge,
+            "badge_label": get_badge_label(badge) if badge else "Aucun",
+            "total_audits": total_audits,
+            "approved_audits": approved,
+            "approval_rate": round((approved / total_audits * 100) if total_audits > 0 else 0, 1),
+            "is_active": auditor.get("is_active", True)
+        })
+    
+    # Sort by total audits (leaderboard)
+    auditor_details.sort(key=lambda x: x["total_audits"], reverse=True)
+    
+    # Monthly trends
+    from datetime import timedelta
+    month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    monthly_audits = db.carbon_audits.count_documents({"audit_date": {"$gte": month_start}})
+    
+    # Previous month comparison
+    prev_month_start = (month_start - timedelta(days=1)).replace(day=1)
+    prev_month_audits = db.carbon_audits.count_documents({
+        "audit_date": {"$gte": prev_month_start, "$lt": month_start}
+    })
+    
+    growth_rate = 0
+    if prev_month_audits > 0:
+        growth_rate = round(((monthly_audits - prev_month_audits) / prev_month_audits) * 100, 1)
+    
+    return {
+        "badge_distribution": badge_counts,
+        "total_auditors": len(all_auditors),
+        "active_auditors": len([a for a in all_auditors if a.get("is_active", True)]),
+        "leaderboard": auditor_details[:10],  # Top 10
+        "all_auditors": auditor_details,
+        "monthly_stats": {
+            "current_month_audits": monthly_audits,
+            "previous_month_audits": prev_month_audits,
+            "growth_rate": growth_rate
+        },
+        "badge_requirements": {
+            "starter": {"min_audits": 1, "description": "Premier audit complété"},
+            "bronze": {"min_audits": 10, "description": "10 audits complétés"},
+            "silver": {"min_audits": 50, "description": "50 audits complétés"},
+            "gold": {"min_audits": 100, "description": "100 audits - Excellence"}
+        }
+    }
