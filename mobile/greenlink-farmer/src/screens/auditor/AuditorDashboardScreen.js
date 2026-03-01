@@ -593,6 +593,81 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  // Badge styles
+  badgeCard: {
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+  },
+  badgeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  currentBadge: {
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  badgeEmoji: {
+    fontSize: 40,
+    marginBottom: 4,
+  },
+  badgeLabel: {
+    color: '#FBBF24',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  badgeProgressContainer: {
+    flex: 1,
+  },
+  badgeProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  badgeProgressLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+  },
+  badgeNextLabel: {
+    color: '#FBBF24',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  badgeProgressBar: {
+    height: 10,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  badgeProgressFill: {
+    height: '100%',
+    backgroundColor: '#FBBF24',
+    borderRadius: 5,
+  },
+  badgeProgressHint: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 11,
+  },
+  badgeMaxLevel: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeMaxText: {
+    color: '#FBBF24',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  badgeMaxSubtext: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    marginTop: 4,
+  },
 });
 
 export default AuditorDashboardScreen;
