@@ -153,6 +153,15 @@ const CarbonAuditorsPage = () => {
               <Plus className="h-4 w-4 mr-2" />
               Nouvel Auditeur
             </Button>
+            <Button 
+              onClick={() => navigate('/admin/audit-missions')} 
+              variant="outline"
+              className="border-white text-white hover:bg-white/10"
+              data-testid="missions-btn"
+            >
+              <Target className="h-4 w-4 mr-2" />
+              Missions
+            </Button>
           </div>
         </div>
       </div>
