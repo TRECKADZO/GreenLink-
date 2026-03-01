@@ -30,7 +30,15 @@ async def declare_parcel(
 ):
     """Déclarer une nouvelle parcelle agricole"""
     parcel_dict = parcel.dict()
-    parcel_dict["farmer_id"] = current_user["_id"]
+    
+    # Si un member_id est fourni (par une coopérative), l'utiliser comme farmer_id
+    if parcel.member_id:
+        parcel_dict["farmer_id"] = parcel.member_id
+        parcel_dict["registered_by"] = current_user["_id"]  # Qui a enregistré
+        parcel_dict["registered_by_type"] = current_user.get("user_type", "unknown")
+    else:
+        parcel_dict["farmer_id"] = current_user["_id"]
+    
     parcel_dict["created_at"] = datetime.utcnow()
     parcel_dict["updated_at"] = datetime.utcnow()
     parcel_dict["is_active"] = True
