@@ -1315,18 +1315,18 @@ async def get_parcels_for_audit(coop_id: str):
     """Get all parcels of a cooperative for carbon audit"""
     try:
         # Get all members of this cooperative
-        members = list(db.coop_members.find({"cooperative_id": coop_id}))
+        members = await db.coop_members.find({"cooperative_id": coop_id}).to_list(length=500)
         member_ids = [str(m["_id"]) for m in members]
         member_user_ids = [str(m.get("user_id")) for m in members if m.get("user_id")]
         
         # Also get users with this coop_id
-        coop_users = list(db.users.find({
+        coop_users = await db.users.find({
             "$or": [
                 {"coop_id": coop_id},
                 {"cooperative_id": coop_id}
             ],
             "user_type": {"$in": ["producteur", "farmer"]}
-        }))
+        }).to_list(length=500)
         farmer_user_ids = [str(u["_id"]) for u in coop_users]
         
         all_farmer_ids = list(set(member_ids + member_user_ids + farmer_user_ids))
@@ -1341,7 +1341,7 @@ async def get_parcels_for_audit(coop_id: str):
             ]
         }
         
-        parcels = list(db.parcels.find(parcels_query))
+        parcels = await db.parcels.find(parcels_query).to_list(length=500)
         
         result = []
         for parcel in parcels:
@@ -1350,12 +1350,12 @@ async def get_parcels_for_audit(coop_id: str):
             farmer_id = parcel.get("farmer_id") or parcel.get("owner_id") or parcel.get("member_id")
             if farmer_id:
                 # Try to find in coop_members
-                member = db.coop_members.find_one({"_id": ObjectId(farmer_id)}) if ObjectId.is_valid(farmer_id) else None
+                member = await db.coop_members.find_one({"_id": ObjectId(farmer_id)}) if ObjectId.is_valid(farmer_id) else None
                 if member:
                     farmer_name = member.get("full_name", "Non assigné")
                 else:
                     # Try to find in users
-                    user = db.users.find_one({"_id": ObjectId(farmer_id)}) if ObjectId.is_valid(farmer_id) else None
+                    user = await db.users.find_one({"_id": ObjectId(farmer_id)}) if ObjectId.is_valid(farmer_id) else None
                     if user:
                         farmer_name = user.get("full_name", "Non assigné")
             
@@ -1386,10 +1386,10 @@ async def list_all_cooperatives():
     """List all cooperatives for admin selection"""
     try:
         # Get cooperatives from users collection
-        coops = list(db.users.find(
+        coops = await db.users.find(
             {"user_type": "cooperative"},
             {"_id": 1, "full_name": 1, "coop_name": 1, "coop_code": 1, "email": 1}
-        ))
+        ).to_list(length=100)
         
         result = []
         for coop in coops:
