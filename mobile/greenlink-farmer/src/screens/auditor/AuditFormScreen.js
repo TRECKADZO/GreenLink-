@@ -326,6 +326,25 @@ const AuditFormScreen = ({ navigation, route }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Audit de Parcelle</Text>
         <Text style={styles.headerSubtitle}>{parcel?.location} - {parcel?.farmer_name}</Text>
+        
+        {/* Network Status Badge */}
+        <View style={styles.networkBadge}>
+          <View style={[styles.networkDot, isOnline ? styles.networkOnline : styles.networkOffline]} />
+          <Text style={styles.networkText}>
+            {isOnline ? 'En ligne' : 'Hors-ligne'}
+          </Text>
+          {pendingCount > 0 && (
+            <TouchableOpacity 
+              style={styles.syncBadge}
+              onPress={syncPendingAudits}
+              disabled={!isOnline || submitting}
+            >
+              <Text style={styles.syncBadgeText}>
+                {pendingCount} en attente {isOnline ? '- Sync' : ''}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
