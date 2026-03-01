@@ -804,6 +804,143 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.sm,
     marginTop: SPACING.sm,
   },
+  // Member Selection Styles
+  memberSection: {
+    marginBottom: SPACING.lg,
+    backgroundColor: COLORS.gray[50],
+    borderRadius: 12,
+    padding: SPACING.md,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    borderStyle: 'dashed',
+  },
+  memberSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.gray[300],
+    marginTop: SPACING.sm,
+  },
+  selectedMember: {
+    flex: 1,
+  },
+  selectedMemberName: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.gray[800],
+  },
+  selectedMemberPhone: {
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.gray[500],
+  },
+  memberPlaceholder: {
+    color: COLORS.gray[400],
+    fontSize: FONTS.sizes.md,
+  },
+  memberArrow: {
+    color: COLORS.gray[400],
+    fontSize: 12,
+  },
+  memberHint: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.primary,
+    marginTop: SPACING.xs,
+    fontStyle: 'italic',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: SPACING.lg,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  modalTitle: {
+    fontSize: FONTS.sizes.lg,
+    fontWeight: 'bold',
+    color: COLORS.gray[800],
+  },
+  modalClose: {
+    fontSize: 24,
+    color: COLORS.gray[500],
+    padding: 5,
+  },
+  searchInput: {
+    backgroundColor: COLORS.gray[100],
+    borderRadius: 10,
+    padding: SPACING.md,
+    fontSize: FONTS.sizes.md,
+    marginBottom: SPACING.md,
+  },
+  memberList: {
+    maxHeight: 400,
+  },
+  memberItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray[200],
+  },
+  memberItemSelected: {
+    backgroundColor: COLORS.primary + '10',
+  },
+  memberAvatar: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.md,
+  },
+  memberAvatarText: {
+    color: COLORS.white,
+    fontSize: FONTS.sizes.lg,
+    fontWeight: 'bold',
+  },
+  memberInfo: {
+    flex: 1,
+  },
+  memberName: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.gray[800],
+  },
+  memberPhone: {
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.gray[500],
+  },
+  memberVillage: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.gray[400],
+    marginTop: 2,
+  },
+  memberCheck: {
+    color: COLORS.primary,
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  emptyList: {
+    textAlign: 'center',
+    color: COLORS.gray[400],
+    padding: SPACING.xl,
+  },
 });
 
 export default AddParcelScreen;
