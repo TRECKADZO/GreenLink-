@@ -53,9 +53,18 @@ const CROP_TYPES = [
 
 const AddParcelScreen = ({ navigation }) => {
   const { isOnline, addPendingAction } = useOffline();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [photos, setPhotos] = useState([]);
+  
+  // Sélection du membre (propriétaire de la parcelle)
+  const [members, setMembers] = useState([]);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [showMemberPicker, setShowMemberPicker] = useState(false);
+  const [searchMember, setSearchMember] = useState('');
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  
   const [formData, setFormData] = useState({
     location: '',
     department: '',
@@ -68,6 +77,33 @@ const AddParcelScreen = ({ navigation }) => {
     latitude: null,
     longitude: null,
   });
+  
+  // Vérifier si l'utilisateur est une coopérative
+  const isCooperative = user?.user_type === 'cooperative';
+
+  // Charger les membres si c'est une coopérative
+  useEffect(() => {
+    if (isCooperative) {
+      fetchMembers();
+    }
+  }, [isCooperative]);
+
+  const fetchMembers = async () => {
+    try {
+      setLoadingMembers(true);
+      const response = await cooperativeApi.getMembers();
+      setMembers(response?.members || []);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  const filteredMembers = members.filter(member => 
+    member.full_name?.toLowerCase().includes(searchMember.toLowerCase()) ||
+    member.phone_number?.includes(searchMember)
+  );
 
   // Obtenir la position automatiquement au chargement
   useEffect(() => {
