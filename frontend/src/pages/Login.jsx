@@ -10,13 +10,30 @@ import { useToast } from '../hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     identifier: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
+
+  // Helper function to get redirect path based on user type
+  const getRedirectPath = (userData) => {
+    switch (userData?.user_type) {
+      case 'admin':
+        return '/admin/dashboard';
+      case 'cooperative':
+        return '/cooperative/dashboard';
+      case 'carbon_auditor':
+        return '/auditor/dashboard';
+      case 'field_agent':
+        return '/profile'; // Field agents primarily use mobile
+      case 'producer':
+      default:
+        return '/profile';
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +48,21 @@ const Login = () => {
         title: 'Connexion réussie!',
         description: 'Bienvenue sur GreenLink'
       });
-      navigate('/profile');
+      
+      // Fetch user data from localStorage to determine redirect
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // Decode JWT to get user type
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const redirectPath = getRedirectPath({ user_type: payload.user_type });
+          navigate(redirectPath);
+        } catch {
+          navigate('/profile');
+        }
+      } else {
+        navigate('/profile');
+      }
     } else {
       toast({
         title: 'Erreur',
