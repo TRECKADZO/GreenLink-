@@ -211,7 +211,7 @@ const AuditFormScreen = ({ navigation, route }) => {
         composting: formData.composting,
         erosion_control: formData.erosion_control,
         crop_health: formData.crop_health,
-        photos: photos.map(p => p.uri), // In production, upload to cloud first
+        photos: photos,
         gps_lat: formData.gps_lat ? parseFloat(formData.gps_lat) : null,
         gps_lng: formData.gps_lng ? parseFloat(formData.gps_lng) : null,
         observations: formData.observations,
@@ -219,9 +219,29 @@ const AuditFormScreen = ({ navigation, route }) => {
         rejection_reason: formData.rejection_reason || null,
       };
 
+      // Check if online
+      const networkState = await NetInfo.fetch();
+      const online = networkState.isConnected && networkState.isInternetReachable;
+
+      if (!online) {
+        // Save offline
+        const result = await auditOfflineService.saveAuditLocally(auditData, missionId, user.id);
+        
+        Alert.alert(
+          'Sauvegardé hors-ligne 📴',
+          result.message,
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+        return;
+      }
+
+      // Submit online
       const response = await axios.post(
         `${API_URL}/api/carbon-auditor/audit/submit?auditor_id=${user.id}&mission_id=${missionId}`,
-        auditData
+        {
+          ...auditData,
+          photos: photos.map(p => p.uri)
+        }
       );
 
       Alert.alert(
@@ -231,7 +251,54 @@ const AuditFormScreen = ({ navigation, route }) => {
       );
     } catch (error) {
       console.error('Error submitting audit:', error);
-      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de soumettre l\'audit');
+      
+      // If network error, save offline
+      if (error.message === 'Network Error' || !error.response) {
+        try {
+          const auditData = {
+            parcel_id: parcelId,
+            actual_area_hectares: parseFloat(formData.actual_area_hectares),
+            shade_trees_count: parseInt(formData.shade_trees_count) || 0,
+            shade_trees_density: formData.shade_trees_density,
+            organic_practices: formData.organic_practices,
+            soil_cover: formData.soil_cover,
+            composting: formData.composting,
+            erosion_control: formData.erosion_control,
+            crop_health: formData.crop_health,
+            photos: photos,
+            gps_lat: formData.gps_lat ? parseFloat(formData.gps_lat) : null,
+            gps_lng: formData.gps_lng ? parseFloat(formData.gps_lng) : null,
+            observations: formData.observations,
+            recommendation: formData.recommendation,
+            rejection_reason: formData.rejection_reason || null,
+          };
+          
+          const result = await auditOfflineService.saveAuditLocally(auditData, missionId, user.id);
+          Alert.alert(
+            'Sauvegardé hors-ligne 📴',
+            'Connexion perdue. ' + result.message,
+            [{ text: 'OK', onPress: () => navigation.goBack() }]
+          );
+        } catch (offlineError) {
+          Alert.alert('Erreur', 'Impossible de sauvegarder l\'audit');
+        }
+      } else {
+        Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de soumettre l\'audit');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const syncPendingAudits = async () => {
+    setSubmitting(true);
+    try {
+      const result = await auditOfflineService.syncPendingAudits();
+      Alert.alert('Synchronisation', result.message);
+      const count = await auditOfflineService.getPendingCount();
+      setPendingCount(count);
+    } catch (error) {
+      Alert.alert('Erreur', 'Erreur de synchronisation');
     } finally {
       setSubmitting(false);
     }
