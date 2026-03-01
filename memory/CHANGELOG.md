@@ -2,6 +2,18 @@
 
 ## [March 1, 2026] - Carbon Auditor System & Web Improvements
 
+### Added - Admin Mission Management Interface
+- **Page Admin `/admin/audit-missions`** - Interface complète de gestion des missions
+- Création de missions en 2 étapes (auditeur → parcelles)
+- Filtres par statut et recherche
+- Barre de progression pour chaque mission
+- Modal de détails de mission
+
+### Added - Test Data
+- Mission de test créée pour COOP-GAGNOA
+- 5 parcelles de démonstration (Gagnoa, Bouaflé, Daloa, Soubré, Issia)
+- Auditeur assigné: Kouassi Jean-Marc
+
 ### Added - Carbon Auditor System (Major Feature)
 - **Nouveau rôle utilisateur**: `carbon_auditor` rattaché à GreenLink
 - **Backend API**:
