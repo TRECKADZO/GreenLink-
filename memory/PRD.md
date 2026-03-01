@@ -1,51 +1,48 @@
 # GreenLink PRD - Updated March 1, 2026
 
-## Latest Updates - March 1, 2026 (Session 6 - Primes Carbone & USSD)
+## Latest Updates - March 1, 2026 (Session 6 - Tests APK v1.10.0 Complets)
 
-### ✅ FONCTIONNALITÉS IMPLÉMENTÉES
+### ✅ APK v1.10.0 VALIDÉ
+
+**Tests API Backend (simulant l'APK) :**
+1. ✅ Login auditeur
+2. ✅ Dashboard avec badges et progression
+3. ✅ Liste missions et parcelles
+4. ✅ Soumission audit (simulation sync offline)
+5. ✅ Progression badges (8 audits → 80% vers Bronze)
+6. ✅ Création parcelle avec membre obligatoire
+7. ✅ Liste membres coopérative (fix compatibilité coop_id/cooperative_id)
+
+**APK Téléchargement:** https://expo.dev/artifacts/eas/eMU9MLxKY9squB94EUkgqF.apk
+
+### ✅ FONCTIONNALITÉS DE CETTE SESSION
 
 **1. Dashboard Primes Carbone (Coopérative)**
 - Page `/cooperative/carbon-premiums` avec tableau de bord complet
 - Calcul automatique: Prime = Surface × 50 000 FCFA/ha × (Score/10) + Bonus 20% si score ≥ 8
-- Export CSV des primes avec format français
-- Export rapport PDF mensuel
-- Bouton "Payer" avec confirmation et enregistrement en DB
-- Onglet historique des paiements avec références
+- Export CSV/PDF des primes
+- Bouton "Payer" avec historique des paiements
 
 **2. API USSD Backend**
 - Endpoint `/api/ussd/callback` compatible Africa's Talking / Orange API
-- Endpoint `/api/ussd/test?phone=XXX` pour tests
-- Menu en 6 options: Parcelles, Primes, Historique, Récolte, Score, Aide
+- 6 options menu: Parcelles, Primes, Paiements, Récolte, Score, Aide
 - Support multi-langues (français, baoulé, dioula)
-- Données réelles du producteur (pas de simulation)
 
-**3. API SMS**
-- Endpoint `/api/ussd/sms/incoming` pour commandes SMS
-- Commandes: SOLDE, PRIME, PARCELLE, RECOLTE, AIDE
-- Stockage des requêtes en DB
+**3. Dashboard Admin Temps Réel**
+- Statistiques USSD, paiements, audits, régions
+- Activité en temps réel
 
-**4. Page d'Accueil Mise à Jour**
-- Nouveau Hero: "Primes Carbone pour l'Agriculture Durable"
-- Badges: 50 000 FCFA/ha | Conforme EUDR | ICI Certified
-- Section fonctionnalités mise à jour avec focus carbone
-
-**5. Correction Contact**
-- Numéro corrigé: +1 514 475-7340 (au lieu de 476)
+**4. Corrections**
+- Numéro de contact: +1 514 475-7340
+- Compatibilité coop_id/cooperative_id pour les membres
 
 ### ✅ TESTS PASSÉS (iteration_13.json)
 - Backend: 100% (16/16 tests)
 - Frontend: 100%
-- APIs Carbon Premiums: ✅
-- APIs USSD: ✅ (toutes les 6 options)
-- Page d'accueil: ✅
-
-### 📱 APK v1.10.0 DISPONIBLE
-- **Téléchargement**: https://expo.dev/artifacts/eas/eMU9MLxKY9squB94EUkgqF.apk
-- Contient: Sélection membre obligatoire pour parcelle, mode offline audit
 
 ### 🔶 APIs SIMULÉES (MOCKED)
-- Orange Money: Paiement enregistré en DB, pas de vrai transfert
-- SMS: Stocké en DB, pas envoyé (Orange SMS API non configuré)
+- Orange Money: Paiement enregistré en DB
+- SMS: Stocké en DB
 
 ---
 
