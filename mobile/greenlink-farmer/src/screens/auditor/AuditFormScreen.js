@@ -59,6 +59,25 @@ const AuditFormScreen = ({ navigation, route }) => {
     { value: 'poor', label: 'Mauvais' },
   ];
 
+  // Check network status
+  useEffect(() => {
+    const checkNetwork = async () => {
+      const state = await NetInfo.fetch();
+      setIsOnline(state.isConnected && state.isInternetReachable);
+      
+      const count = await auditOfflineService.getPendingCount();
+      setPendingCount(count);
+    };
+    
+    checkNetwork();
+    
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsOnline(state.isConnected && state.isInternetReachable);
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
   const getCurrentLocation = async () => {
     try {
       setGettingLocation(true);
