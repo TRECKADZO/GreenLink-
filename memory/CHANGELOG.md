@@ -1,5 +1,26 @@
 # GreenLink Changelog
 
+## [2026-03-01] - v1.9.0 - Mode Hors-ligne Audit
+
+### Nouvelles Fonctionnalités
+- **Mode hors-ligne complet pour les audits** (Mobile)
+  - Sauvegarde locale automatique si pas de connexion
+  - Synchronisation automatique au retour en ligne
+  - Indicateur visuel de l'état de connexion
+  - Stockage local des photos
+  - File d'attente des audits en attente de sync
+
+### Améliorations
+- Service `auditOfflineService.js` pour gérer le stockage offline
+- Badge de statut réseau dans l'en-tête du formulaire
+- Bouton de synchronisation manuelle
+
+### Build APK
+- **Version**: 1.9.0 (build en cours)
+- **Runtime**: 1.9.0
+
+---
+
 ## [2026-03-01] - Session de Test Complet
 
 ### Tests Effectués
