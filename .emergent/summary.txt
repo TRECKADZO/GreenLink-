@@ -1,80 +1,99 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to build a multi-persona agritech platform for Côte d'Ivoire. The project has since evolved significantly, focusing on implementing a comprehensive suite of features for the International Cocoa Initiative (ICI) to monitor and remediate child labor (SSRTE), based on official reports.
+The user's initial request was to build a multi-persona agritech platform for Côte d'Ivoire. The project has since evolved to implement a comprehensive suite of features for the International Cocoa Initiative (ICI) to monitor and remediate child labor (SSRTE).
 
-Key features implemented throughout the project include:
-1.  A strategic analytics dashboard for Super Admins based on ICI data.
-2.  Data collection mechanisms for producer household information via web and mobile.
-3.  A real-time alerts dashboard for high-risk profiles.
-4.  An offline-first dashboard for Cooperatives to log SSRTE field visits.
-5.  A comparative dashboard to rank cooperative performance.
-6.  Data export functionalities (CSV, JSON).
-7.  A dedicated mobile application for field agents with QR code scanning, geo-tagged photos, and offline capabilities.
-8.  Automated PDF report generation and producer ID cards with QR codes.
-9.  Push notifications for critical alerts.
-10. Cloud storage for producer photos and an SSRTE analytics dashboard.
+The scope has recently expanded to include a new, distinct user role: the **Carbon Auditor**. This role, managed by the platform's Super Admin (GreenLink), is responsible for independently auditing farmer plots to verify data for carbon credit payments, ensuring compliance with international standards. This is separate from the cooperative's Field Agents, who focus on SSRTE visits.
+
+The platform must now support:
+*   Strategic analytics dashboards for Admins.
+*   Data collection for producer households and their plots.
+*   Real-time alerts and push notifications.
+*   Offline-first mobile tools for Cooperatives, Field Agents, and now Carbon Auditors.
+*   Data export functionalities (CSV, JSON, PDF).
+*   Automated PDF ID card generation with QR codes.
+*   A carbon payment tracking dashboard for producers.
+*   A centralized notification system.
+*   Account activation flows for producers and field agents pre-registered by cooperatives.
+*   An admin interface to create and manage Carbon Auditors and assign them audit missions.
+*   A dedicated web and mobile dashboard for Carbon Auditors to manage and execute their audit missions.
 
 **User's preferred language**: French
 
 **what currently exists?**
-The application is a mature full-stack platform (React/FastAPI/MongoDB) with extensive features for agritech compliance and monitoring.
-*   **Backend**: The backend is highly modular, with specific routes for ICI analytics, data collection, real-time updates (WebSocket), PDF report generation, QR code management, push notifications, and SSRTE analytics. It handles complex logic like risk scoring, data aggregation, and generating downloadable assets (PDFs, images). A mocked endpoint for cloud photo uploads has been implemented, currently saving files to the local filesystem.
-*   **Frontend (Web)**: The React application provides role-based dashboards for Super Admins, Cooperatives, and Producers.
-    *   **Admin**: Has access to strategic analytics, real-time alerts, inter-cooperative comparisons, QR code management, and a new SSRTE analytics dashboard.
-    *   **Cooperative**: Can manage producer data, log SSRTE visits (with offline support), and perform batch generation and export of producer ID cards (PDF).
-    *   **Producer**: Can update their profile with detailed household information and view/download their personal GreenLink ID card, which includes a unique QR code and their profile picture.
-*   **Mobile App (React Native)**: A dedicated mobile app for field agents () has been built. It includes a dashboard, an offline-first form for SSRTE visits, a QR code scanner to identify producers, and a tool for taking geo-tagged photos. Push notifications for critical alerts are integrated. The final APK is built and the download link has been provided.
+The application is a mature full-stack platform (React/FastAPI/MongoDB) with role-based access for Super Admins, Cooperatives, Producers, Field Agents, and the newly added **Carbon Auditors**.
+
+*   **Backend**: A modular FastAPI backend providing APIs for auth, analytics, data collection, PDF/QR generation, and notifications. It now includes:
+    *   A new  user type.
+    *   API endpoints (, ) for Super Admins to manage auditors and assign audit missions.
+    *   An API endpoint () to serve data to the auditor's dashboard.
+    *   Logic to send push notifications to auditors when a new mission is assigned.
+*   **Frontend (Web)**: The React app features role-specific UIs. Recent additions include:
+    *   **Login Page**: Now includes Activate Account buttons for Cooperative Members and Field Agents, mirroring the mobile app.
+    *   **Cooperative Portal**:
+        *   A new page to manage Field Agents ().
+        *   A new page for adding parcels with a dropdown to select the farmer ().
+        *   Forms now use a complete list of Côte d'Ivoire departments instead of regions.
+    *   **Admin Portal**:
+        *   A new page to manage Carbon Auditors ().
+        *   A new page to create and track Audit Missions ().
+    *   **Auditor Portal**:
+        *   A dedicated dashboard () for auditors to view their stats and assigned missions.
+        *   A page to view the details of an assigned mission, listing all parcels to be audited.
+*   **Mobile App (React Native)**: Skeletons for the Carbon Auditor flow have been created, including screens for login, dashboard, and mission details. The parcel creation forms have been updated to use departments. A new build () incorporating these changes has been initiated.
 
 **Last working item**:
-- Last item agent was working: The agent finished implementing two user-requested features:
-    1.  **Cloud Storage for Producer Photos**: Implemented a backend endpoint () and updated the frontend profile page to allow producers to upload their photos. The photos are used in the PDF ID card exports.
-    2.  **SSRTE Analytics Dashboard**: Created a new backend service () and a corresponding frontend dashboard () to display historical statistics on SSRTE field visits, risk distribution, and other key metrics.
+- Last item agent was working: The agent was implementing push notifications for Carbon Auditors. It updated the backend route for creating audit missions () to trigger a push notification to the assigned auditor.
 - Status: 
-- Agent Testing Done: 
-- Which testing method agent to use? The user should perform manual testing by:
-    1. Navigating to a producer's profile, uploading a photo, and verifying it appears.
-    2. Navigating to the cooperative's QR code page and exporting a PDF card for that producer to see if the photo is included.
-    3. Navigating to the new Analytics SSRTE dashboard from the admin panel and verifying the page loads correctly (it will be empty without SSRTE visit data).
-- User Testing Done: 
+- Agent Testing Done: N
+- Which testing method agent to use? The agent should first test this by creating a new mission as the Admin and checking the backend logs for the notification dispatch call. Then, a full mobile test will be needed to confirm the notification is received on a device.
+- User Testing Done: N
 
 **All Pending/In progress Issue list**:
-There are no known pending issues or bugs.
+  - **Issue 1: Verify APK v1.8.0 Build Completion (P0)**
+     - A new build for the mobile app was started but its status was not confirmed.
+     - Next debug checklist: Run  to check the status of the last build. If complete, provide the download URL to the user. If failed, analyze the build logs.
+     - Why fix this issue and what will be achieved with the fix? The user needs the latest APK to test the new mobile features, especially the Carbon Auditor flow.
+     - Status: 
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Both (Full mobile E2E testing is required).
+     - Blocked on other issue: None.
 
 **In progress Task List**:
-There are no tasks currently in progress. The last set of features has been implemented and is pending user review.
+  - **Task 1: Finalize and Test Push Notification for Audit Missions (P0)**
+     - Where to resume: The backend code to send the notification has been added to .
+     - What will be achieved with this? Auditors will be instantly notified when a new audit mission is assigned to them, improving workflow efficiency.
+     - Status: 
+     - Should Test frontend/backend/both after fix? Both. The backend needs to be tested to ensure the notification is sent. The mobile app needs to be tested to ensure the notification is received.
+     - Blocked on something: Depends on the completion of the APK Build (Issue 1).
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P0) **Populate SSRTE Data and Verify Analytics**: The new SSRTE analytics dashboard is empty. The next logical step is to use the Cooperative/Field Agent role to log several SSRTE visits and then verify that the analytics dashboard correctly displays the aggregated data.
+    *   (P0) **Test Complete Mobile Flow**: The user explicitly requested to test the entire mobile application flow for all roles, especially the new auditor functionality. This is a top priority after the APK is ready.
+    *   (P1) **Implement Mobile Audit Form**: Create the full-featured mobile form for auditors to conduct parcel audits, including geo-tagged photo capture, offline data entry, and sync capabilities.
+    *   (P1) **Implement Web Audit Form**: Build the corresponding audit form on the web dashboard for auditors.
 
 *   **Future Tasks:** (From original backlog)
-    *   (P1) **Real USSD/SMS Integration**: Replace the current mocked USSD/SMS OTP system with a live integration.
-    *   (P2) **Finalize and Verify Order Tracking**: The feature exists but needs full end-to-end testing and integration into the main user journey.
-    *   (P2) **Refactor Backend Routes**: Continue modularizing the backend code for better maintainability as the application grows.
-    *   (P2) **Implement True Cloud Storage**: Replace the mocked local file storage for photos with a genuine cloud storage solution (e.g., AWS S3, Google Cloud Storage).
+    *   (P2) **Real USSD/SMS Integration**: Replace the current mocked USSD/SMS OTP system with a live integration.
+    *   (P2) **Finalize and Verify Order Tracking**: Fully test and integrate the existing order tracking feature.
+    *   (P2) **Refactor Backend Routes**: Continue modularizing the backend code.
+    *   (P2) **Implement True Cloud Storage**: Replace mocked local file storage with a cloud solution (e.g., S3).
 
 **Completed work in this session**
-- **Real-time Dashboard & PDF Reports**:
-    - Implemented  using WebSockets (with a polling fallback).
-    - Implemented backend logic in  to generate downloadable PDF summary reports.
-- **Mobile App for Field Agents (v1.4.0)**:
-    - Created a full suite of screens for field agents: , , , and an offline-first .
-    - Integrated push notifications for critical alerts using  and Expo's libraries.
-    - Successfully built and provided the download link for the  APK.
-- **Full QR Code Lifecycle**:
-    - **Generation**: Created  to generate unique QR codes for producers.
-    - **Display**: Integrated QR codes into the producer .
-    - **Scanning**: Implemented the scanner in the mobile app.
-    - **Batch Management**: Developed  for cooperatives to view, manage, and batch-export producer ID cards.
-- **Producer ID Cards & Photos**:
-    - Created  to generate professional, downloadable PDF ID cards for producers, including their name, photo, and QR code.
-    - Implemented photo upload functionality on the producer profile, with a (mocked) cloud storage backend endpoint.
-- **SSRTE Analytics**:
-    - Built the  for admins to view historical data on child labor monitoring activities.
-    - Created the supporting backend endpoints in .
-- **Testing**: Successfully ran a full suite of tests using the , which passed with 100% success for both frontend and backend.
+- **Web Login Page UI Parity**: Added Activate Account buttons to the web login page to match the mobile app.
+- **Cooperative Portal Enhancements**:
+  - Implemented a dedicated page for managing Field Agents.
+  - Created a new parcel-addition form that allows selecting the associated farmer from a dropdown.
+  - Replaced the static regions list with a comprehensive list of all departments in Côte d'Ivoire.
+- **Carbon Auditor Role Implementation (Full-Stack)**:
+  - Created the new  user type in the backend.
+  - Built a full CRUD interface for Super Admins to manage Carbon Auditors.
+  - Developed a dedicated, role-based web dashboard for Carbon Auditors.
+  - Implemented a system for Admins to create Audit Missions and assign them to specific auditors.
+  - Created skeleton screens for the Auditor flow in the mobile app.
+- **Extensive Debugging**: Successfully resolved a series of complex, interconnected bugs related to password hashing ( vs. ), database environment variables, Pydantic model validation, and frontend state management in the .
+- **APK Build v1.8.0 Initiated**: Started a new EAS build to package the latest mobile app changes.
 
 **Earlier issues found/mentioned but not fixed**
-None. A critical missing feature (QR code generation) was identified by the user and immediately implemented by the agent.
+None.
 
 **Known issue recurrence from previous fork**
 N/A
@@ -83,35 +102,40 @@ N/A
 
 
 **Key Technical Concepts**
-- **WebSocket with Polling Fallback**: Ensures real-time functionality even in restricted network environments.
-- **Dynamic PDF & Image Generation**: Using  and  on the backend to create custom, data-driven documents (ID cards) and QR codes on the fly.
-- **Offline-First Mobile Development**: Using  and  to allow field agents to work without connectivity and sync data later.
-- **Hardware Integration (Mobile)**: Leveraging , , and  for core field agent features.
-- **Full Feature Lifecycle**: Demonstrating the ability to take a feature from concept (e.g., QR codes) to full implementation across the entire stack (backend generation, web display, mobile scanning, PDF export).
+- **New User Role ()**: A new, distinct user type with its own permissions, backend logic, and dedicated UI on both web and mobile, managed by the Super Admin.
+- **Mission Assignment System**: A new workflow where Admins can create tasks (Audit Missions) composed of multiple sub-tasks (parcels to audit) and assign them to specific users (auditors).
+- **Complex Debugging**: The session involved resolving a chain of dependent bugs, from backend password hashing and database model validation to frontend authentication context and state management.
 
 **key DB schema**
-- ****: Schema updated to include  to store the path to the producer's profile picture.
-- ****: This collection is now actively used by the  endpoints to generate historical statistics.
+- ****: The  enum now includes . Documents now use .
+- ****: A new collection to store audit mission details, including assigned , , a list of , , and .
 
 **changes in tech stack**
-- **Backend**: , ,  were installed.
-- **Frontend**:  for WebSocket communication.
-- **Mobile**: , , ,  were added to .
+None.
 
 **All files of reference**
-- : Logic for generating and decoding producer QR codes.
-- : Logic for generating PDF ID cards with photos and QR codes.
-- : API endpoints for the SSRTE analytics dashboard.
-- : UI for cooperatives to manage and batch-export member ID cards.
-- : UI for the new SSRTE analytics page.
-- : Offline-first form for logging SSRTE visits on mobile.
-- : The Product Requirements Document, updated with all completed features.
+- : Updated to include the  user type in all relevant Pydantic models.
+- : New file for managing Carbon Auditors.
+- : New file for managing Audit Missions.
+- : Modified the  function to return user data for correct role-based redirection.
+- : Admin UI for auditor management.
+- : Auditor's main dashboard.
+- : Updated to include the new auditor screens.
+
+**Areas that need refactoring**:
+- The mix of synchronous () and asynchronous () database access in the backend (e.g., in ) caused debugging friction. It should be standardized to use  everywhere for consistency.
+
+**key api endpoints**
+- : CRUD endpoints for managing auditors.
+- : CRUD endpoints for managing audit missions.
+- : GET endpoint for the auditor's dashboard data.
+- : GET endpoint for fetching parcels to be assigned to a mission.
 
 **Critical Info for New Agent**
-- **User-Driven Development**: The user is highly engaged and directs the project's evolution. Pay close attention to their questions, as they often highlight missing links in the user journey (e.g., the QR code generation).
-- **Mocked Photo Storage**: The photo upload feature is functional but saves files to a local  directory. For a production environment, this must be replaced with a proper cloud storage integration. The current implementation serves as a placeholder.
-- **APK v1.4.0 is Ready**: The latest mobile app build is complete. The download link is: .
-- **Respond in French**: The user consistently communicates in French. All communication should be in French to maintain a smooth interaction.
+- **Respond in French**: The user's primary language is French. All communication must be in French.
+- **Two Distinct Agent Types**: It is critical to understand the difference between a cooperative's **Field Agent** (for SSRTE) and GreenLink's **Carbon Auditor** (for carbon credit verification). They are separate roles with separate UIs and management flows.
+- **Pending User Requests**: The user's highest priorities are: 1) Getting the new  APK. 2) A full end-to-end test of the mobile application for all roles.
+- **Check EAS Build Status First**: Before doing anything else, verify the status of the APK build initiated at the end of the last session. The user is waiting for it.
 
 **documents and test reports created in this job**
 -  (Updated)
@@ -119,43 +143,45 @@ N/A
 - 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **continue**: User prompted the agent to continue after viewing the newly created SSRTE Analytics dashboard. (Completed)
-2.  **Stockage cloud des photos producteurs, Historique des visites SSRTE avec statistiques**: User requested the implementation of cloud photo storage and the SSRTE analytics dashboard. (Completed)
-3.  **oui+Export PDF des cartes en lot**: User confirmed the previous plan and added a new requirement for batch PDF exporting of producer cards. (Completed)
-4.  **oui**: User confirmed the plan to implement QR code generation. (Completed)
-5.  **quels QR CODE que les agent de terrains vont scaner pour avoir acces aux imformations des planteur?**: User asked what QR codes the field agents are supposed to scan, correctly identifying that the generation part of the feature was missing. (Addressed)
-6.  **ou se trouve les QR code des planteur?**: User asked where the producer QR codes are located. (Addressed)
-7.  **expliquez moi le role des agent ?**: User asked for a conceptual explanation of the field agent role in the platform. (Answered)
-8.  **oui**: User confirmed the implementation of the three major backlog items (PDF reports, WebSocket dashboard, and Field Agent mobile app). (Completed)
-9.  **User Response **: User provided choices for the agent's proposed plan. (Completed)
-10. **(Initial Ask Human)**: The agent presented the initial plan to the user for approval. (Completed)
+1.  **user**: Confirms plan and requests to test the complete mobile flow. (Pending)
+2.  **user**: Requests an Admin interface to assign missions, test data for missions, and a rebuild of APK v1.8.0. (Completed/In Progress)
+3.  **user**: Confirms the implementation plan for a complete web + mobile auditor experience. (Completed)
+4.  **user**: Asks if the auditor will have a full dashboard on web and mobile. (Answered)
+5.  **user**: Confirms the implementation plan for the new Carbon Auditor role. (Completed)
+6.  **user**: Chooses Option A: Carbon Auditors will be managed by GreenLink (Super Admin). (Decision Made)
+7.  **user**: Asks if the Carbon Auditor reports to GreenLink or the Cooperative. (Answered)
+8.  **user**: Asks for clarification on the difference between SSRTE agents and carbon verification agents. (Answered)
+9.  **user**: Requests a rebuild of APK v1.8.0. (Initiated)
+10. **user**: Provides four initial requests: confirm plan, replace regions with departments, add tracker agent management, and add farmer selection to parcel creation. (Completed)
 
 **Project Health Check:**
 - **Broken**: None.
 - **Mocked/Simulated**:
-    - **Cloud Photo Storage**: The endpoint  saves files locally. This is a placeholder for a real cloud service.
-    - Farmer's USSD interface.
-    - SMS/Email notifications.
-    - Orange Money payments.
-- **Healthy**: The entire web application, including the real-time dashboards, PDF generation, QR code lifecycle, and analytics, is functional. The mobile app () is built with all its new features for field agents.
+    - Cloud Photo Storage
+    - Farmer's USSD interface
+    - SMS/Email notifications (partially implemented for push, but not fully integrated with external providers)
+    - Orange Money payments
+- **Healthy**: The web application is fully functional with the new features. The mobile app has the necessary code changes, but is pending a successful build and full regression testing.
 
 **3rd Party Integrations**
 - **Expo / EAS**: Core framework and build service for the React Native mobile app.
-- **Expo Push Notifications**: Used for handling all mobile push notifications.
+- **Expo Push Notifications**: Used for mobile push notifications.
 - **MongoDB Atlas**: The primary database.
-- ****: Python library for advanced PDF generation.
-- ****: Python library for QR code generation and image manipulation.
+- ****: Python library for PDF generation.
+- ****: Python library for QR code generation.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES. A full test run was executed and passed 100%.
+- **Testing agent used after significant changes**: YES, for the initial batch of 4 features.
 - **Troubleshoot agent used after agent stuck in loop**: NO.
-- **Test files created**: None.
-- **Known regressions**: None.
+- **Test files created**: 
+- **Known regressions**: None, but a full mobile regression is pending.
 
 **Credentials to test flow:**
 - **Super Admin**:  / 
 - **Cooperative**:  / 
-- **Producer (newly created for testing)**:  / 
+- **Producer (Activated)**:  / 
+- **Field Agent (Activated)**: Phone:  / 
+- **Carbon Auditor (New)**:  / 
 
 **What agent forgot to execute**
-The agent successfully executed all user requests in this session. The previous agent had left placeholder files, which this agent correctly identified as unimplemented and then built out the full features as requested.</analysis>
+The agent correctly identified the user's final request to Test the complete flow on mobile but has not yet executed it. The highest priority is to first check the status of the APK build, provide it to the user, and then proceed with this comprehensive testing task. The push notification feature also needs its test cycle completed.</analysis>
