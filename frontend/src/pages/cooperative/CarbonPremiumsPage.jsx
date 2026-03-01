@@ -384,6 +384,75 @@ const CarbonPremiumsPage = () => {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="history">
+            {/* Payment History */}
+            <Card className="bg-gray-800 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <History className="h-5 w-5 text-emerald-400" />
+                  Historique des Paiements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {paymentHistory.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          <th className="text-left py-3 px-4 text-gray-400 font-medium">Date</th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-medium">Bénéficiaire</th>
+                          <th className="text-center py-3 px-4 text-gray-400 font-medium">Téléphone</th>
+                          <th className="text-right py-3 px-4 text-gray-400 font-medium">Montant</th>
+                          <th className="text-center py-3 px-4 text-gray-400 font-medium">Référence</th>
+                          <th className="text-center py-3 px-4 text-gray-400 font-medium">Statut</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paymentHistory.map((payment) => (
+                          <tr key={payment.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                            <td className="py-3 px-4 text-gray-300 text-sm">
+                              {formatDate(payment.created_at)}
+                            </td>
+                            <td className="py-3 px-4">
+                              <p className="text-white font-medium">{payment.member_name}</p>
+                            </td>
+                            <td className="py-3 px-4 text-center text-gray-400 text-sm">
+                              {payment.phone_number}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <p className="text-emerald-400 font-bold">{formatFCFA(payment.amount_fcfa)}</p>
+                              <p className="text-xs text-gray-500">~{payment.amount_eur}€</p>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <code className="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">
+                                {payment.payment_ref}
+                              </code>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <Badge className={payment.status === 'completed' 
+                                ? 'bg-green-500/20 text-green-400 border-green-500/50' 
+                                : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'}>
+                                {payment.status === 'completed' ? '✓ Payé' : '⏳ En cours'}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-400">
+                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Aucun paiement effectué pour le moment</p>
+                    <p className="text-sm mt-2">Les paiements apparaîtront ici après validation</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Payment Confirmation Modal */}
