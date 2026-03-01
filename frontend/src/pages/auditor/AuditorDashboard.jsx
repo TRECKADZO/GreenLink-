@@ -152,6 +152,60 @@ const AuditorDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Badge Progress Card */}
+        <Card className="bg-gradient-to-r from-amber-900/30 to-yellow-900/30 border-amber-700/50 mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-amber-300 flex items-center gap-2">
+              <span className="text-2xl">🏆</span>
+              Badge Auditeur
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-6">
+              {/* Current Badge */}
+              <div className="text-center">
+                <div className="text-4xl mb-2">
+                  {dashboard?.auditor?.badge === 'gold' ? '🥇' :
+                   dashboard?.auditor?.badge === 'silver' ? '🥈' :
+                   dashboard?.auditor?.badge === 'bronze' ? '🥉' :
+                   dashboard?.auditor?.badge === 'starter' ? '🌱' : '🔒'}
+                </div>
+                <p className="text-amber-200 font-medium">
+                  {dashboard?.auditor?.badge_label || 'Aucun badge'}
+                </p>
+              </div>
+              
+              {/* Progress to next badge */}
+              {dashboard?.badge_progress?.next_badge && (
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-gray-400 text-sm">Prochain badge</span>
+                    <span className="text-amber-400 text-sm font-medium">
+                      {dashboard.badge_progress.next_badge === 'bronze' ? '🥉 Bronze' :
+                       dashboard.badge_progress.next_badge === 'silver' ? '🥈 Argent' :
+                       dashboard.badge_progress.next_badge === 'gold' ? '🥇 Or' : ''}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={dashboard.badge_progress.progress_percent} 
+                    className="h-3 bg-gray-700"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Encore {dashboard.badge_progress.audits_needed} audit(s) pour atteindre le prochain niveau
+                  </p>
+                </div>
+              )}
+              
+              {!dashboard?.badge_progress?.next_badge && dashboard?.auditor?.badge === 'gold' && (
+                <div className="flex-1 text-center">
+                  <p className="text-amber-200">🎉 Niveau maximum atteint!</p>
+                  <p className="text-gray-400 text-sm mt-1">Vous êtes un Auditeur Or</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Pending Missions */}
         <Card className="bg-gray-800 border-gray-700 mb-6">
           <CardHeader>
