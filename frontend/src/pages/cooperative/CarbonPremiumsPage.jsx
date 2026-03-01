@@ -57,13 +57,25 @@ const CarbonPremiumsPage = () => {
     }
   };
 
-  const handleInitiatePayment = async () => {
+  const fetchPaymentHistory = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/cooperative/carbon-premiums/history`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      setPaymentHistory(data.payments || []);
+    } catch (error) {
+      console.error('Error fetching history:', error);
+    }
+  };
+
+  const handlePayMember = async () => {
     if (!selectedMember) return;
     
     setProcessingPayment(true);
     try {
       const response = await fetch(
-        `${API_URL}/api/cooperative/carbon-premiums/initiate-payment?member_id=${selectedMember.member_id}&amount_fcfa=${selectedMember.premium_fcfa}`,
+        `${API_URL}/api/cooperative/carbon-premiums/pay?member_id=${selectedMember.member_id}`,
         {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
@@ -73,10 +85,11 @@ const CarbonPremiumsPage = () => {
       if (!response.ok) throw new Error('Erreur de paiement');
       
       const result = await response.json();
-      toast.success(result.message);
+      toast.success(`${result.message} - SMS envoyé!`);
       setShowPaymentModal(false);
       setSelectedMember(null);
-      fetchPremiums(); // Refresh
+      fetchPremiums();
+      fetchPaymentHistory();
     } catch (error) {
       toast.error('Erreur lors du paiement');
     } finally {
@@ -84,8 +97,26 @@ const CarbonPremiumsPage = () => {
     }
   };
 
+  const exportCSV = () => {
+    window.open(`${API_URL}/api/cooperative/carbon-premiums/export-csv?token=${token}`, '_blank');
+    toast.success('Export CSV en cours...');
+  };
+
+  const downloadMonthlyReport = () => {
+    const now = new Date();
+    window.open(`${API_URL}/api/cooperative/carbon-premiums/report-pdf?month=${now.getMonth() + 1}&year=${now.getFullYear()}`, '_blank');
+    toast.success('Téléchargement du rapport PDF...');
+  };
+
   const formatFCFA = (amount) => {
     return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
   };
 
   const filteredMembers = premiums?.members?.filter(member =>
