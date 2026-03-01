@@ -73,6 +73,7 @@ import QRCodeGenerator from "./pages/cooperative/QRCodeGenerator";
 import CooperativeNotifications from "./pages/cooperative/Notifications";
 import FieldAgentsPage from "./pages/cooperative/FieldAgentsPage";
 import AddParcelPage from "./pages/cooperative/AddParcelPage";
+import CarbonPremiumsPage from "./pages/cooperative/CarbonPremiumsPage";
 
 // Auth Pages
 import ActivateMember from "./pages/auth/ActivateMember";
