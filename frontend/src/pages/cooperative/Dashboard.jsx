@@ -60,7 +60,7 @@ const Dashboard = () => {
       subtitle: `${parcels?.total_hectares || 0} ha`,
       icon: MapPin,
       color: 'bg-green-500',
-      link: '/cooperative/parcels'
+      link: '/cooperative/parcels/new'
     },
     {
       title: 'Score Carbone Moyen',
