@@ -616,9 +616,21 @@ const AuditFormScreen = ({ navigation, route }) => {
           {submitting ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.submitButtonText}>💾 Soumettre l'audit</Text>
+            <Text style={styles.submitButtonText}>
+              {isOnline ? '💾 Soumettre l\'audit' : '📴 Sauvegarder hors-ligne'}
+            </Text>
           )}
         </TouchableOpacity>
+        
+        {/* Offline mode info */}
+        {!isOnline && (
+          <View style={styles.offlineInfo}>
+            <Text style={styles.offlineInfoText}>
+              📴 Mode hors-ligne actif. L'audit sera synchronisé automatiquement 
+              quand la connexion sera rétablie.
+            </Text>
+          </View>
+        )}
 
         <View style={{ height: 100 }} />
       </ScrollView>
