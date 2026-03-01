@@ -33,7 +33,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://auditor-missions.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://agritech-cote.preview.emergentagent.com"
       }
     }
   },
