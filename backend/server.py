@@ -126,6 +126,7 @@ app.include_router(ssrte_analytics.router)
 app.include_router(carbon_payments_dashboard.router)
 app.include_router(field_agent_dashboard.router)
 app.include_router(carbon_auditor.router)
+app.include_router(ussd.router)
 
 app.add_middleware(
     CORSMiddleware,
