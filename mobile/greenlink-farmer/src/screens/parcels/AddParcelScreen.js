@@ -17,9 +17,25 @@ import { cameraService } from '../../services/camera';
 import { locationService } from '../../services/location';
 import { COLORS, FONTS, SPACING } from '../../config';
 
-const REGIONS = [
-  'Abidjan', 'Bouaké', 'Daloa', 'Yamoussoukro', 'San-Pédro',
-  'Man', 'Korhogo', 'Gagnoa', 'Soubré', 'Autre'
+// Liste des départements de Côte d'Ivoire (principaux)
+const DEPARTMENTS = [
+  'Abidjan', 'Abengourou', 'Aboisso', 'Adzopé', 'Agboville',
+  'Agnibilékrou', 'Bangolo', 'Béoumi', 'Biankouma', 'Bloléquin',
+  'Bocanda', 'Bondoukou', 'Bongouanou', 'Botro', 'Bouaflé',
+  'Bouaké', 'Bouna', 'Boundiali', 'Buyo', 'Dabakala',
+  'Dabou', 'Daloa', 'Danané', 'Daoukro', 'Didiévi',
+  'Dimbokro', 'Divo', 'Doropo', 'Duékoué', 'Facobly',
+  'Ferkessédougou', 'Fresco', 'Gagnoa', 'Grand-Bassam', 'Grand-Lahou',
+  'Guéyo', 'Guiglo', 'Guitry', 'Issia', 'Jacqueville',
+  'Kani', 'Katiola', 'Kong', 'Korhogo', 'Kouibly',
+  'Kounahiri', 'Koun-Fao', 'Lakota', 'Man', 'Mankono',
+  'Mbahiakro', 'Méagui', 'Minignan', 'Nassian', 'Niakaramadougou',
+  'Odienné', 'Oumé', 'Ouangolodougou', 'Prikro', 'Sakassou',
+  'San-Pédro', 'Sandégué', 'Sassandra', 'Séguéla', 'Sikensi',
+  'Sinfra', 'Sipilou', 'Soubré', 'Tabou', 'Taabo',
+  'Tanda', 'Tengrela', 'Tiassalé', 'Tiébissou', 'Touba',
+  'Toulepleu', 'Toumodi', 'Transua', 'Vavoua', 'Yamoussoukro',
+  'Zouan-Hounien', 'Zoukougbeu', 'Zuénoula', 'Autre'
 ];
 
 const CROP_TYPES = [
@@ -38,7 +54,7 @@ const AddParcelScreen = ({ navigation }) => {
   const [photos, setPhotos] = useState([]);
   const [formData, setFormData] = useState({
     location: '',
-    region: '',
+    department: '',
     size: '',
     crop_type: '',
     planting_year: '',
@@ -70,7 +86,7 @@ const AddParcelScreen = ({ navigation }) => {
           latitude: location.latitude,
           longitude: location.longitude,
           location: address?.formattedAddress || prev.location,
-          region: address?.region || prev.region,
+          department: address?.region || prev.department,
         }));
       }
     } catch (error) {
@@ -229,25 +245,25 @@ const AddParcelScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* Region */}
+        {/* Department */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Région *</Text>
+          <Text style={styles.label}>Département *</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.chipContainer}>
-              {REGIONS.map((region) => (
+              {DEPARTMENTS.map((dept) => (
                 <TouchableOpacity
-                  key={region}
+                  key={dept}
                   style={[
                     styles.chip,
-                    formData.region === region && styles.chipSelected,
+                    formData.department === dept && styles.chipSelected,
                   ]}
-                  onPress={() => setFormData({ ...formData, region })}
+                  onPress={() => setFormData({ ...formData, department: dept })}
                 >
                   <Text style={[
                     styles.chipText,
-                    formData.region === region && styles.chipTextSelected,
+                    formData.department === dept && styles.chipTextSelected,
                   ]}>
-                    {region}
+                    {dept}
                   </Text>
                 </TouchableOpacity>
               ))}
