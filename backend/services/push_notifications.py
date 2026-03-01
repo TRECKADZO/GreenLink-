@@ -363,3 +363,115 @@ async def get_push_notification_stats(
             for log in recent_logs
         ]
     }
+
+    async def send_audit_mission_notification(
+        self,
+        auditor_id: str,
+        mission_data: dict
+    ) -> dict:
+        """
+        Envoyer une notification à un auditeur pour une nouvelle mission assignée
+        
+        Args:
+            auditor_id: ID de l'auditeur
+            mission_data: Données de la mission
+        """
+        # Récupérer le token de l'auditeur
+        from bson import ObjectId
+        
+        auditor = await db.users.find_one(
+            {"_id": ObjectId(auditor_id)},
+            {"push_token": 1, "full_name": 1}
+        )
+        
+        if not auditor or not auditor.get("push_token"):
+            logger.info(f"No push token for auditor {auditor_id}")
+            return {"success": False, "error": "No push token"}
+        
+        title = "🎯 Nouvelle Mission d'Audit"
+        body = f"Mission: {mission_data.get('cooperative_name', 'Coopérative')}\n{mission_data.get('parcels_count', 0)} parcelles à auditer"
+        
+        if mission_data.get("deadline"):
+            body += f"\nÉchéance: {mission_data.get('deadline')}"
+        
+        data = {
+            "type": "audit_mission",
+            "mission_id": str(mission_data.get("_id", "")),
+            "cooperative_name": mission_data.get("cooperative_name"),
+            "parcels_count": mission_data.get("parcels_count"),
+            "screen": "AuditorMission",
+            "params": {
+                "missionId": str(mission_data.get("_id", ""))
+            }
+        }
+        
+        result = await self.send_push_notification(
+            tokens=[auditor["push_token"]],
+            title=title,
+            body=body,
+            data=data,
+            priority="high",
+            channel_id="audit_missions"
+        )
+        
+        # Log notification
+        await db.notification_logs.insert_one({
+            "type": "audit_mission_assigned",
+            "user_id": auditor_id,
+            "mission_id": str(mission_data.get("_id", "")),
+            "tokens_count": 1,
+            "result": result,
+            "created_at": datetime.utcnow()
+        })
+        
+        return result
+
+    async def send_audit_completed_notification(
+        self,
+        cooperative_id: str,
+        audit_data: dict
+    ) -> dict:
+        """
+        Notifier la coopérative qu'un audit a été complété sur une de ses parcelles
+        """
+        from bson import ObjectId
+        
+        # Récupérer le token de la coopérative
+        coop = await db.users.find_one(
+            {"_id": ObjectId(cooperative_id)},
+            {"push_token": 1, "full_name": 1, "coop_name": 1}
+        )
+        
+        if not coop or not coop.get("push_token"):
+            return {"success": False, "error": "No push token"}
+        
+        recommendation = audit_data.get("recommendation", "unknown")
+        if recommendation == "approved":
+            title = "✅ Parcelle Approuvée"
+            emoji = "✅"
+        elif recommendation == "rejected":
+            title = "❌ Parcelle Rejetée"
+            emoji = "❌"
+        else:
+            title = "⚠️ Parcelle à Revoir"
+            emoji = "⚠️"
+        
+        body = f"{emoji} {audit_data.get('parcel_location', 'Parcelle')}\nScore carbone: {audit_data.get('carbon_score', '-')}/10"
+        
+        data = {
+            "type": "audit_completed",
+            "audit_id": str(audit_data.get("_id", "")),
+            "parcel_id": audit_data.get("parcel_id"),
+            "recommendation": recommendation,
+            "screen": "CoopDashboard"
+        }
+        
+        return await self.send_push_notification(
+            tokens=[coop["push_token"]],
+            title=title,
+            body=body,
+            data=data,
+            priority="normal",
+            channel_id="audit_results"
+        )
+
