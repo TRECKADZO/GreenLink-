@@ -305,12 +305,20 @@ async def get_auditor_dashboard(auditor_id: str):
         "audit_date": {"$gte": month_start}
     })
     
+    # Calculer le badge actuel
+    badge = calculate_auditor_badge(total_audits)
+    
+    # Objectif pour le prochain badge
+    next_badge_info = get_next_badge_info(total_audits)
+    
     return {
         "auditor": {
             "id": str(auditor["_id"]),
             "full_name": auditor.get("full_name"),
             "email": auditor.get("email"),
-            "certifications": auditor.get("certifications", [])
+            "certifications": auditor.get("certifications", []),
+            "badge": badge,
+            "badge_label": get_badge_label(badge)
         },
         "stats": {
             "total_audits": total_audits,
@@ -319,6 +327,7 @@ async def get_auditor_dashboard(auditor_id: str):
             "monthly_audits": monthly_audits,
             "approval_rate": round((approved_audits / total_audits * 100) if total_audits > 0 else 0, 1)
         },
+        "badge_progress": next_badge_info,
         "pending_missions": [{
             "id": str(m["_id"]),
             "cooperative_name": m.get("cooperative_name"),
@@ -329,6 +338,47 @@ async def get_auditor_dashboard(auditor_id: str):
         } for m in pending_missions],
         "missions_count": len(pending_missions)
     }
+
+def get_badge_label(badge: str) -> str:
+    """Obtenir le label du badge"""
+    labels = {
+        "starter": "🌱 Débutant",
+        "bronze": "🥉 Bronze",
+        "silver": "🥈 Argent",
+        "gold": "🥇 Or"
+    }
+    return labels.get(badge, "")
+
+def get_next_badge_info(audits_completed: int) -> dict:
+    """Obtenir les infos sur le prochain badge"""
+    if audits_completed >= 100:
+        return {
+            "current_badge": "gold",
+            "next_badge": None,
+            "audits_needed": 0,
+            "progress_percent": 100
+        }
+    elif audits_completed >= 50:
+        return {
+            "current_badge": "silver",
+            "next_badge": "gold",
+            "audits_needed": 100 - audits_completed,
+            "progress_percent": int((audits_completed / 100) * 100)
+        }
+    elif audits_completed >= 10:
+        return {
+            "current_badge": "bronze",
+            "next_badge": "silver",
+            "audits_needed": 50 - audits_completed,
+            "progress_percent": int((audits_completed / 50) * 100)
+        }
+    else:
+        return {
+            "current_badge": "starter" if audits_completed > 0 else None,
+            "next_badge": "bronze",
+            "audits_needed": 10 - audits_completed,
+            "progress_percent": int((audits_completed / 10) * 100)
+        }
 
 @router.get("/missions/{auditor_id}")
 async def get_auditor_missions(auditor_id: str, status: Optional[str] = None):
