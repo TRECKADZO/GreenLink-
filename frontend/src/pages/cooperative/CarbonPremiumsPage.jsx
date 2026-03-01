@@ -158,14 +158,24 @@ const CarbonPremiumsPage = () => {
                 </p>
               </div>
             </div>
-            <Button 
-              variant="outline"
-              className="border-white text-white hover:bg-white/10"
-              onClick={() => {/* Export CSV */}}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                className="border-white text-white hover:bg-white/10"
+                onClick={exportCSV}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                CSV
+              </Button>
+              <Button 
+                variant="outline"
+                className="border-white text-white hover:bg-white/10"
+                onClick={downloadMonthlyReport}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Rapport PDF
+              </Button>
+            </div>
           </div>
         </div>
       </div>
