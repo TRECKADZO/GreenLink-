@@ -68,6 +68,11 @@ import {
   SSRTEVisitFormScreen,
 } from './src/screens/field-agent';
 
+// Screens - Carbon Auditor
+import AuditorDashboardScreen from './src/screens/auditor/AuditorDashboardScreen';
+import AuditorMissionScreen from './src/screens/auditor/AuditorMissionScreen';
+import AuditFormScreen from './src/screens/auditor/AuditFormScreen';
+
 // Screens - Settings
 import { NotificationPreferencesScreen } from './src/screens/settings';
 
@@ -83,6 +88,7 @@ const SCREENS_WITH_TAB_BAR = [
   'CoopDashboard', 'CoopMembers', 'CoopReports', 'FieldAgentDashboard',
   'Parcels', 'Harvest', 'Marketplace', 'Notifications',
   'CarbonMarketplace', 'MyCarbonScore', 'MyCarbonPurchases',
+  'AuditorDashboard',
 ];
 
 // Auth Navigator (Welcome/Login/Register)
@@ -158,6 +164,13 @@ function AppNavigator() {
       <Stack.Screen name="GeoPhoto" component={GeoPhotoScreen} />
       <Stack.Screen name="SSRTEVisitForm" component={SSRTEVisitFormScreen} />
       <Stack.Screen name="VisitsHistory" component={CoopReportsScreen} />
+      
+      {/* Carbon Auditor Screens */}
+      <Stack.Screen name="AuditorDashboard" component={AuditorDashboardScreen} />
+      <Stack.Screen name="AuditorMission" component={AuditorMissionScreen} />
+      <Stack.Screen name="AuditForm" component={AuditFormScreen} />
+      <Stack.Screen name="AuditorMissions" component={AuditorDashboardScreen} />
+      <Stack.Screen name="AuditHistory" component={AuditorDashboardScreen} />
       
       {/* Settings Screens */}
       <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
