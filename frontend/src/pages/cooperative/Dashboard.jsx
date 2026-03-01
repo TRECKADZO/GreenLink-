@@ -226,6 +226,18 @@ const Dashboard = () => {
               </Button>
               <Button 
                 variant="outline" 
+                className="w-full justify-between bg-emerald-500/10 border-emerald-500/50 hover:bg-emerald-500/20"
+                onClick={() => navigate('/cooperative/carbon-premiums')}
+                data-testid="quick-action-carbon-premiums"
+              >
+                <span className="flex items-center text-emerald-400">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Primes Carbone
+                </span>
+                <ChevronRight className="h-4 w-4 text-emerald-400" />
+              </Button>
+              <Button 
+                variant="outline" 
                 className="w-full justify-between"
                 onClick={() => navigate('/cooperative/reports')}
                 data-testid="quick-action-reports"
