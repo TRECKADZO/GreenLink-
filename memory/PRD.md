@@ -1,5 +1,39 @@
 # GreenLink PRD - Updated March 1, 2026
 
+## Latest Updates - March 1, 2026 (Session 5 - Formulaire Audit + Offline)
+
+### ✅ FORMULAIRES D'AUDIT IMPLÉMENTÉS (Web + Mobile)
+- **Formulaire Web** (`/app/frontend/src/pages/auditor/AuditFormPage.jsx`)
+  - Photos avec upload
+  - Capture GPS
+  - Pratiques durables (bio, compostage, couverture sol, érosion)
+  - Décision d'audit (Approuvé/À revoir/Rejeté)
+  
+- **Formulaire Mobile** (`/app/mobile/greenlink-farmer/src/screens/auditor/AuditFormScreen.js`)
+  - Photos géolocalisées via caméra
+  - Mode hors-ligne complet
+  - Synchronisation automatique
+  - Indicateur de connexion
+  
+### ✅ MODE HORS-LIGNE (Mobile)
+- Service `auditOfflineService.js` créé
+- Stockage local des audits et photos
+- Sync automatique au retour en ligne
+- Badge de statut réseau
+
+### 📱 APK v1.9.0
+- **Status**: Build en cours
+- **Logs**: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/65f30c12-ba8d-483f-b15a-e1c83fc0be22
+- **APK v1.8.0 (disponible)**: https://expo.dev/artifacts/eas/38U4jRWoQVVZ9mVie4LZ3M.apk
+
+### ✅ TEST D'AUDIT RÉUSSI
+- Parcelle "Parcelle Nord" (Kossou, Gagnoa) auditée
+- Score carbone calculé: 7.0/10
+- Recommandation: Approuvé
+- Mission en cours: 1/5 parcelles auditées
+
+---
+
 ## Latest Updates - March 1, 2026 (Session 5 - Test Complet)
 
 ### ✅ TESTS COMPLETS EFFECTUÉS
