@@ -26,6 +26,7 @@ from routes import photo_storage
 from routes import ssrte_analytics
 from routes import carbon_payments_dashboard
 from routes import field_agent_dashboard
+from routes import carbon_auditor
 from services.push_notifications import router as push_notifications_router
 
 
@@ -123,6 +124,7 @@ app.include_router(photo_storage.router)
 app.include_router(ssrte_analytics.router)
 app.include_router(carbon_payments_dashboard.router)
 app.include_router(field_agent_dashboard.router)
+app.include_router(carbon_auditor.router)
 
 app.add_middleware(
     CORSMiddleware,
