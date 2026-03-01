@@ -9,10 +9,14 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { useOffline } from '../../context/OfflineContext';
+import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/UI';
 import { farmerApi } from '../../services/api';
+import { cooperativeApi } from '../../services/cooperativeApi';
 import { cameraService } from '../../services/camera';
 import { locationService } from '../../services/location';
 import { COLORS, FONTS, SPACING } from '../../config';
