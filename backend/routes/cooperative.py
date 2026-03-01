@@ -1651,3 +1651,266 @@ async def get_premium_payment_history(
         "total": len(payments)
     }
 
+
+# ============= EXPORT CSV =============
+
+@router.get("/carbon-premiums/export-csv")
+async def export_premiums_csv(
+    current_user: dict = Depends(get_current_user)
+):
+    """Exporter les primes carbone en CSV"""
+    from fastapi.responses import StreamingResponse
+    import csv
+    import io
+    
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    
+    # Récupérer les données des primes
+    members = await db.coop_members.find({"cooperative_id": coop_id}).to_list(1000)
+    
+    RATE_PER_HECTARE = 50000
+    MIN_SCORE = 6.0
+    
+    # Créer le CSV
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';')
+    
+    # En-têtes
+    writer.writerow([
+        'Nom', 'Téléphone', 'Village', 'Surface (ha)', 
+        'Score Carbone', 'Prime (FCFA)', 'Prime (EUR)', 'Statut'
+    ])
+    
+    for member in members:
+        member_id = str(member["_id"])
+        
+        query_conditions = [{"member_id": member_id}]
+        if member.get("user_id"):
+            query_conditions.append({"farmer_id": member.get("user_id")})
+        
+        parcels = await db.parcels.find({"$or": query_conditions}).to_list(100)
+        
+        total_area = 0
+        total_premium = 0
+        avg_score = 0
+        count = 0
+        
+        for parcel in parcels:
+            parcel_id = str(parcel["_id"])
+            area = parcel.get("area_hectares", 0)
+            
+            audit = await db.carbon_audits.find_one({
+                "parcel_id": parcel_id,
+                "recommendation": "approved"
+            })
+            
+            if audit and audit.get("carbon_score", 0) >= MIN_SCORE:
+                score = audit.get("carbon_score", 0)
+                premium = area * RATE_PER_HECTARE * (score / 10)
+                if score >= 8:
+                    premium *= 1.2
+                
+                total_area += area
+                total_premium += premium
+                avg_score += score
+                count += 1
+        
+        if count > 0:
+            avg_score = round(avg_score / count, 1)
+            writer.writerow([
+                member.get("full_name", ""),
+                member.get("phone_number", ""),
+                member.get("village", ""),
+                round(total_area, 2),
+                avg_score,
+                round(total_premium),
+                round(total_premium / 655.957, 2),
+                "Éligible"
+            ])
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=primes_carbone_{datetime.now().strftime('%Y%m%d')}.csv"
+        }
+    )
+
+
+# ============= PAIEMENT AVEC SMS =============
+
+@router.post("/carbon-premiums/pay")
+async def process_premium_payment(
+    member_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Traiter le paiement de la prime carbone et envoyer SMS"""
+    from services.sms_service import sms_service
+    
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    
+    # Vérifier le membre
+    member = await db.coop_members.find_one({
+        "_id": ObjectId(member_id),
+        "cooperative_id": coop_id
+    })
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Membre non trouvé")
+    
+    # Calculer la prime
+    query_conditions = [{"member_id": member_id}]
+    if member.get("user_id"):
+        query_conditions.append({"farmer_id": member.get("user_id")})
+    
+    parcels = await db.parcels.find({"$or": query_conditions}).to_list(100)
+    
+    RATE_PER_HECTARE = 50000
+    MIN_SCORE = 6.0
+    total_premium = 0
+    total_area = 0
+    
+    for parcel in parcels:
+        parcel_id = str(parcel["_id"])
+        area = parcel.get("area_hectares", 0)
+        
+        audit = await db.carbon_audits.find_one({
+            "parcel_id": parcel_id,
+            "recommendation": "approved"
+        })
+        
+        if audit and audit.get("carbon_score", 0) >= MIN_SCORE:
+            score = audit.get("carbon_score", 0)
+            premium = area * RATE_PER_HECTARE * (score / 10)
+            if score >= 8:
+                premium *= 1.2
+            total_premium += premium
+            total_area += area
+    
+    if total_premium <= 0:
+        raise HTTPException(status_code=400, detail="Aucune prime à payer")
+    
+    # Créer l'enregistrement de paiement
+    payment_ref = f"PAY-{datetime.now().strftime('%Y%m%d%H%M%S')}-{member_id[:6]}"
+    
+    payment = {
+        "cooperative_id": coop_id,
+        "cooperative_name": current_user.get("coop_name"),
+        "member_id": member_id,
+        "member_name": member.get("full_name"),
+        "phone_number": member.get("phone_number"),
+        "amount_fcfa": round(total_premium),
+        "amount_eur": round(total_premium / 655.957, 2),
+        "payment_method": "orange_money",
+        "payment_ref": payment_ref,
+        "status": "completed",  # Simulé comme complété
+        "initiated_by": str(current_user["_id"]),
+        "created_at": datetime.now(timezone.utc),
+        "paid_at": datetime.now(timezone.utc)
+    }
+    
+    result = await db.carbon_payments.insert_one(payment)
+    
+    # Envoyer SMS de confirmation
+    sms_message = f"GreenLink: Félicitations {member.get('full_name')}! Votre prime carbone de {round(total_premium):,} FCFA pour {round(total_area, 1)} ha a été envoyée sur votre Orange Money. Ref: {payment_ref}"
+    
+    try:
+        await sms_service.send_sms(
+            phone_number=member.get("phone_number"),
+            message=sms_message,
+            sms_type="carbon_premium_payment"
+        )
+        logger.info(f"SMS sent to {member.get('phone_number')}")
+    except Exception as e:
+        logger.error(f"SMS error: {e}")
+    
+    return {
+        "payment_id": str(result.inserted_id),
+        "payment_ref": payment_ref,
+        "status": "completed",
+        "amount_fcfa": round(total_premium),
+        "amount_eur": round(total_premium / 655.957, 2),
+        "member_name": member.get("full_name"),
+        "phone_number": member.get("phone_number"),
+        "sms_sent": True,
+        "message": f"Prime de {round(total_premium):,} FCFA payée à {member.get('full_name')}"
+    }
+
+
+# ============= RAPPORT PDF MENSUEL =============
+
+@router.get("/carbon-premiums/report-pdf")
+async def generate_monthly_report_pdf(
+    current_user: dict = Depends(get_current_user),
+    month: int = Query(None, ge=1, le=12),
+    year: int = Query(None, ge=2020, le=2030)
+):
+    """Générer le rapport PDF des paiements mensuels"""
+    from fastapi.responses import Response
+    from services.pdf_service import pdf_generator
+    
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    
+    # Default to current month
+    now = datetime.now(timezone.utc)
+    if not month:
+        month = now.month
+    if not year:
+        year = now.year
+    
+    # Date range
+    start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+    if month == 12:
+        end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+    
+    # Get payments for the month
+    payments = await db.carbon_payments.find({
+        "cooperative_id": coop_id,
+        "created_at": {"$gte": start_date, "$lt": end_date}
+    }).sort("created_at", -1).to_list(1000)
+    
+    # Calculate totals
+    total_paid = sum(p.get("amount_fcfa", 0) for p in payments)
+    total_members = len(set(p.get("member_id") for p in payments))
+    
+    # Generate PDF
+    data = {
+        "cooperative_name": current_user.get("coop_name"),
+        "month": month,
+        "year": year,
+        "payments": [{
+            "date": p.get("created_at").strftime("%d/%m/%Y") if p.get("created_at") else "",
+            "member_name": p.get("member_name"),
+            "phone": p.get("phone_number"),
+            "amount_fcfa": p.get("amount_fcfa"),
+            "ref": p.get("payment_ref", "N/A"),
+            "status": p.get("status")
+        } for p in payments],
+        "summary": {
+            "total_payments": len(payments),
+            "total_members": total_members,
+            "total_amount_fcfa": total_paid,
+            "total_amount_eur": round(total_paid / 655.957, 2)
+        }
+    }
+    
+    pdf_bytes = pdf_generator.generate_monthly_payment_report(data)
+    
+    month_names = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=rapport_paiements_{month_names[month]}_{year}.pdf"
+        }
+    )
+
