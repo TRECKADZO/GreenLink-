@@ -36,9 +36,9 @@ class TestCooperativeAuth:
         
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
-        assert "token" in data, "Token not in response"
-        assert data.get("user_type") == "cooperative", f"Wrong user type: {data.get('user_type')}"
-        return data["token"]
+        assert "access_token" in data, "access_token not in response"
+        assert data.get("user", {}).get("user_type") == "cooperative", f"Wrong user type: {data.get('user', {}).get('user_type')}"
+        return data["access_token"]
 
 
 class TestCarbonPremiumsAPI:
@@ -49,7 +49,7 @@ class TestCarbonPremiumsAPI:
         """Get authentication token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json=COOP_CREDENTIALS)
         assert response.status_code == 200, f"Login failed: {response.text}"
-        token = response.json()["token"]
+        token = response.json()["access_token"]
         return {"Authorization": f"Bearer {token}"}
     
     def test_get_members_carbon_premiums(self, auth_headers):
