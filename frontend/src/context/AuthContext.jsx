@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', access_token);
       
       console.log('[Auth] Login successful, token saved');
-      return { success: true };
+      return { success: true, user: userData };
     } catch (error) {
       console.error('[Auth] Login error:', error);
       console.error('[Auth] Error response:', error.response?.data);
