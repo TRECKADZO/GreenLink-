@@ -1,171 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import Navbar from '../../components/Navbar';
-import { Smartphone, ArrowLeft, Send } from 'lucide-react';
+import { Smartphone, ArrowLeft, Send, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const USSDSimulator = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
-  const [screen, setScreen] = useState('main');
-  const [history, setHistory] = useState(['main']);
   const [phoneScreen, setPhoneScreen] = useState('');
+  const [currentText, setCurrentText] = useState('');
+  const [response, setResponse] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState('');
+  const [userPhone, setUserPhone] = useState(user?.phone_number || '+2250700000000');
 
-  const screens = {
-    main: {
-      title: 'GreenLink USSD',
-      content: `Bienvenue ${user?.full_name}
+  // Initialize session
+  useEffect(() => {
+    setSessionId(`session_${Date.now()}`);
+    // Load initial menu
+    sendUSSD('');
+  }, []);
 
-1. Déclarer parcelle
-2. Déclarer récolte
-3. Mes primes carbone
-4. Recevoir paiement
-5. Mon solde
-6. Aide
-
-Tapez votre choix`,
-      options: ['1', '2', '3', '4', '5', '6']
-    },
-    '1': {
-      title: 'Déclarer Parcelle',
-      content: `DÉCLARATION PARCELLE
-
-Envoyez SMS au 1234:
-PARCELLE [Surface_ha] [Arbres] [Localité]
-
-Exemple:
-PARCELLE 3.5 450 Bouaflé
-
-Pratiques:
-A=Agroforesterie
-C=Compost
-Z=Zéro pesticides
-
-Ex: PARCELLE 3.5 450 Bouaflé ACZ
-
-0. Retour`,
-      options: ['0']
-    },
-    '2': {
-      title: 'Déclarer Récolte',
-      content: `DÉCLARATION RÉCOLTE
-
-Envoyez SMS au 1234:
-RECOLTE [Quantité_kg] [Grade]
-
-Grade: A, B, ou C
-
-Exemple:
-RECOLTE 250 A
-
-Vous recevrez:
-- Confirmation SMS
-- Prime carbone si score >7
-- Lien paiement Orange Money
-
-0. Retour`,
-      options: ['0']
-    },
-    '3': {
-      title: 'Mes Primes Carbone',
-      content: `VOS PRIMES CARBONE
-
-📊 Score moyen: 8.2/10
-✓ Prime active: OUI
-
-Primes gagnées:
-- Janvier: 12,500 F
-- Février: 15,800 F
-- Mars: 18,200 F
-
-TOTAL: 46,500 FCFA
-
-Continuez vos pratiques durables!
-
-0. Retour`,
-      options: ['0']
-    },
-    '4': {
-      title: 'Recevoir Paiement',
-      content: `RECEVOIR PAIEMENT
-
-Montant disponible:
-85,000 FCFA
-
-Méthode:
-1. Orange Money
-2. MTN Money
-3. Moov Money
-
-Entrez votre numéro:
-07 XX XX XX XX
-
-Le paiement arrive en 2min!
-
-0. Retour`,
-      options: ['0', '1', '2', '3']
-    },
-    '5': {
-      title: 'Mon Solde',
-      content: `VOTRE SOLDE
-
-💰 Disponible: 85,000 F
-📦 En attente: 0 F
-✓ Payé ce mois: 124,500 F
-
-Parcelles: 2
-Surface: 5.5 ha
-Arbres: 850
-
-Score carbone: 8.2/10
-⭐ EXCELLENT
-
-0. Retour`,
-      options: ['0']
-    },
-    '6': {
-      title: 'Aide',
-      content: `AIDE GREENLINK
-
-📞 Support: 07 87 76 10 23
-
-SMS gratuit au 1234:
-- AIDE [question]
-
-Visitez:
-bit.ly/greenlink-ci
-
-Formation gratuite:
-Chaque samedi à Daloa
-
-0. Retour
-00. Menu principal`,
-      options: ['0', '00']
+  const sendUSSD = async (input) => {
+    setLoading(true);
+    try {
+      const newText = currentText ? `${currentText}*${input}` : input;
+      
+      const res = await fetch(`${API_URL}/api/ussd/callback`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          serviceCode: '*123*45#',
+          phoneNumber: userPhone,
+          text: newText
+        })
+      });
+      
+      const data = await res.json();
+      setResponse(data.raw_response || data.text || 'Erreur');
+      
+      if (data.continue_session) {
+        setCurrentText(newText);
+      } else {
+        // Session ended, reset
+        setCurrentText('');
+        setSessionId(`session_${Date.now()}`);
+      }
+    } catch (error) {
+      console.error('USSD error:', error);
+      toast.error('Erreur de connexion');
+      setResponse('Erreur de connexion. Réessayez.');
+    } finally {
+      setLoading(false);
+      setPhoneScreen('');
     }
   };
 
   const handleInput = (input) => {
-    if (input === '0') {
+    if (input === '0' && currentText) {
       // Go back
-      if (history.length > 1) {
-        const newHistory = [...history];
-        newHistory.pop();
-        setHistory(newHistory);
-        setScreen(newHistory[newHistory.length - 1]);
-      }
+      const parts = currentText.split('*');
+      parts.pop();
+      setCurrentText(parts.join('*'));
+      sendUSSD(input);
     } else if (input === '00') {
-      setScreen('main');
-      setHistory(['main']);
-    } else if (screens[input]) {
-      setScreen(input);
-      setHistory([...history, input]);
+      // Reset to main menu
+      setCurrentText('');
+      sendUSSD('');
+    } else {
+      sendUSSD(input);
     }
-    setPhoneScreen('');
   };
 
-  const currentScreen = screens[screen];
+  const resetSession = () => {
+    setSessionId(`session_${Date.now()}`);
+    setCurrentText('');
+    sendUSSD('');
+    toast.success('Session réinitialisée');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
