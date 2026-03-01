@@ -1748,7 +1748,7 @@ async def process_premium_payment(
     current_user: dict = Depends(get_current_user)
 ):
     """Traiter le paiement de la prime carbone et envoyer SMS"""
-    from services.sms_service import sms_service
+    from services.sms_service import SMSService, send_quick_sms
     
     verify_cooperative(current_user)
     coop_id = str(current_user["_id"])
