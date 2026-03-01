@@ -391,11 +391,12 @@ async def add_member_parcel(
 ):
     """Ajouter une parcelle à un membre"""
     verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
     
-    # Verify member belongs to this cooperative
+    # Verify member belongs to this cooperative (support both field names)
     member = await db.coop_members.find_one({
         "_id": ObjectId(member_id),
-        "coop_id": current_user["_id"]
+        "$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]
     })
     
     if not member:
