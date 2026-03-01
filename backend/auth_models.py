@@ -19,6 +19,8 @@ class UserBase(BaseModel):
     def validate_phone(cls, v, values):
         if v is None:
             return v
+        # Remove spaces from phone number
+        v = v.replace(' ', '')
         # Accept international format with + or without
         phone_pattern = r'^\+?[0-9]{8,15}$'
         if not re.match(phone_pattern, v):
@@ -34,7 +36,7 @@ class UserBase(BaseModel):
     
     @validator('user_type')
     def validate_user_type(cls, v):
-        allowed_types = ['producteur', 'acheteur', 'entreprise_rse', 'fournisseur', 'cooperative', 'admin', 'field_agent', 'farmer']
+        allowed_types = ['producteur', 'acheteur', 'entreprise_rse', 'fournisseur', 'cooperative', 'admin', 'field_agent', 'farmer', 'carbon_auditor']
         if v not in allowed_types:
             raise ValueError(f'Type d\'utilisateur invalide. Types autorisés: {", ".join(allowed_types)}')
         return v
