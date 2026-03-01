@@ -162,6 +162,8 @@ async def register(user_data: UserCreate):
 @router.post("/login", response_model=Token)
 @limiter.limit("5/minute")
 async def login(request: Request, credentials: UserLogin):
+    logger.info(f"Login attempt for: {credentials.identifier}")
+    
     # Find user by phone number or email
     user = await db.users.find_one({
         "$or": [
@@ -171,13 +173,18 @@ async def login(request: Request, credentials: UserLogin):
     })
     
     if not user:
+        logger.warning(f"User not found: {credentials.identifier}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Identifiant ou mot de passe incorrect"
         )
     
+    logger.info(f"User found: {user.get('email')}, has hashed_password: {'hashed_password' in user}")
+    
     # Verify password
-    if not verify_password(credentials.password, user["hashed_password"]):
+    stored_password = user.get("hashed_password", "")
+    if not stored_password or not verify_password(credentials.password, stored_password):
+        logger.warning(f"Password verification failed for: {credentials.identifier}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Identifiant ou mot de passe incorrect"
