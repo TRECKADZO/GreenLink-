@@ -800,6 +800,116 @@ class PDFReportGenerator:
         buffer.seek(0)
         return buffer.getvalue()
 
+    def generate_monthly_payment_report(self, data: dict) -> bytes:
+        """Generate Monthly Carbon Premium Payment Report PDF"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=1.5*cm,
+            leftMargin=1.5*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
+        )
+        
+        story = []
+        
+        month_names = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                       "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+        
+        month = data.get('month', 1)
+        year = data.get('year', 2026)
+        
+        # Title
+        story.append(Paragraph("RAPPORT MENSUEL DES PAIEMENTS", self.styles['ReportTitle']))
+        story.append(Paragraph("Primes Carbone", self.styles['SubTitle']))
+        story.append(Spacer(1, 15))
+        
+        # Period and Cooperative
+        story.append(Paragraph(f"<b>Coopérative:</b> {data.get('cooperative_name', 'N/A')}", 
+                              self.styles['CustomBodyText']))
+        story.append(Paragraph(f"<b>Période:</b> {month_names[month]} {year}", 
+                              self.styles['CustomBodyText']))
+        story.append(Spacer(1, 20))
+        
+        # Summary Box
+        summary = data.get('summary', {})
+        summary_data = [
+            ['Statistiques du mois', ''],
+            ['Nombre de paiements:', str(summary.get('total_payments', 0))],
+            ['Membres bénéficiaires:', str(summary.get('total_members', 0))],
+            ['Montant total:', f"{summary.get('total_amount_fcfa', 0):,} FCFA"],
+            ['Équivalent EUR:', f"{summary.get('total_amount_eur', 0):,} €"],
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[8*cm, 8*cm])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2d5a4d')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('SPAN', (0, 0), (-1, 0)),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.gray),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 25))
+        
+        # Payments Table
+        if data.get('payments'):
+            story.append(Paragraph("Détail des Paiements", self.styles['SectionTitle']))
+            
+            payments_header = ['Date', 'Bénéficiaire', 'Téléphone', 'Montant', 'Réf.', 'Statut']
+            payments_data = [payments_header]
+            
+            for p in data['payments'][:50]:  # Limit to 50 for PDF
+                status_text = "✓" if p.get('status') == 'completed' else "⏳"
+                payments_data.append([
+                    p.get('date', ''),
+                    p.get('member_name', '')[:20],
+                    p.get('phone', ''),
+                    f"{p.get('amount_fcfa', 0):,}",
+                    p.get('ref', '')[:12],
+                    status_text
+                ])
+            
+            payments_table = Table(payments_data, 
+                                  colWidths=[2.2*cm, 4*cm, 3*cm, 2.5*cm, 3*cm, 1.5*cm])
+            payments_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#10B981')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+                ('ALIGN', (5, 0), (5, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f0f9f4')]),
+            ]))
+            story.append(payments_table)
+        else:
+            story.append(Paragraph("Aucun paiement effectué ce mois.", self.styles['CustomBodyText']))
+        
+        story.append(Spacer(1, 30))
+        
+        # Footer
+        story.append(Paragraph(
+            f"Rapport généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')} - GreenLink Agritech Platform",
+            self.styles['SmallText']
+        ))
+        story.append(Paragraph(
+            "Ce document récapitule les paiements de primes carbone effectués aux producteurs membres.",
+            self.styles['SmallText']
+        ))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+
 
 # Create singleton instance
 pdf_generator = PDFReportGenerator()
