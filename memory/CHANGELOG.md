@@ -1,5 +1,33 @@
 # GreenLink Changelog
 
+## [2026-03-01] - v1.10.0 - Primes Carbone + Sélecteur Membre
+
+### Nouvelles Fonctionnalités
+
+**1. Sélecteur de Membre Obligatoire (Mobile)**
+- Le formulaire d'ajout de parcelle exige maintenant de sélectionner le planteur propriétaire
+- Modal de recherche par nom ou téléphone
+- Traçabilité: qui a enregistré la parcelle
+
+**2. Dashboard Primes Carbone (Web)**
+- Page `/cooperative/carbon-premiums`
+- Calcul automatique des primes par membre
+- Formule: Prime = Surface × Taux (50 000 FCFA/ha) × Score carbone (%)
+- Bonus +20% si score ≥ 8/10
+- Initiation de paiement (simulé - Orange Money)
+
+**3. APIs Backend**
+- `/api/cooperative/carbon-premiums/members` - Liste des primes par membre
+- `/api/cooperative/carbon-premiums/summary` - Résumé des primes
+- `/api/cooperative/carbon-premiums/initiate-payment` - Initier un paiement
+- `/api/cooperative/carbon-premiums/history` - Historique des paiements
+
+### Build APK
+- **Version**: 1.10.0 (en cours de compilation)
+- **Logs**: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/6faf6968-d7c7-4113-adf7-c56418ecca6b
+
+---
+
 ## [2026-03-01] - v1.9.0 - Fonctionnalités Complètes
 
 ### Rapports PDF Audit
