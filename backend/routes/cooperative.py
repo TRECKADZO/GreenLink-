@@ -1446,14 +1446,13 @@ async def get_members_carbon_premiums(
         user_id = member.get("user_id")
         
         # Récupérer les parcelles du membre
-        parcels = []
+        query_conditions = [{"member_id": member_id}]
         if user_id:
-            parcels = await db.parcels.find({
-                "$or": [
-                    {"farmer_id": user_id},
-                    {"member_id": member_id}
-                ]
-            }).to_list(100)
+            query_conditions.append({"farmer_id": user_id})
+        
+        parcels = await db.parcels.find({
+            "$or": query_conditions
+        }).to_list(100)
         
         # Récupérer les audits pour ces parcelles
         member_total_area = 0
