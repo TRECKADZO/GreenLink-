@@ -27,6 +27,7 @@ from routes import ssrte_analytics
 from routes import carbon_payments_dashboard
 from routes import field_agent_dashboard
 from routes import carbon_auditor
+from routes import ussd
 from services.push_notifications import router as push_notifications_router
 
 
