@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { 
   Wallet, Users, TrendingUp, Download, Search,
   ChevronLeft, CheckCircle, Clock, AlertCircle,
-  Banknote, MapPin, Leaf, Send
+  Banknote, MapPin, Leaf, Send, FileText, History
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '../../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -27,14 +28,17 @@ const CarbonPremiumsPage = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const [premiums, setPremiums] = useState(null);
+  const [paymentHistory, setPaymentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [activeTab, setActiveTab] = useState('premiums');
 
   useEffect(() => {
     fetchPremiums();
+    fetchPaymentHistory();
   }, []);
 
   const fetchPremiums = async () => {
