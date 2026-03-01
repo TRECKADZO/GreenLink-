@@ -284,13 +284,13 @@ const AddParcelPage = () => {
                 <Label htmlFor="certification">Certification (optionnel)</Label>
                 <Select 
                   value={formData.certification} 
-                  onValueChange={(value) => setFormData({...formData, certification: value})}
+                  onValueChange={(value) => setFormData({...formData, certification: value === 'none' ? '' : value})}
                 >
                   <SelectTrigger data-testid="certification-select">
                     <SelectValue placeholder="Sélectionnez une certification" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucune</SelectItem>
+                    <SelectItem value="none">Aucune</SelectItem>
                     <SelectItem value="Rainforest Alliance">Rainforest Alliance</SelectItem>
                     <SelectItem value="UTZ">UTZ Certified</SelectItem>
                     <SelectItem value="Fairtrade">Fairtrade</SelectItem>
