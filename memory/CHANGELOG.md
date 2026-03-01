@@ -1,6 +1,6 @@
 # GreenLink Changelog
 
-## [2026-03-01] - v1.9.0 - Mode Hors-ligne Audit
+## [2026-03-01] - v1.9.0 - Mode Hors-ligne Audit + Système de Badges
 
 ### Nouvelles Fonctionnalités
 - **Mode hors-ligne complet pour les audits** (Mobile)
@@ -10,14 +10,29 @@
   - Stockage local des photos
   - File d'attente des audits en attente de sync
 
-### Améliorations
-- Service `auditOfflineService.js` pour gérer le stockage offline
-- Badge de statut réseau dans l'en-tête du formulaire
-- Bouton de synchronisation manuelle
+- **Système de Badges Auditeur** (Gamification)
+  - 🌱 Débutant: 1+ audit
+  - 🥉 Bronze: 10+ audits
+  - 🥈 Argent: 50+ audits
+  - 🥇 Or: 100+ audits
+  - Barre de progression vers le prochain niveau
+  - Affichage sur les dashboards web et mobile
+
+- **Notifications Push Audit Complété**
+  - Notification à la coopérative lors de la complétion d'un audit
+  - Notification à l'auditeur lors de l'obtention d'un nouveau badge
+
+### Fichiers Créés/Modifiés
+- `/app/mobile/.../services/auditOffline.js` (nouveau)
+- `/app/mobile/.../screens/auditor/AuditFormScreen.js` (mode offline)
+- `/app/mobile/.../screens/auditor/AuditorDashboardScreen.js` (badges)
+- `/app/backend/routes/carbon_auditor.py` (badges, notifications)
+- `/app/backend/services/push_notifications.py` (nouvelles fonctions)
+- `/app/frontend/src/pages/auditor/AuditorDashboard.jsx` (badges)
 
 ### Build APK
-- **Version**: 1.9.0 (build en cours)
-- **Runtime**: 1.9.0
+- **Version**: 1.9.0 ✅ TERMINÉ
+- **Téléchargement**: https://expo.dev/artifacts/eas/dAaTCFqGqFMos1WJUZRqcd.apk
 
 ---
 
