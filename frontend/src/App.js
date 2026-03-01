@@ -53,6 +53,7 @@ import RealTimeDashboard from "./pages/admin/RealTimeDashboard";
 import SSRTEAnalytics from "./pages/admin/SSRTEAnalytics";
 import CarbonAuditorsPage from "./pages/admin/CarbonAuditorsPage";
 import AuditMissionsPage from "./pages/admin/AuditMissionsPage";
+import BadgeAnalyticsPage from "./pages/admin/BadgeAnalyticsPage";
 
 // Auditor Routes
 import AuditorDashboard from "./pages/auditor/AuditorDashboard";
