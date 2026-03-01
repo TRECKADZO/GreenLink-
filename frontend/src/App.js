@@ -63,6 +63,11 @@ import ImportMembersPage from "./pages/cooperative/ImportMembersPage";
 import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 import QRCodeGenerator from "./pages/cooperative/QRCodeGenerator";
 import CooperativeNotifications from "./pages/cooperative/Notifications";
+import FieldAgentsPage from "./pages/cooperative/FieldAgentsPage";
+
+// Auth Pages
+import ActivateMember from "./pages/auth/ActivateMember";
+import ActivateAgent from "./pages/auth/ActivateAgent";
 
 // Notifications (shared)
 import NotificationsPage from "./pages/NotificationsPage";
@@ -78,6 +83,8 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/activate-member" element={<ActivateMember />} />
+              <Route path="/activate-agent" element={<ActivateAgent />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/checkout" element={<CheckoutPage />} />
@@ -142,6 +149,7 @@ function App() {
               <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
               <Route path="/cooperative/qrcodes" element={<QRCodeGenerator />} />
               <Route path="/cooperative/notifications" element={<CooperativeNotifications />} />
+              <Route path="/cooperative/agents" element={<FieldAgentsPage />} />
 
               {/* Shared Notifications */}
               <Route path="/notifications" element={<NotificationsPage />} />
