@@ -162,6 +162,15 @@ const CarbonAuditorsPage = () => {
               <Target className="h-4 w-4 mr-2" />
               Missions
             </Button>
+            <Button 
+              onClick={() => navigate('/admin/badge-analytics')} 
+              variant="outline"
+              className="border-amber-400 text-amber-400 hover:bg-amber-500/10"
+              data-testid="badge-analytics-btn"
+            >
+              <Award className="h-4 w-4 mr-2" />
+              Badges
+            </Button>
           </div>
         </div>
       </div>
