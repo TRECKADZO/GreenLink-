@@ -162,12 +162,20 @@ const AddParcelScreen = ({ navigation }) => {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
       return;
     }
+    
+    // Si coopérative, le membre est obligatoire
+    if (isCooperative && !selectedMember) {
+      Alert.alert('Erreur', 'Veuillez sélectionner le planteur propriétaire de cette parcelle');
+      return;
+    }
 
     const parcelData = {
       ...formData,
       size: parseFloat(formData.size),
       planting_year: formData.planting_year ? parseInt(formData.planting_year) : null,
       photos: photos.map((p) => p.uri), // URIs des photos
+      member_id: selectedMember?.id || null,
+      member_name: selectedMember?.full_name || null,
     };
 
     setLoading(true);
