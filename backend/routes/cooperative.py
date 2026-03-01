@@ -1819,10 +1819,9 @@ async def process_premium_payment(
     sms_message = f"GreenLink: Félicitations {member.get('full_name')}! Votre prime carbone de {round(total_premium):,} FCFA pour {round(total_area, 1)} ha a été envoyée sur votre Orange Money. Ref: {payment_ref}"
     
     try:
-        await sms_service.send_sms(
-            phone_number=member.get("phone_number"),
-            message=sms_message,
-            sms_type="carbon_premium_payment"
+        await send_quick_sms(
+            phone=member.get("phone_number"),
+            message=sms_message
         )
         logger.info(f"SMS sent to {member.get('phone_number')}")
     except Exception as e:
