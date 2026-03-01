@@ -36,16 +36,12 @@ const HeroSection = () => {
         {/* Quick stats */}
         <div className="flex flex-wrap justify-center gap-6 mb-10">
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-            <Leaf className="w-5 h-5 text-emerald-400" />
-            <span className="text-white font-medium">50 000 FCFA/ha</span>
-          </div>
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
             <Shield className="w-5 h-5 text-blue-400" />
             <span className="text-white font-medium">Conforme EUDR</span>
           </div>
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-            <Users className="w-5 h-5 text-amber-400" />
-            <span className="text-white font-medium">ICI Certified</span>
+            <Leaf className="w-5 h-5 text-emerald-400" />
+            <span className="text-white font-medium">Traçabilité Carbone</span>
           </div>
         </div>
         
