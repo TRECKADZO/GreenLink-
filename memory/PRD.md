@@ -1,6 +1,75 @@
-# GreenLink PRD - Updated February 28, 2026
+# GreenLink PRD - Updated March 1, 2026
 
-## Latest Updates - Feb 28, 2026 (Session 3)
+## Latest Updates - March 1, 2026 (Session 4)
+
+### NEW: Boutons d'Activation sur Page Login Web - ✅ COMPLETED
+Ajout des boutons d'activation de compte sur la page de connexion web, similaire à l'application mobile.
+
+**Modifications:**
+- Bouton "Activer mon compte Membre Coopérative" (vert) → `/activate-member`
+- Bouton "Activer mon compte Agent Terrain" (cyan) → `/activate-agent`
+- Section explicative "Déjà enregistré par une coopérative?"
+
+**Files Updated:**
+- `/app/frontend/src/pages/Login.jsx` - Ajout des boutons d'activation
+
+**Files Created:**
+- `/app/frontend/src/pages/auth/ActivateMember.jsx` - Page d'activation membre web
+- `/app/frontend/src/pages/auth/ActivateAgent.jsx` - Page d'activation agent web
+
+---
+
+### NEW: Page Gestion des Agents Terrain (Coopérative) - ✅ COMPLETED
+Nouvelle page dédiée à la gestion des agents terrain dans le portail coopérative.
+
+**Fonctionnalités:**
+- Liste des agents avec recherche par nom, téléphone, zone
+- Badge de statut (Activé/En attente d'activation)
+- Modal d'ajout d'un nouvel agent (Nom, Téléphone, Email, Zone, Villages couverts)
+- Détails de l'agent avec statistiques (membres enregistrés, visites SSRTE)
+- Navigation depuis le Dashboard via bouton "Agents Terrain"
+
+**Files Created:**
+- `/app/frontend/src/pages/cooperative/FieldAgentsPage.jsx` - Page de gestion des agents
+
+**Routes:**
+- `/cooperative/agents` - Accessible après connexion coopérative
+
+---
+
+### NEW: Page d'Ajout de Parcelle avec Sélection de Membre - ✅ COMPLETED
+Nouvelle page pour ajouter une parcelle avec sélection du membre/agriculteur.
+
+**Fonctionnalités:**
+- Dropdown de sélection du membre (liste de tous les membres actifs)
+- Dropdown de sélection du département (80+ départements de Côte d'Ivoire)
+- Champs: nom parcelle, village, superficie, type de culture, certification
+- Capture GPS optionnelle via bouton "Capturer ma position"
+- Calcul automatique du score carbone
+
+**Files Created:**
+- `/app/frontend/src/pages/cooperative/AddParcelPage.jsx` - Page d'ajout de parcelle
+- `/app/shared/constants/departments.js` - Liste des départements CI
+
+**Routes:**
+- `/cooperative/parcels/new` - Accessible depuis Dashboard (clic sur carte "Parcelles")
+
+---
+
+### NEW: Liste des Départements de Côte d'Ivoire - ✅ COMPLETED
+Remplacement des régions par la liste complète des départements dans les formulaires.
+
+**Départements inclus (80+):**
+- Tous les départements officiels organisés par région
+- Liste alphabétique sans doublons
+- Disponible pour mobile et web
+
+**Files Updated:**
+- `/app/mobile/greenlink-farmer/src/screens/parcels/AddParcelScreen.js` - Champ "Département" au lieu de "Région"
+
+---
+
+## Previous Updates - Feb 28, 2026 (Session 3)
 
 ### NEW: Système de création de compte Agent Terrain - ✅ COMPLETED
 Modèle hybride similaire aux producteurs : La coopérative enregistre l'agent, l'agent active son compte.
