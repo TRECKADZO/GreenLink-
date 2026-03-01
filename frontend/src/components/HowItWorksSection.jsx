@@ -10,19 +10,19 @@ const mockSteps = [
     number: '1',
     icon: 'UserPlus',
     title: 'Inscrivez-vous',
-    description: 'Créez votre profil producteur ou acheteur en 2 minutes avec notre onboarding guidé'
+    description: 'Producteur, coopérative, auditeur ou entreprise RSE - créez votre compte en 2 minutes'
   },
   {
     number: '2',
-    icon: 'ImagePlus',
-    title: 'Déclarez vos récoltes',
-    description: 'Ajoutez photos, certifications et lancez des enchères pour maximiser vos ventes'
+    icon: 'MapPin',
+    title: 'Enregistrez vos parcelles',
+    description: 'Déclarez vos parcelles avec GPS, pratiques agricoles et certifications. Auditeurs : évaluez le score carbone'
   },
   {
     number: '3',
-    icon: 'TrendingUp',
-    title: 'Gagnez plus',
-    description: 'Recevez des primes carbone, accédez aux acheteurs premium et suivez tout en temps réel'
+    icon: 'Wallet',
+    title: 'Recevez vos primes',
+    description: 'Primes carbone versées directement sur Orange Money. Coopératives : gérez et distribuez les paiements'
   }
 ];
 
