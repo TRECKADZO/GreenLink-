@@ -124,6 +124,57 @@ const AuditorDashboardScreen = ({ navigation }) => {
         </View>
       </View>
 
+      {/* Badge Progress */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>🏆 Badge Auditeur</Text>
+        <View style={styles.badgeCard}>
+          <View style={styles.badgeContent}>
+            {/* Current Badge */}
+            <View style={styles.currentBadge}>
+              <Text style={styles.badgeEmoji}>
+                {dashboard?.auditor?.badge === 'gold' ? '🥇' :
+                 dashboard?.auditor?.badge === 'silver' ? '🥈' :
+                 dashboard?.auditor?.badge === 'bronze' ? '🥉' :
+                 dashboard?.auditor?.badge === 'starter' ? '🌱' : '🔒'}
+              </Text>
+              <Text style={styles.badgeLabel}>{dashboard?.auditor?.badge_label || 'Aucun badge'}</Text>
+            </View>
+            
+            {/* Progress to next badge */}
+            {dashboard?.badge_progress?.next_badge && (
+              <View style={styles.badgeProgressContainer}>
+                <View style={styles.badgeProgressHeader}>
+                  <Text style={styles.badgeProgressLabel}>Prochain badge</Text>
+                  <Text style={styles.badgeNextLabel}>
+                    {dashboard.badge_progress.next_badge === 'bronze' ? '🥉 Bronze' :
+                     dashboard.badge_progress.next_badge === 'silver' ? '🥈 Argent' :
+                     dashboard.badge_progress.next_badge === 'gold' ? '🥇 Or' : ''}
+                  </Text>
+                </View>
+                <View style={styles.badgeProgressBar}>
+                  <View 
+                    style={[
+                      styles.badgeProgressFill, 
+                      { width: `${dashboard.badge_progress.progress_percent}%` }
+                    ]} 
+                  />
+                </View>
+                <Text style={styles.badgeProgressHint}>
+                  Encore {dashboard.badge_progress.audits_needed} audit(s) pour le prochain niveau
+                </Text>
+              </View>
+            )}
+            
+            {!dashboard?.badge_progress?.next_badge && dashboard?.auditor?.badge === 'gold' && (
+              <View style={styles.badgeMaxLevel}>
+                <Text style={styles.badgeMaxText}>🎉 Niveau maximum atteint!</Text>
+                <Text style={styles.badgeMaxSubtext}>Vous êtes un Auditeur Or</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+
       {/* Pending Missions */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
