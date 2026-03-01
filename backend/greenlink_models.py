@@ -15,6 +15,7 @@ class ParcelBase(BaseModel):
     farming_practices: List[str]  # agroforesterie, compost, zero_pesticides, etc.
     coordinates: Optional[dict] = None
     language: str = "francais"  # francais, baoule, dioula, senoufo
+    member_id: Optional[str] = None  # ID du membre propriétaire (pour coopératives)
 
 class ParcelCreate(ParcelBase):
     pass
