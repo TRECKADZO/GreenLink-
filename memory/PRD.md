@@ -2,6 +2,61 @@
 
 ## Latest Updates - March 1, 2026 (Session 4)
 
+### NEW: Système Auditeur Carbone (GreenLink) - ✅ COMPLETED
+Implémentation complète du système d'audit carbone avec auditeurs rattachés à GreenLink (pas aux coopératives).
+
+**Architecture:**
+```
+SUPER ADMIN (GreenLink)
+    └── Gère les Auditeurs Carbone
+          └── Assigne des missions d'audit
+                └── Auditeurs vérifient les parcelles
+                      └── Validation → Prime carbone calculée
+```
+
+**Fonctionnalités Backend:**
+- `/api/carbon-auditor/admin/auditors/create` - Créer un auditeur
+- `/api/carbon-auditor/admin/auditors` - Liste des auditeurs
+- `/api/carbon-auditor/admin/missions/create` - Créer une mission d'audit
+- `/api/carbon-auditor/dashboard/{id}` - Dashboard auditeur
+- `/api/carbon-auditor/mission/{id}/parcels` - Parcelles d'une mission
+- `/api/carbon-auditor/audit/submit` - Soumettre un audit
+
+**Fonctionnalités Web:**
+- Page Admin: `/admin/carbon-auditors` - Gestion des auditeurs
+- Dashboard Auditeur: `/auditor/dashboard` - Vue d'ensemble
+- Page Mission: `/auditor/mission/:id` - Liste des parcelles
+- Formulaire Audit: `/auditor/audit/:missionId/:parcelId` - Soumission audit
+
+**Fonctionnalités Mobile:**
+- `AuditorDashboardScreen` - Dashboard mobile
+- `AuditorMissionScreen` - Liste parcelles à auditer
+- `AuditFormScreen` - Formulaire terrain avec photos géolocalisées
+
+**Données vérifiées lors d'un audit:**
+- Superficie réelle (ha)
+- Nombre et densité arbres d'ombrage
+- Pratiques durables (bio, couverture sol, compostage, érosion)
+- État de santé des cultures
+- Photos géolocalisées obligatoires
+- Décision: Approuvé / À revoir / Rejeté
+
+**Files Created:**
+- `/app/backend/routes/carbon_auditor.py` - Routes API
+- `/app/frontend/src/pages/admin/CarbonAuditorsPage.jsx`
+- `/app/frontend/src/pages/auditor/AuditorDashboard.jsx`
+- `/app/frontend/src/pages/auditor/AuditorMissionPage.jsx`
+- `/app/frontend/src/pages/auditor/AuditFormPage.jsx`
+- `/app/mobile/greenlink-farmer/src/screens/auditor/AuditorDashboardScreen.js`
+- `/app/mobile/greenlink-farmer/src/screens/auditor/AuditorMissionScreen.js`
+- `/app/mobile/greenlink-farmer/src/screens/auditor/AuditFormScreen.js`
+
+**Credentials Test:**
+- Email: `auditeur@greenlink.ci`
+- Password: `audit123`
+
+---
+
 ### NEW: Boutons d'Activation sur Page Login Web - ✅ COMPLETED
 Ajout des boutons d'activation de compte sur la page de connexion web, similaire à l'application mobile.
 
