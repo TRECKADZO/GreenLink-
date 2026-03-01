@@ -146,6 +146,7 @@ function App() {
               <Route path="/admin/notifications" element={<AdminNotifications />} />
               <Route path="/admin/carbon-auditors" element={<CarbonAuditorsPage />} />
               <Route path="/admin/audit-missions" element={<AuditMissionsPage />} />
+              <Route path="/admin/badge-analytics" element={<BadgeAnalyticsPage />} />
 
               {/* Carbon Auditor Routes */}
               <Route path="/auditor/dashboard" element={<AuditorDashboard />} />
