@@ -475,3 +475,103 @@ async def get_push_notification_stats(
             channel_id="audit_results"
         )
 
+    async def notify_audit_completed(
+        self,
+        cooperative_id: str,
+        parcel_location: str,
+        recommendation: str,
+        carbon_score: float,
+        auditor_name: str
+    ) -> dict:
+        """
+        Notifier la coopérative qu'un audit a été complété
+        """
+        from bson import ObjectId
+        
+        # Récupérer la coopérative
+        coop = await db.users.find_one({"_id": ObjectId(cooperative_id)})
+        if not coop or not coop.get("push_token"):
+            logger.info(f"No push token for cooperative {cooperative_id}")
+            return {"success": False, "error": "No push token"}
+        
+        # Construire le message selon la recommandation
+        if recommendation == "approved":
+            title = "✅ Audit Approuvé"
+            emoji = "🎉"
+        elif recommendation == "rejected":
+            title = "❌ Audit Rejeté"
+            emoji = "⚠️"
+        else:
+            title = "🔄 Audit À Revoir"
+            emoji = "📋"
+        
+        body = f"{emoji} Parcelle \"{parcel_location}\" - Score carbone: {carbon_score}/10. Auditeur: {auditor_name}"
+        
+        data = {
+            "type": "audit_result",
+            "recommendation": recommendation,
+            "carbon_score": carbon_score,
+            "screen": "CoopDashboard"
+        }
+        
+        result = await self.send_push_notification(
+            tokens=[coop["push_token"]],
+            title=title,
+            body=body,
+            data=data,
+            priority="high" if recommendation == "rejected" else "normal",
+            channel_id="audit_results"
+        )
+        
+        # Log
+        await db.push_notifications_log.insert_one({
+            "type": "audit_completed",
+            "cooperative_id": cooperative_id,
+            "parcel_location": parcel_location,
+            "recommendation": recommendation,
+            "carbon_score": carbon_score,
+            "result": result,
+            "created_at": datetime.utcnow()
+        })
+        
+        return result
+
+    async def notify_new_badge_earned(
+        self,
+        auditor_id: str,
+        badge: str,
+        audits_completed: int
+    ) -> dict:
+        """
+        Notifier un auditeur qu'il a obtenu un nouveau badge
+        """
+        from bson import ObjectId
+        
+        auditor = await db.users.find_one({"_id": ObjectId(auditor_id)})
+        if not auditor or not auditor.get("push_token"):
+            return {"success": False, "error": "No push token"}
+        
+        badge_names = {
+            "starter": ("🌱 Débutant", "Félicitations pour votre premier audit!"),
+            "bronze": ("🥉 Auditeur Bronze", "10 audits complétés! Continuez!"),
+            "silver": ("🥈 Auditeur Argent", "50 audits! Vous êtes un expert!"),
+            "gold": ("🥇 Auditeur Or", "100 audits! Performance exceptionnelle!")
+        }
+        
+        badge_info = badge_names.get(badge, ("Badge", "Nouveau badge obtenu"))
+        
+        title = f"🏆 Nouveau Badge: {badge_info[0]}"
+        body = f"{badge_info[1]} Total: {audits_completed} audits."
+        
+        return await self.send_push_notification(
+            tokens=[auditor["push_token"]],
+            title=title,
+            body=body,
+            data={"type": "badge_earned", "badge": badge, "screen": "AuditorDashboard"},
+            priority="normal",
+            channel_id="achievements"
+        )
+
+
+# Instance globale
+push_service = PushNotificationService()
