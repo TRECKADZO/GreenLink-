@@ -23,7 +23,8 @@ import {
   Building2,
   BarChart3,
   Globe,
-  DollarSign
+  DollarSign,
+  Leaf
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -208,6 +209,14 @@ const AdminDashboard = () => {
               >
                 <DollarSign className="w-4 h-4 mr-2" />
                 Facturation & Paiements
+              </Button>
+              <Button 
+                onClick={() => navigate('/admin/carbon-auditors')}
+                className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
+                data-testid="carbon-auditors-btn"
+              >
+                <Leaf className="w-4 h-4 mr-2" />
+                Auditeurs Carbone
               </Button>
               <Badge className="bg-red-100 text-red-700">Super Admin</Badge>
             </div>
