@@ -155,18 +155,23 @@ async def get_coop_members(
 ):
     """Liste des membres de la coopérative"""
     verify_cooperative(current_user)
-    coop_id = current_user["_id"]
+    coop_id = str(current_user["_id"])
     
-    query = {"coop_id": coop_id}
+    # Support both field names for backward compatibility
+    query = {"$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]}
     if status_filter:
         query["status"] = status_filter
     if village:
         query["village"] = village
     if search:
-        query["$or"] = [
-            {"full_name": {"$regex": search, "$options": "i"}},
-            {"phone_number": {"$regex": search, "$options": "i"}}
+        query["$and"] = [
+            {"$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]},
+            {"$or": [
+                {"full_name": {"$regex": search, "$options": "i"}},
+                {"phone_number": {"$regex": search, "$options": "i"}}
+            ]}
         ]
+        del query["$or"]
     
     total = await db.coop_members.count_documents(query)
     members = await db.coop_members.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
