@@ -483,8 +483,12 @@ const CarbonPremiumsPage = () => {
                 </p>
               </div>
               
+              <div className="bg-blue-900/30 rounded-lg p-3 border border-blue-700/50">
+                <p className="text-sm text-blue-300">📱 Un SMS de confirmation sera envoyé au bénéficiaire</p>
+              </div>
+              
               <div className="text-xs text-gray-500">
-                ⚠️ Note: L'intégration Orange Money est en cours. Le paiement sera simulé.
+                ⚠️ Note: Intégration Orange Money (MOCKED). Le paiement sera simulé avec envoi de SMS.
               </div>
             </div>
           )}
@@ -499,10 +503,10 @@ const CarbonPremiumsPage = () => {
             </Button>
             <Button 
               className="bg-emerald-600 hover:bg-emerald-700"
-              onClick={handleInitiatePayment}
+              onClick={handlePayMember}
               disabled={processingPayment}
             >
-              {processingPayment ? 'Traitement...' : 'Confirmer le paiement'}
+              {processingPayment ? 'Traitement...' : '💳 Confirmer & Envoyer SMS'}
             </Button>
           </DialogFooter>
         </DialogContent>
