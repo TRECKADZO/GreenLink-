@@ -1406,3 +1406,245 @@ async def list_all_cooperatives():
         logger.error(f"Error listing cooperatives: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ============= CARBON PREMIUM CALCULATION =============
+
+class CarbonPremiumSettings(BaseModel):
+    rate_per_hectare: float = 50000  # FCFA par hectare
+    min_score_eligible: float = 6.0   # Score minimum pour être éligible
+    bonus_high_score: float = 1.2     # Bonus 20% pour score >= 8
+    bonus_organic: float = 1.1        # Bonus 10% pour pratiques bio
+
+@router.get("/carbon-premiums/members")
+async def get_members_carbon_premiums(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obtenir les primes carbone calculées par membre
+    Calcul: Prime = Surface × Score × Taux/ha
+    """
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    
+    # Récupérer tous les membres
+    members = await db.coop_members.find({"cooperative_id": coop_id}).to_list(1000)
+    
+    # Taux de base par hectare (FCFA)
+    RATE_PER_HECTARE = 50000
+    MIN_SCORE = 6.0
+    
+    premium_data = []
+    total_premium = 0
+    total_eligible_hectares = 0
+    
+    for member in members:
+        member_id = str(member["_id"])
+        user_id = member.get("user_id")
+        
+        # Récupérer les parcelles du membre
+        parcels = []
+        if user_id:
+            parcels = await db.parcels.find({
+                "$or": [
+                    {"farmer_id": user_id},
+                    {"member_id": member_id}
+                ]
+            }).to_list(100)
+        
+        # Récupérer les audits pour ces parcelles
+        member_total_area = 0
+        member_avg_score = 0
+        member_premium = 0
+        audited_parcels = 0
+        parcels_detail = []
+        
+        for parcel in parcels:
+            parcel_id = str(parcel["_id"])
+            area = parcel.get("area_hectares", 0)
+            
+            # Chercher l'audit de cette parcelle
+            audit = await db.carbon_audits.find_one({
+                "parcel_id": parcel_id,
+                "recommendation": "approved"
+            })
+            
+            if audit:
+                carbon_score = audit.get("carbon_score", 0)
+                
+                if carbon_score >= MIN_SCORE:
+                    # Calcul de la prime pour cette parcelle
+                    parcel_premium = area * RATE_PER_HECTARE * (carbon_score / 10)
+                    
+                    # Bonus pour score élevé
+                    if carbon_score >= 8:
+                        parcel_premium *= 1.2
+                    
+                    member_premium += parcel_premium
+                    member_total_area += area
+                    member_avg_score += carbon_score
+                    audited_parcels += 1
+                    
+                    parcels_detail.append({
+                        "parcel_id": parcel_id,
+                        "location": parcel.get("location"),
+                        "area_hectares": area,
+                        "carbon_score": carbon_score,
+                        "premium_fcfa": round(parcel_premium)
+                    })
+        
+        if audited_parcels > 0:
+            member_avg_score = round(member_avg_score / audited_parcels, 1)
+        
+        premium_data.append({
+            "member_id": member_id,
+            "full_name": member.get("full_name"),
+            "phone_number": member.get("phone_number"),
+            "village": member.get("village"),
+            "total_hectares": round(member_total_area, 2),
+            "average_score": member_avg_score,
+            "audited_parcels": audited_parcels,
+            "premium_fcfa": round(member_premium),
+            "premium_eur": round(member_premium / 655.957, 2),  # Conversion FCFA -> EUR
+            "parcels": parcels_detail,
+            "payment_status": "pending"
+        })
+        
+        total_premium += member_premium
+        total_eligible_hectares += member_total_area
+    
+    # Trier par prime décroissante
+    premium_data.sort(key=lambda x: x["premium_fcfa"], reverse=True)
+    
+    return {
+        "members": premium_data,
+        "summary": {
+            "total_members": len(members),
+            "eligible_members": len([m for m in premium_data if m["premium_fcfa"] > 0]),
+            "total_hectares": round(total_eligible_hectares, 2),
+            "total_premium_fcfa": round(total_premium),
+            "total_premium_eur": round(total_premium / 655.957, 2),
+            "rate_per_hectare": RATE_PER_HECTARE,
+            "min_score_required": MIN_SCORE
+        }
+    }
+
+
+@router.get("/carbon-premiums/summary")
+async def get_carbon_premium_summary(
+    current_user: dict = Depends(get_current_user)
+):
+    """Résumé des primes carbone de la coopérative"""
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    
+    # Statistiques rapides
+    members_count = await db.coop_members.count_documents({"cooperative_id": coop_id})
+    
+    # Parcelles avec audits approuvés
+    members = await db.coop_members.find({"cooperative_id": coop_id}, {"user_id": 1}).to_list(1000)
+    user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    member_ids = [str(m["_id"]) for m in members]
+    
+    # Compter les audits approuvés
+    approved_audits = await db.carbon_audits.count_documents({
+        "recommendation": "approved",
+        "$or": [
+            {"parcel_id": {"$in": member_ids}},
+        ]
+    })
+    
+    # Primes versées vs en attente
+    paid_premiums = await db.carbon_payments.aggregate([
+        {"$match": {"cooperative_id": coop_id, "status": "paid"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount_fcfa"}}}
+    ]).to_list(1)
+    
+    pending_premiums = await db.carbon_payments.aggregate([
+        {"$match": {"cooperative_id": coop_id, "status": "pending"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount_fcfa"}}}
+    ]).to_list(1)
+    
+    return {
+        "total_members": members_count,
+        "approved_audits": approved_audits,
+        "paid_premium_fcfa": paid_premiums[0]["total"] if paid_premiums else 0,
+        "pending_premium_fcfa": pending_premiums[0]["total"] if pending_premiums else 0,
+        "rate_per_hectare": 50000,
+        "currency": "FCFA"
+    }
+
+
+@router.post("/carbon-premiums/initiate-payment")
+async def initiate_premium_payment(
+    member_id: str,
+    amount_fcfa: float,
+    current_user: dict = Depends(get_current_user)
+):
+    """Initier le paiement d'une prime carbone à un membre"""
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    
+    # Vérifier que le membre appartient à cette coopérative
+    member = await db.coop_members.find_one({
+        "_id": ObjectId(member_id),
+        "cooperative_id": coop_id
+    })
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Membre non trouvé")
+    
+    # Créer l'enregistrement de paiement
+    payment = {
+        "cooperative_id": coop_id,
+        "member_id": member_id,
+        "member_name": member.get("full_name"),
+        "phone_number": member.get("phone_number"),
+        "amount_fcfa": amount_fcfa,
+        "amount_eur": round(amount_fcfa / 655.957, 2),
+        "payment_method": "orange_money",  # Par défaut
+        "status": "pending",
+        "initiated_by": str(current_user["_id"]),
+        "created_at": datetime.utcnow()
+    }
+    
+    result = await db.carbon_payments.insert_one(payment)
+    
+    # TODO: Intégrer avec Orange Money API pour le paiement réel
+    # Pour l'instant, on simule une validation
+    
+    return {
+        "payment_id": str(result.inserted_id),
+        "status": "pending",
+        "message": f"Paiement de {amount_fcfa} FCFA initié pour {member.get('full_name')}",
+        "note": "Intégration Orange Money en attente - paiement simulé"
+    }
+
+
+@router.get("/carbon-premiums/history")
+async def get_premium_payment_history(
+    current_user: dict = Depends(get_current_user),
+    limit: int = Query(50, le=100)
+):
+    """Historique des paiements de primes carbone"""
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    
+    payments = await db.carbon_payments.find(
+        {"cooperative_id": coop_id}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return {
+        "payments": [{
+            "id": str(p["_id"]),
+            "member_id": p.get("member_id"),
+            "member_name": p.get("member_name"),
+            "phone_number": p.get("phone_number"),
+            "amount_fcfa": p.get("amount_fcfa"),
+            "amount_eur": p.get("amount_eur"),
+            "status": p.get("status"),
+            "payment_method": p.get("payment_method"),
+            "created_at": p.get("created_at")
+        } for p in payments],
+        "total": len(payments)
+    }
+
