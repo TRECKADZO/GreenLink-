@@ -52,6 +52,7 @@ import CooperativeComparison from "./pages/admin/CooperativeComparison";
 import RealTimeDashboard from "./pages/admin/RealTimeDashboard";
 import SSRTEAnalytics from "./pages/admin/SSRTEAnalytics";
 import CarbonAuditorsPage from "./pages/admin/CarbonAuditorsPage";
+import AuditMissionsPage from "./pages/admin/AuditMissionsPage";
 
 // Auditor Routes
 import AuditorDashboard from "./pages/auditor/AuditorDashboard";
@@ -143,6 +144,7 @@ function App() {
               <Route path="/admin/ssrte-analytics" element={<SSRTEAnalytics />} />
               <Route path="/admin/notifications" element={<AdminNotifications />} />
               <Route path="/admin/carbon-auditors" element={<CarbonAuditorsPage />} />
+              <Route path="/admin/audit-missions" element={<AuditMissionsPage />} />
 
               {/* Carbon Auditor Routes */}
               <Route path="/auditor/dashboard" element={<AuditorDashboard />} />
