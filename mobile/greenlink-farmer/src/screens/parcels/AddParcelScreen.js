@@ -479,6 +479,76 @@ const AddParcelScreen = ({ navigation }) => {
           </Text>
         )}
       </View>
+
+      {/* Member Selection Modal */}
+      <Modal
+        visible={showMemberPicker}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowMemberPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Sélectionner un planteur</Text>
+              <TouchableOpacity onPress={() => setShowMemberPicker(false)}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Rechercher par nom ou téléphone..."
+              value={searchMember}
+              onChangeText={setSearchMember}
+              placeholderTextColor={COLORS.gray[400]}
+            />
+            
+            {loadingMembers ? (
+              <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
+            ) : (
+              <FlatList
+                data={filteredMembers}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.memberItem,
+                      selectedMember?.id === item.id && styles.memberItemSelected
+                    ]}
+                    onPress={() => {
+                      setSelectedMember(item);
+                      setShowMemberPicker(false);
+                    }}
+                  >
+                    <View style={styles.memberAvatar}>
+                      <Text style={styles.memberAvatarText}>
+                        {item.full_name?.charAt(0)?.toUpperCase() || '?'}
+                      </Text>
+                    </View>
+                    <View style={styles.memberInfo}>
+                      <Text style={styles.memberName}>{item.full_name}</Text>
+                      <Text style={styles.memberPhone}>{item.phone_number}</Text>
+                      {item.village && (
+                        <Text style={styles.memberVillage}>📍 {item.village}</Text>
+                      )}
+                    </View>
+                    {selectedMember?.id === item.id && (
+                      <Text style={styles.memberCheck}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <Text style={styles.emptyList}>
+                    Aucun membre trouvé
+                  </Text>
+                }
+                style={styles.memberList}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
