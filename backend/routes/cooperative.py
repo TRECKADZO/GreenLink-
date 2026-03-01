@@ -1306,3 +1306,103 @@ async def generate_member_payment_receipt(
         }
     )
 
+
+
+# ============= CARBON AUDIT ENDPOINTS =============
+
+@router.get("/{coop_id}/parcels-for-audit")
+async def get_parcels_for_audit(coop_id: str):
+    """Get all parcels of a cooperative for carbon audit"""
+    try:
+        # Get all members of this cooperative
+        members = list(db.coop_members.find({"cooperative_id": coop_id}))
+        member_ids = [str(m["_id"]) for m in members]
+        member_user_ids = [str(m.get("user_id")) for m in members if m.get("user_id")]
+        
+        # Also get users with this coop_id
+        coop_users = list(db.users.find({
+            "$or": [
+                {"coop_id": coop_id},
+                {"cooperative_id": coop_id}
+            ],
+            "user_type": {"$in": ["producteur", "farmer"]}
+        }))
+        farmer_user_ids = [str(u["_id"]) for u in coop_users]
+        
+        all_farmer_ids = list(set(member_ids + member_user_ids + farmer_user_ids))
+        
+        # Get parcels
+        parcels_query = {
+            "$or": [
+                {"farmer_id": {"$in": all_farmer_ids}},
+                {"owner_id": {"$in": all_farmer_ids}},
+                {"member_id": {"$in": member_ids}},
+                {"cooperative_id": coop_id}
+            ]
+        }
+        
+        parcels = list(db.parcels.find(parcels_query))
+        
+        result = []
+        for parcel in parcels:
+            # Get farmer name
+            farmer_name = "Non assigné"
+            farmer_id = parcel.get("farmer_id") or parcel.get("owner_id") or parcel.get("member_id")
+            if farmer_id:
+                # Try to find in coop_members
+                member = db.coop_members.find_one({"_id": ObjectId(farmer_id)}) if ObjectId.is_valid(farmer_id) else None
+                if member:
+                    farmer_name = member.get("full_name", "Non assigné")
+                else:
+                    # Try to find in users
+                    user = db.users.find_one({"_id": ObjectId(farmer_id)}) if ObjectId.is_valid(farmer_id) else None
+                    if user:
+                        farmer_name = user.get("full_name", "Non assigné")
+            
+            result.append({
+                "id": str(parcel["_id"]),
+                "location": parcel.get("location") or parcel.get("name") or f"Parcelle {str(parcel['_id'])[-6:]}",
+                "village": parcel.get("village") or parcel.get("region") or "Non spécifié",
+                "area_hectares": parcel.get("area_hectares") or parcel.get("size") or 0,
+                "crop_type": parcel.get("crop_type") or "cacao",
+                "farmer_name": farmer_name,
+                "farmer_id": farmer_id,
+                "gps_lat": parcel.get("gps_lat") or parcel.get("latitude"),
+                "gps_lng": parcel.get("gps_lng") or parcel.get("longitude"),
+                "carbon_score": parcel.get("carbon_score"),
+                "certification": parcel.get("certification"),
+                "audit_status": parcel.get("audit_status", "pending")
+            })
+        
+        return {"parcels": result, "total": len(result)}
+    
+    except Exception as e:
+        logger.error(f"Error fetching parcels for audit: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/list")
+async def list_all_cooperatives():
+    """List all cooperatives for admin selection"""
+    try:
+        # Get cooperatives from users collection
+        coops = list(db.users.find(
+            {"user_type": "cooperative"},
+            {"_id": 1, "full_name": 1, "coop_name": 1, "coop_code": 1, "email": 1}
+        ))
+        
+        result = []
+        for coop in coops:
+            result.append({
+                "id": str(coop["_id"]),
+                "name": coop.get("coop_name") or coop.get("full_name"),
+                "code": coop.get("coop_code"),
+                "email": coop.get("email")
+            })
+        
+        return {"cooperatives": result, "total": len(result)}
+    
+    except Exception as e:
+        logger.error(f"Error listing cooperatives: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
