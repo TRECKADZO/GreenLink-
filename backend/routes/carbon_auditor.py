@@ -497,12 +497,54 @@ async def submit_audit(audit: AuditSubmission, auditor_id: str, mission_id: str)
         }}
     )
     
+    # Calculer et mettre à jour le badge de l'auditeur
+    auditor_updated = db.users.find_one({"_id": ObjectId(auditor_id)})
+    new_badge = calculate_auditor_badge(auditor_updated.get("audits_completed", 0))
+    if new_badge:
+        current_badge = auditor_updated.get("badge")
+        if current_badge != new_badge:
+            db.users.update_one(
+                {"_id": ObjectId(auditor_id)},
+                {"$set": {"badge": new_badge, "badge_earned_at": datetime.now(timezone.utc)}}
+            )
+    
+    # Envoyer notification push à l'admin et à la coopérative
+    try:
+        from services.push_notifications import push_service
+        import asyncio
+        
+        # Notification à la coopérative
+        coop_id = mission.get("cooperative_id")
+        if coop_id:
+            asyncio.create_task(push_service.notify_audit_completed(
+                cooperative_id=coop_id,
+                parcel_location=parcel.get("location", "Parcelle"),
+                recommendation=audit.recommendation,
+                carbon_score=carbon_score,
+                auditor_name=auditor.get("full_name")
+            ))
+    except Exception as e:
+        print(f"Error sending audit notification: {e}")
+    
     return {
         "message": "Audit soumis avec succès",
         "audit_id": str(result.inserted_id),
         "recommendation": audit.recommendation,
-        "carbon_score": carbon_score
+        "carbon_score": carbon_score,
+        "badge": new_badge
     }
+
+def calculate_auditor_badge(audits_completed: int) -> str:
+    """Calculer le badge de l'auditeur basé sur le nombre d'audits"""
+    if audits_completed >= 100:
+        return "gold"      # Auditeur Or
+    elif audits_completed >= 50:
+        return "silver"    # Auditeur Argent
+    elif audits_completed >= 10:
+        return "bronze"    # Auditeur Bronze
+    elif audits_completed >= 1:
+        return "starter"   # Débutant
+    return None
 
 def calculate_carbon_score_from_audit(audit: AuditSubmission) -> float:
     """Calculer le score carbone basé sur les données d'audit"""
