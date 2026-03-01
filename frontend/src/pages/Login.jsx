@@ -49,19 +49,24 @@ const Login = () => {
         description: 'Bienvenue sur GreenLink'
       });
       
-      // Fetch user data from localStorage to determine redirect
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          // Decode JWT to get user type
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const redirectPath = getRedirectPath({ user_type: payload.user_type });
-          navigate(redirectPath);
-        } catch {
+      // Use the user data from the result to determine redirect
+      if (result.user) {
+        const redirectPath = getRedirectPath(result.user);
+        navigate(redirectPath);
+      } else {
+        // Fallback: try to decode JWT
+        const token = localStorage.getItem('token');
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const redirectPath = getRedirectPath({ user_type: payload.user_type });
+            navigate(redirectPath);
+          } catch {
+            navigate('/profile');
+          }
+        } else {
           navigate('/profile');
         }
-      } else {
-        navigate('/profile');
       }
     } else {
       toast({
