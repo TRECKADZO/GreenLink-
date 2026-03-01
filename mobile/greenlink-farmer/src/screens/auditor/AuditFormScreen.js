@@ -663,6 +663,39 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     marginTop: 4,
   },
+  networkBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 6,
+  },
+  networkDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  networkOnline: {
+    backgroundColor: '#22C55E',
+  },
+  networkOffline: {
+    backgroundColor: '#EF4444',
+  },
+  networkText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  syncBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  syncBadgeText: {
+    fontSize: 11,
+    color: '#fff',
+    fontWeight: '500',
+  },
   content: {
     flex: 1,
     padding: SPACING.md,
