@@ -253,6 +253,30 @@ const AddParcelScreen = ({ navigation }) => {
 
       {/* Form */}
       <View style={styles.form}>
+        {/* Member Selection (Cooperative only) */}
+        {isCooperative && (
+          <View style={styles.memberSection}>
+            <Text style={styles.inputLabel}>👨‍🌾 Propriétaire de la parcelle *</Text>
+            <TouchableOpacity 
+              style={styles.memberSelector}
+              onPress={() => setShowMemberPicker(true)}
+            >
+              {selectedMember ? (
+                <View style={styles.selectedMember}>
+                  <Text style={styles.selectedMemberName}>{selectedMember.full_name}</Text>
+                  <Text style={styles.selectedMemberPhone}>{selectedMember.phone_number}</Text>
+                </View>
+              ) : (
+                <Text style={styles.memberPlaceholder}>Sélectionner un planteur...</Text>
+              )}
+              <Text style={styles.memberArrow}>▼</Text>
+            </TouchableOpacity>
+            <Text style={styles.memberHint}>
+              La prime carbone sera versée à ce planteur
+            </Text>
+          </View>
+        )}
+
         {/* GPS Location */}
         <View style={styles.gpsSection}>
           <View style={styles.gpsHeader}>
