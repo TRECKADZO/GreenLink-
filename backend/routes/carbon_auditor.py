@@ -69,16 +69,16 @@ async def create_auditor(auditor: AuditorCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Cet email est déjà utilisé")
     
-    # Hash password
-    import hashlib
-    hashed_password = hashlib.sha256(auditor.password.encode()).hexdigest()
+    # Hash password with bcrypt (same as auth module)
+    import bcrypt
+    hashed_password = bcrypt.hashpw(auditor.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     # Créer l'utilisateur auditeur
     user_doc = {
         "email": auditor.email,
         "phone_number": auditor.phone_number,
         "full_name": auditor.full_name,
-        "password": hashed_password,
+        "hashed_password": hashed_password,
         "user_type": "carbon_auditor",
         "zone_coverage": auditor.zone_coverage,
         "certifications": auditor.certifications,
