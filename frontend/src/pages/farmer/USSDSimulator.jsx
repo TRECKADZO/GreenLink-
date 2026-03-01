@@ -129,7 +129,7 @@ const USSDSimulator = () => {
                     <li>• 100% gratuit (pas de data)</li>
                     <li>• Fonctionne sans internet</li>
                     <li>• Sur tous les téléphones</li>
-                    <li>• Disponible en baoulé, dioula, sénoufo</li>
+                    <li>• Disponible en baoulé, dioula</li>
                     <li>• Paiement direct Orange Money</li>
                   </ul>
                 </div>
@@ -137,13 +137,34 @@ const USSDSimulator = () => {
                 <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                   <h3 className="font-bold text-blue-900 mb-2">💬 SMS Rapides</h3>
                   <div className="text-sm text-blue-800 space-y-1 font-mono">
-                    <p>PARCELLE 3.5 450 Bouaflé ACZ</p>
-                    <p>RECOLTE 250 A</p>
+                    <p>PARCELLE 3.5 Bouaflé</p>
+                    <p>RECOLTE 250</p>
                     <p>SOLDE</p>
                     <p>PRIME</p>
                     <p>AIDE</p>
                   </div>
                   <p className="text-xs text-blue-700 mt-2">Envoyez au 1234 (gratuit)</p>
+                </div>
+
+                {/* Phone number input for testing */}
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-2">🧪 Test avec numéro</h3>
+                  <input
+                    type="text"
+                    value={userPhone}
+                    onChange={(e) => setUserPhone(e.target.value)}
+                    placeholder="+225..."
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                  <Button 
+                    onClick={resetSession}
+                    variant="outline"
+                    className="w-full mt-2"
+                    size="sm"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Tester avec ce numéro
+                  </Button>
                 </div>
               </div>
             </Card>
@@ -153,7 +174,7 @@ const USSDSimulator = () => {
           <div>
             <Card className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
-                Simulateur USSD
+                Simulateur USSD (Connecté au Backend)
               </h3>
               
               {/* Phone Frame */}
@@ -169,17 +190,22 @@ const USSDSimulator = () => {
                     {/* Status Bar */}
                     <div className="flex justify-between text-xs text-gray-600 mb-4">
                       <span>Orange CI</span>
-                      <span>14:32</span>
+                      <span>{new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                       <span>100%🔋</span>
                     </div>
 
                     {/* USSD Screen */}
-                    <div className="flex-1 bg-gray-50 rounded-lg p-4">
+                    <div className="flex-1 bg-gray-50 rounded-lg p-4 relative">
+                      {loading && (
+                        <div className="absolute inset-0 bg-gray-50/80 flex items-center justify-center rounded-lg">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+                        </div>
+                      )}
                       <h4 className="font-bold text-gray-900 mb-3 text-center">
-                        {currentScreen.title}
+                        *123*45#
                       </h4>
                       <pre className="text-sm text-gray-800 whitespace-pre-wrap font-sans leading-relaxed">
-                        {currentScreen.content}
+                        {response || 'Chargement...'}
                       </pre>
                     </div>
 
@@ -190,6 +216,7 @@ const USSDSimulator = () => {
                           type="text"
                           value={phoneScreen}
                           onChange={(e) => setPhoneScreen(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleInput(phoneScreen)}
                           placeholder="Tapez votre choix..."
                           className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg text-center text-lg font-bold"
                           maxLength="2"
@@ -197,7 +224,7 @@ const USSDSimulator = () => {
                         <Button
                           onClick={() => handleInput(phoneScreen)}
                           className="bg-green-600 hover:bg-green-700"
-                          disabled={!phoneScreen}
+                          disabled={!phoneScreen || loading}
                         >
                           <Send className="w-5 h-5" />
                         </Button>
@@ -205,12 +232,13 @@ const USSDSimulator = () => {
 
                       {/* Quick Actions */}
                       <div className="grid grid-cols-4 gap-2 mt-3">
-                        {currentScreen.options.map((opt) => (
+                        {['1', '2', '3', '4', '5', '6', '0', '00'].map((opt) => (
                           <Button
                             key={opt}
                             variant="outline"
                             onClick={() => handleInput(opt)}
                             className="font-bold"
+                            disabled={loading}
                           >
                             {opt}
                           </Button>
