@@ -1426,8 +1426,12 @@ async def get_members_carbon_premiums(
     verify_cooperative(current_user)
     coop_id = str(current_user["_id"])
     
+    logger.info(f"Getting carbon premiums for cooperative: {coop_id}")
+    
     # Récupérer tous les membres
     members = await db.coop_members.find({"cooperative_id": coop_id}).to_list(1000)
+    
+    logger.info(f"Found {len(members)} members for cooperative {coop_id}")
     
     # Taux de base par hectare (FCFA)
     RATE_PER_HECTARE = 50000
