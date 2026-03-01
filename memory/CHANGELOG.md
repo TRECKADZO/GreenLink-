@@ -1,5 +1,49 @@
 # GreenLink CHANGELOG
 
+## [March 1, 2026] - Web Activation Buttons, Agents Management & Department Selection
+
+### Added
+- **Boutons d'activation sur page Login Web**
+  - Bouton "Activer mon compte Membre Coopérative" (vert)
+  - Bouton "Activer mon compte Agent Terrain" (cyan)
+  - Navigation vers `/activate-member` et `/activate-agent`
+
+- **Pages d'activation Web**
+  - `/activate-member` - Activation compte membre coopérative (flux 2 étapes)
+  - `/activate-agent` - Activation compte agent terrain (thème cyan)
+
+- **Page Gestion Agents Terrain** (`/cooperative/agents`)
+  - Liste des agents avec recherche
+  - Badge statut (Activé / En attente)
+  - Modal ajout nouvel agent
+  - Détails agent avec statistiques
+
+- **Page Ajout Parcelle avec Sélection Membre** (`/cooperative/parcels/new`)
+  - Dropdown sélection agriculteur/membre
+  - Dropdown sélection département (80+ départements CI)
+  - Capture GPS optionnelle
+  - Tous les champs parcelle
+
+- **Liste Départements Côte d'Ivoire**
+  - 80+ départements officiels
+  - Organisés par région
+  - Disponible mobile et web
+
+### Files Created
+- `/app/frontend/src/pages/auth/ActivateMember.jsx`
+- `/app/frontend/src/pages/auth/ActivateAgent.jsx`
+- `/app/frontend/src/pages/cooperative/FieldAgentsPage.jsx`
+- `/app/frontend/src/pages/cooperative/AddParcelPage.jsx`
+- `/app/shared/constants/departments.js`
+
+### Files Updated
+- `/app/frontend/src/pages/Login.jsx` - Boutons d'activation ajoutés
+- `/app/frontend/src/pages/cooperative/Dashboard.jsx` - Bouton "Agents Terrain" ajouté
+- `/app/frontend/src/App.js` - Nouvelles routes
+- `/app/mobile/greenlink-farmer/src/screens/parcels/AddParcelScreen.js` - Département au lieu de Région
+
+---
+
 ## [Feb 28, 2026] - Export, Notifications & Offline Support
 
 ### Added
