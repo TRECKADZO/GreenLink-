@@ -972,6 +972,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  offlineInfo: {
+    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+    padding: 12,
+    borderRadius: 10,
+    marginTop: SPACING.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+  },
+  offlineInfoText: {
+    color: '#FBBF24',
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+  },
 });
 
 export default AuditFormScreen;
