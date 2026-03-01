@@ -171,6 +171,7 @@ function App() {
               <Route path="/cooperative/qrcodes" element={<QRCodeGenerator />} />
               <Route path="/cooperative/notifications" element={<CooperativeNotifications />} />
               <Route path="/cooperative/agents" element={<FieldAgentsPage />} />
+              <Route path="/cooperative/carbon-premiums" element={<CarbonPremiumsPage />} />
 
               {/* Shared Notifications */}
               <Route path="/notifications" element={<NotificationsPage />} />
