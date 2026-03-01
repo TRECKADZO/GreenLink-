@@ -27,6 +27,8 @@ const AuditFormScreen = ({ navigation, route }) => {
   const [submitting, setSubmitting] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [photos, setPhotos] = useState([]);
+  const [isOnline, setIsOnline] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
   
   const [formData, setFormData] = useState({
     actual_area_hectares: parcel?.area_hectares?.toString() || '',
