@@ -248,35 +248,49 @@ const CarbonPremiumsPage = () => {
           </Card>
         </div>
 
-        {/* Info Banner */}
-        <Card className="bg-emerald-900/30 border-emerald-700/50 mb-6">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-emerald-400 mt-0.5" />
-              <div>
-                <p className="text-emerald-300 font-medium">Calcul des primes carbone</p>
-                <p className="text-sm text-emerald-200/70">
-                  Prime = Surface (ha) × Taux ({formatFCFA(premiums?.summary?.rate_per_hectare || 50000)}/ha) × Score carbone (%) 
-                  <br />
-                  Bonus +20% si score ≥ 8/10 | Score minimum requis: {premiums?.summary?.min_score_required || 6}/10
-                </p>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="bg-gray-800 border-gray-700">
+            <TabsTrigger value="premiums" className="data-[state=active]:bg-emerald-600">
+              <Wallet className="h-4 w-4 mr-2" />
+              Primes à payer
+            </TabsTrigger>
+            <TabsTrigger value="history" className="data-[state=active]:bg-emerald-600">
+              <History className="h-4 w-4 mr-2" />
+              Historique ({paymentHistory.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="premiums">
+            {/* Info Banner */}
+            <Card className="bg-emerald-900/30 border-emerald-700/50 mb-6">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-emerald-400 mt-0.5" />
+                  <div>
+                    <p className="text-emerald-300 font-medium">Calcul des primes carbone</p>
+                    <p className="text-sm text-emerald-200/70">
+                      Prime = Surface (ha) × Taux ({formatFCFA(premiums?.summary?.rate_per_hectare || 50000)}/ha) × Score carbone (%) 
+                      <br />
+                      Bonus +20% si score ≥ 8/10 | Score minimum requis: {premiums?.summary?.min_score_required || 6}/10
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Search */}
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Rechercher un planteur..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white"
+                />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Search */}
-        <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Rechercher un planteur..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-700 text-white"
-            />
-          </div>
-        </div>
 
         {/* Members Table */}
         <Card className="bg-gray-800 border-gray-700">
