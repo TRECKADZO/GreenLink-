@@ -55,6 +55,8 @@ import CarbonAuditorsPage from "./pages/admin/CarbonAuditorsPage";
 
 // Auditor Routes
 import AuditorDashboard from "./pages/auditor/AuditorDashboard";
+import AuditorMissionPage from "./pages/auditor/AuditorMissionPage";
+import AuditFormPage from "./pages/auditor/AuditFormPage";
 
 // Cooperative Routes
 import CooperativeDashboard from "./pages/cooperative/Dashboard";
@@ -144,6 +146,10 @@ function App() {
 
               {/* Carbon Auditor Routes */}
               <Route path="/auditor/dashboard" element={<AuditorDashboard />} />
+              <Route path="/auditor/mission/:missionId" element={<AuditorMissionPage />} />
+              <Route path="/auditor/audit/:missionId/:parcelId" element={<AuditFormPage />} />
+              <Route path="/auditor/missions" element={<AuditorDashboard />} />
+              <Route path="/auditor/history" element={<AuditorDashboard />} />
 
               {/* Cooperative Routes */}
               <Route path="/cooperative/dashboard" element={<CooperativeDashboard />} />
