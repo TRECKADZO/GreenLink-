@@ -64,6 +64,7 @@ import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 import QRCodeGenerator from "./pages/cooperative/QRCodeGenerator";
 import CooperativeNotifications from "./pages/cooperative/Notifications";
 import FieldAgentsPage from "./pages/cooperative/FieldAgentsPage";
+import AddParcelPage from "./pages/cooperative/AddParcelPage";
 
 // Auth Pages
 import ActivateMember from "./pages/auth/ActivateMember";
@@ -142,6 +143,7 @@ function App() {
               <Route path="/cooperative/members/new" element={<CooperativeMembersPage />} />
               <Route path="/cooperative/members/import" element={<ImportMembersPage />} />
               <Route path="/cooperative/members/:memberId/parcels" element={<MemberParcelsPage />} />
+              <Route path="/cooperative/parcels/new" element={<AddParcelPage />} />
               <Route path="/cooperative/lots" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/lots/new" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />
