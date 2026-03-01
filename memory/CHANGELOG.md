@@ -1,8 +1,28 @@
 # GreenLink CHANGELOG
 
-## [March 1, 2026] - Web Activation Buttons, Agents Management & Department Selection
+## [March 1, 2026] - Carbon Auditor System & Web Improvements
 
-### Added
+### Added - Carbon Auditor System (Major Feature)
+- **Nouveau rôle utilisateur**: `carbon_auditor` rattaché à GreenLink
+- **Backend API**:
+  - Routes CRUD pour auditeurs (`/api/carbon-auditor/admin/*`)
+  - Système de missions d'audit
+  - Soumission d'audit avec calcul automatique du score carbone
+  - Statistiques et dashboard API
+
+- **Frontend Web**:
+  - Page Admin `/admin/carbon-auditors` - Gestion des auditeurs
+  - Dashboard Auditeur `/auditor/dashboard` - Stats et missions
+  - Page Mission `/auditor/mission/:id` - Liste parcelles
+  - Formulaire Audit `/auditor/audit/:missionId/:parcelId`
+
+- **Mobile App**:
+  - `AuditorDashboardScreen` - Dashboard avec stats
+  - `AuditorMissionScreen` - Liste des parcelles à auditer
+  - `AuditFormScreen` - Formulaire terrain complet
+  - Photos géolocalisées avec capture GPS
+
+### Added - Web Activation Buttons
 - **Boutons d'activation sur page Login Web**
   - Bouton "Activer mon compte Membre Coopérative" (vert)
   - Bouton "Activer mon compte Agent Terrain" (cyan)
