@@ -567,6 +567,239 @@ class PDFReportGenerator:
         buffer.seek(0)
         return buffer.getvalue()
 
+    def generate_audit_report(self, data: dict) -> bytes:
+        """Generate Carbon Audit Report PDF"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
+        )
+        
+        story = []
+        
+        # Title
+        story.append(Paragraph("RAPPORT D'AUDIT CARBONE", self.styles['ReportTitle']))
+        story.append(Paragraph("Vérification des Pratiques Durables", self.styles['SubTitle']))
+        story.append(Spacer(1, 20))
+        
+        # Mission Info
+        mission = data.get('mission', {})
+        story.append(Paragraph("Informations de la Mission", self.styles['SectionTitle']))
+        
+        mission_data = [
+            ['Coopérative:', mission.get('cooperative_name', 'N/A')],
+            ['Auditeur:', mission.get('auditor_name', 'N/A')],
+            ['Date d\'audit:', data.get('audit_date', datetime.now().strftime('%d/%m/%Y'))],
+            ['Référence:', data.get('audit_id', 'N/A')],
+        ]
+        
+        mission_table = Table(mission_data, colWidths=[4*cm, 12*cm])
+        mission_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#2d5a4d')),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(mission_table)
+        story.append(Spacer(1, 20))
+        
+        # Parcel Info
+        parcel = data.get('parcel', {})
+        story.append(Paragraph("Informations de la Parcelle", self.styles['SectionTitle']))
+        
+        parcel_data = [
+            ['Localisation:', parcel.get('location', 'N/A')],
+            ['Producteur:', parcel.get('farmer_name', 'N/A')],
+            ['Surface déclarée:', f"{parcel.get('declared_area', 0)} hectares"],
+            ['Surface vérifiée:', f"{data.get('actual_area_hectares', 0)} hectares"],
+            ['Coordonnées GPS:', f"{data.get('gps_lat', 'N/A')}, {data.get('gps_lng', 'N/A')}"],
+        ]
+        
+        parcel_table = Table(parcel_data, colWidths=[4*cm, 12*cm])
+        parcel_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#2d5a4d')),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(parcel_table)
+        story.append(Spacer(1, 20))
+        
+        # Audit Results
+        story.append(Paragraph("Résultats de l'Audit", self.styles['SectionTitle']))
+        
+        recommendation = data.get('recommendation', 'pending')
+        rec_text = {
+            'approved': '✓ APPROUVÉ',
+            'rejected': '✗ REJETÉ',
+            'pending': '⏳ EN ATTENTE',
+            'needs_review': '⚠ À RÉVISER'
+        }.get(recommendation, recommendation)
+        
+        rec_color = {
+            'approved': colors.HexColor('#10B981'),
+            'rejected': colors.HexColor('#EF4444'),
+            'pending': colors.HexColor('#F59E0B'),
+            'needs_review': colors.HexColor('#F59E0B')
+        }.get(recommendation, colors.gray)
+        
+        results_data = [
+            ['Critère', 'Résultat', 'Détail'],
+            ['Arbres d\'ombrage', str(data.get('shade_trees_count', 0)), data.get('shade_trees_density', 'N/A')],
+            ['Pratiques biologiques', '✓' if data.get('organic_practices') else '✗', ''],
+            ['Couverture du sol', '✓' if data.get('soil_cover') else '✗', ''],
+            ['Compostage', '✓' if data.get('composting') else '✗', ''],
+            ['Contrôle de l\'érosion', '✓' if data.get('erosion_control') else '✗', ''],
+            ['Santé des cultures', data.get('crop_health', 'N/A'), ''],
+        ]
+        
+        results_table = Table(results_data, colWidths=[6*cm, 4*cm, 6*cm])
+        results_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2d5a4d')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.gray),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(results_table)
+        story.append(Spacer(1, 20))
+        
+        # Carbon Score
+        carbon_score = data.get('carbon_score', 0)
+        story.append(Paragraph("Score Carbone", self.styles['SectionTitle']))
+        
+        score_data = [
+            ['Score obtenu:', f"{carbon_score}/10"],
+            ['Recommandation:', rec_text],
+        ]
+        
+        score_table = Table(score_data, colWidths=[6*cm, 10*cm])
+        score_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('TEXTCOLOR', (1, 0), (1, 0), colors.HexColor('#10B981') if carbon_score >= 7 else colors.HexColor('#F59E0B')),
+            ('TEXTCOLOR', (1, 1), (1, 1), rec_color),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ]))
+        story.append(score_table)
+        story.append(Spacer(1, 15))
+        
+        # Observations
+        if data.get('observations'):
+            story.append(Paragraph("Observations de l'Auditeur", self.styles['SectionTitle']))
+            story.append(Paragraph(data.get('observations', ''), self.styles['CustomBodyText']))
+            story.append(Spacer(1, 15))
+        
+        # Rejection Reason
+        if data.get('rejection_reason') and recommendation == 'rejected':
+            story.append(Paragraph("Motif du Rejet", self.styles['SectionTitle']))
+            story.append(Paragraph(data.get('rejection_reason', ''), self.styles['CustomBodyText']))
+            story.append(Spacer(1, 15))
+        
+        # Footer
+        story.append(Spacer(1, 30))
+        story.append(Paragraph("Signature de l'auditeur:", self.styles['SmallText']))
+        story.append(Spacer(1, 40))
+        story.append(Paragraph("_" * 30, self.styles['CustomBodyText']))
+        story.append(Spacer(1, 20))
+        
+        story.append(Paragraph(
+            f"Rapport généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')} - GreenLink Carbon Audit",
+            self.styles['SmallText']
+        ))
+        story.append(Paragraph(
+            "Ce document certifie les résultats de l'audit carbone effectué sur la parcelle mentionnée.",
+            self.styles['SmallText']
+        ))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+
+    def generate_auditor_badge_certificate(self, data: dict) -> bytes:
+        """Generate Badge Certificate for Auditor"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=3*cm,
+            bottomMargin=2*cm
+        )
+        
+        story = []
+        
+        badge = data.get('badge', 'starter')
+        badge_info = {
+            'starter': ('🌱', 'DÉBUTANT', 'Premier pas vers l\'excellence'),
+            'bronze': ('🥉', 'BRONZE', '10 audits complétés avec succès'),
+            'silver': ('🥈', 'ARGENT', '50 audits - Expert reconnu'),
+            'gold': ('🥇', 'OR', '100 audits - Excellence confirmée'),
+        }.get(badge, ('🏆', badge.upper(), ''))
+        
+        # Title
+        story.append(Paragraph("CERTIFICAT DE BADGE", self.styles['ReportTitle']))
+        story.append(Paragraph("Programme de Reconnaissance des Auditeurs Carbone", self.styles['SubTitle']))
+        story.append(Spacer(1, 30))
+        
+        # Badge
+        story.append(Paragraph(f"<font size='48'>{badge_info[0]}</font>", 
+                              ParagraphStyle('BadgeEmoji', alignment=TA_CENTER, fontSize=48)))
+        story.append(Spacer(1, 15))
+        story.append(Paragraph(f"AUDITEUR {badge_info[1]}", 
+                              ParagraphStyle('BadgeTitle', parent=self.styles['Heading1'], 
+                                           alignment=TA_CENTER, textColor=colors.HexColor('#FBBF24'))))
+        story.append(Spacer(1, 10))
+        story.append(Paragraph(badge_info[2], self.styles['SubTitle']))
+        story.append(Spacer(1, 30))
+        
+        # Auditor Info
+        story.append(Paragraph("Décerné à:", self.styles['CustomBodyText']))
+        story.append(Paragraph(f"<b>{data.get('auditor_name', 'N/A')}</b>", 
+                              ParagraphStyle('AuditorName', parent=self.styles['Heading2'], 
+                                           alignment=TA_CENTER)))
+        story.append(Spacer(1, 20))
+        
+        # Stats
+        stats_data = [
+            ['Audits complétés:', str(data.get('total_audits', 0))],
+            ['Taux d\'approbation:', f"{data.get('approval_rate', 0)}%"],
+            ['Date d\'obtention:', data.get('badge_date', datetime.now().strftime('%d/%m/%Y'))],
+        ]
+        
+        stats_table = Table(stats_data, colWidths=[6*cm, 10*cm])
+        stats_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ]))
+        story.append(stats_table)
+        story.append(Spacer(1, 40))
+        
+        # Signature
+        story.append(Paragraph("_" * 40, ParagraphStyle('Sig', alignment=TA_CENTER)))
+        story.append(Paragraph("Direction GreenLink Agritech", 
+                              ParagraphStyle('SigLabel', alignment=TA_CENTER, fontSize=10)))
+        story.append(Spacer(1, 30))
+        
+        story.append(Paragraph(
+            f"Certificat généré le {datetime.now().strftime('%d/%m/%Y')} - GreenLink Carbon Certification",
+            self.styles['SmallText']
+        ))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+
 
 # Create singleton instance
 pdf_generator = PDFReportGenerator()
