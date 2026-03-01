@@ -1,5 +1,33 @@
 # GreenLink Changelog
 
+## [2026-03-01] - v1.9.0 - Fonctionnalités Complètes
+
+### Rapports PDF Audit
+- **Rapport d'audit** (`/api/carbon-auditor/audit/{id}/pdf`)
+  - Informations mission et parcelle
+  - Résultats détaillés de l'audit
+  - Score carbone et recommandation
+  - Signature de l'auditeur
+
+- **Certificat de badge** (`/api/carbon-auditor/auditor/{id}/badge-certificate`)
+  - Design certificat professionnel
+  - Badge obtenu avec emoji
+  - Statistiques de l'auditeur
+
+### Dashboard Analytics Badges
+- Page admin `/admin/badge-analytics`
+- Distribution des badges (Or/Argent/Bronze/Débutant)
+- Leaderboard des auditeurs avec classement
+- Statistiques mensuelles et taux de croissance
+- Téléchargement des certificats en un clic
+
+### Fichiers Créés
+- `/app/frontend/src/pages/admin/BadgeAnalyticsPage.jsx`
+- `/app/backend/services/pdf_service.py` (fonctions ajoutées)
+- `/app/backend/routes/carbon_auditor.py` (endpoints PDF + analytics)
+
+---
+
 ## [2026-03-01] - v1.9.0 - Mode Hors-ligne Audit + Système de Badges
 
 ### Nouvelles Fonctionnalités
