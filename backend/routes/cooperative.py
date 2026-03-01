@@ -6,7 +6,7 @@ GreenLink Agritech - Côte d'Ivoire
 from fastapi import APIRouter, HTTPException, Depends, status, Query
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 import logging
 import os
