@@ -22,9 +22,11 @@ const AuditorDashboard = () => {
 
   useEffect(() => {
     const fetchDashboard = async () => {
-      if (!user?.id) return;
+      // Use _id or id (depends on how data is stored)
+      const userId = user?.id || user?._id;
+      if (!userId) return;
       try {
-        const response = await fetch(`${API_URL}/api/carbon-auditor/dashboard/${user.id}`);
+        const response = await fetch(`${API_URL}/api/carbon-auditor/dashboard/${userId}`);
         const data = await response.json();
         setDashboard(data);
       } catch (error) {
