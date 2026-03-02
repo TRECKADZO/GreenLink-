@@ -90,9 +90,19 @@ const CarbonBusinessDashboard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Business Model Carbone</h1>
-          <p className="text-gray-500">Revenus des crédits carbone et projections</p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/admin')}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Retour
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Business Model Carbone</h1>
+            <p className="text-gray-500">Revenus des crédits carbone et projections</p>
+          </div>
         </div>
         <Badge className="bg-green-100 text-green-700 px-4 py-2">
           <Leaf className="w-4 h-4 mr-2" />
