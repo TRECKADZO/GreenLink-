@@ -236,7 +236,7 @@ async def seed_database():
         },
         {
             "name": "Acheteurs",
-            "price": "49 000 FCFA",
+            "price": "49 000 XOF",
             "period": "/mois",
             "badge": "1 mois gratuit",
             "popular": True,
@@ -274,7 +274,7 @@ async def seed_database():
         },
         {
             "name": "Fournisseurs",
-            "price": "29 000 FCFA",
+            "price": "29 000 XOF",
             "period": "/mois",
             "badge": "+ 5% commission/vente",
             "popular": False,

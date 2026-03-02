@@ -81,7 +81,7 @@ class TestStrategicDashboard:
         assert 'generated_at' in data
         assert 'period' in data
         assert 'currency' in data
-        assert data['currency'] == 'FCFA'
+        assert data['currency'] == 'XOF'
         print("PASS: Dashboard returns correct base structure")
     
     def test_dashboard_production_section(self, auth_headers):
@@ -112,7 +112,7 @@ class TestStrategicDashboard:
         assert 'total_co2_captured_tonnes' in sustainability
         assert 'carbon_credits_generated' in sustainability
         assert 'carbon_credits_sold' in sustainability
-        assert 'carbon_revenue_fcfa' in sustainability
+        assert 'carbon_revenue_xof' in sustainability
         assert 'deforestation_free_rate' in sustainability
         
         print(f"PASS: Sustainability - CO2: {sustainability['total_co2_captured_tonnes']}T, Credits: {sustainability['carbon_credits_generated']}")
@@ -157,11 +157,11 @@ class TestStrategicDashboard:
         market = data.get('market')
         assert market is not None, "Market section missing"
         assert 'total_transactions' in market
-        assert 'total_volume_fcfa' in market
-        assert 'average_prices_fcfa_per_kg' in market
+        assert 'total_volume_xof' in market
+        assert 'average_prices_xof_per_kg' in market
         assert 'export_destinations' in market
         
-        print(f"PASS: Market - Transactions: {market['total_transactions']}, Volume: {market['total_volume_fcfa']} FCFA")
+        print(f"PASS: Market - Transactions: {market['total_transactions']}, Volume: {market['total_volume_xof']} XOF")
     
     def test_dashboard_macroeconomic_section(self, auth_headers):
         """Dashboard includes macroeconomic indicators"""
@@ -308,9 +308,9 @@ class TestTradeReport:
         
         trade = data['trade_volume']
         assert 'total_transactions' in trade
-        assert 'total_value_fcfa' in trade
+        assert 'total_value_xof' in trade
         
-        print(f"PASS: Trade Report - Transactions: {trade['total_transactions']}, Value: {trade['total_value_fcfa']} FCFA")
+        print(f"PASS: Trade Report - Transactions: {trade['total_transactions']}, Value: {trade['total_value_xof']} XOF")
     
     def test_trade_report_requires_auth(self):
         """Trade report requires authentication"""

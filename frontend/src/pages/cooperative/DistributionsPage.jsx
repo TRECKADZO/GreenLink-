@@ -109,7 +109,7 @@ const DistributionsPage = () => {
               <div>
                 <p className="text-sm text-gray-500">Total Distribué</p>
                 <p className="text-xl font-bold text-green-600">
-                  {totalDistributed.toLocaleString()} FCFA
+                  {totalDistributed.toLocaleString()} XOF
                 </p>
               </div>
             </CardContent>
@@ -122,7 +122,7 @@ const DistributionsPage = () => {
               <div>
                 <p className="text-sm text-gray-500">En Attente</p>
                 <p className="text-xl font-bold text-amber-600">
-                  {totalPending.toLocaleString()} FCFA
+                  {totalPending.toLocaleString()} XOF
                 </p>
               </div>
             </CardContent>
@@ -165,15 +165,15 @@ const DistributionsPage = () => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                         <div>
                           <p className="text-sm text-gray-500">Prime Totale</p>
-                          <p className="font-medium">{(dist.total_premium || 0).toLocaleString()} FCFA</p>
+                          <p className="font-medium">{(dist.total_premium || 0).toLocaleString()} XOF</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Commission</p>
-                          <p className="font-medium">{(dist.commission_amount || 0).toLocaleString()} FCFA</p>
+                          <p className="font-medium">{(dist.commission_amount || 0).toLocaleString()} XOF</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">À Distribuer</p>
-                          <p className="font-medium text-green-600">{(dist.amount_distributed || 0).toLocaleString()} FCFA</p>
+                          <p className="font-medium text-green-600">{(dist.amount_distributed || 0).toLocaleString()} XOF</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Bénéficiaires</p>
@@ -244,7 +244,7 @@ const DistributionsPage = () => {
                 <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600">Montant à distribuer</span>
                   <span className="font-bold text-green-600">
-                    {(selectedDistribution.amount_distributed || 0).toLocaleString()} FCFA
+                    {(selectedDistribution.amount_distributed || 0).toLocaleString()} XOF
                   </span>
                 </div>
                 <div className="flex justify-between p-3 bg-gray-50 rounded-lg">

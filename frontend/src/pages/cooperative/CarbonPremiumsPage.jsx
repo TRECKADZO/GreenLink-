@@ -108,8 +108,8 @@ const CarbonPremiumsPage = () => {
     toast.success('Téléchargement du rapport PDF...');
   };
 
-  const formatFCFA = (amount) => {
-    return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+  const formatXOF = (amount) => {
+    return new Intl.NumberFormat('fr-FR').format(amount) + ' XOF';
   };
 
   const formatDate = (dateStr) => {
@@ -223,7 +223,7 @@ const CarbonPremiumsPage = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-white">
-                    {formatFCFA(premiums?.summary?.total_premium_fcfa || 0)}
+                    {formatXOF(premiums?.summary?.total_premium_xof || 0)}
                   </p>
                   <p className="text-xs text-gray-400">Prime totale</p>
                 </div>
@@ -239,7 +239,7 @@ const CarbonPremiumsPage = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-white">
-                    {formatFCFA(premiums?.summary?.rate_per_hectare || 50000)}/ha
+                    {formatXOF(premiums?.summary?.rate_per_hectare || 50000)}/ha
                   </p>
                   <p className="text-xs text-gray-400">Taux de base</p>
                 </div>
@@ -270,7 +270,7 @@ const CarbonPremiumsPage = () => {
                   <div>
                     <p className="text-emerald-300 font-medium">Calcul des primes carbone</p>
                     <p className="text-sm text-emerald-200/70">
-                      Prime = Surface (ha) × Taux ({formatFCFA(premiums?.summary?.rate_per_hectare || 50000)}/ha) × Score carbone (%) 
+                      Prime = Surface (ha) × Taux ({formatXOF(premiums?.summary?.rate_per_hectare || 50000)}/ha) × Score carbone (%) 
                       <br />
                       Bonus +20% si score ≥ 8/10 | Score minimum requis: {premiums?.summary?.min_score_required || 6}/10
                     </p>
@@ -343,10 +343,10 @@ const CarbonPremiumsPage = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        {member.premium_fcfa > 0 ? (
+                        {member.premium_xof > 0 ? (
                           <div>
                             <p className="text-emerald-400 font-bold">
-                              {formatFCFA(member.premium_fcfa)}
+                              {formatXOF(member.premium_xof)}
                             </p>
                             <p className="text-xs text-gray-400">
                               ~{member.premium_eur}€
@@ -357,7 +357,7 @@ const CarbonPremiumsPage = () => {
                         )}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        {member.premium_fcfa > 0 && (
+                        {member.premium_xof > 0 && (
                           <Button
                             size="sm"
                             className="bg-emerald-600 hover:bg-emerald-700"
@@ -422,7 +422,7 @@ const CarbonPremiumsPage = () => {
                               {payment.phone_number}
                             </td>
                             <td className="py-3 px-4 text-right">
-                              <p className="text-emerald-400 font-bold">{formatFCFA(payment.amount_fcfa)}</p>
+                              <p className="text-emerald-400 font-bold">{formatXOF(payment.amount_xof)}</p>
                               <p className="text-xs text-gray-500">~{payment.amount_eur}€</p>
                             </td>
                             <td className="py-3 px-4 text-center">
@@ -476,7 +476,7 @@ const CarbonPremiumsPage = () => {
               <div className="bg-emerald-900/30 rounded-lg p-4 border border-emerald-700/50">
                 <p className="text-sm text-emerald-400">Montant de la prime</p>
                 <p className="text-2xl font-bold text-emerald-400">
-                  {formatFCFA(selectedMember.premium_fcfa)}
+                  {formatXOF(selectedMember.premium_xof)}
                 </p>
                 <p className="text-sm text-gray-400">
                   Pour {selectedMember.total_hectares} ha auditées (score moyen: {selectedMember.average_score}/10)

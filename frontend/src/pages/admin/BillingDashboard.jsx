@@ -247,7 +247,7 @@ const BillingDashboard = () => {
                       {formatNumber(dashboard?.overview?.total_invoiced_usd)} USD
                     </p>
                     <p className="text-xs text-gray-400">
-                      {formatNumber(dashboard?.overview?.total_invoiced_fcfa)} FCFA
+                      {formatNumber(dashboard?.overview?.total_invoiced_xof)} XOF
                     </p>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-lg">
@@ -320,7 +320,7 @@ const BillingDashboard = () => {
                       {formatNumber(dashboard?.greenlink_revenue?.total_margin_usd)} USD
                     </p>
                     <p className="text-green-300 text-sm">
-                      {formatNumber(dashboard?.greenlink_revenue?.total_margin_fcfa)} FCFA
+                      {formatNumber(dashboard?.greenlink_revenue?.total_margin_xof)} XOF
                     </p>
                   </div>
                   <TrendingUp className="w-12 h-12 text-green-300 opacity-50" />
@@ -334,11 +334,11 @@ const BillingDashboard = () => {
                   <div>
                     <p className="text-sm text-gray-500">Distributions aux Planteurs</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {formatNumber(dashboard?.distributions?.distributed_fcfa)} FCFA
+                      {formatNumber(dashboard?.distributions?.distributed_xof)} XOF
                     </p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-orange-600">
-                        En attente: {formatNumber(dashboard?.distributions?.pending_fcfa)} FCFA
+                        En attente: {formatNumber(dashboard?.distributions?.pending_xof)} XOF
                       </span>
                       <span className="text-xs text-gray-400">
                         ({dashboard?.distributions?.distribution_rate}% distribué)
@@ -433,7 +433,7 @@ const BillingDashboard = () => {
                               </td>
                               <td className="py-3 px-2 text-right">
                                 <p className="font-medium">{formatNumber(invoice.total_usd)} USD</p>
-                                <p className="text-xs text-gray-500">{formatNumber(invoice.total_fcfa)} FCFA</p>
+                                <p className="text-xs text-gray-500">{formatNumber(invoice.total_xof)} XOF</p>
                               </td>
                               <td className="py-3 px-2 text-right">
                                 <p className={`font-medium ${invoice.amount_paid_usd > 0 ? 'text-green-600' : 'text-gray-400'}`}>
@@ -561,7 +561,7 @@ const BillingDashboard = () => {
                           <div className="grid grid-cols-3 gap-4 text-sm">
                             <div className="p-3 bg-gray-50 rounded">
                               <p className="text-gray-500">Total à distribuer</p>
-                              <p className="font-bold">{formatNumber(dist.farmers_share_fcfa)} FCFA</p>
+                              <p className="font-bold">{formatNumber(dist.farmers_share_xof)} XOF</p>
                             </div>
                             <div className="p-3 bg-green-50 rounded">
                               <p className="text-gray-500">Planteurs payés</p>
@@ -686,7 +686,7 @@ const BillingDashboard = () => {
                         {formatNumber(invoiceForm.tonnes_co2 * invoiceForm.price_per_tonne_usd)} USD
                       </p>
                       <p className="text-sm text-gray-500">
-                        ≈ {formatNumber(invoiceForm.tonnes_co2 * invoiceForm.price_per_tonne_usd * 655)} FCFA
+                        ≈ {formatNumber(invoiceForm.tonnes_co2 * invoiceForm.price_per_tonne_usd * 655)} XOF
                       </p>
                     </div>
 

@@ -345,7 +345,7 @@ async def payment_webhook(
                 await db.notifications.insert_one({
                     "user_id": order["supplier_id"],
                     "title": "Paiement reçu",
-                    "message": f"Paiement de {order['total_amount']:,.0f} FCFA reçu pour commande #{order['order_number']}",
+                    "message": f"Paiement de {order['total_amount']:,.0f} XOF reçu pour commande #{order['order_number']}",
                     "type": "payment",
                     "action_url": "/supplier/orders",
                     "created_at": datetime.utcnow(),
@@ -356,7 +356,7 @@ async def payment_webhook(
                 await db.notifications.insert_one({
                     "user_id": order["buyer_id"],
                     "title": "Paiement confirmé",
-                    "message": f"Votre paiement de {order['total_amount']:,.0f} FCFA a été confirmé",
+                    "message": f"Votre paiement de {order['total_amount']:,.0f} XOF a été confirmé",
                     "type": "payment",
                     "action_url": "/buyer/orders",
                     "created_at": datetime.utcnow(),
@@ -428,7 +428,7 @@ async def simulate_payment_completion(
                 await db.notifications.insert_one({
                     "user_id": order["supplier_id"],
                     "title": "Paiement reçu (Simulation)",
-                    "message": f"Paiement simulé de {order['total_amount']:,.0f} FCFA pour #{order['order_number']}",
+                    "message": f"Paiement simulé de {order['total_amount']:,.0f} XOF pour #{order['order_number']}",
                     "type": "payment",
                     "action_url": "/supplier/orders",
                     "created_at": datetime.utcnow(),

@@ -74,7 +74,7 @@ const CarbonBusinessDashboard = () => {
     }).format(num);
   };
 
-  const formatCurrency = (amount, currency = 'FCFA') => {
+  const formatCurrency = (amount, currency = 'XOF') => {
     return `${formatNumber(amount)} ${currency}`;
   };
 
@@ -253,7 +253,7 @@ const CarbonBusinessDashboard = () => {
                         {formatNumber(projection.revenue?.gross_usd)} USD
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
-                        {formatCurrency(projection.revenue?.gross_fcfa)}
+                        {formatCurrency(projection.revenue?.gross_xof)}
                       </p>
                     </div>
                     <div className="p-3 bg-blue-100 rounded-lg">
@@ -272,7 +272,7 @@ const CarbonBusinessDashboard = () => {
                         {formatNumber(projection.distribution?.greenlink_margin_usd)} USD
                       </p>
                       <p className="text-sm text-green-200 mt-1">
-                        {formatCurrency(projection.distribution?.greenlink_margin_fcfa)}
+                        {formatCurrency(projection.distribution?.greenlink_margin_xof)}
                       </p>
                     </div>
                     <div className="p-3 bg-green-800 rounded-lg">
@@ -474,7 +474,7 @@ const CarbonBusinessDashboard = () => {
                 </div>
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-600 font-medium">Taux de change</p>
-                  <p className="text-2xl font-bold text-gray-700">1 USD = {dashboard?.business_model?.usd_to_fcfa} FCFA</p>
+                  <p className="text-2xl font-bold text-gray-700">1 USD = {dashboard?.business_model?.usd_to_xof} XOF</p>
                 </div>
               </div>
             </CardContent>

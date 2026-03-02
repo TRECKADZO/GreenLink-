@@ -186,7 +186,7 @@ class TestShoppingCart:
         data = response.json()
         assert 'items' in data
         assert 'total' in data
-        print(f"✓ Cart: {data.get('items_count', 0)} items, total: {data['total']} FCFA")
+        print(f"✓ Cart: {data.get('items_count', 0)} items, total: {data['total']} XOF")
 
     def test_add_to_cart(self):
         """Test adding product to cart"""
@@ -380,7 +380,7 @@ class TestCheckoutFlow:
         response = self.session.get(f"{BASE_URL}/api/marketplace/cart")
         cart = response.json()
         assert cart['items_count'] > 0
-        print(f"✓ Cart has {cart['items_count']} items, total: {cart['total']} FCFA")
+        print(f"✓ Cart has {cart['items_count']} items, total: {cart['total']} XOF")
         
         # 5. Checkout with cash on delivery
         checkout_params = {

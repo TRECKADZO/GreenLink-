@@ -301,7 +301,7 @@ const CarbonMarketplace = () => {
                           <span className="text-sm">Prix/tonne</span>
                         </div>
                         <span className="font-bold text-gray-900">
-                          {credit.price_per_tonne.toLocaleString()} FCFA
+                          {credit.price_per_tonne.toLocaleString()} XOF
                         </span>
                       </div>
 
@@ -327,7 +327,7 @@ const CarbonMarketplace = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-gray-600">Total</span>
                         <span className="text-xl font-bold text-green-700">
-                          {(credit.quantity_tonnes_co2 * credit.price_per_tonne).toLocaleString()} FCFA
+                          {(credit.quantity_tonnes_co2 * credit.price_per_tonne).toLocaleString()} XOF
                         </span>
                       </div>
                     </div>

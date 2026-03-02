@@ -330,7 +330,7 @@ const MarketplacePage = () => {
                         <p className="text-xl font-bold text-[#2d5a4d]">
                           {product.price.toLocaleString()}
                           <span className="text-sm font-normal text-gray-500 ml-1">
-                            FCFA/{product.unit}
+                            XOF/{product.unit}
                           </span>
                         </p>
                       </div>
@@ -501,7 +501,7 @@ const ProductDetailModal = ({ product, onClose, onAddToCart, isInWishlist, onTog
               </div>
 
               <p className="text-3xl font-bold text-[#2d5a4d] mb-2">
-                {product.price.toLocaleString()} FCFA
+                {product.price.toLocaleString()} XOF
                 <span className="text-lg font-normal text-gray-500">/{product.unit}</span>
               </p>
 

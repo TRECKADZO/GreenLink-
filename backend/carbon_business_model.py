@@ -94,8 +94,8 @@ COST_STRUCTURE = {
 # - Farmers: 75% × 73% = ~54.75% of gross
 # - Cooperatives: 5% × 73% = ~3.65% of gross
 
-# USD to FCFA conversion
-USD_TO_FCFA = 655  # 1 USD = 655 FCFA (approximate)
+# USD to XOF conversion
+USD_TO_XOF = 655  # 1 USD = 655 XOF (approximate)
 
 
 # =============================================================================
@@ -177,7 +177,7 @@ class CarbonSale(BaseModel):
     # Pricing
     price_per_tonne_usd: float
     total_gross_usd: float
-    total_gross_fcfa: float
+    total_gross_xof: float
     
     # Revenue distribution
     distribution: Dict[str, Any] = {}
@@ -196,7 +196,7 @@ class RevenueDistribution(BaseModel):
     """Revenue distribution from a carbon sale"""
     sale_id: str
     total_gross_usd: float
-    total_gross_fcfa: float
+    total_gross_xof: float
     
     # Costs (deducted from gross)
     costs: Dict[str, float] = {}
@@ -204,19 +204,19 @@ class RevenueDistribution(BaseModel):
     
     # Net after costs
     net_after_costs_usd: float = 0
-    net_after_costs_fcfa: float = 0
+    net_after_costs_xof: float = 0
     
     # Distribution
     greenlink_share_usd: float = 0
-    greenlink_share_fcfa: float = 0
+    greenlink_share_xof: float = 0
     greenlink_margin_rate: float = GREENLINK_MARGIN_RATE
     
     farmers_share_usd: float = 0
-    farmers_share_fcfa: float = 0
+    farmers_share_xof: float = 0
     farmers_share_rate: float = FARMER_SHARE_RATE
     
     cooperative_share_usd: float = 0
-    cooperative_share_fcfa: float = 0
+    cooperative_share_xof: float = 0
     cooperative_share_rate: float = COOPERATIVE_SHARE_RATE
     
     # Per-farmer breakdown
@@ -310,7 +310,7 @@ def calculate_credit_price(quality: CreditQuality, buyer_type: BuyerType) -> Dic
     
     return {
         "price_per_tonne_usd": round(price_usd, 2),
-        "price_per_tonne_fcfa": round(price_usd * USD_TO_FCFA, 0),
+        "price_per_tonne_xof": round(price_usd * USD_TO_XOF, 0),
         "base_price_usd": base_pricing["default"],
         "buyer_multiplier": buyer_multiplier
     }
@@ -337,7 +337,7 @@ def calculate_revenue_distribution(
     """
     # Gross revenue
     gross_usd = total_tonnes * price_per_tonne_usd
-    gross_fcfa = gross_usd * USD_TO_FCFA
+    gross_xof = gross_usd * USD_TO_XOF
     
     # Calculate costs (deducted from gross)
     costs = {}
@@ -347,7 +347,7 @@ def calculate_revenue_distribution(
         costs[cost_name] = {
             "rate": f"{rate*100:.0f}%",
             "amount_usd": round(cost_amount, 2),
-            "amount_fcfa": round(cost_amount * USD_TO_FCFA, 0)
+            "amount_xof": round(cost_amount * USD_TO_XOF, 0)
         }
         total_costs += cost_amount
     
@@ -355,7 +355,7 @@ def calculate_revenue_distribution(
     
     # Net after costs
     net_usd = gross_usd - total_costs
-    net_fcfa = net_usd * USD_TO_FCFA
+    net_xof = net_usd * USD_TO_XOF
     
     # Distribution of NET revenue
     greenlink_share = net_usd * GREENLINK_MARGIN_RATE
@@ -376,25 +376,25 @@ def calculate_revenue_distribution(
             "tonnes_co2": farmer_tonnes,
             "proportion": round(farmer_proportion * 100, 2),
             "share_usd": round(farmer_share_usd, 2),
-            "share_fcfa": round(farmer_share_usd * USD_TO_FCFA, 0),
+            "share_xof": round(farmer_share_usd * USD_TO_XOF, 0),
             # Premium per kg of cacao (assuming 2200 kg/ha average yield)
-            "premium_per_kg_fcfa": round((farmer_share_usd * USD_TO_FCFA) / (fc.get("area_hectares", 1) * 2200), 0)
+            "premium_per_kg_xof": round((farmer_share_usd * USD_TO_XOF) / (fc.get("area_hectares", 1) * 2200), 0)
         })
     
     return RevenueDistribution(
         sale_id="",
         total_gross_usd=round(gross_usd, 2),
-        total_gross_fcfa=round(gross_fcfa, 0),
+        total_gross_xof=round(gross_xof, 0),
         costs=costs,
         total_costs_usd=round(total_costs, 2),
         net_after_costs_usd=round(net_usd, 2),
-        net_after_costs_fcfa=round(net_fcfa, 0),
+        net_after_costs_xof=round(net_xof, 0),
         greenlink_share_usd=round(greenlink_share, 2),
-        greenlink_share_fcfa=round(greenlink_share * USD_TO_FCFA, 0),
+        greenlink_share_xof=round(greenlink_share * USD_TO_XOF, 0),
         farmers_share_usd=round(farmers_pool, 2),
-        farmers_share_fcfa=round(farmers_pool * USD_TO_FCFA, 0),
+        farmers_share_xof=round(farmers_pool * USD_TO_XOF, 0),
         cooperative_share_usd=round(coop_share, 2),
-        cooperative_share_fcfa=round(coop_share * USD_TO_FCFA, 0),
+        cooperative_share_xof=round(coop_share * USD_TO_XOF, 0),
         farmer_distributions=farmer_distributions
     )
 
@@ -408,7 +408,7 @@ def calculate_farmer_premium_per_kg(
     """
     Calculate the carbon premium per kg of cacao for a farmer
     
-    Example: 4.8 t CO2/ha × 30 USD/t × 70% farmer share / 2200 kg/ha = ~46 FCFA/kg premium
+    Example: 4.8 t CO2/ha × 30 USD/t × 70% farmer share / 2200 kg/ha = ~46 XOF/kg premium
     """
     gross_usd = tonnes_co2 * price_per_tonne_usd
     net_after_costs = gross_usd * (1 - sum(COST_STRUCTURE.values()))
@@ -416,17 +416,17 @@ def calculate_farmer_premium_per_kg(
     
     total_yield_kg = area_hectares * yield_kg_per_ha
     premium_per_kg_usd = farmer_share / total_yield_kg if total_yield_kg > 0 else 0
-    premium_per_kg_fcfa = premium_per_kg_usd * USD_TO_FCFA
+    premium_per_kg_xof = premium_per_kg_usd * USD_TO_XOF
     
     return {
         "gross_revenue_usd": round(gross_usd, 2),
         "farmer_share_usd": round(farmer_share, 2),
-        "farmer_share_fcfa": round(farmer_share * USD_TO_FCFA, 0),
+        "farmer_share_xof": round(farmer_share * USD_TO_XOF, 0),
         "total_yield_kg": total_yield_kg,
         "premium_per_kg_usd": round(premium_per_kg_usd, 4),
-        "premium_per_kg_fcfa": round(premium_per_kg_fcfa, 0),
+        "premium_per_kg_xof": round(premium_per_kg_xof, 0),
         # Range based on tree count
-        "premium_range_fcfa": {
+        "premium_range_xof": {
             "low_shade": 80,    # ~20 trees/ha
             "medium_shade": 120, # ~40 trees/ha
             "high_shade": 160,   # ~60 trees/ha
@@ -475,7 +475,7 @@ def project_annual_revenue(
     
     # Revenue calculations
     gross_usd = total_tonnes_co2 * price_per_tonne_usd
-    gross_fcfa = gross_usd * USD_TO_FCFA
+    gross_xof = gross_usd * USD_TO_XOF
     
     # Costs
     total_cost_rate = sum(COST_STRUCTURE.values())
@@ -503,19 +503,19 @@ def project_annual_revenue(
         },
         "revenue": {
             "gross_usd": round(gross_usd, 0),
-            "gross_fcfa": round(gross_fcfa, 0),
+            "gross_xof": round(gross_xof, 0),
             "costs_usd": round(costs_usd, 0),
             "net_usd": round(net_usd, 0),
-            "net_fcfa": round(net_usd * USD_TO_FCFA, 0)
+            "net_xof": round(net_usd * USD_TO_XOF, 0)
         },
         "distribution": {
             "greenlink_margin_usd": round(greenlink_margin_usd, 0),
-            "greenlink_margin_fcfa": round(greenlink_margin_usd * USD_TO_FCFA, 0),
+            "greenlink_margin_xof": round(greenlink_margin_usd * USD_TO_XOF, 0),
             "greenlink_margin_rate": f"{GREENLINK_MARGIN_RATE * 100}%",
             "farmers_total_usd": round(farmers_total_usd, 0),
-            "farmers_total_fcfa": round(farmers_total_usd * USD_TO_FCFA, 0),
+            "farmers_total_xof": round(farmers_total_usd * USD_TO_XOF, 0),
             "avg_farmer_income_usd": round(avg_farmer_income_usd, 2),
-            "avg_farmer_income_fcfa": round(avg_farmer_income_usd * USD_TO_FCFA, 0)
+            "avg_farmer_income_xof": round(avg_farmer_income_usd * USD_TO_XOF, 0)
         },
         "projections": {
             "year_1_pilot_1000": project_scenario(1000, price_per_tonne_usd),
@@ -537,5 +537,5 @@ def project_scenario(num_farmers: int, price_usd: float) -> Dict[str, float]:
         "tonnes_co2": round(tonnes, 0),
         "gross_usd": round(gross, 0),
         "greenlink_margin_usd": round(margin, 0),
-        "greenlink_margin_fcfa": round(margin * USD_TO_FCFA, 0)
+        "greenlink_margin_xof": round(margin * USD_TO_XOF, 0)
     }

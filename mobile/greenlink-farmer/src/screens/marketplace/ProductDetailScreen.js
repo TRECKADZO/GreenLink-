@@ -160,7 +160,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
           </View>
 
           <Text style={styles.price}>
-            {product.price?.toLocaleString()} FCFA
+            {product.price?.toLocaleString()} XOF
             <Text style={styles.unit}> / {product.unit}</Text>
           </Text>
 
@@ -196,7 +196,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
             </TouchableOpacity>
           </View>
           <Text style={styles.totalPrice}>
-            Total: {(product.price * quantity).toLocaleString()} FCFA
+            Total: {(product.price * quantity).toLocaleString()} XOF
           </Text>
         </View>
 

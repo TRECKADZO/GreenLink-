@@ -71,7 +71,7 @@ const CarbonMarketplaceScreen = ({ navigation }) => {
 
     Alert.alert(
       'Confirmer l\'achat',
-      `Voulez-vous acheter ${credit.quantity_tonnes_co2} tonnes de CO₂ pour ${(credit.quantity_tonnes_co2 * credit.price_per_tonne).toLocaleString()} FCFA ?`,
+      `Voulez-vous acheter ${credit.quantity_tonnes_co2} tonnes de CO₂ pour ${(credit.quantity_tonnes_co2 * credit.price_per_tonne).toLocaleString()} XOF ?`,
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -163,13 +163,13 @@ const CarbonMarketplaceScreen = ({ navigation }) => {
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{item.price_per_tonne?.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>FCFA/tonne</Text>
+          <Text style={styles.statLabel}>XOF/tonne</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={[styles.statValue, styles.totalPrice]}>
             {(item.quantity_tonnes_co2 * item.price_per_tonne).toLocaleString()}
           </Text>
-          <Text style={styles.statLabel}>FCFA total</Text>
+          <Text style={styles.statLabel}>XOF total</Text>
         </View>
       </View>
 

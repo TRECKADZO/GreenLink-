@@ -93,7 +93,7 @@ const SupplierDashboard = () => {
     },
     {
       title: 'Revenu Total',
-      value: `${stats.total_revenue.toLocaleString()} FCFA`,
+      value: `${stats.total_revenue.toLocaleString()} XOF`,
       subtitle: `${stats.monthly_revenue.toLocaleString()} ce mois`,
       icon: DollarSign,
       color: 'text-green-600',
@@ -212,7 +212,7 @@ const SupplierDashboard = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-gray-900">
-                        {order.total_amount.toLocaleString()} FCFA
+                        {order.total_amount.toLocaleString()} XOF
                       </p>
                       <Badge className={`text-xs mt-1 ${getStatusColor(order.status)}`}>
                         {getStatusLabel(order.status)}
@@ -250,7 +250,7 @@ const SupplierDashboard = () => {
                       </div>
                     </div>
                     <p className="font-bold text-green-600">
-                      {product.revenue.toLocaleString()} FCFA
+                      {product.revenue.toLocaleString()} XOF
                     </p>
                   </div>
                 ))}
@@ -275,7 +275,7 @@ const SupplierDashboard = () => {
                       style={{ height: `${height}%` || '2px' }}
                     >
                       <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
-                        {day.revenue.toLocaleString()} FCFA
+                        {day.revenue.toLocaleString()} XOF
                       </div>
                     </div>
                   </div>

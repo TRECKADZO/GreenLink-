@@ -97,7 +97,7 @@ ICI_DATA_2024 = {
     "budget_total_chf": 15445839,
     "budget_membres_chf": 4851875,
     "budget_projets_chf": 10593964,
-    "cash_transfer_montant_fcfa": 50000
+    "cash_transfer_montant_xof": 50000
 }
 
 # ============= ENDPOINT: DASHBOARD TRAVAIL DES ENFANTS =============
@@ -203,7 +203,7 @@ async def get_child_labor_dashboard(
             {
                 "priorite": 2,
                 "action": "Déployer les cash transfers avec incitations main-d'oeuvre adulte",
-                "montant_recommande": f"{ICI_DATA_2024['cash_transfer_montant_fcfa']:,} FCFA + bonus"
+                "montant_recommande": f"{ICI_DATA_2024['cash_transfer_montant_xof']:,} XOF + bonus"
             },
             {
                 "priorite": 3,
@@ -380,8 +380,8 @@ async def get_social_impact_indicators(
             "objectif": "Éliminer l'extrême pauvreté (<2$/jour)",
             "indicateurs": {
                 "revenu_moyen_producteur": {
-                    "avant_greenlink_fcfa": 650000,
-                    "apres_greenlink_fcfa": 890000,
+                    "avant_greenlink_xof": 650000,
+                    "apres_greenlink_xof": 890000,
                     "augmentation": "+36.9%"
                 },
                 "producteurs_sous_seuil_pauvrete": {
@@ -389,7 +389,7 @@ async def get_social_impact_indicators(
                     "apres": "15%",
                     "reduction": "-17 points"
                 },
-                "prime_carbone_moyenne_fcfa": 125000
+                "prime_carbone_moyenne_xof": 125000
             }
         },
         
@@ -430,7 +430,7 @@ async def get_social_impact_indicators(
             "valeur_sociale_creee": {
                 "emplois_preserves": total_farmers,
                 "familles_impactees": total_farmers * 4.2,
-                "revenus_additionnels_fcfa": total_farmers * 125000
+                "revenus_additionnels_xof": total_farmers * 125000
             }
         },
         
@@ -459,7 +459,7 @@ async def get_cash_transfer_program(
         "generated_at": datetime.utcnow().isoformat(),
         
         "design_programme": {
-            "montant_base_fcfa": 50000,
+            "montant_base_xof": 50000,
             "incitation_main_oeuvre_adulte": True,
             "frequence": "Saisonnier (période récolte)",
             "ciblage": "Ménages avec enfants 5-17 ans"
@@ -488,7 +488,7 @@ async def get_cash_transfer_program(
         
         "scalabilite_greenlink": {
             "producteurs_eligibles": await db.users.count_documents({"user_type": "farmer"}),
-            "budget_necessaire_fcfa": (await db.users.count_documents({"user_type": "farmer"})) * 50000,
+            "budget_necessaire_xof": (await db.users.count_documents({"user_type": "farmer"})) * 50000,
             "sources_financement_potentielles": [
                 "Primes carbone (% dédié)",
                 "Fonds RSE acheteurs (Barry Callebaut, Nestlé)",
@@ -501,19 +501,19 @@ async def get_cash_transfer_program(
             {
                 "phase": 1,
                 "action": "Cibler zones Catégorie 1 (haut risque)",
-                "budget_fcfa": 500000000,
+                "budget_xof": 500000000,
                 "beneficiaires": 10000
             },
             {
                 "phase": 2,
                 "action": "Étendre à zones Catégorie 2",
-                "budget_fcfa": 750000000,
+                "budget_xof": 750000000,
                 "beneficiaires": 15000
             },
             {
                 "phase": 3,
                 "action": "Couverture nationale zones cacao",
-                "budget_fcfa": 2500000000,
+                "budget_xof": 2500000000,
                 "beneficiaires": 50000
             }
         ],
@@ -579,7 +579,7 @@ async def get_child_friendly_programs(
             "modele": {
                 "prime_carbone_par_tonne": "30 USD",
                 "pourcentage_programmes_enfants": "5%",
-                "contribution_par_producteur_fcfa": 6250
+                "contribution_par_producteur_xof": 6250
             },
             "impact_projete": {
                 "clubs_financables": 25,

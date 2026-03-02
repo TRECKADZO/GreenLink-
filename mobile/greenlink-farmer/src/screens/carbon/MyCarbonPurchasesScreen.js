@@ -96,7 +96,7 @@ const MyCarbonPurchasesScreen = ({ navigation }) => {
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>💰 Montant:</Text>
-          <Text style={styles.detailValue}>{item.total_price?.toLocaleString()} FCFA</Text>
+          <Text style={styles.detailValue}>{item.total_price?.toLocaleString()} XOF</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>📜 Standard:</Text>
@@ -187,7 +187,7 @@ const MyCarbonPurchasesScreen = ({ navigation }) => {
             <Text style={styles.statNumber}>
               {purchases.reduce((sum, p) => sum + (p.total_price || 0), 0).toLocaleString()}
             </Text>
-            <Text style={styles.statLabel}>FCFA investis</Text>
+            <Text style={styles.statLabel}>XOF investis</Text>
           </View>
         </View>
       )}

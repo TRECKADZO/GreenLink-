@@ -87,7 +87,7 @@ const Dashboard = () => {
     {
       title: 'Primes à Distribuer',
       value: `${(financial?.pending_distribution || 0).toLocaleString()}`,
-      subtitle: 'FCFA',
+      subtitle: 'XOF',
       icon: DollarSign,
       color: 'bg-purple-500',
       link: '/cooperative/distributions'
@@ -345,19 +345,19 @@ const Dashboard = () => {
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-green-600">Primes Reçues</p>
                   <p className="text-xl font-bold text-green-700">
-                    {(financial?.total_premiums_received || 0).toLocaleString()} FCFA
+                    {(financial?.total_premiums_received || 0).toLocaleString()} XOF
                   </p>
                 </div>
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-600">Distribué</p>
                   <p className="text-xl font-bold text-blue-700">
-                    {(financial?.total_premiums_distributed || 0).toLocaleString()} FCFA
+                    {(financial?.total_premiums_distributed || 0).toLocaleString()} XOF
                   </p>
                 </div>
                 <div className="text-center p-4 bg-amber-50 rounded-lg">
                   <p className="text-sm text-amber-600">En Attente</p>
                   <p className="text-xl font-bold text-amber-700">
-                    {(financial?.pending_distribution || 0).toLocaleString()} FCFA
+                    {(financial?.pending_distribution || 0).toLocaleString()} XOF
                   </p>
                 </div>
               </div>

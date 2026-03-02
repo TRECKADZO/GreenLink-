@@ -449,8 +449,8 @@ class TestDistributionsAPI:
         assert isinstance(data["distributions"], list)
         
         summary = data["summary"]
-        assert "total_to_distribute_fcfa" in summary
-        assert "total_distributed_fcfa" in summary
+        assert "total_to_distribute_xof" in summary
+        assert "total_distributed_xof" in summary
         assert "pending_count" in summary
         
         print(f"PASS: Distributions retrieved - {summary['pending_count']} pending")

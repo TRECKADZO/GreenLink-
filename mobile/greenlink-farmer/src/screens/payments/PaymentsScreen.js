@@ -120,12 +120,12 @@ const PaymentsScreen = ({ navigation }) => {
         <View style={styles.statCard}>
           <Text style={styles.statIcon}>💰</Text>
           <Text style={styles.statValue}>{totalPaid.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>FCFA reçus</Text>
+          <Text style={styles.statLabel}>XOF reçus</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statIcon}>⏳</Text>
           <Text style={styles.statValue}>{pendingAmount.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>FCFA en attente</Text>
+          <Text style={styles.statLabel}>XOF en attente</Text>
         </View>
       </View>
 
@@ -157,7 +157,7 @@ const PaymentsScreen = ({ navigation }) => {
             <View key={payment._id || index} style={styles.paymentCard}>
               <View style={styles.paymentLeft}>
                 <Text style={styles.paymentAmount}>
-                  {(payment.amount || 0).toLocaleString()} FCFA
+                  {(payment.amount || 0).toLocaleString()} XOF
                 </Text>
                 <Text style={styles.paymentDate}>
                   {new Date(payment.created_at).toLocaleDateString('fr-FR')}

@@ -132,7 +132,7 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
   const { carbon_score, earnings, monthly_history, recent_payments, distribution_model } = data || {};
 
   // Calculer la hauteur max du graphique
-  const maxAmount = Math.max(...(monthly_history?.map(m => m.amount_fcfa) || [1]));
+  const maxAmount = Math.max(...(monthly_history?.map(m => m.amount_xof) || [1]));
 
   return (
     <View style={styles.container}>
@@ -165,28 +165,28 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
         <View style={styles.statsRow}>
           <View style={[styles.statCard, styles.statCardPrimary]}>
             <Ionicons name="wallet" size={24} color={COLORS.white} />
-            <Text style={styles.statValue}>{formatCurrency(earnings?.total_received_fcfa)}</Text>
-            <Text style={styles.statLabel}>FCFA reçus</Text>
+            <Text style={styles.statValue}>{formatCurrency(earnings?.total_received_xof)}</Text>
+            <Text style={styles.statLabel}>XOF reçus</Text>
           </View>
           
           <View style={[styles.statCard, styles.statCardSecondary]}>
             <Ionicons name="time" size={24} color={COLORS.white} />
-            <Text style={styles.statValue}>{formatCurrency(earnings?.pending_fcfa)}</Text>
-            <Text style={styles.statLabel}>FCFA en attente</Text>
+            <Text style={styles.statValue}>{formatCurrency(earnings?.pending_xof)}</Text>
+            <Text style={styles.statLabel}>XOF en attente</Text>
           </View>
         </View>
 
         <View style={styles.statsRow}>
           <View style={[styles.statCard, styles.statCardTertiary]}>
             <Ionicons name="trending-up" size={24} color={COLORS.white} />
-            <Text style={styles.statValue}>{formatCurrency(earnings?.annual_projection_fcfa)}</Text>
+            <Text style={styles.statValue}>{formatCurrency(earnings?.annual_projection_xof)}</Text>
             <Text style={styles.statLabel}>Projection annuelle</Text>
           </View>
           
           <View style={[styles.statCard, styles.statCardQuaternary]}>
             <Ionicons name="pricetag" size={24} color={COLORS.white} />
-            <Text style={styles.statValue}>{earnings?.premium_per_kg_fcfa || 0}</Text>
-            <Text style={styles.statLabel}>FCFA/kg cacao</Text>
+            <Text style={styles.statValue}>{earnings?.premium_per_kg_xof || 0}</Text>
+            <Text style={styles.statLabel}>XOF/kg cacao</Text>
           </View>
         </View>
 
@@ -224,8 +224,8 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
           
           <View style={styles.chartContainer}>
             {monthly_history?.map((month, idx) => {
-              const height = month.amount_fcfa > 0 
-                ? (month.amount_fcfa / maxAmount) * 80 
+              const height = month.amount_xof > 0 
+                ? (month.amount_xof / maxAmount) * 80 
                 : 4;
               
               return (
@@ -235,7 +235,7 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
                       styles.chartBarFill,
                       { 
                         height,
-                        backgroundColor: month.amount_fcfa > 0 ? COLORS.primary : COLORS.gray[300]
+                        backgroundColor: month.amount_xof > 0 ? COLORS.primary : COLORS.gray[300]
                       }
                     ]} 
                   />
@@ -296,7 +296,7 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
               <View key={idx} style={styles.paymentItem}>
                 <View>
                   <Text style={styles.paymentAmount}>
-                    {formatCurrency(payment.amount_fcfa)} FCFA
+                    {formatCurrency(payment.amount_xof)} XOF
                   </Text>
                   <Text style={styles.paymentDate}>
                     {payment.payment_date 

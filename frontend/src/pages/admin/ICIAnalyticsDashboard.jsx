@@ -569,12 +569,12 @@ const ICIAnalyticsDashboard = () => {
                         <div className="p-4 bg-slate-800/50 rounded-lg text-center">
                           <p className="text-slate-400 text-sm mb-1">Avant GreenLink</p>
                           <p className="text-2xl font-bold text-white">650,000</p>
-                          <p className="text-xs text-slate-500">FCFA/an</p>
+                          <p className="text-xs text-slate-500">XOF/an</p>
                         </div>
                         <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
                           <p className="text-slate-400 text-sm mb-1">Après GreenLink</p>
                           <p className="text-2xl font-bold text-green-400">890,000</p>
-                          <p className="text-xs text-slate-500">FCFA/an</p>
+                          <p className="text-xs text-slate-500">XOF/an</p>
                         </div>
                         <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg text-center">
                           <p className="text-slate-400 text-sm mb-1">Augmentation</p>
@@ -584,7 +584,7 @@ const ICIAnalyticsDashboard = () => {
                         <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg text-center">
                           <p className="text-slate-400 text-sm mb-1">Prime carbone moy.</p>
                           <p className="text-2xl font-bold text-blue-400">125,000</p>
-                          <p className="text-xs text-slate-500">FCFA/producteur</p>
+                          <p className="text-xs text-slate-500">XOF/producteur</p>
                         </div>
                       </div>
                     </CardContent>

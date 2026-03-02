@@ -1,7 +1,7 @@
 # Subscription Routes for GreenLink
 # Business Model:
 # - FREE: Producteurs, Coopératives
-# - PAID (15-day trial): Acheteurs (49,000 FCFA), Fournisseurs (29,000 FCFA), Entreprises RSE (custom)
+# - PAID (15-day trial): Acheteurs (49,000 XOF), Fournisseurs (29,000 XOF), Entreprises RSE (custom)
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
@@ -195,7 +195,7 @@ async def upgrade_subscription(
         "message": "Redirection vers le paiement...",
         "payment": {
             "amount": price,
-            "currency": "FCFA",
+            "currency": "XOF",
             "plan": upgrade_data.plan.value,
             "billing_cycle": upgrade_data.billing_cycle,
         }

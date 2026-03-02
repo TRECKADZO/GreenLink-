@@ -176,9 +176,9 @@ async def get_realtime_dashboard(current_user: dict = Depends(get_admin_user)):
         {"$match": {"created_at": {"$gte": month_ago}}},
         {"$group": {
             "_id": None,
-            "total_amount": {"$sum": "$amount_fcfa"},
+            "total_amount": {"$sum": "$amount_xof"},
             "count": {"$sum": 1},
-            "avg_amount": {"$avg": "$amount_fcfa"}
+            "avg_amount": {"$avg": "$amount_xof"}
         }}
     ]).to_list(1)
     
@@ -192,7 +192,7 @@ async def get_realtime_dashboard(current_user: dict = Depends(get_admin_user)):
         recent_payments_list.append({
             "id": str(p["_id"]),
             "member_name": member.get("full_name") if member else "N/A",
-            "amount": p.get("amount_fcfa", 0),
+            "amount": p.get("amount_xof", 0),
             "status": p.get("status", "pending"),
             "payment_ref": p.get("payment_ref", ""),
             "created_at": p.get("created_at").isoformat() if p.get("created_at") else None

@@ -168,7 +168,7 @@ const WishlistPage = () => {
                     <p className="text-sm text-gray-500 my-2">{item.product.supplier_name}</p>
 
                     <p className="text-xl font-bold text-[#2d5a4d] mb-3">
-                      {item.product.price.toLocaleString()} FCFA
+                      {item.product.price.toLocaleString()} XOF
                       <span className="text-sm font-normal text-gray-500">/{item.product.unit}</span>
                     </p>
 

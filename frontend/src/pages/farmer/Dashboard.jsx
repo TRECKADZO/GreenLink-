@@ -198,7 +198,7 @@ const FarmerDashboard = () => {
                   Votre score carbone de <strong>{stats.average_carbon_score.toFixed(1)}/10</strong> vous donne droit à une prime de <strong>10%</strong> sur toutes vos ventes!
                 </p>
                 <p className="text-sm text-green-700 mt-2">
-                  Vous avez déjà gagné <strong>{stats.carbon_premium_earned.toLocaleString()} FCFA</strong> en primes carbone.
+                  Vous avez déjà gagné <strong>{stats.carbon_premium_earned.toLocaleString()} XOF</strong> en primes carbone.
                 </p>
               </div>
             </div>
@@ -231,7 +231,7 @@ const FarmerDashboard = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-gray-900">
-                      {harvest.total_amount.toLocaleString()} FCFA
+                      {harvest.total_amount.toLocaleString()} XOF
                     </p>
                     {harvest.carbon_premium > 0 && (
                       <Badge className="bg-green-100 text-green-700 text-xs">

@@ -62,7 +62,7 @@ const FAQPage = () => {
       id: 7,
       category: 'carbon',
       question: "Quelle prime carbone puis-je recevoir comme planteur ?",
-      answer: "La prime carbone dépend de vos pratiques :\n\n• **Faible ombrage** (≤20 arbres/ha) : ~80 FCFA/kg de cacao\n• **Ombrage moyen** (21-40 arbres/ha) : ~120 FCFA/kg\n• **Bon ombrage** (41-60 arbres/ha) : ~160 FCFA/kg\n• **Optimal** (48+ arbres/ha + pratiques bio) : ~180 FCFA/kg\n\nPlus vous plantez d'arbres, plus votre prime est élevée !"
+      answer: "La prime carbone dépend de vos pratiques :\n\n• **Faible ombrage** (≤20 arbres/ha) : ~80 XOF/kg de cacao\n• **Ombrage moyen** (21-40 arbres/ha) : ~120 XOF/kg\n• **Bon ombrage** (41-60 arbres/ha) : ~160 XOF/kg\n• **Optimal** (48+ arbres/ha + pratiques bio) : ~180 XOF/kg\n\nPlus vous plantez d'arbres, plus votre prime est élevée !"
     },
     {
       id: 8,
@@ -96,7 +96,7 @@ const FAQPage = () => {
       id: 12,
       category: 'pricing',
       question: "Combien coûte GreenLink ?",
-      answer: "**Gratuit à vie** pour :\n• Producteurs\n• Coopératives\n\n**Plans payants avec 15 jours d'essai gratuit** :\n• Acheteurs : 49,000 FCFA/mois\n• Fournisseurs : 29,000 FCFA/mois + 5% commission\n• Entreprises RSE : Sur devis\n\nTous les plans payants incluent une période d'essai sans engagement."
+      answer: "**Gratuit à vie** pour :\n• Producteurs\n• Coopératives\n\n**Plans payants avec 15 jours d'essai gratuit** :\n• Acheteurs : 49,000 XOF/mois\n• Fournisseurs : 29,000 XOF/mois + 5% commission\n• Entreprises RSE : Sur devis\n\nTous les plans payants incluent une période d'essai sans engagement."
     },
     {
       id: 13,

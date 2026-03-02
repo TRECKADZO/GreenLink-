@@ -47,7 +47,7 @@ const mockPricingPlans = [
   },
   {
     name: 'Acheteurs',
-    price: '49 000 FCFA',
+    price: '49 000 XOF',
     period: '/mois',
     badge: '15 jours gratuits',
     badgeColor: 'blue',
@@ -66,7 +66,7 @@ const mockPricingPlans = [
   },
   {
     name: 'Fournisseurs',
-    price: '29 000 FCFA',
+    price: '29 000 XOF',
     period: '/mois',
     badge: '15 jours gratuits + 5% commission',
     badgeColor: 'blue',

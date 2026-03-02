@@ -200,7 +200,7 @@ const Orders = () => {
                     
                     <div className="text-right">
                       <p className="text-2xl font-bold text-[#2d5a4d]">
-                        {order.total_amount.toLocaleString()} FCFA
+                        {order.total_amount.toLocaleString()} XOF
                       </p>
                     </div>
                   </div>
@@ -215,7 +215,7 @@ const Orders = () => {
                             {item.product_name} x {item.quantity}
                           </span>
                           <span className="font-semibold text-gray-900">
-                            {item.total_price.toLocaleString()} FCFA
+                            {item.total_price.toLocaleString()} XOF
                           </span>
                         </div>
                       ))}

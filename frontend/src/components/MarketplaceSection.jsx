@@ -83,7 +83,7 @@ const MarketplaceSection = () => {
     // Navigate to product detail or show modal
     toast({
       title: product.name,
-      description: `Prix: ${product.price.toLocaleString()} FCFA/${product.unit}`
+      description: `Prix: ${product.price.toLocaleString()} XOF/${product.unit}`
     });
   };
 
@@ -210,7 +210,7 @@ const MarketplaceSection = () => {
                         <p className="text-2xl font-bold text-[#2d5a4d]">
                           {product.price.toLocaleString()}
                           <span className="text-sm font-normal text-gray-500 ml-1">
-                            FCFA/{product.unit}
+                            XOF/{product.unit}
                           </span>
                         </p>
                       </div>

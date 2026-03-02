@@ -40,7 +40,7 @@ class LaborForceData(BaseModel):
     travailleurs_permanents: int = Field(ge=0, default=0)
     travailleurs_saisonniers: int = Field(ge=0, default=0)
     travailleurs_avec_contrat: int = Field(ge=0, default=0)
-    salaire_journalier_moyen_fcfa: int = Field(ge=0, default=0)
+    salaire_journalier_moyen_xof: int = Field(ge=0, default=0)
     utilise_main_oeuvre_familiale: bool = True
 
 class FarmerICIProfile(BaseModel):

@@ -26,7 +26,7 @@ from carbon_business_model import (
     project_annual_revenue,
     MARKET_PRICING,
     BUYER_PRICING,
-    USD_TO_FCFA,
+    USD_TO_XOF,
     GREENLINK_MARGIN_RATE,
     FARMER_SHARE_RATE,
 )
@@ -60,7 +60,7 @@ async def calculate_parcel_credits(
         pricing[buyer_type.value] = {
             "price_per_tonne_usd": price_info["price_per_tonne_usd"],
             "total_potential_usd": round(result["total_tonnes_co2"] * price_info["price_per_tonne_usd"], 2),
-            "total_potential_fcfa": round(result["total_tonnes_co2"] * price_info["price_per_tonne_usd"] * USD_TO_FCFA, 0)
+            "total_potential_xof": round(result["total_tonnes_co2"] * price_info["price_per_tonne_usd"] * USD_TO_XOF, 0)
         }
     
     # Calculate farmer premium
@@ -76,7 +76,7 @@ async def calculate_parcel_credits(
         "pricing_by_buyer": pricing,
         "farmer_premium": premium,
         "message": f"Potentiel: {result['total_tonnes_co2']} tonnes CO2/an, "
-                   f"soit ~{premium['premium_per_kg_fcfa']} FCFA/kg de prime carbone"
+                   f"soit ~{premium['premium_per_kg_xof']} XOF/kg de prime carbone"
     }
 
 
@@ -214,7 +214,7 @@ async def get_available_credits(
             quality_enum = CreditQuality(q)
             price_info = calculate_credit_price(quality_enum, BuyerType.CORPORATE)
             data["potential_revenue_usd"] = round(data["total_tonnes"] * price_info["price_per_tonne_usd"], 2)
-            data["potential_revenue_fcfa"] = round(data["potential_revenue_usd"] * USD_TO_FCFA, 0)
+            data["potential_revenue_xof"] = round(data["potential_revenue_usd"] * USD_TO_XOF, 0)
             data["price_per_tonne_usd"] = price_info["price_per_tonne_usd"]
         except:
             pass
@@ -352,7 +352,7 @@ async def create_carbon_sale(
         "buyer_id": sale_request.buyer_id,
         "price_per_tonne_usd": price_per_tonne,
         "total_gross_usd": distribution.total_gross_usd,
-        "total_gross_fcfa": distribution.total_gross_fcfa,
+        "total_gross_xof": distribution.total_gross_xof,
         "distribution": distribution.dict(),
         "status": "pending",
         "contract_ref": sale_request.contract_ref,
@@ -380,7 +380,7 @@ async def create_carbon_sale(
         "summary": {
             "total_tonnes": total_tonnes,
             "gross_revenue_usd": distribution.total_gross_usd,
-            "gross_revenue_fcfa": distribution.total_gross_fcfa,
+            "gross_revenue_xof": distribution.total_gross_xof,
             "greenlink_margin_usd": distribution.greenlink_share_usd,
             "farmers_share_usd": distribution.farmers_share_usd,
             "farmer_count": len(farmer_credits)
@@ -436,8 +436,8 @@ async def confirm_sale_payment(
             "cooperative_id": fd.get("cooperative_id"),
             "tonnes_co2": fd.get("tonnes_co2"),
             "amount_usd": fd.get("share_usd"),
-            "amount_fcfa": fd.get("share_fcfa"),
-            "premium_per_kg_fcfa": fd.get("premium_per_kg_fcfa"),
+            "amount_xof": fd.get("share_xof"),
+            "premium_per_kg_xof": fd.get("premium_per_kg_xof"),
             "status": "pending",  # Will be paid via Orange Money
             "created_at": datetime.utcnow()
         })
@@ -455,7 +455,7 @@ async def confirm_sale_payment(
         "success": True,
         "message": f"Paiement confirmé. {len(farmer_distributions)} distributions aux agriculteurs créées.",
         "distributions_created": len(farmer_distributions),
-        "total_to_farmers_fcfa": distribution.get("farmers_share_fcfa", 0)
+        "total_to_farmers_xof": distribution.get("farmers_share_xof", 0)
     }
 
 
@@ -495,9 +495,9 @@ async def get_carbon_sales(
             "total_sales": len(sales),
             "total_tonnes_sold": round(total_tonnes, 2),
             "total_gross_usd": round(total_gross, 2),
-            "total_gross_fcfa": round(total_gross * USD_TO_FCFA, 0),
+            "total_gross_xof": round(total_gross * USD_TO_XOF, 0),
             "greenlink_total_margin_usd": round(total_greenlink, 2),
-            "greenlink_total_margin_fcfa": round(total_greenlink * USD_TO_FCFA, 0)
+            "greenlink_total_margin_xof": round(total_greenlink * USD_TO_XOF, 0)
         }
     }
 
@@ -600,7 +600,7 @@ async def get_carbon_dashboard(
         },
         "sales": {
             "total_revenue_usd": round(total_sales_usd, 2),
-            "total_revenue_fcfa": round(total_sales_usd * USD_TO_FCFA, 0),
+            "total_revenue_xof": round(total_sales_usd * USD_TO_XOF, 0),
             "total_tonnes_sold": round(total_sold_tonnes, 2),
             "by_status": sales_by_status,
             "greenlink_margin_estimate_usd": round(total_sales_usd * GREENLINK_MARGIN_RATE * (1 - 0.30), 2)  # After costs
@@ -613,7 +613,7 @@ async def get_carbon_dashboard(
         "business_model": {
             "greenlink_margin_rate": f"{GREENLINK_MARGIN_RATE * 100}%",
             "farmer_share_rate": f"{FARMER_SHARE_RATE * 100}%",
-            "usd_to_fcfa": USD_TO_FCFA
+            "usd_to_xof": USD_TO_XOF
         }
     }
 
@@ -634,7 +634,7 @@ async def get_market_prices():
             }.get(quality.value, quality.value),
             "price_range_usd": f"{pricing['min']}-{pricing['max']} USD/t",
             "default_price_usd": pricing["default"],
-            "default_price_fcfa": pricing["default"] * USD_TO_FCFA
+            "default_price_xof": pricing["default"] * USD_TO_XOF
         })
     
     buyers = []

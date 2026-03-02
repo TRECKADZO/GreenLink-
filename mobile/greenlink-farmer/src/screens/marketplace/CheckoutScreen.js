@@ -107,7 +107,7 @@ const CheckoutScreen = ({ route, navigation }) => {
             <View style={styles.summaryTotal}>
               <Text style={styles.summaryTotalLabel}>Total</Text>
               <Text style={styles.summaryTotalValue}>
-                {total.toLocaleString()} FCFA
+                {total.toLocaleString()} XOF
               </Text>
             </View>
           </View>
@@ -221,7 +221,7 @@ const CheckoutScreen = ({ route, navigation }) => {
       <View style={styles.bottomBar}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total à payer</Text>
-          <Text style={styles.totalValue}>{total.toLocaleString()} FCFA</Text>
+          <Text style={styles.totalValue}>{total.toLocaleString()} XOF</Text>
         </View>
         <TouchableOpacity
           style={[styles.checkoutButton, loading && styles.checkoutButtonDisabled]}

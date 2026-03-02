@@ -285,7 +285,7 @@ async def notify_farmer_payment_received(
     push_token: str,
     farmer_name: str,
     amount: float,
-    currency: str = "FCFA"
+    currency: str = "XOF"
 ) -> Dict[str, Any]:
     """Send notification when payment is received"""
     return await fcm_service.send_notification(
@@ -325,7 +325,7 @@ async def notify_farmer_carbon_premium(
     return await fcm_service.send_notification(
         push_token=push_token,
         title="Prime carbone disponible 🌱",
-        body=f"Félicitations ! Vous êtes éligible à une prime de {premium_amount:,.0f} FCFA",
+        body=f"Félicitations ! Vous êtes éligible à une prime de {premium_amount:,.0f} XOF",
         data={
             "type": "carbon_premium",
             "amount": premium_amount,
@@ -450,7 +450,7 @@ async def notify_members_premium_available(
                     db=db,
                     user_id=user_id,
                     title="Prime Carbone Disponible! 🌱💰",
-                    body=f"Félicitations {member_name}! Votre prime de {amount:,.0f} FCFA de {coop_name} est prête.",
+                    body=f"Félicitations {member_name}! Votre prime de {amount:,.0f} XOF de {coop_name} est prête.",
                     data={
                         "type": "carbon_premium_available",
                         "distribution_id": distribution_id,
@@ -475,7 +475,7 @@ async def notify_members_premium_available(
                 await db.pending_sms_notifications.insert_one({
                     "phone_number": phone,
                     "member_name": member_name,
-                    "message": f"GreenLink: Votre prime carbone de {amount:,.0f} FCFA de {coop_name} est disponible. Lot: {lot_name}",
+                    "message": f"GreenLink: Votre prime carbone de {amount:,.0f} XOF de {coop_name} est disponible. Lot: {lot_name}",
                     "type": "carbon_premium",
                     "distribution_id": distribution_id,
                     "created_at": datetime.utcnow(),
@@ -506,7 +506,7 @@ async def notify_coop_distribution_complete(
         db=db,
         user_id=coop_user_id,
         title="Distribution Terminée ✅",
-        body=f"La distribution de {total_distributed:,.0f} FCFA à {beneficiaries_count} membres ({lot_name}) est terminée.",
+        body=f"La distribution de {total_distributed:,.0f} XOF à {beneficiaries_count} membres ({lot_name}) est terminée.",
         data={
             "type": "distribution_complete",
             "lot_name": lot_name,
@@ -534,7 +534,7 @@ async def notify_payment_confirmed(
         db=db,
         user_id=user_id,
         title="Paiement Confirmé ✅💰",
-        body=f"{member_name}, votre paiement de {amount:,.0f} FCFA via {payment_method} a été effectué avec succès!",
+        body=f"{member_name}, votre paiement de {amount:,.0f} XOF via {payment_method} a été effectué avec succès!",
         data={
             "type": "payment_confirmed",
             "amount": amount,
@@ -559,7 +559,7 @@ async def notify_payment_pending(
         db=db,
         user_id=user_id,
         title="Paiement en Attente ⏳",
-        body=f"{member_name}, {amount:,.0f} FCFA de {coop_name} sont en attente de retrait sur Orange Money.",
+        body=f"{member_name}, {amount:,.0f} XOF de {coop_name} sont en attente de retrait sur Orange Money.",
         data={
             "type": "payment_pending",
             "amount": amount,
@@ -628,7 +628,7 @@ async def send_weekly_premium_reminders(db) -> Dict[str, Any]:
                             db=db,
                             user_id=user_id,
                             title="Rappel: Prime Non Récupérée 🔔",
-                            body=f"{member_name}, n'oubliez pas de récupérer votre prime de {amount:,.0f} FCFA de {coop_name}!",
+                            body=f"{member_name}, n'oubliez pas de récupérer votre prime de {amount:,.0f} XOF de {coop_name}!",
                             data={
                                 "type": "premium_reminder",
                                 "amount": amount,
@@ -647,7 +647,7 @@ async def send_weekly_premium_reminders(db) -> Dict[str, Any]:
                         await db.pending_sms_notifications.insert_one({
                             "phone_number": phone,
                             "member_name": member_name,
-                            "message": f"GreenLink Rappel: Votre prime de {amount:,.0f} FCFA de {coop_name} vous attend! Retirez-la via Orange Money.",
+                            "message": f"GreenLink Rappel: Votre prime de {amount:,.0f} XOF de {coop_name} vous attend! Retirez-la via Orange Money.",
                             "type": "premium_reminder",
                             "created_at": datetime.utcnow(),
                             "status": "pending"

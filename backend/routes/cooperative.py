@@ -778,7 +778,7 @@ async def distribute_lot_premiums(
     
     result = await db.coop_distributions.insert_one(dist_doc)
     
-    logger.info(f"Distribution created for lot {lot_id}: {len(distributions)} beneficiaries, {distributable} FCFA")
+    logger.info(f"Distribution created for lot {lot_id}: {len(distributions)} beneficiaries, {distributable} XOF")
     
     return {
         "message": "Redistribution calculée avec succès",
@@ -820,7 +820,7 @@ async def execute_distribution_payments(
         successful += 1
         
         # Send SMS notification (simulated)
-        logger.info(f"SMS sent to {d['phone_number']}: Prime carbone {d['amount']} FCFA reçue")
+        logger.info(f"SMS sent to {d['phone_number']}: Prime carbone {d['amount']} XOF reçue")
     
     await db.coop_distributions.update_one(
         {"_id": ObjectId(dist_id)},
@@ -1180,7 +1180,7 @@ async def generate_carbon_pdf_report(
             "carbon_credits_generated": len(carbon_credits),
             "carbon_credits_sold": sold_credits,
             "carbon_credits_available": len(carbon_credits) - sold_credits,
-            "carbon_revenue_fcfa": carbon_revenue,
+            "carbon_revenue_xof": carbon_revenue,
             "average_carbon_score": round(avg_score, 1),
             "deforestation_free_rate": 98.5
         }
@@ -1416,7 +1416,7 @@ async def list_all_cooperatives():
 # ============= CARBON PREMIUM CALCULATION =============
 
 class CarbonPremiumSettings(BaseModel):
-    rate_per_hectare: float = 50000  # FCFA par hectare
+    rate_per_hectare: float = 50000  # XOF par hectare
     min_score_eligible: float = 6.0   # Score minimum pour être éligible
     bonus_high_score: float = 1.2     # Bonus 20% pour score >= 8
     bonus_organic: float = 1.1        # Bonus 10% pour pratiques bio
@@ -1439,7 +1439,7 @@ async def get_members_carbon_premiums(
     
     logger.info(f"Found {len(members)} members for cooperative {coop_id}")
     
-    # Taux de base par hectare (FCFA)
+    # Taux de base par hectare (XOF)
     RATE_PER_HECTARE = 50000
     MIN_SCORE = 6.0
     
@@ -1498,7 +1498,7 @@ async def get_members_carbon_premiums(
                         "location": parcel.get("location"),
                         "area_hectares": area,
                         "carbon_score": carbon_score,
-                        "premium_fcfa": round(parcel_premium)
+                        "premium_xof": round(parcel_premium)
                     })
         
         if audited_parcels > 0:
@@ -1512,8 +1512,8 @@ async def get_members_carbon_premiums(
             "total_hectares": round(member_total_area, 2),
             "average_score": member_avg_score,
             "audited_parcels": audited_parcels,
-            "premium_fcfa": round(member_premium),
-            "premium_eur": round(member_premium / 655.957, 2),  # Conversion FCFA -> EUR
+            "premium_xof": round(member_premium),
+            "premium_eur": round(member_premium / 655.957, 2),  # Conversion XOF -> EUR
             "parcels": parcels_detail,
             "payment_status": "pending"
         })
@@ -1522,15 +1522,15 @@ async def get_members_carbon_premiums(
         total_eligible_hectares += member_total_area
     
     # Trier par prime décroissante
-    premium_data.sort(key=lambda x: x["premium_fcfa"], reverse=True)
+    premium_data.sort(key=lambda x: x["premium_xof"], reverse=True)
     
     return {
         "members": premium_data,
         "summary": {
             "total_members": len(members),
-            "eligible_members": len([m for m in premium_data if m["premium_fcfa"] > 0]),
+            "eligible_members": len([m for m in premium_data if m["premium_xof"] > 0]),
             "total_hectares": round(total_eligible_hectares, 2),
-            "total_premium_fcfa": round(total_premium),
+            "total_premium_xof": round(total_premium),
             "total_premium_eur": round(total_premium / 655.957, 2),
             "rate_per_hectare": RATE_PER_HECTARE,
             "min_score_required": MIN_SCORE
@@ -1565,28 +1565,28 @@ async def get_carbon_premium_summary(
     # Primes versées vs en attente
     paid_premiums = await db.carbon_payments.aggregate([
         {"$match": {"cooperative_id": coop_id, "status": "paid"}},
-        {"$group": {"_id": None, "total": {"$sum": "$amount_fcfa"}}}
+        {"$group": {"_id": None, "total": {"$sum": "$amount_xof"}}}
     ]).to_list(1)
     
     pending_premiums = await db.carbon_payments.aggregate([
         {"$match": {"cooperative_id": coop_id, "status": "pending"}},
-        {"$group": {"_id": None, "total": {"$sum": "$amount_fcfa"}}}
+        {"$group": {"_id": None, "total": {"$sum": "$amount_xof"}}}
     ]).to_list(1)
     
     return {
         "total_members": members_count,
         "approved_audits": approved_audits,
-        "paid_premium_fcfa": paid_premiums[0]["total"] if paid_premiums else 0,
-        "pending_premium_fcfa": pending_premiums[0]["total"] if pending_premiums else 0,
+        "paid_premium_xof": paid_premiums[0]["total"] if paid_premiums else 0,
+        "pending_premium_xof": pending_premiums[0]["total"] if pending_premiums else 0,
         "rate_per_hectare": 50000,
-        "currency": "FCFA"
+        "currency": "XOF"
     }
 
 
 @router.post("/carbon-premiums/initiate-payment")
 async def initiate_premium_payment(
     member_id: str,
-    amount_fcfa: float,
+    amount_xof: float,
     current_user: dict = Depends(get_current_user)
 ):
     """Initier le paiement d'une prime carbone à un membre"""
@@ -1608,8 +1608,8 @@ async def initiate_premium_payment(
         "member_id": member_id,
         "member_name": member.get("full_name"),
         "phone_number": member.get("phone_number"),
-        "amount_fcfa": amount_fcfa,
-        "amount_eur": round(amount_fcfa / 655.957, 2),
+        "amount_xof": amount_xof,
+        "amount_eur": round(amount_xof / 655.957, 2),
         "payment_method": "orange_money",  # Par défaut
         "status": "pending",
         "initiated_by": str(current_user["_id"]),
@@ -1624,7 +1624,7 @@ async def initiate_premium_payment(
     return {
         "payment_id": str(result.inserted_id),
         "status": "pending",
-        "message": f"Paiement de {amount_fcfa} FCFA initié pour {member.get('full_name')}",
+        "message": f"Paiement de {amount_xof} XOF initié pour {member.get('full_name')}",
         "note": "Intégration Orange Money en attente - paiement simulé"
     }
 
@@ -1648,7 +1648,7 @@ async def get_premium_payment_history(
             "member_id": p.get("member_id"),
             "member_name": p.get("member_name"),
             "phone_number": p.get("phone_number"),
-            "amount_fcfa": p.get("amount_fcfa"),
+            "amount_xof": p.get("amount_xof"),
             "amount_eur": p.get("amount_eur"),
             "status": p.get("status"),
             "payment_method": p.get("payment_method"),
@@ -1685,7 +1685,7 @@ async def export_premiums_csv(
     # En-têtes
     writer.writerow([
         'Nom', 'Téléphone', 'Village', 'Surface (ha)', 
-        'Score Carbone', 'Prime (FCFA)', 'Prime (EUR)', 'Statut'
+        'Score Carbone', 'Prime (XOF)', 'Prime (EUR)', 'Statut'
     ])
     
     for member in members:
@@ -1809,7 +1809,7 @@ async def process_premium_payment(
         "member_id": member_id,
         "member_name": member.get("full_name"),
         "phone_number": member.get("phone_number"),
-        "amount_fcfa": round(total_premium),
+        "amount_xof": round(total_premium),
         "amount_eur": round(total_premium / 655.957, 2),
         "payment_method": "orange_money",
         "payment_ref": payment_ref,
@@ -1822,7 +1822,7 @@ async def process_premium_payment(
     result = await db.carbon_payments.insert_one(payment)
     
     # Envoyer SMS de confirmation
-    sms_message = f"GreenLink: Félicitations {member.get('full_name')}! Votre prime carbone de {round(total_premium):,} FCFA pour {round(total_area, 1)} ha a été envoyée sur votre Orange Money. Ref: {payment_ref}"
+    sms_message = f"GreenLink: Félicitations {member.get('full_name')}! Votre prime carbone de {round(total_premium):,} XOF pour {round(total_area, 1)} ha a été envoyée sur votre Orange Money. Ref: {payment_ref}"
     
     try:
         await send_quick_sms(
@@ -1837,12 +1837,12 @@ async def process_premium_payment(
         "payment_id": str(result.inserted_id),
         "payment_ref": payment_ref,
         "status": "completed",
-        "amount_fcfa": round(total_premium),
+        "amount_xof": round(total_premium),
         "amount_eur": round(total_premium / 655.957, 2),
         "member_name": member.get("full_name"),
         "phone_number": member.get("phone_number"),
         "sms_sent": True,
-        "message": f"Prime de {round(total_premium):,} FCFA payée à {member.get('full_name')}"
+        "message": f"Prime de {round(total_premium):,} XOF payée à {member.get('full_name')}"
     }
 
 
@@ -1882,7 +1882,7 @@ async def generate_monthly_report_pdf(
     }).sort("created_at", -1).to_list(1000)
     
     # Calculate totals
-    total_paid = sum(p.get("amount_fcfa", 0) for p in payments)
+    total_paid = sum(p.get("amount_xof", 0) for p in payments)
     total_members = len(set(p.get("member_id") for p in payments))
     
     # Generate PDF
@@ -1894,14 +1894,14 @@ async def generate_monthly_report_pdf(
             "date": p.get("created_at").strftime("%d/%m/%Y") if p.get("created_at") else "",
             "member_name": p.get("member_name"),
             "phone": p.get("phone_number"),
-            "amount_fcfa": p.get("amount_fcfa"),
+            "amount_xof": p.get("amount_xof"),
             "ref": p.get("payment_ref", "N/A"),
             "status": p.get("status")
         } for p in payments],
         "summary": {
             "total_payments": len(payments),
             "total_members": total_members,
-            "total_amount_fcfa": total_paid,
+            "total_amount_xof": total_paid,
             "total_amount_eur": round(total_paid / 655.957, 2)
         }
     }

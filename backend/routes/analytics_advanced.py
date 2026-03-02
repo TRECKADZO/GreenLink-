@@ -266,7 +266,7 @@ async def export_orders_csv(
     # Header
     writer.writerow([
         "N° Commande", "Date", "Statut", "Client/Fournisseur", "Téléphone",
-        "Adresse Livraison", "Ville", "Nb Articles", "Total (FCFA)",
+        "Adresse Livraison", "Ville", "Nb Articles", "Total (XOF)",
         "Mode Paiement", "Livraison Estimée"
     ])
     
@@ -312,7 +312,7 @@ async def export_products_csv(
     writer = csv.writer(output)
     
     writer.writerow([
-        "ID Produit", "Nom", "Catégorie", "Prix (FCFA)", "Stock",
+        "ID Produit", "Nom", "Catégorie", "Prix (XOF)", "Stock",
         "Unité", "Description", "Statut", "Date Création"
     ])
     
@@ -357,7 +357,7 @@ async def export_cooperative_members(
     writer.writerow([
         "Nom Complet", "Téléphone", "Village", "N° CNI", "Statut",
         "Nb Parcelles", "Surface (ha)", "CO2 Capturé (t)", "Score Carbone",
-        "Primes Reçues (FCFA)", "Date Inscription"
+        "Primes Reçues (XOF)", "Date Inscription"
     ])
     
     for member in members:
@@ -427,7 +427,7 @@ async def export_financial_transactions(
     writer = csv.writer(output)
     
     writer.writerow([
-        "Date", "Type", "Référence", "Description", "Montant (FCFA)", "Statut"
+        "Date", "Type", "Référence", "Description", "Montant (XOF)", "Statut"
     ])
     
     for dist in distributions:

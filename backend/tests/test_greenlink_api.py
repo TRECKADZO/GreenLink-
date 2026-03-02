@@ -319,7 +319,7 @@ class TestSupplierMarketplaceAPI:
         assert 'active_products' in data
         assert 'total_orders' in data
         assert 'total_revenue' in data
-        print(f"✓ Supplier dashboard: {data['total_products']} products, {data['total_revenue']} FCFA")
+        print(f"✓ Supplier dashboard: {data['total_products']} products, {data['total_revenue']} XOF")
 
     def test_get_my_products(self):
         """Test getting supplier's products"""

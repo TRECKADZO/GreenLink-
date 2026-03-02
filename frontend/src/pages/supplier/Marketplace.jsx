@@ -132,7 +132,7 @@ const Marketplace = () => {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Prix:</span>
                           <span className="font-bold text-[#2d5a4d]">
-                            {product.price.toLocaleString()} FCFA
+                            {product.price.toLocaleString()} XOF
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">

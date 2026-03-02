@@ -136,7 +136,7 @@ const OrdersScreen = ({ navigation }) => {
 
       <View style={styles.orderFooter}>
         <Text style={styles.orderTotal}>
-          {item.total_amount?.toLocaleString() || '0'} FCFA
+          {item.total_amount?.toLocaleString() || '0'} XOF
         </Text>
         <View style={styles.viewButton}>
           <Text style={styles.viewButtonText}>Voir détails →</Text>

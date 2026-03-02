@@ -214,32 +214,32 @@ async def get_volume_price_trends(
     # Prices by culture
     prices_by_culture = {
         "cacao": {
-            "premium_fcfa_kg": 1450,
-            "standard_fcfa_kg": 1200,
+            "premium_xof_kg": 1450,
+            "standard_xof_kg": 1200,
             "trend_3m": "+5.2%",
             "volatility": "Faible"
         },
         "cafe_arabica": {
-            "premium_fcfa_kg": 2800,
-            "standard_fcfa_kg": 2200,
+            "premium_xof_kg": 2800,
+            "standard_xof_kg": 2200,
             "trend_3m": "+3.8%",
             "volatility": "Modérée"
         },
         "cafe_robusta": {
-            "premium_fcfa_kg": 1800,
-            "standard_fcfa_kg": 1400,
+            "premium_xof_kg": 1800,
+            "standard_xof_kg": 1400,
             "trend_3m": "+2.1%",
             "volatility": "Faible"
         },
         "anacarde": {
-            "premium_fcfa_kg": 950,
-            "standard_fcfa_kg": 750,
+            "premium_xof_kg": 950,
+            "standard_xof_kg": 750,
             "trend_3m": "+4.5%",
             "volatility": "Modérée"
         },
         "hevea": {
-            "premium_fcfa_kg": 650,
-            "standard_fcfa_kg": 480,
+            "premium_xof_kg": 650,
+            "standard_xof_kg": 480,
             "trend_3m": "-1.2%",
             "volatility": "Élevée"
         }
@@ -614,8 +614,8 @@ async def get_carbon_credits_premiums(
         
         "premium_impact": {
             "farmers_receiving_premium": 4250,
-            "average_premium_per_farmer_fcfa": 125000,
-            "total_premiums_distributed_fcfa": 531250000,
+            "average_premium_per_farmer_xof": 125000,
+            "total_premiums_distributed_xof": 531250000,
             "income_increase_percentage": 38.5,
             "highest_premium_region": "Soubre (+42%)",
             "premium_calculation": {
@@ -630,19 +630,19 @@ async def get_carbon_credits_premiums(
                 "tonnes_co2e": 12500,
                 "revenue_usd": 275000,
                 "farmers_benefiting": 3200,
-                "avg_premium_fcfa": 135000
+                "avg_premium_xof": 135000
             },
             "cafe": {
                 "tonnes_co2e": 3500,
                 "revenue_usd": 70000,
                 "farmers_benefiting": 680,
-                "avg_premium_fcfa": 115000
+                "avg_premium_xof": 115000
             },
             "anacarde": {
                 "tonnes_co2e": 1800,
                 "revenue_usd": 25000,
                 "farmers_benefiting": 280,
-                "avg_premium_fcfa": 95000
+                "avg_premium_xof": 95000
             }
         },
         
@@ -806,8 +806,8 @@ async def get_economic_impact(
         "generated_at": datetime.utcnow().isoformat(),
         
         "income_improvement": {
-            "baseline_annual_income_fcfa": 650000,
-            "current_annual_income_fcfa": 890000,
+            "baseline_annual_income_xof": 650000,
+            "current_annual_income_xof": 890000,
             "increase_percentage": 36.9,
             "increase_sources": {
                 "carbon_premium": "+18.5%",
@@ -818,18 +818,18 @@ async def get_economic_impact(
         
         "price_differentials": {
             "cacao": {
-                "conventional_fcfa_kg": 1100,
-                "sustainable_fcfa_kg": 1450,
+                "conventional_xof_kg": 1100,
+                "sustainable_xof_kg": 1450,
                 "differential": "+31.8%"
             },
             "cafe_arabica": {
-                "conventional_fcfa_kg": 2200,
-                "sustainable_fcfa_kg": 2950,
+                "conventional_xof_kg": 2200,
+                "sustainable_xof_kg": 2950,
                 "differential": "+34.1%"
             },
             "anacarde": {
-                "conventional_fcfa_kg": 680,
-                "sustainable_fcfa_kg": 850,
+                "conventional_xof_kg": 680,
+                "sustainable_xof_kg": 850,
                 "differential": "+25.0%"
             }
         },
@@ -849,9 +849,9 @@ async def get_economic_impact(
         },
         
         "total_value_created": {
-            "carbon_premiums_fcfa": 531250000,
-            "quality_premiums_fcfa": 425000000,
-            "total_additional_income_fcfa": 956250000,
+            "carbon_premiums_xof": 531250000,
+            "quality_premiums_xof": 425000000,
+            "total_additional_income_xof": 956250000,
             "total_usd": 1593750
         },
         
@@ -1089,7 +1089,7 @@ async def get_sector_benchmarks(
             "cacao": {
                 "sustainability_score": 8.2,
                 "carbon_efficiency": 4.2,  # tCO2/ha
-                "economic_return": 890000,  # FCFA/ha/an
+                "economic_return": 890000,  # XOF/ha/an
                 "premium_potential": "+40%",
                 "eudr_readiness": 96,
                 "growth_trend": "+12%",

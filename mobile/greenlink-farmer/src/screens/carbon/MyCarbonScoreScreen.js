@@ -117,7 +117,7 @@ const MyCarbonScoreScreen = ({ navigation }) => {
           <View style={styles.statCard}>
             <Text style={styles.statEmoji}>💰</Text>
             <Text style={styles.statValue}>{totalPremium.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>Primes carbone (FCFA)</Text>
+            <Text style={styles.statLabel}>Primes carbone (XOF)</Text>
           </View>
         </View>
 

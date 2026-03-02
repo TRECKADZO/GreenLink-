@@ -51,9 +51,9 @@ ussd_sessions = {}
 
 # ============= HELPER FUNCTIONS =============
 
-def format_fcfa(amount: float) -> str:
-    """Format amount in FCFA"""
-    return f"{amount:,.0f}".replace(",", " ") + " FCFA"
+def format_xof(amount: float) -> str:
+    """Format amount in XOF"""
+    return f"{amount:,.0f}".replace(",", " ") + " XOF"
 
 
 def get_session_data(session_id: str) -> dict:
@@ -154,7 +154,7 @@ async def get_farmer_carbon_stats(farmer_id: str) -> dict:
     
     # Get received payments
     payments = await get_farmer_payments(farmer_id)
-    total_received = sum(p.get("amount_fcfa", 0) for p in payments if p.get("status") == "completed")
+    total_received = sum(p.get("amount_xof", 0) for p in payments if p.get("status") == "completed")
     
     return {
         "parcels_count": len(parcels),
@@ -276,10 +276,10 @@ Parcelles: {stats['parcels_count']}
 Surface: {stats['total_area']} ha
 
 Prime disponible:
-{format_fcfa(stats['pending'])}
+{format_xof(stats['pending'])}
 
 Déjà reçu:
-{format_fcfa(stats['total_received'])}
+{format_xof(stats['total_received'])}
 
 1. Demander paiement
 0. Retour"""
@@ -299,7 +299,7 @@ Déjà reçu:
                             else:
                                 date_str = "N/A"
                             lines.append(f"• {date_str}")
-                            lines.append(f"  {format_fcfa(p.get('amount_fcfa', 0))}")
+                            lines.append(f"  {format_xof(p.get('amount_xof', 0))}")
                             lines.append(f"  Ref: {p.get('payment_ref', 'N/A')[:12]}")
                         lines.append("\n0. Retour")
                         response_text = "\n".join(lines)
@@ -386,7 +386,7 @@ SMS gratuit au 1234:
                     if stats['pending'] > 0:
                         response_text = f"""💳 DEMANDE PAIEMENT
 
-Montant: {format_fcfa(stats['pending'])}
+Montant: {format_xof(stats['pending'])}
 
 Votre demande sera traitée
 par votre coopérative.
@@ -504,8 +504,8 @@ async def handle_incoming_sms(request: SMSRequest):
                 response = f"""GreenLink - SOLDE
 {farmer_name}
 
-Prime disponible: {format_fcfa(stats['pending'])}
-Déjà reçu: {format_fcfa(stats['total_received'])}
+Prime disponible: {format_xof(stats['pending'])}
+Déjà reçu: {format_xof(stats['total_received'])}
 Score: {stats['avg_score']}/10
 Parcelles: {stats['parcels_count']}
 
@@ -523,7 +523,7 @@ Score moyen: {stats['avg_score']}/10
 Surface: {stats['total_area']} ha
 
 Prime disponible:
-{format_fcfa(stats['pending'])}
+{format_xof(stats['pending'])}
 
 Contactez votre coopérative pour le paiement."""
             else:

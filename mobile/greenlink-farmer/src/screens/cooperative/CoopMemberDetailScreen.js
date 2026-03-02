@@ -267,7 +267,7 @@ export default function CoopMemberDetailScreen({ route, navigation }) {
             <View style={styles.revenueBox}>
               <Ionicons name="cash" size={24} color={COLORS.primary} />
               <Text style={styles.revenueValue}>
-                {(member?.total_premium_earned || 0).toLocaleString()} FCFA
+                {(member?.total_premium_earned || 0).toLocaleString()} XOF
               </Text>
             </View>
             <TouchableOpacity

@@ -76,7 +76,7 @@ class TestCarbonPremiumsAPI:
         assert "total_members" in summary, "Missing total_members"
         assert "eligible_members" in summary, "Missing eligible_members"
         assert "total_hectares" in summary, "Missing total_hectares"
-        assert "total_premium_fcfa" in summary, "Missing total_premium_fcfa"
+        assert "total_premium_xof" in summary, "Missing total_premium_xof"
         assert "rate_per_hectare" in summary, "Missing rate_per_hectare"
         
         # Check members structure if any
@@ -85,7 +85,7 @@ class TestCarbonPremiumsAPI:
             assert "member_id" in member, "Missing member_id"
             assert "full_name" in member, "Missing full_name"
             assert "phone_number" in member, "Missing phone_number"
-            assert "premium_fcfa" in member, "Missing premium_fcfa"
+            assert "premium_xof" in member, "Missing premium_xof"
     
     def test_export_csv(self, auth_headers):
         """
@@ -136,7 +136,7 @@ class TestCarbonPremiumsAPI:
             payment = data["payments"][0]
             assert "id" in payment, "Missing payment id"
             assert "member_name" in payment, "Missing member_name"
-            assert "amount_fcfa" in payment, "Missing amount_fcfa"
+            assert "amount_xof" in payment, "Missing amount_xof"
             assert "status" in payment, "Missing status"
     
     def test_process_payment(self, auth_headers):
@@ -156,7 +156,7 @@ class TestCarbonPremiumsAPI:
         # Find eligible member (with premium > 0)
         eligible_member = None
         for m in members:
-            if m.get("premium_fcfa", 0) > 0:
+            if m.get("premium_xof", 0) > 0:
                 eligible_member = m
                 break
         
@@ -179,7 +179,7 @@ class TestCarbonPremiumsAPI:
         # Verify payment response structure
         assert "payment_id" in data, "Missing payment_id"
         assert "payment_ref" in data, "Missing payment_ref"
-        assert "amount_fcfa" in data, "Missing amount_fcfa"
+        assert "amount_xof" in data, "Missing amount_xof"
         assert "status" in data, "Missing status"
         assert "sms_sent" in data, "Missing sms_sent"
         

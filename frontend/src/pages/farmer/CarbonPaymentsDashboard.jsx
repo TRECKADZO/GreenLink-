@@ -157,7 +157,7 @@ const CarbonPaymentsDashboard = () => {
                 Total Reçu
               </div>
               <p className="text-2xl font-bold mt-1">
-                {formatCurrency(earnings?.total_received_fcfa)} <span className="text-sm font-normal">FCFA</span>
+                {formatCurrency(earnings?.total_received_xof)} <span className="text-sm font-normal">XOF</span>
               </p>
             </div>
             
@@ -167,7 +167,7 @@ const CarbonPaymentsDashboard = () => {
                 En Attente
               </div>
               <p className="text-2xl font-bold mt-1">
-                {formatCurrency(earnings?.pending_fcfa)} <span className="text-sm font-normal">FCFA</span>
+                {formatCurrency(earnings?.pending_xof)} <span className="text-sm font-normal">XOF</span>
               </p>
             </div>
             
@@ -177,7 +177,7 @@ const CarbonPaymentsDashboard = () => {
                 Projection Annuelle
               </div>
               <p className="text-2xl font-bold mt-1">
-                {formatCurrency(earnings?.annual_projection_fcfa)} <span className="text-sm font-normal">FCFA</span>
+                {formatCurrency(earnings?.annual_projection_xof)} <span className="text-sm font-normal">XOF</span>
               </p>
             </div>
             
@@ -187,7 +187,7 @@ const CarbonPaymentsDashboard = () => {
                 Prime/kg Cacao
               </div>
               <p className="text-2xl font-bold mt-1">
-                {formatCurrency(earnings?.premium_per_kg_fcfa)} <span className="text-sm font-normal">FCFA</span>
+                {formatCurrency(earnings?.premium_per_kg_xof)} <span className="text-sm font-normal">XOF</span>
               </p>
             </div>
           </div>
@@ -284,17 +284,17 @@ const CarbonPaymentsDashboard = () => {
               
               <div className="flex items-end justify-between gap-1 h-40">
                 {monthly_history?.map((month, idx) => {
-                  const maxAmount = Math.max(...(monthly_history?.map(m => m.amount_fcfa) || [1]));
-                  const height = month.amount_fcfa > 0 ? (month.amount_fcfa / maxAmount) * 100 : 5;
+                  const maxAmount = Math.max(...(monthly_history?.map(m => m.amount_xof) || [1]));
+                  const height = month.amount_xof > 0 ? (month.amount_xof / maxAmount) * 100 : 5;
                   
                   return (
                     <div key={idx} className="flex-1 flex flex-col items-center">
                       <div 
                         className={`w-full rounded-t transition-all ${
-                          month.amount_fcfa > 0 ? 'bg-emerald-500' : 'bg-gray-200'
+                          month.amount_xof > 0 ? 'bg-emerald-500' : 'bg-gray-200'
                         }`}
                         style={{ height: `${height}%` }}
-                        title={`${month.month}: ${formatCurrency(month.amount_fcfa)} FCFA`}
+                        title={`${month.month}: ${formatCurrency(month.amount_xof)} XOF`}
                       />
                       <span className="text-xs text-gray-500 mt-2 rotate-45 origin-left">
                         {month.month.slice(0, 3)}
@@ -357,7 +357,7 @@ const CarbonPaymentsDashboard = () => {
                     <div key={idx} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-800">
-                          {formatCurrency(payment.amount_fcfa)} FCFA
+                          {formatCurrency(payment.amount_xof)} XOF
                         </p>
                         <p className="text-xs text-gray-500">
                           {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('fr-FR') : 'En attente'}
@@ -390,7 +390,7 @@ const CarbonPaymentsDashboard = () => {
                     <div key={idx} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                       <div>
                         <p className="font-medium text-purple-800">
-                          {formatCurrency(payment.amount_fcfa)} FCFA
+                          {formatCurrency(payment.amount_xof)} XOF
                         </p>
                         <p className="text-xs text-purple-600">
                           {payment.scheduled_date ? new Date(payment.scheduled_date).toLocaleDateString('fr-FR') : 'À venir'}

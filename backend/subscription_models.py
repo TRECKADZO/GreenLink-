@@ -10,8 +10,8 @@ from enum import Enum
 
 class SubscriptionPlan(str, Enum):
     FREE = "free"
-    STARTER = "starter"  # Acheteurs - 49,000 FCFA/month
-    BUSINESS = "business"  # Fournisseurs - 29,000 FCFA/month + 5% commission
+    STARTER = "starter"  # Acheteurs - 49,000 XOF/month
+    BUSINESS = "business"  # Fournisseurs - 29,000 XOF/month + 5% commission
     ENTERPRISE = "enterprise"  # Entreprises RSE - Custom pricing
 
 
@@ -23,7 +23,7 @@ class SubscriptionStatus(str, Enum):
     PENDING_PAYMENT = "pending_payment"
 
 
-# Plan pricing in FCFA
+# Plan pricing in XOF
 PLAN_PRICING = {
     SubscriptionPlan.FREE: {
         "monthly": 0,
@@ -162,7 +162,7 @@ class Subscription(BaseModel):
     
     # Billing
     billing_cycle: str = "monthly"  # monthly, yearly
-    price_paid: Optional[int] = None  # in FCFA
+    price_paid: Optional[int] = None  # in XOF
     next_billing_date: Optional[datetime] = None
     
     # Payment

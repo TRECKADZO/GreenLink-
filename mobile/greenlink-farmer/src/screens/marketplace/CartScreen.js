@@ -219,7 +219,7 @@ const CartScreen = ({ navigation }) => {
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Sous-total</Text>
               <Text style={styles.summaryValue}>
-                {calculateTotal().toLocaleString()} FCFA
+                {calculateTotal().toLocaleString()} XOF
               </Text>
             </View>
             <View style={styles.summaryRow}>
@@ -229,7 +229,7 @@ const CartScreen = ({ navigation }) => {
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total</Text>
               <Text style={styles.totalValue}>
-                {calculateTotal().toLocaleString()} FCFA
+                {calculateTotal().toLocaleString()} XOF
               </Text>
             </View>
 

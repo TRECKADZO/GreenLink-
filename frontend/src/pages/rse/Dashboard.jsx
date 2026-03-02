@@ -82,7 +82,7 @@ IMPACT DÉTAILLÉ PAR MOIS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${reportData.monthly_breakdown.map(m => 
-  `${m.month}: ${m.co2_offset}t CO₂ | ${m.investment.toLocaleString()} FCFA`
+  `${m.month}: ${m.co2_offset}t CO₂ | ${m.investment.toLocaleString()} XOF`
 ).join('\n')}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -12,7 +12,7 @@ import logging
 
 from database import db
 from routes.auth import get_current_user
-from carbon_business_model import USD_TO_FCFA, GREENLINK_MARGIN_RATE, FARMER_SHARE_RATE, COOPERATIVE_SHARE_RATE, COST_STRUCTURE
+from carbon_business_model import USD_TO_XOF, GREENLINK_MARGIN_RATE, FARMER_SHARE_RATE, COOPERATIVE_SHARE_RATE, COST_STRUCTURE
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ async def create_invoice(
     
     # Calculate amounts
     subtotal_usd = invoice_data.tonnes_co2 * invoice_data.price_per_tonne_usd
-    subtotal_fcfa = subtotal_usd * USD_TO_FCFA
+    subtotal_xof = subtotal_usd * USD_TO_XOF
     
     # Generate invoice number
     year = datetime.utcnow().year
@@ -117,11 +117,11 @@ async def create_invoice(
         
         # Totals
         "subtotal_usd": subtotal_usd,
-        "subtotal_fcfa": subtotal_fcfa,
+        "subtotal_xof": subtotal_xof,
         "tax_rate": 0,
         "tax_amount_usd": 0,
         "total_usd": subtotal_usd,
-        "total_fcfa": subtotal_fcfa,
+        "total_xof": subtotal_xof,
         
         # Payment tracking
         "amount_paid_usd": 0,
@@ -285,7 +285,7 @@ async def record_payment(
     payment_record = {
         "id": str(uuid.uuid4()),
         "amount_usd": payment.amount_usd,
-        "amount_fcfa": payment.amount_usd * USD_TO_FCFA,
+        "amount_xof": payment.amount_usd * USD_TO_XOF,
         "method": payment.payment_method.value,
         "reference": payment.payment_reference,
         "date": payment.payment_date,
@@ -358,7 +358,7 @@ async def get_payment_history(
         "payments": all_payments[:limit],
         "summary": {
             "total_received_usd": round(total_received, 2),
-            "total_received_fcfa": round(total_received * USD_TO_FCFA, 0),
+            "total_received_xof": round(total_received * USD_TO_XOF, 0),
             "payment_count": len(all_payments)
         }
     }
@@ -379,15 +379,15 @@ async def create_distribution_from_sale(sale_id: str, created_by: str):
     distribution = {
         "sale_id": sale_id,
         "total_gross_usd": distribution_data.get("total_gross_usd", 0),
-        "total_gross_fcfa": distribution_data.get("total_gross_fcfa", 0),
+        "total_gross_xof": distribution_data.get("total_gross_xof", 0),
         
         # Amounts to distribute
         "greenlink_share_usd": distribution_data.get("greenlink_share_usd", 0),
-        "greenlink_share_fcfa": distribution_data.get("greenlink_share_fcfa", 0),
+        "greenlink_share_xof": distribution_data.get("greenlink_share_xof", 0),
         "farmers_share_usd": distribution_data.get("farmers_share_usd", 0),
-        "farmers_share_fcfa": distribution_data.get("farmers_share_fcfa", 0),
+        "farmers_share_xof": distribution_data.get("farmers_share_xof", 0),
         "coop_share_usd": distribution_data.get("cooperative_share_usd", 0),
-        "coop_share_fcfa": distribution_data.get("cooperative_share_fcfa", 0),
+        "coop_share_xof": distribution_data.get("cooperative_share_xof", 0),
         
         # Status tracking
         "status": DistributionStatus.PENDING.value,
@@ -442,9 +442,9 @@ async def get_distributions(
         d["_id"] = str(d["_id"])
     
     # Summary
-    total_to_distribute = sum(d.get("farmers_share_fcfa", 0) for d in distributions)
+    total_to_distribute = sum(d.get("farmers_share_xof", 0) for d in distributions)
     total_distributed = sum(
-        d.get("farmers_share_fcfa", 0) 
+        d.get("farmers_share_xof", 0) 
         for d in distributions 
         if d.get("status") == "completed"
     )
@@ -452,8 +452,8 @@ async def get_distributions(
     return {
         "distributions": distributions,
         "summary": {
-            "total_to_distribute_fcfa": round(total_to_distribute, 0),
-            "total_distributed_fcfa": round(total_distributed, 0),
+            "total_to_distribute_xof": round(total_to_distribute, 0),
+            "total_distributed_xof": round(total_distributed, 0),
             "pending_count": len([d for d in distributions if d.get("status") == "pending"])
         }
     }
@@ -512,7 +512,7 @@ async def process_distribution(
         "success": True,
         "message": "Distribution en cours de traitement",
         "farmer_count": distribution.get("farmer_count", 0),
-        "total_amount_fcfa": distribution.get("farmers_share_fcfa", 0)
+        "total_amount_xof": distribution.get("farmers_share_xof", 0)
     }
 
 
@@ -624,14 +624,14 @@ async def get_billing_dashboard(
     # Distribution stats
     all_distributions = await db.distributions.find({}).to_list(1000)
     
-    total_to_farmers_fcfa = sum(d.get("farmers_share_fcfa", 0) for d in all_distributions)
-    distributed_fcfa = sum(
-        d.get("farmers_share_fcfa", 0) 
+    total_to_farmers_xof = sum(d.get("farmers_share_xof", 0) for d in all_distributions)
+    distributed_xof = sum(
+        d.get("farmers_share_xof", 0) 
         for d in all_distributions 
         if d.get("status") == "completed"
     )
-    pending_distribution_fcfa = sum(
-        d.get("farmers_share_fcfa", 0) 
+    pending_distribution_xof = sum(
+        d.get("farmers_share_xof", 0) 
         for d in all_distributions 
         if d.get("status") in ["pending", "processing"]
     )
@@ -655,9 +655,9 @@ async def get_billing_dashboard(
     return {
         "overview": {
             "total_invoiced_usd": round(total_invoiced_usd, 2),
-            "total_invoiced_fcfa": round(total_invoiced_usd * USD_TO_FCFA, 0),
+            "total_invoiced_xof": round(total_invoiced_usd * USD_TO_XOF, 0),
             "total_paid_usd": round(total_paid_usd, 2),
-            "total_paid_fcfa": round(total_paid_usd * USD_TO_FCFA, 0),
+            "total_paid_xof": round(total_paid_usd * USD_TO_XOF, 0),
             "total_pending_usd": round(total_pending_usd, 2),
             "total_overdue_usd": round(total_overdue_usd, 2),
             "collection_rate": round((total_paid_usd / total_invoiced_usd * 100) if total_invoiced_usd > 0 else 0, 1)
@@ -668,14 +668,14 @@ async def get_billing_dashboard(
             "invoice_count": len(month_invoices)
         },
         "distributions": {
-            "total_to_farmers_fcfa": round(total_to_farmers_fcfa, 0),
-            "distributed_fcfa": round(distributed_fcfa, 0),
-            "pending_fcfa": round(pending_distribution_fcfa, 0),
-            "distribution_rate": round((distributed_fcfa / total_to_farmers_fcfa * 100) if total_to_farmers_fcfa > 0 else 0, 1)
+            "total_to_farmers_xof": round(total_to_farmers_xof, 0),
+            "distributed_xof": round(distributed_xof, 0),
+            "pending_xof": round(pending_distribution_xof, 0),
+            "distribution_rate": round((distributed_xof / total_to_farmers_xof * 100) if total_to_farmers_xof > 0 else 0, 1)
         },
         "greenlink_revenue": {
             "total_margin_usd": round(greenlink_total_usd, 2),
-            "total_margin_fcfa": round(greenlink_total_usd * USD_TO_FCFA, 0)
+            "total_margin_xof": round(greenlink_total_usd * USD_TO_XOF, 0)
         },
         "recent_invoices": recent_invoices,
         "recent_payments": recent_payments,
@@ -733,7 +733,7 @@ async def get_monthly_report(
     # Calculate metrics
     invoiced_usd = sum(i.get("total_usd", 0) for i in invoices)
     payments_usd = sum(p.get("amount_usd", 0) for p in month_payments)
-    distributed_fcfa = sum(d.get("farmers_share_fcfa", 0) for d in distributions if d.get("status") == "completed")
+    distributed_xof = sum(d.get("farmers_share_xof", 0) for d in distributions if d.get("status") == "completed")
     greenlink_usd = sum(d.get("greenlink_share_usd", 0) for d in distributions)
     
     return {
@@ -747,21 +747,21 @@ async def get_monthly_report(
         },
         "invoicing": {
             "total_invoiced_usd": round(invoiced_usd, 2),
-            "total_invoiced_fcfa": round(invoiced_usd * USD_TO_FCFA, 0),
+            "total_invoiced_xof": round(invoiced_usd * USD_TO_XOF, 0),
             "invoice_count": len(invoices)
         },
         "collections": {
             "total_collected_usd": round(payments_usd, 2),
-            "total_collected_fcfa": round(payments_usd * USD_TO_FCFA, 0),
+            "total_collected_xof": round(payments_usd * USD_TO_XOF, 0),
             "payment_count": len(month_payments)
         },
         "distributions": {
-            "total_distributed_fcfa": round(distributed_fcfa, 0),
+            "total_distributed_xof": round(distributed_xof, 0),
             "distribution_count": len(distributions),
             "farmers_paid": sum(d.get("farmers_paid", 0) for d in distributions)
         },
         "greenlink_revenue": {
             "margin_usd": round(greenlink_usd, 2),
-            "margin_fcfa": round(greenlink_usd * USD_TO_FCFA, 0)
+            "margin_xof": round(greenlink_usd * USD_TO_XOF, 0)
         }
     }

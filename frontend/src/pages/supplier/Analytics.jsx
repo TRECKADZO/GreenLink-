@@ -142,8 +142,8 @@ const SupplierAnalytics = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Chiffre d'affaires"
-          value={`${(summary?.total_revenue || 0).toLocaleString()} FCFA`}
-          subtitle={`${(summary?.completed_revenue || 0).toLocaleString()} FCFA livrées`}
+          value={`${(summary?.total_revenue || 0).toLocaleString()} XOF`}
+          subtitle={`${(summary?.completed_revenue || 0).toLocaleString()} XOF livrées`}
           icon={DollarSign}
           trendUp={true}
         />
@@ -156,7 +156,7 @@ const SupplierAnalytics = () => {
         />
         <StatCard
           title="Panier moyen"
-          value={`${(summary?.avg_order_value || 0).toLocaleString()} FCFA`}
+          value={`${(summary?.avg_order_value || 0).toLocaleString()} XOF`}
           subtitle={`${summary?.avg_items_per_order || 0} articles/commande`}
           icon={TrendingUp}
           trendUp={true}
@@ -227,7 +227,7 @@ const SupplierAnalytics = () => {
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{product.name}</p>
                   <p className="text-sm text-gray-500">
-                    {product.orders_count} commandes · {product.revenue.toLocaleString()} FCFA
+                    {product.orders_count} commandes · {product.revenue.toLocaleString()} XOF
                   </p>
                 </div>
                 <div className="text-right">
@@ -269,7 +269,7 @@ const SupplierAnalytics = () => {
                   style={{ height: `${Math.max(height, 2)}%` }}
                 >
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
-                    {day.revenue.toLocaleString()} FCFA
+                    {day.revenue.toLocaleString()} XOF
                     <br />
                     {day.orders} commandes
                   </div>

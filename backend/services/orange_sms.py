@@ -183,7 +183,7 @@ class OrangeSMSService:
         """
         Envoie une notification de paiement
         """
-        message = f"GreenLink: Paiement reçu de {amount:,.0f} FCFA. {description}. Merci!"
+        message = f"GreenLink: Paiement reçu de {amount:,.0f} XOF. {description}. Merci!"
         return await self.send_sms(phone, message)
     
     async def send_harvest_confirmation(self, phone: str, harvest_id: str, quantity: float, crop: str) -> dict:
@@ -197,7 +197,7 @@ class OrangeSMSService:
         """
         Envoie une notification de prime carbone
         """
-        message = f"GreenLink: Prime carbone de {amount:,.0f} FCFA! Score: {score}/10. Montant versé sur Orange Money."
+        message = f"GreenLink: Prime carbone de {amount:,.0f} XOF! Score: {score}/10. Montant versé sur Orange Money."
         return await self.send_sms(phone, message)
 
 

@@ -122,7 +122,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                       {item.product.name}
                     </h4>
                     <p className="text-sm text-gray-500">
-                      {item.product.price.toLocaleString()} FCFA/{item.product.unit}
+                      {item.product.price.toLocaleString()} XOF/{item.product.unit}
                     </p>
                     
                     {/* Quantity Controls */}
@@ -158,7 +158,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     <p className="font-bold text-[#2d5a4d]">
                       {item.item_total.toLocaleString()}
                     </p>
-                    <p className="text-xs text-gray-500">FCFA</p>
+                    <p className="text-xs text-gray-500">XOF</p>
                   </div>
                 </div>
               ))}
@@ -172,7 +172,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-600">Total</span>
               <span className="text-2xl font-bold text-[#2d5a4d]">
-                {cart.total.toLocaleString()} FCFA
+                {cart.total.toLocaleString()} XOF
               </span>
             </div>
             <Button

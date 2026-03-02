@@ -423,7 +423,7 @@ async def checkout_cart(
         await db.notifications.insert_one({
             "user_id": supplier_id,
             "title": "Nouvelle commande reçue",
-            "message": f"Commande #{order['order_number']} de {current_user['full_name']} - {order_data['total']:,.0f} FCFA",
+            "message": f"Commande #{order['order_number']} de {current_user['full_name']} - {order_data['total']:,.0f} XOF",
             "type": "order",
             "action_url": f"/supplier/orders",
             "created_at": datetime.utcnow(),

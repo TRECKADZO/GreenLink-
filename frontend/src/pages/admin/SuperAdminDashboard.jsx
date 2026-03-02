@@ -285,7 +285,7 @@ const SuperAdminDashboard = () => {
               />
               <MetricCard
                 title="Volume Marché"
-                value={formatCurrency(market?.total_volume_fcfa || 0)}
+                value={formatCurrency(market?.total_volume_xof || 0)}
                 icon={DollarSign}
                 color="purple"
                 trend="+23%"
@@ -354,7 +354,7 @@ const SuperAdminDashboard = () => {
                     <div className="p-4 rounded-lg bg-green-900/30 border border-green-700/30">
                       <p className="text-green-400 text-sm">Revenus Carbone</p>
                       <p className="text-2xl font-bold text-white">
-                        {formatCurrency(sustainability?.carbon_revenue_fcfa || 0)}
+                        {formatCurrency(sustainability?.carbon_revenue_xof || 0)}
                       </p>
                     </div>
                     <div className="p-4 rounded-lg bg-lime-900/30 border border-lime-700/30">
@@ -485,7 +485,7 @@ const SuperAdminDashboard = () => {
                   </div>
                   <div className="p-4 rounded-lg bg-slate-800/50 text-center">
                     <p className="text-slate-400 text-xs">Investissements</p>
-                    <p className="text-xl font-bold text-purple-400">{formatCurrency(macroeconomic?.investissements_recus_fcfa || 0)}</p>
+                    <p className="text-xl font-bold text-purple-400">{formatCurrency(macroeconomic?.investissements_recus_xof || 0)}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-800/50 text-center">
                     <p className="text-slate-400 text-xs">Croissance Secteur</p>
@@ -605,7 +605,7 @@ const CarbonTab = ({ sustainability, eudr }) => (
             <div className="p-4 rounded-lg bg-emerald-900/20 border border-emerald-700/30">
               <p className="text-emerald-400 text-sm">Revenus Carbone Totaux</p>
               <p className="text-3xl font-bold text-white">
-                {formatCurrency(sustainability?.carbon_revenue_fcfa || 0)}
+                {formatCurrency(sustainability?.carbon_revenue_xof || 0)}
               </p>
               <p className="text-slate-400 text-sm mt-1">
                 ≈ ${sustainability?.carbon_revenue_usd || 0} USD
@@ -696,15 +696,15 @@ const MarketTab = ({ data }) => (
   <div className="space-y-6">
     <Card className="bg-slate-800 border-slate-700">
       <CardHeader>
-        <CardTitle className="text-white">Prix Moyens par Produit (FCFA/kg)</CardTitle>
+        <CardTitle className="text-white">Prix Moyens par Produit (XOF/kg)</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {Object.entries(data?.average_prices_fcfa_per_kg || {}).map(([product, price]) => (
+          {Object.entries(data?.average_prices_xof_per_kg || {}).map(([product, price]) => (
             <div key={product} className="p-4 rounded-lg bg-slate-700/30 text-center">
               <p className="text-slate-400 text-xs capitalize">{product.replace('_', ' ')}</p>
               <p className="text-2xl font-bold text-white">{price}</p>
-              <p className="text-emerald-400 text-xs">FCFA/kg</p>
+              <p className="text-emerald-400 text-xs">XOF/kg</p>
             </div>
           ))}
         </div>

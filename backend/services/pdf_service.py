@@ -248,7 +248,7 @@ class PDFReportGenerator:
             ['Crédits carbone générés', str(sustainability.get('carbon_credits_generated', 0))],
             ['Crédits vendus', str(sustainability.get('carbon_credits_sold', 0))],
             ['Crédits disponibles', str(sustainability.get('carbon_credits_available', 0))],
-            ['Revenus carbone', f"{sustainability.get('carbon_revenue_fcfa', 0):,.0f} FCFA"],
+            ['Revenus carbone', f"{sustainability.get('carbon_revenue_xof', 0):,.0f} XOF"],
             ['Score carbone moyen', f"{sustainability.get('average_carbon_score', 0)}/10"],
             ['Taux zéro déforestation', f"{sustainability.get('deforestation_free_rate', 0)}%"],
         ]
@@ -346,9 +346,9 @@ class PDFReportGenerator:
             ['Information', 'Valeur'],
             ['Lot concerné', dist.get('lot_name', 'N/A')],
             ['Date de distribution', datetime.now().strftime('%d/%m/%Y')],
-            ['Prime totale reçue', f"{dist.get('total_premium', 0):,.0f} FCFA"],
-            ['Commission coopérative (10%)', f"{dist.get('commission_amount', 0):,.0f} FCFA"],
-            ['Montant à distribuer', f"{dist.get('amount_distributed', 0):,.0f} FCFA"],
+            ['Prime totale reçue', f"{dist.get('total_premium', 0):,.0f} XOF"],
+            ['Commission coopérative (10%)', f"{dist.get('commission_amount', 0):,.0f} XOF"],
+            ['Montant à distribuer', f"{dist.get('amount_distributed', 0):,.0f} XOF"],
             ['Nombre de bénéficiaires', str(dist.get('beneficiaries_count', 0))],
             ['Statut', dist.get('status', 'N/A').replace('_', ' ').title()],
         ]
@@ -372,7 +372,7 @@ class PDFReportGenerator:
         if beneficiaries:
             story.append(Paragraph("Liste des Bénéficiaires", self.styles['SectionTitle']))
             
-            ben_data = [['Nom', 'Téléphone', 'Montant (FCFA)', 'Statut']]
+            ben_data = [['Nom', 'Téléphone', 'Montant (XOF)', 'Statut']]
             for ben in beneficiaries[:20]:  # Limit to 20
                 ben_data.append([
                     ben.get('name', 'N/A'),
@@ -473,7 +473,7 @@ class PDFReportGenerator:
         # Main payment amount - highlighted
         amount = payment.get('amount', 0)
         story.append(Paragraph(
-            f"<b>Montant reçu: {amount:,.0f} FCFA</b>",
+            f"<b>Montant reçu: {amount:,.0f} XOF</b>",
             ParagraphStyle(
                 'AmountStyle',
                 parent=self.styles['Normal'],
@@ -838,7 +838,7 @@ class PDFReportGenerator:
             ['Statistiques du mois', ''],
             ['Nombre de paiements:', str(summary.get('total_payments', 0))],
             ['Membres bénéficiaires:', str(summary.get('total_members', 0))],
-            ['Montant total:', f"{summary.get('total_amount_fcfa', 0):,} FCFA"],
+            ['Montant total:', f"{summary.get('total_amount_xof', 0):,} XOF"],
             ['Équivalent EUR:', f"{summary.get('total_amount_eur', 0):,} €"],
         ]
         
@@ -871,7 +871,7 @@ class PDFReportGenerator:
                     p.get('date', ''),
                     p.get('member_name', '')[:20],
                     p.get('phone', ''),
-                    f"{p.get('amount_fcfa', 0):,}",
+                    f"{p.get('amount_xof', 0):,}",
                     p.get('ref', '')[:12],
                     status_text
                 ])

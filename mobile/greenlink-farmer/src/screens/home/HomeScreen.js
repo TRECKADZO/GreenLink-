@@ -111,7 +111,7 @@ const HomeScreen = ({ navigation }) => {
         <InfoCard
           title="Prime estimée"
           value={(dashboard?.estimated_premium || 0).toLocaleString()}
-          unit="FCFA"
+          unit="XOF"
           icon="💰"
           color={COLORS.secondary}
         />

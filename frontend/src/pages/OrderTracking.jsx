@@ -297,7 +297,7 @@ const OrderTracking = () => {
           <div className="flex items-center justify-between text-gray-600">
             <span>{tracking.items_count} article(s)</span>
             <span className="text-xl font-bold text-[#2d5a4d]">
-              {tracking.total_amount?.toLocaleString()} FCFA
+              {tracking.total_amount?.toLocaleString()} XOF
             </span>
           </div>
         </Card>

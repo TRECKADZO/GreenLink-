@@ -314,7 +314,7 @@ const MyProducts = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="price">Prix (FCFA) *</Label>
+                    <Label htmlFor="price">Prix (XOF) *</Label>
                     <Input
                       id="price"
                       type="number"
@@ -473,7 +473,7 @@ const MyProducts = () => {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Prix:</span>
                       <span className="font-bold text-[#2d5a4d]">
-                        {product.price.toLocaleString()} FCFA/{product.unit}
+                        {product.price.toLocaleString()} XOF/{product.unit}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">

@@ -15,7 +15,7 @@ from carbon_business_model import (
     CarbonCreditCalculation,
     FARMER_SHARE_RATE,
     COOPERATIVE_SHARE_RATE,
-    USD_TO_FCFA
+    USD_TO_XOF
 )
 
 logger = logging.getLogger(__name__)
@@ -95,15 +95,15 @@ async def get_carbon_payments_dashboard(
         ]
     }).sort("payment_date", -1).to_list(100)
     
-    total_received_fcfa = sum(p.get('amount_fcfa', 0) for p in carbon_payments if p.get('status') == 'completed')
-    pending_fcfa = sum(p.get('amount_fcfa', 0) for p in carbon_payments if p.get('status') == 'pending')
+    total_received_xof = sum(p.get('amount_xof', 0) for p in carbon_payments if p.get('status') == 'completed')
+    pending_xof = sum(p.get('amount_xof', 0) for p in carbon_payments if p.get('status') == 'pending')
     
     # Calculer les projections annuelles
     # Prix moyen du marché: 25 USD/tonne
     price_per_tonne_usd = 25
     annual_gross_usd = total_tonnes_co2 * price_per_tonne_usd
     annual_farmer_share_usd = annual_gross_usd * 0.73 * FARMER_SHARE_RATE  # 73% net après coûts
-    annual_farmer_share_fcfa = annual_farmer_share_usd * USD_TO_FCFA
+    annual_farmer_share_xof = annual_farmer_share_usd * USD_TO_XOF
     
     # Prime par kg de cacao
     premium_data = calculate_farmer_premium_per_kg(
@@ -123,7 +123,7 @@ async def get_carbon_payments_dashboard(
                 payment_date = datetime.fromisoformat(payment_date.replace('Z', '+00:00'))
             if payment_date >= twelve_months_ago:
                 month_key = payment_date.strftime('%Y-%m')
-                monthly_payments[month_key] = monthly_payments.get(month_key, 0) + payment.get('amount_fcfa', 0)
+                monthly_payments[month_key] = monthly_payments.get(month_key, 0) + payment.get('amount_xof', 0)
     
     # Formater l'historique mensuel
     monthly_history = []
@@ -134,7 +134,7 @@ async def get_carbon_payments_dashboard(
         monthly_history.append({
             "month": month_date.strftime('%b %Y'),
             "month_key": month_key,
-            "amount_fcfa": monthly_payments.get(month_key, 0)
+            "amount_xof": monthly_payments.get(month_key, 0)
         })
     
     monthly_history.reverse()
@@ -151,7 +151,7 @@ async def get_carbon_payments_dashboard(
     upcoming_payments = [
         {
             "id": str(p['_id']),
-            "amount_fcfa": p.get('amount_fcfa', 0),
+            "amount_xof": p.get('amount_xof', 0),
             "scheduled_date": p.get('scheduled_date', p.get('created_at')),
             "status": p.get('status'),
             "source": p.get('source', 'Crédits Carbone')
@@ -174,10 +174,10 @@ async def get_carbon_payments_dashboard(
             "parcels": parcels_data
         },
         "earnings": {
-            "total_received_fcfa": total_received_fcfa,
-            "pending_fcfa": pending_fcfa,
-            "annual_projection_fcfa": round(annual_farmer_share_fcfa, 0),
-            "premium_per_kg_fcfa": premium_data['premium_per_kg_fcfa'],
+            "total_received_xof": total_received_xof,
+            "pending_xof": pending_xof,
+            "annual_projection_xof": round(annual_farmer_share_xof, 0),
+            "premium_per_kg_xof": premium_data['premium_per_kg_xof'],
             "payments_count": len([p for p in carbon_payments if p.get('status') == 'completed'])
         },
         "monthly_history": monthly_history,
@@ -185,7 +185,7 @@ async def get_carbon_payments_dashboard(
         "recent_payments": [
             {
                 "id": str(p['_id']),
-                "amount_fcfa": p.get('amount_fcfa', 0),
+                "amount_xof": p.get('amount_xof', 0),
                 "payment_date": p.get('payment_date'),
                 "status": p.get('status'),
                 "source": p.get('source', 'Prime Carbone'),
@@ -211,8 +211,8 @@ async def get_cooperative_carbon_dashboard(coop_user: dict):
     
     total_hectares = 0
     total_tonnes_co2 = 0
-    total_distributed_fcfa = 0
-    total_pending_fcfa = 0
+    total_distributed_xof = 0
+    total_pending_xof = 0
     
     member_stats = []
     
@@ -231,15 +231,15 @@ async def get_cooperative_carbon_dashboard(coop_user: dict):
             "status": "completed"
         }).to_list(100)
         
-        member_received = sum(p.get('amount_fcfa', 0) for p in member_payments)
-        total_distributed_fcfa += member_received
+        member_received = sum(p.get('amount_xof', 0) for p in member_payments)
+        total_distributed_xof += member_received
         
         member_stats.append({
             "member_id": member_id,
             "name": member.get('full_name', member.get('name')),
             "hectares": member_hectares,
             "tonnes_co2": round(member_tonnes, 2),
-            "received_fcfa": member_received
+            "received_xof": member_received
         })
     
     # Paiements de la coopérative (reçus de GreenLink)
@@ -248,11 +248,11 @@ async def get_cooperative_carbon_dashboard(coop_user: dict):
     }).sort("payment_date", -1).to_list(100)
     
     total_received_from_greenlink = sum(
-        p.get('total_amount_fcfa', 0) for p in coop_payments if p.get('status') == 'completed'
+        p.get('total_amount_xof', 0) for p in coop_payments if p.get('status') == 'completed'
     )
     
     # Commission de la coopérative
-    coop_commission_fcfa = total_received_from_greenlink * COOPERATIVE_SHARE_RATE
+    coop_commission_xof = total_received_from_greenlink * COOPERATIVE_SHARE_RATE
     
     return {
         "cooperative_info": {
@@ -266,16 +266,16 @@ async def get_cooperative_carbon_dashboard(coop_user: dict):
             "avg_rate_per_hectare": 3.5
         },
         "finances": {
-            "received_from_greenlink_fcfa": total_received_from_greenlink,
-            "distributed_to_members_fcfa": total_distributed_fcfa,
-            "cooperative_commission_fcfa": round(coop_commission_fcfa, 0),
-            "pending_distribution_fcfa": total_received_from_greenlink - total_distributed_fcfa - coop_commission_fcfa
+            "received_from_greenlink_xof": total_received_from_greenlink,
+            "distributed_to_members_xof": total_distributed_xof,
+            "cooperative_commission_xof": round(coop_commission_xof, 0),
+            "pending_distribution_xof": total_received_from_greenlink - total_distributed_xof - coop_commission_xof
         },
         "member_stats": sorted(member_stats, key=lambda x: x['tonnes_co2'], reverse=True)[:20],
         "recent_payments": [
             {
                 "id": str(p['_id']),
-                "total_amount_fcfa": p.get('total_amount_fcfa', 0),
+                "total_amount_xof": p.get('total_amount_xof', 0),
                 "payment_date": p.get('payment_date'),
                 "status": p.get('status'),
                 "members_paid": p.get('members_count', 0)
@@ -318,7 +318,7 @@ async def get_payment_history(
         "payments": [
             {
                 "id": str(p['_id']),
-                "amount_fcfa": p.get('amount_fcfa', 0),
+                "amount_xof": p.get('amount_xof', 0),
                 "amount_usd": p.get('amount_usd', 0),
                 "tonnes_co2": p.get('tonnes_co2', 0),
                 "payment_date": p.get('payment_date'),
@@ -405,7 +405,7 @@ async def get_carbon_projections(
     base_rate = 3.5  # t CO2/ha/an
     
     projections = []
-    cumulative_earnings_fcfa = 0
+    cumulative_earnings_xof = 0
     
     for year in range(1, years + 1):
         # Amélioration progressive des pratiques (+5% par an)
@@ -418,17 +418,17 @@ async def get_carbon_projections(
         # Calcul des revenus
         gross_usd = year_tonnes * year_price_usd
         farmer_share_usd = gross_usd * 0.73 * FARMER_SHARE_RATE
-        farmer_share_fcfa = farmer_share_usd * USD_TO_FCFA
+        farmer_share_xof = farmer_share_usd * USD_TO_XOF
         
-        cumulative_earnings_fcfa += farmer_share_fcfa
+        cumulative_earnings_xof += farmer_share_xof
         
         projections.append({
             "year": year,
             "year_label": f"Année {year}",
             "tonnes_co2": round(year_tonnes, 2),
             "price_per_tonne_usd": round(year_price_usd, 2),
-            "earnings_fcfa": round(farmer_share_fcfa, 0),
-            "cumulative_fcfa": round(cumulative_earnings_fcfa, 0)
+            "earnings_xof": round(farmer_share_xof, 0),
+            "cumulative_xof": round(cumulative_earnings_xof, 0)
         })
     
     return {
@@ -437,8 +437,8 @@ async def get_carbon_projections(
         "base_rate_per_hectare": base_rate,
         "projections": projections,
         "summary": {
-            "total_5_years_fcfa": round(cumulative_earnings_fcfa, 0),
-            "avg_annual_fcfa": round(cumulative_earnings_fcfa / years, 0),
+            "total_5_years_xof": round(cumulative_earnings_xof, 0),
+            "avg_annual_xof": round(cumulative_earnings_xof / years, 0),
             "improvement_potential": "Augmentez vos arbres d'ombrage pour améliorer votre score carbone"
         }
     }

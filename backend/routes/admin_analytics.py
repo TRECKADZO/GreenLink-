@@ -34,7 +34,7 @@ class CarbonMetrics(BaseModel):
     total_co2_captured: float
     total_credits_generated: int
     total_credits_sold: int
-    credits_revenue_fcfa: float
+    credits_revenue_xof: float
     average_carbon_score: float
     deforestation_free_rate: float
 
@@ -59,7 +59,7 @@ class TraceabilityMetrics(BaseModel):
 
 class MarketMetrics(BaseModel):
     total_transactions: int
-    total_volume_fcfa: float
+    total_volume_xof: float
     average_price_per_kg: dict
     premium_price_percentage: float
     export_ready_tonnage: float
@@ -143,7 +143,7 @@ async def get_strategic_dashboard(
     return {
         "generated_at": datetime.utcnow().isoformat(),
         "period": period,
-        "currency": "FCFA",
+        "currency": "XOF",
         
         # === SECTION 1: PRODUCTION NATIONALE ===
         "production": {
@@ -168,7 +168,7 @@ async def get_strategic_dashboard(
             "carbon_credits_generated": total_carbon_credits,
             "carbon_credits_sold": sold_credits,
             "carbon_credits_available": total_carbon_credits - sold_credits,
-            "carbon_revenue_fcfa": carbon_revenue,
+            "carbon_revenue_xof": carbon_revenue,
             "carbon_revenue_usd": round(carbon_revenue / 600, 2),
             "average_carbon_score": round(sum(p.get('carbon_score', 0) for p in parcels) / max(len(parcels), 1), 2),
             "deforestation_free_rate": 98.5,  # High compliance
@@ -209,7 +209,7 @@ async def get_strategic_dashboard(
             "youth_participation_rate": round(youth_farmers / max(len(farmers), 1) * 100, 2),
             "farmers_with_bank_account": farmers_banked,
             "financial_inclusion_rate": round(farmers_banked / max(len(farmers), 1) * 100, 2),
-            "average_annual_income_fcfa": 850000,
+            "average_annual_income_xof": 850000,
             "income_increase_vs_2023": 23.5,
             "poverty_reduction_impact": "Fort",
             "jobs_created_direct": len(farmers),
@@ -223,9 +223,9 @@ async def get_strategic_dashboard(
             "description": "Pour Bourse Café-Cacao, Acheteurs Internationaux, OMC",
             "total_transactions": len(orders),
             "completed_transactions": completed_orders,
-            "total_volume_fcfa": total_order_value,
+            "total_volume_xof": total_order_value,
             "total_volume_usd": round(total_order_value / 600, 2),
-            "average_prices_fcfa_per_kg": {
+            "average_prices_xof_per_kg": {
                 "cacao_premium": 1450,
                 "cacao_standard": 1200,
                 "cafe_arabica": 2800,
@@ -252,7 +252,7 @@ async def get_strategic_dashboard(
             "devises_generees_usd": round(total_order_value / 600 * 0.65, 2),
             "balance_commerciale_impact": "Positif",
             "emploi_secteur_agricole": len(farmers) + len(farmers) * 3,
-            "investissements_recus_fcfa": 2500000000,
+            "investissements_recus_xof": 2500000000,
             "taux_croissance_secteur": 8.7,
             "productivite_moyenne": round(sum(production_by_crop.values()) / max(len(farmers), 1), 2)
         },
@@ -265,8 +265,8 @@ async def get_strategic_dashboard(
             "total_members": len(coop_members),
             "average_members_per_coop": round(len(coop_members) / max(len(cooperatives), 1), 1),
             "certified_cooperatives": int(len(cooperatives) * 0.75),
-            "total_premiums_distributed_fcfa": 45000000,
-            "average_premium_per_farmer_fcfa": round(45000000 / max(len(coop_members), 1), 0),
+            "total_premiums_distributed_xof": 45000000,
+            "average_premium_per_farmer_xof": round(45000000 / max(len(coop_members), 1), 0),
             "cooperatives_with_warehouse": int(len(cooperatives) * 0.60),
             "digital_payment_adoption": 78.5
         }
@@ -347,8 +347,8 @@ async def get_carbon_report(current_user: dict = Depends(get_admin_user)):
             "credits_generated": len(carbon_credits),
             "credits_sold": len([c for c in carbon_credits if c.get('status') == 'sold']),
             "credits_available": len([c for c in carbon_credits if c.get('status') != 'sold']),
-            "total_revenue_fcfa": sum(p.get('total_amount', 0) for p in carbon_purchases),
-            "average_price_per_credit_fcfa": 15000,
+            "total_revenue_xof": sum(p.get('total_amount', 0) for p in carbon_purchases),
+            "average_price_per_credit_xof": 15000,
             "market_trend": "Hausse +8%"
         },
         "sustainability_indicators": {
@@ -409,9 +409,9 @@ async def get_social_impact_report(current_user: dict = Depends(get_admin_user))
             "credit_access_rate": 25.0
         },
         "income_improvement": {
-            "average_annual_income_fcfa": 850000,
+            "average_annual_income_xof": 850000,
             "income_increase_percentage": 23.5,
-            "premium_income_fcfa": 125000,
+            "premium_income_xof": 125000,
             "below_poverty_line_reduction": "18% → 9%"
         },
         "capacity_building": {
@@ -436,27 +436,27 @@ async def get_trade_report(current_user: dict = Depends(get_admin_user)):
         "generated_at": datetime.utcnow().isoformat(),
         "trade_volume": {
             "total_transactions": len(orders),
-            "total_value_fcfa": total_volume,
+            "total_value_xof": total_volume,
             "total_value_usd": round(total_volume / 600, 2),
             "total_value_eur": round(total_volume / 655, 2),
-            "average_transaction_fcfa": round(total_volume / max(len(orders), 1), 0)
+            "average_transaction_xof": round(total_volume / max(len(orders), 1), 0)
         },
         "by_commodity": {
             "cacao": {
                 "volume_tonnes": round(sum(h.get('quantity_kg', 0) for h in harvests if 'cacao' in h.get('crop_type', '').lower()) / 1000, 2),
-                "value_fcfa": int(total_volume * 0.70),
+                "value_xof": int(total_volume * 0.70),
                 "average_price_kg": 1350,
                 "quality_premium_percentage": 18.5
             },
             "cafe": {
                 "volume_tonnes": round(sum(h.get('quantity_kg', 0) for h in harvests if 'cafe' in h.get('crop_type', '').lower()) / 1000, 2),
-                "value_fcfa": int(total_volume * 0.20),
+                "value_xof": int(total_volume * 0.20),
                 "average_price_kg": 2200,
                 "quality_premium_percentage": 15.0
             },
             "anacarde": {
                 "volume_tonnes": round(sum(h.get('quantity_kg', 0) for h in harvests if 'anacarde' in h.get('crop_type', '').lower()) / 1000, 2),
-                "value_fcfa": int(total_volume * 0.10),
+                "value_xof": int(total_volume * 0.10),
                 "average_price_kg": 850,
                 "quality_premium_percentage": 12.0
             }

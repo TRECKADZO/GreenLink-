@@ -408,7 +408,7 @@ const MembersPage = () => {
                 </div>
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-500">Primes totales</p>
-                  <p className="font-medium">{(selectedMember.total_premium_earned || 0).toLocaleString()} FCFA</p>
+                  <p className="font-medium">{(selectedMember.total_premium_earned || 0).toLocaleString()} XOF</p>
                 </div>
               </div>
 

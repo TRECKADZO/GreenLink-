@@ -64,7 +64,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
     const carbonCredits = (hectares * carbonScore * 0.8).toFixed(1);
     
     // Calculate premium (10% bonus if score >= 7)
-    const baseRevenue = hectares * 850 * 1000; // FCFA per hectare per year
+    const baseRevenue = hectares * 850 * 1000; // XOF per hectare per year
     const premiumRate = carbonScore >= 7 ? 0.10 : 0;
     const carbonPremium = baseRevenue * premiumRate;
     
@@ -332,7 +332,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                     <span className="text-sm text-blue-700">Revenu estimé/an</span>
                   </div>
                   <p className="text-2xl font-bold text-blue-800">
-                    {(result.estimatedRevenue / 1000000).toFixed(1)}M <span className="text-sm">FCFA</span>
+                    {(result.estimatedRevenue / 1000000).toFixed(1)}M <span className="text-sm">XOF</span>
                   </p>
                 </Card>
                 
@@ -347,7 +347,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                     {result.isEligible 
                       ? `+${(result.estimatedPremium / 1000000).toFixed(1)}M` 
                       : '0'
-                    } <span className="text-sm">FCFA</span>
+                    } <span className="text-sm">XOF</span>
                   </p>
                 </Card>
               </div>

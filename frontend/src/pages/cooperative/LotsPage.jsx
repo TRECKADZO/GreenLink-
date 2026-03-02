@@ -255,7 +255,7 @@ const LotsPage = () => {
                             <DollarSign className="h-4 w-4 text-amber-500" />
                             <div>
                               <p className="text-sm text-gray-500">Valeur</p>
-                              <p className="font-medium">{lot.total_value.toLocaleString()} FCFA</p>
+                              <p className="font-medium">{lot.total_value.toLocaleString()} XOF</p>
                             </div>
                           </div>
                         )}
@@ -463,7 +463,7 @@ const LotsPage = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="price_per_kg">Prix/kg (FCFA) *</Label>
+                  <Label htmlFor="price_per_kg">Prix/kg (XOF) *</Label>
                   <Input
                     id="price_per_kg"
                     type="number"
@@ -474,7 +474,7 @@ const LotsPage = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="carbon_premium_per_kg">Prime Carbone/kg (FCFA) *</Label>
+                  <Label htmlFor="carbon_premium_per_kg">Prime Carbone/kg (XOF) *</Label>
                   <Input
                     id="carbon_premium_per_kg"
                     type="number"
@@ -489,11 +489,11 @@ const LotsPage = () => {
                 <div className="p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-green-800">
                     <strong>Valeur totale:</strong>{' '}
-                    {(parseFloat(saleData.actual_tonnage || 0) * 1000 * parseFloat(saleData.price_per_kg || 0)).toLocaleString()} FCFA
+                    {(parseFloat(saleData.actual_tonnage || 0) * 1000 * parseFloat(saleData.price_per_kg || 0)).toLocaleString()} XOF
                   </p>
                   <p className="text-sm text-green-800 mt-1">
                     <strong>Primes carbone:</strong>{' '}
-                    {(parseFloat(saleData.actual_tonnage || 0) * 1000 * parseFloat(saleData.carbon_premium_per_kg || 0)).toLocaleString()} FCFA
+                    {(parseFloat(saleData.actual_tonnage || 0) * 1000 * parseFloat(saleData.carbon_premium_per_kg || 0)).toLocaleString()} XOF
                   </p>
                 </div>
               )}

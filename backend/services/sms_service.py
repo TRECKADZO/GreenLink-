@@ -25,9 +25,9 @@ SMS_TEMPLATES = {
         "dioula": "GreenLink: {name}, i ka parcelle {parcel_id} carbone score ye {score}/10. A ka nyi! 10% prime bè i soro. *123*45#"
     },
     "harvest_payment": {
-        "francais": "GreenLink: Paiement de {amount} FCFA envoyé sur votre {payment_method}. Ref: {ref}. Prime carbone incluse: {premium} FCFA.",
-        "baoule": "GreenLink: Sika {amount} FCFA ko wo {payment_method} su. Ref: {ref}. Carbone prime: {premium} FCFA.",
-        "dioula": "GreenLink: Wari {amount} FCFA bila i ka {payment_method} la. Ref: {ref}. Carbone prime: {premium} FCFA."
+        "francais": "GreenLink: Paiement de {amount} XOF envoyé sur votre {payment_method}. Ref: {ref}. Prime carbone incluse: {premium} XOF.",
+        "baoule": "GreenLink: Sika {amount} XOF ko wo {payment_method} su. Ref: {ref}. Carbone prime: {premium} XOF.",
+        "dioula": "GreenLink: Wari {amount} XOF bila i ka {payment_method} la. Ref: {ref}. Carbone prime: {premium} XOF."
     },
     "parcel_verified": {
         "francais": "GreenLink: Votre parcelle {parcel_id} a été vérifiée! Score carbone: {score}/10. {premium_msg}",
@@ -35,9 +35,9 @@ SMS_TEMPLATES = {
         "dioula": "GreenLink: I ka parcelle {parcel_id} verification tèmèna! Score: {score}/10. {premium_msg}"
     },
     "weekly_summary": {
-        "francais": "GreenLink Résumé: {parcels} parcelles, {credits} crédits CO2, {revenue} FCFA ce mois. Score moyen: {avg_score}/10. Continuez!",
-        "baoule": "GreenLink: Parcelle {parcels}, CO2 {credits}, sika {revenue} FCFA. Score {avg_score}/10. A ti kpa!",
-        "dioula": "GreenLink: Parcelle {parcels}, CO2 {credits}, wari {revenue} FCFA. Score {avg_score}/10. A ka nyi!"
+        "francais": "GreenLink Résumé: {parcels} parcelles, {credits} crédits CO2, {revenue} XOF ce mois. Score moyen: {avg_score}/10. Continuez!",
+        "baoule": "GreenLink: Parcelle {parcels}, CO2 {credits}, sika {revenue} XOF. Score {avg_score}/10. A ti kpa!",
+        "dioula": "GreenLink: Parcelle {parcels}, CO2 {credits}, wari {revenue} XOF. Score {avg_score}/10. A ka nyi!"
     }
 }
 

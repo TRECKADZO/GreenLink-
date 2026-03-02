@@ -265,7 +265,7 @@ const CheckoutPage = () => {
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-600">Montant</span>
                   <span className="text-2xl font-bold text-orange-600">
-                    {paymentStatus.amount?.toLocaleString()} FCFA
+                    {paymentStatus.amount?.toLocaleString()} XOF
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
@@ -354,7 +354,7 @@ const CheckoutPage = () => {
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-gray-500">Montant</span>
                   <span className="font-bold text-[#2d5a4d]">
-                    {paymentStatus.amount?.toLocaleString()} FCFA
+                    {paymentStatus.amount?.toLocaleString()} XOF
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -413,7 +413,7 @@ const CheckoutPage = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-[#2d5a4d]">
-                        {order.total_amount.toLocaleString()} FCFA
+                        {order.total_amount.toLocaleString()} XOF
                       </p>
                       <Badge className="bg-yellow-100 text-yellow-700">
                         Paiement à la livraison
@@ -649,7 +649,7 @@ const CheckoutPage = () => {
                           {item.product.name}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {item.quantity} x {item.product.price.toLocaleString()} FCFA
+                          {item.quantity} x {item.product.price.toLocaleString()} XOF
                         </p>
                       </div>
                       <p className="font-semibold text-gray-900 text-sm">
@@ -662,7 +662,7 @@ const CheckoutPage = () => {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-gray-600">
                     <span>Sous-total</span>
-                    <span>{cart.total.toLocaleString()} FCFA</span>
+                    <span>{cart.total.toLocaleString()} XOF</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>Livraison</span>
@@ -670,7 +670,7 @@ const CheckoutPage = () => {
                   </div>
                   <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t">
                     <span>Total</span>
-                    <span className="text-[#2d5a4d]">{cart.total.toLocaleString()} FCFA</span>
+                    <span className="text-[#2d5a4d]">{cart.total.toLocaleString()} XOF</span>
                   </div>
                 </div>
 

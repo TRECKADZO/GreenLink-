@@ -150,7 +150,7 @@ const BuyerOrders = () => {
                             {status.label}
                           </Badge>
                           <p className="text-xl font-bold text-[#2d5a4d] mt-2">
-                            {order.total_amount.toLocaleString()} FCFA
+                            {order.total_amount.toLocaleString()} XOF
                           </p>
                         </div>
                       </div>
@@ -167,11 +167,11 @@ const BuyerOrders = () => {
                               <div>
                                 <p className="font-medium text-gray-900">{item.product_name}</p>
                                 <p className="text-sm text-gray-500">
-                                  {item.quantity} x {item.unit_price.toLocaleString()} FCFA/{item.unit}
+                                  {item.quantity} x {item.unit_price.toLocaleString()} XOF/{item.unit}
                                 </p>
                               </div>
                               <p className="font-semibold text-gray-900">
-                                {item.total.toLocaleString()} FCFA
+                                {item.total.toLocaleString()} XOF
                               </p>
                             </div>
                           ))}

@@ -169,14 +169,14 @@ export default function CoopDashboardScreen({ navigation }) {
               <Ionicons name="arrow-down-circle" size={20} color="#4CAF50" />
               <Text style={styles.financialLabel}>Reçu</Text>
               <Text style={styles.financialValue}>
-                {(financial?.total_premiums_received || 0).toLocaleString()} FCFA
+                {(financial?.total_premiums_received || 0).toLocaleString()} XOF
               </Text>
             </View>
             <View style={styles.financialItem}>
               <Ionicons name="arrow-up-circle" size={20} color="#2196F3" />
               <Text style={styles.financialLabel}>Distribué</Text>
               <Text style={styles.financialValue}>
-                {(financial?.total_premiums_distributed || 0).toLocaleString()} FCFA
+                {(financial?.total_premiums_distributed || 0).toLocaleString()} XOF
               </Text>
             </View>
           </View>
@@ -184,7 +184,7 @@ export default function CoopDashboardScreen({ navigation }) {
             <View style={styles.pendingBanner}>
               <Ionicons name="time" size={16} color="#FF9800" />
               <Text style={styles.pendingText}>
-                {financial.pending_distribution.toLocaleString()} FCFA en attente
+                {financial.pending_distribution.toLocaleString()} XOF en attente
               </Text>
             </View>
           )}

@@ -136,7 +136,7 @@ async def declare_harvest(
     await db.notifications.insert_one({
         "user_id": current_user["_id"],
         "title": "Récolte déclarée",
-        "message": f"Récolte de {harvest.quantity_kg} kg enregistrée. Prime carbone: {harvest_dict['carbon_premium']:,.0f} FCFA",
+        "message": f"Récolte de {harvest.quantity_kg} kg enregistrée. Prime carbone: {harvest_dict['carbon_premium']:,.0f} XOF",
         "type": "harvest",
         "action_url": f"/farmer/harvests/{str(result.inserted_id)}",
         "created_at": datetime.utcnow(),
@@ -149,7 +149,7 @@ async def declare_harvest(
             db=db,
             user_id=current_user["_id"],
             title="Récolte enregistrée 🌾",
-            body=f"{harvest.quantity_kg} kg déclarés. Prime carbone: {harvest_dict['carbon_premium']:,.0f} FCFA",
+            body=f"{harvest.quantity_kg} kg déclarés. Prime carbone: {harvest_dict['carbon_premium']:,.0f} XOF",
             data={
                 "type": "harvest_created",
                 "harvest_id": str(result.inserted_id),
@@ -189,7 +189,7 @@ async def request_payment(
     await db.notifications.insert_one({
         "user_id": current_user["_id"],
         "title": "Paiement reçu",
-        "message": f"Paiement de {payment.amount:,.0f} FCFA reçu via {payment.payment_method}. Ref: {transaction_id}",
+        "message": f"Paiement de {payment.amount:,.0f} XOF reçu via {payment.payment_method}. Ref: {transaction_id}",
         "type": "payment",
         "created_at": datetime.utcnow(),
         "is_read": False
@@ -218,7 +218,7 @@ async def request_payment(
             db=db,
             user_id=current_user["_id"],
             title="Paiement reçu 💰",
-            body=f"{payment.amount:,.0f} FCFA reçus via {payment.payment_method.replace('_', ' ').title()}",
+            body=f"{payment.amount:,.0f} XOF reçus via {payment.payment_method.replace('_', ' ').title()}",
             data={
                 "type": "payment_received",
                 "amount": payment.amount,
@@ -234,7 +234,7 @@ async def request_payment(
         "success": True,
         "transaction_id": transaction_id,
         "amount": payment.amount,
-        "message": f"Paiement de {payment.amount:,.0f} FCFA envoyé à {payment.phone_number}"
+        "message": f"Paiement de {payment.amount:,.0f} XOF envoyé à {payment.phone_number}"
     }
 
 @router.get("/farmer/dashboard")
