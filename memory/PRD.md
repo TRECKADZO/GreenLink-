@@ -2,29 +2,34 @@
 
 ## Latest Updates - March 2, 2026 (Session 8 - SSRTE Agent System)
 
-### ✅ CARTE GÉOLOCALISATION AGENTS TEMPS RÉEL
+### ✅ CARTE GÉOLOCALISATION AGENTS TEMPS RÉEL + ZONES DE COUVERTURE
 
 **Routes Frontend:**
-- `/admin/agents-map` - Carte Leaflet OpenStreetMap
+- `/admin/agents-map` - Carte Leaflet OpenStreetMap avec zones
 - `/admin/geolocation` - Alias carte principale
-- `/admin/agents-map-simple` - Version simplifiée (sans Leaflet)
 
-**Carte Interactive Leaflet:**
+**Carte Interactive Leaflet avec Zones:**
 - Vraie carte OpenStreetMap de la Côte d'Ivoire
-- Villes de référence: Abidjan, Yamoussoukro, Bouaké, Daloa, Korhogo, San-Pédro, Man, Gagnoa, etc.
-- Marqueurs personnalisés colorés par type d'agent
-- Animation pulse pour agents en ligne
-- Cercles pour les villes principales (capitale en orange, politique en violet)
-- Zoom interactif et navigation
-- Popups avec détails agent (position, batterie, précision)
-- Centrage automatique sur agent sélectionné
+- **10 zones de couverture** (polygones colorés) pour les régions cacaoyères:
+  - Zone Gagnoa (vert), Zone Daloa (bleu), Zone Soubré (orange)
+  - Zone San-Pédro (rouge), Zone Divo (violet), Zone Abengourou (cyan)
+  - Zone Agboville (rose), Zone Bouaflé (teal), Zone Issia (orange), Zone Duékoué (lime)
+- Zones assignées aux coopératives avec stats (producteurs, agents)
+- Polygones interactifs avec hover et popups
+- Zones non assignées en pointillés
+- Toggle pour afficher/masquer zones et villes
 
-**Légende:**
-- 🔵 Agent Terrain
-- 🟢 Auditeur Carbone  
-- 🔵 Agent SSRTE (cyan)
-- ⭕ Bordure verte = En ligne
-- ⭕ Bordure grise = Hors ligne
+**API Backend (`/api/zones/`):**
+- `GET /coverage` - Liste toutes les zones avec coopératives
+- `POST /coverage` - Créer une zone personnalisée
+- `PUT /coverage/{zone_id}/assign` - Assigner zone à coopérative
+- `GET /coverage/stats` - Statistiques de couverture
+- `GET /regions` - Liste des régions de Côte d'Ivoire
+
+**Légende mise à jour:**
+- Types d'agents (🔵 Terrain, 🟢 Carbone, 🔵 SSRTE)
+- Statut (⭕ En ligne, ⭕ Hors ligne)
+- Zones (▢ Assignée, ⬜ Non assignée en pointillés)
 
 **API Backend (`/api/agents/geo/`):**
 - `POST /update` - Mise à jour position GPS agent

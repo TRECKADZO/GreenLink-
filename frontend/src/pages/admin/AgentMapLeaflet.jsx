@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Switch } from '../../components/ui/switch';
 import { toast } from 'sonner';
 import {
-  MapPin, Users, Wifi, WifiOff, Battery, Navigation,
+  MapPin, Users, Wifi, WifiOff, Battery,
   RefreshCw, Maximize2, Minimize2, Filter, Clock,
-  Activity, User, Building, AlertTriangle, Layers
+  Activity, User, Building, Layers, Map as MapIcon
 } from 'lucide-react';
 
 // Fix Leaflet default marker icon issue
@@ -103,9 +104,24 @@ const AgentMapLeaflet = () => {
   const [mapCenter, setMapCenter] = useState([7.539989, -5.547080]); // Centre Côte d'Ivoire
   const [mapZoom, setMapZoom] = useState(7);
   const [showRegions, setShowRegions] = useState(true);
+  const [showZones, setShowZones] = useState(true);
+  const [coverageZones, setCoverageZones] = useState([]);
+  const [selectedZone, setSelectedZone] = useState(null);
   const wsRef = useRef(null);
   
   const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+  // Charger les zones de couverture
+  const loadCoverageZones = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/zones/coverage`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCoverageZones(response.data.zones || []);
+    } catch (error) {
+      console.error('Error loading coverage zones:', error);
+    }
+  }, [API_URL, token]);
 
   // Charger les positions des agents
   const loadAgents = useCallback(async () => {
@@ -177,6 +193,7 @@ const AgentMapLeaflet = () => {
 
   useEffect(() => {
     loadAgents();
+    loadCoverageZones();
     connectWebSocket();
     const interval = setInterval(loadAgents, 30000);
     
@@ -184,7 +201,7 @@ const AgentMapLeaflet = () => {
       clearInterval(interval);
       if (wsRef.current) wsRef.current.close();
     };
-  }, [loadAgents, connectWebSocket]);
+  }, [loadAgents, loadCoverageZones, connectWebSocket]);
 
   const getAgentTypeLabel = (type) => {
     const labels = {
@@ -285,8 +302,19 @@ const AgentMapLeaflet = () => {
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => setShowZones(!showZones)}
+            className={showZones ? 'text-emerald-400' : 'text-slate-400'}
+            title="Zones de couverture"
+          >
+            <MapIcon className="h-5 w-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowRegions(!showRegions)}
-            className={showRegions ? 'text-emerald-400' : 'text-slate-400'}
+            className={showRegions ? 'text-blue-400' : 'text-slate-400'}
+            title="Villes de référence"
           >
             <Layers className="h-5 w-5" />
           </Button>
@@ -309,14 +337,14 @@ const AgentMapLeaflet = () => {
             {fullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
           </Button>
           
-          <Button variant="ghost" size="sm" onClick={loadAgents} className="text-slate-400">
+          <Button variant="ghost" size="sm" onClick={() => { loadAgents(); loadCoverageZones(); }} className="text-slate-400">
             <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
         <Card className="bg-slate-800/50 border-slate-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -357,12 +385,24 @@ const AgentMapLeaflet = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-xs text-slate-400">Zones</p>
+                <p className="text-2xl font-bold text-amber-400">{coverageZones.length}</p>
+              </div>
+              <MapIcon className="h-8 w-8 text-amber-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-800/50 border-slate-700">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-xs text-slate-400">Couverture</p>
                 <p className="text-2xl font-bold text-white">
                   {stats.total > 0 ? Math.round((stats.online / stats.total) * 100) : 0}%
                 </p>
               </div>
-              <MapPin className="h-8 w-8 text-amber-500" />
+              <MapPin className="h-8 w-8 text-cyan-500" />
             </div>
           </CardContent>
         </Card>
@@ -412,6 +452,50 @@ const AgentMapLeaflet = () => {
                       </div>
                     </Popup>
                   </Circle>
+                ))}
+                
+                {/* Zones de couverture des coopératives */}
+                {showZones && coverageZones.map((zone, idx) => (
+                  <Polygon
+                    key={`zone-${idx}`}
+                    positions={zone.coordinates.map(c => [c.lat, c.lng])}
+                    pathOptions={{
+                      color: zone.color,
+                      fillColor: zone.color,
+                      fillOpacity: selectedZone?.name === zone.name ? 0.4 : 0.2,
+                      weight: selectedZone?.name === zone.name ? 3 : 2,
+                      dashArray: zone.cooperative_id ? null : '5, 5'
+                    }}
+                    eventHandlers={{
+                      click: () => setSelectedZone(zone),
+                      mouseover: (e) => e.target.setStyle({ fillOpacity: 0.4 }),
+                      mouseout: (e) => e.target.setStyle({ fillOpacity: selectedZone?.name === zone.name ? 0.4 : 0.2 })
+                    }}
+                  >
+                    <Popup>
+                      <div className="min-w-[220px]">
+                        <div className="font-bold text-lg" style={{ color: zone.color }}>{zone.name}</div>
+                        <div className="text-sm text-gray-600">{zone.region} • {zone.department}</div>
+                        <hr className="my-2" />
+                        {zone.cooperative_name ? (
+                          <div className="text-sm">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Building className="h-3 w-3" />
+                              <strong>{zone.cooperative_name}</strong>
+                            </div>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              <div>👨‍🌾 {zone.farmers_count || 0} producteurs</div>
+                              <div>👷 {zone.agents_count || 0} agents terrain</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-orange-600 italic">
+                            Zone non assignée
+                          </div>
+                        )}
+                      </div>
+                    </Popup>
+                  </Polygon>
                 ))}
                 
                 {/* Marqueurs des agents */}
@@ -466,7 +550,31 @@ const AgentMapLeaflet = () => {
               <div className="w-4 h-4 rounded-full border-2 border-slate-500 bg-transparent opacity-50"></div>
               <span className="text-xs text-slate-300">Hors ligne</span>
             </div>
+            <div className="border-l border-slate-600 pl-4 ml-2">
+              <span className="text-xs text-slate-400">Zones:</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-emerald-500/30 border border-emerald-500"></div>
+              <span className="text-xs text-slate-300">Assignée</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded border border-dashed border-slate-400"></div>
+              <span className="text-xs text-slate-300">Non assignée</span>
+            </div>
           </div>
+          
+          {/* Zone info on hover */}
+          {selectedZone && (
+            <div className="mt-2 p-2 rounded bg-slate-700/80">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: selectedZone.color }}></div>
+                <span className="text-sm text-white font-medium">{selectedZone.name}</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                {selectedZone.cooperative_name || 'Non assignée'} • {selectedZone.farmers_count || 0} producteurs
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Agent List */}

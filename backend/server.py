@@ -30,6 +30,7 @@ from routes import field_agent_dashboard
 from routes import carbon_auditor
 from routes import ussd
 from routes import agent_geolocation  # Agent GPS tracking
+from routes import coverage_zones  # Coverage zones for cooperatives
 from services.push_notifications import router as push_notifications_router
 
 
@@ -131,6 +132,7 @@ app.include_router(field_agent_dashboard.router)
 app.include_router(carbon_auditor.router)
 app.include_router(ussd.router)
 app.include_router(agent_geolocation.router)
+app.include_router(coverage_zones.router)
 
 app.add_middleware(
     CORSMiddleware,
