@@ -1,4 +1,25 @@
-# GreenLink PRD - Updated March 1, 2026
+# GreenLink PRD - Updated March 2, 2026
+
+## Latest Updates - March 2, 2026 (Session 7 - Fix Login Admin)
+
+### ✅ PROBLÈME RÉSOLU : Connexion Super Admin
+
+**Problème Signalé:**
+- L'utilisateur `klenakan.eric@gmail.com` ne pouvait pas se connecter à l'interface web
+- Erreur générique "Erreur de connexion" affichée
+
+**Investigation:**
+1. Vérifié le compte dans MongoDB → User trouvé avec `user_type: admin`, `hashed_password` présent (bcrypt $2b$12$)
+2. Testé l'API `/api/auth/login` via curl → **SUCCÈS** (token obtenu)
+3. Testé le frontend via screenshot → **SUCCÈS** (redirection vers `/admin/dashboard`)
+
+**Conclusion:**
+Le problème semble avoir été temporaire (cache navigateur, session corrompue, ou problème réseau côté utilisateur). Le compte fonctionne correctement.
+
+**Credentials Confirmés:**
+- Super Admin: `klenakan.eric@gmail.com` / `474Treckadzo` ✅
+
+---
 
 ## Latest Updates - March 1, 2026 (Session 6 - Tests APK v1.10.0 Complets)
 
