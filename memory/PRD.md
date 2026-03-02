@@ -19,10 +19,14 @@ Le problème était lié au hash du mot de passe dans la base de données. La so
 **Cause racine identifiée et corrigée :**
 - **Problème** : Incompatibilité entre `passlib 1.7.4` et `bcrypt 4.1.x` - passlib essayait d'accéder à `bcrypt.__about__.__version__` qui n'existe plus dans bcrypt 4.x
 - **Symptôme** : Warning constant `AttributeError: module 'bcrypt' has no attribute '__about__'` pouvant causer des problèmes de timing lors de la vérification
-- **Solution appliquée** :
+- **Solutions appliquées** :
   1. Downgrade de bcrypt de 4.1.3 vers 4.0.1 (version compatible)
   2. Standardisation du hachage dans `carbon_auditor.py` pour utiliser `auth_utils.get_password_hash()` au lieu de `bcrypt.hashpw()` directement
-- **Statut** : ✅ Corrigé - plus de warnings bcrypt dans les logs
+  3. **NOUVEAU: Système Self-Healing pour comptes admin** - régénère automatiquement le hash si la vérification échoue mais le mot de passe en clair est correct
+  4. **NOUVEAU: Endpoints de diagnostic** :
+     - `GET /api/auth/admin/password-health/{email}` - vérifie l'état du hash
+     - `POST /api/auth/admin/repair-password` - répare manuellement le hash
+- **Statut** : ✅ Corrigé - système robuste pour le déploiement
 
 **Credentials Confirmés:**
 - Super Admin: `klenakan.eric@gmail.com` / `474Treckadzo` ✅
