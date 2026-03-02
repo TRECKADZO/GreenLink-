@@ -1,6 +1,45 @@
 # GreenLink PRD - Updated March 2, 2026
 
-## Latest Updates - March 2, 2026 (Session 8 - Super Admin Dashboard Enrichment)
+## Latest Updates - March 2, 2026 (Session 8 - SSRTE Agent System)
+
+### ✅ SYSTÈME AGENT SSRTE COMPLET IMPLÉMENTÉ
+
+**Backend - Routes API SSRTE (/api/ssrte/*):**
+- `/api/ssrte/agents/create` - Création d'agents SSRTE
+- `/api/ssrte/agents` - Liste des agents SSRTE
+- `/api/ssrte/visits/create` - Enregistrer une visite de ménage
+- `/api/ssrte/visits` - Lister les visites
+- `/api/ssrte/visits/{visit_id}` - Détails d'une visite
+- `/api/ssrte/cases/create` - Créer un cas de travail des enfants
+- `/api/ssrte/cases` - Lister les cas
+- `/api/ssrte/cases/{case_id}` - Détails d'un cas
+- `/api/ssrte/cases/{case_id}/status` - Mettre à jour le statut
+- `/api/ssrte/remediations/create` - Créer un plan de remédiation
+- `/api/ssrte/remediations` - Lister les remédiations
+- `/api/ssrte/stats/overview` - Statistiques globales SSRTE
+- `/api/ssrte/stats/by-zone` - Statistiques par zone
+- `/api/ssrte/reports/pdf/{cooperative_id}` - Rapport PDF
+- `/api/ssrte/reports/csv/{cooperative_id}` - Export CSV
+
+**Frontend Web - Dashboard Agent SSRTE:**
+- Route: `/ssrte/dashboard` et `/agent/ssrte`
+- Fichier: `/app/frontend/src/pages/ssrte/SSRTEAgentDashboard.jsx`
+- Fonctionnalités:
+  - Métriques: Visites Total, Haut Risque, Cas Identifiés, En Cours, Cas Résolus, Remédiations
+  - Onglets: Tableau de Bord, Visites, Cas
+  - Formulaire nouvelle visite avec détails des enfants
+  - Actions rapides: Nouvelle visite, Voir cas, Export CSV
+
+**Mobile - Écrans Agent SSRTE:**
+- Dashboard: `/app/mobile/greenlink-farmer/src/screens/field-agent/SSRTEAgentDashboard.js`
+- Formulaire visite: `/app/mobile/greenlink-farmer/src/screens/field-agent/SSRTEVisitFormScreen.js`
+- Support offline avec synchronisation automatique
+
+**Tests passés:**
+- Backend: 100% (17/17 tests)
+- Frontend: 95% (Dashboard, onglets, formulaires)
+
+---
 
 ### ✅ ENRICHISSEMENT MÉTRIQUES SUPER ADMIN
 

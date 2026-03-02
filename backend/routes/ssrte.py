@@ -308,13 +308,13 @@ async def list_visits(
     return {
         "visits": [{
             "id": str(v["_id"]),
-            "member_name": v.get("member_name"),
+            "member_name": v.get("member_name") or v.get("farmer_name"),
             "agent_name": v.get("agent_name"),
-            "visit_date": v.get("visit_date"),
-            "household_size": v.get("household_size"),
-            "children_count": v.get("children_count"),
+            "visit_date": v.get("visit_date") or v.get("date_visite"),
+            "household_size": v.get("household_size") or 0,
+            "children_count": v.get("children_count") or v.get("enfants_observes_travaillant", 0),
             "children_at_risk": v.get("children_at_risk", 0),
-            "risk_level": v.get("risk_level"),
+            "risk_level": v.get("risk_level") or v.get("niveau_risque", "low"),
             "living_conditions": v.get("living_conditions"),
             "has_cases": v.get("has_cases", False)
         } for v in visits],
