@@ -356,6 +356,7 @@ const CooperativeSSRTEDashboard = () => {
                 </Badge>
               </div>
               <p className="text-slate-400">Système de Suivi et Remédiation du Travail des Enfants</p>
+              </div>
             </div>
             <div className="flex gap-2">
               {/* Offline Sync Button */}
