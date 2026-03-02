@@ -29,6 +29,29 @@ Le problème était lié au hash du mot de passe dans la base de données. La so
 
 ---
 
+## Refactoring Backend - March 2, 2026
+
+### ✅ Migration carbon_auditor.py vers async motor
+
+**Changements effectués:**
+- Remplacement de `pymongo.MongoClient` (sync) par `motor` (async) via `from database import db`
+- Ajout de `await` devant toutes les opérations DB (find_one, find, count_documents, insert_one, update_one)
+- Conversion de `list(db.collection.find(...))` en `await db.collection.find(...).to_list(None)`
+- Standardisation du hachage de mot de passe avec `auth_utils.get_password_hash()`
+
+**Fichiers modifiés:**
+- `/app/backend/routes/carbon_auditor.py` (875 lignes → entièrement async)
+
+**Tests validés:**
+- ✅ List Auditors endpoint
+- ✅ Audit Stats Overview endpoint  
+- ✅ Badge Analytics endpoint
+- ✅ Aucune régression sur les autres routes
+
+**Note:** Le découpage de `cooperative.py` (1921 lignes) en modules plus petits reste une tâche future (Option A du plan de refactoring).
+
+---
+
 ## Latest Updates - March 1, 2026 (Session 6 - Tests APK v1.10.0 Complets)
 
 ### ✅ APK v1.10.0 VALIDÉ
