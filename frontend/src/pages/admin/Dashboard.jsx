@@ -228,20 +228,8 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid md:grid-cols-4 gap-4 mb-6">
-            <Card className="p-4">
-              <div className="flex items-center gap-3">
-                <Handshake className="w-8 h-8 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Partenaires</p>
-                  <p className="text-2xl font-bold">{partners.length}</p>
-                </div>
-              </div>
-            </Card>
-
           {/* Quick Navigation Menu */}
-          <div className="md:col-span-4 bg-white rounded-xl p-4 border shadow-sm">
+          <div className="bg-white rounded-xl p-4 border shadow-sm mb-6">
             <h3 className="text-sm font-medium text-gray-500 mb-3">Accès Rapide aux Modules</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-2">
               <button
