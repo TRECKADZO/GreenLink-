@@ -26,7 +26,14 @@ Le problème était lié au hash du mot de passe dans la base de données. La so
   4. **NOUVEAU: Endpoints de diagnostic** :
      - `GET /api/auth/admin/password-health/{email}` - vérifie l'état du hash
      - `POST /api/auth/admin/repair-password` - répare manuellement le hash
+  5. **NOUVEAU: Meilleure gestion des erreurs frontend** - Messages d'erreur détaillés pour les problèmes de réseau
+  6. **NOUVEAU: Try-catch robuste dans /register** - Capture et log toutes les exceptions avec messages détaillés
 - **Statut** : ✅ Corrigé - système robuste pour le déploiement
+
+**Tests API validés:**
+- Registration ✅
+- Login ✅  
+- Password Health Check ✅
 
 **Credentials Confirmés:**
 - Super Admin: `klenakan.eric@gmail.com` / `474Treckadzo` ✅
