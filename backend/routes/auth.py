@@ -154,11 +154,21 @@ async def register(user_data: UserCreate):
         "trial_end": subscription.get("trial_end").isoformat() if subscription.get("trial_end") else None,
     }
     
+    logger.info(f"[REGISTER] Success for {user_data.email or user_data.phone_number}")
+    
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "user": user_dict
     }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[REGISTER] Unexpected error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur interne du serveur: {str(e)}"
+        )
 
 @router.post("/login", response_model=Token)
 @limiter.limit("10/minute")
