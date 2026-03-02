@@ -5,8 +5,26 @@
 ### ✅ CARTE GÉOLOCALISATION AGENTS TEMPS RÉEL
 
 **Routes Frontend:**
-- `/admin/agents-map` - Carte des agents terrain
-- `/admin/geolocation` - Alias pour la carte
+- `/admin/agents-map` - Carte Leaflet OpenStreetMap
+- `/admin/geolocation` - Alias carte principale
+- `/admin/agents-map-simple` - Version simplifiée (sans Leaflet)
+
+**Carte Interactive Leaflet:**
+- Vraie carte OpenStreetMap de la Côte d'Ivoire
+- Villes de référence: Abidjan, Yamoussoukro, Bouaké, Daloa, Korhogo, San-Pédro, Man, Gagnoa, etc.
+- Marqueurs personnalisés colorés par type d'agent
+- Animation pulse pour agents en ligne
+- Cercles pour les villes principales (capitale en orange, politique en violet)
+- Zoom interactif et navigation
+- Popups avec détails agent (position, batterie, précision)
+- Centrage automatique sur agent sélectionné
+
+**Légende:**
+- 🔵 Agent Terrain
+- 🟢 Auditeur Carbone  
+- 🔵 Agent SSRTE (cyan)
+- ⭕ Bordure verte = En ligne
+- ⭕ Bordure grise = Hors ligne
 
 **API Backend (`/api/agents/geo/`):**
 - `POST /update` - Mise à jour position GPS agent
