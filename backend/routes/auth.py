@@ -45,37 +45,38 @@ async def register(user_data: UserCreate):
     import logging
     logger = logging.getLogger(__name__)
     
-    logger.info(f"[REGISTER] Attempting registration for phone: {user_data.phone_number}, email: {user_data.email}")
-    
-    # Check if user already exists (by phone or email)
-    query = []
-    if user_data.phone_number:
-        query.append({"phone_number": user_data.phone_number})
-    if user_data.email:
-        query.append({"email": user_data.email})
-    
-    if query:
-        existing_user = await db.users.find_one({"$or": query})
-        logger.info(f"[REGISTER] Existing user check result: {existing_user is not None}")
-        if existing_user:
-            logger.info(f"[REGISTER] Found existing user with phone: {existing_user.get('phone_number')}, email: {existing_user.get('email')}")
-            if existing_user.get("phone_number") == user_data.phone_number:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Ce numéro de téléphone est déjà enregistré"
-                )
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Cet email est déjà enregistré"
-                )
-    
-    # Create user
-    hashed_password = get_password_hash(user_data.password)
-    user_dict = user_data.dict(exclude={"password"})
-    user_dict["hashed_password"] = hashed_password
-    user_dict["created_at"] = datetime.utcnow()
-    user_dict["is_active"] = True
+    try:
+        logger.info(f"[REGISTER] Attempting registration for phone: {user_data.phone_number}, email: {user_data.email}")
+        
+        # Check if user already exists (by phone or email)
+        query = []
+        if user_data.phone_number:
+            query.append({"phone_number": user_data.phone_number})
+        if user_data.email:
+            query.append({"email": user_data.email})
+        
+        if query:
+            existing_user = await db.users.find_one({"$or": query})
+            logger.info(f"[REGISTER] Existing user check result: {existing_user is not None}")
+            if existing_user:
+                logger.info(f"[REGISTER] Found existing user with phone: {existing_user.get('phone_number')}, email: {existing_user.get('email')}")
+                if existing_user.get("phone_number") == user_data.phone_number:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Ce numéro de téléphone est déjà enregistré"
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Cet email est déjà enregistré"
+                    )
+        
+        # Create user
+        hashed_password = get_password_hash(user_data.password)
+        user_dict = user_data.dict(exclude={"password"})
+        user_dict["hashed_password"] = hashed_password
+        user_dict["created_at"] = datetime.utcnow()
+        user_dict["is_active"] = True
     
     # Initialize profile fields based on user_type
     if user_data.user_type == "producteur":
