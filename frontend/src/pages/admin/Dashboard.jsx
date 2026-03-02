@@ -316,7 +316,18 @@ const AdminDashboard = () => {
               </button>
             </div>
           </div>
-          </div>
+
+          {/* Stats Cards Row */}
+          <div className="grid md:grid-cols-4 gap-4 mb-8">
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <Handshake className="w-8 h-8 text-blue-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Partenaires</p>
+                  <p className="text-2xl font-bold">{partners.length}</p>
+                </div>
+              </div>
+            </Card>
             <Card className="p-4">
               <div className="flex items-center gap-3">
                 <Users className="w-8 h-8 text-green-600" />
