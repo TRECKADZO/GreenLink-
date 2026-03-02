@@ -150,9 +150,24 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('[Auth] Login error:', error);
       console.error('[Auth] Error response:', error.response?.data);
+      console.error('[Auth] Error status:', error.response?.status);
+      console.error('[Auth] Error message:', error.message);
+      
+      // More detailed error message
+      let errorMessage = 'Erreur lors de la connexion';
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMessage = 'Erreur de connexion au serveur. Vérifiez votre connexion internet.';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'La connexion a expiré. Veuillez réessayer.';
+      } else if (error.message) {
+        errorMessage = `Erreur: ${error.message}`;
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.detail || 'Erreur lors de la connexion'
+        error: errorMessage
       };
     }
   };
