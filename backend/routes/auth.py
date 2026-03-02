@@ -80,87 +80,87 @@ async def register(user_data: UserCreate):
     
         # Initialize profile fields based on user_type
         if user_data.user_type == "producteur":
-        user_dict["crops"] = []
-        user_dict["farm_location"] = None
-        user_dict["farm_size"] = None
-        # ICI Data fields for producers
-        user_dict["ici_profile_complete"] = bool(
-            user_data.genre or user_data.date_naissance or 
-            user_data.taille_menage or user_data.nombre_enfants
-        )
-    elif user_data.user_type == "acheteur":
-        user_dict["company_name"] = None
-        user_dict["purchase_volume"] = None
-    elif user_data.user_type == "entreprise_rse":
-        user_dict["company_name_rse"] = None
-        user_dict["sector"] = None
-        user_dict["carbon_goals"] = None
-    elif user_data.user_type == "fournisseur":
-        user_dict["supplier_company"] = None
-        user_dict["products_offered"] = []
-    elif user_data.user_type == "cooperative":
-        user_dict["coop_name"] = getattr(user_data, 'coop_name', None)
-        user_dict["coop_code"] = getattr(user_data, 'coop_code', None)
-        user_dict["registration_number"] = getattr(user_data, 'registration_number', None)
-        user_dict["certifications"] = getattr(user_data, 'certifications', [])
-        user_dict["headquarters_address"] = getattr(user_data, 'headquarters_address', None)
-        user_dict["headquarters_region"] = getattr(user_data, 'headquarters_region', None)
-        user_dict["commission_rate"] = getattr(user_data, 'commission_rate', 0.10)
-        user_dict["orange_money_business"] = getattr(user_data, 'orange_money_business', None)
-    
-    result = await db.users.insert_one(user_dict)
-    user_dict["_id"] = str(result.inserted_id)
-    
-    # Create ICI profile automatically for producers with ICI data
-    if user_data.user_type == "producteur" and user_dict.get("ici_profile_complete"):
-        from routes.ici_data_collection import get_zone_risk_category
+            user_dict["crops"] = []
+            user_dict["farm_location"] = None
+            user_dict["farm_size"] = None
+            # ICI Data fields for producers
+            user_dict["ici_profile_complete"] = bool(
+                user_data.genre or user_data.date_naissance or 
+                user_data.taille_menage or user_data.nombre_enfants
+            )
+        elif user_data.user_type == "acheteur":
+            user_dict["company_name"] = None
+            user_dict["purchase_volume"] = None
+        elif user_data.user_type == "entreprise_rse":
+            user_dict["company_name_rse"] = None
+            user_dict["sector"] = None
+            user_dict["carbon_goals"] = None
+        elif user_data.user_type == "fournisseur":
+            user_dict["supplier_company"] = None
+            user_dict["products_offered"] = []
+        elif user_data.user_type == "cooperative":
+            user_dict["coop_name"] = getattr(user_data, 'coop_name', None)
+            user_dict["coop_code"] = getattr(user_data, 'coop_code', None)
+            user_dict["registration_number"] = getattr(user_data, 'registration_number', None)
+            user_dict["certifications"] = getattr(user_data, 'certifications', [])
+            user_dict["headquarters_address"] = getattr(user_data, 'headquarters_address', None)
+            user_dict["headquarters_region"] = getattr(user_data, 'headquarters_region', None)
+            user_dict["commission_rate"] = getattr(user_data, 'commission_rate', 0.10)
+            user_dict["orange_money_business"] = getattr(user_data, 'orange_money_business', None)
         
-        zone_risk = get_zone_risk_category(user_data.department or "")
+        result = await db.users.insert_one(user_dict)
+        user_dict["_id"] = str(result.inserted_id)
         
-        ici_profile = {
-            "farmer_id": str(result.inserted_id),
-            "date_naissance": user_data.date_naissance,
-            "genre": user_data.genre,
-            "niveau_education": user_data.niveau_education,
-            "taille_menage": user_data.taille_menage,
-            "household_children": {
-                "total_enfants": user_data.nombre_enfants or 0
-            } if user_data.nombre_enfants else None,
-            "zone_risque": zone_risk,
-            "updated_at": datetime.utcnow(),
-            "created_at": datetime.utcnow()
+        # Create ICI profile automatically for producers with ICI data
+        if user_data.user_type == "producteur" and user_dict.get("ici_profile_complete"):
+            from routes.ici_data_collection import get_zone_risk_category
+            
+            zone_risk = get_zone_risk_category(user_data.department or "")
+            
+            ici_profile = {
+                "farmer_id": str(result.inserted_id),
+                "date_naissance": user_data.date_naissance,
+                "genre": user_data.genre,
+                "niveau_education": user_data.niveau_education,
+                "taille_menage": user_data.taille_menage,
+                "household_children": {
+                    "total_enfants": user_data.nombre_enfants or 0
+                } if user_data.nombre_enfants else None,
+                "zone_risque": zone_risk,
+                "updated_at": datetime.utcnow(),
+                "created_at": datetime.utcnow()
+            }
+            
+            await db.ici_profiles.insert_one(ici_profile)
+            logger.info(f"Created ICI profile for producer {result.inserted_id}")
+        
+        # Create subscription based on user type
+        from subscription_models import create_subscription_for_user
+        subscription = create_subscription_for_user(str(result.inserted_id), user_data.user_type)
+        await db.subscriptions.insert_one(subscription)
+        logger.info(f"Created subscription for new user {result.inserted_id}: plan={subscription['plan']}, is_trial={subscription['is_trial']}")
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": str(result.inserted_id)})
+        
+        # Remove hashed_password from response
+        user_dict.pop("hashed_password", None)
+        
+        # Add subscription info to response
+        user_dict["subscription"] = {
+            "plan": subscription["plan"],
+            "status": subscription["status"],
+            "is_trial": subscription["is_trial"],
+            "trial_end": subscription.get("trial_end").isoformat() if subscription.get("trial_end") else None,
         }
         
-        await db.ici_profiles.insert_one(ici_profile)
-        logger.info(f"Created ICI profile for producer {result.inserted_id}")
-    
-    # Create subscription based on user type
-    from subscription_models import create_subscription_for_user
-    subscription = create_subscription_for_user(str(result.inserted_id), user_data.user_type)
-    await db.subscriptions.insert_one(subscription)
-    logger.info(f"Created subscription for new user {result.inserted_id}: plan={subscription['plan']}, is_trial={subscription['is_trial']}")
-    
-    # Create access token
-    access_token = create_access_token(data={"sub": str(result.inserted_id)})
-    
-    # Remove hashed_password from response
-    user_dict.pop("hashed_password", None)
-    
-    # Add subscription info to response
-    user_dict["subscription"] = {
-        "plan": subscription["plan"],
-        "status": subscription["status"],
-        "is_trial": subscription["is_trial"],
-        "trial_end": subscription.get("trial_end").isoformat() if subscription.get("trial_end") else None,
-    }
-    
-    logger.info(f"[REGISTER] Success for {user_data.email or user_data.phone_number}")
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user_dict
-    }
+        logger.info(f"[REGISTER] Success for {user_data.email or user_data.phone_number}")
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": user_dict
+        }
     except HTTPException:
         raise
     except Exception as e:
