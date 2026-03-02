@@ -86,14 +86,25 @@ const CooperativeComparison = () => {
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <BarChart3 className="w-6 h-6 text-purple-400" />
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin')}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Retour
+              </Button>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-purple-500/20 rounded-lg">
+                    <BarChart3 className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <h1 className="text-2xl font-bold">Tableau Comparatif Coopératives</h1>
                 </div>
-                <h1 className="text-2xl font-bold">Tableau Comparatif Coopératives</h1>
+                <p className="text-slate-400">Analyse comparative des performances ICI entre coopératives</p>
               </div>
-              <p className="text-slate-400">Analyse comparative des performances ICI entre coopératives</p>
             </div>
             <Button 
               variant="outline" 
