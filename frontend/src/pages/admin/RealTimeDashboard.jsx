@@ -269,6 +269,7 @@ const RealTimeDashboard = () => {
                   </span>
                 )}
               </p>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button 
