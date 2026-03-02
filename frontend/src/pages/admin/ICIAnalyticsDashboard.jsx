@@ -92,14 +92,25 @@ const ICIAnalyticsDashboard = () => {
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-amber-500/20 rounded-lg">
-                  <Baby className="w-6 h-6 text-amber-400" />
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin')}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Retour
+              </Button>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-amber-500/20 rounded-lg">
+                    <Baby className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <h1 className="text-2xl font-bold">ICI Analytics</h1>
                 </div>
-                <h1 className="text-2xl font-bold">ICI Analytics</h1>
+                <p className="text-slate-400">Données officielles International Cocoa Initiative & Gouvernement CI</p>
               </div>
-              <p className="text-slate-400">Données officielles International Cocoa Initiative & Gouvernement CI</p>
             </div>
             <div className="flex gap-2">
               <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 px-4 py-2">
