@@ -3,166 +3,156 @@ The user's initial request was to build a multi-persona agritech platform for CÃ
 
 The scope expanded to include a **Carbon Auditor** role, managed by a Super Admin (GreenLink), to independently verify farmer plots for carbon credit payments. This is distinct from the cooperative's Field Agents who focus on SSRTE.
 
-Most recently, the focus has shifted to building out the financial tools for cooperatives to manage these carbon payments, including calculating premiums, providing dashboards, exporting reports, and tracking payment history.
+Most recently, the focus has shifted to building out the financial tools for cooperatives to manage these carbon payments, building a USSD interface for farmers, and improving the overall UI/UX of the web portals.
 
-The platform must now support:
-*   Strategic analytics dashboards for Admins (including auditor performance/badges).
+The platform must support:
+*   Strategic analytics dashboards for Admins (including auditor performance/badges and real-time data).
 *   Data collection for producer households and their plots, with a critical requirement that all parcels created by a cooperative must be assigned to a specific member.
 *   Offline-first mobile tools for Cooperatives, Field Agents, and Carbon Auditors.
 *   A robust carbon payment calculation and tracking system for Cooperatives.
 *   Data export functionalities (CSV, PDF) for audits and payment reports.
 *   A gamification system (badges) for Carbon Auditors.
 *   Account activation flows for producers and field agents.
+*   A USSD interface (API and simulator) for farmers to access their data.
 
 **User's preferred language**: French
 
 **what currently exists?**
 The application is a mature full-stack platform (React/FastAPI/MongoDB) with role-based access for Super Admins, Cooperatives, Producers, Field Agents, and Carbon Auditors.
 
-*   **Backend**: A modular FastAPI backend providing APIs for auth, data collection, and role-specific functionalities. Recent additions include:
-    *   A complete gamification engine for auditors with a badge system (, , etc.) based on audit counts.
-    *   A carbon premium calculation engine for cooperatives, factoring in surface area, audit score, and performance bonuses.
-    *   API endpoints for a new Cooperative-facing Carbon Premiums Dashboard.
-    *   API endpoints to export payment data to CSV and generate monthly summary PDFs.
-    *   API endpoints to track payment history in a new  collection.
-    *   A fix to ensure a  is passed when a cooperative creates a parcel.
-
-*   **Frontend (Web)**: The React app features several new and enhanced role-specific dashboards:
-    *   **Admin Portal**: A new **Badge Analytics Dashboard** to track auditor performance, rankings, and badge distribution.
-    *   **Auditor Portal**: The dashboard now displays the auditor's current badge and progress toward the next one.
-    *   **Cooperative Portal**: A new **Carbon Premiums Dashboard** that lists eligible members, their calculated carbon payments, and provides functionality to export reports and mark payments as complete. UI elements for payment history have been added but are not yet fully tested.
-
-*   **Mobile App (React Native)**:
-    *   The Carbon Auditor's audit form now has a full **offline mode**, storing submissions locally and syncing them when connectivity is restored.
-    *   The parcel creation screen has been critically updated to **force a cooperative user to select a member** before creating a parcel, fixing a major data integrity issue.
-    *   A new APK, , incorporating these changes has been successfully built and is ready for testing.
+*   **Backend**: A modular FastAPI backend providing APIs for auth, data collection, and role-specific functionalities. It includes a complete gamification engine, a carbon premium calculation engine, PDF/CSV export capabilities, and a new USSD callback endpoint.
+*   **Frontend (Web)**: The React app features role-specific dashboards. Recent changes include the addition of Back buttons on all sub-pages for improved navigation, a new Quick Access menu on the admin dashboard, fixes for raw JSON data display on analytics pages, and a system-wide currency update from FCFA to XOF.
+*   **Mobile App (React Native)**: The mobile app () includes offline audit submission, mandatory member selection for parcel creation, improved registration error messages, and a new USSD simulator screen. The latest version is .
 
 **Last working item**:
-- Last item agent was working: The agent finished implementing a suite of features for the Cooperative's Carbon Premium Dashboard, including CSV/PDF export, a payment history tab, and the backend logic to record payments. It was just about to begin testing these new features.
+- Last item agent was working: The agent was investigating a login failure for the Super Admin account () on the web application. The user reported an Erreur de connexion with a screenshot.
 - Status: 
 - Agent Testing Done: N
-- Which testing method agent to use? backend testing agent to test the new API endpoints (, , , and ). Then, use the screenshot tool to verify the UI of the  page.
+- Which testing method agent to use? The agent should first investigate the user account in the database. Use  to test the login endpoint directly with the admin credentials, while checking the backend logs for specific errors. Finally, use the  tool to verify the fix.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - **Issue 1: Test and Finalize Carbon Premium Management Features (P0)**
-     - **Description**: The newly added features for the cooperative (CSV/PDF export, payment history, Pay button) have been implemented but not tested. A thorough test is needed to ensure the entire workflow functions correctly. A complex debugging session was just completed to get the underlying data to display correctly, so this testing is critical.
+  - **Issue 1: Super Admin Web App Login Failure (P0)**
+     - **Description**: The Super Admin user () is unable to log into the web application, receiving a generic Erreur de connexion message as shown in a user-provided screenshot. This is blocking all super admin functionalities.
+     - **Attempted fixes**: The agent confirmed that the backend server is running and that login for a different role (Cooperative) works correctly after a previous debugging session. The investigation into the admin account itself has just begun.
      - **Next debug checklist**:
-        1.  Use  to test the backend endpoints: , , . Ensure they return correct data/status.
-        2.  Log in as the cooperative () and take a screenshot of the Carbon Premiums Dashboard to confirm the UI is rendered correctly with the test data.
-        3.  Click the Payer button for one of the members in the list.
-        4.  Switch to the Historique des Paiements tab and verify that the payment is now listed there.
-     - **Why fix this issue and what will be achieved with the fix?**: This will complete the core functionality for cooperatives to manage and track carbon credit payments to their members.
+        1.  Examine the user record in the  collection for . Verify the  is 'admin' and check the status of the .
+        2.  If the password hash is suspect, reset the password for the admin account using a script, ensuring the  field is correctly updated.
+        3.  Execute a  command to test the  endpoint with the admin credentials.
+        4.  Simultaneously,  the backend logs () to capture the exact error message during the login attempt.
+        5.  After a successful  test, use the screenshot tool to confirm login is successful on the frontend.
+     - **Why fix this issue and what will be achieved with the fix?**: The Super Admin role is critical for platform management, user administration, and accessing key analytics dashboards. This fix will restore access to these essential functions.
      - **Status**: 
-     - **Is recurring issue?**: N
+     - **Is recurring issue?**: Y (A similar login issue with the cooperative account was resolved earlier in the session, suggesting potential brittleness in the auth/password logic).
      - **Should Test frontend/backend/both after fix?**: Both
      - **Blocked on other issue**: None.
 
 **In progress Task List**:
-None. The current focus is on the pending issue above.
+None.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P0) Test Complete Mobile Flow on APK v1.10.0**: The new APK is ready (). A full end-to-end test is required, focusing on:
-        *   The auditor's offline audit submission flow.
-        *   The cooperative's parcel creation flow, confirming member selection is mandatory and works.
-    *   **(P1) Implement Real Payment Integration (Orange Money)**: The user has previously expressed interest in this. Now that the tracking system is in place, the next step is integrating a real payment provider. This will require .
-    *   **(P1) Implement SMS Notifications for Payments**: As requested by the user, send an SMS notification to the member when a payment is made. This will also require an integration subagent (e.g., Twilio).
+    *   **(P0) Full User Test of APK v1.12.0**: The latest APK is built, but a comprehensive user flow test is pending. This should cover:
+        *   Farmer registration (with the new, more descriptive error messages).
+        *   Farmer login and use of the new USSD Simulator screen.
+        *   Confirming all currency values appear in XOF.
+    *   **(P1) Implement Real Payment Integration (Orange Money)**: The user has expressed interest in this. The next step is to use  to integrate a real payment provider.
+    *   **(P1) Implement multi-channel notifications for Payments**: As requested, send notifications (Push, SMS, Email) to members when a payment is made. This will require an integration subagent.
 
 *   **Future Tasks:**
-    *   (P2) Implement PDF generation for monthly payment reports.
-    *   (P2) Implement a more detailed payment history with status tracking.
-    *   (P2) Real USSD Integration for farmers.
-    *   (P2) Refactor backend to use a true cloud storage solution (e.g., S3).
+    *   (P2) Real USSD Integration (beyond the current API simulator).
+    *   (P2) Refactor backend to use a true cloud storage solution (e.g., S3) for file uploads.
+    *   (P2) Standardize all backend database calls on  (async) to avoid sync/async bugs.
+    *   (P2) Refactor the monolithic  file into smaller, more focused routers.
 
 **Completed work in this session**
-- **Critical Parcel Ownership Fix**: Addressed a major flaw by modifying the mobile app to require cooperatives to assign a farmer to every new parcel.
-- **Cooperative Carbon Premiums Dashboard**: Built a full-stack feature for cooperatives to view, manage, and calculate carbon payments for members, based on audit scores and surface area.
-- **Auditor Gamification System**: Implemented a complete badge system (backend logic, API endpoints, frontend display on web/mobile) to reward auditors based on performance.
-- **Admin Badge Analytics**: Created a new dashboard for admins to monitor auditor rankings and badge distribution.
-- **Mobile Offline Audits**: Successfully implemented an offline-first mechanism for the auditor's mobile audit form using AsyncStorage.
-- **PDF/CSV Reporting**: Added backend logic to generate PDF reports for audits/badges and CSV/PDF reports for carbon payments.
-- **Extensive Debugging**: Resolved a highly complex chain of bugs related to database name mismatches ( vs. ), duplicate user data, authentication token mismatches, and incorrect password hashing during test data setup.
-- **Mobile App Builds**: Successfully built and delivered APKs for  and .
-- **Full System Regression Test**: Used the testing agent to perform a comprehensive test of all major application flows, confirming system stability before adding new features.
+- **Currency Standardization**: Replaced all instances of FCFA with XOF across the entire platform (backend, frontend, mobile) and made EUR an optional secondary display.
+- **UI Navigation Improvement**: Added Back buttons to all secondary pages within the Super Admin and Cooperative portals for consistent navigation.
+- **Admin Dashboard Overhaul**: Fixed analytics pages that were displaying raw JSON data, replacing it with formatted components. Added a Quick Access menu to the main admin dashboard to link to all 10 analytics and management modules.
+- **Mobile USSD Simulator**: Added a new USSD Simulator screen to the mobile app for farmers and built/delivered **APK v1.11.0**.
+- **Mobile Registration Fix**: Debugged a farmer registration error, improved the in-app error messages to be more specific (e.g., Phone number already exists), and built/delivered **APK v1.10.1**.
+- **USSD Backend Implementation**: Created a new FastAPI endpoint () to power a stateful USSD menu system for farmers.
+- **Carbon Premium Features Tested**: Successfully debugged and tested the entire cooperative carbon premium workflow, including fetching data, exporting to CSV, and processing payments which are then reflected in the payment history tab.
+- **Authentication Debugging**: Resolved a complex login failure for the cooperative account which involved incorrect password hashing during a database update.
+- **Homepage Update**: Updated the homepage content to better reflect the project's features and removed outdated/placeholder information at the user's request.
+- **New APK with Currency Fix**: Built and delivered **APK v1.12.0** containing the currency update and all previous mobile enhancements.
 
 **Earlier issues found/mentioned but not fixed**
-None. The critical issue of parcel ownership raised by the user during this session was immediately addressed and fixed.
+None.
 
 **Known issue recurrence from previous fork**
-- **Sync vs. Async DB Calls**: The previous handoff noted that the mix of  (sync) and  (async) in the backend could cause issues. The agent ran into exactly this kind of problem during a lengthy debugging session, highlighting the need for a refactor to standardize on .
+- **Authentication/Password Issues**: Login failures have occurred for two different user roles (Cooperative and Admin) in this session, both requiring database-level intervention. This highlights a potential weakness in the password update and verification logic.
+- **Sync vs. Async DB Calls**: The need to refactor to a fully async  implementation remains. The agent encountered database state synchronization delays during password debugging, which is a symptom of this underlying issue.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Offline-First Mobile Development**: Using  for local data persistence and creating a service () to handle synchronization.
-- **Data Integrity**: Enforcing business rules at the UI level (requiring member selection for parcels) to prevent invalid data from being created.
-- **Gamification**: Implementing a badge and ranking system to drive user engagement and performance.
-- **Complex Data Aggregation**: Building backend endpoints that join data from multiple collections (, , ) to calculate results for dashboards (e.g., carbon premiums).
-- **Intensive Debugging**: The session demonstrated the need for systematic debugging across the stack, involving checking environment variables, database state, user authentication flows, and API logic.
+- **USSD Backend Implementation**: Creating a stateful USSD menu system via a web API that receives session data, phone numbers, and user input.
+- **System-wide Refactoring**: Performing a global search-and-replace to change the primary currency (FCFA to XOF) and updating all relevant frontend components and backend logic.
+- **Mobile App Build Pipeline**: Using Expo Application Services () to version, build, and distribute new APKs (, , ) with incremental fixes and features.
+- **UI Consistency**: Adding a reusable  component and applying it across multiple pages in different user portals to create a standardized user experience.
+- **Component-Based UI Debugging**: Fixing analytics pages by replacing raw JSON output with structured React components to properly visualize data.
 
 **key DB schema**
-- ****: Now correctly contains a  to link it to a cooperative member.
-- ****: The auditor user documents now have  and  fields.
-- ****: A new collection to log payment transactions: .
+- ****: This collection was directly manipulated to investigate and fix login issues by resetting  for  and needs to be checked for .
+- ****: This new collection was verified to correctly log payment transactions made through the cooperative dashboard.
+- **Data fields**: Code logic was updated to use fields like  instead of , though the underlying database schema was not migrated.
 
 **changes in tech stack**
-- : Added  for offline storage.
-- : Added  for data tables in the new dashboards.
+No new libraries or technologies were added in this session.
 
 **All files of reference**
-- : Contains all new logic for the carbon premium system.
-- : The main UI for the cooperative's new financial tool.
-- : Contains the critical fix for parcel ownership.
-- : Contains the new offline functionality.
-- : The service managing offline data sync.
-- : Critical file for checking the .
+- : Central to the current login issue.
+- : Recently modified to add the Quick Access menu.
+- : Recently fixed to display formatted data instead of raw JSON.
+- : Contains the improved error handling for mobile registration.
+- : The new USSD simulator screen in the mobile app.
+- : The new backend endpoint for handling all USSD interactions.
+- : Located in , it defines the build profiles for the mobile app.
 
 **Areas that need refactoring**:
-- **Standardize on **: The backend should be refactored to use  (asynchronous) for all database interactions to prevent confusion and bugs related to sync/async mismatches.
-- **Breakdown **: The  file is becoming monolithic. It should be broken down into smaller, more focused routers (e.g., , ).
+- **Authentication Logic**: The process for updating passwords and verifying them seems brittle and has caused recurring login failures. This part of  and related database update scripts needs to be made more robust.
+- **Standardize on **: The backend should be refactored to use  (asynchronous) for all database interactions to prevent sync/async bugs.
+- **Breakdown **: The  file is large and should be split into smaller, more focused routers.
 
 **key api endpoints**
-- : GET - Retrieves data for the carbon premiums dashboard.
-- : GET - Downloads a CSV report of premiums.
-- : GET - Downloads a PDF summary report.
-- : POST - Marks a premium as paid and creates a history record.
-- : GET - Retrieves all payment records for the cooperative.
-- : GET - Retrieves data for the admin's badge analytics dashboard.
+- : POST - The endpoint for user authentication, which is currently failing for the admin user.
+- : POST - The new endpoint that powers the USSD menu logic.
+- : POST - Endpoint to mark a premium as paid; successfully tested.
+- : GET - Endpoint to retrieve payment records; successfully tested.
 
 **Critical Info for New Agent**
 - **Respond in French.** All user interactions must be in French.
-- **Database Environment is Key**: The agent spent significant time debugging issues caused by a mismatch between the test database () and the production database used by the server (). Before running tests or creating data, always verify the  in  and operate on the correct database.
-- **User Feedback is High-Value**: The user identified a critical architectural flaw (unassigned parcels). Treat their feedback and observations as high-priority tasks.
-- **APK v1.10.0 is Ready for Testing**: The user is waiting for a test of the latest mobile app. This is a top priority after finalizing the current payment features. The APK URL is: .
+- **Admin Login is the Top Priority**: The immediate task is to solve the login issue for the super admin (). This is a hard blocker for the user.
+- **Password Resets are Tricky**: Be very careful when updating passwords in the database. The previous agent had to ensure the  was generated and updated correctly. Simply changing a  field is not enough.
+- **Mobile Builds**: The user is actively testing APKs. After any significant mobile-side change, be prepared to increment the version in  and run  to generate a new APK. The latest build is .
 
 **documents and test reports created in this job**
 -  (Updated)
--  (Updated)
 - 
-- 
+- Multiple APKs have been built, with the latest being . Link: 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Asks for payment management features: CSV/PDF export, payment history. (Current work item)
-2.  **User**: Acknowledges the fix for parcel ownership and the explanation of the carbon payment flow. Asks for next steps.
-3.  **User**: Points out a critical flaw: cooperatives can create parcels without assigning them to a farmer, questioning how carbon payments would work.
-4.  **User**: Asks what happens after the badge system is implemented.
-5.  **User**: Confirms the plan to test the full mobile flow and add push notifications for audit completion.
-6.  **User**: Confirms the plan to implement badge system and build APK v1.9.0.
-7.  **User**: Asks to check the build status for APK v1.9.0.
-8.  **User**: Confirms plan to implement offline mode and web/mobile audit forms.
-9.  **User**: Asks to test everything ().
-10. **User**: Confirms agent's plan to test the mobile app.
+1.  **User**: Reports Erreur de connexion with a screenshot, showing the admin login is failing. (Current issue)
+2.  **User**: Confirms the  APK is what they wanted.
+3.  **User**: Asks for a new APK  (which was before the currency change). The agent correctly inferred they need a new build with the currency change.
+4.  **User**: Asks for all amounts in the project to be in XOF by default, with USD as an optional display. (Completed)
+5.  **User**: Reports that admin analytics pages are showing raw JSON and that some analytics modules are missing from the admin menu. (Completed)
+6.  **User**: Asks to also check for Back buttons in all Super Admin pages. (Completed)
+7.  **User**: Asks to add a Back button to all pages in the Cooperative portal. (Completed)
+8.  **User**: Asks for a USSD simulator screen to be added to the mobile app. (Completed, APK v1.11.0 built)
+9.  **User**: Asks where the USSD interface is in the farmer's mobile app.
+10. **User**: Confirms the registration error fix is what they wanted and asks to proceed with building the new APK. (Completed, APK v1.10.1 built)
 
 **Project Health Check:**
-- **Broken**: None.
+- **Broken**:
+    - Super Admin login on the web application.
 - **Mocked/Simulated**:
-    - **Payment Gateway**: The system can track payments, but the actual disbursement is manual. Real integration (e.g., Orange Money) is a future task.
-    - **SMS Notifications**: The backend logic for notifications exists, but it's not connected to a live SMS provider (like Twilio).
-    - Cloud Photo Storage
-    - Farmer's USSD interface
-- **Healthy**: The web and mobile applications are stable. Core features are functional, and new features have been added with extensive testing or are pending final verification.
+    - **Payment Gateway**: The system tracks payments, but disbursement is manual. Real integration (e.g., Orange Money) is a future task.
+    - **SMS/Email Notifications**: The infrastructure is partially there but not connected to a live provider.
+    - **Real USSD**: The system uses a web API to simulate USSD. A real integration with a telecom provider is a future task.
+- **Healthy**: The web and mobile applications are otherwise stable. The Cooperative portal, carbon premium features, USSD simulator (web and mobile), and mobile registration flows are functional.
 
 **3rd Party Integrations**
 - **Expo / EAS**: Core framework and build service for the React Native mobile app.
@@ -174,17 +164,17 @@ None. The critical issue of parcel ownership raised by the user during this sess
 - ****: For data tables in the frontend.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES. The agent ran full regression tests twice in this session.
-- **Troubleshoot agent used after agent stuck in loop**: NO. The agent performed a lengthy manual debugging session.
-- **Test files created**: , .
-- **Known regressions**: None.
+- **Testing agent used after significant changes**: YES. A full test suite was run after the USSD implementation and homepage update.
+- **Troubleshoot agent used after agent stuck in loop**: NO.
+- **Test files created**: .
+- **Known regressions**: Super Admin login is a new regression.
 
 **Credentials to test flow:**
-- **Super Admin**:  / 
-- **Cooperative**:  /  (Password was reset during debugging).
+- **Super Admin**:  /  (Login is currently failing)
+- **Cooperative**:  /  (Password was reset during this session and is confirmed working).
 - **Producer**:  / 
 - **Field Agent**: Phone:  / 
-- **Carbon Auditor**:  / 
+- **Carbon Auditor**:  /  (Password was reset during this session and is confirmed working).
 
 **What agent forgot to execute**
-- The agent has not yet executed the comprehensive test of the newly-built **APK v1.10.0**, which was a priority user request. This includes testing the offline audit submission and the mandatory member selection on parcel creation. This should be the next major task after verifying the current payment features.</analysis>
+- The agent successfully tested individual API endpoints related to the latest mobile features but has not performed a holistic, end-to-end test on the actual  APK. This should be done after the admin login is fixed.</analysis>

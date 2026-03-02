@@ -106,7 +106,7 @@ L'application utilise l'API backend GreenLink. L'URL est configurée dans :
 - `/app/mobile/greenlink-farmer/src/config.js`
 
 ```javascript
-API_URL: 'https://agritech-cote.preview.emergentagent.com/api'
+API_URL: 'https://farmer-ussd-portal.preview.emergentagent.com/api'
 ```
 
 ### Notifications Push
