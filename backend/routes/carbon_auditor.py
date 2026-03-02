@@ -1,22 +1,18 @@
 """
 Carbon Auditor Management Routes
 Auditeurs Carbone rattachés à GreenLink (gérés par Super Admin)
+Migrated to async motor - March 2026
 """
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from bson import ObjectId
-import os
 
 router = APIRouter(prefix="/api/carbon-auditor", tags=["Carbon Auditor"])
 
-# MongoDB connection
-from pymongo import MongoClient
-MONGO_URL = os.environ.get("MONGO_URL")
-DB_NAME = os.environ.get("DB_NAME", "greenlink")
-client = MongoClient(MONGO_URL)
-db = client[DB_NAME]
+# Use centralized async database connection
+from database import db
 
 # ============== MODELS ==============
 
@@ -65,7 +61,7 @@ class AuditSubmission(BaseModel):
 async def create_auditor(auditor: AuditorCreate):
     """Créer un nouvel auditeur carbone (Super Admin)"""
     # Vérifier si email existe déjà
-    existing = db.users.find_one({"email": auditor.email})
+    existing = await db.users.find_one({"email": auditor.email})
     if existing:
         raise HTTPException(status_code=400, detail="Cet email est déjà utilisé")
     
@@ -89,7 +85,7 @@ async def create_auditor(auditor: AuditorCreate):
         "created_by": "admin"
     }
     
-    result = db.users.insert_one(user_doc)
+    result = await db.users.insert_one(user_doc)
     
     return {
         "message": "Auditeur carbone créé avec succès",
@@ -100,16 +96,16 @@ async def create_auditor(auditor: AuditorCreate):
 @router.get("/admin/auditors")
 async def list_auditors():
     """Lister tous les auditeurs carbone (Super Admin)"""
-    auditors = list(db.users.find(
+    auditors = await db.users.find(
         {"user_type": "carbon_auditor"},
         {"password": 0}
-    ))
+    ).to_list(None)
     
     result = []
     for auditor in auditors:
         # Compter les missions
-        missions_count = db.audit_missions.count_documents({"auditor_id": str(auditor["_id"])})
-        pending_missions = db.audit_missions.count_documents({
+        missions_count = await db.audit_missions.count_documents({"auditor_id": str(auditor["_id"])})
+        pending_missions = await db.audit_missions.count_documents({
             "auditor_id": str(auditor["_id"]),
             "status": "pending"
         })
@@ -137,7 +133,7 @@ async def list_auditors():
 @router.get("/admin/auditors/{auditor_id}")
 async def get_auditor_details(auditor_id: str):
     """Détails d'un auditeur (Super Admin)"""
-    auditor = db.users.find_one(
+    auditor = await db.users.find_one(
         {"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"},
         {"password": 0}
     )
@@ -146,10 +142,10 @@ async def get_auditor_details(auditor_id: str):
         raise HTTPException(status_code=404, detail="Auditeur non trouvé")
     
     # Récupérer les missions
-    missions = list(db.audit_missions.find({"auditor_id": auditor_id}).sort("created_at", -1).limit(10))
+    missions = await db.audit_missions.find({"auditor_id": auditor_id}).sort("created_at", -1).limit(10).to_list(10)
     
     # Récupérer les audits récents
-    recent_audits = list(db.carbon_audits.find({"auditor_id": auditor_id}).sort("audit_date", -1).limit(10))
+    recent_audits = await db.carbon_audits.find({"auditor_id": auditor_id}).sort("audit_date", -1).limit(10).to_list(10)
     
     return {
         "id": str(auditor["_id"]),
@@ -187,7 +183,7 @@ async def update_auditor(auditor_id: str, update: AuditorUpdate):
     
     update_data["updated_at"] = datetime.now(timezone.utc)
     
-    result = db.users.update_one(
+    result = await db.users.update_one(
         {"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"},
         {"$set": update_data}
     )
@@ -200,7 +196,7 @@ async def update_auditor(auditor_id: str, update: AuditorUpdate):
 @router.delete("/admin/auditors/{auditor_id}")
 async def deactivate_auditor(auditor_id: str):
     """Désactiver un auditeur (Super Admin)"""
-    result = db.users.update_one(
+    result = await db.users.update_one(
         {"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"},
         {"$set": {"is_active": False, "deactivated_at": datetime.now(timezone.utc)}}
     )
@@ -216,12 +212,12 @@ async def deactivate_auditor(auditor_id: str):
 async def create_audit_mission(mission: AuditMissionCreate):
     """Créer une mission d'audit (Super Admin)"""
     # Vérifier que l'auditeur existe
-    auditor = db.users.find_one({"_id": ObjectId(mission.auditor_id), "user_type": "carbon_auditor"})
+    auditor = await db.users.find_one({"_id": ObjectId(mission.auditor_id), "user_type": "carbon_auditor"})
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditeur non trouvé")
     
     # Vérifier que la coopérative existe
-    coop = db.users.find_one({"_id": ObjectId(mission.cooperative_id), "user_type": "cooperative"})
+    coop = await db.users.find_one({"_id": ObjectId(mission.cooperative_id), "user_type": "cooperative"})
     if not coop:
         raise HTTPException(status_code=404, detail="Coopérative non trouvée")
     
@@ -239,7 +235,7 @@ async def create_audit_mission(mission: AuditMissionCreate):
         "created_at": datetime.now(timezone.utc)
     }
     
-    result = db.audit_missions.insert_one(mission_doc)
+    result = await db.audit_missions.insert_one(mission_doc)
     
     return {
         "message": "Mission d'audit créée avec succès",
@@ -254,7 +250,7 @@ async def list_missions(status: Optional[str] = None):
     if status:
         query["status"] = status
     
-    missions = list(db.audit_missions.find(query).sort("created_at", -1))
+    missions = await db.audit_missions.find(query).sort("created_at", -1).to_list(None)
     
     return {
         "missions": [{
@@ -278,7 +274,7 @@ async def list_missions(status: Optional[str] = None):
 async def get_auditor_dashboard(auditor_id: str):
     """Dashboard de l'auditeur carbone"""
     # Vérifier l'auditeur
-    auditor = db.users.find_one(
+    auditor = await db.users.find_one(
         {"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"},
         {"password": 0}
     )
@@ -287,20 +283,19 @@ async def get_auditor_dashboard(auditor_id: str):
         raise HTTPException(status_code=404, detail="Auditeur non trouvé")
     
     # Missions en cours
-    pending_missions = list(db.audit_missions.find({
+    pending_missions = await db.audit_missions.find({
         "auditor_id": auditor_id,
         "status": {"$in": ["pending", "in_progress"]}
-    }))
+    }).to_list(None)
     
     # Statistiques
-    total_audits = db.carbon_audits.count_documents({"auditor_id": auditor_id})
-    approved_audits = db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "approved"})
-    rejected_audits = db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "rejected"})
+    total_audits = await db.carbon_audits.count_documents({"auditor_id": auditor_id})
+    approved_audits = await db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "approved"})
+    rejected_audits = await db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "rejected"})
     
     # Audits ce mois
-    from datetime import timedelta
     month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    monthly_audits = db.carbon_audits.count_documents({
+    monthly_audits = await db.carbon_audits.count_documents({
         "auditor_id": auditor_id,
         "audit_date": {"$gte": month_start}
     })
@@ -387,7 +382,7 @@ async def get_auditor_missions(auditor_id: str, status: Optional[str] = None):
     if status:
         query["status"] = status
     
-    missions = list(db.audit_missions.find(query).sort("created_at", -1))
+    missions = await db.audit_missions.find(query).sort("created_at", -1).to_list(None)
     
     return {
         "missions": [{
@@ -407,7 +402,7 @@ async def get_auditor_missions(auditor_id: str, status: Optional[str] = None):
 @router.get("/mission/{mission_id}/parcels")
 async def get_mission_parcels(mission_id: str):
     """Liste des parcelles d'une mission à auditer"""
-    mission = db.audit_missions.find_one({"_id": ObjectId(mission_id)})
+    mission = await db.audit_missions.find_one({"_id": ObjectId(mission_id)})
     
     if not mission:
         raise HTTPException(status_code=404, detail="Mission non trouvée")
@@ -417,10 +412,10 @@ async def get_mission_parcels(mission_id: str):
     # Récupérer les détails des parcelles
     parcels = []
     for pid in parcel_ids:
-        parcel = db.parcels.find_one({"_id": ObjectId(pid)})
+        parcel = await db.parcels.find_one({"_id": ObjectId(pid)})
         if parcel:
             # Vérifier si déjà audité
-            audit = db.carbon_audits.find_one({
+            audit = await db.carbon_audits.find_one({
                 "parcel_id": pid,
                 "mission_id": mission_id
             })
@@ -428,7 +423,7 @@ async def get_mission_parcels(mission_id: str):
             # Récupérer info producteur
             farmer = None
             if parcel.get("farmer_id"):
-                farmer = db.users.find_one({"_id": ObjectId(parcel["farmer_id"])}, {"full_name": 1})
+                farmer = await db.users.find_one({"_id": ObjectId(parcel["farmer_id"])}, {"full_name": 1})
             
             parcels.append({
                 "id": str(parcel["_id"]),
@@ -456,17 +451,17 @@ async def get_mission_parcels(mission_id: str):
 async def submit_audit(audit: AuditSubmission, auditor_id: str, mission_id: str):
     """Soumettre un audit de parcelle"""
     # Vérifier l'auditeur
-    auditor = db.users.find_one({"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"})
+    auditor = await db.users.find_one({"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"})
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditeur non trouvé")
     
     # Vérifier la mission
-    mission = db.audit_missions.find_one({"_id": ObjectId(mission_id)})
+    mission = await db.audit_missions.find_one({"_id": ObjectId(mission_id)})
     if not mission:
         raise HTTPException(status_code=404, detail="Mission non trouvée")
     
     # Vérifier la parcelle
-    parcel = db.parcels.find_one({"_id": ObjectId(audit.parcel_id)})
+    parcel = await db.parcels.find_one({"_id": ObjectId(audit.parcel_id)})
     if not parcel:
         raise HTTPException(status_code=404, detail="Parcelle non trouvée")
     
@@ -497,11 +492,11 @@ async def submit_audit(audit: AuditSubmission, auditor_id: str, mission_id: str)
         "audit_date": datetime.now(timezone.utc)
     }
     
-    result = db.carbon_audits.insert_one(audit_doc)
+    result = await db.carbon_audits.insert_one(audit_doc)
     
     # Mettre à jour la parcelle si approuvée
     if audit.recommendation == "approved":
-        db.parcels.update_one(
+        await db.parcels.update_one(
             {"_id": ObjectId(audit.parcel_id)},
             {"$set": {
                 "audit_status": "approved",
@@ -512,7 +507,7 @@ async def submit_audit(audit: AuditSubmission, auditor_id: str, mission_id: str)
             }}
         )
     elif audit.recommendation == "rejected":
-        db.parcels.update_one(
+        await db.parcels.update_one(
             {"_id": ObjectId(audit.parcel_id)},
             {"$set": {
                 "audit_status": "rejected",
@@ -522,7 +517,7 @@ async def submit_audit(audit: AuditSubmission, auditor_id: str, mission_id: str)
         )
     
     # Mettre à jour la mission
-    db.audit_missions.update_one(
+    await db.audit_missions.update_one(
         {"_id": ObjectId(mission_id)},
         {
             "$inc": {"parcels_audited": 1},
@@ -531,15 +526,15 @@ async def submit_audit(audit: AuditSubmission, auditor_id: str, mission_id: str)
     )
     
     # Vérifier si mission complète
-    mission_updated = db.audit_missions.find_one({"_id": ObjectId(mission_id)})
+    mission_updated = await db.audit_missions.find_one({"_id": ObjectId(mission_id)})
     if mission_updated.get("parcels_audited", 0) >= mission_updated.get("parcels_count", 0):
-        db.audit_missions.update_one(
+        await db.audit_missions.update_one(
             {"_id": ObjectId(mission_id)},
             {"$set": {"status": "completed", "completed_at": datetime.now(timezone.utc)}}
         )
     
     # Mettre à jour stats auditeur
-    db.users.update_one(
+    await db.users.update_one(
         {"_id": ObjectId(auditor_id)},
         {"$inc": {
             "audits_completed": 1,
@@ -548,12 +543,12 @@ async def submit_audit(audit: AuditSubmission, auditor_id: str, mission_id: str)
     )
     
     # Calculer et mettre à jour le badge de l'auditeur
-    auditor_updated = db.users.find_one({"_id": ObjectId(auditor_id)})
+    auditor_updated = await db.users.find_one({"_id": ObjectId(auditor_id)})
     new_badge = calculate_auditor_badge(auditor_updated.get("audits_completed", 0))
     if new_badge:
         current_badge = auditor_updated.get("badge")
         if current_badge != new_badge:
-            db.users.update_one(
+            await db.users.update_one(
                 {"_id": ObjectId(auditor_id)},
                 {"$set": {"badge": new_badge, "badge_earned_at": datetime.now(timezone.utc)}}
             )
@@ -627,13 +622,13 @@ def calculate_carbon_score_from_audit(audit: AuditSubmission) -> float:
 @router.get("/audit/{audit_id}")
 async def get_audit_details(audit_id: str):
     """Détails d'un audit"""
-    audit = db.carbon_audits.find_one({"_id": ObjectId(audit_id)})
+    audit = await db.carbon_audits.find_one({"_id": ObjectId(audit_id)})
     
     if not audit:
         raise HTTPException(status_code=404, detail="Audit non trouvé")
     
     # Récupérer info parcelle
-    parcel = db.parcels.find_one({"_id": ObjectId(audit["parcel_id"])})
+    parcel = await db.parcels.find_one({"_id": ObjectId(audit["parcel_id"])})
     
     return {
         "id": str(audit["_id"]),
@@ -663,18 +658,21 @@ async def get_audit_details(audit_id: str):
 @router.get("/admin/stats/overview")
 async def get_audit_stats_overview():
     """Statistiques globales des audits (Super Admin)"""
-    total_auditors = db.users.count_documents({"user_type": "carbon_auditor", "is_active": True})
-    total_missions = db.audit_missions.count_documents({})
-    pending_missions = db.audit_missions.count_documents({"status": "pending"})
-    completed_missions = db.audit_missions.count_documents({"status": "completed"})
+    total_auditors = await db.users.count_documents({"user_type": "carbon_auditor", "is_active": True})
+    total_missions = await db.audit_missions.count_documents({})
+    pending_missions = await db.audit_missions.count_documents({"status": "pending"})
+    completed_missions = await db.audit_missions.count_documents({"status": "completed"})
     
-    total_audits = db.carbon_audits.count_documents({})
-    approved_audits = db.carbon_audits.count_documents({"recommendation": "approved"})
-    rejected_audits = db.carbon_audits.count_documents({"recommendation": "rejected"})
+    total_audits = await db.carbon_audits.count_documents({})
+    approved_audits = await db.carbon_audits.count_documents({"recommendation": "approved"})
+    rejected_audits = await db.carbon_audits.count_documents({"recommendation": "rejected"})
     
     # Audits ce mois
     month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    monthly_audits = db.carbon_audits.count_documents({"audit_date": {"$gte": month_start}})
+    monthly_audits = await db.carbon_audits.count_documents({"audit_date": {"$gte": month_start}})
+    
+    in_progress_missions = await db.audit_missions.count_documents({"status": "in_progress"})
+    needs_review_audits = await db.carbon_audits.count_documents({"recommendation": "needs_review"})
     
     return {
         "auditors": {
@@ -684,14 +682,14 @@ async def get_audit_stats_overview():
         "missions": {
             "total": total_missions,
             "pending": pending_missions,
-            "in_progress": db.audit_missions.count_documents({"status": "in_progress"}),
+            "in_progress": in_progress_missions,
             "completed": completed_missions
         },
         "audits": {
             "total": total_audits,
             "approved": approved_audits,
             "rejected": rejected_audits,
-            "needs_review": db.carbon_audits.count_documents({"recommendation": "needs_review"}),
+            "needs_review": needs_review_audits,
             "approval_rate": round((approved_audits / total_audits * 100) if total_audits > 0 else 0, 1),
             "monthly": monthly_audits
         }
@@ -706,18 +704,18 @@ async def get_audit_pdf_report(audit_id: str):
     from fastapi.responses import Response
     from services.pdf_service import pdf_generator
     
-    audit = db.carbon_audits.find_one({"_id": ObjectId(audit_id)})
+    audit = await db.carbon_audits.find_one({"_id": ObjectId(audit_id)})
     if not audit:
         raise HTTPException(status_code=404, detail="Audit non trouvé")
     
     # Get related data
-    parcel = db.parcels.find_one({"_id": ObjectId(audit["parcel_id"])})
-    mission = db.audit_missions.find_one({"_id": ObjectId(audit.get("mission_id", ""))})
-    auditor = db.users.find_one({"_id": ObjectId(audit["auditor_id"])})
+    parcel = await db.parcels.find_one({"_id": ObjectId(audit["parcel_id"])})
+    mission = await db.audit_missions.find_one({"_id": ObjectId(audit.get("mission_id", ""))}) if audit.get("mission_id") else None
+    auditor = await db.users.find_one({"_id": ObjectId(audit["auditor_id"])})
     
     farmer = None
     if parcel and parcel.get("member_id"):
-        farmer = db.users.find_one({"_id": ObjectId(parcel["member_id"])})
+        farmer = await db.users.find_one({"_id": ObjectId(parcel["member_id"])})
     
     data = {
         "audit_id": str(audit["_id"]),
@@ -764,12 +762,12 @@ async def get_badge_certificate(auditor_id: str):
     from fastapi.responses import Response
     from services.pdf_service import pdf_generator
     
-    auditor = db.users.find_one({"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"})
+    auditor = await db.users.find_one({"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"})
     if not auditor:
         raise HTTPException(status_code=404, detail="Auditeur non trouvé")
     
-    total_audits = db.carbon_audits.count_documents({"auditor_id": auditor_id})
-    approved = db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "approved"})
+    total_audits = await db.carbon_audits.count_documents({"auditor_id": auditor_id})
+    approved = await db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "approved"})
     
     badge = calculate_auditor_badge(total_audits)
     if not badge:
@@ -801,7 +799,7 @@ async def get_badges_analytics():
     """Dashboard Analytics des badges auditeurs"""
     
     # Badge distribution
-    all_auditors = list(db.users.find({"user_type": "carbon_auditor"}))
+    all_auditors = await db.users.find({"user_type": "carbon_auditor"}).to_list(None)
     
     badge_counts = {
         "gold": 0,
@@ -815,8 +813,8 @@ async def get_badges_analytics():
     
     for auditor in all_auditors:
         auditor_id = str(auditor["_id"])
-        total_audits = db.carbon_audits.count_documents({"auditor_id": auditor_id})
-        approved = db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "approved"})
+        total_audits = await db.carbon_audits.count_documents({"auditor_id": auditor_id})
+        approved = await db.carbon_audits.count_documents({"auditor_id": auditor_id, "recommendation": "approved"})
         
         badge = calculate_auditor_badge(total_audits)
         if badge:
@@ -840,13 +838,12 @@ async def get_badges_analytics():
     auditor_details.sort(key=lambda x: x["total_audits"], reverse=True)
     
     # Monthly trends
-    from datetime import timedelta
     month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    monthly_audits = db.carbon_audits.count_documents({"audit_date": {"$gte": month_start}})
+    monthly_audits = await db.carbon_audits.count_documents({"audit_date": {"$gte": month_start}})
     
     # Previous month comparison
     prev_month_start = (month_start - timedelta(days=1)).replace(day=1)
-    prev_month_audits = db.carbon_audits.count_documents({
+    prev_month_audits = await db.carbon_audits.count_documents({
         "audit_date": {"$gte": prev_month_start, "$lt": month_start}
     })
     
