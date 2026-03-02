@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Bell, 
@@ -12,12 +13,14 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  X
+  X,
+  ChevronLeft
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const CooperativeNotifications = () => {
+  const navigate = useNavigate();
   const { token, user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
