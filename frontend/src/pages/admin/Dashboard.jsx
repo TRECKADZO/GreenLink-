@@ -229,7 +229,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <div className="grid md:grid-cols-4 gap-4 mb-6">
             <Card className="p-4">
               <div className="flex items-center gap-3">
                 <Handshake className="w-8 h-8 text-blue-600" />
@@ -239,6 +239,84 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </Card>
+
+          {/* Quick Navigation Menu */}
+          <div className="md:col-span-4 bg-white rounded-xl p-4 border shadow-sm">
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Accès Rapide aux Modules</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-2">
+              <button
+                onClick={() => navigate('/admin/realtime')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-emerald-50 rounded-lg transition group"
+              >
+                <Activity className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700" />
+                <span className="text-xs text-gray-600 group-hover:text-emerald-700">Temps Réel</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/notifications')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-amber-50 rounded-lg transition group"
+              >
+                <Bell className="w-5 h-5 text-amber-600 group-hover:text-amber-700" />
+                <span className="text-xs text-gray-600 group-hover:text-amber-700">Notifications</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/ssrte-analytics')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition group"
+              >
+                <Baby className="w-5 h-5 text-blue-600 group-hover:text-blue-700" />
+                <span className="text-xs text-gray-600 group-hover:text-blue-700">SSRTE</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/ici-analytics')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-purple-50 rounded-lg transition group"
+              >
+                <Shield className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
+                <span className="text-xs text-gray-600 group-hover:text-purple-700">ICI Analytics</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/carbon-business')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-green-50 rounded-lg transition group"
+              >
+                <Leaf className="w-5 h-5 text-green-600 group-hover:text-green-700" />
+                <span className="text-xs text-gray-600 group-hover:text-green-700">Business Carbone</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/cooperative-comparison')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-cyan-50 rounded-lg transition group"
+              >
+                <Building2 className="w-5 h-5 text-cyan-600 group-hover:text-cyan-700" />
+                <span className="text-xs text-gray-600 group-hover:text-cyan-700">Comparaison</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/billing')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-rose-50 rounded-lg transition group"
+              >
+                <CreditCard className="w-5 h-5 text-rose-600 group-hover:text-rose-700" />
+                <span className="text-xs text-gray-600 group-hover:text-rose-700">Facturation</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/badge-analytics')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-yellow-50 rounded-lg transition group"
+              >
+                <Award className="w-5 h-5 text-yellow-600 group-hover:text-yellow-700" />
+                <span className="text-xs text-gray-600 group-hover:text-yellow-700">Badges</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/premium-analytics')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-indigo-50 rounded-lg transition group"
+              >
+                <BarChart3 className="w-5 h-5 text-indigo-600 group-hover:text-indigo-700" />
+                <span className="text-xs text-gray-600 group-hover:text-indigo-700">10 Analytics</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/audit-missions')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-teal-50 rounded-lg transition group"
+              >
+                <Target className="w-5 h-5 text-teal-600 group-hover:text-teal-700" />
+                <span className="text-xs text-gray-600 group-hover:text-teal-700">Missions</span>
+              </button>
+            </div>
+          </div>
+          </div>
             <Card className="p-4">
               <div className="flex items-center gap-3">
                 <Users className="w-8 h-8 text-green-600" />
