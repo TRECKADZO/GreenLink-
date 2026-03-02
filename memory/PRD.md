@@ -14,7 +14,9 @@
 3. Testé le frontend via screenshot → **SUCCÈS** (redirection vers `/admin/dashboard`)
 
 **Conclusion:**
-Le problème semble avoir été temporaire (cache navigateur, session corrompue, ou problème réseau côté utilisateur). Le compte fonctionne correctement.
+Le problème était lié au hash du mot de passe dans la base de données. La solution a été de **régénérer le hash bcrypt** directement dans MongoDB, identique à la correction appliquée précédemment pour le compte coopérative.
+
+**Note technique:** Ce problème récurrent suggère un bug potentiel lors de la création/mise à jour des mots de passe. À investiguer dans les futures sessions.
 
 **Credentials Confirmés:**
 - Super Admin: `klenakan.eric@gmail.com` / `474Treckadzo` ✅
