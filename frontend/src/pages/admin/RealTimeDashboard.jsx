@@ -237,18 +237,28 @@ const RealTimeDashboard = () => {
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className={`p-2 rounded-lg ${connected ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                  <Radio className={`w-6 h-6 ${connected ? 'text-green-400 animate-pulse' : 'text-red-400'}`} />
-                </div>
-                <h1 className="text-2xl font-bold">Dashboard Temps Réel</h1>
-                <Badge className={connected ? 'bg-green-500' : 'bg-red-500'}>
-                  {connected ? (
-                    <><Wifi className="w-3 h-3 mr-1" /> EN DIRECT</>
-                  ) : (
-                    <><WifiOff className="w-3 h-3 mr-1" /> DÉCONNECTÉ</>
-                  )}
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/admin')}
+                className="text-white hover:bg-white/10"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Retour
+              </Button>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${connected ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                    <Radio className={`w-6 h-6 ${connected ? 'text-green-400 animate-pulse' : 'text-red-400'}`} />
+                  </div>
+                  <h1 className="text-2xl font-bold">Dashboard Temps Réel</h1>
+                  <Badge className={connected ? 'bg-green-500' : 'bg-red-500'}>
+                    {connected ? (
+                      <><Wifi className="w-3 h-3 mr-1" /> EN DIRECT</>
+                    ) : (
+                      <><WifiOff className="w-3 h-3 mr-1" /> DÉCONNECTÉ</>
+                    )}
                 </Badge>
               </div>
               <p className="text-slate-400">
