@@ -104,9 +104,21 @@ async def get_strategic_dashboard(
     carbon_purchases = await db.carbon_purchases.find().to_list(10000)
     coop_members = await db.coop_members.find().to_list(10000)
     
+    # NEW: Get audit and SSRTE data
+    carbon_audits = await db.carbon_audits.find().to_list(10000)
+    audit_missions = await db.audit_missions.find().to_list(10000)
+    ssrte_visits = await db.ssrte_visits.find().to_list(10000)
+    ici_alerts = await db.ici_alerts.find().to_list(10000)
+    carbon_payments = await db.carbon_premium_payments.find().to_list(10000)
+    
     # Calculate metrics
     farmers = [u for u in users if u.get('user_type') == 'producteur']
     cooperatives = [u for u in users if u.get('user_type') == 'cooperative']
+    
+    # NEW: Carbon Auditors metrics
+    carbon_auditors = [u for u in users if u.get('user_type') == 'carbon_auditor' or 'carbon_auditor' in u.get('roles', [])]
+    dual_role_agents = [u for u in users if u.get('is_dual_role') or (len(u.get('roles', [])) > 1)]
+    field_agents = [u for u in users if u.get('user_type') == 'field_agent']
     
     total_hectares = sum(p.get('area_hectares', 0) for p in parcels)
     total_co2 = sum(p.get('co2_captured_tonnes', 0) for p in parcels)
@@ -265,10 +277,87 @@ async def get_strategic_dashboard(
             "total_members": len(coop_members),
             "average_members_per_coop": round(len(coop_members) / max(len(cooperatives), 1), 1),
             "certified_cooperatives": int(len(cooperatives) * 0.75),
-            "total_premiums_distributed_xof": 45000000,
-            "average_premium_per_farmer_xof": round(45000000 / max(len(coop_members), 1), 0),
+            "total_premiums_distributed_xof": sum(p.get('amount', 0) for p in carbon_payments),
+            "average_premium_per_farmer_xof": round(sum(p.get('amount', 0) for p in carbon_payments) / max(len(coop_members), 1), 0),
             "cooperatives_with_warehouse": int(len(cooperatives) * 0.60),
             "digital_payment_adoption": 78.5
+        },
+        
+        # === SECTION 8: AUDITEURS CARBONE (NEW) ===
+        "carbon_auditors": {
+            "title": "Programme d'Audit Carbone GreenLink",
+            "description": "Suivi des auditeurs indépendants et vérifications terrain",
+            "total_auditors": len(carbon_auditors),
+            "dual_role_agents": len(dual_role_agents),
+            "total_audits_completed": len([a for a in carbon_audits if a.get('status') == 'completed']),
+            "audits_in_progress": len([a for a in carbon_audits if a.get('status') == 'in_progress']),
+            "total_missions": len(audit_missions),
+            "missions_completed": len([m for m in audit_missions if m.get('status') == 'completed']),
+            "missions_in_progress": len([m for m in audit_missions if m.get('status') in ['assigned', 'in_progress']]),
+            "parcels_audited": len(set(a.get('parcel_id') for a in carbon_audits if a.get('parcel_id'))),
+            "average_carbon_score": round(sum(a.get('carbon_score', 0) for a in carbon_audits) / max(len(carbon_audits), 1), 2),
+            "auditors_by_badge": {
+                "debutant": len([u for u in carbon_auditors if u.get('audits_completed', 0) < 10]),
+                "bronze": len([u for u in carbon_auditors if 10 <= u.get('audits_completed', 0) < 50]),
+                "argent": len([u for u in carbon_auditors if 50 <= u.get('audits_completed', 0) < 100]),
+                "or": len([u for u in carbon_auditors if u.get('audits_completed', 0) >= 100])
+            },
+            "approval_rate": round(len([a for a in carbon_audits if a.get('decision') == 'approved']) / max(len(carbon_audits), 1) * 100, 1)
+        },
+        
+        # === SECTION 9: SSRTE - TRAVAIL DES ENFANTS (NEW) ===
+        "ssrte_monitoring": {
+            "title": "Suivi SSRTE (Travail des Enfants)",
+            "description": "Conformité ICI - International Cocoa Initiative",
+            "total_field_agents": len(field_agents),
+            "total_ssrte_visits": len(ssrte_visits),
+            "visits_this_period": len([v for v in ssrte_visits if v.get('visit_date') and isinstance(v.get('visit_date'), datetime) and v['visit_date'] >= start_date]),
+            "households_monitored": len(set(v.get('farmer_id') for v in ssrte_visits if v.get('farmer_id'))),
+            "children_identified": sum(v.get('children_observed', 0) for v in ssrte_visits),
+            "risk_distribution": {
+                "critical": len([v for v in ssrte_visits if v.get('risk_level') == 'critical']),
+                "high": len([v for v in ssrte_visits if v.get('risk_level') == 'high']),
+                "moderate": len([v for v in ssrte_visits if v.get('risk_level') == 'moderate']),
+                "low": len([v for v in ssrte_visits if v.get('risk_level') == 'low'])
+            },
+            "dangerous_tasks_reported": sum(len(v.get('dangerous_tasks', [])) for v in ssrte_visits),
+            "support_provided_count": sum(len(v.get('support_provided', [])) for v in ssrte_visits),
+            "remediation_rate": round(len([v for v in ssrte_visits if v.get('remediation_status') == 'completed']) / max(len(ssrte_visits), 1) * 100, 1),
+            "coverage_rate": round(len(set(v.get('farmer_id') for v in ssrte_visits)) / max(len(farmers), 1) * 100, 1)
+        },
+        
+        # === SECTION 10: ALERTES ICI (NEW) ===
+        "ici_alerts": {
+            "title": "Centre d'Alertes ICI",
+            "description": "Alertes et interventions protection de l'enfance",
+            "total_alerts": len(ici_alerts),
+            "active_alerts": len([a for a in ici_alerts if a.get('status') == 'active']),
+            "resolved_alerts": len([a for a in ici_alerts if a.get('status') == 'resolved']),
+            "alerts_by_severity": {
+                "critical": len([a for a in ici_alerts if a.get('severity') == 'critical']),
+                "high": len([a for a in ici_alerts if a.get('severity') == 'high']),
+                "medium": len([a for a in ici_alerts if a.get('severity') == 'medium']),
+                "low": len([a for a in ici_alerts if a.get('severity') == 'low'])
+            },
+            "average_resolution_time_hours": 48,
+            "alerts_acknowledged": len([a for a in ici_alerts if a.get('acknowledged')])
+        },
+        
+        # === SECTION 11: PRIMES CARBONE (NEW) ===
+        "carbon_premiums": {
+            "title": "Distribution des Primes Carbone",
+            "description": "Paiements aux producteurs basés sur le score carbone",
+            "total_payments": len(carbon_payments),
+            "total_amount_distributed_xof": sum(p.get('amount', 0) for p in carbon_payments),
+            "payments_completed": len([p for p in carbon_payments if p.get('status') == 'completed']),
+            "payments_pending": len([p for p in carbon_payments if p.get('status') == 'pending']),
+            "average_premium_xof": round(sum(p.get('amount', 0) for p in carbon_payments) / max(len(carbon_payments), 1), 0),
+            "beneficiaries_count": len(set(p.get('farmer_id') for p in carbon_payments if p.get('farmer_id'))),
+            "payment_methods": {
+                "orange_money": len([p for p in carbon_payments if p.get('payment_method') == 'orange_money']),
+                "bank_transfer": len([p for p in carbon_payments if p.get('payment_method') == 'bank_transfer']),
+                "cash": len([p for p in carbon_payments if p.get('payment_method') == 'cash'])
+            }
         }
     }
 
@@ -566,7 +655,6 @@ async def get_regions_analytics(current_user: dict = Depends(get_admin_user)):
     """Analyse par région pour Ministère et Gouvernement"""
     
     parcels = await db.parcels.find().to_list(10000)
-    users = await db.users.find({'user_type': 'producteur'}).to_list(10000)
     
     regions = {}
     for p in parcels:

@@ -67,7 +67,7 @@ const SuperAdminDashboard = () => {
     );
   }
 
-  const { production, sustainability, eudr_compliance, social_impact, market, macroeconomic, cooperatives } = dashboardData || {};
+  const { production, sustainability, eudr_compliance, social_impact, market, macroeconomic, cooperatives, carbon_auditors, ssrte_monitoring, ici_alerts, carbon_premiums } = dashboardData || {};
 
   return (
     <div className="min-h-screen bg-slate-900" data-testid="super-admin-dashboard">
@@ -235,10 +235,11 @@ const SuperAdminDashboard = () => {
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-800 border-slate-700">
+          <TabsList className="bg-slate-800 border-slate-700 flex-wrap">
             <TabsTrigger value="overview" className="data-[state=active]:bg-emerald-600">Vue d'ensemble</TabsTrigger>
             <TabsTrigger value="production" className="data-[state=active]:bg-emerald-600">Production</TabsTrigger>
             <TabsTrigger value="carbon" className="data-[state=active]:bg-emerald-600">Carbone & EUDR</TabsTrigger>
+            <TabsTrigger value="audit" className="data-[state=active]:bg-emerald-600">Audit & SSRTE</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-emerald-600">Impact Social</TabsTrigger>
             <TabsTrigger value="market" className="data-[state=active]:bg-emerald-600">Marché & Commerce</TabsTrigger>
           </TabsList>
@@ -516,6 +517,15 @@ const SuperAdminDashboard = () => {
           <TabsContent value="market">
             <MarketTab data={market} />
           </TabsContent>
+
+          <TabsContent value="audit">
+            <AuditSSRTETab 
+              auditors={carbon_auditors} 
+              ssrte={ssrte_monitoring} 
+              alerts={ici_alerts}
+              premiums={carbon_premiums}
+            />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
@@ -748,5 +758,230 @@ const formatWeight = (value) => {
   }
   return `${value} kg`;
 };
+
+// NEW: Audit & SSRTE Tab Component
+const AuditSSRTETab = ({ auditors, ssrte, alerts, premiums }) => (
+  <div className="space-y-6">
+    {/* Row 1: Key Metrics */}
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="p-4 rounded-xl bg-gradient-to-br from-teal-900/50 to-slate-800 border border-teal-700/30">
+        <p className="text-teal-400 text-xs font-medium">Auditeurs Carbone</p>
+        <p className="text-3xl font-bold text-white">{auditors?.total_auditors || 0}</p>
+        <p className="text-slate-400 text-xs mt-1">{auditors?.dual_role_agents || 0} double casquette</p>
+      </div>
+      <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-900/50 to-slate-800 border border-emerald-700/30">
+        <p className="text-emerald-400 text-xs font-medium">Audits Complétés</p>
+        <p className="text-3xl font-bold text-white">{auditors?.total_audits_completed || 0}</p>
+        <p className="text-slate-400 text-xs mt-1">{auditors?.audits_in_progress || 0} en cours</p>
+      </div>
+      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-900/50 to-slate-800 border border-blue-700/30">
+        <p className="text-blue-400 text-xs font-medium">Visites SSRTE</p>
+        <p className="text-3xl font-bold text-white">{ssrte?.total_ssrte_visits || 0}</p>
+        <p className="text-slate-400 text-xs mt-1">{ssrte?.households_monitored || 0} ménages</p>
+      </div>
+      <div className="p-4 rounded-xl bg-gradient-to-br from-amber-900/50 to-slate-800 border border-amber-700/30">
+        <p className="text-amber-400 text-xs font-medium">Enfants Identifiés</p>
+        <p className="text-3xl font-bold text-white">{ssrte?.children_identified || 0}</p>
+        <p className="text-slate-400 text-xs mt-1">{ssrte?.support_provided_count || 0} supports fournis</p>
+      </div>
+      <div className="p-4 rounded-xl bg-gradient-to-br from-rose-900/50 to-slate-800 border border-rose-700/30">
+        <p className="text-rose-400 text-xs font-medium">Alertes Actives</p>
+        <p className="text-3xl font-bold text-white">{alerts?.active_alerts || 0}</p>
+        <p className="text-slate-400 text-xs mt-1">{alerts?.resolved_alerts || 0} résolues</p>
+      </div>
+      <div className="p-4 rounded-xl bg-gradient-to-br from-green-900/50 to-slate-800 border border-green-700/30">
+        <p className="text-green-400 text-xs font-medium">Primes Distribuées</p>
+        <p className="text-3xl font-bold text-white">{formatCurrency(premiums?.total_amount_distributed_xof || 0)}</p>
+        <p className="text-slate-400 text-xs mt-1">{premiums?.beneficiaries_count || 0} bénéficiaires</p>
+      </div>
+    </div>
+
+    {/* Row 2: Auditors & Missions */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Award className="h-5 w-5 text-yellow-500" />
+            Badges des Auditeurs
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            Gamification et progression des auditeurs
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-700/30">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🌱</span>
+                <span className="text-slate-300">Débutant</span>
+              </div>
+              <Badge className="bg-slate-600/50 text-slate-300">{auditors?.auditors_by_badge?.debutant || 0}</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-amber-900/20 border border-amber-700/30">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🥉</span>
+                <span className="text-amber-300">Bronze (10+ audits)</span>
+              </div>
+              <Badge className="bg-amber-600/50 text-amber-300">{auditors?.auditors_by_badge?.bronze || 0}</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-500/20 border border-slate-400/30">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🥈</span>
+                <span className="text-slate-300">Argent (50+ audits)</span>
+              </div>
+              <Badge className="bg-slate-500/50 text-slate-200">{auditors?.auditors_by_badge?.argent || 0}</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-900/20 border border-yellow-600/30">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🥇</span>
+                <span className="text-yellow-300">Or (100+ audits)</span>
+              </div>
+              <Badge className="bg-yellow-600/50 text-yellow-200">{auditors?.auditors_by_badge?.or || 0}</Badge>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-slate-700">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-400">Taux d'approbation</span>
+              <span className="text-emerald-400 font-bold">{auditors?.approval_rate || 0}%</span>
+            </div>
+            <Progress value={auditors?.approval_rate || 0} className="h-2 mt-2 bg-slate-700" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Baby className="h-5 w-5 text-blue-500" />
+            Distribution des Risques SSRTE
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            Classification ICI des ménages visités
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-rose-400">Critique</span>
+                <span className="text-white">{ssrte?.risk_distribution?.critical || 0}</span>
+              </div>
+              <Progress 
+                value={(ssrte?.risk_distribution?.critical || 0) / Math.max((ssrte?.total_ssrte_visits || 1), 1) * 100} 
+                className="h-2 bg-slate-700 [&>div]:bg-rose-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-orange-400">Élevé</span>
+                <span className="text-white">{ssrte?.risk_distribution?.high || 0}</span>
+              </div>
+              <Progress 
+                value={(ssrte?.risk_distribution?.high || 0) / Math.max((ssrte?.total_ssrte_visits || 1), 1) * 100} 
+                className="h-2 bg-slate-700 [&>div]:bg-orange-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-amber-400">Modéré</span>
+                <span className="text-white">{ssrte?.risk_distribution?.moderate || 0}</span>
+              </div>
+              <Progress 
+                value={(ssrte?.risk_distribution?.moderate || 0) / Math.max((ssrte?.total_ssrte_visits || 1), 1) * 100} 
+                className="h-2 bg-slate-700 [&>div]:bg-amber-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-emerald-400">Faible</span>
+                <span className="text-white">{ssrte?.risk_distribution?.low || 0}</span>
+              </div>
+              <Progress 
+                value={(ssrte?.risk_distribution?.low || 0) / Math.max((ssrte?.total_ssrte_visits || 1), 1) * 100} 
+                className="h-2 bg-slate-700 [&>div]:bg-emerald-500"
+              />
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-slate-700 grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <p className="text-slate-400 text-xs">Couverture SSRTE</p>
+              <p className="text-2xl font-bold text-blue-400">{ssrte?.coverage_rate || 0}%</p>
+            </div>
+            <div className="text-center">
+              <p className="text-slate-400 text-xs">Taux Remédiation</p>
+              <p className="text-2xl font-bold text-emerald-400">{ssrte?.remediation_rate || 0}%</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    {/* Row 3: Alerts & Premiums */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Bell className="h-5 w-5 text-rose-500" />
+            Alertes par Sévérité
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg bg-rose-900/30 border border-rose-700/30 text-center">
+              <p className="text-rose-400 text-xs">Critiques</p>
+              <p className="text-3xl font-bold text-white">{alerts?.alerts_by_severity?.critical || 0}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-orange-900/30 border border-orange-700/30 text-center">
+              <p className="text-orange-400 text-xs">Hautes</p>
+              <p className="text-3xl font-bold text-white">{alerts?.alerts_by_severity?.high || 0}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-amber-900/30 border border-amber-700/30 text-center">
+              <p className="text-amber-400 text-xs">Moyennes</p>
+              <p className="text-3xl font-bold text-white">{alerts?.alerts_by_severity?.medium || 0}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-emerald-900/30 border border-emerald-700/30 text-center">
+              <p className="text-emerald-400 text-xs">Basses</p>
+              <p className="text-3xl font-bold text-white">{alerts?.alerts_by_severity?.low || 0}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-green-500" />
+            Primes Carbone
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 rounded-lg bg-green-900/20 border border-green-700/30">
+              <p className="text-green-400 text-sm">Total Distribué</p>
+              <p className="text-3xl font-bold text-white">{formatCurrency(premiums?.total_amount_distributed_xof || 0)} FCFA</p>
+              <p className="text-slate-400 text-xs mt-1">
+                Moyenne: {formatCurrency(premiums?.average_premium_xof || 0)} FCFA/bénéficiaire
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="p-2 rounded-lg bg-slate-700/50 text-center">
+                <p className="text-xs text-orange-400">Orange Money</p>
+                <p className="text-lg font-bold text-white">{premiums?.payment_methods?.orange_money || 0}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-slate-700/50 text-center">
+                <p className="text-xs text-blue-400">Virement</p>
+                <p className="text-lg font-bold text-white">{premiums?.payment_methods?.bank_transfer || 0}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-slate-700/50 text-center">
+                <p className="text-xs text-slate-400">Espèces</p>
+                <p className="text-lg font-bold text-white">{premiums?.payment_methods?.cash || 0}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+);
 
 export default SuperAdminDashboard;
