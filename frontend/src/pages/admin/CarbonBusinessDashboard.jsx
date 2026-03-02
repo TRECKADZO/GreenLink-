@@ -23,6 +23,7 @@ const apiClient = {
 };
 
 const CarbonBusinessDashboard = () => {
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [projection, setProjection] = useState(null);
   const [marketPrices, setMarketPrices] = useState(null);
