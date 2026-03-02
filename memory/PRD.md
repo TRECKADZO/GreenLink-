@@ -40,7 +40,7 @@ Le problème était lié au hash du mot de passe dans la base de données. La so
 **Problèmes identifiés par l'agent de déploiement :**
 
 1. **CORS bloqué** (CRITIQUE)
-   - Ancien: `CORS_ORIGINS="https://farmer-ussd-portal.preview.emergentagent.com"`
+   - Ancien: `CORS_ORIGINS="https://greenlink-auditor.preview.emergentagent.com"`
    - Nouveau: `CORS_ORIGINS="*"`
 
 2. **load_dotenv override=True** (CRITIQUE)

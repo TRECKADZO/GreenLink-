@@ -3,160 +3,164 @@ The user's initial request was to build a multi-persona agritech platform for CÃ
 
 The scope expanded to include a **Carbon Auditor** role, managed by a Super Admin (GreenLink), to independently verify farmer plots for carbon credit payments. This is distinct from the cooperative's Field Agents who focus on SSRTE.
 
-Most recently, the focus has shifted to building out the financial tools for cooperatives to manage these carbon payments, building a USSD interface for farmers, and improving the overall UI/UX of the web portals.
+Most recently, the focus has shifted to building out the financial tools for cooperatives, improving the overall UI/UX, and resolving persistent deployment issues. The user has also requested the ability for a single Field Agent to have a double casquette (dual role) for both Carbon and SSRTE monitoring, and a fully dedicated system for SSRTE agents.
 
 The platform must support:
-*   Strategic analytics dashboards for Admins (including auditor performance/badges and real-time data).
-*   Data collection for producer households and their plots, with a critical requirement that all parcels created by a cooperative must be assigned to a specific member.
+*   Strategic analytics dashboards for Admins.
+*   Data collection for producer households and their plots.
 *   Offline-first mobile tools for Cooperatives, Field Agents, and Carbon Auditors.
-*   A robust carbon payment calculation and tracking system for Cooperatives.
-*   Data export functionalities (CSV, PDF) for audits and payment reports.
+*   A robust carbon payment calculation and tracking system.
+*   Data export functionalities (CSV, PDF).
 *   A gamification system (badges) for Carbon Auditors.
-*   Account activation flows for producers and field agents.
-*   A USSD interface (API and simulator) for farmers to access their data.
+*   A USSD interface (API and simulator) for farmers.
+*   Multi-role support for field agents.
 
 **User's preferred language**: French
 
 **what currently exists?**
 The application is a mature full-stack platform (React/FastAPI/MongoDB) with role-based access for Super Admins, Cooperatives, Producers, Field Agents, and Carbon Auditors.
 
-*   **Backend**: A modular FastAPI backend providing APIs for auth, data collection, and role-specific functionalities. It includes a complete gamification engine, a carbon premium calculation engine, PDF/CSV export capabilities, and a new USSD callback endpoint.
-*   **Frontend (Web)**: The React app features role-specific dashboards. Recent changes include the addition of Back buttons on all sub-pages for improved navigation, a new Quick Access menu on the admin dashboard, fixes for raw JSON data display on analytics pages, and a system-wide currency update from FCFA to XOF.
-*   **Mobile App (React Native)**: The mobile app () includes offline audit submission, mandatory member selection for parcel creation, improved registration error messages, and a new USSD simulator screen. The latest version is .
+*   **Backend**: A modular FastAPI backend providing APIs for auth, data collection, and role-specific functionalities. It now supports a multi-role system ( array in the user model instead of a single ). The  route has been refactored to use async . The CORS policy has been made more permissive to debug deployment issues.
+*   **Frontend (Web)**: The React app features role-specific dashboards. The login, registration, and password reset pages now have a password visibility toggle. The cooperative member creation form has been updated to include a 'Department' field. A UI for managing the double casquette (dual role) for agents has been implemented.
+*   **Mobile App (React Native)**: The mobile app () has an updated welcome screen to better match the web UI/UX. The latest planned version is .
 
 **Last working item**:
-- Last item agent was working: The agent was investigating a login failure for the Super Admin account () on the web application. The user reported an Erreur de connexion with a screenshot.
+- Last item agent was working: The agent was beginning the implementation of a complete, dedicated system for SSRTE agents, as per the user's request (Option 'A'). This involves creating new backend models, API endpoints, and a frontend interface for this new role.
 - Status: 
 - Agent Testing Done: N
-- Which testing method agent to use? The agent should first investigate the user account in the database. Use  to test the login endpoint directly with the admin credentials, while checking the backend logs for specific errors. Finally, use the  tool to verify the fix.
+- Which testing method agent to use? After implementation, use  to test the new backend endpoints and frontend components for the SSRTE agent role. Use  for initial endpoint verification during development.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - **Issue 1: Super Admin Web App Login Failure (P0)**
-     - **Description**: The Super Admin user () is unable to log into the web application, receiving a generic Erreur de connexion message as shown in a user-provided screenshot. This is blocking all super admin functionalities.
-     - **Attempted fixes**: The agent confirmed that the backend server is running and that login for a different role (Cooperative) works correctly after a previous debugging session. The investigation into the admin account itself has just begun.
+  - **Issue 1: Critical Web Login & Registration Failures in Deployed Environment (P0)**
+     - **Description**: Users are unable to log in or register on the *deployed* web application, receiving generic connection errors. This issue persists across different computers and browsers, and for both new and existing accounts. The application works correctly in the local preview environment, but fails in production, indicating a deployment or environment configuration problem. This is the highest priority blocker.
+     - **Attempted fixes**:
+        - Regenerated password hashes directly in the database.
+        - Downgraded  to  to resolve a warning/incompatibility with .
+        - Standardized password hashing logic to use a central utility ().
+        - Implemented more detailed error logging in the frontend's .
+        - Used , which identified a restrictive CORS policy.
+        - Updated  and  to allow all origins ().
      - **Next debug checklist**:
-        1.  Examine the user record in the  collection for . Verify the  is 'admin' and check the status of the .
-        2.  If the password hash is suspect, reset the password for the admin account using a script, ensuring the  field is correctly updated.
-        3.  Execute a  command to test the  endpoint with the admin credentials.
-        4.  Simultaneously,  the backend logs () to capture the exact error message during the login attempt.
-        5.  After a successful  test, use the screenshot tool to confirm login is successful on the frontend.
-     - **Why fix this issue and what will be achieved with the fix?**: The Super Admin role is critical for platform management, user administration, and accessing key analytics dashboards. This fix will restore access to these essential functions.
+        1.  The problem is almost certainly not with the application code itself, but with the deployment environment.
+        2.  Use the  again to get a fresh, detailed report on the production environment configuration (environment variables, proxy settings, ingress rules).
+        3.  Inspect the live production logs for the backend service during a failed login/registration attempt. Look for any errors from the ingress controller, proxy, or the FastAPI application itself that don't appear in the preview environment.
+        4.  Implement verbose request logging in  (using a middleware) to log all incoming request headers for the  and  endpoints. This will show if critical headers are being stripped or altered by the production infrastructure.
+        5.  Once a fix is attempted, testing **must** be done against the deployed URL, not the preview URL.
+     - **Why fix this issue and what will be achieved with the fix?**: The entire web platform is unusable for all users in its deployed state. Fixing this will unblock all web-based activities.
      - **Status**: 
-     - **Is recurring issue?**: Y (A similar login issue with the cooperative account was resolved earlier in the session, suggesting potential brittleness in the auth/password logic).
-     - **Should Test frontend/backend/both after fix?**: Both
-     - **Blocked on other issue**: None.
+     - **Is recurring issue?**: Y
+     - **Should Test frontend/backend/both after fix?**: Both, with an emphasis on testing the deployed production application.
+     - **Blocked on other issue**: None. This issue is the primary blocker for all other tasks.
 
 **In progress Task List**:
-None.
+  - **Task 1: Implement Full SSRTE Agent System (P1)**
+     - **Where to resume**: The agent confirmed the plan with the user. The next step is to create the backend models (), Pydantic schemas (), and API endpoints () for the SSRTE agent role, including forms and data collection logic.
+     - **What will be achieved with this?**: A new, dedicated user role will exist for SSRTE agents, allowing for targeted data collection, monitoring, and reporting related to child labor remediation, separate from the carbon audit workflow.
+     - **Status**: 
+     - **Should Test frontend/backend/both after fix?**: Both
+     - **Blocked on something**: Critically blocked by **Issue 1**. It is not logical to build a new user role when no users can log into the deployed application.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P0) Full User Test of APK v1.12.0**: The latest APK is built, but a comprehensive user flow test is pending. This should cover:
-        *   Farmer registration (with the new, more descriptive error messages).
-        *   Farmer login and use of the new USSD Simulator screen.
-        *   Confirming all currency values appear in XOF.
-    *   **(P1) Implement Real Payment Integration (Orange Money)**: The user has expressed interest in this. The next step is to use  to integrate a real payment provider.
-    *   **(P1) Implement multi-channel notifications for Payments**: As requested, send notifications (Push, SMS, Email) to members when a payment is made. This will require an integration subagent.
-
+    *   **(P0) Full User Test of APK v1.14.0**: An APK was requested but the build process was not completed. A full user flow test is pending once built. This should cover the new mobile home screen and confirm no regressions were introduced.
+    *   **(P1) Implement Real Payment Integration (Orange Money)**: Use  to get a playbook for integrating a real payment provider.
+    *   **(P1) Implement multi-channel notifications for Payments**: Send notifications (Push, SMS, Email) to members when a payment is made. This will require using an integration subagent.
 *   **Future Tasks:**
     *   (P2) Real USSD Integration (beyond the current API simulator).
     *   (P2) Refactor backend to use a true cloud storage solution (e.g., S3) for file uploads.
-    *   (P2) Standardize all backend database calls on  (async) to avoid sync/async bugs.
-    *   (P2) Refactor the monolithic  file into smaller, more focused routers.
+    *   (P2) Complete the refactoring of the monolithic  file into smaller, more focused routers.
+    *   (P2) Verify the entire backend uses  (async) for all database calls.
 
 **Completed work in this session**
-- **Currency Standardization**: Replaced all instances of FCFA with XOF across the entire platform (backend, frontend, mobile) and made EUR an optional secondary display.
-- **UI Navigation Improvement**: Added Back buttons to all secondary pages within the Super Admin and Cooperative portals for consistent navigation.
-- **Admin Dashboard Overhaul**: Fixed analytics pages that were displaying raw JSON data, replacing it with formatted components. Added a Quick Access menu to the main admin dashboard to link to all 10 analytics and management modules.
-- **Mobile USSD Simulator**: Added a new USSD Simulator screen to the mobile app for farmers and built/delivered **APK v1.11.0**.
-- **Mobile Registration Fix**: Debugged a farmer registration error, improved the in-app error messages to be more specific (e.g., Phone number already exists), and built/delivered **APK v1.10.1**.
-- **USSD Backend Implementation**: Created a new FastAPI endpoint () to power a stateful USSD menu system for farmers.
-- **Carbon Premium Features Tested**: Successfully debugged and tested the entire cooperative carbon premium workflow, including fetching data, exporting to CSV, and processing payments which are then reflected in the payment history tab.
-- **Authentication Debugging**: Resolved a complex login failure for the cooperative account which involved incorrect password hashing during a database update.
-- **Homepage Update**: Updated the homepage content to better reflect the project's features and removed outdated/placeholder information at the user's request.
-- **New APK with Currency Fix**: Built and delivered **APK v1.12.0** containing the currency update and all previous mobile enhancements.
+- **Dual-Role Double Casquette Implemented**: Modified the user model to support an array of roles. Implemented backend and frontend logic for an agent to have both Carbon and SSRTE roles.
+- **Password Visibility Toggle**: Added an icon to show/hide the password on the web login, registration, and password reset forms.
+- **Mobile Homepage Update**: Redesigned the mobile app's  to better align with the modern UI of the web application.
+- **Department Field Added**: The Add Cooperative Member form on the web now correctly includes a 'Department' selection field, which is saved to the backend.
+- **Authentication System Hardening**:
+    - Downgraded  from v4.x to  to resolve a  incompatibility warning.
+    - Refactored  to use the standardized  utility.
+- **Async Refactoring**: Migrated  from synchronous  to asynchronous .
+- **CORS Configuration Fix**: Updated the backend's CORS policy to be more permissive () to rule out CORS as the cause of deployment login issues.
+- **APK Build Initiated**: Started builds for APK  and  to incorporate recent mobile changes.
 
 **Earlier issues found/mentioned but not fixed**
-None.
+None, all known issues are captured in the pending list.
 
 **Known issue recurrence from previous fork**
-- **Authentication/Password Issues**: Login failures have occurred for two different user roles (Cooperative and Admin) in this session, both requiring database-level intervention. This highlights a potential weakness in the password update and verification logic.
-- **Sync vs. Async DB Calls**: The need to refactor to a fully async  implementation remains. The agent encountered database state synchronization delays during password debugging, which is a symptom of this underlying issue.
+- **Authentication/Deployment Failures**: The most significant recurring problem is the failure of login and registration functionality specifically in the deployed production environment. This has happened multiple times and previous fixes (password hashing, CORS) have not resolved the root cause.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **USSD Backend Implementation**: Creating a stateful USSD menu system via a web API that receives session data, phone numbers, and user input.
-- **System-wide Refactoring**: Performing a global search-and-replace to change the primary currency (FCFA to XOF) and updating all relevant frontend components and backend logic.
-- **Mobile App Build Pipeline**: Using Expo Application Services () to version, build, and distribute new APKs (, , ) with incremental fixes and features.
-- **UI Consistency**: Adding a reusable  component and applying it across multiple pages in different user portals to create a standardized user experience.
-- **Component-Based UI Debugging**: Fixing analytics pages by replacing raw JSON output with structured React components to properly visualize data.
+- **Multi-Role Authentication**: Transitioned from a single  string to a  array in the user model to support users with multiple responsibilities.
+- **Async/Await Refactoring**: Migrating synchronous  database calls to asynchronous  to improve performance and prevent blocking operations.
+- **Dependency Version Management**: Pinning  in  to fix a runtime warning and potential instability caused by an incompatibility with .
+- **Deployment vs. Preview Debugging**: The core challenge is diagnosing an issue that only manifests in a production-like environment, pointing towards configuration (env vars, proxy, ingress) rather than application code.
 
 **key DB schema**
-- ****: This collection was directly manipulated to investigate and fix login issues by resetting  for  and needs to be checked for .
-- ****: This new collection was verified to correctly log payment transactions made through the cooperative dashboard.
-- **Data fields**: Code logic was updated to use fields like  instead of , though the underlying database schema was not migrated.
+- ****: The schema was changed. The  field has been replaced by  to allow for multiple roles (e.g., ).
+- ****: Now includes a  field.
 
 **changes in tech stack**
-No new libraries or technologies were added in this session.
+- ****: Downgraded and pinned to version  in .
 
 **All files of reference**
-- : Central to the current login issue.
-- : Recently modified to add the Quick Access menu.
-- : Recently fixed to display formatted data instead of raw JSON.
-- : Contains the improved error handling for mobile registration.
-- : The new USSD simulator screen in the mobile app.
-- : The new backend endpoint for handling all USSD interactions.
-- : Located in , it defines the build profiles for the mobile app.
+- : The focus of repeated debugging for login/registration issues.
+- : Location of the CORS middleware configuration.
+- : Contains the pinned  version.
+- : Recently modified for password visibility.
+- : Updated with the department field.
+- : Contains the UI for managing dual roles.
+- : The redesigned mobile home screen.
+-  files for both frontend and backend: These are critical for the deployment debugging process.
 
 **Areas that need refactoring**:
-- **Authentication Logic**: The process for updating passwords and verifying them seems brittle and has caused recurring login failures. This part of  and related database update scripts needs to be made more robust.
-- **Standardize on **: The backend should be refactored to use  (asynchronous) for all database interactions to prevent sync/async bugs.
-- **Breakdown **: The  file is large and should be split into smaller, more focused routers.
+- **Authentication in Deployment**: The entire authentication flow needs a robust solution that is proven to work in the production environment, not just preview. This is less about code style and more about environmental resilience.
+- ** router**: This large file still needs to be broken down into smaller, more manageable routers for better maintainability.
 
 **key api endpoints**
-- : POST - The endpoint for user authentication, which is currently failing for the admin user.
-- : POST - The new endpoint that powers the USSD menu logic.
-- : POST - Endpoint to mark a premium as paid; successfully tested.
-- : GET - Endpoint to retrieve payment records; successfully tested.
+- : POST - Failing in deployment, working in preview.
+- : POST - Failing in deployment, working in preview.
+- : POST - Updated to accept the  field.
+- : POST - New endpoint to grant an existing auditor the SSRTE role.
 
 **Critical Info for New Agent**
 - **Respond in French.** All user interactions must be in French.
-- **Admin Login is the Top Priority**: The immediate task is to solve the login issue for the super admin (). This is a hard blocker for the user.
-- **Password Resets are Tricky**: Be very careful when updating passwords in the database. The previous agent had to ensure the  was generated and updated correctly. Simply changing a  field is not enough.
-- **Mobile Builds**: The user is actively testing APKs. After any significant mobile-side change, be prepared to increment the version in  and run  to generate a new APK. The latest build is .
+- **DEPLOYMENT IS BROKEN**: Your absolute first priority is to solve the login and registration failure in the **deployed environment**. Do not work on any new features until users can successfully log into the production web app. The problem is not in the preview environment's code. Focus your investigation on configuration differences between preview and production (env vars, ingress, proxies).
+- **SSRTE System is Next**: Once the deployment issue is fixed, the next task is to implement the full, dedicated system for SSRTE agents as requested by the user.
 
 **documents and test reports created in this job**
 -  (Updated)
-- 
-- Multiple APKs have been built, with the latest being . Link: 
+- APK builds for  and  were initiated.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Reports Erreur de connexion with a screenshot, showing the admin login is failing. (Current issue)
-2.  **User**: Confirms the  APK is what they wanted.
-3.  **User**: Asks for a new APK  (which was before the currency change). The agent correctly inferred they need a new build with the currency change.
-4.  **User**: Asks for all amounts in the project to be in XOF by default, with USD as an optional display. (Completed)
-5.  **User**: Reports that admin analytics pages are showing raw JSON and that some analytics modules are missing from the admin menu. (Completed)
-6.  **User**: Asks to also check for Back buttons in all Super Admin pages. (Completed)
-7.  **User**: Asks to add a Back button to all pages in the Cooperative portal. (Completed)
-8.  **User**: Asks for a USSD simulator screen to be added to the mobile app. (Completed, APK v1.11.0 built)
-9.  **User**: Asks where the USSD interface is in the farmer's mobile app.
-10. **User**: Confirms the registration error fix is what they wanted and asks to proceed with building the new APK. (Completed, APK v1.10.1 built)
+1.  **User**: Asks for a complete, dedicated system for SSRTE agents.
+2.  **Agent**: Proposes a plan for the SSRTE system.
+3.  **User**: Confirms plan 'A' (full system).
+4.  **User**: Asks to build APK v1.14.0.
+5.  **Agent**: Starts the build.
+6.  **User**: Asks to update the mobile home screen to match the web version.
+7.  **Agent**: Implements the mobile home screen update.
+8.  **User**: Asks to add password visibility toggle (show/hide) to web login/register pages.
+9.  **Agent**: Implements the password visibility toggle.
+10. **User**: Asks about the RÃ´le afent SSRTE? (SSRTE Agent Role?), prompting the discussion for a dedicated system.
 
 **Project Health Check:**
 - **Broken**:
-    - Super Admin login on the web application.
+    - **Web Application Login and Registration in the DEPLOYED environment.** This is a critical, show-stopping failure.
 - **Mocked/Simulated**:
-    - **Payment Gateway**: The system tracks payments, but disbursement is manual. Real integration (e.g., Orange Money) is a future task.
-    - **SMS/Email Notifications**: The infrastructure is partially there but not connected to a live provider.
-    - **Real USSD**: The system uses a web API to simulate USSD. A real integration with a telecom provider is a future task.
-- **Healthy**: The web and mobile applications are otherwise stable. The Cooperative portal, carbon premium features, USSD simulator (web and mobile), and mobile registration flows are functional.
+    - Payment Gateway (manual disbursement).
+    - SMS/Email Notifications (not connected to a provider).
+    - Real USSD (uses a web API simulation).
+- **Healthy**:
+    - The entire application (frontend, backend, mobile) within the **preview environment**.
+    - Core features like carbon premiums, multi-role logic, and data management are functional in preview.
 
 **3rd Party Integrations**
 - **Expo / EAS**: Core framework and build service for the React Native mobile app.
-- **Expo Push Notifications**: Used for mobile push notifications.
+- **Expo Push Notifications**: For mobile push notifications.
 - **MongoDB Atlas**: The primary database.
 - ****: Python library for PDF generation.
 - ****: Python library for QR code generation.
@@ -164,17 +168,17 @@ No new libraries or technologies were added in this session.
 - ****: For data tables in the frontend.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES. A full test suite was run after the USSD implementation and homepage update.
-- **Troubleshoot agent used after agent stuck in loop**: NO.
-- **Test files created**: .
-- **Known regressions**: Super Admin login is a new regression.
+- **Testing agent used after significant changes**: NO, recent changes were tested manually with  and screenshots.
+- **Troubleshoot agent used after agent stuck in loop**: NO. The  was used to diagnose the CORS issue.
+- **Test files created**: None in this session.
+- **Known regressions**: The login/registration failure in deployment is a major, persistent regression.
 
 **Credentials to test flow:**
-- **Super Admin**:  /  (Login is currently failing)
-- **Cooperative**:  /  (Password was reset during this session and is confirmed working).
+- **Super Admin**:  / 
+- **Cooperative**:  / 
 - **Producer**:  / 
 - **Field Agent**: Phone:  / 
-- **Carbon Auditor**:  /  (Password was reset during this session and is confirmed working).
+- **Carbon Auditor**:  / 
 
 **What agent forgot to execute**
-- The agent successfully tested individual API endpoints related to the latest mobile features but has not performed a holistic, end-to-end test on the actual  APK. This should be done after the admin login is fixed.</analysis>
+The agent repeatedly treated the deployment failure as a code issue solvable within the preview environment. The root cause is environmental, and the agent failed to establish a robust debugging strategy focused on the production environment itself (e.g., inspecting ingress logs, comparing env vars, logging raw requests on the production server). The user's request to test that the feature works well in deployment was not adequately fulfilled.</analysis>

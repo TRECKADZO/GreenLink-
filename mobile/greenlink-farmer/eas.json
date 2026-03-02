@@ -33,7 +33,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://farmer-ussd-portal.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://greenlink-auditor.preview.emergentagent.com"
       }
     }
   },
