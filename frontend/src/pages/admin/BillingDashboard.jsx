@@ -13,7 +13,8 @@ import axios from 'axios';
 import { 
   FileText, DollarSign, Users, TrendingUp, Clock, AlertCircle,
   Plus, Send, CheckCircle, XCircle, ArrowUpRight, ArrowDownRight,
-  Calendar, Building2, Receipt, CreditCard, Download, RefreshCcw
+  Calendar, Building2, Receipt, CreditCard, Download, RefreshCcw,
+  ChevronLeft
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
