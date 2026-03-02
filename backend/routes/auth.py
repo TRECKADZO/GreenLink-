@@ -518,7 +518,7 @@ async def check_password_health(email: str):
     if not user:
         return {"status": "error", "message": "Utilisateur non trouvé"}
     
-    has_hash = "hashed_password" in user and user["hashed_password"]
+    has_hash = "hashed_password" in user and bool(user["hashed_password"])
     hash_format_valid = False
     hash_prefix = None
     
@@ -531,7 +531,7 @@ async def check_password_health(email: str):
     return {
         "status": "ok" if has_hash and hash_format_valid else "needs_repair",
         "email": email,
-        "has_hashed_password": has_hash,
+        "has_hashed_password": has_hash,  # Now returns True/False
         "hash_format_valid": hash_format_valid,
         "hash_prefix": hash_prefix,
         "last_login": user.get("last_login"),
