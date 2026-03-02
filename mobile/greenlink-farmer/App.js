@@ -73,6 +73,9 @@ import AuditorDashboardScreen from './src/screens/auditor/AuditorDashboardScreen
 import AuditorMissionScreen from './src/screens/auditor/AuditorMissionScreen';
 import AuditFormScreen from './src/screens/auditor/AuditFormScreen';
 
+// Screens - USSD
+import { USSDSimulatorScreen } from './src/screens/ussd';
+
 // Screens - Settings
 import { NotificationPreferencesScreen } from './src/screens/settings';
 
