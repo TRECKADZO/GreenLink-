@@ -106,9 +106,26 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('[Auth] Register error:', error.message);
       console.error('[Auth] Error response:', error.response?.data);
+      
+      // Parse specific error messages from backend
+      let errorMessage = 'Erreur d\'inscription';
+      const backendError = error.response?.data?.detail;
+      
+      if (backendError) {
+        if (backendError.includes('téléphone') || backendError.includes('phone')) {
+          errorMessage = 'Ce numéro de téléphone est déjà enregistré. Connectez-vous ou utilisez un autre numéro.';
+        } else if (backendError.includes('email')) {
+          errorMessage = 'Cet email est déjà enregistré.';
+        } else {
+          errorMessage = backendError;
+        }
+      } else if (error.message.includes('Network')) {
+        errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet.';
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.detail || 'Erreur d\'inscription',
+        error: errorMessage,
       };
     }
   };
