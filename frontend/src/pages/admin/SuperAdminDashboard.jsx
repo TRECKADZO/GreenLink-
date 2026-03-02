@@ -6,7 +6,8 @@ import {
   TrendingUp, FileText, Download, Building2,
   MapPin, Shield, Scale, Target, Briefcase,
   ArrowUpRight, ArrowDownRight, RefreshCw,
-  ChevronRight, Calendar, Filter
+  ChevronRight, Calendar, Filter, Bell, Activity,
+  Award, Baby, CreditCard
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
