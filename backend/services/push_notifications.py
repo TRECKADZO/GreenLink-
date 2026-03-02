@@ -131,7 +131,6 @@ class PushNotificationService:
         Notifie les admins et coopératives concernées
         """
         severity = alert_data.get("severity", "medium")
-        alert_type = alert_data.get("type", "general")
         message = alert_data.get("message", "Nouvelle alerte ICI")
         farmer_id = alert_data.get("farmer_id")
         
@@ -224,6 +223,93 @@ class PushNotificationService:
             data=data,
             priority=priority
         )
+    
+    async def send_ssrte_case_alert(self, case_data: dict) -> dict:
+        """
+        Envoyer une notification push pour un cas SSRTE critique
+        Notifie immédiatement les responsables ICI pour intervention rapide
+        """
+        child_name = case_data.get("child_name", "Enfant")
+        child_age = case_data.get("child_age", 0)
+        labor_type = case_data.get("labor_type", "unknown")
+        severity_score = case_data.get("severity_score", 0)
+        member_name = case_data.get("member_name", "Producteur")
+        cooperative_id = case_data.get("cooperative_id")
+        
+        # Mapper les types de travail
+        labor_type_labels = {
+            "worst_forms": "PIRE FORME",
+            "hazardous": "DANGEREUX", 
+            "light_work": "Léger",
+            "none": "Aucun"
+        }
+        labor_label = labor_type_labels.get(labor_type, labor_type)
+        
+        # Déterminer la sévérité et le message
+        if severity_score >= 8:
+            title = "🚨 CAS SSRTE CRITIQUE DÉTECTÉ"
+            emoji = "🚨"
+            priority = "high"
+            channel_id = "alerts"
+        elif severity_score >= 5:
+            title = "⚠️ Cas SSRTE Haute Priorité"
+            emoji = "⚠️"
+            priority = "high"
+            channel_id = "alerts"
+        else:
+            title = "📋 Nouveau Cas SSRTE"
+            emoji = "📋"
+            priority = "normal"
+            channel_id = "default"
+        
+        body = f"{emoji} {child_name} ({child_age} ans) - Travail {labor_label}\nProducteur: {member_name}\nSévérité: {severity_score}/10"
+        
+        # Récupérer les tokens (admins + coopérative concernée)
+        user_types = ["admin", "super_admin"]
+        tokens = await self.get_device_tokens(user_types=user_types)
+        
+        # Ajouter les tokens de la coopérative concernée si disponible
+        if cooperative_id:
+            coop_tokens = await self.get_device_tokens(user_ids=[cooperative_id])
+            tokens.extend(coop_tokens)
+        
+        # Données pour la navigation
+        data = {
+            "type": "ssrte_case",
+            "case_id": str(case_data.get("_id", "")),
+            "severity_score": severity_score,
+            "labor_type": labor_type,
+            "screen": "SSRTECases",
+            "params": {"caseId": str(case_data.get("_id", ""))}
+        }
+        
+        # Envoyer la notification
+        result = await self.send_push_notification(
+            tokens=tokens,
+            title=title,
+            body=body[:200],
+            data=data,
+            priority=priority,
+            channel_id=channel_id
+        )
+        
+        # Logger dans la base
+        await db.push_notifications_log.insert_one({
+            "type": "ssrte_case_alert",
+            "case_data": {
+                "case_id": str(case_data.get("_id", "")),
+                "child_name": child_name,
+                "severity_score": severity_score,
+                "labor_type": labor_type
+            },
+            "tokens_count": len(tokens),
+            "result": result,
+            "created_at": datetime.utcnow()
+        })
+        
+        logger.info(f"[SSRTE] Push notification sent for case: {child_name}, severity: {severity_score}")
+        
+        return result
     
     async def broadcast_to_all_field_agents(self, title: str, body: str, data: dict = None) -> dict:
         """

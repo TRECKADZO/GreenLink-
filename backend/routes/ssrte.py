@@ -262,6 +262,7 @@ async def create_household_visit(
     }
     
     result = await db.ssrte_visits.insert_one(visit_doc)
+    visit_doc["_id"] = result.inserted_id
     
     # Mettre à jour les stats de l'agent
     await db.users.update_one(
@@ -269,11 +270,26 @@ async def create_household_visit(
         {"$inc": {"ssrte_stats.visits_completed": 1}}
     )
     
+    # Envoyer une notification push pour les visites à haut risque
+    if children_at_risk > 0:
+        try:
+            from services.push_notifications import push_service
+            await push_service.send_ssrte_visit_notification({
+                "_id": result.inserted_id,
+                "farmer_name": member.get("full_name"),
+                "niveau_risque": "eleve",
+                "enfants_observes_travaillant": children_at_risk
+            })
+            logger.info(f"[SSRTE] Push notification sent for high-risk visit: {member.get('full_name')}")
+        except Exception as e:
+            logger.error(f"[SSRTE] Failed to send push notification: {e}")
+    
     return {
         "message": "Visite enregistrée avec succès",
         "visit_id": str(result.inserted_id),
         "children_at_risk": children_at_risk,
-        "risk_level": "high" if children_at_risk > 0 else "low"
+        "risk_level": "high" if children_at_risk > 0 else "low",
+        "notification_sent": children_at_risk > 0
     }
 
 
@@ -385,6 +401,7 @@ async def create_child_labor_case(
     }
     
     result = await db.ssrte_cases.insert_one(case_doc)
+    case_doc["_id"] = result.inserted_id
     
     # Mettre à jour la visite
     await db.ssrte_visits.update_one(
@@ -400,10 +417,20 @@ async def create_child_labor_case(
     
     logger.info(f"[SSRTE] New child labor case created: {case.child_name}, type: {case.labor_type}")
     
+    # Envoyer une notification push pour les cas critiques ou dangereux
+    if case.severity_score >= 5 or case.labor_type in [ChildLaborType.HAZARDOUS, ChildLaborType.WORST_FORMS]:
+        try:
+            from services.push_notifications import push_service
+            await push_service.send_ssrte_case_alert(case_doc)
+            logger.info(f"[SSRTE] Push notification sent for critical case: {case.child_name}")
+        except Exception as e:
+            logger.error(f"[SSRTE] Failed to send push notification: {e}")
+    
     return {
         "message": "Cas enregistré avec succès",
         "case_id": str(result.inserted_id),
-        "severity": "critical" if case.severity_score >= 8 else "high" if case.severity_score >= 5 else "medium"
+        "severity": "critical" if case.severity_score >= 8 else "high" if case.severity_score >= 5 else "medium",
+        "notification_sent": case.severity_score >= 5 or case.labor_type in [ChildLaborType.HAZARDOUS, ChildLaborType.WORST_FORMS]
     }
 
 

@@ -2,6 +2,29 @@
 
 ## Latest Updates - March 2, 2026 (Session 8 - SSRTE Agent System)
 
+### ✅ SYSTÈME D'ALERTES PUSH SSRTE IMPLÉMENTÉ
+
+**Notifications Push Automatiques:**
+- Alerte push instantanée lors de création de cas SSRTE critique (severity >= 5)
+- Alerte push pour visites à haut risque (enfants à risque détectés)
+- Notifications envoyées aux responsables ICI (admins, coopératives)
+- Logs des notifications dans `push_notifications_log`
+
+**Déclencheurs d'alertes:**
+- `send_ssrte_case_alert()` - Cas critique ou dangereux
+- `send_ssrte_visit_notification()` - Visite à haut risque
+- Sévérité 8-10: 🚨 CRITIQUE
+- Sévérité 5-7: ⚠️ HAUTE PRIORITÉ
+- Travail dangereux ou pire forme: Alerte automatique
+
+**Tests réussis:**
+- ✅ Visite créée avec `notification_sent: true`
+- ✅ Logs: "Push notification sent for high-risk visit"
+- ✅ Cas critique créé avec notification
+- ✅ Logs: "Push notification sent for case: severity: 9"
+
+---
+
 ### ✅ SYSTÈME AGENT SSRTE COMPLET IMPLÉMENTÉ
 
 **Backend - Routes API SSRTE (/api/ssrte/*):**
