@@ -11,7 +11,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 # Load environment variables from .env file
 # This must happen BEFORE any other imports that use os.environ
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env', override=True)
+load_dotenv(ROOT_DIR / '.env', override=False)
 
 # MongoDB configuration
 MONGO_URL = os.environ.get('MONGO_URL')
