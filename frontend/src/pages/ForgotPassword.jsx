@@ -4,7 +4,7 @@ import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Sprout, Mail, ArrowLeft, KeyRound, Check, AlertCircle } from 'lucide-react';
+import { Sprout, Mail, ArrowLeft, KeyRound, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -19,6 +19,8 @@ const ForgotPassword = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [simulationCode, setSimulationCode] = useState(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Step 1: Request reset code
   const handleRequestCode = async (e) => {
@@ -242,30 +244,48 @@ const ForgotPassword = () => {
 
             <div>
               <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                placeholder="Minimum 6 caractères"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-2"
-                data-testid="new-password-input"
-                required
-              />
+              <div className="relative mt-2">
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? 'text' : 'password'}
+                  placeholder="Minimum 6 caractères"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="pr-10"
+                  data-testid="new-password-input"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Répétez le mot de passe"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-2"
-                data-testid="confirm-password-input"
-                required
-              />
+              <div className="relative mt-2">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Répétez le mot de passe"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pr-10"
+                  data-testid="confirm-password-input"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
               {confirmPassword && newPassword !== confirmPassword && (
                 <p className="text-xs text-red-500 mt-1">
                   Les mots de passe ne correspondent pas

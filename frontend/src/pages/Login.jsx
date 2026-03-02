@@ -5,7 +5,7 @@ import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Sprout, Mail, Lock, UserPlus, Shield } from 'lucide-react';
+import { Sprout, Mail, Lock, UserPlus, Shield, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const Login = () => {
@@ -17,6 +17,7 @@ const Login = () => {
     password: ''
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Helper function to get redirect path based on user type
   const getRedirectPath = (userData) => {
@@ -120,13 +121,22 @@ const Login = () => {
               <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Votre mot de passe"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="pl-10"
+                className="pl-10 pr-10"
                 required
+                data-testid="password-input"
               />
+              <button
+                type="button"
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                onClick={() => setShowPassword(!showPassword)}
+                data-testid="toggle-password-visibility"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 
