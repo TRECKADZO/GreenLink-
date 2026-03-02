@@ -208,6 +208,15 @@ const HomeScreen = ({ navigation }) => {
         
         <MenuItem
           number="9"
+          title="Accès USSD/SMS"
+          subtitle="Sans internet *123*45#"
+          icon="📱"
+          onPress={() => navigation.navigate('USSDSimulator')}
+          highlight={true}
+        />
+        
+        <MenuItem
+          number="*"
           title="Mon Profil"
           subtitle="Gérer mon compte"
           icon="👤"
