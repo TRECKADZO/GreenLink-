@@ -37,10 +37,75 @@ const MembersPage = () => {
     full_name: '',
     phone_number: '',
     village: '',
+    department: '',
+    zone: '',
     cni_number: '',
     consent_given: true
   });
   const [submitting, setSubmitting] = useState(false);
+
+  // Liste des 51 départements de Côte d'Ivoire
+  const DEPARTEMENTS = [
+    { code: "ABEN", nom: "Abengourou", zone: "Est" },
+    { code: "ABID", nom: "Abidjan", zone: "Sud" },
+    { code: "ABOI", nom: "Aboisso", zone: "Sud-Est" },
+    { code: "ADIA", nom: "Adiaké", zone: "Sud-Est" },
+    { code: "ADZO", nom: "Adzopé", zone: "Sud-Est" },
+    { code: "AGBO", nom: "Agboville", zone: "Sud" },
+    { code: "AGNI", nom: "Agnibilékro", zone: "Est" },
+    { code: "ALEP", nom: "Alépé", zone: "Sud-Est" },
+    { code: "BANG", nom: "Bangolo", zone: "Ouest" },
+    { code: "BEOU", nom: "Béoumi", zone: "Centre" },
+    { code: "BIAN", nom: "Biankouma", zone: "Ouest" },
+    { code: "BOCA", nom: "Bocanda", zone: "Centre" },
+    { code: "BOND", nom: "Bondoukou", zone: "Nord-Est" },
+    { code: "BONG", nom: "Bongouanou", zone: "Centre-Est" },
+    { code: "BOUA", nom: "Bouaflé", zone: "Centre-Ouest" },
+    { code: "BOUK", nom: "Bouaké", zone: "Centre" },
+    { code: "DABA", nom: "Dabakala", zone: "Nord" },
+    { code: "DABO", nom: "Dabou", zone: "Sud" },
+    { code: "DANA", nom: "Danané", zone: "Ouest" },
+    { code: "DAOU", nom: "Daoukro", zone: "Centre-Est" },
+    { code: "DIMB", nom: "Dimbokro", zone: "Centre" },
+    { code: "DALO", nom: "Daloa", zone: "Centre-Ouest" },
+    { code: "DIVO", nom: "Divo", zone: "Sud" },
+    { code: "DOUE", nom: "Duékoué", zone: "Ouest" },
+    { code: "GAGN", nom: "Gagnoa", zone: "Centre-Ouest" },
+    { code: "BASS", nom: "Grand-Bassam", zone: "Sud" },
+    { code: "LAHO", nom: "Grand-Lahou", zone: "Sud" },
+    { code: "GUIG", nom: "Guiglo", zone: "Ouest" },
+    { code: "ISSI", nom: "Issia", zone: "Centre-Ouest" },
+    { code: "JACQ", nom: "Jacqueville", zone: "Sud" },
+    { code: "LAKO", nom: "Lakota", zone: "Sud-Ouest" },
+    { code: "MAN", nom: "Man", zone: "Ouest" },
+    { code: "MANK", nom: "Mankono", zone: "Nord" },
+    { code: "MBAH", nom: "M'Bahiakro", zone: "Centre" },
+    { code: "OUME", nom: "Oumé", zone: "Centre-Ouest" },
+    { code: "SAKA", nom: "Sakassou", zone: "Centre" },
+    { code: "SANP", nom: "San-Pédro", zone: "Sud-Ouest" },
+    { code: "SASS", nom: "Sassandra", zone: "Sud-Ouest" },
+    { code: "SEGU", nom: "Séguéla", zone: "Nord-Ouest" },
+    { code: "SINF", nom: "Sinfra", zone: "Centre-Ouest" },
+    { code: "SOUB", nom: "Soubré", zone: "Sud-Ouest" },
+    { code: "TABO", nom: "Tabou", zone: "Sud-Ouest" },
+    { code: "TAND", nom: "Tanda", zone: "Nord-Est" },
+    { code: "TIAS", nom: "Tiassalé", zone: "Sud" },
+    { code: "TOUL", nom: "Touleupleu", zone: "Ouest" },
+    { code: "TIEB", nom: "Tiébissou", zone: "Centre" },
+    { code: "TOUB", nom: "Touba", zone: "Nord-Ouest" },
+    { code: "TOUM", nom: "Toumodi", zone: "Centre" },
+    { code: "VAVO", nom: "Vavoua", zone: "Centre-Ouest" },
+    { code: "YAMO", nom: "Yamoussoukro", zone: "Centre" },
+    { code: "ZUEN", nom: "Zuénoula", zone: "Centre-Ouest" },
+  ];
+
+  // Get unique zones for filtering
+  const zones = [...new Set(DEPARTEMENTS.map(d => d.zone))].sort();
+  
+  // Filter departments by selected zone
+  const filteredDepartements = newMember.zone 
+    ? DEPARTEMENTS.filter(d => d.zone === newMember.zone)
+    : DEPARTEMENTS;
 
   const fetchMembers = async () => {
     try {
@@ -80,6 +145,8 @@ const MembersPage = () => {
         full_name: '',
         phone_number: '',
         village: '',
+        department: '',
+        zone: '',
         cni_number: '',
         consent_given: true
       });
@@ -327,6 +394,49 @@ const MembersPage = () => {
                   data-testid="member-phone-input"
                 />
               </div>
+              
+              {/* Zone et Département */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">Zone</Label>
+                  <select
+                    className="w-full p-2 border rounded-md text-sm"
+                    value={newMember.zone}
+                    onChange={(e) => setNewMember({ ...newMember, zone: e.target.value, department: '' })}
+                    data-testid="member-zone-select"
+                  >
+                    <option value="">Toutes les zones</option>
+                    {zones.map(zone => (
+                      <option key={zone} value={zone}>{zone}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-sm">Département *</Label>
+                  <select
+                    className="w-full p-2 border rounded-md text-sm"
+                    value={newMember.department}
+                    onChange={(e) => {
+                      const dept = DEPARTEMENTS.find(d => d.code === e.target.value);
+                      setNewMember({ 
+                        ...newMember, 
+                        department: e.target.value,
+                        zone: dept ? dept.zone : newMember.zone
+                      });
+                    }}
+                    required
+                    data-testid="member-department-select"
+                  >
+                    <option value="">-- Sélectionner --</option>
+                    {filteredDepartements.map(dept => (
+                      <option key={dept.code} value={dept.code}>
+                        {dept.nom} ({dept.zone})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
               <div>
                 <Label htmlFor="village">Village *</Label>
                 <Input
@@ -394,6 +504,14 @@ const MembersPage = () => {
               </div>
               
               <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500">Département</p>
+                  <p className="font-medium">{selectedMember.department || 'Non renseigné'}</p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500">Zone</p>
+                  <p className="font-medium">{selectedMember.zone || 'Non renseigné'}</p>
+                </div>
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-500">Village</p>
                   <p className="font-medium">{selectedMember.village}</p>

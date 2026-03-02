@@ -52,6 +52,25 @@ Le problème était lié au hash du mot de passe dans la base de données. La so
 - `/app/backend/server.py` - override=False
 - `/app/backend/database.py` - override=False
 
+### Ajout Champ Département - March 2, 2026
+
+**Problème:** Le formulaire d'ajout de membre dans la coopérative ne permettait pas de sélectionner le département.
+
+**Corrections:**
+1. **Backend** (`cooperative.py`):
+   - Ajout des champs `department` et `zone` dans `CoopMemberCreate` et `CoopMemberUpdate`
+   - Le document membre inclut maintenant ces champs
+
+2. **Frontend** (`MembersPage.jsx`):
+   - Liste des 51 départements de Côte d'Ivoire avec leurs zones
+   - Sélecteur de Zone + Département dans le formulaire d'ajout
+   - Affichage du département et de la zone dans les détails du membre
+
+3. **Mobile** (`ForgotPasswordScreen.js`):
+   - Amélioration des messages d'erreur avec détection des problèmes réseau
+
+**APK v1.13.0 en cours de build** avec toutes les corrections.
+
 **Credentials Confirmés:**
 - Super Admin: `klenakan.eric@gmail.com` / `474Treckadzo` ✅
 

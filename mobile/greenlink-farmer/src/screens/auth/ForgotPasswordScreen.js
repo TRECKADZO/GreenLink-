@@ -33,9 +33,14 @@ export default function ForgotPasswordScreen({ navigation }) {
 
     setLoading(true);
     try {
+      console.log('[ForgotPassword] Sending request to:', CONFIG.API_URL + '/auth/forgot-password');
+      console.log('[ForgotPassword] Identifier:', identifier.trim());
+      
       const response = await api.post('/auth/forgot-password', {
         identifier: identifier.trim()
       });
+      
+      console.log('[ForgotPassword] Response:', response.data);
       
       // In simulation mode, show the code for testing
       if (response.data.simulation_code) {
@@ -45,7 +50,21 @@ export default function ForgotPasswordScreen({ navigation }) {
       Alert.alert('Succès', 'Code de réinitialisation envoyé');
       setStep(2);
     } catch (error) {
-      Alert.alert('Erreur', error.response?.data?.detail || 'Erreur lors de l\'envoi du code');
+      console.log('[ForgotPassword] Error:', error);
+      console.log('[ForgotPassword] Error response:', error.response?.data);
+      console.log('[ForgotPassword] Error status:', error.response?.status);
+      console.log('[ForgotPassword] Error message:', error.message);
+      
+      let errorMessage = 'Erreur lors de l\'envoi du code';
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.code === 'ERR_NETWORK' || error.message?.includes('Network')) {
+        errorMessage = 'Erreur réseau. Vérifiez votre connexion internet.';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Connexion expirée. Veuillez réessayer.';
+      }
+      
+      Alert.alert('Erreur', errorMessage);
     } finally {
       setLoading(false);
     }

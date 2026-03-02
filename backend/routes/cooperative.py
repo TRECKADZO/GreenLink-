@@ -23,6 +23,8 @@ class CoopMemberCreate(BaseModel):
     full_name: str
     phone_number: str
     village: str
+    department: Optional[str] = None  # Département de production
+    zone: Optional[str] = None  # Zone géographique
     cni_number: Optional[str] = None
     consent_given: bool = True
 
@@ -30,6 +32,8 @@ class CoopMemberUpdate(BaseModel):
     full_name: Optional[str] = None
     phone_number: Optional[str] = None
     village: Optional[str] = None
+    department: Optional[str] = None
+    zone: Optional[str] = None
     is_active: Optional[bool] = None
 
 class CoopLotCreate(BaseModel):
@@ -232,6 +236,8 @@ async def create_coop_member(
         "full_name": member.full_name,
         "phone_number": member.phone_number,
         "village": member.village,
+        "department": member.department,
+        "zone": member.zone,
         "cni_number": member.cni_number,
         "consent_given": member.consent_given,
         "consent_date": datetime.utcnow() if member.consent_given else None,
