@@ -2,6 +2,42 @@
 
 ## Latest Updates - March 2, 2026 (Session 8 - SSRTE Agent System)
 
+### ✅ CARTE GÉOLOCALISATION AGENTS TEMPS RÉEL
+
+**Routes Frontend:**
+- `/admin/agents-map` - Carte des agents terrain
+- `/admin/geolocation` - Alias pour la carte
+
+**API Backend (`/api/agents/geo/`):**
+- `POST /update` - Mise à jour position GPS agent
+- `GET /agents` - Liste positions tous agents
+- `GET /agent/{agent_id}` - Position agent spécifique
+- `GET /agent/{agent_id}/history` - Historique positions
+- `POST /offline` - Marquer agent hors ligne
+- `GET /stats` - Statistiques géolocalisation
+
+**Fonctionnalités:**
+- Carte interactive avec marqueurs colorés par type d'agent
+- Mise à jour positions en temps réel via WebSocket (channel `geo`)
+- Filtres: Tous agents, En ligne, Par type (Terrain/Carbone/SSRTE)
+- Stats: Agents suivis, En ligne, Hors ligne, Couverture
+- Détails agent: Coordonnées, Batterie, Précision GPS, Coopérative
+- Légende avec codes couleur
+- Historique des trajets (24h par défaut)
+
+**Tests API confirmés:**
+```
+✅ Position mise à jour: (6.8273, -5.2893) avec batterie 75%
+✅ Agent récupéré: "Eric Klenakan" - En ligne
+✅ Stats: 1 total, 1 online, 100% couverture
+```
+
+**Mobile - Service de géolocalisation:**
+- L'app mobile peut envoyer sa position périodiquement via `POST /api/agents/geo/update`
+- Support batterie, précision, activité (marche, conduite, stationnaire)
+
+---
+
 ### ✅ DASHBOARD TEMPS RÉEL SSRTE AVEC WEBSOCKET
 
 **Routes Frontend:**

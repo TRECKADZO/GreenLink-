@@ -54,6 +54,7 @@ import SSRTEAnalytics from "./pages/admin/SSRTEAnalytics";
 import CarbonAuditorsPage from "./pages/admin/CarbonAuditorsPage";
 import AuditMissionsPage from "./pages/admin/AuditMissionsPage";
 import BadgeAnalyticsPage from "./pages/admin/BadgeAnalyticsPage";
+import AgentMapDashboard from "./pages/admin/AgentMapDashboard";
 
 // Auditor Routes
 import AuditorDashboard from "./pages/auditor/AuditorDashboard";
@@ -152,6 +153,8 @@ function App() {
               <Route path="/admin/carbon-auditors" element={<CarbonAuditorsPage />} />
               <Route path="/admin/audit-missions" element={<AuditMissionsPage />} />
               <Route path="/admin/badge-analytics" element={<BadgeAnalyticsPage />} />
+              <Route path="/admin/agents-map" element={<AgentMapDashboard />} />
+              <Route path="/admin/geolocation" element={<AgentMapDashboard />} />
 
               {/* Carbon Auditor Routes */}
               <Route path="/auditor/dashboard" element={<AuditorDashboard />} />
