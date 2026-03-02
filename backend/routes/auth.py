@@ -78,8 +78,8 @@ async def register(user_data: UserCreate):
         user_dict["created_at"] = datetime.utcnow()
         user_dict["is_active"] = True
     
-    # Initialize profile fields based on user_type
-    if user_data.user_type == "producteur":
+        # Initialize profile fields based on user_type
+        if user_data.user_type == "producteur":
         user_dict["crops"] = []
         user_dict["farm_location"] = None
         user_dict["farm_size"] = None
