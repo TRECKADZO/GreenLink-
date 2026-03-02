@@ -22,6 +22,25 @@ https://expo.dev/artifacts/eas/41iVTHinai8tkKDy4jm6bJ.apk
 - Synchronisation automatique à la reconnexion
 - Détection d'activité (stationnaire, marche, course, conduite)
 
+### ✅ REPLAY INTERACTIF DES TRAJECTOIRES - NOUVEAU
+
+**Fonctionnalité de visualisation animée des parcours agents sur la carte.**
+
+**Caractéristiques:**
+- Bouton "Replay du parcours" dans le popup de chaque trajectoire
+- Panneau de contrôle en bas de l'écran avec:
+  - Play/Pause du replay
+  - Barre de progression interactive (slider)
+  - Navigation rapide: Début, -5 points, +5 points, Fin
+  - Vitesse variable: 1x, 2x, 4x
+  - Coordonnées GPS en temps réel
+- Marqueur animé montrant la position actuelle
+- Ligne verte montrant le parcours déjà parcouru
+- Centrage automatique de la carte sur la position actuelle
+
+**Fichiers modifiés:**
+- `/app/frontend/src/pages/admin/AgentMapLeaflet.jsx`
+
 ### ✅ VÉRIFICATION GÉOLOCALISATION EFFECTUÉE
 
 **Tests API Backend:**

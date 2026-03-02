@@ -14,7 +14,7 @@ import {
   MapPin, Users, Wifi, WifiOff, Battery,
   RefreshCw, Maximize2, Minimize2, Filter, Clock,
   Activity, User, Building, Layers, Map as MapIcon,
-  Route, Bell, Send, AlertTriangle
+  Route, Bell, Send, AlertTriangle, Play, Pause, SkipBack, SkipForward, FastForward
 } from 'lucide-react';
 
 // Fix Leaflet default marker icon issue
@@ -113,6 +113,15 @@ const AgentMapLeaflet = () => {
   const [showProximityPanel, setShowProximityPanel] = useState(false);
   const [proximityRadius, setProximityRadius] = useState(10);
   const [proximityMessage, setProximityMessage] = useState('');
+  
+  // État pour le replay de trajectoire
+  const [showReplayPanel, setShowReplayPanel] = useState(false);
+  const [selectedTrajectory, setSelectedTrajectory] = useState(null);
+  const [replayIndex, setReplayIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [replaySpeed, setReplaySpeed] = useState(1); // 1x, 2x, 4x
+  const replayIntervalRef = useRef(null);
+  
   const wsRef = useRef(null);
   
   const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -306,6 +315,121 @@ const AgentMapLeaflet = () => {
     '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'
   ];
 
+  // ========== REPLAY FUNCTIONS ==========
+  
+  // Démarrer le replay d'une trajectoire
+  const startReplay = (trajectory) => {
+    setSelectedTrajectory(trajectory);
+    setReplayIndex(0);
+    setShowReplayPanel(true);
+    setIsPlaying(false);
+    if (trajectory.polyline && trajectory.polyline.length > 0) {
+      setMapCenter(trajectory.polyline[0]);
+      setMapZoom(13);
+    }
+    toast.info(`Mode replay activé pour ${trajectory.agent_name}`);
+  };
+
+  // Jouer/Pause le replay
+  const togglePlayPause = () => {
+    if (!selectedTrajectory || !selectedTrajectory.polyline) return;
+    
+    if (isPlaying) {
+      // Pause
+      if (replayIntervalRef.current) {
+        clearInterval(replayIntervalRef.current);
+        replayIntervalRef.current = null;
+      }
+      setIsPlaying(false);
+    } else {
+      // Play
+      setIsPlaying(true);
+      const interval = 1000 / replaySpeed; // Ajuster selon la vitesse
+      
+      replayIntervalRef.current = setInterval(() => {
+        setReplayIndex(prev => {
+          const nextIndex = prev + 1;
+          if (nextIndex >= selectedTrajectory.polyline.length) {
+            clearInterval(replayIntervalRef.current);
+            replayIntervalRef.current = null;
+            setIsPlaying(false);
+            toast.success('Replay terminé');
+            return prev;
+          }
+          // Centrer la carte sur la position actuelle
+          if (selectedTrajectory.polyline[nextIndex]) {
+            setMapCenter(selectedTrajectory.polyline[nextIndex]);
+          }
+          return nextIndex;
+        });
+      }, interval);
+    }
+  };
+
+  // Arrêter le replay
+  const stopReplay = () => {
+    if (replayIntervalRef.current) {
+      clearInterval(replayIntervalRef.current);
+      replayIntervalRef.current = null;
+    }
+    setIsPlaying(false);
+    setShowReplayPanel(false);
+    setSelectedTrajectory(null);
+    setReplayIndex(0);
+    setMapZoom(7);
+    setMapCenter([7.539989, -5.547080]);
+  };
+
+  // Changer la vitesse de replay
+  const cycleSpeed = () => {
+    const speeds = [1, 2, 4];
+    const currentIdx = speeds.indexOf(replaySpeed);
+    const nextSpeed = speeds[(currentIdx + 1) % speeds.length];
+    setReplaySpeed(nextSpeed);
+    
+    // Si en cours de lecture, redémarrer avec la nouvelle vitesse
+    if (isPlaying && replayIntervalRef.current) {
+      clearInterval(replayIntervalRef.current);
+      const interval = 1000 / nextSpeed;
+      replayIntervalRef.current = setInterval(() => {
+        setReplayIndex(prev => {
+          const nextIndex = prev + 1;
+          if (nextIndex >= selectedTrajectory.polyline.length) {
+            clearInterval(replayIntervalRef.current);
+            replayIntervalRef.current = null;
+            setIsPlaying(false);
+            return prev;
+          }
+          if (selectedTrajectory.polyline[nextIndex]) {
+            setMapCenter(selectedTrajectory.polyline[nextIndex]);
+          }
+          return nextIndex;
+        });
+      }, interval);
+    }
+  };
+
+  // Aller à un point spécifique
+  const goToPoint = (index) => {
+    if (!selectedTrajectory || !selectedTrajectory.polyline) return;
+    const clampedIndex = Math.max(0, Math.min(index, selectedTrajectory.polyline.length - 1));
+    setReplayIndex(clampedIndex);
+    if (selectedTrajectory.polyline[clampedIndex]) {
+      setMapCenter(selectedTrajectory.polyline[clampedIndex]);
+    }
+  };
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (replayIntervalRef.current) {
+        clearInterval(replayIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // ========== END REPLAY FUNCTIONS ==========
+
   return (
     <div 
       className={`min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 ${fullscreen ? 'fixed inset-0 z-50' : ''}`}
@@ -318,7 +442,34 @@ const AgentMapLeaflet = () => {
           70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
           100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
+        @keyframes replayPulse {
+          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+          50% { transform: scale(1.1); }
+          70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
         .leaflet-container { background: #1e293b; border-radius: 0.5rem; }
+        .replay-marker { z-index: 1000 !important; }
+        input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #3b82f6;
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        input[type="range"]::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #3b82f6;
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
       `}</style>
 
       {/* Header */}
@@ -585,12 +736,12 @@ const AgentMapLeaflet = () => {
                     pathOptions={{
                       color: trajectoryColors[idx % trajectoryColors.length],
                       weight: 3,
-                      opacity: 0.8,
+                      opacity: selectedTrajectory?.agent_id === traj.agent_id ? 1 : 0.5,
                       dashArray: null
                     }}
                   >
                     <Popup>
-                      <div className="min-w-[180px]">
+                      <div className="min-w-[200px]">
                         <div className="font-bold">{traj.agent_name}</div>
                         <div className="text-xs text-gray-600">{traj.agent_type}</div>
                         <hr className="my-1" />
@@ -599,10 +750,62 @@ const AgentMapLeaflet = () => {
                           <div>📏 {traj.total_distance_km} km parcourus</div>
                           <div>🕐 Dernières 24h</div>
                         </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startReplay(traj); }}
+                          className="mt-2 w-full flex items-center justify-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                        >
+                          <Play className="h-3 w-3" />
+                          Replay du parcours
+                        </button>
                       </div>
                     </Popup>
                   </Polyline>
                 ))}
+                
+                {/* Marqueur de position actuelle pendant le replay */}
+                {showReplayPanel && selectedTrajectory && selectedTrajectory.polyline && selectedTrajectory.polyline[replayIndex] && (
+                  <Marker
+                    position={selectedTrajectory.polyline[replayIndex]}
+                    icon={L.divIcon({
+                      className: 'replay-marker',
+                      html: `
+                        <div style="
+                          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                          width: 24px;
+                          height: 24px;
+                          border-radius: 50%;
+                          border: 3px solid white;
+                          box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
+                          animation: replayPulse 1s infinite;
+                        "></div>
+                      `,
+                      iconSize: [24, 24],
+                      iconAnchor: [12, 12]
+                    })}
+                  >
+                    <Popup>
+                      <div className="text-xs">
+                        <strong>Position {replayIndex + 1}/{selectedTrajectory.polyline.length}</strong>
+                        <div className="text-gray-500">
+                          {selectedTrajectory.polyline[replayIndex][0].toFixed(4)}, {selectedTrajectory.polyline[replayIndex][1].toFixed(4)}
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+                
+                {/* Ligne de trajectoire partielle pendant le replay (portion déjà parcourue) */}
+                {showReplayPanel && selectedTrajectory && selectedTrajectory.polyline && replayIndex > 0 && (
+                  <Polyline
+                    positions={selectedTrajectory.polyline.slice(0, replayIndex + 1)}
+                    pathOptions={{
+                      color: '#22c55e',
+                      weight: 4,
+                      opacity: 1,
+                      dashArray: null
+                    }}
+                  />
+                )}
                 
                 {/* Cercle de rayon de proximité si panel ouvert */}
                 {showProximityPanel && selectedAgent && (
@@ -845,6 +1048,146 @@ const AgentMapLeaflet = () => {
                     Envoyer l'alerte
                   </Button>
                 </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Panel de Contrôle du Replay */}
+      {showReplayPanel && selectedTrajectory && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 w-[90%] max-w-2xl">
+          <Card className="bg-slate-800/95 border-slate-700 shadow-2xl backdrop-blur-sm">
+            <CardContent className="p-4">
+              {/* Header du replay */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: trajectoryColors[trajectories.findIndex(t => t.agent_id === selectedTrajectory.agent_id) % trajectoryColors.length] || '#3b82f6' }}
+                  >
+                    <Route className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{selectedTrajectory.agent_name}</p>
+                    <p className="text-xs text-slate-400">
+                      {selectedTrajectory.total_distance_km} km • {selectedTrajectory.points_count} points
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-blue-600">
+                    Replay {replaySpeed}x
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={stopReplay}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              </div>
+
+              {/* Barre de progression */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                  <span>Point {replayIndex + 1} / {selectedTrajectory.polyline?.length || 0}</span>
+                  <span>
+                    {selectedTrajectory.polyline?.length > 0 
+                      ? Math.round((replayIndex / (selectedTrajectory.polyline.length - 1)) * 100) 
+                      : 0}%
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="range"
+                    min={0}
+                    max={(selectedTrajectory.polyline?.length || 1) - 1}
+                    value={replayIndex}
+                    onChange={(e) => goToPoint(parseInt(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    style={{
+                      background: `linear-gradient(to right, #22c55e 0%, #22c55e ${(replayIndex / ((selectedTrajectory.polyline?.length || 1) - 1)) * 100}%, #334155 ${(replayIndex / ((selectedTrajectory.polyline?.length || 1) - 1)) * 100}%, #334155 100%)`
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Contrôles de lecture */}
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => goToPoint(0)}
+                  className="text-slate-400 hover:text-white"
+                  title="Début"
+                >
+                  <SkipBack className="h-5 w-5" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => goToPoint(Math.max(0, replayIndex - 5))}
+                  className="text-slate-400 hover:text-white"
+                  title="-5 points"
+                >
+                  <FastForward className="h-5 w-5 rotate-180" />
+                </Button>
+                
+                <Button
+                  onClick={togglePlayPause}
+                  className={`w-14 h-14 rounded-full ${isPlaying ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                >
+                  {isPlaying ? (
+                    <Pause className="h-6 w-6 text-white" />
+                  ) : (
+                    <Play className="h-6 w-6 text-white ml-1" />
+                  )}
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => goToPoint(Math.min((selectedTrajectory.polyline?.length || 1) - 1, replayIndex + 5))}
+                  className="text-slate-400 hover:text-white"
+                  title="+5 points"
+                >
+                  <FastForward className="h-5 w-5" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => goToPoint((selectedTrajectory.polyline?.length || 1) - 1)}
+                  className="text-slate-400 hover:text-white"
+                  title="Fin"
+                >
+                  <SkipForward className="h-5 w-5" />
+                </Button>
+                
+                <div className="border-l border-slate-600 pl-2 ml-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={cycleSpeed}
+                    className="text-slate-400 hover:text-white font-mono"
+                    title="Changer la vitesse"
+                  >
+                    {replaySpeed}x
+                  </Button>
+                </div>
+              </div>
+
+              {/* Coordonnées actuelles */}
+              {selectedTrajectory.polyline && selectedTrajectory.polyline[replayIndex] && (
+                <div className="mt-3 text-center">
+                  <p className="text-xs text-slate-500 font-mono">
+                    📍 {selectedTrajectory.polyline[replayIndex][0].toFixed(5)}, {selectedTrajectory.polyline[replayIndex][1].toFixed(5)}
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
