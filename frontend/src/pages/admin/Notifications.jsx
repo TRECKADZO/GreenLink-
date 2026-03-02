@@ -151,6 +151,7 @@ const AdminNotifications = () => {
               <p className="text-gray-400 mt-1">
                 Gestion des notifications système GreenLink
               </p>
+              </div>
             </div>
             
             <div className="flex items-center gap-3">
