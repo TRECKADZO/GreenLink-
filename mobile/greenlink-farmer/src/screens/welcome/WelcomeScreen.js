@@ -6,14 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  Image,
   Animated,
   StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS, SPACING } from '../../config';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const WelcomeScreen = ({ navigation }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -37,32 +36,59 @@ const WelcomeScreen = ({ navigation }) => {
   const features = [
     {
       icon: '🌱',
-      title: 'Producteurs',
-      description: 'Gérez vos parcelles, déclarez vos récoltes et recevez vos primes carbone',
+      title: 'Audits Carbone Certifiés',
+      description: 'Auditeurs indépendants évaluent vos parcelles pour la certification carbone',
+      badge: 'GreenLink',
+      badgeColor: '#10b981',
     },
     {
-      icon: '🤝',
-      title: 'Coopératives',
-      description: 'Suivez vos membres, générez des rapports et gérez les certifications',
-    },
-    {
-      icon: '🌍',
-      title: 'Impact Carbone',
-      description: 'Compensez votre empreinte et accédez au marché des crédits carbone',
+      icon: '💰',
+      title: 'Primes Carbone',
+      description: 'Recevez jusqu\'à 60 000 XOF/ha sur Orange Money pour vos bonnes pratiques',
+      badge: 'Nouveau',
+      badgeColor: '#f59e0b',
     },
     {
       icon: '📱',
-      title: 'Mode Hors-ligne',
-      description: 'Travaillez même sans connexion, synchronisation automatique',
+      title: 'Accès USSD/SMS',
+      description: 'Consultez vos parcelles et primes sans internet via *123*45#',
+      badge: 'Offline',
+      badgeColor: '#f97316',
     },
+    {
+      icon: '🛡️',
+      title: 'Conformité SSRTE/ICI',
+      description: 'Outils de monitoring du travail des enfants selon les standards ICI',
+      badge: 'ICI',
+      badgeColor: '#3b82f6',
+    },
+    {
+      icon: '🏆',
+      title: 'Badges Auditeurs',
+      description: 'Gamification pour récompenser les auditeurs : Bronze, Argent, Or',
+      badge: 'Gamification',
+      badgeColor: '#8b5cf6',
+    },
+    {
+      icon: '📊',
+      title: 'Gestion Coopérative',
+      description: 'Dashboard complet: membres, parcelles, primes et rapports EUDR',
+      badge: 'Pro',
+      badgeColor: '#64748b',
+    },
+  ];
+
+  const quickStats = [
+    { icon: '🛡️', label: 'Conforme EUDR', color: '#3b82f6' },
+    { icon: '🌿', label: 'Traçabilité Carbone', color: '#10b981' },
   ];
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+      <StatusBar barStyle="light-content" backgroundColor="#2d5a4d" />
       
       <LinearGradient
-        colors={[COLORS.primary, COLORS.primaryDark, '#1a3530']}
+        colors={['#2d5a4d', '#235043', '#1a4038']}
         style={styles.gradient}
       >
         <ScrollView 
@@ -83,12 +109,12 @@ const WelcomeScreen = ({ navigation }) => {
               <Text style={styles.logoIcon}>🌿</Text>
               <View>
                 <Text style={styles.logoText}>GreenLink</Text>
-                <Text style={styles.logoSubtext}>Agriculture durable</Text>
+                <Text style={styles.logoSubtext}>Côte d'Ivoire</Text>
               </View>
             </View>
           </Animated.View>
 
-          {/* Hero Section */}
+          {/* Hero Section - Style Web */}
           <Animated.View 
             style={[
               styles.heroSection,
@@ -99,32 +125,75 @@ const WelcomeScreen = ({ navigation }) => {
             ]}
           >
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>🏆 #1 en Côte d'Ivoire</Text>
+              <Text style={styles.badgeIcon}>🌱</Text>
+              <Text style={styles.badgeText}>Plateforme Carbone & Traçabilité</Text>
             </View>
             
             <Text style={styles.heroTitle}>
-              Du planteur au chocolatier,{'\n'}
-              <Text style={styles.heroHighlight}>100% traçable</Text>
+              Primes Carbone pour{'\n'}
+              <Text style={styles.heroHighlight}>l'Agriculture Durable</Text>
             </Text>
             
             <Text style={styles.heroSubtitle}>
-              Marketplace B2B, crédits carbone vérifiés et analytics avancés pour les producteurs et coopératives
+              Coopératives, producteurs et auditeurs : gérez vos parcelles, recevez des primes carbone sur Orange Money et assurez la conformité EUDR & SSRTE/ICI.
             </Text>
+
+            {/* Quick Stats - Style Web */}
+            <View style={styles.quickStatsContainer}>
+              {quickStats.map((stat, index) => (
+                <View key={index} style={styles.quickStat}>
+                  <Text style={styles.quickStatIcon}>{stat.icon}</Text>
+                  <Text style={styles.quickStatLabel}>{stat.label}</Text>
+                </View>
+              ))}
+            </View>
           </Animated.View>
 
-          {/* Features Section */}
+          {/* CTA Buttons - Style Web */}
+          <View style={styles.ctaContainer}>
+            <TouchableOpacity 
+              style={styles.primaryButton}
+              onPress={() => navigation.navigate('Register')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.primaryButtonText}>S'inscrire gratuitement</Text>
+              <Text style={styles.primaryButtonArrow}>→</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.secondaryButton}
+              onPress={() => navigation.navigate('Login')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.secondaryButtonText}>J'ai déjà un compte</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Features Section - Style Web Cards */}
           <View style={styles.featuresContainer}>
-            <Text style={styles.sectionTitle}>Pourquoi GreenLink ?</Text>
+            <Text style={styles.sectionTitle}>Une plateforme tout-en-un</Text>
+            <Text style={styles.sectionSubtitle}>
+              IA, analytics, vérification carbone et outils professionnels
+            </Text>
             
-            {features.map((feature, index) => (
-              <View key={index} style={styles.featureCard}>
-                <Text style={styles.featureIcon}>{feature.icon}</Text>
-                <View style={styles.featureContent}>
+            <View style={styles.featuresGrid}>
+              {features.map((feature, index) => (
+                <View key={index} style={styles.featureCard}>
+                  <View style={styles.featureHeader}>
+                    <View style={styles.featureIconContainer}>
+                      <Text style={styles.featureIcon}>{feature.icon}</Text>
+                    </View>
+                    <View style={[styles.featureBadge, { backgroundColor: feature.badgeColor + '30' }]}>
+                      <Text style={[styles.featureBadgeText, { color: feature.badgeColor }]}>
+                        {feature.badge}
+                      </Text>
+                    </View>
+                  </View>
                   <Text style={styles.featureTitle}>{feature.title}</Text>
                   <Text style={styles.featureDescription}>{feature.description}</Text>
                 </View>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
 
           {/* User Type Selection */}
@@ -146,7 +215,7 @@ const WelcomeScreen = ({ navigation }) => {
                 <View style={styles.userTypeContent}>
                   <Text style={styles.userTypeTitle}>Je suis Producteur</Text>
                   <Text style={styles.userTypeDescription}>
-                    Gérez vos parcelles et recevez vos primes
+                    Gérez vos parcelles et recevez vos primes carbone
                   </Text>
                 </View>
                 <Text style={styles.userTypeArrow}>→</Text>
@@ -159,7 +228,7 @@ const WelcomeScreen = ({ navigation }) => {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[COLORS.secondary, '#b8956a']}
+                colors={['#d4a574', '#c49564']}
                 style={styles.userTypeGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -168,31 +237,44 @@ const WelcomeScreen = ({ navigation }) => {
                 <View style={styles.userTypeContent}>
                   <Text style={styles.userTypeTitleDark}>Je suis Coopérative</Text>
                   <Text style={styles.userTypeDescriptionDark}>
-                    Gérez vos membres et certifications
+                    Gérez vos membres, parcelles et certifications
                   </Text>
                 </View>
                 <Text style={styles.userTypeArrowDark}>→</Text>
               </LinearGradient>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.userTypeCard}
+              onPress={() => navigation.navigate('Register', { userType: 'field_agent' })}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#3b82f6', '#2563eb']}
+                style={styles.userTypeGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.userTypeIcon}>📋</Text>
+                <View style={styles.userTypeContent}>
+                  <Text style={styles.userTypeTitle}>Je suis Agent Terrain</Text>
+                  <Text style={styles.userTypeDescription}>
+                    Audits carbone et suivi SSRTE/ICI
+                  </Text>
+                </View>
+                <Text style={styles.userTypeArrow}>→</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
 
-          {/* CTA Buttons */}
-          <View style={styles.ctaContainer}>
-            <TouchableOpacity 
-              style={styles.primaryButton}
-              onPress={() => navigation.navigate('Register')}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.primaryButtonText}>Créer mon compte</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.secondaryButton}
-              onPress={() => navigation.navigate('Login')}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.secondaryButtonText}>J'ai déjà un compte</Text>
-            </TouchableOpacity>
+          {/* USSD Access Banner */}
+          <View style={styles.ussdBanner}>
+            <Text style={styles.ussdIcon}>📱</Text>
+            <View style={styles.ussdContent}>
+              <Text style={styles.ussdTitle}>Accès sans internet</Text>
+              <Text style={styles.ussdCode}>*123*45# ou SMS au 1234</Text>
+              <Text style={styles.ussdSubtitle}>Disponible en français, baoulé et dioula</Text>
+            </View>
           </View>
 
           {/* Footer */}
@@ -208,6 +290,8 @@ const WelcomeScreen = ({ navigation }) => {
               <Text style={styles.contactTitle}>Besoin d'aide ?</Text>
               <Text style={styles.contactPhone}>📞 +225 07 87 76 10 23</Text>
             </View>
+
+            <Text style={styles.versionText}>Version 1.13.0</Text>
           </View>
 
         </ScrollView>
@@ -254,70 +338,171 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xl,
   },
   badge: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: 20,
     alignSelf: 'flex-start',
     marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  badgeIcon: {
+    fontSize: 16,
+    marginRight: 6,
   },
   badgeText: {
     color: COLORS.white,
     fontSize: FONTS.sizes.sm,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   heroTitle: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: 'bold',
     color: COLORS.white,
-    lineHeight: 40,
+    lineHeight: 42,
     marginBottom: SPACING.md,
   },
   heroHighlight: {
-    color: COLORS.secondary,
+    color: '#d4a574',
   },
   heroSubtitle: {
     fontSize: FONTS.sizes.md,
     color: COLORS.white,
     opacity: 0.9,
     lineHeight: 24,
+    marginBottom: SPACING.lg,
+  },
+  quickStatsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  quickStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  quickStatIcon: {
+    fontSize: 18,
+    marginRight: 6,
+  },
+  quickStatLabel: {
+    color: COLORS.white,
+    fontSize: FONTS.sizes.sm,
+    fontWeight: '500',
+  },
+  ctaContainer: {
+    paddingHorizontal: SPACING.lg,
+    marginBottom: SPACING.xl,
+  },
+  primaryButton: {
+    backgroundColor: '#d4a574',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  primaryButtonText: {
+    fontSize: FONTS.sizes.lg,
+    fontWeight: 'bold',
+    color: '#2d5a4d',
+  },
+  primaryButtonArrow: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2d5a4d',
+    marginLeft: 8,
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  secondaryButtonText: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.white,
   },
   featuresContainer: {
     paddingHorizontal: SPACING.lg,
     marginBottom: SPACING.xl,
-    marginTop: SPACING.lg,
   },
   sectionTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: 'bold',
     color: COLORS.white,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.xs,
+  },
+  sectionSubtitle: {
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.white,
+    opacity: 0.7,
+    marginBottom: SPACING.lg,
+  },
+  featuresGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   featureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    width: (width - SPACING.lg * 2 - 12) / 2,
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: SPACING.md,
+  },
+  featureHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: SPACING.sm,
   },
-  featureIcon: {
-    fontSize: 32,
-    marginRight: SPACING.md,
+  featureIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#2d5a4d',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  featureContent: {
-    flex: 1,
+  featureIcon: {
+    fontSize: 20,
+  },
+  featureBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  featureBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
   },
   featureTitle: {
-    fontSize: FONTS.sizes.md,
+    fontSize: FONTS.sizes.sm,
     fontWeight: 'bold',
-    color: COLORS.white,
+    color: '#1f2937',
     marginBottom: 4,
   },
   featureDescription: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.white,
-    opacity: 0.8,
+    fontSize: 11,
+    color: '#6b7280',
+    lineHeight: 16,
   },
   userTypeSection: {
     paddingHorizontal: SPACING.lg,
@@ -334,7 +519,7 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
   },
   userTypeIcon: {
-    fontSize: 40,
+    fontSize: 36,
     marginRight: SPACING.md,
   },
   userTypeContent: {
@@ -349,7 +534,7 @@ const styles = StyleSheet.create({
   userTypeTitleDark: {
     fontSize: FONTS.sizes.lg,
     fontWeight: 'bold',
-    color: COLORS.primaryDark,
+    color: '#2d5a4d',
     marginBottom: 4,
   },
   userTypeDescription: {
@@ -359,7 +544,7 @@ const styles = StyleSheet.create({
   },
   userTypeDescriptionDark: {
     fontSize: FONTS.sizes.sm,
-    color: COLORS.primaryDark,
+    color: '#2d5a4d',
     opacity: 0.8,
   },
   userTypeArrow: {
@@ -369,42 +554,41 @@ const styles = StyleSheet.create({
   },
   userTypeArrowDark: {
     fontSize: 24,
-    color: COLORS.primaryDark,
+    color: '#2d5a4d',
     fontWeight: 'bold',
   },
-  ctaContainer: {
-    paddingHorizontal: SPACING.lg,
+  ussdBanner: {
+    marginHorizontal: SPACING.lg,
     marginBottom: SPACING.xl,
-  },
-  primaryButton: {
-    backgroundColor: COLORS.secondary,
-    paddingVertical: SPACING.md,
-    borderRadius: 12,
+    backgroundColor: '#f97316',
+    borderRadius: 16,
+    padding: SPACING.lg,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
-  primaryButtonText: {
+  ussdIcon: {
+    fontSize: 40,
+    marginRight: SPACING.md,
+  },
+  ussdContent: {
+    flex: 1,
+  },
+  ussdTitle: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: 'bold',
+    color: COLORS.white,
+    marginBottom: 4,
+  },
+  ussdCode: {
     fontSize: FONTS.sizes.lg,
     fontWeight: 'bold',
-    color: COLORS.primaryDark,
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: SPACING.md,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.white,
-  },
-  secondaryButtonText: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: '600',
     color: COLORS.white,
+    marginBottom: 4,
+  },
+  ussdSubtitle: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.white,
+    opacity: 0.9,
   },
   footer: {
     paddingHorizontal: SPACING.lg,
@@ -427,6 +611,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xl,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 12,
+    marginBottom: SPACING.md,
   },
   contactTitle: {
     fontSize: FONTS.sizes.sm,
@@ -438,6 +623,12 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.lg,
     fontWeight: 'bold',
     color: COLORS.white,
+  },
+  versionText: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.white,
+    opacity: 0.5,
+    marginTop: SPACING.sm,
   },
 });
 
