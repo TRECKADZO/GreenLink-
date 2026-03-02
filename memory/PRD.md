@@ -69,7 +69,15 @@ Le problème était lié au hash du mot de passe dans la base de données. La so
 3. **Mobile** (`ForgotPasswordScreen.js`):
    - Amélioration des messages d'erreur avec détection des problèmes réseau
 
-**APK v1.13.0 en cours de build** avec toutes les corrections.
+**APK v1.13.0 PRÊT!**
+- **Lien de téléchargement:** https://expo.dev/artifacts/eas/9cLgcpnFGHaRYycwNKiwQp.apk
+- **Build ID:** 426d9174-710e-42ac-bf29-04ce672e2147
+- **Date:** March 2, 2026
+- **Contenu:**
+  - Fix CORS pour déploiement
+  - Messages d'erreur améliorés (détection réseau)
+  - Formulaire membre avec département
+  - Support double casquette agent
 
 ### Fonctionnalité Double Casquette Agent - March 2, 2026
 
