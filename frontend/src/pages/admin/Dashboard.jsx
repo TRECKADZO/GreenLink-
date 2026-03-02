@@ -24,7 +24,13 @@ import {
   BarChart3,
   Globe,
   DollarSign,
-  Leaf
+  Leaf,
+  Bell,
+  Activity,
+  Award,
+  Baby,
+  CreditCard,
+  Target
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
