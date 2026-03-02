@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { 
   Activity, AlertTriangle, Bell, CheckCircle2, Clock, 
   RefreshCcw, Shield, Users, Wifi, WifiOff, 
-  TrendingUp, Download, BarChart3, Eye, Zap, Radio
+  TrendingUp, Download, BarChart3, Eye, Zap, Radio, ChevronLeft
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
