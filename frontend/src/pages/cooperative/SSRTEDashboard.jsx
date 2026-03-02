@@ -330,14 +330,24 @@ const CooperativeSSRTEDashboard = () => {
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-green-500/20 rounded-lg">
-                  <ClipboardCheck className="w-6 h-6 text-green-400" />
-                </div>
-                <h1 className="text-2xl font-bold">Suivi SSRTE Terrain</h1>
-                {/* Online Status Indicator */}
-                <Badge className={`${isOnline ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'}`}>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/cooperative/dashboard')}
+                className="text-white hover:bg-white/10"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Retour
+              </Button>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-green-500/20 rounded-lg">
+                    <ClipboardCheck className="w-6 h-6 text-green-400" />
+                  </div>
+                  <h1 className="text-2xl font-bold">Suivi SSRTE Terrain</h1>
+                  {/* Online Status Indicator */}
+                  <Badge className={`${isOnline ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'}`}>
                   {isOnline ? (
                     <><Wifi className="w-3 h-3 mr-1" /> En ligne</>
                   ) : (
