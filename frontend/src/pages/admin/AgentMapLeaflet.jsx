@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
-import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Switch } from '../../components/ui/switch';
+import { Input } from '../../components/ui/input';
 import { toast } from 'sonner';
 import {
   MapPin, Users, Wifi, WifiOff, Battery,
   RefreshCw, Maximize2, Minimize2, Filter, Clock,
-  Activity, User, Building, Layers, Map as MapIcon
+  Activity, User, Building, Layers, Map as MapIcon,
+  Route, Bell, Send, AlertTriangle
 } from 'lucide-react';
 
 // Fix Leaflet default marker icon issue
@@ -107,9 +108,27 @@ const AgentMapLeaflet = () => {
   const [showZones, setShowZones] = useState(true);
   const [coverageZones, setCoverageZones] = useState([]);
   const [selectedZone, setSelectedZone] = useState(null);
+  const [trajectories, setTrajectories] = useState([]);
+  const [showTrajectories, setShowTrajectories] = useState(false);
+  const [showProximityPanel, setShowProximityPanel] = useState(false);
+  const [proximityRadius, setProximityRadius] = useState(10);
+  const [proximityMessage, setProximityMessage] = useState('');
   const wsRef = useRef(null);
   
   const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+  // Charger les trajectoires
+  const loadTrajectories = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/agents/geo/trajectories`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { hours: 24 }
+      });
+      setTrajectories(response.data.trajectories || []);
+    } catch (error) {
+      console.error('Error loading trajectories:', error);
+    }
+  }, [API_URL, token]);
 
   // Charger les zones de couverture
   const loadCoverageZones = useCallback(async () => {
@@ -194,6 +213,7 @@ const AgentMapLeaflet = () => {
   useEffect(() => {
     loadAgents();
     loadCoverageZones();
+    loadTrajectories();
     connectWebSocket();
     const interval = setInterval(loadAgents, 30000);
     
@@ -201,7 +221,7 @@ const AgentMapLeaflet = () => {
       clearInterval(interval);
       if (wsRef.current) wsRef.current.close();
     };
-  }, [loadAgents, loadCoverageZones, connectWebSocket]);
+  }, [loadAgents, loadCoverageZones, loadTrajectories, connectWebSocket]);
 
   const getAgentTypeLabel = (type) => {
     const labels = {
@@ -246,6 +266,45 @@ const AgentMapLeaflet = () => {
     setMapCenter([agent.latitude, agent.longitude]);
     setMapZoom(12);
   };
+
+  // Envoyer une alerte de proximité
+  const sendProximityAlert = async () => {
+    if (!selectedAgent) {
+      toast.error('Sélectionnez d\'abord un agent sur la carte');
+      return;
+    }
+    
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/agents/geo/proximity/alert`,
+        null,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            latitude: selectedAgent.latitude,
+            longitude: selectedAgent.longitude,
+            radius_km: proximityRadius,
+            message: proximityMessage || `Alerte: Intervention requise près de ${selectedAgent.agent_name}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        toast.success(`Alerte envoyée à ${response.data.agents_notified} agent(s)`);
+        setShowProximityPanel(false);
+        setProximityMessage('');
+      }
+    } catch (error) {
+      console.error('Error sending proximity alert:', error);
+      toast.error('Erreur lors de l\'envoi de l\'alerte');
+    }
+  };
+
+  // Couleurs des trajectoires par agent
+  const trajectoryColors = [
+    '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e',
+    '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'
+  ];
 
   return (
     <div 
@@ -299,6 +358,26 @@ const AgentMapLeaflet = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setShowTrajectories(!showTrajectories); if (!showTrajectories) loadTrajectories(); }}
+            className={showTrajectories ? 'text-orange-400' : 'text-slate-400'}
+            title="Trajectoires 24h"
+          >
+            <Route className="h-5 w-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowProximityPanel(!showProximityPanel)}
+            className={showProximityPanel ? 'text-rose-400' : 'text-slate-400'}
+            title="Alerte de proximité"
+          >
+            <Bell className="h-5 w-5" />
+          </Button>
+          
           <Button
             variant="ghost"
             size="sm"
@@ -498,6 +577,48 @@ const AgentMapLeaflet = () => {
                   </Polygon>
                 ))}
                 
+                {/* Trajectoires des agents (24h) */}
+                {showTrajectories && trajectories.map((traj, idx) => (
+                  <Polyline
+                    key={`traj-${traj.agent_id}`}
+                    positions={traj.polyline}
+                    pathOptions={{
+                      color: trajectoryColors[idx % trajectoryColors.length],
+                      weight: 3,
+                      opacity: 0.8,
+                      dashArray: null
+                    }}
+                  >
+                    <Popup>
+                      <div className="min-w-[180px]">
+                        <div className="font-bold">{traj.agent_name}</div>
+                        <div className="text-xs text-gray-600">{traj.agent_type}</div>
+                        <hr className="my-1" />
+                        <div className="text-xs space-y-1">
+                          <div>📍 {traj.points_count} points</div>
+                          <div>📏 {traj.total_distance_km} km parcourus</div>
+                          <div>🕐 Dernières 24h</div>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Polyline>
+                ))}
+                
+                {/* Cercle de rayon de proximité si panel ouvert */}
+                {showProximityPanel && selectedAgent && (
+                  <Circle
+                    center={[selectedAgent.latitude, selectedAgent.longitude]}
+                    radius={proximityRadius * 1000}
+                    pathOptions={{
+                      color: '#ef4444',
+                      fillColor: '#ef4444',
+                      fillOpacity: 0.1,
+                      weight: 2,
+                      dashArray: '5, 5'
+                    }}
+                  />
+                )}
+                
                 {/* Marqueurs des agents */}
                 {filteredAgents.map((agent) => (
                   <Marker
@@ -654,6 +775,81 @@ const AgentMapLeaflet = () => {
           </Card>
         </div>
       </div>
+
+      {/* Panel Alerte de Proximité */}
+      {showProximityPanel && (
+        <div className="fixed bottom-4 left-4 z-30 w-80">
+          <Card className="bg-slate-800 border-slate-700 shadow-2xl">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-white flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-rose-500" />
+                  Alerte de Proximité
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowProximityPanel(false)}
+                  className="text-slate-400"
+                >
+                  ✕
+                </Button>
+              </div>
+              <CardDescription className="text-slate-400">
+                Envoyer une alerte à tous les agents dans un rayon
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!selectedAgent ? (
+                <div className="text-center py-4 text-slate-400">
+                  <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Sélectionnez un agent sur la carte comme centre de l'alerte</p>
+                </div>
+              ) : (
+                <>
+                  <div className="p-2 rounded bg-slate-700/50">
+                    <p className="text-xs text-slate-400">Centre de l'alerte</p>
+                    <p className="text-white font-medium">{selectedAgent.agent_name}</p>
+                    <p className="text-xs text-slate-500 font-mono">
+                      {selectedAgent.latitude.toFixed(4)}, {selectedAgent.longitude.toFixed(4)}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm text-slate-400">Rayon (km)</label>
+                    <Input
+                      type="number"
+                      value={proximityRadius}
+                      onChange={(e) => setProximityRadius(Number(e.target.value))}
+                      min={1}
+                      max={100}
+                      className="bg-slate-700 border-slate-600 text-white mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm text-slate-400">Message (optionnel)</label>
+                    <Input
+                      value={proximityMessage}
+                      onChange={(e) => setProximityMessage(e.target.value)}
+                      placeholder="Intervention urgente requise..."
+                      className="bg-slate-700 border-slate-600 text-white mt-1"
+                    />
+                  </div>
+                  
+                  <Button
+                    onClick={sendProximityAlert}
+                    className="w-full bg-rose-600 hover:bg-rose-700"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Envoyer l'alerte
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

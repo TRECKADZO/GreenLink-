@@ -1,177 +1,192 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to build a multi-persona agritech platform for Côte d'Ivoire. The project has since evolved to implement a comprehensive suite of features for the International Cocoa Initiative (ICI) to monitor and remediate child labor (SSRTE).
+The user's initial request was to build a multi-persona agritech platform for Côte d'Ivoire for the International Cocoa Initiative (ICI). The platform is designed to monitor and remediate child labor (SSRTE) and manage carbon credit verification.
 
-The scope expanded to include a **Carbon Auditor** role, managed by a Super Admin (GreenLink), to independently verify farmer plots for carbon credit payments. This is distinct from the cooperative's Field Agents who focus on SSRTE.
+The scope has expanded significantly to include:
+*   A dedicated system for SSRTE agents.
+*   Enriched analytics for Super Admins.
+*   Real-time features, including push notifications and WebSocket-powered dashboards for SSRTE alerts.
+*   A comprehensive, real-time geolocation system to track field agents on an interactive map, display their historical trajectories, and show cooperative intervention zones.
 
-Most recently, the focus has shifted to building out the financial tools for cooperatives, improving the overall UI/UX, and resolving persistent deployment issues. The user has also requested the ability for a single Field Agent to have a double casquette (dual role) for both Carbon and SSRTE monitoring, and a fully dedicated system for SSRTE agents.
-
-The platform must support:
-*   Strategic analytics dashboards for Admins.
+PRODUCT REQUIREMENTS:
+*   Strategic analytics dashboards for Admins (ICI, GreenLink).
 *   Data collection for producer households and their plots.
 *   Offline-first mobile tools for Cooperatives, Field Agents, and Carbon Auditors.
 *   A robust carbon payment calculation and tracking system.
 *   Data export functionalities (CSV, PDF).
 *   A gamification system (badges) for Carbon Auditors.
 *   A USSD interface (API and simulator) for farmers.
-*   Multi-role support for field agents.
+*   Multi-role support for field agents (double casquette).
+*   Real-time push and WebSocket notifications for critical events.
+*   An interactive map for live agent tracking, trajectory history, and operational zones.
+*   A background service on the mobile app for periodic location updates.
 
 **User's preferred language**: French
 
 **what currently exists?**
-The application is a mature full-stack platform (React/FastAPI/MongoDB) with role-based access for Super Admins, Cooperatives, Producers, Field Agents, and Carbon Auditors.
+The application is a full-stack platform (React/FastAPI/MongoDB) with role-based access.
 
-*   **Backend**: A modular FastAPI backend providing APIs for auth, data collection, and role-specific functionalities. It now supports a multi-role system ( array in the user model instead of a single ). The  route has been refactored to use async . The CORS policy has been made more permissive to debug deployment issues.
-*   **Frontend (Web)**: The React app features role-specific dashboards. The login, registration, and password reset pages now have a password visibility toggle. The cooperative member creation form has been updated to include a 'Department' field. A UI for managing the double casquette (dual role) for agents has been implemented.
-*   **Mobile App (React Native)**: The mobile app () has an updated welcome screen to better match the web UI/UX. The latest planned version is .
+*   **Backend**: Features a modular FastAPI backend. It includes a multi-role authentication system, comprehensive APIs for data management, and real-time capabilities through WebSockets () and push notifications for critical SSRTE events. New routers for live alerts () and geolocation () have been added. The SSRTE router () is now fully integrated.
+*   **Frontend (Web)**: The React app features several role-specific dashboards.
+    *   **Super Admin**: An enhanced dashboard with detailed analytics on Carbon Auditors, SSRTE activities, and dual-role agents.
+    *   **SSRTE Agent**: A dedicated dashboard for managing SSRTE visits and cases.
+    *   **Real-time Dashboards**:
+        *   An SSRTE alert dashboard () that receives live updates via WebSockets.
+        *   An interactive agent map () built with Leaflet and OpenStreetMap, showing live agent positions, 24h trajectories, and colored polygonal zones for cooperative areas.
+*   **Frontend (Mobile)**: The React Native app () includes a complete form for SSRTE visits and a new background service () for periodically sending geolocation data to the backend.
 
 **Last working item**:
-- Last item agent was working: The agent was beginning the implementation of a complete, dedicated system for SSRTE agents, as per the user's request (Option 'A'). This involves creating new backend models, API endpoints, and a frontend interface for this new role.
+- Last item agent was working: The agent finished implementing a suite of advanced geolocation features requested by the user. This included:
+    1.  A background service for the mobile app to send periodic location updates.
+    2.  Backend endpoints to handle batch location data and provide agent trajectory history.
+    3.  Frontend map updates to display 24-hour agent trajectories as polylines.
+    4.  A UI for triggering proximity alerts.
 - Status: 
-- Agent Testing Done: N
-- Which testing method agent to use? After implementation, use  to test the new backend endpoints and frontend components for the SSRTE agent role. Use  for initial endpoint verification during development.
+- Agent Testing Done: Y
+- Which testing method agent to use? . The agent should be instructed to perform a full end-to-end test covering the new map features: agent trajectory display, toggling zones, and triggering proximity alerts. It should also simulate the mobile client sending batch location updates.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - **Issue 1: Critical Web Login & Registration Failures in Deployed Environment (P0)**
-     - **Description**: Users are unable to log in or register on the *deployed* web application, receiving generic connection errors. This issue persists across different computers and browsers, and for both new and existing accounts. The application works correctly in the local preview environment, but fails in production, indicating a deployment or environment configuration problem. This is the highest priority blocker.
-     - **Attempted fixes**:
-        - Regenerated password hashes directly in the database.
-        - Downgraded  to  to resolve a warning/incompatibility with .
-        - Standardized password hashing logic to use a central utility ().
-        - Implemented more detailed error logging in the frontend's .
-        - Used , which identified a restrictive CORS policy.
-        - Updated  and  to allow all origins ().
-     - **Next debug checklist**:
-        1.  The problem is almost certainly not with the application code itself, but with the deployment environment.
-        2.  Use the  again to get a fresh, detailed report on the production environment configuration (environment variables, proxy settings, ingress rules).
-        3.  Inspect the live production logs for the backend service during a failed login/registration attempt. Look for any errors from the ingress controller, proxy, or the FastAPI application itself that don't appear in the preview environment.
-        4.  Implement verbose request logging in  (using a middleware) to log all incoming request headers for the  and  endpoints. This will show if critical headers are being stripped or altered by the production infrastructure.
-        5.  Once a fix is attempted, testing **must** be done against the deployed URL, not the preview URL.
-     - **Why fix this issue and what will be achieved with the fix?**: The entire web platform is unusable for all users in its deployed state. Fixing this will unblock all web-based activities.
-     - **Status**: 
-     - **Is recurring issue?**: Y
-     - **Should Test frontend/backend/both after fix?**: Both, with an emphasis on testing the deployed production application.
-     - **Blocked on other issue**: None. This issue is the primary blocker for all other tasks.
+  - Issue 1: Critical Web Login & Registration Failures in Deployed Environment (P0)
+    - **Description**: Users cannot log in or register on the **deployed** web application. This issue, originally reported in the previous fork, was not properly resolved. The agent tested login functionality using  against the *preview* environment and concluded it was fixed, but the problem was specific to the *production* environment. This remains the highest priority blocker.
+    - **Attempted fixes**: Previous attempts included changing CORS policy and  versions. The last agent's  test in the preview environment was not a valid fix for a deployment-specific issue.
+    - **Next debug checklist**:
+        1.  **DO NOT** test against the preview URL. All testing must be done on the actual deployed production URL.
+        2.  Use the  to get a fresh report on the production environment configuration (env vars, proxy, ingress).
+        3.  Inspect the live production logs for the backend service () **during a failed login attempt from the production frontend**.
+        4.  Compare the network requests (headers, body) made from the production frontend vs. a successful  request to identify discrepancies. The browser's developer tools will be essential here.
+    - **Why fix this issue and what will be achieved with the fix?**: The entire web platform is unusable in its deployed state. Fixing this unblocks all web-based activities and user testing.
+    - **Status**: 
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: Both, with an absolute focus on testing the deployed production application.
+    - **Blocked on other issue**: None. This issue is the primary blocker for all other tasks.
 
 **In progress Task List**:
-  - **Task 1: Implement Full SSRTE Agent System (P1)**
-     - **Where to resume**: The agent confirmed the plan with the user. The next step is to create the backend models (), Pydantic schemas (), and API endpoints () for the SSRTE agent role, including forms and data collection logic.
-     - **What will be achieved with this?**: A new, dedicated user role will exist for SSRTE agents, allowing for targeted data collection, monitoring, and reporting related to child labor remediation, separate from the carbon audit workflow.
-     - **Status**: 
-     - **Should Test frontend/backend/both after fix?**: Both
-     - **Blocked on something**: Critically blocked by **Issue 1**. It is not logical to build a new user role when no users can log into the deployed application.
+None. All recent tasks have been completed and are pending user verification.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P0) Full User Test of APK v1.14.0**: An APK was requested but the build process was not completed. A full user flow test is pending once built. This should cover the new mobile home screen and confirm no regressions were introduced.
+    *   **(P0) Full User Test of APK v1.14.0**: An APK build was previously requested but needs a full user flow test to confirm no regressions were introduced by recent mobile changes (new home screen, location service).
     *   **(P1) Implement Real Payment Integration (Orange Money)**: Use  to get a playbook for integrating a real payment provider.
     *   **(P1) Implement multi-channel notifications for Payments**: Send notifications (Push, SMS, Email) to members when a payment is made. This will require using an integration subagent.
+    *   **(P2) Customize SSRTE Alert Recipients**: Allow configuration of which roles (Cooperative Managers, ICI Coordinators) receive critical alerts, as suggested by the agent.
 *   **Future Tasks:**
     *   (P2) Real USSD Integration (beyond the current API simulator).
     *   (P2) Refactor backend to use a true cloud storage solution (e.g., S3) for file uploads.
-    *   (P2) Complete the refactoring of the monolithic  file into smaller, more focused routers.
+    *   (P2) Complete the refactoring of the monolithic  file.
     *   (P2) Verify the entire backend uses  (async) for all database calls.
 
 **Completed work in this session**
-- **Dual-Role Double Casquette Implemented**: Modified the user model to support an array of roles. Implemented backend and frontend logic for an agent to have both Carbon and SSRTE roles.
-- **Password Visibility Toggle**: Added an icon to show/hide the password on the web login, registration, and password reset forms.
-- **Mobile Homepage Update**: Redesigned the mobile app's  to better align with the modern UI of the web application.
-- **Department Field Added**: The Add Cooperative Member form on the web now correctly includes a 'Department' selection field, which is saved to the backend.
-- **Authentication System Hardening**:
-    - Downgraded  from v4.x to  to resolve a  incompatibility warning.
-    - Refactored  to use the standardized  utility.
-- **Async Refactoring**: Migrated  from synchronous  to asynchronous .
-- **CORS Configuration Fix**: Updated the backend's CORS policy to be more permissive () to rule out CORS as the cause of deployment login issues.
-- **APK Build Initiated**: Started builds for APK  and  to incorporate recent mobile changes.
+- **SSRTE System (Complete Implementation)**:
+    - Backend: Integrated  router.
+    - Frontend: Created a dedicated  for agents.
+    - Mobile: Created a  and confirmed the existence of the visit form.
+    - Testing: Successfully validated by .
+- **Super Admin Dashboard Enhancement**: Enriched the admin analytics dashboard with metrics for SSRTE, Carbon Auditors, and dual-role agents.
+- **Real-time SSRTE Alerts**:
+    - Implemented automatic push notifications for high-risk visits and critical cases.
+    - Created a real-time WebSocket dashboard () to display live alerts.
+- **Real-time Geolocation System**:
+    - **Live Map**: Implemented an interactive map () using Leaflet/OpenStreetMap.
+    - **Cooperative Zones**: Added functionality to display cooperative operational zones as colored polygons on the map via .
+    - **Agent Trajectories**: Implemented 24-hour agent path history on the map, fetched from .
+    - **Mobile Geolocation Service**: Created a service () for the mobile app to periodically send location data via .
+    - **Proximity Alerts**: Added backend endpoint and frontend UI to trigger proximity alerts.
 
 **Earlier issues found/mentioned but not fixed**
-None, all known issues are captured in the pending list.
+- The critical deployment login failure (Issue #1 in the pending list) was mistaken as fixed by the previous agent because they only tested it in the preview environment, not the production one where the error occurred.
 
 **Known issue recurrence from previous fork**
-- **Authentication/Deployment Failures**: The most significant recurring problem is the failure of login and registration functionality specifically in the deployed production environment. This has happened multiple times and previous fixes (password hashing, CORS) have not resolved the root cause.
+- **Authentication/Deployment Failures**: The inability to log in or register in the deployed production environment is a persistent, high-priority recurring issue that has not been successfully resolved.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Multi-Role Authentication**: Transitioned from a single  string to a  array in the user model to support users with multiple responsibilities.
-- **Async/Await Refactoring**: Migrating synchronous  database calls to asynchronous  to improve performance and prevent blocking operations.
-- **Dependency Version Management**: Pinning  in  to fix a runtime warning and potential instability caused by an incompatibility with .
-- **Deployment vs. Preview Debugging**: The core challenge is diagnosing an issue that only manifests in a production-like environment, pointing towards configuration (env vars, proxy, ingress) rather than application code.
+- **Real-time Data Streaming**: Use of WebSockets for live dashboard updates ().
+- **Push Notifications**: Server-side logic to send alerts for critical events (SSRTE cases).
+- **Interactive Geolocation Mapping**: Integration of **Leaflet** and **OpenStreetMap** to build a feature-rich, real-time map.
+- **Geospatial Data Handling**: Displaying points (agents), lines (trajectories), and polygons (zones) on the map.
+- **Background Mobile Services**: Implementation of a location tracking service on the client's mobile app.
 
 **key DB schema**
-- ****: The schema was changed. The  field has been replaced by  to allow for multiple roles (e.g., ).
-- ****: Now includes a  field.
+- ****:  is used for multi-role support.
+- ****: Includes a  field.
+- ****: (Implicitly created) Stores agent location data with timestamps for trajectory tracking.
+- ****, ****: Core collections for the SSRTE module.
 
 **changes in tech stack**
-- ****: Downgraded and pinned to version  in .
+- ****: Added to  for map integration.
+- ****: Added to  as a dependency for .
 
 **All files of reference**
-- : The focus of repeated debugging for login/registration issues.
-- : Location of the CORS middleware configuration.
-- : Contains the pinned  version.
-- : Recently modified for password visibility.
-- : Updated with the department field.
-- : Contains the UI for managing dual roles.
-- : The redesigned mobile home screen.
--  files for both frontend and backend: These are critical for the deployment debugging process.
+- : New file for all geolocation-related APIs.
+- : New file for WebSocket broadcasting logic.
+- : Contains logic for sending push notifications.
+- : The core component for the interactive map.
+- : The main dashboard for SSRTE agents.
+- : The real-time WebSocket dashboard.
+- : The new background service for location tracking.
 
 **Areas that need refactoring**:
-- **Authentication in Deployment**: The entire authentication flow needs a robust solution that is proven to work in the production environment, not just preview. This is less about code style and more about environmental resilience.
-- ** router**: This large file still needs to be broken down into smaller, more manageable routers for better maintainability.
+- The  component has grown quite large. It manages state for agents, zones, trajectories, and alerts. It could be broken down into smaller, more focused components (e.g., , , ).
 
 **key api endpoints**
-- : POST - Failing in deployment, working in preview.
-- : POST - Failing in deployment, working in preview.
-- : POST - Updated to accept the  field.
-- : POST - New endpoint to grant an existing auditor the SSRTE role.
+- : Full suite of CRUD endpoints for the SSRTE agent system.
+- : Endpoint to send WebSocket messages.
+- : The WebSocket connection endpoint.
+- : POST endpoint for a single location update.
+- : POST endpoint for mobile app's periodic sync.
+- : GET endpoint to fetch all agent locations.
+- : GET endpoint for an agent's 24h path.
+- : GET endpoint for cooperative zone polygons.
+- : POST endpoint to trigger an alert.
 
 **Critical Info for New Agent**
 - **Respond in French.** All user interactions must be in French.
-- **DEPLOYMENT IS BROKEN**: Your absolute first priority is to solve the login and registration failure in the **deployed environment**. Do not work on any new features until users can successfully log into the production web app. The problem is not in the preview environment's code. Focus your investigation on configuration differences between preview and production (env vars, ingress, proxies).
-- **SSRTE System is Next**: Once the deployment issue is fixed, the next task is to implement the full, dedicated system for SSRTE agents as requested by the user.
+- **DEPLOYMENT IS LIKELY BROKEN**: Your absolute first priority is to solve the **P0 login/registration failure in the deployed environment**. Do not work on any new features. Verify any fix on the **production URL**, not the preview one. The last agent made a mistake by only testing this in preview.
+- **Verify New Features**: Once the deployment is fixed, the next step is to guide the user through verifying the newly implemented real-time geolocation features (map, trajectories, zones).
 
 **documents and test reports created in this job**
 -  (Updated)
-- APK builds for  and  were initiated.
+-  (From testing the SSRTE system)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Asks for a complete, dedicated system for SSRTE agents.
-2.  **Agent**: Proposes a plan for the SSRTE system.
-3.  **User**: Confirms plan 'A' (full system).
-4.  **User**: Asks to build APK v1.14.0.
-5.  **Agent**: Starts the build.
-6.  **User**: Asks to update the mobile home screen to match the web version.
-7.  **Agent**: Implements the mobile home screen update.
-8.  **User**: Asks to add password visibility toggle (show/hide) to web login/register pages.
-9.  **Agent**: Implements the password visibility toggle.
-10. **User**: Asks about the Rôle afent SSRTE? (SSRTE Agent Role?), prompting the discussion for a dedicated system.
+1.  **User**: Asks to use a specific Google Maps link for geolocation.
+2.  **Agent**: Interprets the link as a request for a real interactive map with Côte d'Ivoire departments and implements it with Leaflet/OpenStreetMap.
+3.  **User**: Agrees with the new map implementation.
+4.  **User**: Asks to add colored polygonal zones for each cooperative's intervention area.
+5.  **Agent**: Implements the cooperative zones on the map.
+6.  **User**: Agrees with the zone implementation.
+7.  **User**: Provides a list of 4 new features: mobile geolocation service, agent trajectories, proximity alerts, and cooperative zones (re-confirming).
+8.  **Agent**: Implements all four features.
+9.  **User**: Acknowledges the agent's summary of completed work.
+10. **Agent**: Proposes next steps for implementing the mobile location service and other features.
 
 **Project Health Check:**
 - **Broken**:
-    - **Web Application Login and Registration in the DEPLOYED environment.** This is a critical, show-stopping failure.
+    - **Web Application Login and Registration in the DEPLOYED environment.** This is a critical, unresolved failure preventing any use of the production application.
 - **Mocked/Simulated**:
+    - Agent locations are currently from a test data file (). Needs to be connected to real data from the mobile service.
     - Payment Gateway (manual disbursement).
     - SMS/Email Notifications (not connected to a provider).
     - Real USSD (uses a web API simulation).
 - **Healthy**:
     - The entire application (frontend, backend, mobile) within the **preview environment**.
-    - Core features like carbon premiums, multi-role logic, and data management are functional in preview.
+    - Core features like SSRTE management, real-time alerts, and map visualization are functionally complete in preview.
 
 **3rd Party Integrations**
-- **Expo / EAS**: Core framework and build service for the React Native mobile app.
+- **Expo / EAS**: For React Native mobile app build and updates.
 - **Expo Push Notifications**: For mobile push notifications.
-- **MongoDB Atlas**: The primary database.
-- ****: Python library for PDF generation.
-- ****: Python library for QR code generation.
-- ****: For mobile offline storage.
-- ****: For data tables in the frontend.
+- **MongoDB Atlas**: Primary database.
+- **Leaflet & OpenStreetMap**: For the interactive web map.
+- ****: For PDF generation.
+- ****: For QR code generation.
 
 **Testing status**
-- **Testing agent used after significant changes**: NO, recent changes were tested manually with  and screenshots.
-- **Troubleshoot agent used after agent stuck in loop**: NO. The  was used to diagnose the CORS issue.
-- **Test files created**: None in this session.
-- **Known regressions**: The login/registration failure in deployment is a major, persistent regression.
+- **Testing agent used after significant changes**: YES, the  was used to validate the entire SSRTE backend and frontend system, reporting a 95-100% success rate.
+- **Troubleshoot agent used after agent stuck in loop**: NO.
+- **Test files created**: None.
+- **Known regressions**: The login/registration failure in deployment is a major, persistent regression from a previous fork.
 
 **Credentials to test flow:**
 - **Super Admin**:  / 
@@ -181,4 +196,4 @@ None, all known issues are captured in the pending list.
 - **Carbon Auditor**:  / 
 
 **What agent forgot to execute**
-The agent repeatedly treated the deployment failure as a code issue solvable within the preview environment. The root cause is environmental, and the agent failed to establish a robust debugging strategy focused on the production environment itself (e.g., inspecting ingress logs, comparing env vars, logging raw requests on the production server). The user's request to test that the feature works well in deployment was not adequately fulfilled.</analysis>
+- The agent failed to correctly diagnose and resolve the P0 deployment login issue. They mistook a successful test in the **preview** environment for a fix to a problem that only exists in the **production** environment. This critical oversight has left the deployed application unusable.</analysis>

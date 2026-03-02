@@ -1,6 +1,109 @@
 # GreenLink PRD - Updated March 2, 2026
 
-## Latest Updates - March 2, 2026 (Session 8 - SSRTE Agent System)
+## Latest Updates - March 2, 2026 (Session 9 - APK v1.15.0 + Vérification Géolocalisation)
+
+### 📱 APK v1.15.0 PRÊT AU TÉLÉCHARGEMENT
+
+**Lien de téléchargement:**
+https://expo.dev/artifacts/eas/41iVTHinai8tkKDy4jm6bJ.apk
+
+**Détails:**
+- **Version**: 1.15.0
+- **Build ID**: `18567718-b3a5-4b6e-85ab-771ce694f4c2`
+- **Profile**: preview
+- **Channel**: preview
+- **SDK**: 53.0.0
+- **Date**: March 2, 2026
+
+**Nouveautés v1.15.0:**
+- Service de géolocalisation mobile (`GeolocationService.js`)
+- Envoi périodique des positions GPS (30 secondes)
+- Mode hors ligne avec cache local (500 positions max)
+- Synchronisation automatique à la reconnexion
+- Détection d'activité (stationnaire, marche, course, conduite)
+
+### ✅ VÉRIFICATION GÉOLOCALISATION EFFECTUÉE
+
+**Tests API Backend:**
+- `GET /api/agents/geo/agents?online_only=false` → 1 agent trouvé ✅
+- `GET /api/zones/coverage` → 10 zones trouvées ✅
+- `GET /api/agents/geo/trajectories?hours=24` → 1 trajectoire ✅
+
+**Test Frontend:**
+- Carte Leaflet/OpenStreetMap fonctionnelle ✅
+- Zones de couverture (polygones colorés) affichées ✅
+- Liste des agents visible ✅
+- Indicateur de statut (online/offline) ✅
+- Légende complète affichée ✅
+
+---
+
+## Latest Updates - March 2, 2026 (Session 8 - Géolocalisation Avancée)
+
+### ✅ SERVICE GÉOLOCALISATION MOBILE
+
+**Fichier:** `/app/mobile/greenlink-farmer/src/services/GeolocationService.js`
+
+**Fonctionnalités:**
+- Envoi périodique des positions (30 secondes)
+- Tracking en arrière-plan (Expo Location)
+- Mode hors ligne avec cache local (500 positions max)
+- Synchronisation automatique à la reconnexion
+- Détection d'activité (stationnaire, marche, course, conduite)
+- Niveau batterie inclus dans les updates
+
+**Configuration:**
+- `UPDATE_INTERVAL: 30000` (30s)
+- `DISTANCE_FILTER: 10` (10 mètres)
+- `MAX_CACHED_LOCATIONS: 500`
+- `OFFLINE_SYNC_INTERVAL: 300000` (5 min)
+
+---
+
+### ✅ TRAJECTOIRES DES AGENTS (24H)
+
+**API:** `GET /api/agents/geo/trajectories?hours=24`
+
+**Fonctionnalités:**
+- Polylines colorées par agent sur la carte
+- Distance totale parcourue calculée (Haversine)
+- Nombre de points et période
+- Toggle ON/OFF sur la carte
+
+**Test:** 1 agent, 6 points, 812.22 km parcourus
+
+---
+
+### ✅ ALERTES DE PROXIMITÉ
+
+**APIs:**
+- `POST /api/agents/geo/proximity/check` - Vérifier agents/cas à proximité
+- `POST /api/agents/geo/proximity/alert` - Envoyer alerte push aux agents dans un rayon
+
+**Fonctionnalités:**
+- Panel d'alerte sur la carte
+- Sélection du centre (agent)
+- Rayon configurable (1-100 km)
+- Message personnalisé
+- Cercle de visualisation sur la carte
+- Push notification aux agents dans le rayon
+- Diffusion WebSocket temps réel
+
+---
+
+### ✅ ZONES DE COUVERTURE PAR COOPÉRATIVE
+
+**10 zones cacaoyères de Côte d'Ivoire:**
+- Gagnoa, Daloa, Soubré, San-Pédro, Divo
+- Abengourou, Agboville, Bouaflé, Issia, Duékoué
+
+**Fonctionnalités:**
+- Polygones colorés par zone
+- Attribution coopérative avec stats
+- Zones non assignées en pointillés
+- Popup avec producteurs et agents
+
+---
 
 ### ✅ CARTE GÉOLOCALISATION AGENTS TEMPS RÉEL + ZONES DE COUVERTURE
 
@@ -246,7 +349,7 @@ Le problème était lié au hash du mot de passe dans la base de données. La so
 **Problèmes identifiés par l'agent de déploiement :**
 
 1. **CORS bloqué** (CRITIQUE)
-   - Ancien: `CORS_ORIGINS="https://greenlink-auditor.preview.emergentagent.com"`
+   - Ancien: `CORS_ORIGINS="https://ssrte-dashboard.preview.emergentagent.com"`
    - Nouveau: `CORS_ORIGINS="*"`
 
 2. **load_dotenv override=True** (CRITIQUE)

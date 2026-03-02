@@ -323,3 +323,334 @@ async def get_geolocation_stats(
         "by_type": {item["_id"]: item["count"] for item in by_type},
         "last_updated": datetime.now(timezone.utc).isoformat()
     }
+
+
+# ============= BATCH & TRAJECTOIRES =============
+
+class BatchLocationRequest(BaseModel):
+    locations: List[LocationUpdate]
+
+
+@router.post("/batch")
+async def batch_location_update(
+    request: BatchLocationRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Envoyer plusieurs positions en batch (synchronisation hors ligne).
+    Utilisé par l'app mobile pour sync les positions cachées.
+    """
+    if not request.locations:
+        return {"success": True, "synced": 0}
+    
+    synced_count = 0
+    
+    for location in request.locations:
+        try:
+            # Ajouter à l'historique
+            await db.agent_location_history.insert_one({
+                "agent_id": str(current_user["_id"]),
+                "agent_name": current_user.get("full_name"),
+                "agent_type": current_user.get("user_type"),
+                "latitude": location.latitude,
+                "longitude": location.longitude,
+                "accuracy": location.accuracy,
+                "altitude": location.altitude,
+                "speed": location.speed,
+                "heading": location.heading,
+                "battery_level": location.battery_level,
+                "is_moving": location.is_moving,
+                "activity_type": location.activity_type,
+                "created_at": datetime.now(timezone.utc)
+            })
+            synced_count += 1
+        except Exception as e:
+            logger.error(f"[GEO] Batch sync error: {e}")
+    
+    # Mettre à jour la dernière position
+    if request.locations:
+        last_loc = request.locations[-1]
+        await db.agent_locations.update_one(
+            {"agent_id": str(current_user["_id"])},
+            {"$set": {
+                "latitude": last_loc.latitude,
+                "longitude": last_loc.longitude,
+                "accuracy": last_loc.accuracy,
+                "timestamp": datetime.now(timezone.utc),
+                "is_online": True
+            }},
+            upsert=True
+        )
+    
+    logger.info(f"[GEO] Batch sync: {synced_count}/{len(request.locations)} positions for {current_user.get('full_name')}")
+    
+    return {
+        "success": True,
+        "synced": synced_count,
+        "total": len(request.locations)
+    }
+
+
+@router.get("/trajectories")
+async def get_all_trajectories(
+    hours: int = 24,
+    agent_type: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Récupérer les trajectoires de tous les agents pour affichage sur carte.
+    Retourne les polylines pour chaque agent.
+    """
+    user_type = current_user.get("user_type", "")
+    if user_type not in ["admin", "super_admin", "cooperative"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux administrateurs et coopératives"
+        )
+    
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    
+    # Filtrer par type si spécifié
+    match_query = {"created_at": {"$gte": cutoff}}
+    if agent_type:
+        match_query["agent_type"] = agent_type
+    
+    # Si coopérative, limiter à ses agents
+    if user_type == "cooperative":
+        match_query["cooperative_id"] = str(current_user["_id"])
+    
+    # Agréger par agent
+    pipeline = [
+        {"$match": match_query},
+        {"$sort": {"created_at": 1}},
+        {"$group": {
+            "_id": "$agent_id",
+            "agent_name": {"$first": "$agent_name"},
+            "agent_type": {"$first": "$agent_type"},
+            "points": {"$push": {
+                "lat": "$latitude",
+                "lng": "$longitude",
+                "time": "$created_at",
+                "speed": "$speed"
+            }},
+            "total_points": {"$sum": 1},
+            "start_time": {"$first": "$created_at"},
+            "end_time": {"$last": "$created_at"}
+        }}
+    ]
+    
+    trajectories = await db.agent_location_history.aggregate(pipeline).to_list(100)
+    
+    result = []
+    for traj in trajectories:
+        # Calculer la distance totale
+        points = traj.get("points", [])
+        total_distance = 0
+        for i in range(1, len(points)):
+            p1, p2 = points[i-1], points[i]
+            total_distance += haversine_distance(p1["lat"], p1["lng"], p2["lat"], p2["lng"])
+        
+        result.append({
+            "agent_id": traj["_id"],
+            "agent_name": traj.get("agent_name"),
+            "agent_type": traj.get("agent_type"),
+            "polyline": [[p["lat"], p["lng"]] for p in points],
+            "points_count": traj.get("total_points", 0),
+            "start_time": traj.get("start_time"),
+            "end_time": traj.get("end_time"),
+            "total_distance_km": round(total_distance, 2)
+        })
+    
+    return {
+        "period_hours": hours,
+        "trajectories": result,
+        "total_agents": len(result)
+    }
+
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """Calculer la distance entre deux points GPS en km"""
+    from math import radians, cos, sin, asin, sqrt
+    
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    r = 6371  # Rayon de la Terre en km
+    
+    return c * r
+
+
+# ============= ALERTES DE PROXIMITÉ =============
+
+class ProximityAlertRequest(BaseModel):
+    latitude: float
+    longitude: float
+    radius_km: float = 5.0  # Rayon en km
+    alert_type: str = "ssrte_case"  # Type d'alerte à chercher
+
+
+@router.post("/proximity/check")
+async def check_proximity_alerts(
+    request: ProximityAlertRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Vérifier s'il y a des agents ou cas critiques à proximité.
+    Utilisé pour dispatcher rapidement en cas d'urgence.
+    """
+    nearby_agents = []
+    nearby_cases = []
+    
+    # Chercher les agents en ligne à proximité
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
+    agents = await db.agent_locations.find({
+        "timestamp": {"$gte": cutoff}
+    }).to_list(500)
+    
+    for agent in agents:
+        dist = haversine_distance(
+            request.latitude, request.longitude,
+            agent["latitude"], agent["longitude"]
+        )
+        if dist <= request.radius_km:
+            nearby_agents.append({
+                "agent_id": agent["agent_id"],
+                "agent_name": agent.get("agent_name"),
+                "agent_type": agent.get("agent_type"),
+                "distance_km": round(dist, 2),
+                "latitude": agent["latitude"],
+                "longitude": agent["longitude"],
+                "battery_level": agent.get("battery_level")
+            })
+    
+    # Chercher les cas SSRTE critiques à proximité
+    if request.alert_type == "ssrte_case":
+        cases = await db.ssrte_cases.find({
+            "status": {"$in": ["identified", "in_progress"]},
+            "severity_score": {"$gte": 7}
+        }).to_list(100)
+        
+        # Récupérer les positions des membres
+        for case in cases:
+            member = await db.coop_members.find_one({"_id": ObjectId(case.get("member_id"))})
+            if member and member.get("gps_latitude") and member.get("gps_longitude"):
+                dist = haversine_distance(
+                    request.latitude, request.longitude,
+                    member["gps_latitude"], member["gps_longitude"]
+                )
+                if dist <= request.radius_km:
+                    nearby_cases.append({
+                        "case_id": str(case["_id"]),
+                        "child_name": case.get("child_name"),
+                        "severity_score": case.get("severity_score"),
+                        "status": case.get("status"),
+                        "distance_km": round(dist, 2),
+                        "member_name": member.get("full_name")
+                    })
+    
+    # Trier par distance
+    nearby_agents.sort(key=lambda x: x["distance_km"])
+    nearby_cases.sort(key=lambda x: x["distance_km"])
+    
+    return {
+        "center": {"latitude": request.latitude, "longitude": request.longitude},
+        "radius_km": request.radius_km,
+        "nearby_agents": nearby_agents[:20],  # Max 20
+        "nearby_cases": nearby_cases[:10],    # Max 10
+        "agents_count": len(nearby_agents),
+        "cases_count": len(nearby_cases)
+    }
+
+
+@router.post("/proximity/alert")
+async def send_proximity_alert(
+    latitude: float,
+    longitude: float,
+    radius_km: float = 10.0,
+    message: str = "Alerte de proximité",
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Envoyer une alerte push à tous les agents dans un rayon donné.
+    Utilisé pour mobilisation rapide en cas d'urgence.
+    """
+    user_type = current_user.get("user_type", "")
+    if user_type not in ["admin", "super_admin", "cooperative"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux administrateurs et coopératives"
+        )
+    
+    # Trouver les agents à proximité
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+    agents = await db.agent_locations.find({
+        "timestamp": {"$gte": cutoff}
+    }).to_list(500)
+    
+    target_agent_ids = []
+    for agent in agents:
+        dist = haversine_distance(latitude, longitude, agent["latitude"], agent["longitude"])
+        if dist <= radius_km:
+            target_agent_ids.append(agent["agent_id"])
+    
+    if not target_agent_ids:
+        return {
+            "success": False,
+            "message": "Aucun agent trouvé dans le rayon spécifié",
+            "agents_notified": 0
+        }
+    
+    # Envoyer les notifications push
+    try:
+        from services.push_notifications import push_service
+        
+        # Récupérer les tokens des agents ciblés
+        tokens = await push_service.get_device_tokens(user_ids=target_agent_ids)
+        
+        if tokens:
+            await push_service.send_push_notification(
+                tokens=tokens,
+                title="🚨 Alerte de Proximité",
+                body=message,
+                data={
+                    "type": "proximity_alert",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius_km": radius_km,
+                    "sender": current_user.get("full_name")
+                },
+                priority="high"
+            )
+    except Exception as e:
+        logger.error(f"[GEO] Proximity alert push failed: {e}")
+    
+    # Diffuser via WebSocket
+    try:
+        from services.websocket_manager import manager
+        await manager.broadcast_to_channel("alerts", {
+            "type": "proximity_alert",
+            "data": {
+                "latitude": latitude,
+                "longitude": longitude,
+                "radius_km": radius_km,
+                "message": message,
+                "sender": current_user.get("full_name"),
+                "agents_notified": len(target_agent_ids)
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+    except Exception as e:
+        logger.error(f"[GEO] Proximity alert WebSocket failed: {e}")
+    
+    logger.info(f"[GEO] Proximity alert sent to {len(target_agent_ids)} agents by {current_user.get('full_name')}")
+    
+    return {
+        "success": True,
+        "message": "Alerte envoyée",
+        "agents_notified": len(target_agent_ids),
+        "agent_ids": target_agent_ids
+    }
+
