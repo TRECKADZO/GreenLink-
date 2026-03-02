@@ -223,9 +223,86 @@ const PremiumAnalyticsDashboard = () => {
                   </TabsList>
 
                   <TabsContent value="data" className="mt-4">
-                    <pre className="bg-gray-50 p-4 rounded-lg overflow-auto max-h-96 text-sm">
-                      {JSON.stringify(selectedAnalytic, null, 2)}
-                    </pre>
+                    {/* Formatted Data Display instead of raw JSON */}
+                    <div className="space-y-4">
+                      {/* Summary Card */}
+                      {selectedAnalytic.summary && (
+                        <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                          <h4 className="font-semibold text-emerald-800 mb-2">Résumé</h4>
+                          <p className="text-emerald-700">{selectedAnalytic.summary}</p>
+                        </div>
+                      )}
+                      
+                      {/* Data Grid */}
+                      {selectedAnalytic.data && (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {Object.entries(selectedAnalytic.data).map(([key, value]) => (
+                            <div key={key} className="p-4 bg-gray-50 rounded-lg border">
+                              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                                {key.replace(/_/g, ' ')}
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {typeof value === 'object' 
+                                  ? Array.isArray(value) 
+                                    ? value.length + ' éléments'
+                                    : Object.keys(value).length + ' propriétés'
+                                  : typeof value === 'number' 
+                                    ? value.toLocaleString('fr-FR')
+                                    : String(value)
+                                }
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Metrics if available */}
+                      {selectedAnalytic.metrics && (
+                        <div className="mt-4">
+                          <h4 className="font-semibold text-gray-800 mb-3">Métriques Clés</h4>
+                          <div className="grid md:grid-cols-4 gap-3">
+                            {Object.entries(selectedAnalytic.metrics).map(([key, value]) => (
+                              <div key={key} className="p-3 bg-blue-50 rounded-lg text-center">
+                                <p className="text-2xl font-bold text-blue-700">
+                                  {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
+                                </p>
+                                <p className="text-xs text-blue-600 capitalize">{key.replace(/_/g, ' ')}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Regions breakdown if available */}
+                      {selectedAnalytic.by_region && (
+                        <div className="mt-4">
+                          <h4 className="font-semibold text-gray-800 mb-3">Par Région</h4>
+                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {Object.entries(selectedAnalytic.by_region).map(([region, data]) => (
+                              <div key={region} className="p-3 bg-gray-50 rounded-lg border">
+                                <p className="font-medium text-gray-900">{region}</p>
+                                <p className="text-sm text-gray-600">
+                                  {typeof data === 'object' 
+                                    ? Object.entries(data).map(([k, v]) => `${k}: ${v}`).join(', ')
+                                    : data
+                                  }
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Raw data toggle for advanced users */}
+                      <details className="mt-4">
+                        <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                          Voir les données brutes (JSON)
+                        </summary>
+                        <pre className="mt-2 bg-gray-100 p-4 rounded-lg overflow-auto max-h-64 text-xs">
+                          {JSON.stringify(selectedAnalytic, null, 2)}
+                        </pre>
+                      </details>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="monetization" className="mt-4">
