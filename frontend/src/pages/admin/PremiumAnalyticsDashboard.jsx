@@ -103,9 +103,19 @@ const PremiumAnalyticsDashboard = () => {
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Premium Analytics</h1>
-              <p className="text-gray-500">10 Analytics institutionnels à haute valeur marchande</p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin')}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Retour
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Premium Analytics</h1>
+                <p className="text-gray-500">10 Analytics institutionnels à haute valeur marchande</p>
+              </div>
             </div>
             <div className="flex gap-2">
               <Badge className="bg-purple-100 text-purple-700 px-4 py-2">
