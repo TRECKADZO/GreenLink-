@@ -1,5 +1,6 @@
 # Dashboard spécifique pour les agents terrain
 # Statistiques, classement et suivi des performances
+# Supporte les agents avec double casquette (SSRTE + Carbon)
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
@@ -16,8 +17,18 @@ router = APIRouter(prefix="/api/field-agent", tags=["Field Agent Dashboard"])
 
 
 def verify_field_agent(user: dict):
-    """Vérifie que l'utilisateur est un agent terrain"""
-    if user.get('user_type') not in ['field_agent', 'cooperative', 'admin']:
+    """Vérifie que l'utilisateur est un agent terrain ou a le rôle approprié"""
+    user_type = user.get('user_type')
+    roles = user.get('roles', [])
+    
+    # Accepter si user_type est agent ou si l'utilisateur a le rôle field_agent/ssrte_agent
+    valid_types = ['field_agent', 'cooperative', 'admin', 'carbon_auditor']
+    valid_roles = ['field_agent', 'ssrte_agent', 'carbon_auditor']
+    
+    has_valid_type = user_type in valid_types
+    has_valid_role = any(role in roles for role in valid_roles)
+    
+    if not has_valid_type and not has_valid_role:
         raise HTTPException(status_code=403, detail="Accès réservé aux agents terrain")
 
 

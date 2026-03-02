@@ -71,6 +71,29 @@ Le problème était lié au hash du mot de passe dans la base de données. La so
 
 **APK v1.13.0 en cours de build** avec toutes les corrections.
 
+### Fonctionnalité Double Casquette Agent - March 2, 2026
+
+**Objectif:** Permettre à un même agent de terrain d'avoir les rôles Carbone ET SSRTE
+
+**Backend (`carbon_auditor.py`, `field_agent_dashboard.py`):**
+- Nouveau champ `roles` (liste) dans le modèle utilisateur
+- Champ `is_dual_role` pour identifier les agents double casquette
+- Nouveau champ `is_dual_role` et `cooperative_id` dans `AuditorCreate`
+- Endpoints pour gérer les rôles:
+  - `POST /api/carbon-auditor/admin/auditors/{id}/add-role?role=xxx`
+  - `DELETE /api/carbon-auditor/admin/auditors/{id}/remove-role/{role}`
+- Requêtes adaptées pour trouver les auditeurs par `user_type` OU par `roles`
+- Helper `has_carbon_auditor_role()` pour vérifier les permissions
+- Compteur `ssrte_visits_completed` pour les agents SSRTE
+
+**Frontend (`CarbonAuditorsPage.jsx`):**
+- Option "Double Casquette (Carbone + SSRTE)" dans le formulaire de création
+- Sélection de la coopérative rattachée (optionnel) pour agents double casquette
+- Badge "Double Casquette" sur les cartes d'auditeurs
+- Affichage des rôles multiples (Carbone, SSRTE, Agent Terrain)
+- Statistiques séparées: "audits carbone" et "visites SSRTE"
+- Boutons pour ajouter/retirer des rôles depuis la modal de détails
+
 **Credentials Confirmés:**
 - Super Admin: `klenakan.eric@gmail.com` / `474Treckadzo` ✅
 

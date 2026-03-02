@@ -2,6 +2,7 @@
 Carbon Auditor Management Routes
 Auditeurs Carbone rattachés à GreenLink (gérés par Super Admin)
 Migrated to async motor - March 2026
+Supporte les agents avec double casquette (SSRTE + Carbon)
 """
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
@@ -14,6 +15,28 @@ router = APIRouter(prefix="/api/carbon-auditor", tags=["Carbon Auditor"])
 # Use centralized async database connection
 from database import db
 
+
+# ============== HELPER FUNCTIONS ==============
+
+def has_carbon_auditor_role(user: dict) -> bool:
+    """Vérifie si l'utilisateur a le rôle d'auditeur carbone"""
+    user_type = user.get('user_type')
+    roles = user.get('roles', [])
+    
+    # L'utilisateur est auditeur carbone si:
+    # 1. Son user_type est 'carbon_auditor'
+    # 2. Ou il a 'carbon_auditor' dans ses rôles
+    return user_type == 'carbon_auditor' or 'carbon_auditor' in roles
+
+
+async def get_auditor_by_id(auditor_id: str):
+    """Récupère un auditeur par ID, supporte les rôles multiples"""
+    user = await db.users.find_one({"_id": ObjectId(auditor_id)})
+    if user and has_carbon_auditor_role(user):
+        return user
+    return None
+
+
 # ============== MODELS ==============
 
 class AuditorCreate(BaseModel):
@@ -23,6 +46,8 @@ class AuditorCreate(BaseModel):
     password: str
     zone_coverage: List[str] = []  # Départements couverts
     certifications: List[str] = []  # Ex: Verra VCS, Gold Standard
+    is_dual_role: bool = False  # Si True, l'agent aura aussi le rôle SSRTE
+    cooperative_id: Optional[str] = None  # Pour les agents double casquette
 
 class AuditorUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -30,6 +55,7 @@ class AuditorUpdate(BaseModel):
     zone_coverage: Optional[List[str]] = None
     certifications: Optional[List[str]] = None
     is_active: Optional[bool] = None
+    roles: Optional[List[str]] = None  # Pour ajouter/retirer des rôles
 
 class AuditMissionCreate(BaseModel):
     auditor_id: str
@@ -59,7 +85,10 @@ class AuditSubmission(BaseModel):
 
 @router.post("/admin/auditors/create")
 async def create_auditor(auditor: AuditorCreate):
-    """Créer un nouvel auditeur carbone (Super Admin)"""
+    """Créer un nouvel auditeur carbone (Super Admin)
+    
+    Supporte la création d'agents à double casquette (Carbon + SSRTE)
+    """
     # Vérifier si email existe déjà
     existing = await db.users.find_one({"email": auditor.email})
     if existing:
@@ -69,37 +98,136 @@ async def create_auditor(auditor: AuditorCreate):
     from auth_utils import get_password_hash
     hashed_password = get_password_hash(auditor.password)
     
+    # Définir les rôles
+    roles = ["carbon_auditor"]
+    user_type = "carbon_auditor"
+    
+    # Si double casquette, ajouter le rôle SSRTE/field_agent
+    if auditor.is_dual_role:
+        roles.append("ssrte_agent")
+        roles.append("field_agent")
+    
     # Créer l'utilisateur auditeur
     user_doc = {
         "email": auditor.email,
         "phone_number": auditor.phone_number,
         "full_name": auditor.full_name,
         "hashed_password": hashed_password,
-        "user_type": "carbon_auditor",
+        "user_type": user_type,
+        "roles": roles,  # Liste des rôles pour supporter la double casquette
         "zone_coverage": auditor.zone_coverage,
         "certifications": auditor.certifications,
+        "cooperative_id": auditor.cooperative_id,  # Pour les agents double casquette
         "is_active": True,
+        "is_dual_role": auditor.is_dual_role,
         "audits_completed": 0,
         "parcels_validated": 0,
+        "ssrte_visits_completed": 0,  # Pour les agents SSRTE
         "created_at": datetime.now(timezone.utc),
         "created_by": "admin"
     }
     
     result = await db.users.insert_one(user_doc)
     
+    role_description = "Auditeur Carbone + Agent SSRTE" if auditor.is_dual_role else "Auditeur Carbone"
+    
     return {
-        "message": "Auditeur carbone créé avec succès",
+        "message": f"{role_description} créé avec succès",
         "auditor_id": str(result.inserted_id),
-        "email": auditor.email
+        "email": auditor.email,
+        "roles": roles,
+        "is_dual_role": auditor.is_dual_role
     }
 
+
+@router.post("/admin/auditors/{auditor_id}/add-role")
+async def add_role_to_auditor(auditor_id: str, role: str):
+    """Ajouter un rôle à un auditeur existant (Super Admin)
+    
+    Permet de transformer un auditeur carbone en agent double casquette
+    """
+    valid_roles = ["carbon_auditor", "ssrte_agent", "field_agent"]
+    if role not in valid_roles:
+        raise HTTPException(status_code=400, detail=f"Rôle invalide. Valides: {valid_roles}")
+    
+    user = await db.users.find_one({"_id": ObjectId(auditor_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    current_roles = user.get("roles", [])
+    if user.get("user_type") and user.get("user_type") not in current_roles:
+        current_roles.append(user.get("user_type"))
+    
+    if role not in current_roles:
+        current_roles.append(role)
+    
+    is_dual = "carbon_auditor" in current_roles and ("ssrte_agent" in current_roles or "field_agent" in current_roles)
+    
+    await db.users.update_one(
+        {"_id": ObjectId(auditor_id)},
+        {"$set": {
+            "roles": current_roles,
+            "is_dual_role": is_dual,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {
+        "message": f"Rôle '{role}' ajouté avec succès",
+        "roles": current_roles,
+        "is_dual_role": is_dual
+    }
+
+
+@router.delete("/admin/auditors/{auditor_id}/remove-role/{role}")
+async def remove_role_from_auditor(auditor_id: str, role: str):
+    """Retirer un rôle à un auditeur (Super Admin)"""
+    user = await db.users.find_one({"_id": ObjectId(auditor_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    current_roles = user.get("roles", [])
+    
+    # Ne pas permettre de retirer le rôle principal (user_type)
+    if role == user.get("user_type"):
+        raise HTTPException(status_code=400, detail="Impossible de retirer le rôle principal")
+    
+    if role in current_roles:
+        current_roles.remove(role)
+    
+    is_dual = "carbon_auditor" in current_roles and ("ssrte_agent" in current_roles or "field_agent" in current_roles)
+    
+    await db.users.update_one(
+        {"_id": ObjectId(auditor_id)},
+        {"$set": {
+            "roles": current_roles,
+            "is_dual_role": is_dual,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {
+        "message": f"Rôle '{role}' retiré avec succès",
+        "roles": current_roles,
+        "is_dual_role": is_dual
+    }
+
+
 @router.get("/admin/auditors")
-async def list_auditors():
-    """Lister tous les auditeurs carbone (Super Admin)"""
-    auditors = await db.users.find(
-        {"user_type": "carbon_auditor"},
-        {"password": 0}
-    ).to_list(None)
+async def list_auditors(include_dual_role: bool = True):
+    """Lister tous les auditeurs carbone (Super Admin)
+    
+    Inclut les agents avec rôle carbon_auditor dans leurs rôles
+    """
+    # Requête pour trouver les auditeurs carbone (user_type ou dans roles)
+    query = {
+        "$or": [
+            {"user_type": "carbon_auditor"},
+            {"roles": "carbon_auditor"}
+        ]
+    }
+    
+    auditors = await db.users.find(query, {"password": 0, "hashed_password": 0}).to_list(None)
     
     result = []
     for auditor in auditors:
@@ -118,8 +246,12 @@ async def list_auditors():
             "zone_coverage": auditor.get("zone_coverage", []),
             "certifications": auditor.get("certifications", []),
             "is_active": auditor.get("is_active", True),
+            "is_dual_role": auditor.get("is_dual_role", False),
+            "roles": auditor.get("roles", [auditor.get("user_type")]),
+            "cooperative_id": auditor.get("cooperative_id"),
             "audits_completed": auditor.get("audits_completed", 0),
             "parcels_validated": auditor.get("parcels_validated", 0),
+            "ssrte_visits_completed": auditor.get("ssrte_visits_completed", 0),
             "missions_count": missions_count,
             "pending_missions": pending_missions,
             "created_at": auditor.get("created_at")
@@ -132,10 +264,17 @@ async def list_auditors():
 
 @router.get("/admin/auditors/{auditor_id}")
 async def get_auditor_details(auditor_id: str):
-    """Détails d'un auditeur (Super Admin)"""
+    """Détails d'un auditeur (Super Admin) - Supporte les rôles multiples"""
+    # Chercher par user_type ou par rôle
     auditor = await db.users.find_one(
-        {"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"},
-        {"password": 0}
+        {
+            "_id": ObjectId(auditor_id),
+            "$or": [
+                {"user_type": "carbon_auditor"},
+                {"roles": "carbon_auditor"}
+            ]
+        },
+        {"password": 0, "hashed_password": 0}
     )
     
     if not auditor:
@@ -155,8 +294,12 @@ async def get_auditor_details(auditor_id: str):
         "zone_coverage": auditor.get("zone_coverage", []),
         "certifications": auditor.get("certifications", []),
         "is_active": auditor.get("is_active", True),
+        "is_dual_role": auditor.get("is_dual_role", False),
+        "roles": auditor.get("roles", [auditor.get("user_type")]),
+        "cooperative_id": auditor.get("cooperative_id"),
         "audits_completed": auditor.get("audits_completed", 0),
         "parcels_validated": auditor.get("parcels_validated", 0),
+        "ssrte_visits_completed": auditor.get("ssrte_visits_completed", 0),
         "created_at": auditor.get("created_at"),
         "recent_missions": [{
             "id": str(m["_id"]),
@@ -175,16 +318,29 @@ async def get_auditor_details(auditor_id: str):
 
 @router.put("/admin/auditors/{auditor_id}")
 async def update_auditor(auditor_id: str, update: AuditorUpdate):
-    """Mettre à jour un auditeur (Super Admin)"""
+    """Mettre à jour un auditeur (Super Admin) - Supporte les rôles multiples"""
     update_data = {k: v for k, v in update.dict().items() if v is not None}
     
     if not update_data:
         raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
     
+    # Si des rôles sont spécifiés, mettre à jour is_dual_role
+    if "roles" in update_data:
+        roles = update_data["roles"]
+        is_dual = "carbon_auditor" in roles and ("ssrte_agent" in roles or "field_agent" in roles)
+        update_data["is_dual_role"] = is_dual
+    
     update_data["updated_at"] = datetime.now(timezone.utc)
     
+    # Chercher par user_type ou par rôle
     result = await db.users.update_one(
-        {"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"},
+        {
+            "_id": ObjectId(auditor_id),
+            "$or": [
+                {"user_type": "carbon_auditor"},
+                {"roles": "carbon_auditor"}
+            ]
+        },
         {"$set": update_data}
     )
     
@@ -197,7 +353,13 @@ async def update_auditor(auditor_id: str, update: AuditorUpdate):
 async def deactivate_auditor(auditor_id: str):
     """Désactiver un auditeur (Super Admin)"""
     result = await db.users.update_one(
-        {"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"},
+        {
+            "_id": ObjectId(auditor_id),
+            "$or": [
+                {"user_type": "carbon_auditor"},
+                {"roles": "carbon_auditor"}
+            ]
+        },
         {"$set": {"is_active": False, "deactivated_at": datetime.now(timezone.utc)}}
     )
     

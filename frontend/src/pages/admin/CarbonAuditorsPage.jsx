@@ -37,9 +37,12 @@ const CarbonAuditorsPage = () => {
     phone_number: '',
     password: '',
     zone_coverage: '',
-    certifications: ''
+    certifications: '',
+    is_dual_role: false,
+    cooperative_id: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [cooperatives, setCooperatives] = useState([]);
 
   const fetchAuditors = async () => {
     try {
@@ -52,6 +55,16 @@ const CarbonAuditorsPage = () => {
       toast.error('Erreur lors du chargement des auditeurs');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCooperatives = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/admin/cooperatives`);
+      const data = await response.json();
+      setCooperatives(data.cooperatives || []);
+    } catch (error) {
+      console.error('Error fetching cooperatives:', error);
     }
   };
 
@@ -68,6 +81,7 @@ const CarbonAuditorsPage = () => {
   useEffect(() => {
     fetchAuditors();
     fetchStats();
+    fetchCooperatives();
   }, []);
 
   const handleAddAuditor = async (e) => {
@@ -81,7 +95,11 @@ const CarbonAuditorsPage = () => {
           : [],
         certifications: newAuditor.certifications
           ? newAuditor.certifications.split(',').map(c => c.trim()).filter(c => c)
-          : []
+          : [],
+        is_dual_role: newAuditor.is_dual_role,
+        cooperative_id: newAuditor.is_dual_role && newAuditor.cooperative_id 
+          ? newAuditor.cooperative_id 
+          : null
       };
       
       const response = await fetch(`${API_URL}/api/carbon-auditor/admin/auditors/create`, {
@@ -95,7 +113,11 @@ const CarbonAuditorsPage = () => {
         throw new Error(error.detail || 'Erreur création');
       }
       
-      toast.success('Auditeur carbone créé avec succès!');
+      const result = await response.json();
+      const roleMsg = newAuditor.is_dual_role 
+        ? 'Agent double casquette (Carbone + SSRTE)' 
+        : 'Auditeur carbone';
+      toast.success(`${roleMsg} créé avec succès!`);
       setShowAddModal(false);
       setNewAuditor({
         full_name: '',
@@ -103,7 +125,9 @@ const CarbonAuditorsPage = () => {
         phone_number: '',
         password: '',
         zone_coverage: '',
-        certifications: ''
+        certifications: '',
+        is_dual_role: false,
+        cooperative_id: ''
       });
       fetchAuditors();
       fetchStats();
@@ -112,6 +136,32 @@ const CarbonAuditorsPage = () => {
       toast.error(error.message || 'Erreur lors de la création');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAddRole = async (auditorId, role) => {
+    try {
+      const response = await fetch(`${API_URL}/api/carbon-auditor/admin/auditors/${auditorId}/add-role?role=${role}`, {
+        method: 'POST'
+      });
+      if (!response.ok) throw new Error('Erreur');
+      toast.success(`Rôle ${role === 'ssrte_agent' ? 'SSRTE' : role} ajouté!`);
+      fetchAuditors();
+    } catch (error) {
+      toast.error('Erreur lors de l\'ajout du rôle');
+    }
+  };
+
+  const handleRemoveRole = async (auditorId, role) => {
+    try {
+      const response = await fetch(`${API_URL}/api/carbon-auditor/admin/auditors/${auditorId}/remove-role/${role}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Erreur');
+      toast.success(`Rôle ${role === 'ssrte_agent' ? 'SSRTE' : role} retiré!`);
+      fetchAuditors();
+    } catch (error) {
+      toast.error('Erreur lors du retrait du rôle');
     }
   };
 
@@ -262,11 +312,23 @@ const CarbonAuditorsPage = () => {
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center relative">
                         <Shield className="h-6 w-6 text-emerald-400" />
+                        {auditor.is_dual_role && (
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                            <Users className="h-3 w-3 text-white" />
+                          </div>
+                        )}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-white">{auditor.full_name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-white">{auditor.full_name}</h3>
+                          {auditor.is_dual_role && (
+                            <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs">
+                              Double Casquette
+                            </Badge>
+                          )}
+                        </div>
                         <div className="flex items-center gap-3 text-sm text-gray-400">
                           <span className="flex items-center">
                             <Mail className="h-3 w-3 mr-1" />
@@ -277,20 +339,36 @@ const CarbonAuditorsPage = () => {
                             {auditor.phone_number}
                           </span>
                         </div>
-                        {auditor.certifications?.length > 0 && (
-                          <div className="flex gap-1 mt-1">
-                            {auditor.certifications.map((cert, i) => (
-                              <Badge key={i} variant="outline" className="text-xs border-emerald-500/50 text-emerald-400">
-                                {cert}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {auditor.roles?.map((role, i) => (
+                            <Badge 
+                              key={i} 
+                              variant="outline" 
+                              className={`text-xs ${
+                                role === 'carbon_auditor' 
+                                  ? 'border-emerald-500/50 text-emerald-400' 
+                                  : role === 'ssrte_agent' || role === 'field_agent'
+                                    ? 'border-blue-500/50 text-blue-400'
+                                    : 'border-gray-500/50 text-gray-400'
+                              }`}
+                            >
+                              {role === 'carbon_auditor' ? 'Carbone' : role === 'ssrte_agent' ? 'SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role}
+                            </Badge>
+                          ))}
+                          {auditor.certifications?.map((cert, i) => (
+                            <Badge key={`cert-${i}`} variant="outline" className="text-xs border-emerald-500/50 text-emerald-400">
+                              {cert}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right hidden md:block">
-                        <p className="text-sm font-medium text-white">{auditor.audits_completed || 0} audits</p>
+                        <p className="text-sm font-medium text-white">{auditor.audits_completed || 0} audits carbone</p>
+                        {auditor.is_dual_role && (
+                          <p className="text-xs text-blue-400">{auditor.ssrte_visits_completed || 0} visites SSRTE</p>
+                        )}
                         <p className="text-xs text-gray-400">{auditor.pending_missions || 0} missions en cours</p>
                       </div>
                       <Badge className={auditor.is_active ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-500/20 text-gray-400"}>
@@ -396,6 +474,45 @@ const CarbonAuditorsPage = () => {
                   data-testid="auditor-password-input"
                 />
               </div>
+              
+              {/* Double Casquette Option */}
+              <div className="p-4 bg-amber-500/10 rounded-lg border border-amber-500/30">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="is_dual_role"
+                    checked={newAuditor.is_dual_role}
+                    onChange={(e) => setNewAuditor({...newAuditor, is_dual_role: e.target.checked})}
+                    className="w-4 h-4 rounded"
+                    data-testid="dual-role-checkbox"
+                  />
+                  <Label htmlFor="is_dual_role" className="text-amber-400 font-medium cursor-pointer">
+                    Double Casquette (Carbone + SSRTE)
+                  </Label>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  Permet à cet agent d'effectuer des audits carbone ET des visites de suivi SSRTE (travail des enfants)
+                </p>
+                
+                {newAuditor.is_dual_role && (
+                  <div className="mt-3">
+                    <Label htmlFor="cooperative_id" className="text-gray-300 text-sm">Coopérative rattachée (optionnel)</Label>
+                    <select
+                      id="cooperative_id"
+                      value={newAuditor.cooperative_id}
+                      onChange={(e) => setNewAuditor({...newAuditor, cooperative_id: e.target.value})}
+                      className="w-full mt-1 p-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                      data-testid="cooperative-select"
+                    >
+                      <option value="">-- Aucune (agent GreenLink) --</option>
+                      {cooperatives.map(coop => (
+                        <option key={coop.id} value={coop.id}>{coop.full_name || coop.coop_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+              
               <div>
                 <Label htmlFor="zone_coverage" className="text-gray-300">Zones couvertes (séparées par virgule)</Label>
                 <Input
@@ -429,7 +546,7 @@ const CarbonAuditorsPage = () => {
                 className="bg-emerald-600 hover:bg-emerald-700"
                 data-testid="submit-auditor-btn"
               >
-                {submitting ? 'Création...' : 'Créer l\'auditeur'}
+                {submitting ? 'Création...' : newAuditor.is_dual_role ? 'Créer l\'agent double casquette' : 'Créer l\'auditeur'}
               </Button>
             </DialogFooter>
           </form>
@@ -445,15 +562,84 @@ const CarbonAuditorsPage = () => {
           {selectedAuditor && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center relative">
                   <Shield className="h-8 w-8 text-emerald-400" />
+                  {selectedAuditor.is_dual_role && (
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                      <Users className="h-4 w-4 text-white" />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">{selectedAuditor.full_name}</h3>
                   <p className="text-gray-400">{selectedAuditor.email}</p>
-                  <Badge className={selectedAuditor.is_active ? "bg-emerald-500/20 text-emerald-400 mt-1" : "bg-gray-500/20 text-gray-400 mt-1"}>
-                    {selectedAuditor.is_active ? "Actif" : "Inactif"}
-                  </Badge>
+                  <div className="flex gap-1 mt-1">
+                    <Badge className={selectedAuditor.is_active ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-500/20 text-gray-400"}>
+                      {selectedAuditor.is_active ? "Actif" : "Inactif"}
+                    </Badge>
+                    {selectedAuditor.is_dual_role && (
+                      <Badge className="bg-amber-500/20 text-amber-400">
+                        Double Casquette
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Rôles */}
+              <div className="p-3 bg-gray-700/50 rounded-lg">
+                <p className="text-sm text-gray-400 mb-2">Rôles attribués</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedAuditor.roles?.map((role, i) => (
+                    <Badge 
+                      key={i} 
+                      className={`${
+                        role === 'carbon_auditor' 
+                          ? 'bg-emerald-500/20 text-emerald-400' 
+                          : role === 'ssrte_agent' || role === 'field_agent'
+                            ? 'bg-blue-500/20 text-blue-400'
+                            : 'bg-gray-500/20 text-gray-400'
+                      }`}
+                    >
+                      {role === 'carbon_auditor' ? 'Auditeur Carbone' : role === 'ssrte_agent' ? 'Agent SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role}
+                    </Badge>
+                  ))}
+                </div>
+                
+                {/* Actions pour ajouter/retirer des rôles */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {!selectedAuditor.roles?.includes('ssrte_agent') && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20"
+                      onClick={() => handleAddRole(selectedAuditor.id, 'ssrte_agent')}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Ajouter rôle SSRTE
+                    </Button>
+                  )}
+                  {selectedAuditor.roles?.includes('ssrte_agent') && selectedAuditor.user_type !== 'ssrte_agent' && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-red-500/50 text-red-400 hover:bg-red-500/20"
+                      onClick={() => handleRemoveRole(selectedAuditor.id, 'ssrte_agent')}
+                    >
+                      Retirer rôle SSRTE
+                    </Button>
+                  )}
+                  {!selectedAuditor.roles?.includes('field_agent') && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20"
+                      onClick={() => handleAddRole(selectedAuditor.id, 'field_agent')}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Ajouter Agent Terrain
+                    </Button>
+                  )}
                 </div>
               </div>
               
@@ -467,10 +653,14 @@ const CarbonAuditorsPage = () => {
                   <p className="font-medium text-white">{selectedAuditor.pending_missions || 0}</p>
                 </div>
                 <div className="p-3 bg-emerald-500/10 rounded-lg">
-                  <p className="text-sm text-emerald-400">Audits complétés</p>
+                  <p className="text-sm text-emerald-400">Audits Carbone</p>
                   <p className="font-medium text-emerald-300">{selectedAuditor.audits_completed || 0}</p>
                 </div>
-                <div className="p-3 bg-emerald-500/10 rounded-lg">
+                <div className="p-3 bg-blue-500/10 rounded-lg">
+                  <p className="text-sm text-blue-400">Visites SSRTE</p>
+                  <p className="font-medium text-blue-300">{selectedAuditor.ssrte_visits_completed || 0}</p>
+                </div>
+                <div className="p-3 bg-emerald-500/10 rounded-lg col-span-2">
                   <p className="text-sm text-emerald-400">Parcelles validées</p>
                   <p className="font-medium text-emerald-300">{selectedAuditor.parcels_validated || 0}</p>
                 </div>
