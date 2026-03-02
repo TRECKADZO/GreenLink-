@@ -11,7 +11,7 @@ import axios from 'axios';
 import { 
   Building2, Users, Eye, AlertTriangle, TrendingUp,
   Award, RefreshCcw, Download, BarChart3, MapPin,
-  Trophy, Medal, Target, ChevronUp, ChevronDown
+  Trophy, Medal, Target, ChevronUp, ChevronDown, ChevronLeft
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
