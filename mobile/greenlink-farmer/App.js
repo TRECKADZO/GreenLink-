@@ -173,6 +173,9 @@ function AppNavigator() {
       <Stack.Screen name="AuditorMission" component={AuditorMissionScreen} />
       <Stack.Screen name="AuditForm" component={AuditFormScreen} />
       <Stack.Screen name="AuditorMissions" component={AuditorDashboardScreen} />
+      
+      {/* USSD Simulator */}
+      <Stack.Screen name="USSDSimulator" component={USSDSimulatorScreen} />
       <Stack.Screen name="AuditHistory" component={AuditorDashboardScreen} />
       
       {/* Settings Screens */}
