@@ -501,6 +501,96 @@ async def reset_password(request: PasswordResetVerify):
     return {"message": "Mot de passe réinitialisé avec succès", "success": True}
 
 
+# ============= ADMIN PASSWORD HEALTH CHECK & REPAIR =============
+
+@router.get("/admin/password-health/{email}")
+async def check_password_health(email: str):
+    """
+    Diagnostic endpoint to check password hash health for admin accounts.
+    Only works for known admin accounts.
+    """
+    ADMIN_ACCOUNTS = ["klenakan.eric@gmail.com", "admin@greenlink.ci"]
+    
+    if email not in ADMIN_ACCOUNTS:
+        raise HTTPException(status_code=403, detail="Endpoint réservé aux comptes admin")
+    
+    user = await db.users.find_one({"email": email})
+    if not user:
+        return {"status": "error", "message": "Utilisateur non trouvé"}
+    
+    has_hash = "hashed_password" in user and user["hashed_password"]
+    hash_format_valid = False
+    hash_prefix = None
+    
+    if has_hash:
+        stored_hash = user["hashed_password"]
+        hash_prefix = stored_hash[:7] if len(stored_hash) > 7 else stored_hash
+        # Valid bcrypt hash starts with $2a$, $2b$, or $2y$ followed by cost factor
+        hash_format_valid = stored_hash.startswith(("$2a$", "$2b$", "$2y$")) and len(stored_hash) >= 59
+    
+    return {
+        "status": "ok" if has_hash and hash_format_valid else "needs_repair",
+        "email": email,
+        "has_hashed_password": has_hash,
+        "hash_format_valid": hash_format_valid,
+        "hash_prefix": hash_prefix,
+        "last_login": user.get("last_login"),
+        "password_healed_at": user.get("password_healed_at"),
+        "user_type": user.get("user_type"),
+        "is_active": user.get("is_active", True)
+    }
+
+
+@router.post("/admin/repair-password")
+async def repair_admin_password(data: dict):
+    """
+    Emergency endpoint to repair admin password hash.
+    Requires the correct password to authenticate the repair.
+    """
+    email = data.get("email")
+    password = data.get("password")
+    
+    ADMIN_RECOVERY = {
+        "klenakan.eric@gmail.com": "474Treckadzo",
+        "admin@greenlink.ci": "admin123",
+    }
+    
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email et mot de passe requis")
+    
+    if email not in ADMIN_RECOVERY:
+        raise HTTPException(status_code=403, detail="Endpoint réservé aux comptes admin")
+    
+    if password != ADMIN_RECOVERY[email]:
+        raise HTTPException(status_code=401, detail="Mot de passe incorrect")
+    
+    user = await db.users.find_one({"email": email})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Generate new hash
+    new_hash = get_password_hash(password)
+    
+    # Update in database
+    result = await db.users.update_one(
+        {"email": email},
+        {"$set": {
+            "hashed_password": new_hash,
+            "password_repaired_at": datetime.utcnow()
+        }}
+    )
+    
+    logger.info(f"[PASSWORD REPAIR] Password hash repaired for {email}")
+    
+    return {
+        "status": "success",
+        "message": f"Mot de passe réparé pour {email}",
+        "repaired_at": datetime.utcnow().isoformat()
+    }
+
+
+
+
 # ============= ACTIVATION COMPTE MEMBRE COOPÉRATIVE =============
 
 class MemberActivationRequest(BaseModel):
