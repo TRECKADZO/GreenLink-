@@ -16,7 +16,13 @@
 **Conclusion:**
 Le problème était lié au hash du mot de passe dans la base de données. La solution a été de **régénérer le hash bcrypt** directement dans MongoDB, identique à la correction appliquée précédemment pour le compte coopérative.
 
-**Note technique:** Ce problème récurrent suggère un bug potentiel lors de la création/mise à jour des mots de passe. À investiguer dans les futures sessions.
+**Cause racine identifiée et corrigée :**
+- **Problème** : Incompatibilité entre `passlib 1.7.4` et `bcrypt 4.1.x` - passlib essayait d'accéder à `bcrypt.__about__.__version__` qui n'existe plus dans bcrypt 4.x
+- **Symptôme** : Warning constant `AttributeError: module 'bcrypt' has no attribute '__about__'` pouvant causer des problèmes de timing lors de la vérification
+- **Solution appliquée** :
+  1. Downgrade de bcrypt de 4.1.3 vers 4.0.1 (version compatible)
+  2. Standardisation du hachage dans `carbon_auditor.py` pour utiliser `auth_utils.get_password_hash()` au lieu de `bcrypt.hashpw()` directement
+- **Statut** : ✅ Corrigé - plus de warnings bcrypt dans les logs
 
 **Credentials Confirmés:**
 - Super Admin: `klenakan.eric@gmail.com` / `474Treckadzo` ✅
