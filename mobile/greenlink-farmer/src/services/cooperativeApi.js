@@ -98,9 +98,25 @@ export const cooperativeApi = {
   /**
    * Get SSRTE visits list
    */
-  getSSRTEVisits: async (params = {}) => {
-    const response = await api.get('/ici-data/ssrte/visits', { params });
-    return response.data;
+  getSSRTEVisits: async (token, params = {}) => {
+    const response = await api.get('/ssrte/visits', { params });
+    return response;
+  },
+
+  /**
+   * Get SSRTE stats overview
+   */
+  getSSRTEStats: async (token, params = {}) => {
+    const response = await api.get('/ssrte/stats/overview', { params });
+    return response;
+  },
+
+  /**
+   * Get SSRTE cases
+   */
+  getSSRTECases: async (token, params = {}) => {
+    const response = await api.get('/ssrte/cases', { params });
+    return response;
   },
 
   /**

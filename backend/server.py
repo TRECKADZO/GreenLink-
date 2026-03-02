@@ -24,6 +24,7 @@ from routes import qrcode_generator
 from routes import farmer_cards_pdf
 from routes import photo_storage
 from routes import ssrte_analytics
+from routes import ssrte  # SSRTE Agent dedicated routes
 from routes import carbon_payments_dashboard
 from routes import field_agent_dashboard
 from routes import carbon_auditor
@@ -123,6 +124,7 @@ app.include_router(qrcode_generator.router)
 app.include_router(farmer_cards_pdf.router)
 app.include_router(photo_storage.router)
 app.include_router(ssrte_analytics.router)
+app.include_router(ssrte.router)  # SSRTE Agent dedicated routes
 app.include_router(carbon_payments_dashboard.router)
 app.include_router(field_agent_dashboard.router)
 app.include_router(carbon_auditor.router)

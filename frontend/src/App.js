@@ -75,6 +75,9 @@ import FieldAgentsPage from "./pages/cooperative/FieldAgentsPage";
 import AddParcelPage from "./pages/cooperative/AddParcelPage";
 import CarbonPremiumsPage from "./pages/cooperative/CarbonPremiumsPage";
 
+// SSRTE Agent Routes
+import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
+
 // Auth Pages
 import ActivateMember from "./pages/auth/ActivateMember";
 import ActivateAgent from "./pages/auth/ActivateAgent";
@@ -172,6 +175,10 @@ function App() {
               <Route path="/cooperative/notifications" element={<CooperativeNotifications />} />
               <Route path="/cooperative/agents" element={<FieldAgentsPage />} />
               <Route path="/cooperative/carbon-premiums" element={<CarbonPremiumsPage />} />
+
+              {/* SSRTE Agent Routes */}
+              <Route path="/ssrte/dashboard" element={<SSRTEAgentDashboard />} />
+              <Route path="/agent/ssrte" element={<SSRTEAgentDashboard />} />
 
               {/* Shared Notifications */}
               <Route path="/notifications" element={<NotificationsPage />} />
