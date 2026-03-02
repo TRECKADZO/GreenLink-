@@ -77,6 +77,7 @@ import CarbonPremiumsPage from "./pages/cooperative/CarbonPremiumsPage";
 
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
+import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
 
 // Auth Pages
 import ActivateMember from "./pages/auth/ActivateMember";
@@ -179,6 +180,8 @@ function App() {
               {/* SSRTE Agent Routes */}
               <Route path="/ssrte/dashboard" element={<SSRTEAgentDashboard />} />
               <Route path="/agent/ssrte" element={<SSRTEAgentDashboard />} />
+              <Route path="/ssrte/realtime" element={<SSRTERealTimeDashboard />} />
+              <Route path="/ssrte/alerts" element={<SSRTERealTimeDashboard />} />
 
               {/* Shared Notifications */}
               <Route path="/notifications" element={<NotificationsPage />} />

@@ -146,6 +146,9 @@ class WebSocketMessageTypes:
     # SSRTE
     NEW_VISIT = "new_ssrte_visit"
     VISIT_SYNCED = "visit_synced"
+    NEW_SSRTE_CASE = "new_ssrte_case"
+    SSRTE_CASE_CRITICAL = "ssrte_case_critical"
+    SSRTE_CASE_UPDATE = "ssrte_case_update"
     
     # Système
     CONNECTION_ESTABLISHED = "connection_established"
@@ -188,6 +191,75 @@ async def send_ssrte_visit_notification(visit_data: dict):
         "timestamp": datetime.utcnow().isoformat()
     }
     await manager.broadcast_to_channel("ssrte", message)
+
+
+async def send_ssrte_case_alert(case_data: dict):
+    """
+    Envoyer une alerte temps réel pour un nouveau cas SSRTE
+    Diffusé sur les channels 'ssrte' et 'alerts'
+    """
+    severity_score = case_data.get("severity_score", 0)
+    
+    # Déterminer le type de message selon la sévérité
+    if severity_score >= 8:
+        msg_type = WebSocketMessageTypes.SSRTE_CASE_CRITICAL
+        priority = "critical"
+    elif severity_score >= 5:
+        msg_type = WebSocketMessageTypes.NEW_SSRTE_CASE
+        priority = "high"
+    else:
+        msg_type = WebSocketMessageTypes.NEW_SSRTE_CASE
+        priority = "normal"
+    
+    message = {
+        "type": msg_type,
+        "priority": priority,
+        "data": {
+            "case_id": str(case_data.get("_id", "")),
+            "child_name": case_data.get("child_name"),
+            "child_age": case_data.get("child_age"),
+            "member_name": case_data.get("member_name"),
+            "labor_type": case_data.get("labor_type"),
+            "severity_score": severity_score,
+            "status": case_data.get("status", "identified"),
+            "created_at": case_data.get("created_at", datetime.utcnow()).isoformat() if hasattr(case_data.get("created_at", datetime.utcnow()), 'isoformat') else str(case_data.get("created_at"))
+        },
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    
+    # Diffuser sur le channel ssrte
+    await manager.broadcast_to_channel("ssrte", message)
+    
+    # Pour les cas critiques, diffuser aussi sur alerts
+    if severity_score >= 5:
+        await manager.broadcast_to_channel("alerts", message)
+    
+    logger.info(f"[WebSocket] SSRTE case alert sent: {case_data.get('child_name')}, severity: {severity_score}")
+
+
+async def send_ssrte_high_risk_visit(visit_data: dict):
+    """
+    Envoyer une alerte temps réel pour une visite à haut risque
+    """
+    message = {
+        "type": WebSocketMessageTypes.NEW_VISIT,
+        "priority": "high",
+        "data": {
+            "visit_id": str(visit_data.get("_id", "")),
+            "member_name": visit_data.get("member_name") or visit_data.get("farmer_name"),
+            "children_count": visit_data.get("children_count", 0),
+            "children_at_risk": visit_data.get("children_at_risk", 0),
+            "risk_level": visit_data.get("risk_level", "high"),
+            "agent_name": visit_data.get("agent_name"),
+            "created_at": datetime.utcnow().isoformat()
+        },
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    
+    await manager.broadcast_to_channel("ssrte", message)
+    await manager.broadcast_to_channel("alerts", message)
+    
+    logger.info(f"[WebSocket] High-risk visit alert sent: {visit_data.get('member_name')}")
 
 
 # ============= BACKGROUND TASKS =============

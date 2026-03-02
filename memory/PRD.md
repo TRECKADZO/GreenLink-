@@ -2,6 +2,38 @@
 
 ## Latest Updates - March 2, 2026 (Session 8 - SSRTE Agent System)
 
+### ✅ DASHBOARD TEMPS RÉEL SSRTE AVEC WEBSOCKET
+
+**Routes Frontend:**
+- `/ssrte/realtime` - Dashboard temps réel des alertes
+- `/ssrte/alerts` - Alias pour le dashboard temps réel
+
+**Fonctionnalités:**
+- Connexion WebSocket automatique au channel `ssrte` et `alerts`
+- Réception d'alertes en temps réel sans rafraîchissement
+- 4 métriques en direct: Session Active, Visites Risque, Nouveaux Cas, Cas Critiques
+- Flux d'alertes avec code couleur par sévérité
+- Contrôles: Son, Plein écran, Supprimer alertes, Reconnexion
+- Toast notifications pour chaque nouvelle alerte
+- Son d'alerte pour cas critiques (severity >= 8)
+- Marquage "lu/non lu" des alertes
+- Reconnexion automatique en cas de déconnexion
+
+**Types de messages WebSocket:**
+- `ssrte_case_critical` - Cas critique (severity >= 8)
+- `new_ssrte_case` - Nouveau cas SSRTE
+- `new_ssrte_visit` - Visite à haut risque
+
+**Backend - Fonctions d'émission:**
+- `send_ssrte_case_alert()` - Diffuse sur channels `ssrte` + `alerts`
+- `send_ssrte_high_risk_visit()` - Diffuse sur channels `ssrte` + `alerts`
+
+**Tests logs confirmés:**
+- ✅ `[WebSocket] High-risk visit alert sent: Koffi Amenan Solange`
+- ✅ `[WebSocket] SSRTE case alert sent: WebSocket_Test_Child, severity: 10`
+
+---
+
 ### ✅ SYSTÈME D'ALERTES PUSH SSRTE IMPLÉMENTÉ
 
 **Notifications Push Automatiques:**

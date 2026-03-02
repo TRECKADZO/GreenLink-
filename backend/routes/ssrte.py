@@ -283,6 +283,21 @@ async def create_household_visit(
             logger.info(f"[SSRTE] Push notification sent for high-risk visit: {member.get('full_name')}")
         except Exception as e:
             logger.error(f"[SSRTE] Failed to send push notification: {e}")
+        
+        # Envoyer une alerte WebSocket temps réel
+        try:
+            from services.websocket_manager import send_ssrte_high_risk_visit
+            await send_ssrte_high_risk_visit({
+                "_id": result.inserted_id,
+                "member_name": member.get("full_name"),
+                "children_count": visit.children_count,
+                "children_at_risk": children_at_risk,
+                "risk_level": "high",
+                "agent_name": current_user.get("full_name")
+            })
+            logger.info(f"[SSRTE] WebSocket alert sent for high-risk visit")
+        except Exception as e:
+            logger.error(f"[SSRTE] Failed to send WebSocket alert: {e}")
     
     return {
         "message": "Visite enregistrée avec succès",
@@ -425,6 +440,14 @@ async def create_child_labor_case(
             logger.info(f"[SSRTE] Push notification sent for critical case: {case.child_name}")
         except Exception as e:
             logger.error(f"[SSRTE] Failed to send push notification: {e}")
+    
+    # Envoyer une alerte WebSocket temps réel
+    try:
+        from services.websocket_manager import send_ssrte_case_alert as ws_send_case_alert
+        await ws_send_case_alert(case_doc)
+        logger.info(f"[SSRTE] WebSocket alert sent for case: {case.child_name}")
+    except Exception as e:
+        logger.error(f"[SSRTE] Failed to send WebSocket alert: {e}")
     
     return {
         "message": "Cas enregistré avec succès",
