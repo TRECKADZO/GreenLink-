@@ -149,14 +149,22 @@ const CooperativeNotifications = () => {
       <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-3">
-                <Bell className="w-7 h-7" />
-                Centre de Notifications
-              </h1>
-              <p className="text-emerald-200 mt-1">
-                Gérez les notifications de votre coopérative
-              </p>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/cooperative/dashboard')}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-3">
+                  <Bell className="w-7 h-7" />
+                  Centre de Notifications
+                </h1>
+                <p className="text-emerald-200 mt-1">
+                  Gérez les notifications de votre coopérative
+                </p>
+              </div>
             </div>
             
             <div className="flex items-center gap-3">
