@@ -153,6 +153,85 @@ const SuperAdminDashboard = () => {
         </div>
       </div>
 
+      {/* Quick Navigation Menu */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+          <h3 className="text-sm font-medium text-slate-400 mb-3">Accès Rapide</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <button
+              onClick={() => navigate('/admin/realtime')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-emerald-600/20 rounded-lg transition text-left group"
+            >
+              <Activity className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Temps Réel</span>
+            </button>
+            <button
+              onClick={() => navigate('/admin/notifications')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-amber-600/20 rounded-lg transition text-left group"
+            >
+              <Bell className="w-5 h-5 text-amber-400 group-hover:text-amber-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Notifications</span>
+            </button>
+            <button
+              onClick={() => navigate('/admin/ssrte-analytics')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-blue-600/20 rounded-lg transition text-left group"
+            >
+              <Baby className="w-5 h-5 text-blue-400 group-hover:text-blue-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">SSRTE Analytics</span>
+            </button>
+            <button
+              onClick={() => navigate('/admin/ici-analytics')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-purple-600/20 rounded-lg transition text-left group"
+            >
+              <Shield className="w-5 h-5 text-purple-400 group-hover:text-purple-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">ICI Analytics</span>
+            </button>
+            <button
+              onClick={() => navigate('/admin/carbon-business')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-green-600/20 rounded-lg transition text-left group"
+            >
+              <Leaf className="w-5 h-5 text-green-400 group-hover:text-green-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Business Carbone</span>
+            </button>
+            <button
+              onClick={() => navigate('/admin/cooperative-comparison')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-cyan-600/20 rounded-lg transition text-left group"
+            >
+              <Building2 className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Comparaison Coop</span>
+            </button>
+            <button
+              onClick={() => navigate('/admin/billing')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-rose-600/20 rounded-lg transition text-left group"
+            >
+              <CreditCard className="w-5 h-5 text-rose-400 group-hover:text-rose-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Facturation</span>
+            </button>
+            <button
+              onClick={() => navigate('/admin/badge-analytics')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-yellow-600/20 rounded-lg transition text-left group"
+            >
+              <Award className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Badges Auditeurs</span>
+            </button>
+            <button
+              onClick={() => navigate('/admin/premium-analytics')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-indigo-600/20 rounded-lg transition text-left group"
+            >
+              <BarChart3 className="w-5 h-5 text-indigo-400 group-hover:text-indigo-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">10 Analytics Premium</span>
+            </button>
+            <button
+              onClick={() => navigate('/admin/audit-missions')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-teal-600/20 rounded-lg transition text-left group"
+            >
+              <Target className="w-5 h-5 text-teal-400 group-hover:text-teal-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Missions Audit</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
