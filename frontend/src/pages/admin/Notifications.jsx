@@ -136,11 +136,18 @@ const AdminNotifications = () => {
       <div className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Bell className="w-7 h-7 text-amber-400" />
-                Centre de Notifications Admin
-              </h1>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/admin')}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition text-white"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                  <Bell className="w-7 h-7 text-amber-400" />
+                  Centre de Notifications Admin
+                </h1>
               <p className="text-gray-400 mt-1">
                 Gestion des notifications système GreenLink
               </p>
