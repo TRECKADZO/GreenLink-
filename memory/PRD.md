@@ -35,6 +35,23 @@ Le problème était lié au hash du mot de passe dans la base de données. La so
 - Login ✅  
 - Password Health Check ✅
 
+### Corrections Déploiement - March 2, 2026
+
+**Problèmes identifiés par l'agent de déploiement :**
+
+1. **CORS bloqué** (CRITIQUE)
+   - Ancien: `CORS_ORIGINS="https://farmer-ussd-portal.preview.emergentagent.com"`
+   - Nouveau: `CORS_ORIGINS="*"`
+
+2. **load_dotenv override=True** (CRITIQUE)
+   - Remplacé par `override=False` dans `server.py` et `database.py`
+   - Permet aux variables K8s de prendre le dessus sur le fichier .env en production
+
+**Fichiers modifiés :**
+- `/app/backend/.env` - CORS ouvert à toutes les origines
+- `/app/backend/server.py` - override=False
+- `/app/backend/database.py` - override=False
+
 **Credentials Confirmés:**
 - Super Admin: `klenakan.eric@gmail.com` / `474Treckadzo` ✅
 
