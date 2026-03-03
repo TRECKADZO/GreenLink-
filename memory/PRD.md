@@ -2,6 +2,67 @@
 
 ## Latest Updates - March 3, 2026 (Session 11)
 
+### 📊 ANALYTICS BOURSE DES RÉCOLTES - NOUVEAU
+
+**Métriques de classe mondiale pour la bourse des matières premières agricoles, intégrées dans l'onglet "Bourse Récoltes" du Dashboard Super Admin.**
+
+#### Métriques Incluses :
+
+**1. Résumé Exécutif (KPIs)**
+- Annonces Actives
+- Valeur Marché Totale (en millions FCFA)
+- Volume Total (en tonnes)
+- Taux de Conversion (devis → ventes)
+- Acheteurs Actifs
+- Score Santé du Marché (0-100)
+
+**2. Indices de Marché par Produit**
+- Prix moyen, min, max par produit (Cacao, Café, Anacarde)
+- Volume disponible
+- Valeur marché
+- Spread de prix (volatilité)
+- **Comparaison vs Cours Internationaux** (prime/décote %)
+
+**3. Références Internationales**
+- Cacao: Prix ICCO (USD/tonne), London Futures, NY Futures
+- Café: ICO Composite, Robusta London, Arabica NY
+- Anacarde: AFI RCN, Kernel W320
+- Taux de change USD/XOF
+
+**4. Liquidité & Trading**
+- Demandes de devis (total, cette semaine, ce mois)
+- Taux de conversion
+- Taux de réponse
+- Vélocité du marché (active/moderate/low)
+
+**5. Certifications & Conformité**
+- Taux de produits certifiés
+- Conformité EUDR
+- Répartition par certification (Fairtrade, Rainforest, UTZ, Bio)
+- Potentiel premium
+
+**6. Participants du Marché**
+- Vendeurs actifs (coopératives vs producteurs)
+- Acheteurs actifs
+- Ratio acheteurs/vendeurs
+
+**7. Tendances & Sentiment**
+- Nouvelles annonces (semaine courante vs précédente)
+- Tendance offre (hausse/baisse/stable)
+- Sentiment marché (bullish/bearish/neutral)
+
+#### API Endpoints :
+- `GET /api/marketplace-analytics/dashboard` - Dashboard complet
+- `GET /api/marketplace-analytics/price-history/{crop}` - Historique des prix
+- `GET /api/marketplace-analytics/top-listings` - Top annonces
+- `GET /api/marketplace-analytics/regional-analysis` - Analyse régionale
+
+#### Fichiers :
+- `/app/backend/routes/marketplace_analytics.py` (NOUVEAU)
+- `/app/frontend/src/components/admin/MarketplaceAnalyticsTab.jsx` (NOUVEAU)
+
+---
+
 ### 🎁 ESSAI GRATUIT 15 JOURS POUR ACHETEURS - NOUVEAU
 
 **Système d'essai gratuit de 15 jours pour les acheteurs sur la marketplace.**

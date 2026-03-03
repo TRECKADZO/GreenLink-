@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { analyticsApi } from '../../services/analyticsApi';
+import MarketplaceAnalyticsTab from '../../components/admin/MarketplaceAnalyticsTab';
 import { 
   BarChart3, Globe, Leaf, Users, DollarSign, 
   TrendingUp, FileText, Download, Building2,
@@ -549,7 +550,7 @@ const SuperAdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="marketplace">
-            <MarketplaceTab data={marketplaceStats} />
+            <MarketplaceAnalyticsTab />
           </TabsContent>
         </Tabs>
       </div>
