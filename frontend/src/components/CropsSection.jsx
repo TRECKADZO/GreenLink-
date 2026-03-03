@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
-import { api } from '../services/api';
 import { MapPin } from 'lucide-react';
 
-// Cultures supportées : Cacao, Café, Anacarde avec images
-const mockCrops = [
+// Cultures supportées : Cacao, Café, Anacarde avec images (données statiques)
+const CROPS_DATA = [
   {
     icon: '🍫',
     title: 'Cacao',
@@ -30,19 +29,6 @@ const mockCrops = [
 ];
 
 const CropsSection = () => {
-  const [crops, setCrops] = useState(mockCrops);
-
-  useEffect(() => {
-    const fetchCrops = async () => {
-      const data = await api.getCrops();
-      // Ne mettre à jour que si l'API retourne des données non-vides
-      if (data && data.length > 0) {
-        setCrops(data);
-      }
-    };
-    fetchCrops();
-  }, []);
-  
   return (
     <section className="py-24 bg-gradient-to-b from-white to-gray-50">
       <div className="max-w-7xl mx-auto px-6">
@@ -59,24 +45,19 @@ const CropsSection = () => {
         </div>
         
         <div className="grid md:grid-cols-3 gap-8">
-          {crops.map((crop, index) => (
+          {CROPS_DATA.map((crop, index) => (
             <Card 
               key={index} 
               className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-0 group"
             >
               {/* Image de la culture */}
               <div className="relative h-48 overflow-hidden">
-                {crop.image ? (
-                  <img 
-                    src={crop.image} 
-                    alt={crop.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className={`w-full h-full bg-gradient-to-br ${crop.color} flex items-center justify-center`}>
-                    <span className="text-6xl">{crop.icon}</span>
-                  </div>
-                )}
+                <img 
+                  src={crop.image} 
+                  alt={crop.title}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  loading="lazy"
+                />
                 {/* Badge superposé */}
                 <div className="absolute top-3 left-3">
                   <Badge className="bg-white/90 text-gray-800 font-semibold shadow-lg">
