@@ -96,7 +96,6 @@ const mockPricingPlans = [
       'Certificats conformes',
       'Rapports ESG automatiques',
       'Traçabilité complète',
-      'API & intégrations',
       'Support dédié',
       'Accompagnement RSE'
     ],
