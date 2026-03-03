@@ -6,7 +6,8 @@ import {
   Plus, Eye, MessageSquare, ChevronRight, Leaf,
   DollarSign, Package, Star, Calendar, Building2,
   Check, X, ArrowUpDown, RefreshCw, FileText,
-  Globe, Shield, Truck, Send, ClipboardList
+  Globe, Shield, Truck, Send, ClipboardList, Heart,
+  LayoutDashboard
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -62,6 +63,7 @@ const HarvestMarketplace = () => {
   const [sortBy, setSortBy] = useState('created_at');
   const [selectedListing, setSelectedListing] = useState(null);
   const [showQuoteDialog, setShowQuoteDialog] = useState(false);
+  const [favorites, setFavorites] = useState(new Set());
   const [quoteForm, setQuoteForm] = useState({
     company_name: '',
     contact_name: '',
@@ -80,7 +82,53 @@ const HarvestMarketplace = () => {
   useEffect(() => {
     fetchListings();
     fetchStats();
+    fetchFavorites();
   }, [cropFilter, certFilter, sortBy]);
+
+  const fetchFavorites = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await axios.get(`${API_URL}/api/buyer/favorites`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const favIds = new Set(response.data.map(f => f.listing_id));
+      setFavorites(favIds);
+    } catch (error) {
+      // User might not be logged in
+    }
+  };
+
+  const handleToggleFavorite = async (e, listingId) => {
+    e.stopPropagation();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Connectez-vous pour ajouter aux favoris');
+      return;
+    }
+
+    try {
+      if (favorites.has(listingId)) {
+        await axios.delete(`${API_URL}/api/buyer/favorites/${listingId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setFavorites(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(listingId);
+          return newSet;
+        });
+        toast.success('Retiré des favoris');
+      } else {
+        await axios.post(`${API_URL}/api/buyer/favorites/${listingId}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setFavorites(prev => new Set([...prev, listingId]));
+        toast.success('Ajouté aux favoris');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur');
+    }
+  };
 
   const fetchListings = async () => {
     try {
@@ -176,6 +224,14 @@ const HarvestMarketplace = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <Button 
+                onClick={() => navigate('/buyer/marketplace')}
+                variant="outline"
+                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              >
+                <LayoutDashboard className="h-4 w-4 mr-2" />
+                Mon Espace
+              </Button>
               <Button 
                 onClick={() => navigate('/marketplace/my-listings')}
                 variant="outline"
@@ -307,7 +363,17 @@ const HarvestMarketplace = () => {
                       {listing.grade?.replace('_', ' ')}
                     </Badge>
                   </div>
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 right-3 flex gap-2">
+                    <button
+                      onClick={(e) => handleToggleFavorite(e, listing.listing_id)}
+                      className={`p-2 rounded-full transition-colors ${
+                        favorites.has(listing.listing_id)
+                          ? 'bg-red-500 text-white'
+                          : 'bg-slate-900/80 text-slate-300 hover:text-red-400'
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 ${favorites.has(listing.listing_id) ? 'fill-current' : ''}`} />
+                    </button>
                     <Badge className="bg-slate-900/80 text-white capitalize">
                       {listing.crop_type}
                     </Badge>

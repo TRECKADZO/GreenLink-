@@ -87,6 +87,9 @@ import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
 import HarvestMarketplace from "./pages/marketplace/HarvestMarketplace";
 import CreateHarvestListing from "./pages/marketplace/CreateHarvestListing";
 
+// Buyer Dashboard
+import BuyerMarketplaceDashboard from "./pages/buyer/BuyerDashboard";
+
 // Auth Pages
 import ActivateMember from "./pages/auth/ActivateMember";
 import ActivateAgent from "./pages/auth/ActivateAgent";
@@ -206,6 +209,12 @@ function App() {
               <Route path="/marketplace/harvest" element={<HarvestMarketplace />} />
               <Route path="/marketplace/create-listing" element={<CreateHarvestListing />} />
               <Route path="/marketplace/my-listings" element={<HarvestMarketplace />} />
+
+              {/* Buyer Dashboard */}
+              <Route path="/buyer/marketplace" element={<BuyerMarketplaceDashboard />} />
+              <Route path="/buyer/quotes" element={<BuyerMarketplaceDashboard />} />
+              <Route path="/buyer/favorites" element={<BuyerMarketplaceDashboard />} />
+              <Route path="/buyer/alerts" element={<BuyerMarketplaceDashboard />} />
             </Routes>
           </BrowserRouter>
           <Toaster />

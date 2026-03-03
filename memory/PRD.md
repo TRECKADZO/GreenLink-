@@ -1,8 +1,62 @@
 # GreenLink PRD - Updated March 3, 2026
 
-## Latest Updates - March 3, 2026 (Session 10 - Bourse des Récoltes)
+## Latest Updates - March 3, 2026 (Session 10)
 
-### 🌍 BOURSE DES RÉCOLTES - NOUVEAU MARKETPLACE INTERNATIONAL
+### 🏢 TABLEAU DE BORD ACHETEUR - NOUVEAU
+
+**Espace dédié aux acheteurs (négociants, exportateurs, transformateurs) pour gérer leurs activités sur le marketplace.**
+
+#### URL: `/buyer/marketplace`
+
+#### Fonctionnalités:
+
+**1. Vue d'ensemble (Aperçu)**
+- Statistiques: Demandes de devis, En attente, Devis reçus, Favoris, Alertes actives
+- Dernières demandes
+- Actions rapides
+
+**2. Historique des Devis (Mes Devis)**
+- Liste de toutes les demandes envoyées
+- Statut: En attente, Devis reçu, Refusé, Info demandée
+- Détails des devis reçus avec prix proposés
+
+**3. Favoris**
+- Récoltes sauvegardées
+- Alerte si prix modifié depuis l'ajout
+- Action rapide pour demander un devis
+- Bouton coeur dans le marketplace pour ajouter/retirer
+
+**4. Alertes Personnalisées**
+- Création d'alertes avec critères:
+  - Types de culture (cacao, café, anacarde)
+  - Prix maximum
+  - Quantité minimum
+  - Certifications requises (Fairtrade, Rainforest, UTZ, Bio, EUDR)
+  - EUDR Compliant requis
+- Activation/désactivation des alertes
+- Vue des correspondances (récoltes matchant les critères)
+
+**5. Aperçu du Marché**
+- Prix par culture (moyenne, min, max)
+- Top régions par volume
+- Certifications les plus courantes
+- Nouvelles annonces de la semaine
+
+#### API Endpoints:
+- `GET /api/buyer/dashboard` - Stats dashboard
+- `GET /api/buyer/quotes` - Historique devis
+- `GET/POST/DELETE /api/buyer/favorites` - Gestion favoris
+- `GET/POST/PUT/DELETE /api/buyer/alerts` - Gestion alertes
+- `GET /api/buyer/matching-listings` - Correspondances alertes
+- `GET /api/buyer/market-insights` - Aperçu marché
+
+#### Fichiers:
+- `/app/backend/routes/buyer_dashboard.py` (NOUVEAU)
+- `/app/frontend/src/pages/buyer/BuyerDashboard.jsx` (NOUVEAU)
+
+---
+
+### 🌍 BOURSE DES RÉCOLTES - MARKETPLACE INTERNATIONAL
 
 **Fonctionnalité majeure permettant aux producteurs et coopératives d'exposer leurs récoltes aux acheteurs internationaux avec une fiche produit aux normes internationales.**
 

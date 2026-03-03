@@ -32,6 +32,7 @@ from routes import ussd
 from routes import agent_geolocation  # Agent GPS tracking
 from routes import coverage_zones  # Coverage zones for cooperatives
 from routes import harvest_marketplace  # Harvest Marketplace for producers/coops
+from routes import buyer_dashboard  # Buyer Dashboard
 from services.push_notifications import router as push_notifications_router
 
 
@@ -135,6 +136,7 @@ app.include_router(ussd.router)
 app.include_router(agent_geolocation.router)
 app.include_router(coverage_zones.router)
 app.include_router(harvest_marketplace.router)
+app.include_router(buyer_dashboard.router)
 
 app.add_middleware(
     CORSMiddleware,
