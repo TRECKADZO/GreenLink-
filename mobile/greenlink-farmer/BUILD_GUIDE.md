@@ -58,8 +58,12 @@ L'app crée 3 canaux:
 
 ## Version actuelle
 
-- **Version**: 1.1.0
+- **Version**: 1.10.0
 - **Nouvelles fonctionnalités**:
+  - **Messagerie temps réel**: Chat sécurisé avec les acheteurs de la Bourse des Récoltes
+  - Pièces jointes (photos, documents PDF)
+  - Accusés de lecture et indicateurs de frappe
+  - WebSocket pour messages instantanés
   - Notifications push en temps réel (Expo)
   - Préférences de notifications
   - Rappels hebdomadaires automatiques

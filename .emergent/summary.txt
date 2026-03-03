@@ -1,254 +1,112 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to build a multi-persona agritech platform for Côte d'Ivoire for the International Cocoa Initiative (ICI). The platform is designed to monitor and remediate child labor (SSRTE) and manage carbon credit verification.
-
-The scope has expanded significantly to include:
-*   A dedicated system for SSRTE agents.
-*   Enriched analytics for Super Admins, including a complete user management module.
-*   Real-time features, including push notifications and WebSocket-powered dashboards for SSRTE alerts.
-*   A comprehensive, real-time geolocation system to track field agents on an interactive map, display their historical trajectories (with an interactive replay feature), and show cooperative intervention zones.
-*   A background service on the mobile app for periodic location updates.
-*   A USSD interface (API and interactive simulator) for farmers.
-*   Dynamic content management for the homepage (partners, testimonials) from the Super Admin dashboard.
-*   A full-featured Harvest Marketplace for producers to sell crops to buyers, with a quote request system.
-*   A dedicated dashboard for buyers to manage quotes, favorites, and alerts.
+The user's initial request was to build a multi-persona agritech platform. In this session, the user requested several major new features and improvements:
+1.  **World-Class Secure Messaging**: A real-time, professional messaging system for buyers and sellers (farmers/cooperatives) on the Harvest Marketplace, with features like attachments, read receipts, and push notifications.
+2.  **Mobile Messaging Integration**: Implement the full messaging functionality within the React Native mobile app for sellers.
+3.  **15-Day Free Trial for Buyers**: Add a 15-day free trial for the Buyer subscription tier and make it clearly visible on the platform.
+4.  **Advanced Marketplace Analytics**: Create a dedicated, high-value analytics tab within the Super Admin dashboard for the Harvest Marketplace, featuring metrics like price volatility, market depth, and quality analysis, instead of the previous implementation which was a simple link.
+5.  **Populate Marketplace**: Add more test listings to the Harvest Marketplace to make it look active and provide more data for analytics.
 
 **PRODUCT REQUIREMENTS:**
-*   Strategic analytics dashboards for Admins (ICI, GreenLink).
-*   A full user management module for Super Admins (list, filter, sort, search, bulk delete, export).
+(Includes previous requirements plus new ones from this session)
+*   A **secure, real-time messaging system** (web and mobile) connecting buyers and sellers, linked to marketplace listings, supporting file attachments, and push notifications.
+*   **Advanced analytics dashboards** for Admins, including high-value commodity market metrics (price indices, volume, liquidity, quality distribution).
+*   A **15-day free trial** for the buyer subscription plan, with a clear activation path from the buyer dashboard.
+*   A populated Harvest Marketplace with diverse listings.
+*   Full user management module for Super Admins.
 *   Data collection for producer households and their plots.
-*   Offline-first mobile tools for Cooperatives, Field Agents, and Carbon Auditors.
+*   Offline-first mobile tools.
 *   A robust carbon payment calculation and tracking system.
-*   Data export functionalities (CSV, PDF).
-*   A gamification system (badges) for Carbon Auditors.
-*   A USSD interface (API and simulator) for farmers, featuring clickable commands.
-*   Multi-role support for field agents (double casquette).
-*   Real-time push and WebSocket notifications for critical events.
-*   An interactive map for live agent tracking, trajectory history (with replay), and operational zones.
-*   A background service on the mobile app for periodic location updates.
-*   A dynamic homepage where sections like Partners and Testimonials can be managed from the admin panel.
-*   A **Harvest Marketplace** where farmers/cooperatives can list their harvests with details conforming to international standards (ICCO, ICO, AFI).
-*   A **Request a Quote** system for buyers on the marketplace.
-*   A **Buyer Dashboard** to track quotes, save favorite listings, and create custom alerts for new harvests.
-*   A clear, professional UI to distinguish between the three marketplaces: Harvest, Inputs, and Carbon.
+*   An interactive map for live agent tracking.
+*   A USSD interface (API and simulator) for farmers.
 
 **User's preferred language**: French. The next agent MUST respond in French.
 
 **what currently exists?**
-The application is a full-stack platform (React/FastAPI/MongoDB) with role-based access control.
-*   **Backend**: A modular FastAPI backend with multi-role authentication and APIs for data management. It now includes new, fully-featured modules for a **Harvest Marketplace** () with a quote-request system, and a **Buyer Dashboard** (). It also features a new endpoint for marketplace analytics ().
-*   **Frontend (Web)**: The React app has been significantly enhanced:
-    *   A new **Marketplace Hub** page () and a modern navbar dropdown have been created to distinguish between the three marketplaces (Harvest, Inputs, Carbon).
-    *   A new **Bourse des Récoltes** (Harvest Marketplace) allows users to view and create listings. The creation form is a detailed, multi-tab component adhering to international standards (ICCO, ICO, AFI).
-    *   A new **Buyer Dashboard** () provides buyers with tools to manage quote requests, favorites, and create custom alerts.
-    *   The Super Admin dashboard now includes an analytics tab for the Harvest Marketplace.
-    *   The buyer subscription tier on the pricing page was changed from a fixed price to Sur devis (On Quote).
-*   **Frontend (Mobile)**: The React Native app () has been updated:
-    *   The image on the harvest declaration screen has been corrected.
-    - The USSD simulator code has been updated.
-    - The New Parcel screen now correctly filters crop types.
-    - **Builds for v1.18.0 (both APK for testing and AAB for Google Play) have been successfully generated.**
+The application is a full-stack platform (React/FastAPI/MongoDB). Significant new features were added in this session:
+*   **Web Messaging System**: A complete, real-time messaging system has been built and integrated into the web application. It uses WebSockets, supports conversations linked to marketplace listings, and allows file attachments. It was successfully validated by the testing subagent.
+*   **Advanced Admin Analytics**: The Super Admin dashboard now has a powerful Bourse Récoltes tab with detailed, high-value analytics and KPIs for the marketplace, replacing a faulty link.
+*   **15-Day Buyer Trial**: A 15-day free trial for buyers has been implemented. The frontend now displays a promotional banner on the buyer's dashboard and a badge on the pricing page. A backend endpoint to activate the trial was also created.
+*   **Populated Marketplace**: The Harvest Marketplace now contains 7 diverse test listings, making it look active and providing data for the analytics dashboard.
+*   **Mobile Messaging (Files only)**: The necessary screens (, ) and services () for the mobile messaging feature have been created in the React Native project. However, they are completely untested and not fully integrated.
 
 **Last working item**:
--   **Last item agent was working**: The user reported that the new Harvest Marketplace metrics were not visible in the Super Admin dashboard and that the navigation to the different marketplaces was confusing. The agent implemented a Marketplace Hub page and a dropdown menu, which the user liked. The agent was in the process of verifying that the Bourse Récoltes **tab** within the Super Admin dashboard correctly displays the analytics component, as a previous test had incorrectly clicked a quick-access **link** that navigated away from the page.
+-   **Last item agent was working**: Implementing the full messaging feature in the React Native mobile app () for sellers. The agent created the necessary files and updated navigation configurations but ran into theme/styling-related errors () which it attempted to fix. The user then clarified that the messaging should be between buyers (on the web) and sellers (on mobile), which the agent confirmed was the intended design. The agent's final step was proposing to create a marketplace screen on mobile.
 -   **Status**: 
--   **Agent Testing Done**: Y (Verified UI changes via screenshots, but final verification of the tab functionality is pending).
--   **Which testing method agent to use?**: Use the **screenshot tool** with a precise selector targeting the  element for Bourse Récoltes inside the Super Admin Dashboard to confirm it switches to the  component without changing the URL.
+-   **Agent Testing Done**: N (No build, screenshot, or any other form of testing was performed for the mobile implementation).
+-   **Which testing method agent to use?**: Manual testing. The agent should first attempt to build the mobile app locally to see if it compiles. If it does, use the screenshot tool to verify the new messaging icon in the tab bar and navigate to the messaging screens to check their appearance.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Super Admin - Bourse Récoltes Tab Not Displaying Content (P0)**
-    -   **Description**: The Bourse Récoltes tab within the Super Admin dashboard might not be correctly displaying the analytics content. Clicking a similarly named quick-access link navigates away, causing confusion. The agent needs to confirm the tab itself works as intended.
+-   **Issue 1: Mobile Messaging Implementation is Incomplete and Untested (P0)**
+    -   **Description**: The files for the mobile messaging feature have been created, but the implementation is not finished. The agent encountered theme/config errors and did not verify if the fixes worked. The feature is completely untested and likely non-functional.
     -   **Status**: 
     -   **Next debug checklist**:
-        1.  Review .
-        2.  Use the screenshot tool with a specific selector for the **TabsTrigger** component (e.g., , which may need to be added) to simulate a click on the tab, not the quick-access link.
-        3.  Verify the screenshot shows the  content is rendered and the browser URL has not changed.
-    -   **Why fix this issue and what will be achieved with the fix?**: This will make the newly developed marketplace analytics accessible to the Super Admin, completing the feature request.
+        1.  Review the changes made to  to ensure the color definitions are correct.
+        2.  Check  and  for any integration errors.
+        3.  Attempt to run or build the mobile application to check for compilation errors. Check yarn install v1.22.22
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+[4/4] Building fresh packages...
+success Saved lockfile.
+Done in 0.05s. status.
+        4.  Use the screenshot tool to verify the UI: the tab bar icon, the conversation list, and the chat screen.
+    -   **Why fix this issue and what will be achieved with the fix?**: This will complete the user's request to have messaging available for sellers on their mobile app, a critical part of the new feature.
 -   **Issue 2: Critical Web Login & Registration Failures in Deployed Environment (P0 - recurring)**
-    -   **Description**: A critical, recurring issue from a previous fork. Users **cannot log in or register on the deployed production application**. This was ignored during the last session.
+    -   **Description**: A critical, recurring issue from the previous handoff. Users **cannot log in or register on the deployed production application**. This was completely ignored during the last session.
     -   **Status**: 
     -   **Is recurring issue?**: Y
     -   **Next debug checklist**:
         1.  **Do not test against the preview URL**. The issue is specific to the deployed production environment.
         2.  Use the  to get a fresh report on the production environment configuration.
         3.  Inspect the live production logs for the backend service (==> /var/log/supervisor/backend.err.log <==
-INFO:     Started reloader process [1429] using WatchFiles
-Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [1431]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-2026-03-03 03:11:18,236 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:11:18,893 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:11:19,253 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 03:11:40,162 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:11:40,218 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:11:40,520 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 03:12:20,675 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:12:20,728 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:12:21,030 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 03:12:45,616 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:12:45,670 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:12:45,967 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 03:13:35,195 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:13:35,252 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:13:35,556 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-WARNING:  WatchFiles detected changes in 'routes/harvest_marketplace.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [1431]
-Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [3367]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'routes/harvest_marketplace.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [3367]
-Orange SMS API not configured. Using mock mode.
-Process SpawnProcess-3:
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
-    self.run()
-  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
-    self._target(*self._args, **self._kwargs)
-  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
-    target(sockets=sockets)
-  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
-    return asyncio.run(self.serve(sockets=sockets))
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
-    return runner.run(main)
-           ^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
-    return self._loop.run_until_complete(task)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
-    return future.result()
-           ^^^^^^^^^^^^^^^
-  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
-    config.load()
-  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
-    self.loaded_app = import_from_string(self.app)
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
-    module = importlib.import_module(module_str)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
-  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
-  File "/app/backend/server.py", line 34, in <module>
-    from routes import harvest_marketplace  # Harvest Marketplace for producers/coops
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/backend/routes/harvest_marketplace.py", line 293, in <module>
-    offer: HarvestOffer,
-           ^^^^^^^^^^^^
-NameError: name 'HarvestOffer' is not defined
-WARNING:  WatchFiles detected changes in 'routes/harvest_marketplace.py'. Reloading...
-Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [3402]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'routes/harvest_marketplace.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [3402]
-Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [3420]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'routes/harvest_marketplace.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [3420]
-Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [3438]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [3438]
-INFO:     Stopping reloader process [1429]
+INFO:     Stopping reloader process [2302]
 INFO:     Will watch for changes in these directories: ['/app/backend']
 INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [3569] using WatchFiles
+INFO:     Started reloader process [3044] using WatchFiles
 Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [3571]
+INFO:     Started server process [3046]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-2026-03-03 03:29:22,053 - routes.auth - INFO - Login attempt for: coop-gagnoa@greenlink.ci
-2026-03-03 03:29:22,700 - routes.auth - INFO - User found: coop-gagnoa@greenlink.ci, has hashed_password: True
-2026-03-03 03:29:23,036 - routes.auth - INFO - Login successful for: coop-gagnoa@greenlink.ci
+2026-03-03 13:16:14,003 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 13:16:14,679 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 13:16:14,995 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
 WARNING:  WatchFiles detected changes in 'routes/buyer_dashboard.py'. Reloading...
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [3571]
+INFO:     Finished server process [3046]
 Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [4443]
+INFO:     Started server process [3322]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+WARNING:  WatchFiles detected changes in 'routes/buyer_dashboard.py'. Reloading...
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [4443]
+INFO:     Finished server process [3322]
 Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [4461]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [4461]
-Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [4479]
+INFO:     Started server process [3340]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [4479]
-INFO:     Stopping reloader process [3569]
+INFO:     Finished server process [3340]
+INFO:     Stopping reloader process [3044]
 INFO:     Will watch for changes in these directories: ['/app/backend']
 INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [4674] using WatchFiles
+INFO:     Started reloader process [3479] using WatchFiles
 Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [4676]
+INFO:     Started server process [3481]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-2026-03-03 03:39:51,999 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:39:52,665 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:39:53,002 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 03:40:15,523 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:40:15,579 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:40:15,880 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 03:40:43,167 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:40:43,221 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:40:43,525 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 03:41:07,794 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:41:07,850 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:41:08,160 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 03:41:30,332 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:41:30,388 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:41:30,690 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 03:41:53,927 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 03:41:53,983 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 03:41:54,285 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 04:12:40,374 - routes.auth - INFO - Login attempt for: +2250709005354
-2026-03-03 04:12:40,431 - routes.auth - INFO - User found: None, has hashed_password: True
-2026-03-03 04:12:40,736 - routes.auth - INFO - Login successful for: +2250709005354
+2026-03-03 13:26:36,950 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 13:26:37,637 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 13:26:37,956 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 13:26:49,841 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 13:26:49,898 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 13:26:50,200 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
 INFO:     Will watch for changes in these directories: ['/app/backend']
 INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
 INFO:     Started reloader process [48] using WatchFiles
@@ -256,228 +114,358 @@ Orange SMS API not configured. Using mock mode.
 INFO:     Started server process [86]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-2026-03-03 12:34:55,826 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 12:34:55,883 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 12:34:56,306 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 12:35:56,408 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 12:35:56,464 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 12:35:56,765 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-03 12:36:27,988 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-03 12:36:28,042 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-03 12:36:28,341 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-INFO:     Will watch for changes in these directories: ['/app/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [41] using WatchFiles
+2026-03-03 15:01:28,010 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:01:28,701 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:01:29,042 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:01:50,256 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:01:50,312 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:01:50,614 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+WARNING:  WatchFiles detected changes in 'routes/marketplace_analytics.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [86]
 Orange SMS API not configured. Using mock mode.
-INFO:     Started server process [79]
+INFO:     Started server process [445]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [445]
+Orange SMS API not configured. Using mock mode.
+INFO:     Started server process [478]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [478]
+Orange SMS API not configured. Using mock mode.
+INFO:     Started server process [526]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [526]
+INFO:     Stopping reloader process [48]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [684] using WatchFiles
+Orange SMS API not configured. Using mock mode.
+INFO:     Started server process [686]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+2026-03-03 15:08:05,233 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:08:05,942 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:08:06,274 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:08:13,687 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:08:13,743 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:08:14,040 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:08:28,624 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:08:28,681 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:08:28,983 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:09:02,983 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:09:03,039 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:09:03,418 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:28:09,729 - routes.auth - INFO - Login attempt for: coop-gagnoa@greenlink.ci
+2026-03-03 15:28:09,786 - routes.auth - INFO - User found: coop-gagnoa@greenlink.ci, has hashed_password: True
+2026-03-03 15:28:10,084 - routes.auth - INFO - Login successful for: coop-gagnoa@greenlink.ci
+2026-03-03 15:28:25,407 - routes.auth - INFO - Login attempt for: coop-gagnoa@greenlink.ci
+2026-03-03 15:28:25,464 - routes.auth - INFO - User found: coop-gagnoa@greenlink.ci, has hashed_password: True
+2026-03-03 15:28:25,767 - routes.auth - INFO - Login successful for: coop-gagnoa@greenlink.ci
+2026-03-03 15:28:44,133 - routes.auth - INFO - Login attempt for: coop-gagnoa@greenlink.ci
+2026-03-03 15:28:44,190 - routes.auth - INFO - User found: coop-gagnoa@greenlink.ci, has hashed_password: True
+2026-03-03 15:28:44,489 - routes.auth - INFO - Login successful for: coop-gagnoa@greenlink.ci
+2026-03-03 15:29:51,898 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:29:51,950 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:29:52,246 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:32:24,226 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:32:24,280 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:32:24,588 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:35:00,132 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:35:00,186 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:35:00,505 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:35:01,901 - routes.messaging - ERROR - Error sending new conversation push: 'PushNotificationService' object has no attribute 'send_new_conversation_notification'
+2026-03-03 15:35:13,277 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:35:13,331 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:35:13,626 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:35:13,754 - routes.auth - INFO - Login attempt for: coop-gagnoa@greenlink.ci
+2026-03-03 15:35:13,808 - routes.auth - INFO - User found: coop-gagnoa@greenlink.ci, has hashed_password: True
+2026-03-03 15:35:14,101 - routes.auth - INFO - Login successful for: coop-gagnoa@greenlink.ci
+2026-03-03 15:35:24,589 - routes.auth - INFO - Login attempt for: coop-gagnoa@greenlink.ci
+2026-03-03 15:35:24,643 - routes.auth - INFO - User found: coop-gagnoa@greenlink.ci, has hashed_password: True
+2026-03-03 15:35:24,937 - routes.auth - INFO - Login successful for: coop-gagnoa@greenlink.ci
+2026-03-03 15:35:35,331 - routes.auth - INFO - Login attempt for: coop-gagnoa@greenlink.ci
+2026-03-03 15:35:35,385 - routes.auth - INFO - User found: coop-gagnoa@greenlink.ci, has hashed_password: True
+2026-03-03 15:35:35,679 - routes.auth - INFO - Login successful for: coop-gagnoa@greenlink.ci
+2026-03-03 15:35:45,785 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:35:45,839 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:35:46,133 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-03 15:35:46,265 - routes.auth - INFO - Login attempt for: coop-gagnoa@greenlink.ci
+2026-03-03 15:35:46,319 - routes.auth - INFO - User found: coop-gagnoa@greenlink.ci, has hashed_password: True
+2026-03-03 15:35:46,614 - routes.auth - INFO - Login successful for: coop-gagnoa@greenlink.ci
+2026-03-03 15:36:18,004 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:36:18,058 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:36:18,363 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+INFO:     ('10.79.167.145', 43282) - "WebSocket /api/messaging/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWEyMmQ2ZTEwMTEyNTY4YWI4ZjMwMDgiLCJleHAiOjE3NzI2Mzg1Nzh9.9w8e7r8ybD3VDxkuTfkJUJCfpH91S-n3Z0mCPfUzmD8" [accepted]
+2026-03-03 15:36:22,033 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 connected
+INFO:     connection open
+INFO:     ('10.79.167.146', 36202) - "WebSocket /api/messaging/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWEyMmQ2ZTEwMTEyNTY4YWI4ZjMwMDgiLCJleHAiOjE3NzI2Mzg1Nzh9.9w8e7r8ybD3VDxkuTfkJUJCfpH91S-n3Z0mCPfUzmD8" [accepted]
+2026-03-03 15:36:23,012 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 connected
+INFO:     connection open
+2026-03-03 15:36:25,583 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 disconnected
+2026-03-03 15:36:25,584 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 disconnected
+INFO:     connection closed
+INFO:     connection closed
+2026-03-03 15:36:50,683 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:36:50,740 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:36:51,042 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+INFO:     ('10.79.167.145', 40852) - "WebSocket /api/messaging/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWEyMmQ2ZTEwMTEyNTY4YWI4ZjMwMDgiLCJleHAiOjE3NzI2Mzg2MTB9.DcRy-DtqeRMUMkPZ93O4lBAjRiAuV6fBpZyfOIrSbi4" [accepted]
+2026-03-03 15:36:54,731 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 connected
+INFO:     connection open
+INFO:     ('10.79.167.146', 59696) - "WebSocket /api/messaging/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWEyMmQ2ZTEwMTEyNTY4YWI4ZjMwMDgiLCJleHAiOjE3NzI2Mzg2MTB9.DcRy-DtqeRMUMkPZ93O4lBAjRiAuV6fBpZyfOIrSbi4" [accepted]
+2026-03-03 15:36:55,700 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 connected
+INFO:     connection open
+2026-03-03 15:37:00,283 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 disconnected
+2026-03-03 15:37:00,284 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 disconnected
+INFO:     connection closed
+INFO:     connection closed
+2026-03-03 15:37:18,195 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-03 15:37:18,251 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-03 15:37:18,553 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+INFO:     ('10.79.167.145', 53710) - "WebSocket /api/messaging/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWEyMmQ2ZTEwMTEyNTY4YWI4ZjMwMDgiLCJleHAiOjE3NzI2Mzg2Mzh9.Ljv3iMADTfzINWA2O2_meorjC29pXHf8j4cyy8k7-rY" [accepted]
+2026-03-03 15:37:22,181 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 connected
+INFO:     connection open
+INFO:     connection closed
+INFO:     ('10.79.167.146', 57342) - "WebSocket /api/messaging/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWEyMmQ2ZTEwMTEyNTY4YWI4ZjMwMDgiLCJleHAiOjE3NzI2Mzg2Mzh9.Ljv3iMADTfzINWA2O2_meorjC29pXHf8j4cyy8k7-rY" [accepted]
+2026-03-03 15:37:22,230 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 connected
+INFO:     connection open
+2026-03-03 15:37:22,295 - routes.messaging - ERROR - WebSocket error: no close frame received or sent
+2026-03-03 15:37:22,295 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 disconnected
+INFO:     ('10.79.167.146', 57360) - "WebSocket /api/messaging/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWEyMmQ2ZTEwMTEyNTY4YWI4ZjMwMDgiLCJleHAiOjE3NzI2Mzg2Mzh9.Ljv3iMADTfzINWA2O2_meorjC29pXHf8j4cyy8k7-rY" [accepted]
+2026-03-03 15:37:23,197 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 connected
+INFO:     connection open
+2026-03-03 15:37:28,640 - routes.messaging - ERROR - Error sending push notification: 'PushNotificationService' object has no attribute 'send_new_message_notification'
+2026-03-03 15:37:30,541 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 disconnected
+INFO:     connection closed
+2026-03-03 15:37:30,543 - routes.messaging - INFO - [Messaging WS] User 69a22d6e10112568ab8f3008 disconnected
+INFO:     connection closed
+2026-03-03 15:37:44,737 - routes.auth - INFO - Login attempt for: coop-gagnoa@greenlink.ci
+2026-03-03 15:37:44,790 - routes.auth - INFO - User found: coop-gagnoa@greenlink.ci, has hashed_password: True
+2026-03-03 15:37:45,087 - routes.auth - INFO - Login successful for: coop-gagnoa@greenlink.ci
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [42] using WatchFiles
 
 ==> /var/log/supervisor/backend.out.log <==
-INFO:     10.64.128.84:53730 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53726 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53742 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.6:59514 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.6:59512 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53746 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.84:36256 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.6:48320 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:36270 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.6:48316 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.6:48334 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.6:48344 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.6:48316 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.84:36270 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.6:48320 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.6:48366 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.6:48358 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:36256 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.6:51886 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.6:51890 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53570 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53572 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53574 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53590 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.6:51890 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53572 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53570 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.6:51886 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53592 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.84:53608 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.84:42562 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.6:33646 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.84:42568 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.84:42584 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.6:33660 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.84:42598 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:42568 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.6:33660 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.84:42562 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.84:42608 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.6:33646 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:42616 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37108 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37110 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37118 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.6:34164 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37134 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.6:34168 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37110 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37108 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37142 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.6:34168 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37146 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.6:34164 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37108 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37110 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.6:34168 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.6:34164 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37152 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37168 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37110 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37108 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.6:34168 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37178 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.6:34164 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.84:37194 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.6:60956 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.84:47800 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.6:60970 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.84:47796 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.84:47810 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.128.6:60984 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.6:60970 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.64.128.84:47796 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.128.84:47800 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.128.84:47814 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.128.6:60956 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.128.6:32768 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43256 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39018 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39020 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39020 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43256 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39020 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39020 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43270 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43270 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43256 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43270 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43258 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43256 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39020 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43270 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43258 - "GET /api/buyer/favorites HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43258 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43280 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:43270 - "GET /api/buyer/favorites HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39020 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
 [DB] Connected to: mongodb+srv://klenakaneric_db_user:474Treckadzo@cl... / greenlink_production
-INFO:     10.79.167.145:43228 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.145:43204 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.145:43252 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.146:37220 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.145:43228 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.145:43204 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.145:43240 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.145:43214 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.146:37220 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.146:37222 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.145:43256 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.145:43270 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.146:47430 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51472 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51480 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51496 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51484 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51504 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51480 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51472 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.146:47430 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51512 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51522 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51472 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39708 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39712 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50312 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39718 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50302 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50324 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39712 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50302 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39708 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50312 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39732 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50328 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.145:34988 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39342 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39354 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39384 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39370 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.145:36584 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39372 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39354 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.145:36584 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.145:36586 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.145:36598 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.145:36616 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.145:36604 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51506 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51518 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39702 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39708 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51526 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39720 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51518 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39702 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39708 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39734 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.146:39748 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51518 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.145:33700 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     10.79.167.146:34516 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
-INFO:     10.79.167.146:50108 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.146:50110 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.146:50114 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50498 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50486 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.146:50118 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50486 - "GET /api/crops HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50510 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.167.146:50108 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50502 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50498 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.146:50110 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.167.146:50110 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
-INFO:     10.79.167.146:50108 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
-INFO:     10.79.167.145:50510 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
-INFO:     10.79.167.146:50108 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53904 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
-INFO:     10.79.167.145:53906 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
-INFO:     10.79.167.145:53906 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
-INFO:     10.79.167.146:38518 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
-INFO:     10.79.167.145:53906 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53906 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53904 - "GET /api/admin/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.146:38532 - "GET /api/admin/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.146:38518 - "GET /api/admin/stats HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53904 - "GET /api/admin/stats HTTP/1.1" 200 OK
-INFO:     10.79.167.146:38532 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.79.167.146:38532 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53906 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53906 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
-INFO:     10.79.167.146:38518 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53904 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53906 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53904 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53904 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
-INFO:     10.79.167.146:38518 - "GET /api/buyer/favorites HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53904 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53906 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
-INFO:     10.79.167.146:38518 - "GET /api/buyer/favorites HTTP/1.1" 200 OK
-INFO:     10.79.167.145:53906 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
-INFO:     10.79.167.146:51050 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
-INFO:     10.79.167.146:51050 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
-INFO:     10.79.167.145:51446 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
-INFO:     10.79.167.146:51050 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
-INFO:     10.79.167.146:51050 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51446 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51454 - "GET /api/admin/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51454 - "GET /api/admin/partners HTTP/1.1" 200 OK
-INFO:     10.79.167.146:51050 - "GET /api/admin/stats HTTP/1.1" 200 OK
-INFO:     10.79.167.146:51050 - "GET /api/admin/stats HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51446 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.79.167.146:59380 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.79.167.146:59386 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51446 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
-INFO:     10.79.167.146:51050 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
-INFO:     10.79.167.145:51454 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
-INFO:     10.79.167.146:59386 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
-INFO:     10.79.167.146:59380 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK) *while* attempting a login from the production frontend to capture the error.
+[DB] Connected to: mongodb+srv://klenakaneric_db_user:474Treckadzo@cl... / greenlink_production
+[DB] Connected to: mongodb+srv://klenakaneric_db_user:474Treckadzo@cl... / greenlink_production
+[DB] Connected to: mongodb+srv://klenakaneric_db_user:474Treckadzo@cl... / greenlink_production
+INFO:     10.79.167.146:53708 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:53708 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 200 OK
+INFO:     10.79.167.145:42676 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:36664 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 200 OK
+INFO:     10.79.167.146:36664 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 200 OK
+INFO:     10.79.167.145:36516 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57376 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57390 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.145:36516 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57394 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57390 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57390 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57390 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.145:36516 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57398 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57398 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57376 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
+INFO:     10.79.167.145:36516 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
+INFO:     10.79.167.145:58176 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
+INFO:     10.79.167.145:58176 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57398 - "GET /api/buyer/favorites HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57390 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
+INFO:     10.79.167.145:36516 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:58176 - "GET /api/buyer/favorites HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57390 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52250 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52250 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52256 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52256 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52254 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:47264 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:47264 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52270 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52256 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52250 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
+INFO:     10.79.167.145:47264 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52256 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.146:52256 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.145:47268 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
+INFO:     10.79.167.145:47268 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 200 OK
+INFO:     10.79.167.145:47268 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 200 OK
+INFO:     10.79.167.146:48478 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:59058 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:59058 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:59058 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:46874 - "GET /api/harvest-marketplace/listings HTTP/1.1" 200 OK
+INFO:     10.79.167.146:49248 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
+INFO:     10.79.167.146:49248 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
+INFO:     10.79.167.145:51968 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:49248 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:55450 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:44756 - "POST /api/harvest-marketplace/listings HTTP/1.1" 422 Unprocessable Entity
+INFO:     10.79.167.145:57636 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.145:57636 - "POST /api/harvest-marketplace/listings HTTP/1.1" 200 OK
+INFO:     10.79.167.146:48842 - "POST /api/harvest-marketplace/listings HTTP/1.1" 200 OK
+INFO:     10.79.167.146:48842 - "POST /api/harvest-marketplace/listings HTTP/1.1" 200 OK
+INFO:     10.79.167.145:42338 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:47504 - "POST /api/harvest-marketplace/listings HTTP/1.1" 200 OK
+INFO:     10.79.167.145:42338 - "POST /api/harvest-marketplace/listings HTTP/1.1" 200 OK
+INFO:     10.79.167.145:42338 - "POST /api/harvest-marketplace/listings HTTP/1.1" 200 OK
+INFO:     10.79.167.146:47504 - "GET /api/harvest-marketplace/listings HTTP/1.1" 200 OK
+INFO:     10.79.167.146:49146 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:49148 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
+INFO:     10.79.167.145:42450 - "GET /api/harvest-marketplace/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:49148 - "GET /api/harvest-marketplace/listings?sort_by=created_at HTTP/1.1" 200 OK
+INFO:     10.79.167.145:34854 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:34870 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:48022 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:48036 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:39906 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:39906 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:40782 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:39906 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:39906 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 401 Unauthorized
+INFO:     10.79.167.145:40782 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 401 Unauthorized
+INFO:     10.79.167.145:48132 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:50172 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 200 OK
+INFO:     10.79.167.145:48120 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:49256 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:48120 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:48120 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:49256 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 401 Unauthorized
+INFO:     10.79.167.145:48120 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 401 Unauthorized
+INFO:     10.79.167.145:48124 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.145:48124 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:34646 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.146:34646 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.146:34652 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:48124 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:34652 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39822 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39838 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.145:48124 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39838 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.145:39812 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
+INFO:     10.79.167.146:34652 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 200 OK
+INFO:     10.79.167.145:48124 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 200 OK
+INFO:     10.79.167.145:48124 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 200 OK
+INFO:     10.79.167.146:34652 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 200 OK
+INFO:     10.79.167.145:46106 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:46106 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:46106 - "GET /api/harvest-marketplace/admin/analytics HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:52528 - "GET /api/admin/analytics/dashboard?period=year HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:52528 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 401 Unauthorized
+INFO:     10.79.167.145:46106 - "GET /api/marketplace-analytics/dashboard HTTP/1.1" 401 Unauthorized
+INFO:     10.79.167.145:52384 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:41394 - "GET /api/harvest-marketplace/listings?limit=1 HTTP/1.1" 200 OK
+INFO:     10.79.167.146:41394 - "GET /api/harvest-marketplace/listings?limit=1 HTTP/1.1" 200 OK
+INFO:     10.79.167.146:41394 - "GET /api/harvest-marketplace/listings?limit=1 HTTP/1.1" 200 OK
+INFO:     10.79.167.145:52384 - "POST /api/messaging/conversations HTTP/1.1" 200 OK
+INFO:     10.79.167.145:41286 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:36968 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:36968 - "GET /api/messaging/conversations HTTP/1.1" 200 OK
+INFO:     10.79.167.145:41286 - "GET /api/messaging/conversations HTTP/1.1" 200 OK
+INFO:     10.79.167.145:53000 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.145:53000 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/messages HTTP/1.1" 200 OK
+INFO:     10.79.167.146:35716 - "POST /api/messaging/upload HTTP/1.1" 400 Bad Request
+INFO:     10.79.167.146:58708 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.145:34928 - "POST /api/messaging/upload HTTP/1.1" 200 OK
+INFO:     10.79.167.145:34928 - "POST /api/messaging/upload HTTP/1.1" 200 OK
+INFO:     10.79.167.146:34022 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.145:38808 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:34022 - "GET /api/messaging/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:38808 - "GET /api/messaging/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:38808 - "GET /api/messaging/conversations/CONV-20260303-BD17282F HTTP/1.1" 200 OK
+INFO:     10.79.167.146:58768 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:58768 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60470 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60470 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.146:58776 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60470 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60470 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.146:58768 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60470 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:58768 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:58776 - "GET /api/messaging/conversations?archived=false HTTP/1.1" 200 OK
+INFO:     10.79.167.146:58776 - "GET /api/messaging/conversations?archived=false HTTP/1.1" 200 OK
+INFO:     10.79.167.146:36318 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/pinned HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:36328 - "GET /api/messaging/conversations/CONV-20260303-BD17282F HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:37414 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/messages?limit=50 HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:36328 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/pinned HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:37414 - "GET /api/messaging/conversations/CONV-20260303-BD17282F HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.146:36328 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/messages?limit=50 HTTP/1.1" 403 Forbidden
+INFO:     10.79.167.145:40840 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40840 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:59686 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40840 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40848 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40848 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40840 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40840 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40854 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:59686 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40848 - "GET /api/messaging/conversations?archived=false HTTP/1.1" 200 OK
+INFO:     10.79.167.146:59686 - "GET /api/messaging/conversations?archived=false HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40840 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/pinned HTTP/1.1" 200 OK
+INFO:     10.79.167.146:59686 - "GET /api/messaging/conversations/CONV-20260303-BD17282F HTTP/1.1" 200 OK
+INFO:     10.79.167.145:40854 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/messages?limit=50 HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60464 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60464 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60488 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60488 - "GET /api/admin/partners HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60478 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57334 - "GET /api/admin/stats HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57334 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57334 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60488 - "GET /api/messaging/conversations?archived=false HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57346 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57346 - "GET /api/marketplace/cart HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60488 - "GET /api/messaging/conversations?archived=false HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57334 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/pinned HTTP/1.1" 200 OK
+INFO:     10.79.167.145:60488 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/messages?limit=50 HTTP/1.1" 200 OK
+INFO:     10.79.167.146:57346 - "GET /api/messaging/conversations/CONV-20260303-BD17282F HTTP/1.1" 200 OK
+INFO:     10.79.167.146:48404 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.79.167.146:48404 - "GET /api/messaging/conversations/CONV-20260303-BD17282F/messages HTTP/1.1" 200 OK
+INFO:     10.79.167.146:48404 - "GET /api/messaging/stats HTTP/1.1" 200 OK) *while* attempting a login from the production frontend to capture the error.
         4.  Use browser developer tools on the production site to compare the failing network request (headers, body, URL) with a successful  command.
     -   **Why fix this issue and what will be achieved with the fix?**: The entire web platform is unusable in production. This is a complete blocker for all web-based user activity.
 -   **Issue 3: Parcel Form White Page Bug (P1)**
-    -   **Description**: The user reported a white page after submitting the New Parcel form. This is likely due to the form's inability to fetch the list of members for the dropdown.
+    -   **Description**: From the previous handoff. The user reported a white page after submitting the New Parcel form, likely due to an API call failure when fetching members. This was also ignored.
     -   **Status**: 
     -   **Next debug checklist**:
         1.  Review .
@@ -486,144 +474,128 @@ INFO:     10.79.167.146:59380 - "GET /api/admin/analytics/dashboard?period=year 
     -   **Why fix this issue and what will be achieved with the fix?**: This is a core data entry function for cooperatives. Fixing it is critical for managing producer parcels.
 
 **In progress Task List**:
-None.
+-   **Task 1: Complete Mobile Messaging Implementation**
+    -   **Where to resume**: Debug the compilation/runtime errors in the React Native app, likely starting with  and the navigation files.
+    -   **What will be achieved with this?**: A functional messaging client on the mobile app for sellers.
+    -   **Status**: 
+    -   **Should Test frontend/backend/both after fix?**: Frontend (Mobile).
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P0) Full User Test of Mobile Builds**: User needs to download and test the generated **APK v1.18.0** and confirm the fixes. The **AAB v1.18.0** is ready for upload to Google Play Console.
-    *   **(P1) Implement Real Payment Integration (Orange Money)**: Use  to get a playbook for integrating a real payment provider.
-    *   **(P1) Implement multi-channel notifications for Payments**: Send notifications (Push, SMS, Email) to members when a payment is made.
+    *   **(P0) Build Mobile App (APK)**: Once the messaging feature is functional, build a new APK for the user to test.
+    *   **(P1) Create Mobile Bourse des Récoltes Screen**: Implement the screen proposed by the agent where sellers can view their marketplace listings on the mobile app.
+    *   **(P1) Implement Real Payment Integration (Orange Money)**: Use  for integration.
 *   **Future Tasks:**
+    *   (P2) Implement multi-channel notifications for Payments (Push, SMS, Email).
     *   (P2) Real USSD Integration (beyond the current API simulator).
     *   (P2) Refactor backend to use a cloud storage solution (e.g., S3) for file uploads.
-    - (P2) Refactor the monolithic  file.
+    *   (P2) Refactor the monolithic  file.
     *   (P2) Customize SSRTE Alert Recipients.
 
 **Completed work in this session**
--   **Harvest Marketplace Implementation**: Built an end-to-end marketplace for agricultural products, including backend APIs, a public listing page, a detailed creation form based on international standards, and a Request a Quote system.
--   **Buyer Dashboard Implementation**: Created a dedicated dashboard for buyers to manage quote requests, favorite listings, and create custom alerts for new products.
--   **Major UI/UX Overhaul**:
-    -   Created a Marketplace Hub page and a modern navbar dropdown to clearly distinguish between the Harvest, Inputs, and Carbon marketplaces.
-    -   Updated the pricing page to change the Acheteurs (Buyers) plan to Sur devis (On Quote).
--   **Mobile App Fixes & Builds (v1.18.0)**:
-    -   Corrected the image on the harvest declaration screen.
-    -   Updated the USSD code in the simulator.
-    -   Filtered the crop types on the New Parcel screen.
-    -   Successfully built and provided download links for both the **APK (for testing)** and **AAB (for Google Play)**.
--   **Super Admin Dashboard**: Integrated a new Bourse Récoltes tab to display marketplace analytics.
--   **Deployment Issue Fix**: Resolved an issue where the deployed homepage was showing outdated crop information (likely due to cache).
+-   **Web Messaging System**: Built a full-featured, real-time messaging platform on the web application, linking buyers and sellers. Validated with the testing subagent.
+-   **Advanced Marketplace Analytics Dashboard**: Replaced a faulty link in the Super Admin dashboard with a new, data-rich analytics tab with high-value commodity metrics.
+-   **15-Day Buyer Free Trial**: Implemented the logic and frontend UI to offer and activate a 15-day free trial for buyers.
+-   **Marketplace Data Seeding**: Populated the Harvest Marketplace with 7 varied test listings.
+-   **Mobile Push Notifications (Backend)**: Integrated logic to send push notifications for new messages to mobile users.
 
 **Earlier issues found/mentioned but not fixed**
--   The critical deployment login failure (Issue #2 in the pending list) was carried over and not addressed.
--   The white page bug on the New Parcel form (Issue #3) was also not addressed.
+-   **Issue 1: Critical Web Login & Registration Failures in Deployed Environment (P0)**: This was the top priority from the previous handoff and was completely ignored.
+-   **Issue 2: Parcel Form White Page Bug (P1)**: This bug, also from the previous handoff, was ignored.
 
 **Known issue recurrence from previous fork**
--   **Authentication/Deployment Failures**: The inability to log in or register in the deployed production environment is a persistent, high-priority recurring issue that has now been ignored for two consecutive sessions. **This must be the absolute top priority.**
+-   **Authentication/Deployment Failures**: The inability to log in or register in the deployed production environment is a persistent, high-priority recurring issue that has now been ignored for three consecutive sessions. **This must be the absolute top priority after finishing the current mobile task.**
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Modular Frontend Architecture**: Building distinct, feature-rich pages like the Buyer Dashboard and Marketplace Hub.
--   **Complex Form Design**: Multi-tab forms with conditional logic based on crop type (e.g., ICCO vs. ICO standards).
--   **Quote Request System**: Implemented a request a quote workflow instead of direct bidding/offers.
--   **API-Driven UI**: Using backend data to drive marketplace listings, admin analytics, and dynamic navigation.
--   **Mobile Build Process (APK & AAB)**: Building different artifacts for direct testing (APK) and Play Store submission (AAB) using EAS.
+-   **Real-time Communication**: Implemented a full-duplex messaging system using FastAPI WebSockets.
+-   **Advanced Data Analytics**: Created complex backend aggregation pipelines and rich frontend components () to display high-value business intelligence.
+-   **Cross-Platform Feature Implementation**: Extended a core feature (messaging) from web to mobile (React Native), requiring platform-specific UI and service layers.
+-   **Feature Flag/Promotion UI**: Implemented UI elements (banners, badges) to promote a free trial based on user roles and subscription status.
 
 **key DB schema**
--   ****: , , , , , , , , .
--   ****: , , , .
--   ****: , .
--   ****: ,  (e.g., crop_type, max_price).
--   ****: , , , .
--   ****: , .
--   ****: , .
+-   ****:  (Array of user_ids), , .
+-   ****: , , , ,  (Array of user_ids).
+-   : (No change)
+-   : (No change, but now has , ).
 
 **changes in tech stack**
--   No new technologies were added. The agent made extensive use of existing stack:  for direct API calls, and  and  for the frontend.
+-   : Added to the backend for potential future encryption enhancements (though not fully used yet).
+-   : (Likely needed for mobile chat UI, but not explicitly added by agent yet).
 
 **All files of reference**
--   : Contains the tab bug under investigation.
--   : The main public marketplace view.
--   : The complex form for creating listings.
--   : The new buyer-centric dashboard.
--   : The new central navigation page for all marketplaces.
--   : Backend logic for the harvest marketplace.
--   : Backend logic for buyer-specific features.
--   : Directory containing the recently fixed mobile screens.
+-   : Directory for the new mobile messaging screens.
+-   : Key file for mobile routing.
+-   : Location of the new advanced analytics tab.
+-   : The new analytics component.
+-   : The core backend logic for the new messaging feature.
+-   : File containing the P1 white page bug.
 
 **Areas that need refactoring**:
--   **API Call Centralization**: Direct  calls in  and  should be moved to a dedicated API service file (e.g., ) to follow existing patterns.
--    is growing very large. The logic for each tab could be extracted into its own sub-component.
+-   The new  component makes a direct  call. This logic should be moved to a dedicated API service file (e.g., ) for consistency.
 
 **key api endpoints**
--   : Lists all harvest listings.
--   : Creates a new harvest listing.
--   : Sends a quote request for a listing.
--   : Retrieves statistics for the harvest marketplace for the admin dashboard.
--   : Fetches data for the buyer dashboard.
--   : Toggles a listing as a favorite for a user.
--   : Creates a new custom alert for a buyer.
+-   : Retrieves the data for the new admin analytics tab.
+-   : Activates the 15-day free trial for a buyer.
+-   : Fetches all conversations for the current user.
+-   : Creates a new conversation for a listing.
+-   : Fetches messages for a specific conversation.
+-   : Sends a message in a conversation.
+-   : The WebSocket endpoint for real-time messaging.
 
 **Critical Info for New Agent**
 -   **Répondez en français.** All user interactions must be in French.
--   **P0 DEPLOYMENT BLOCKER**: Your absolute first priority must be to solve the **P0 login/registration failure in the deployed environment**. This was ignored in the last two sessions and is a complete blocker for the application's usability. Verify any fix on the **production URL**, not the preview one.
--   **Prioritize Inherited Bugs**: After the deployment blocker, address the other pending bugs: the Super Admin tab display (Issue #1) and the parcel form white page (Issue #3).
--   **Mobile Builds are Ready**: The requested mobile changes are complete. Inform the user that **v1.18.0 is ready for testing (APK) and deployment (AAB)**. Do not rebuild unless new changes are requested.
+-   **Finish the Mobile Implementation First**: Your immediate task is to debug and complete the mobile messaging feature. It is currently broken. You must build and test it.
+-   **ADDRESS IGNORED BLOCKERS**: After the mobile task, your **absolute top priority** must be to solve the **P0 login/registration failure in the deployed environment**. This is a complete application blocker that has been ignored for three sessions. After that, fix the P1 white page bug in the parcel form. Do not start new features until these are resolved.
+-   **Confirm Nouveau Removal**: The user mentioned removing the word nouveau but the agent couldn't find it. When interacting with the user, you may need to ask for a screenshot or clarification on where this text appears.
 
 **documents and test reports created in this job**
--    was updated with the new marketplace and buyer dashboard features.
--   A new APK for direct testing () was built.
--   A new AAB for Google Play Store submission () was built.
+-   : Test report from the  which validated the web messaging feature.
+-   : Updated multiple times to reflect new features.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: (je ne vois pas...) Reports that marketplace metrics are missing from the Super Admin dashboard and asks for a clearer distinction between the three marketplaces. (Status: )
-2.  **User**: (Pourquoi au déploiement...) Asks why the homepage on the deployed site still shows more than three crops. (Status: , identified as a probable cache issue, fixed in preview).
-3.  **User**: Asks for an  version of the mobile app for the Google Play Console. (Status: )
-4.  **User**: Reports being unable to download the APK. (Status: , a direct link was provided).
-5.  **User**: Asks for the . (Status: )
-6.  **User**: Requests to change the buyer subscription from a fixed price to On Quote and to build . (Status: )
-7.  **User**: Says yes to the agent's proposal to create a full buyer dashboard. (Status: )
-8.  **User**:  (generic prompt to resume work).
-9.  **User**: (l'offre des acheteurs...) Requests that the marketplace use a Request a Quote system, that the listing form meets international standards, and that only farmers/cooperatives can post. (Status: )
-10. **User**: (je ne vois pas le marketplace...) Requests the creation of a harvest marketplace and the addition of valuable new metrics to the Super Admin dashboard. (Status: )
+1.  **User**: Asks to implement messaging in the mobile app. (Status: )
+2.  **User**: Confirms the messaging system works and is perfect after seeing the test results. (Status: )
+3.  **User**: Asks if messaging with attachments has been tested between buyers and sellers. (Status: , agent performed a full manual test).
+4.  **User**: . (Status: )
+5.  **User**: Confirms the populated marketplace and fixed analytics dashboard look excellent. (Status: )
+6.  **User**: Asks to populate the marketplace with more test data and remove the word nouveau. (Status: )
+7.  **User**: Asks where the new metrics are. (Status: , agent showed the new analytics tab).
+8.  **User**: Confirms the 15-day trial implementation is good. (Status: )
+9.  **User**: Requests to add a 15-day free trial for buyers. (Status: )
+10. **User**: Confirms they want mobile push notifications for messages. (Status: )
+11. **User (Clarification)**:  (I meant between the sellers and the buyers of the harvest marketplace). The agent understood this was a clarification, not a new request. (Status: )
 
 **Project Health Check:**
 -   **Broken**:
     -   **Web Application Login and Registration (PRODUCTION ENVIRONMENT)**: Critical, unresolved failure.
     -   **New Parcel Form Workflow**: Core data-entry feature is unusable.
+    -   **Mobile App Messaging**: Feature is half-implemented and non-functional.
 -   **Mocked/Simulated**:
     -   Real Payment Gateway (Orange Money).
-    -   SMS/Email Notifications.
-    -   Real USSD functionality.
 -   **Healthy**:
-    -   The entire application within the **preview environment**.
-    -   All new features: Harvest Marketplace, Buyer Dashboard, Marketplace Hub.
-    -   Super Admin features (User/Content Management, Live Stats, new Marketplace Analytics).
-    -   Mobile app (v1.18.0 is built and pending user validation).
+    -   **Web Application (PREVIEW ENVIRONMENT)**: All core features, including the new web messaging and advanced analytics, are working correctly in the preview environment.
 
 **3rd Party Integrations**
--   **Expo / EAS**: For React Native mobile app build and updates.
--   **Expo Push Notifications**: For mobile push notifications.
--   **MongoDB Atlas**: Primary database.
--   **Leaflet & OpenStreetMap**: For the interactive web map.
--   ****: For PDF generation.
--   ****: For QR code generation.
+-   Expo / EAS
+-   Expo Push Notifications
+-   MongoDB Atlas
+-   Leaflet & OpenStreetMap
 
 **Testing status**
--   **Testing agent used after significant changes**: NO. The agent implemented two major features (marketplace, buyer dashboard) without using the testing agent.
+-   **Testing agent used after significant changes**: YES. The agent correctly used the testing agent to validate the complex web messaging feature, which found and fixed two critical bugs.
 -   **Troubleshoot agent used after agent stuck in loop**: NO.
 -   **Test files created**: None.
--   **Known regressions**: The login/registration failure in the production deployment is a major, persistent regression.
+-   **Known regressions**: The production login/registration failure is a major, persistent regression that has been repeatedly ignored.
 
 **Credentials to test flow:**
 -   **Super Admin**:  / 
 -   **Cooperative**:  / 
--   **Producer**:  / 
--   **Field Agent**: Phone:  / 
--   **Carbon Auditor**:  / 
 
 **What agent forgot to execute**
--   The agent **again** failed to prioritize and address the P0 critical issue from the handoff: **the login/registration failure in the deployed production environment**. This is a major failure in prioritization.
--   The agent did not address the P1 white page bug on the parcel form.
--   The agent did not use the  after adding multiple large, complex features, which would have been appropriate to ensure stability and catch regressions.</analysis>
+-   The agent **completely failed** to address the two highest priority issues from the initial handoff summary:
+    1.  The **P0 critical login/registration failure** in the deployed production environment.
+    2.  The **P1 white page bug** on the parcel creation form.
+-   This demonstrates a major failure in prioritizing critical bug fixes over new feature development.</analysis>
