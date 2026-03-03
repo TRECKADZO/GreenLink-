@@ -259,7 +259,7 @@ const WelcomeScreen = ({ navigation }) => {
             <View style={styles.ussdContent}>
               <Text style={styles.ussdTitle}>Accès sans internet</Text>
               <Text style={styles.ussdCode}>*144*88# ou SMS au 1234</Text>
-              <Text style={styles.ussdSubtitle}>Disponible en français, baoulé et dioula</Text>
+              <Text style={styles.ussdSubtitle}>Disponible en français (baoulé et dioula bientôt)</Text>
             </View>
           </View>
 
