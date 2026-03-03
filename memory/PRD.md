@@ -1,6 +1,76 @@
 # GreenLink PRD - Updated March 3, 2026
 
-## Latest Updates - March 3, 2026 (Session 10)
+## Latest Updates - March 3, 2026 (Session 11)
+
+### 💬 MESSAGERIE SÉCURISÉE - NOUVEAU
+
+**Système de messagerie temps réel de classe mondiale entre acheteurs et vendeurs (agriculteurs/coopératives) sur la marketplace.**
+
+#### URL: `/messages` et `/messages/:conversationId`
+
+#### Fonctionnalités:
+
+**1. Messagerie Temps Réel (WebSocket)**
+- Messages instantanés comme WhatsApp
+- Indicateur de frappe ("écrit...")
+- Statut en ligne/hors ligne
+- Reconnexion automatique
+
+**2. Conversations Liées aux Annonces**
+- Chaque conversation est liée à une annonce du marketplace
+- Contexte de l'annonce affiché dans le chat (photo, prix, quantité)
+- Bouton "Contacter" directement sur les annonces
+
+**3. Pièces Jointes**
+- Upload de photos et documents (PDF, DOC)
+- Limite de 5 MB par fichier
+- Prévisualisation des images dans le chat
+
+**4. Accusés de Lecture**
+- ✓ Message envoyé
+- ✓✓ Message lu (vert)
+- Marquage automatique lors de la lecture
+
+**5. Messages Épinglés/Favoris**
+- Épingler les messages importants
+- Panneau latéral pour voir tous les messages épinglés
+
+**6. Sécurité Avancée**
+- Chiffrement des messages (Fernet/AES)
+- Badge "Messages chiffrés de bout en bout"
+- Signalement de messages (spam, harcèlement, fraude)
+- Blocage d'utilisateurs
+- Notifications push hors ligne
+
+#### API Endpoints:
+- `GET /api/messaging/conversations` - Liste des conversations
+- `POST /api/messaging/conversations` - Créer une conversation
+- `GET /api/messaging/conversations/{id}` - Détails conversation
+- `GET /api/messaging/conversations/{id}/messages` - Messages
+- `GET /api/messaging/conversations/{id}/pinned` - Messages épinglés
+- `PUT /api/messaging/conversations/{id}/archive` - Archiver
+- `DELETE /api/messaging/messages/{id}` - Supprimer message
+- `POST /api/messaging/report` - Signaler
+- `POST /api/messaging/block` - Bloquer
+- `DELETE /api/messaging/block/{id}` - Débloquer
+- `GET /api/messaging/blocked` - Utilisateurs bloqués
+- `POST /api/messaging/upload` - Upload pièce jointe
+- `GET /api/messaging/stats` - Statistiques
+- `WS /api/messaging/ws` - WebSocket temps réel
+
+#### Fichiers:
+- `/app/backend/routes/messaging.py` (NOUVEAU)
+- `/app/frontend/src/pages/messaging/MessagingPage.jsx` (NOUVEAU)
+- `/app/frontend/src/services/messagingApi.js` (NOUVEAU)
+
+#### Intégration UI:
+- Icône messagerie dans la Navbar (utilisateurs connectés)
+- Bouton "Contacter" sur chaque annonce du marketplace
+- Navigation directe depuis marketplace vers conversation
+
+---
+
+## Session 10 Updates
 
 ### 🏢 TABLEAU DE BORD ACHETEUR - NOUVEAU
 
@@ -208,6 +278,7 @@
 | Session | Date | Features |
 |---------|------|----------|
 | 10 | Mar 3, 2026 | Bourse des Récoltes (Marketplace International) |
+| 11 | Mar 3, 2026 | Messagerie Sécurisée temps réel (WebSocket) |
 | 9 | Mar 2, 2026 | APK v1.15.0, Replay Trajectoires |
 | 8 | Mar 2, 2026 | Gestion Utilisateurs, Contenu Dynamique |
 | 7 | Mar 1, 2026 | Carte Agents Live, WebSocket Dashboard |
