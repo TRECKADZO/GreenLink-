@@ -174,11 +174,17 @@ const Login = () => {
               <UserPlus className="w-4 h-4 mr-2" />
               Activer mon compte Membre Coopérative
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start border-cyan-200 hover:bg-cyan-50 text-cyan-700"
+              onClick={() => navigate('/activate-agent')}
+              data-testid="activate-agent-btn"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Activer mon compte Agent Terrain
+            </Button>
           </div>
-          {/* Info pour les agents terrain */}
-          <p className="text-xs text-gray-500 text-center mt-4 italic">
-            Agent terrain ? Contactez votre coopérative ou l'administrateur pour obtenir vos accès.
-          </p>
         </div>
       </Card>
     </div>

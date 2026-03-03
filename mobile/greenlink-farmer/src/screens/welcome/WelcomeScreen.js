@@ -243,28 +243,14 @@ const WelcomeScreen = ({ navigation }) => {
                 <Text style={styles.userTypeArrowDark}>→</Text>
               </LinearGradient>
             </TouchableOpacity>
+          </View>
 
-            <TouchableOpacity 
-              style={styles.userTypeCard}
-              onPress={() => navigation.navigate('Register', { userType: 'field_agent' })}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={['#3b82f6', '#2563eb']}
-                style={styles.userTypeGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.userTypeIcon}>📋</Text>
-                <View style={styles.userTypeContent}>
-                  <Text style={styles.userTypeTitle}>Je suis Agent Terrain</Text>
-                  <Text style={styles.userTypeDescription}>
-                    Audits carbone et suivi SSRTE/ICI
-                  </Text>
-                </View>
-                <Text style={styles.userTypeArrow}>→</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+          {/* Info Agent Terrain */}
+          <View style={styles.agentInfoBanner}>
+            <Text style={styles.agentInfoIcon}>ℹ️</Text>
+            <Text style={styles.agentInfoText}>
+              Agent terrain ? Contactez votre coopérative ou l'administrateur pour obtenir vos accès.
+            </Text>
           </View>
 
           {/* USSD Access Banner */}
@@ -556,6 +542,27 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#2d5a4d',
     fontWeight: 'bold',
+  },
+  agentInfoBanner: {
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    backgroundColor: '#e0f2fe',
+    borderRadius: 12,
+    padding: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#7dd3fc',
+  },
+  agentInfoIcon: {
+    fontSize: 18,
+    marginRight: SPACING.sm,
+  },
+  agentInfoText: {
+    flex: 1,
+    fontSize: FONTS.sizes.xs,
+    color: '#0369a1',
+    fontStyle: 'italic',
   },
   ussdBanner: {
     marginHorizontal: SPACING.lg,
