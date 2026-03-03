@@ -18,6 +18,7 @@ import ConditionsPage from "./pages/ConditionsPage";
 import ConfidentialitePage from "./pages/ConfidentialitePage";
 import SecuritePage from "./pages/SecuritePage";
 import FAQPage from "./pages/FAQPage";
+import DeleteAccountPage from "./pages/DeleteAccountPage";
 
 // Supplier Routes
 import SupplierDashboard from "./pages/supplier/Dashboard";
@@ -124,6 +125,7 @@ function App() {
               <Route path="/confidentialite" element={<ConfidentialitePage />} />
               <Route path="/securite" element={<SecuritePage />} />
               <Route path="/faq" element={<FAQPage />} />
+              <Route path="/delete-account" element={<DeleteAccountPage />} />
               
               {/* Supplier/Fournisseur Routes */}
               <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
