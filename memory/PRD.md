@@ -40,7 +40,7 @@
 - Badge "Messages chiffrés de bout en bout"
 - Signalement de messages (spam, harcèlement, fraude)
 - Blocage d'utilisateurs
-- Notifications push hors ligne
+- **Notifications push mobiles** pour utilisateurs hors ligne (Expo Push API)
 
 #### API Endpoints:
 - `GET /api/messaging/conversations` - Liste des conversations

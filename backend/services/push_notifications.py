@@ -658,6 +658,130 @@ async def get_push_notification_stats(
             channel_id="achievements"
         )
 
+    async def send_new_message_notification(
+        self,
+        recipient_id: str,
+        sender_name: str,
+        message_preview: str,
+        conversation_id: str,
+        listing_title: str = None
+    ) -> dict:
+        """
+        Envoyer une notification push pour un nouveau message dans la messagerie
+        
+        Args:
+            recipient_id: ID du destinataire
+            sender_name: Nom de l'expéditeur
+            message_preview: Aperçu du message (premiers caractères)
+            conversation_id: ID de la conversation
+            listing_title: Titre de l'annonce liée (optionnel)
+        """
+        from bson import ObjectId
+        
+        # Récupérer le token du destinataire
+        recipient = await db.users.find_one(
+            {"_id": ObjectId(recipient_id)},
+            {"push_token": 1, "full_name": 1}
+        )
+        
+        if not recipient or not recipient.get("push_token"):
+            logger.info(f"No push token for messaging recipient {recipient_id}")
+            return {"success": False, "error": "No push token"}
+        
+        title = f"💬 {sender_name}"
+        body = message_preview[:150]
+        
+        if listing_title:
+            body = f"📦 {listing_title}\n{body}"
+        
+        data = {
+            "type": "new_message",
+            "conversation_id": conversation_id,
+            "sender_name": sender_name,
+            "screen": "Messaging",
+            "params": {
+                "conversationId": conversation_id
+            }
+        }
+        
+        result = await self.send_push_notification(
+            tokens=[recipient["push_token"]],
+            title=title,
+            body=body,
+            data=data,
+            priority="high",
+            channel_id="messages"
+        )
+        
+        # Logger dans la base
+        await db.push_notifications_log.insert_one({
+            "type": "new_message",
+            "recipient_id": recipient_id,
+            "sender_name": sender_name,
+            "conversation_id": conversation_id,
+            "tokens_count": 1,
+            "result": result,
+            "created_at": datetime.utcnow()
+        })
+        
+        logger.info(f"[Messaging] Push notification sent to {recipient_id} from {sender_name}")
+        
+        return result
+
+    async def send_new_conversation_notification(
+        self,
+        seller_id: str,
+        buyer_name: str,
+        listing_title: str,
+        conversation_id: str,
+        initial_message: str
+    ) -> dict:
+        """
+        Notifier un vendeur qu'un acheteur a initié une conversation
+        """
+        from bson import ObjectId
+        
+        seller = await db.users.find_one(
+            {"_id": ObjectId(seller_id)},
+            {"push_token": 1, "full_name": 1}
+        )
+        
+        if not seller or not seller.get("push_token"):
+            return {"success": False, "error": "No push token"}
+        
+        title = f"🆕 Nouveau contact: {buyer_name}"
+        body = f"📦 {listing_title}\n\"{initial_message[:100]}...\""
+        
+        data = {
+            "type": "new_conversation",
+            "conversation_id": conversation_id,
+            "buyer_name": buyer_name,
+            "screen": "Messaging",
+            "params": {
+                "conversationId": conversation_id
+            }
+        }
+        
+        result = await self.send_push_notification(
+            tokens=[seller["push_token"]],
+            title=title,
+            body=body,
+            data=data,
+            priority="high",
+            channel_id="messages"
+        )
+        
+        await db.push_notifications_log.insert_one({
+            "type": "new_conversation",
+            "seller_id": seller_id,
+            "buyer_name": buyer_name,
+            "conversation_id": conversation_id,
+            "result": result,
+            "created_at": datetime.utcnow()
+        })
+        
+        return result
+
 
 # Instance globale
 push_service = PushNotificationService()

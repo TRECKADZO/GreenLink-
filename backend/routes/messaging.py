@@ -8,6 +8,7 @@ Features:
 - Messages épinglés/favoris
 - Chiffrement des messages
 - Signalement et blocage d'utilisateurs
+- Notifications push pour messages hors ligne
 """
 from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket, WebSocketDisconnect, UploadFile, File
 from typing import List, Optional
@@ -16,6 +17,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from database import db
 from routes.auth import get_current_user
+from services.push_notifications import push_service
 import uuid
 import json
 import logging
@@ -332,6 +334,19 @@ async def handle_ws_message(websocket: WebSocket, user: dict, data: dict):
                 "created_at": datetime.now(timezone.utc),
                 "is_read": False
             })
+            
+            # Envoyer une notification push mobile
+            try:
+                listing_title = conversation.get("listing_title")
+                await push_service.send_new_message_notification(
+                    recipient_id=recipient_id,
+                    sender_name=user.get("full_name", "Utilisateur"),
+                    message_preview=content[:150],
+                    conversation_id=conversation_id,
+                    listing_title=listing_title
+                )
+            except Exception as e:
+                logger.error(f"Error sending push notification: {e}")
     
     elif msg_type == "typing":
         # Indicateur de frappe
@@ -504,7 +519,7 @@ async def create_conversation(
         }
     })
     
-    # Notification push
+    # Notification in-app
     await db.notifications.insert_one({
         "user_id": seller_id,
         "title": "Nouvelle conversation",
@@ -514,6 +529,19 @@ async def create_conversation(
         "created_at": datetime.now(timezone.utc),
         "is_read": False
     })
+    
+    # Notification push mobile si vendeur hors ligne
+    if not messaging_manager.is_online(seller_id):
+        try:
+            await push_service.send_new_conversation_notification(
+                seller_id=seller_id,
+                buyer_name=conversation_doc["buyer_name"],
+                listing_title=conversation_doc["listing_title"],
+                conversation_id=conversation_id,
+                initial_message=data.initial_message
+            )
+        except Exception as e:
+            logger.error(f"Error sending new conversation push: {e}")
     
     return {
         "conversation_id": conversation_id,
