@@ -30,7 +30,9 @@ import {
   Award,
   Baby,
   CreditCard,
-  Target
+  Target,
+  MapPin,
+  AlertTriangle
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -301,6 +303,22 @@ const AdminDashboard = () => {
               >
                 <Target className="w-5 h-5 text-teal-600 group-hover:text-teal-700" />
                 <span className="text-xs text-gray-600 group-hover:text-teal-700">Missions</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/agents-map')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-sky-50 rounded-lg transition group"
+                data-testid="agents-map-btn"
+              >
+                <MapPin className="w-5 h-5 text-sky-600 group-hover:text-sky-700" />
+                <span className="text-xs text-gray-600 group-hover:text-sky-700">Carte Agents</span>
+              </button>
+              <button
+                onClick={() => navigate('/ssrte/realtime')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-red-50 rounded-lg transition group"
+                data-testid="ssrte-realtime-btn"
+              >
+                <AlertTriangle className="w-5 h-5 text-red-600 group-hover:text-red-700" />
+                <span className="text-xs text-gray-600 group-hover:text-red-700">Alertes Live</span>
               </button>
             </div>
           </div>
