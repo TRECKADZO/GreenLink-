@@ -47,21 +47,21 @@ const mockPricingPlans = [
   },
   {
     name: 'Acheteurs',
-    price: '49 000 XOF',
-    period: '/mois',
-    badge: '15 jours gratuits',
+    price: 'Sur devis',
+    period: '',
+    badge: 'Négociants & Exportateurs',
     badgeColor: 'blue',
     popular: true,
     features: [
-      'Recommandations IA',
-      'Comparateur avancé',
-      'Filtres granulaires',
-      'Analytics détaillés',
-      'Export de données',
+      'Accès Bourse des Récoltes',
+      'Demandes de devis illimitées',
+      'Alertes nouvelles récoltes',
+      'Favoris & comparateur',
+      'Analytics marché',
       'Support prioritaire',
       'Badge vérifié'
     ],
-    cta: 'Essai gratuit 15 jours',
+    cta: 'Demander un devis',
     ctaVariant: 'default'
   },
   {

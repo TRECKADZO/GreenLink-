@@ -96,7 +96,7 @@ const FAQPage = () => {
       id: 12,
       category: 'pricing',
       question: "Combien coûte GreenLink ?",
-      answer: "**Gratuit à vie** pour :\n• Producteurs\n• Coopératives\n\n**Plans payants avec 15 jours d'essai gratuit** :\n• Acheteurs : 49,000 XOF/mois\n• Fournisseurs : 29,000 XOF/mois + 5% commission\n• Entreprises RSE : Sur devis\n\nTous les plans payants incluent une période d'essai sans engagement."
+      answer: "**Gratuit à vie** pour :\n• Producteurs\n• Coopératives\n\n**Plans payants** :\n• Acheteurs : Sur devis\n• Fournisseurs : 29,000 XOF/mois + 5% commission\n• Entreprises RSE : Sur devis\n\nContactez-nous pour un devis personnalisé adapté à vos besoins."
     },
     {
       id: 13,
@@ -108,7 +108,7 @@ const FAQPage = () => {
       id: 14,
       category: 'pricing',
       question: "Comment fonctionne la période d'essai ?",
-      answer: "Pour les plans payants (Acheteurs, Fournisseurs, RSE) :\n\n• **15 jours gratuits** avec accès à toutes les fonctionnalités\n• Aucune carte bancaire requise pour démarrer\n• Rappel avant la fin de l'essai\n• Possibilité d'annuler à tout moment\n• Après l'essai : paiement via Orange Money ou carte"
+      answer: "Pour les plans payants (Acheteurs, Fournisseurs, RSE) :\n\n• Contactez-nous pour un devis personnalisé\n• Démonstration gratuite de la plateforme\n• Accompagnement sur mesure\n• Paiement via Orange Money, Mobile Money ou virement"
     },
     
     // Sécurité
