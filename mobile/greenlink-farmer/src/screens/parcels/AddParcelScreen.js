@@ -43,12 +43,24 @@ const DEPARTMENTS = [
 ];
 
 const CROP_TYPES = [
-  { id: 'cacao', label: 'Cacao', icon: '🍫' },
-  { id: 'cafe', label: 'Café', icon: '☕' },
-  { id: 'anacarde', label: 'Anacarde', icon: '🥜' },
-  { id: 'palmier', label: 'Palmier à huile', icon: '🌴' },
-  { id: 'hevea', label: 'Hévéa', icon: '🌳' },
-  { id: 'autre', label: 'Autre', icon: '🌿' },
+  { 
+    id: 'cacao', 
+    label: 'Cacao', 
+    icon: '🍫',
+    image: 'https://images.unsplash.com/photo-1573710661345-610f790e1218?w=200&q=80'
+  },
+  { 
+    id: 'cafe', 
+    label: 'Café', 
+    icon: '☕',
+    image: 'https://images.unsplash.com/photo-1652211940752-fb61223427f6?w=200&q=80'
+  },
+  { 
+    id: 'anacarde', 
+    label: 'Anacarde', 
+    icon: '🥜',
+    image: 'https://images.unsplash.com/photo-1594900689460-fdad3599342c?w=200&q=80'
+  },
 ];
 
 const AddParcelScreen = ({ navigation }) => {
@@ -369,13 +381,22 @@ const AddParcelScreen = ({ navigation }) => {
                 ]}
                 onPress={() => setFormData({ ...formData, crop_type: crop.id })}
               >
-                <Text style={styles.cropIcon}>{crop.icon}</Text>
-                <Text style={[
-                  styles.cropLabel,
-                  formData.crop_type === crop.id && styles.cropLabelSelected,
+                <Image 
+                  source={{ uri: crop.image }} 
+                  style={styles.cropImage}
+                  resizeMode="cover"
+                />
+                <View style={[
+                  styles.cropOverlay,
+                  formData.crop_type === crop.id && styles.cropOverlaySelected,
                 ]}>
-                  {crop.label}
-                </Text>
+                  <Text style={[
+                    styles.cropLabel,
+                    formData.crop_type === crop.id && styles.cropLabelSelected,
+                  ]}>
+                    {crop.label}
+                  </Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -670,17 +691,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: SPACING.sm,
+    justifyContent: 'space-between',
   },
   cropItem: {
-    width: '30%',
-    alignItems: 'center',
-    padding: SPACING.md,
+    width: '31%',
+    aspectRatio: 0.85,
     borderRadius: 12,
-    backgroundColor: COLORS.gray[100],
+    overflow: 'hidden',
     marginBottom: SPACING.sm,
+    borderWidth: 3,
+    borderColor: 'transparent',
   },
   cropItemSelected: {
-    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  cropImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+  },
+  cropOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: SPACING.sm,
+  },
+  cropOverlaySelected: {
+    backgroundColor: 'rgba(34, 139, 34, 0.6)',
   },
   cropIcon: {
     fontSize: 32,
@@ -688,8 +726,12 @@ const styles = StyleSheet.create({
   },
   cropLabel: {
     fontSize: FONTS.sizes.sm,
-    color: COLORS.gray[700],
+    color: COLORS.white,
     textAlign: 'center',
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   cropLabelSelected: {
     color: COLORS.white,

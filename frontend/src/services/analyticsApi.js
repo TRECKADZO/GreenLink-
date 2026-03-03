@@ -68,6 +68,14 @@ export const analyticsApi = {
       params: { report_type: reportType }
     });
     return response.data;
+  },
+
+  // Harvest Marketplace Stats
+  getMarketplaceStats: async () => {
+    const response = await axios.get(`${BACKEND_URL}/api/harvest-marketplace/admin/analytics`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
   }
 };
 

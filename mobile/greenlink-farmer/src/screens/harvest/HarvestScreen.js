@@ -7,11 +7,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
 import { useOffline } from '../../context/OfflineContext';
 import { Button, Loader } from '../../components/UI';
 import { farmerApi } from '../../services/api';
 import { COLORS, FONTS, SPACING } from '../../config';
+
+// Image des cabosses de cacao pour l'illustration
+const HARVEST_IMAGE = 'https://images.unsplash.com/photo-1573710661345-610f790e1218?w=400&q=80';
 
 const HarvestScreen = ({ navigation }) => {
   const { isOnline, addPendingAction, getCachedData, cacheData } = useOffline();
@@ -111,13 +115,25 @@ const HarvestScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
+      {/* Header with Image */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>← Retour</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Déclarer une Récolte</Text>
         <Text style={styles.subtitle}>Enregistrez votre production</Text>
+        
+        {/* Harvest Illustration */}
+        <View style={styles.imageContainer}>
+          <Image 
+            source={{ uri: HARVEST_IMAGE }}
+            style={styles.harvestImage}
+            resizeMode="cover"
+          />
+          <View style={styles.imageOverlay}>
+            <Text style={styles.imageText}>🌳 Cabosses de Cacao</Text>
+          </View>
+        </View>
       </View>
 
       {/* Form */}
@@ -282,6 +298,32 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.md,
     color: COLORS.secondary,
     marginTop: SPACING.xs,
+  },
+  imageContainer: {
+    marginTop: SPACING.lg,
+    borderRadius: 16,
+    overflow: 'hidden',
+    height: 140,
+    backgroundColor: COLORS.gray[200],
+  },
+  harvestImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+  },
+  imageText: {
+    color: COLORS.white,
+    fontSize: FONTS.sizes.md,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   form: {
     backgroundColor: COLORS.white,

@@ -83,6 +83,10 @@ import CarbonPremiumsPage from "./pages/cooperative/CarbonPremiumsPage";
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
 import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
 
+// Harvest Marketplace Routes
+import HarvestMarketplace from "./pages/marketplace/HarvestMarketplace";
+import CreateHarvestListing from "./pages/marketplace/CreateHarvestListing";
+
 // Auth Pages
 import ActivateMember from "./pages/auth/ActivateMember";
 import ActivateAgent from "./pages/auth/ActivateAgent";
@@ -197,6 +201,11 @@ function App() {
               <Route path="/farmer/notifications" element={<NotificationsPage />} />
               <Route path="/rse/notifications" element={<NotificationsPage />} />
               <Route path="/buyer/notifications" element={<NotificationsPage />} />
+
+              {/* Harvest Marketplace Routes */}
+              <Route path="/marketplace/harvest" element={<HarvestMarketplace />} />
+              <Route path="/marketplace/create-listing" element={<CreateHarvestListing />} />
+              <Route path="/marketplace/my-listings" element={<HarvestMarketplace />} />
             </Routes>
           </BrowserRouter>
           <Toaster />

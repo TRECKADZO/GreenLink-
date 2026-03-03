@@ -7,7 +7,7 @@ import {
   MapPin, Shield, Scale, Target, Briefcase,
   ArrowUpRight, ArrowDownRight, RefreshCw,
   ChevronRight, Calendar, Filter, Bell, Activity,
-  Award, Baby, CreditCard
+  Award, Baby, CreditCard, Package, Store, ShoppingBag
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -29,6 +29,7 @@ const SuperAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('year');
   const [activeTab, setActiveTab] = useState('overview');
+  const [marketplaceStats, setMarketplaceStats] = useState(null);
 
   const fetchDashboard = async () => {
     try {
@@ -46,6 +47,18 @@ const SuperAdminDashboard = () => {
   useEffect(() => {
     fetchDashboard();
   }, [period]);
+
+  useEffect(() => {
+    const fetchMarketplaceStats = async () => {
+      try {
+        const response = await analyticsApi.getMarketplaceStats();
+        setMarketplaceStats(response);
+      } catch (error) {
+        console.error('Error fetching marketplace stats:', error);
+      }
+    };
+    fetchMarketplaceStats();
+  }, []);
 
   const handleExport = async (reportType) => {
     try {
@@ -228,6 +241,13 @@ const SuperAdminDashboard = () => {
               <Target className="w-5 h-5 text-teal-400 group-hover:text-teal-300" />
               <span className="text-sm text-slate-300 group-hover:text-white">Missions Audit</span>
             </button>
+            <button
+              onClick={() => navigate('/marketplace/harvest')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-amber-600/20 rounded-lg transition text-left group"
+            >
+              <Package className="w-5 h-5 text-amber-400 group-hover:text-amber-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Bourse Récoltes</span>
+            </button>
           </div>
         </div>
       </div>
@@ -242,6 +262,7 @@ const SuperAdminDashboard = () => {
             <TabsTrigger value="audit" className="data-[state=active]:bg-emerald-600">Audit & SSRTE</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-emerald-600">Impact Social</TabsTrigger>
             <TabsTrigger value="market" className="data-[state=active]:bg-emerald-600">Marché & Commerce</TabsTrigger>
+            <TabsTrigger value="marketplace" className="data-[state=active]:bg-amber-600">Bourse Récoltes</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW TAB */}
@@ -525,6 +546,10 @@ const SuperAdminDashboard = () => {
               alerts={ici_alerts}
               premiums={carbon_premiums}
             />
+          </TabsContent>
+
+          <TabsContent value="marketplace">
+            <MarketplaceTab data={marketplaceStats} />
           </TabsContent>
         </Tabs>
       </div>
@@ -983,5 +1008,212 @@ const AuditSSRTETab = ({ auditors, ssrte, alerts, premiums }) => (
     </div>
   </div>
 );
+
+// NEW: Marketplace Tab - Bourse des Récoltes
+const MarketplaceTab = ({ data }) => {
+  if (!data) {
+    return (
+      <div className="text-center py-12">
+        <Package className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+        <p className="text-slate-400">Chargement des données du marketplace...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Key Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="p-4 rounded-xl bg-gradient-to-br from-amber-900/50 to-slate-800 border border-amber-700/30">
+          <p className="text-amber-400 text-xs font-medium">Annonces Actives</p>
+          <p className="text-3xl font-bold text-white">{data.overview?.total_listings || 0}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-900/50 to-slate-800 border border-emerald-700/30">
+          <p className="text-emerald-400 text-xs font-medium">Volume Total</p>
+          <p className="text-3xl font-bold text-white">{data.overview?.total_volume_tonnes || 0} T</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-blue-900/50 to-slate-800 border border-blue-700/30">
+          <p className="text-blue-400 text-xs font-medium">Valeur Marché</p>
+          <p className="text-2xl font-bold text-white">{formatCurrency(data.overview?.total_value_xof || 0)}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-purple-900/50 to-slate-800 border border-purple-700/30">
+          <p className="text-purple-400 text-xs font-medium">Prix Moyen</p>
+          <p className="text-2xl font-bold text-white">{formatCurrency(data.overview?.avg_price_per_kg || 0)}/kg</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-rose-900/50 to-slate-800 border border-rose-700/30">
+          <p className="text-rose-400 text-xs font-medium">Offres Reçues</p>
+          <p className="text-3xl font-bold text-white">
+            {Object.values(data.offers_by_status || {}).reduce((sum, s) => sum + (s.count || 0), 0)}
+          </p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-teal-900/50 to-slate-800 border border-teal-700/30">
+          <p className="text-teal-400 text-xs font-medium">Taux Conversion</p>
+          <p className="text-3xl font-bold text-white">
+            {data.offers_by_status?.accept ? 
+              Math.round((data.offers_by_status.accept.count / 
+                Object.values(data.offers_by_status).reduce((sum, s) => sum + (s.count || 0), 1)) * 100) 
+              : 0}%
+          </p>
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* By Certification */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Award className="h-5 w-5 text-emerald-500" />
+              Volume par Certification
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              Répartition des récoltes certifiées
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {(data.by_certification || []).map((cert, idx) => (
+                <div key={idx} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300 capitalize">{cert._id?.replace('_', ' ')}</span>
+                    <span className="text-white font-medium">
+                      {(cert.volume_kg / 1000).toFixed(1)} T • {formatCurrency(cert.value_xof)}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={Math.min((cert.volume_kg / (data.overview?.total_volume_kg || 1)) * 100, 100)} 
+                    className="h-2 bg-slate-700"
+                  />
+                </div>
+              ))}
+              {(!data.by_certification || data.by_certification.length === 0) && (
+                <p className="text-slate-500 text-center py-4">Aucune donnée de certification</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* By Department */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-red-500" />
+              Top 10 Départements
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              Volume par zone géographique
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {(data.by_department || []).slice(0, 10).map((dept, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-slate-700/30">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500 w-5">{idx + 1}.</span>
+                    <span className="text-slate-300">{dept._id}</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white font-medium">{(dept.volume_kg / 1000).toFixed(1)} T</p>
+                    <p className="text-xs text-slate-500">{dept.listings} annonces</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Sellers & Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Sellers */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-blue-500" />
+              Top Vendeurs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {(data.top_sellers || []).map((seller, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/30">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                    idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-slate-400' : idx === 2 ? 'bg-orange-600' : 'bg-slate-600'
+                  }`}>
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-medium">{seller.seller_name}</p>
+                    <p className="text-xs text-slate-500 capitalize">{seller.seller_type}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-amber-400 font-bold">{formatCurrency(seller.total_value)}</p>
+                    <p className="text-xs text-slate-500">{(seller.total_volume / 1000).toFixed(1)} T</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quotes Status */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-purple-500" />
+              Statut des Demandes de Devis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-amber-900/30 border border-amber-700/30 text-center">
+                <p className="text-amber-400 text-xs">En attente</p>
+                <p className="text-3xl font-bold text-white">{data.quotes_by_status?.pending?.count || 0}</p>
+                <p className="text-xs text-slate-500">{formatCurrency(data.quotes_by_status?.pending?.value || 0)}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-emerald-900/30 border border-emerald-700/30 text-center">
+                <p className="text-emerald-400 text-xs">Devis envoyés</p>
+                <p className="text-3xl font-bold text-white">{data.quotes_by_status?.quoted?.count || 0}</p>
+                <p className="text-xs text-slate-500">{formatCurrency(data.quotes_by_status?.quoted?.value || 0)}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-rose-900/30 border border-rose-700/30 text-center">
+                <p className="text-rose-400 text-xs">Refusées</p>
+                <p className="text-3xl font-bold text-white">{data.quotes_by_status?.reject?.count || 0}</p>
+                <p className="text-xs text-slate-500">{formatCurrency(data.quotes_by_status?.reject?.value || 0)}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-blue-900/30 border border-blue-700/30 text-center">
+                <p className="text-blue-400 text-xs">Info demandée</p>
+                <p className="text-3xl font-bold text-white">{data.quotes_by_status?.request_info?.count || 0}</p>
+                <p className="text-xs text-slate-500">{formatCurrency(data.quotes_by_status?.request_info?.value || 0)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <Card className="bg-gradient-to-r from-amber-900/30 to-slate-800 border-amber-700/30">
+        <CardContent className="py-6">
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Button 
+              onClick={() => window.location.href = '/marketplace/harvest'}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              <Store className="h-4 w-4 mr-2" />
+              Voir la Bourse
+            </Button>
+            <Button 
+              variant="outline"
+              className="border-amber-600 text-amber-400 hover:bg-amber-600/20"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exporter Rapport
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 export default SuperAdminDashboard;
