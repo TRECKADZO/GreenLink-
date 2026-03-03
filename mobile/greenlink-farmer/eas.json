@@ -24,8 +24,7 @@
     "production": {
       "distribution": "store",
       "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
+        "buildType": "app-bundle"
       },
       "ios": {
         "resourceClass": "m-medium"
