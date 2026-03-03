@@ -340,6 +340,14 @@ const AdminDashboard = () => {
                 <AlertTriangle className="w-5 h-5 text-red-600 group-hover:text-red-700" />
                 <span className="text-xs text-gray-600 group-hover:text-red-700">Alertes Live</span>
               </button>
+              <button
+                onClick={() => navigate('/admin/users')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-violet-50 rounded-lg transition group"
+                data-testid="users-management-btn"
+              >
+                <Users className="w-5 h-5 text-violet-600 group-hover:text-violet-700" />
+                <span className="text-xs text-gray-600 group-hover:text-violet-700">Utilisateurs</span>
+              </button>
             </div>
           </div>
 

@@ -131,6 +131,193 @@ async def get_admin_stats(admin: dict = Depends(get_admin_user)):
     }
 
 
+# ============= USER MANAGEMENT =============
+
+@router.get("/admin/users")
+async def get_all_users(
+    admin: dict = Depends(get_admin_user),
+    user_type: Optional[str] = None,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = "created_at",
+    sort_order: Optional[str] = "desc",
+    skip: int = 0,
+    limit: int = 100
+):
+    """Get all users with filtering and sorting"""
+    query = {}
+    
+    if user_type and user_type != "all":
+        query["user_type"] = user_type
+    
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+            {"phone": {"$regex": search, "$options": "i"}},
+            {"full_name": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # Sort direction
+    sort_dir = -1 if sort_order == "desc" else 1
+    
+    # Get users
+    cursor = db.users.find(query).sort(sort_by, sort_dir).skip(skip).limit(limit)
+    users = await cursor.to_list(limit)
+    
+    # Total count for pagination
+    total = await db.users.count_documents(query)
+    
+    # Format users (exclude password, convert ObjectId)
+    formatted_users = []
+    for u in users:
+        user_data = {
+            "id": str(u["_id"]),
+            "name": u.get("name") or u.get("full_name") or "Sans nom",
+            "email": u.get("email") or "-",
+            "phone": u.get("phone") or "-",
+            "user_type": u.get("user_type") or "-",
+            "status": u.get("status") or "active",
+            "created_at": u.get("created_at"),
+            "last_login": u.get("last_login"),
+            "cooperative_id": u.get("cooperative_id"),
+            "roles": u.get("roles", []),
+            "is_verified": u.get("is_verified", False)
+        }
+        formatted_users.append(user_data)
+    
+    return {
+        "users": formatted_users,
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
+
+
+@router.get("/admin/users/{user_id}")
+async def get_user_details(user_id: str, admin: dict = Depends(get_admin_user)):
+    """Get detailed user information"""
+    try:
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID utilisateur invalide")
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Remove sensitive data
+    user.pop("password", None)
+    user["_id"] = str(user["_id"])
+    
+    return user
+
+
+@router.delete("/admin/users/{user_id}")
+async def delete_user(user_id: str, admin: dict = Depends(get_admin_user)):
+    """Delete a user"""
+    try:
+        obj_id = ObjectId(user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID utilisateur invalide")
+    
+    # Check if user exists
+    user = await db.users.find_one({"_id": obj_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Prevent deleting yourself
+    if str(user.get("_id")) == str(admin.get("_id")):
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas supprimer votre propre compte")
+    
+    # Delete user
+    await db.users.delete_one({"_id": obj_id})
+    
+    return {"message": "Utilisateur supprimé avec succès", "deleted_id": user_id}
+
+
+@router.delete("/admin/users/bulk/delete")
+async def bulk_delete_users(user_ids: list[str], admin: dict = Depends(get_admin_user)):
+    """Delete multiple users at once"""
+    deleted_count = 0
+    errors = []
+    
+    for user_id in user_ids:
+        try:
+            obj_id = ObjectId(user_id)
+            
+            # Check if trying to delete admin
+            user = await db.users.find_one({"_id": obj_id})
+            if user and str(user.get("_id")) == str(admin.get("_id")):
+                errors.append({"id": user_id, "error": "Impossible de supprimer votre propre compte"})
+                continue
+            
+            result = await db.users.delete_one({"_id": obj_id})
+            if result.deleted_count > 0:
+                deleted_count += 1
+        except Exception as e:
+            errors.append({"id": user_id, "error": str(e)})
+    
+    return {
+        "message": f"{deleted_count} utilisateur(s) supprimé(s)",
+        "deleted_count": deleted_count,
+        "errors": errors
+    }
+
+
+@router.put("/admin/users/{user_id}/status")
+async def update_user_status(user_id: str, status: str, admin: dict = Depends(get_admin_user)):
+    """Update user status (active, suspended, banned)"""
+    try:
+        obj_id = ObjectId(user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID utilisateur invalide")
+    
+    if status not in ["active", "suspended", "banned"]:
+        raise HTTPException(status_code=400, detail="Statut invalide")
+    
+    result = await db.users.update_one(
+        {"_id": obj_id},
+        {"$set": {"status": status, "updated_at": datetime.utcnow()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    return {"message": f"Statut mis à jour: {status}", "user_id": user_id}
+
+
+@router.get("/admin/users/export/data")
+async def export_users_data(
+    admin: dict = Depends(get_admin_user),
+    user_type: Optional[str] = None,
+    format: str = "json"
+):
+    """Export users data for CSV/Excel generation"""
+    query = {}
+    if user_type and user_type != "all":
+        query["user_type"] = user_type
+    
+    users = await db.users.find(query).to_list(1000)
+    
+    export_data = []
+    for u in users:
+        export_data.append({
+            "Nom": u.get("name") or u.get("full_name") or "Sans nom",
+            "Email": u.get("email") or "-",
+            "Téléphone": u.get("phone") or "-",
+            "Type": u.get("user_type") or "-",
+            "Statut": u.get("status") or "active",
+            "Date d'inscription": str(u.get("created_at", "-"))[:10],
+            "Dernière connexion": str(u.get("last_login", "-"))[:10] if u.get("last_login") else "-",
+            "Vérifié": "Oui" if u.get("is_verified") else "Non"
+        })
+    
+    return {
+        "data": export_data,
+        "total": len(export_data),
+        "exported_at": datetime.utcnow().isoformat()
+    }
+
+
 # ============= REAL-TIME DASHBOARD =============
 
 @router.get("/admin/realtime-dashboard")

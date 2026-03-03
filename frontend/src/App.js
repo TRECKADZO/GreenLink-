@@ -56,6 +56,7 @@ import AuditMissionsPage from "./pages/admin/AuditMissionsPage";
 import BadgeAnalyticsPage from "./pages/admin/BadgeAnalyticsPage";
 import AgentMapDashboard from "./pages/admin/AgentMapDashboard";
 import AgentMapLeaflet from "./pages/admin/AgentMapLeaflet";
+import UsersManagement from "./pages/admin/UsersManagement";
 
 // Auditor Routes
 import AuditorDashboard from "./pages/auditor/AuditorDashboard";
@@ -157,6 +158,7 @@ function App() {
               <Route path="/admin/agents-map" element={<AgentMapLeaflet />} />
               <Route path="/admin/geolocation" element={<AgentMapLeaflet />} />
               <Route path="/admin/agents-map-simple" element={<AgentMapDashboard />} />
+              <Route path="/admin/users" element={<UsersManagement />} />
 
               {/* Carbon Auditor Routes */}
               <Route path="/auditor/dashboard" element={<AuditorDashboard />} />
