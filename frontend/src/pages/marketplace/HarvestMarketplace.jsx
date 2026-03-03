@@ -52,6 +52,132 @@ const GRADE_COLORS = {
   w450: 'bg-amber-800/20 text-amber-600'
 };
 
+// Données démo statiques pour la Bourse des Récoltes
+const DEMO_LISTINGS = [
+  {
+    listing_id: 'DEMO-001',
+    crop_type: 'cacao',
+    variety: 'Criollo',
+    grade: 'premium',
+    quantity_kg: 5000,
+    price_per_kg: 1800,
+    seller_name: 'Coopérative COOP-DALOA',
+    location: 'Daloa',
+    certifications: ['fairtrade', 'rainforest', 'bio'],
+    eudr_compliant: true,
+    harvest_date: '2026-02-15',
+    images: ['https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop'],
+    views_count: 12,
+    description: 'Cacao premium de qualité supérieure, séché naturellement'
+  },
+  {
+    listing_id: 'DEMO-002',
+    crop_type: 'cafe',
+    variety: 'Arabica',
+    grade: 'specialty',
+    quantity_kg: 2500,
+    price_per_kg: 2200,
+    seller_name: 'Coopérative COOP-MAN',
+    location: 'Man',
+    certifications: ['rainforest', 'bio'],
+    eudr_compliant: true,
+    harvest_date: '2026-02-20',
+    images: ['https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop'],
+    views_count: 8,
+    description: 'Café Arabica de montagne, notes fruitées'
+  },
+  {
+    listing_id: 'DEMO-003',
+    crop_type: 'anacarde',
+    variety: 'RCN',
+    grade: 'w240',
+    quantity_kg: 25000,
+    price_per_kg: 950,
+    seller_name: 'Coopérative COOP-KORHOGO',
+    location: 'Korhogo',
+    certifications: ['fairtrade', 'eudr'],
+    eudr_compliant: true,
+    harvest_date: '2026-01-10',
+    images: ['https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=400&h=300&fit=crop'],
+    views_count: 15,
+    description: 'Noix de cajou W240, calibre uniforme'
+  },
+  {
+    listing_id: 'DEMO-004',
+    crop_type: 'cacao',
+    variety: 'Forastero',
+    grade: 'grade_2',
+    quantity_kg: 10000,
+    price_per_kg: 1400,
+    seller_name: 'Coopérative COOP-SOUBRE',
+    location: 'Soubré',
+    certifications: ['fairtrade'],
+    eudr_compliant: true,
+    harvest_date: '2026-02-01',
+    images: ['https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=400&h=300&fit=crop'],
+    views_count: 20,
+    description: 'Cacao Forastero, bon rendement en beurre'
+  },
+  {
+    listing_id: 'DEMO-005',
+    crop_type: 'cafe',
+    variety: 'Robusta',
+    grade: 'grade_1',
+    quantity_kg: 3500,
+    price_per_kg: 1825,
+    seller_name: 'Coopérative COOP-DANANE',
+    location: 'Danané',
+    certifications: ['bio'],
+    eudr_compliant: false,
+    harvest_date: '2026-02-25',
+    images: ['https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&h=300&fit=crop'],
+    views_count: 6,
+    description: 'Robusta corsé, idéal pour espresso'
+  },
+  {
+    listing_id: 'DEMO-006',
+    crop_type: 'anacarde',
+    variety: 'RCN',
+    grade: 'w320',
+    quantity_kg: 15000,
+    price_per_kg: 875,
+    seller_name: 'Coopérative COOP-BOUNDIALI',
+    location: 'Boundiali',
+    certifications: ['eudr'],
+    eudr_compliant: true,
+    harvest_date: '2026-01-20',
+    images: ['https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop'],
+    views_count: 9,
+    description: 'Anacarde W320, qualité export'
+  },
+  {
+    listing_id: 'DEMO-007',
+    crop_type: 'cacao',
+    variety: 'Trinitario',
+    grade: 'premium',
+    quantity_kg: 3000,
+    price_per_kg: 2100,
+    seller_name: 'Coopérative COOP-GAGNOA',
+    location: 'Gagnoa',
+    certifications: ['fairtrade', 'rainforest', 'bio'],
+    eudr_compliant: true,
+    harvest_date: '2026-02-10',
+    images: ['https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop'],
+    views_count: 18,
+    description: 'Cacao Trinitario fin, arômes complexes'
+  }
+];
+
+// Stats démo statiques
+const DEMO_STATS = {
+  total_listings: 7,
+  total_quantity_kg: 64000,
+  avg_price_cacao: 1767,
+  avg_price_cafe: 2013,
+  avg_price_anacarde: 913,
+  active_sellers: 7
+};
+
 const HarvestMarketplace = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState([]);
@@ -139,9 +265,13 @@ const HarvestMarketplace = () => {
       params.append('sort_by', sortBy);
       
       const response = await axios.get(`${API_URL}/api/harvest-marketplace/listings?${params}`);
-      setListings(response.data || []);
+      const data = response.data || [];
+      // Utiliser les données démo si l'API retourne vide
+      setListings(data.length > 0 ? data : DEMO_LISTINGS);
     } catch (error) {
       console.error('Error fetching listings:', error);
+      // En cas d'erreur, utiliser les données démo
+      setListings(DEMO_LISTINGS);
     } finally {
       setLoading(false);
     }
@@ -150,9 +280,17 @@ const HarvestMarketplace = () => {
   const fetchStats = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/harvest-marketplace/stats`);
-      setStats(response.data);
+      const data = response.data;
+      // Utiliser les stats démo si l'API retourne des valeurs nulles
+      if (!data || data.total_listings === 0) {
+        setStats(DEMO_STATS);
+      } else {
+        setStats(data);
+      }
     } catch (error) {
       console.error('Error fetching stats:', error);
+      // En cas d'erreur, utiliser les stats démo
+      setStats(DEMO_STATS);
     }
   };
 
