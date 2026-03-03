@@ -86,9 +86,13 @@ import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
 // Harvest Marketplace Routes
 import HarvestMarketplace from "./pages/marketplace/HarvestMarketplace";
 import CreateHarvestListing from "./pages/marketplace/CreateHarvestListing";
+import MarketplaceHub from "./pages/MarketplaceHub";
 
 // Buyer Dashboard
 import BuyerMarketplaceDashboard from "./pages/buyer/BuyerDashboard";
+
+// Messaging System
+import MessagingPage from "./pages/messaging/MessagingPage";
 
 // Auth Pages
 import ActivateMember from "./pages/auth/ActivateMember";
@@ -206,6 +210,7 @@ function App() {
               <Route path="/buyer/notifications" element={<NotificationsPage />} />
 
               {/* Harvest Marketplace Routes */}
+              <Route path="/marketplaces" element={<MarketplaceHub />} />
               <Route path="/marketplace/harvest" element={<HarvestMarketplace />} />
               <Route path="/marketplace/create-listing" element={<CreateHarvestListing />} />
               <Route path="/marketplace/my-listings" element={<HarvestMarketplace />} />
@@ -215,6 +220,10 @@ function App() {
               <Route path="/buyer/quotes" element={<BuyerMarketplaceDashboard />} />
               <Route path="/buyer/favorites" element={<BuyerMarketplaceDashboard />} />
               <Route path="/buyer/alerts" element={<BuyerMarketplaceDashboard />} />
+
+              {/* Messaging System */}
+              <Route path="/messages" element={<MessagingPage />} />
+              <Route path="/messages/:conversationId" element={<MessagingPage />} />
             </Routes>
           </BrowserRouter>
           <Toaster />

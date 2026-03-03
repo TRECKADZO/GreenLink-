@@ -12,7 +12,11 @@ import {
   ShoppingCart,
   Leaf,
   Building2,
-  Smartphone
+  Smartphone,
+  Recycle,
+  Store,
+  ArrowRight,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -26,13 +30,18 @@ const Navbar = () => {
   const { cart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [marketplaceMenuOpen, setMarketplaceMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const marketplaceRef = useRef(null);
 
-  // Close menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setMenuOpen(false);
+      }
+      if (marketplaceRef.current && !marketplaceRef.current.contains(event.target)) {
+        setMarketplaceMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -160,18 +169,101 @@ const Navbar = () => {
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center gap-6">
-          <button 
-            onClick={() => navigate('/marketplace')}
-            className="text-white/80 hover:text-white transition-colors font-medium"
-          >
-            Marketplace
-          </button>
-          <button 
-            onClick={() => navigate('/carbon-marketplace')}
-            className="text-white/80 hover:text-white transition-colors font-medium"
-          >
-            Crédits Carbone
-          </button>
+          {/* Marketplace Dropdown */}
+          <div className="relative" ref={marketplaceRef}>
+            <button 
+              onClick={() => setMarketplaceMenuOpen(!marketplaceMenuOpen)}
+              className="flex items-center gap-1 text-white/80 hover:text-white transition-colors font-medium"
+            >
+              <Store className="h-4 w-4" />
+              Marketplaces
+              <ChevronDown className={`h-4 w-4 transition-transform ${marketplaceMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {marketplaceMenuOpen && (
+              <div className="absolute top-full left-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                {/* Bourse des Récoltes */}
+                <button
+                  onClick={() => {
+                    navigate('/marketplace/harvest');
+                    setMarketplaceMenuOpen(false);
+                  }}
+                  className="w-full p-4 hover:bg-amber-600/20 transition-colors text-left group border-b border-slate-700"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
+                      <Leaf className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-semibold">Bourse des Récoltes</span>
+                        <Badge className="bg-amber-500 text-white text-xs">NOUVEAU</Badge>
+                      </div>
+                      <p className="text-slate-400 text-sm mt-1">Cacao, Café, Anacarde - Normes internationales</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-amber-400 transition-colors" />
+                  </div>
+                </button>
+
+                {/* Marketplace Intrants */}
+                <button
+                  onClick={() => {
+                    navigate('/marketplace');
+                    setMarketplaceMenuOpen(false);
+                  }}
+                  className="w-full p-4 hover:bg-emerald-600/20 transition-colors text-left group border-b border-slate-700"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg">
+                      <Package className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-white font-semibold">Marketplace Intrants</span>
+                      <p className="text-slate-400 text-sm mt-1">Engrais, Semences, Équipements agricoles</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+                  </div>
+                </button>
+
+                {/* Marché Carbone */}
+                <button
+                  onClick={() => {
+                    navigate('/carbon-marketplace');
+                    setMarketplaceMenuOpen(false);
+                  }}
+                  className="w-full p-4 hover:bg-blue-600/20 transition-colors text-left group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                      <Recycle className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-semibold">Marché Carbone</span>
+                        <Badge className="bg-blue-500 text-white text-xs">RSE</Badge>
+                      </div>
+                      <p className="text-slate-400 text-sm mt-1">Crédits carbone certifiés VCS, Gold Standard</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                  </div>
+                </button>
+
+                {/* View All Link */}
+                <div className="p-3 bg-slate-900/50 border-t border-slate-700">
+                  <button
+                    onClick={() => {
+                      navigate('/marketplaces');
+                      setMarketplaceMenuOpen(false);
+                    }}
+                    className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors"
+                  >
+                    Voir tous les marketplaces →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <button 
             onClick={() => navigate('/#features')}
             className="text-white/80 hover:text-white transition-colors font-medium"
@@ -181,6 +273,18 @@ const Navbar = () => {
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Messaging Button - Only for logged in users */}
+          {user && (
+            <button
+              onClick={() => navigate('/messages')}
+              className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+              data-testid="messages-button"
+              title="Messagerie"
+            >
+              <MessageSquare className="w-6 h-6 text-white" />
+            </button>
+          )}
+
           {/* Shopping Cart Button */}
           <button
             onClick={() => setCartOpen(true)}

@@ -475,21 +475,32 @@ const HarvestMarketplace = () => {
                     <span className="flex items-center gap-1">
                       <Eye className="h-4 w-4" /> {listing.views_count || 0}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <ClipboardList className="h-4 w-4" /> {listing.quotes_count || 0} devis
-                    </span>
-                    <Button 
-                      size="sm"
-                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedListing(listing);
-                        setShowQuoteDialog(true);
-                      }}
-                    >
-                      <Send className="h-3 w-3 mr-1" />
-                      Demander un devis
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        className="border-slate-600 text-slate-300 hover:text-emerald-400 hover:border-emerald-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/messages?listing=${listing.listing_id}&seller=${listing.seller_id}`);
+                        }}
+                      >
+                        <MessageSquare className="h-3 w-3 mr-1" />
+                        Contacter
+                      </Button>
+                      <Button 
+                        size="sm"
+                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedListing(listing);
+                          setShowQuoteDialog(true);
+                        }}
+                      >
+                        <Send className="h-3 w-3 mr-1" />
+                        Devis
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
