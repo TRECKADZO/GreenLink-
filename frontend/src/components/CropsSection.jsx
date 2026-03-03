@@ -4,25 +4,28 @@ import { Badge } from './ui/badge';
 import { api } from '../services/api';
 import { MapPin } from 'lucide-react';
 
-// Cultures supportées : Cacao, Café, Anacarde
+// Cultures supportées : Cacao, Café, Anacarde avec images
 const mockCrops = [
   {
     icon: '🍫',
     title: 'Cacao',
     locations: 'Bouaflé, Daloa, Soubré, Gagnoa',
-    color: 'from-amber-600 to-amber-800'
+    color: 'from-amber-600 to-amber-800',
+    image: 'https://images.unsplash.com/photo-1634303316622-33b4d64f1f65?w=400&h=300&fit=crop'
   },
   {
     icon: '☕',
     title: 'Café',
     locations: 'Man, Danané, Biankouma',
-    color: 'from-amber-700 to-amber-900'
+    color: 'from-amber-700 to-amber-900',
+    image: 'https://images.unsplash.com/photo-1654815439629-5e93cb7f74a1?w=400&h=300&fit=crop'
   },
   {
     icon: '🥜',
     title: 'Anacarde',
     locations: 'Korhogo, Boundiali, Ferkessédougou',
-    color: 'from-orange-600 to-orange-800'
+    color: 'from-orange-600 to-orange-800',
+    image: 'https://images.unsplash.com/photo-1671558694488-a31f9b6f4700?w=400&h=300&fit=crop'
   }
 ];
 
@@ -55,25 +58,43 @@ const CropsSection = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-8">
           {crops.map((crop, index) => (
             <Card 
               key={index} 
-              className="p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2 border-gray-100 group overflow-hidden relative"
+              className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-0 group"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${crop.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-              
-              <div className="relative z-10">
-                <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                  {crop.icon}
+              {/* Image de la culture */}
+              <div className="relative h-48 overflow-hidden">
+                {crop.image ? (
+                  <img 
+                    src={crop.image} 
+                    alt={crop.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className={`w-full h-full bg-gradient-to-br ${crop.color} flex items-center justify-center`}>
+                    <span className="text-6xl">{crop.icon}</span>
+                  </div>
+                )}
+                {/* Badge superposé */}
+                <div className="absolute top-3 left-3">
+                  <Badge className="bg-white/90 text-gray-800 font-semibold shadow-lg">
+                    {crop.icon} {crop.title}
+                  </Badge>
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+              </div>
+              
+              {/* Contenu */}
+              <div className="p-5 bg-white">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
                   {crop.title}
                 </h3>
-                <div className="flex items-center text-gray-600">
-                  <MapPin className="w-4 h-4 mr-2" />
+                <div className="flex items-center text-gray-600 mb-3">
+                  <MapPin className="w-4 h-4 mr-2 text-[#2d5a4d]" />
                   <span className="text-sm">{crop.locations}</span>
                 </div>
+                <div className={`h-1 w-16 bg-gradient-to-r ${crop.color} rounded-full`}></div>
               </div>
             </Card>
           ))}

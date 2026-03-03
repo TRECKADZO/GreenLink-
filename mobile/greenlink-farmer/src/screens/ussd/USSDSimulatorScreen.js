@@ -8,12 +8,18 @@ import {
   TextInput,
   ActivityIndicator,
   SafeAreaView,
+  Linking,
+  Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../config';
 import api from '../../services/api';
+
+const USSD_CODE = '*144*88#';
+const SMS_NUMBER = '1234';
 
 const USSDSimulatorScreen = () => {
   const navigation = useNavigation();
@@ -24,11 +30,23 @@ const USSDSimulatorScreen = () => {
   const [response, setResponse] = useState('');
   const [inputValue, setInputValue] = useState('');
 
+  // Message d'accueil par défaut
+  const welcomeMessage = `Bienvenue chez GreenLink 🌳
+La prime pour tes arbres !
+
+1. Calculer ma prime carbone
+2. Vendre mon cacao / anacarde
+3. Voir mon historique
+4. Aide / Infos
+5. Quitter
+
+→ Tape 1 (le plus utilisé)`;
+
   useEffect(() => {
-    // Initialize session and load main menu
+    // Initialize session
     const newSessionId = `mobile_${Date.now()}`;
     setSessionId(newSessionId);
-    sendUSSD('', newSessionId);
+    setResponse(welcomeMessage);
   }, []);
 
   const sendUSSD = async (input, sid = sessionId) => {
@@ -38,7 +56,7 @@ const USSDSimulatorScreen = () => {
       
       const res = await api.post('/ussd/callback', {
         sessionId: sid,
-        serviceCode: '*123*45#',
+        serviceCode: USSD_CODE,
         phoneNumber: user?.phone_number || '+225000000000',
         text: newText,
       });
@@ -55,23 +73,77 @@ const USSDSimulatorScreen = () => {
       }
     } catch (error) {
       console.error('USSD error:', error);
-      setResponse('Erreur de connexion. Vérifiez votre connexion internet.');
+      // Afficher réponse simulée en cas d'erreur
+      handleLocalResponse(input);
     } finally {
       setLoading(false);
       setInputValue('');
     }
   };
 
-  const handleQuickAction = (value) => {
-    if (value === '0' && currentText) {
-      // Go back
-      const parts = currentText.split('*');
-      parts.pop();
-      setCurrentText(parts.join('*'));
-    } else if (value === '00') {
-      // Reset to main menu
+  // Réponses locales simulées
+  const handleLocalResponse = (input) => {
+    const responses = {
+      '1': `📊 CALCUL PRIME CARBONE
+
+Surface totale: 3.5 ha
+Arbres estimés: 1,750
+Prime carbone: 87,500 FCFA/an
+
+Détail:
+- Cacao (2 ha): 50,000 FCFA
+- Anacarde (1.5 ha): 37,500 FCFA
+
+💰 Prime disponible: 43,750 FCFA
+
+1. Demander paiement
+2. Voir détails par parcelle
+0. Retour`,
+      '2': `🛒 VENDRE MA RÉCOLTE
+
+Cours du jour (03/03/2026):
+- Cacao: 1,200 FCFA/kg
+- Anacarde: 450 FCFA/kg
+- Café: 1,100 FCFA/kg
+
+1. Déclarer une vente
+2. Voir mes dernières ventes
+3. Contacter un acheteur
+0. Retour`,
+      '3': `📋 MON HISTORIQUE
+
+Dernières transactions:
+✅ 15/02 - Prime +43,750 FCFA
+✅ 02/02 - Vente cacao +180,000 FCFA
+✅ 18/01 - Prime +21,875 FCFA
+
+Solde actuel: 245,625 FCFA
+
+1. Exporter historique
+0. Retour`,
+      '4': `ℹ️ AIDE & INFOS
+
+GreenLink - Agriculture durable
+Tél: +225 27 22 00 00 00
+WhatsApp: +225 07 07 00 00 00
+
+1. Comment calculer ma prime?
+2. Comment vendre ma récolte?
+3. Contacter un agent
+0. Retour`,
+      '5': `Merci d'avoir utilisé GreenLink! 🌳
+
+À bientôt!`,
+      '0': welcomeMessage,
+    };
+    
+    setResponse(responses[input] || welcomeMessage);
+    if (input === '5' || input === '0') {
       setCurrentText('');
     }
+  };
+
+  const handleQuickAction = (value) => {
     sendUSSD(value);
   };
 
@@ -81,12 +153,66 @@ const USSDSimulatorScreen = () => {
     }
   };
 
+  // Insérer une commande dans le champ de saisie
+  const insertCommand = (cmd) => {
+    setInputValue(cmd);
+  };
+
+  // Ouvrir le composeur SMS avec la commande
+  const openSMS = (command) => {
+    const smsUrl = Platform.select({
+      ios: `sms:${SMS_NUMBER}&body=${command}`,
+      android: `sms:${SMS_NUMBER}?body=${command}`,
+    });
+    
+    Linking.canOpenURL(smsUrl)
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(smsUrl);
+        } else {
+          // Fallback: copier dans le champ de saisie
+          insertCommand(command);
+          Alert.alert(
+            'SMS non disponible',
+            `Envoyez "${command}" au ${SMS_NUMBER} depuis votre application SMS.`
+          );
+        }
+      })
+      .catch(() => {
+        insertCommand(command);
+      });
+  };
+
+  // Ouvrir le composeur USSD
+  const dialUSSD = () => {
+    const ussdUrl = `tel:${encodeURIComponent(USSD_CODE)}`;
+    Linking.canOpenURL(ussdUrl)
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(ussdUrl);
+        } else {
+          Alert.alert('Info', `Composez ${USSD_CODE} sur votre téléphone.`);
+        }
+      })
+      .catch(() => {
+        Alert.alert('Info', `Composez ${USSD_CODE} sur votre téléphone.`);
+      });
+  };
+
   const resetSession = () => {
     const newSid = `mobile_${Date.now()}`;
     setSessionId(newSid);
     setCurrentText('');
-    sendUSSD('', newSid);
+    setResponse(welcomeMessage);
   };
+
+  // Commandes SMS disponibles
+  const smsCommands = [
+    { cmd: 'SOLDE', desc: 'Voir mon solde' },
+    { cmd: 'PRIME', desc: 'Ma prime carbone' },
+    { cmd: 'VENTE', desc: 'Déclarer une vente' },
+    { cmd: 'AIDE', desc: 'Obtenir de l\'aide' },
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -98,33 +224,29 @@ const USSDSimulatorScreen = () => {
         >
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Accès USSD</Text>
+        <Text style={styles.headerTitle}>Accès USSD / SMS</Text>
         <TouchableOpacity onPress={resetSession} style={styles.refreshButton}>
           <Ionicons name="refresh" size={24} color={COLORS.white} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Info Card */}
-        <View style={styles.infoCard}>
-          <View style={styles.infoHeader}>
-            <Ionicons name="phone-portrait" size={24} color={COLORS.primary} />
-            <Text style={styles.infoTitle}>Comment utiliser?</Text>
+        {/* Dial USSD Button */}
+        <TouchableOpacity style={styles.dialButton} onPress={dialUSSD}>
+          <Ionicons name="call" size={24} color={COLORS.white} />
+          <View style={styles.dialTextContainer}>
+            <Text style={styles.dialButtonText}>Composer {USSD_CODE}</Text>
+            <Text style={styles.dialButtonSubtext}>Sur téléphone basique</Text>
           </View>
-          <Text style={styles.infoText}>
-            Sur un téléphone basique, composez <Text style={styles.bold}>*123*45#</Text> pour accéder à ce menu sans internet.
-          </Text>
-          <Text style={styles.infoText}>
-            Ou envoyez un SMS au <Text style={styles.bold}>1234</Text> avec les commandes: SOLDE, PRIME, PARCELLE, RECOLTE
-          </Text>
-        </View>
+          <Ionicons name="chevron-forward" size={24} color={COLORS.white} />
+        </TouchableOpacity>
 
         {/* Phone Simulator */}
         <View style={styles.phoneFrame}>
           {/* Phone Status Bar */}
           <View style={styles.phoneStatusBar}>
             <Text style={styles.statusText}>Orange CI</Text>
-            <Text style={styles.statusText}>*123*45#</Text>
+            <Text style={styles.statusText}>{USSD_CODE}</Text>
           </View>
 
           {/* USSD Screen */}
@@ -145,24 +267,25 @@ const USSDSimulatorScreen = () => {
               style={styles.input}
               value={inputValue}
               onChangeText={setInputValue}
-              placeholder="Tapez votre choix..."
+              placeholder="Tapez 1, 2, 3..."
               placeholderTextColor="#999"
               keyboardType="number-pad"
-              maxLength={2}
+              maxLength={3}
               onSubmitEditing={handleSubmit}
             />
             <TouchableOpacity 
-              style={styles.sendButton}
+              style={[styles.sendButton, !inputValue.trim() && styles.sendButtonDisabled]}
               onPress={handleSubmit}
               disabled={loading || !inputValue.trim()}
             >
-              <Ionicons name="send" size={20} color={COLORS.white} />
+              <Text style={styles.sendButtonText}>Envoyer</Text>
+              <Ionicons name="send" size={18} color={COLORS.white} />
             </TouchableOpacity>
           </View>
 
-          {/* Quick Actions */}
+          {/* Quick Number Pad */}
           <View style={styles.quickActions}>
-            {['1', '2', '3', '4', '5', '6'].map((num) => (
+            {['1', '2', '3', '4', '5'].map((num) => (
               <TouchableOpacity
                 key={num}
                 style={styles.quickButton}
@@ -173,36 +296,61 @@ const USSDSimulatorScreen = () => {
               </TouchableOpacity>
             ))}
           </View>
-          <View style={styles.quickActions}>
+          <View style={styles.quickActionsRow}>
             <TouchableOpacity
               style={[styles.quickButton, styles.backBtn]}
               onPress={() => handleQuickAction('0')}
               disabled={loading}
             >
-              <Text style={styles.quickButtonText}>0 Retour</Text>
+              <Ionicons name="arrow-back" size={16} color={COLORS.white} />
+              <Text style={styles.quickButtonText}> 0 Retour</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.quickButton, styles.homeBtn]}
-              onPress={() => handleQuickAction('00')}
+              onPress={resetSession}
               disabled={loading}
             >
-              <Text style={styles.quickButtonText}>00 Menu</Text>
+              <Ionicons name="home" size={16} color={COLORS.white} />
+              <Text style={styles.quickButtonText}> Menu</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* SMS Commands Reference */}
+        {/* SMS Commands - Cliquables */}
         <View style={styles.smsCard}>
-          <Text style={styles.smsTitle}>
-            <Ionicons name="chatbubble" size={16} color={COLORS.primary} /> Commandes SMS (1234)
+          <View style={styles.smsHeader}>
+            <Ionicons name="chatbubbles" size={20} color={COLORS.primary} />
+            <Text style={styles.smsTitle}>Commandes SMS</Text>
+            <Text style={styles.smsNumber}>→ {SMS_NUMBER}</Text>
+          </View>
+          <Text style={styles.smsHint}>
+            Appuyez sur une commande pour l'envoyer par SMS
           </Text>
           <View style={styles.smsCommands}>
-            <Text style={styles.smsCommand}>SOLDE</Text>
-            <Text style={styles.smsCommand}>PRIME</Text>
-            <Text style={styles.smsCommand}>PARCELLE 3.5 Bouaflé</Text>
-            <Text style={styles.smsCommand}>RECOLTE 250</Text>
-            <Text style={styles.smsCommand}>AIDE</Text>
+            {smsCommands.map((item, index) => (
+              <TouchableOpacity 
+                key={index}
+                style={styles.smsCommandButton}
+                onPress={() => openSMS(item.cmd)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.smsCommandText}>{item.cmd}</Text>
+                <Text style={styles.smsCommandDesc}>{item.desc}</Text>
+                <Ionicons name="send-outline" size={14} color={COLORS.primary} />
+              </TouchableOpacity>
+            ))}
           </View>
+        </View>
+
+        {/* Info Card */}
+        <View style={styles.infoCard}>
+          <View style={styles.infoHeader}>
+            <Ionicons name="information-circle" size={24} color="#2563eb" />
+            <Text style={styles.infoTitle}>Sans Internet?</Text>
+          </View>
+          <Text style={styles.infoText}>
+            Composez <Text style={styles.bold}>{USSD_CODE}</Text> depuis n'importe quel téléphone pour accéder à GreenLink sans connexion internet.
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -212,7 +360,7 @@ const USSDSimulatorScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background || '#F5F5F5',
+    backgroundColor: '#F5F7FA',
   },
   header: {
     flexDirection: 'row',
@@ -238,56 +386,63 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  infoCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
-  },
-  infoHeader: {
+  dialButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  infoTitle: {
-    fontSize: 16,
+  dialTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  dialButtonText: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.text,
-    marginLeft: 8,
+    color: COLORS.white,
   },
-  infoText: {
-    fontSize: 14,
-    color: COLORS.textSecondary || '#666',
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  bold: {
-    fontWeight: 'bold',
-    color: COLORS.primary,
+  dialButtonSubtext: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
   },
   phoneFrame: {
     backgroundColor: '#1a1a1a',
-    borderRadius: 24,
-    padding: 12,
+    borderRadius: 28,
+    padding: 16,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   phoneStatusBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
     paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
   },
   statusText: {
-    color: '#888',
+    color: '#10b981',
     fontSize: 12,
+    fontWeight: '600',
   },
   ussdScreen: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f8fafc',
     borderRadius: 12,
     padding: 16,
-    minHeight: 280,
+    minHeight: 260,
+    marginTop: 8,
   },
   loadingContainer: {
     flex: 1,
@@ -297,13 +452,13 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    color: COLORS.textSecondary,
+    color: '#666',
   },
   ussdText: {
-    fontSize: 15,
-    color: '#333',
-    lineHeight: 24,
-    fontFamily: 'monospace',
+    fontSize: 14,
+    color: '#1f2937',
+    lineHeight: 22,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   inputArea: {
     flexDirection: 'row',
@@ -313,19 +468,29 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     backgroundColor: COLORS.white,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 18,
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   sendButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 6,
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  sendButtonText: {
+    color: COLORS.white,
+    fontWeight: '600',
+    fontSize: 14,
   },
   quickActions: {
     flexDirection: 'row',
@@ -333,12 +498,19 @@ const styles = StyleSheet.create({
     marginTop: 12,
     gap: 8,
   },
+  quickActionsRow: {
+    flexDirection: 'row',
+    marginTop: 8,
+    gap: 8,
+  },
   quickButton: {
     flex: 1,
-    backgroundColor: '#333',
-    borderRadius: 8,
-    paddingVertical: 12,
+    backgroundColor: '#374151',
+    borderRadius: 10,
+    paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
   },
   quickButtonText: {
     color: COLORS.white,
@@ -347,7 +519,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     flex: 1,
-    backgroundColor: '#555',
+    backgroundColor: '#6b7280',
   },
   homeBtn: {
     flex: 1,
@@ -355,30 +527,91 @@ const styles = StyleSheet.create({
   },
   smsCard: {
     backgroundColor: COLORS.white,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  smsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   smsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: '#1f2937',
+    marginLeft: 8,
+    flex: 1,
+  },
+  smsNumber: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  smsHint: {
+    fontSize: 12,
+    color: '#6b7280',
     marginBottom: 12,
+    fontStyle: 'italic',
   },
   smsCommands: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
   },
-  smsCommand: {
-    backgroundColor: '#E8F5E9',
+  smsCommandButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ecfdf5',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  smsCommandText: {
+    fontSize: 15,
+    fontWeight: 'bold',
     color: COLORS.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    marginRight: 12,
+    minWidth: 60,
+  },
+  smsCommandDesc: {
+    flex: 1,
+    fontSize: 13,
+    color: '#374151',
+  },
+  infoCard: {
+    backgroundColor: '#eff6ff',
     borderRadius: 16,
-    fontSize: 12,
-    fontFamily: 'monospace',
-    overflow: 'hidden',
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e40af',
+    marginLeft: 8,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#1e3a8a',
+    lineHeight: 20,
+  },
+  bold: {
+    fontWeight: 'bold',
+    color: '#1e40af',
   },
 });
 

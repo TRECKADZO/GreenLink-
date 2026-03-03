@@ -51,7 +51,7 @@ const WelcomeScreen = ({ navigation }) => {
     {
       icon: '📱',
       title: 'Accès USSD/SMS',
-      description: 'Consultez vos parcelles et primes sans internet via *123*45#',
+      description: 'Consultez vos parcelles et primes sans internet via *144*88#',
       badge: 'Offline',
       badgeColor: '#f97316',
     },
@@ -258,7 +258,7 @@ const WelcomeScreen = ({ navigation }) => {
             <Text style={styles.ussdIcon}>📱</Text>
             <View style={styles.ussdContent}>
               <Text style={styles.ussdTitle}>Accès sans internet</Text>
-              <Text style={styles.ussdCode}>*123*45# ou SMS au 1234</Text>
+              <Text style={styles.ussdCode}>*144*88# ou SMS au 1234</Text>
               <Text style={styles.ussdSubtitle}>Disponible en français, baoulé et dioula</Text>
             </View>
           </View>
@@ -277,7 +277,7 @@ const WelcomeScreen = ({ navigation }) => {
               <Text style={styles.contactPhone}>📞 +225 07 87 76 10 23</Text>
             </View>
 
-            <Text style={styles.versionText}>Version 1.13.0</Text>
+            <Text style={styles.versionText}>Version 1.16.0</Text>
           </View>
 
         </ScrollView>
