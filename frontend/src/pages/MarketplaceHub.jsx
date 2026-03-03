@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, Leaf, Recycle, ArrowRight, 
   TrendingUp, Users, Globe, Award,
-  ShoppingBag, Sprout, Factory
+  ShoppingBag, Sprout, Factory, ArrowLeft
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -83,6 +83,16 @@ const MarketplaceHub = () => {
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          {/* Bouton Retour */}
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+            className="mb-4 text-slate-400 hover:text-white hover:bg-slate-800"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour à l'accueil
+          </Button>
+          
           <div className="text-center">
             <Badge className="mb-4 bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
               <Globe className="h-3 w-3 mr-1" />

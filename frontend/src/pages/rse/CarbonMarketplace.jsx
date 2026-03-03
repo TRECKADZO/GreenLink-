@@ -19,7 +19,8 @@ import {
   Calendar,
   TrendingUp,
   Shield,
-  CheckCircle
+  CheckCircle,
+  ArrowLeft
 } from 'lucide-react';
 
 const CarbonMarketplace = () => {
@@ -123,6 +124,16 @@ const CarbonMarketplace = () => {
       
       <div className="pt-24 pb-12 px-6">
         <div className="max-w-7xl mx-auto">
+          {/* Bouton Retour */}
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="mb-4 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+          
           {/* Header */}
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-green-100 text-green-700">

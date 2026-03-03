@@ -7,7 +7,7 @@ import {
   DollarSign, Package, Star, Calendar, Building2,
   Check, X, ArrowUpDown, RefreshCw, FileText,
   Globe, Shield, Truck, Send, ClipboardList, Heart,
-  LayoutDashboard
+  LayoutDashboard, ArrowLeft
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -207,6 +207,16 @@ const HarvestMarketplace = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-900/50 via-slate-900 to-emerald-900/50 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Bouton Retour */}
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="mb-4 text-slate-400 hover:text-white hover:bg-slate-800"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+          
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3">

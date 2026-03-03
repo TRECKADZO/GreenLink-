@@ -214,6 +214,8 @@ function App() {
               {/* Harvest Marketplace Routes */}
               <Route path="/marketplaces" element={<MarketplaceHub />} />
               <Route path="/marketplace/harvest" element={<HarvestMarketplace />} />
+              <Route path="/harvest-marketplace" element={<HarvestMarketplace />} />
+              <Route path="/bourse-recoltes" element={<HarvestMarketplace />} />
               <Route path="/marketplace/create-listing" element={<CreateHarvestListing />} />
               <Route path="/marketplace/my-listings" element={<HarvestMarketplace />} />
 
