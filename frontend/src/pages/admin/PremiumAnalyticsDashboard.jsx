@@ -229,7 +229,22 @@ const PremiumAnalyticsDashboard = () => {
                       {selectedAnalytic.summary && (
                         <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
                           <h4 className="font-semibold text-emerald-800 mb-2">Résumé</h4>
-                          <p className="text-emerald-700">{selectedAnalytic.summary}</p>
+                          {typeof selectedAnalytic.summary === 'string' ? (
+                            <p className="text-emerald-700">{selectedAnalytic.summary}</p>
+                          ) : (
+                            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+                              {Object.entries(selectedAnalytic.summary).map(([key, value]) => (
+                                <div key={key} className="text-center">
+                                  <p className="text-xs text-emerald-600 uppercase tracking-wide">
+                                    {key.replace(/_/g, ' ')}
+                                  </p>
+                                  <p className="font-bold text-emerald-800">
+                                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                       
@@ -264,7 +279,11 @@ const PremiumAnalyticsDashboard = () => {
                             {Object.entries(selectedAnalytic.metrics).map(([key, value]) => (
                               <div key={key} className="p-3 bg-blue-50 rounded-lg text-center">
                                 <p className="text-2xl font-bold text-blue-700">
-                                  {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
+                                  {typeof value === 'number' 
+                                    ? value.toLocaleString('fr-FR') 
+                                    : typeof value === 'object'
+                                      ? Array.isArray(value) ? value.length : Object.keys(value).length
+                                      : String(value)}
                                 </p>
                                 <p className="text-xs text-blue-600 capitalize">{key.replace(/_/g, ' ')}</p>
                               </div>
@@ -292,16 +311,6 @@ const PremiumAnalyticsDashboard = () => {
                           </div>
                         </div>
                       )}
-                      
-                      {/* Raw data toggle for advanced users */}
-                      <details className="mt-4">
-                        <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                          Voir les données brutes (JSON)
-                        </summary>
-                        <pre className="mt-2 bg-gray-100 p-4 rounded-lg overflow-auto max-h-64 text-xs">
-                          {JSON.stringify(selectedAnalytic, null, 2)}
-                        </pre>
-                      </details>
                     </div>
                   </TabsContent>
 
@@ -311,7 +320,9 @@ const PremiumAnalyticsDashboard = () => {
                         {Object.entries(selectedAnalytic.monetization).map(([key, value]) => (
                           <div key={key} className="p-4 bg-green-50 rounded-lg">
                             <p className="text-sm text-gray-600 capitalize">{key.replace(/_/g, ' ')}</p>
-                            <p className="font-bold text-green-700">{value}</p>
+                            <p className="font-bold text-green-700">
+                              {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -329,7 +340,9 @@ const PremiumAnalyticsDashboard = () => {
                           {Object.entries(selectedAnalytic.anonymization).map(([key, value]) => (
                             <li key={key} className="flex items-center gap-2 text-sm">
                               <span className="text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
-                              <span className="font-medium text-gray-900">{String(value)}</span>
+                              <span className="font-medium text-gray-900">
+                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                              </span>
                             </li>
                           ))}
                         </ul>
