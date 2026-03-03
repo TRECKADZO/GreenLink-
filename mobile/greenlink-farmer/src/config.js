@@ -29,6 +29,12 @@ export const COLORS = {
   error: '#ef4444',
   white: '#ffffff',
   black: '#000000',
+  // UI Colors
+  background: '#f8fafc',
+  surface: '#ffffff',
+  text: '#1f2937',
+  textSecondary: '#6b7280',
+  border: '#e5e7eb',
   gray: {
     50: '#f9fafb',
     100: '#f3f4f6',

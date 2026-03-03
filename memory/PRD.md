@@ -2,6 +2,54 @@
 
 ## Latest Updates - March 3, 2026 (Session 11)
 
+### 📱 MESSAGERIE MOBILE POUR VENDEURS - NOUVEAU
+
+**Implémentation complète de la messagerie dans l'app mobile React Native pour les vendeurs (planteurs et coopératives).**
+
+#### Écrans créés :
+- `/src/screens/messaging/MessagingScreen.js` - Liste des conversations
+- `/src/screens/messaging/ChatScreen.js` - Chat individuel temps réel
+
+#### Fonctionnalités Mobile :
+
+**1. Liste des Conversations**
+- Recherche de conversations
+- Onglets Actives/Archivées
+- Badge messages non lus
+- Indicateur en ligne
+- Pull-to-refresh
+
+**2. Chat Temps Réel**
+- WebSocket pour messages instantanés
+- Indicateur de frappe ("écrit...")
+- Accusés de lecture (✓ envoyé, ✓✓ lu)
+- Répondre à un message
+- Épingler des messages
+
+**3. Pièces Jointes**
+- 📷 Prendre une photo (caméra)
+- 🖼️ Choisir une image (galerie)
+- 📄 Envoyer un document (PDF)
+
+**4. Sécurité**
+- Badge "Messages chiffrés de bout en bout"
+- Signaler un message (spam, harcèlement, fraude)
+- Bloquer un utilisateur
+- Archiver une conversation
+
+**5. Navigation**
+- Accessible via menu "Actions Rapides" (bouton +)
+- Routes : `/Messaging` et `/Chat`
+
+#### Service API :
+- `/src/services/messaging.js` - Client API + WebSocket
+
+#### Intégration :
+- Ajouté dans `App.js` (routes)
+- Ajouté dans `BottomTabBar.js` (menu actions rapides)
+
+---
+
 ### 📊 ANALYTICS BOURSE DES RÉCOLTES - NOUVEAU
 
 **Métriques de classe mondiale pour la bourse des matières premières agricoles, intégrées dans l'onglet "Bourse Récoltes" du Dashboard Super Admin.**

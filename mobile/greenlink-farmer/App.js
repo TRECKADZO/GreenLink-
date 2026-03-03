@@ -76,6 +76,9 @@ import AuditFormScreen from './src/screens/auditor/AuditFormScreen';
 // Screens - USSD
 import { USSDSimulatorScreen } from './src/screens/ussd';
 
+// Screens - Messaging
+import { MessagingScreen, ChatScreen } from './src/screens/messaging';
+
 // Screens - Settings
 import { NotificationPreferencesScreen } from './src/screens/settings';
 
@@ -89,7 +92,7 @@ const Stack = createNativeStackNavigator();
 const SCREENS_WITH_TAB_BAR = [
   'Home', 'MyParcels', 'DeclareHarvest', 'Payments', 'Profile',
   'CoopDashboard', 'CoopMembers', 'CoopReports', 'FieldAgentDashboard',
-  'Parcels', 'Harvest', 'Marketplace', 'Notifications',
+  'Parcels', 'Harvest', 'Marketplace', 'Notifications', 'Messaging',
   'CarbonMarketplace', 'MyCarbonScore', 'MyCarbonPurchases',
   'AuditorDashboard',
 ];
@@ -177,6 +180,10 @@ function AppNavigator() {
       {/* USSD Simulator */}
       <Stack.Screen name="USSDSimulator" component={USSDSimulatorScreen} />
       <Stack.Screen name="AuditHistory" component={AuditorDashboardScreen} />
+      
+      {/* Messaging Screens */}
+      <Stack.Screen name="Messaging" component={MessagingScreen} />
+      <Stack.Screen name="Chat" component={ChatScreen} />
       
       {/* Settings Screens */}
       <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
