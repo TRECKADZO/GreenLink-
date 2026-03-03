@@ -45,6 +45,8 @@ const BuyerDashboard = () => {
   const [matchingListings, setMatchingListings] = useState([]);
   const [marketInsights, setMarketInsights] = useState(null);
   const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const [trialStatus, setTrialStatus] = useState(null);
+  const [activatingTrial, setActivatingTrial] = useState(false);
   const [alertForm, setAlertForm] = useState({
     name: '',
     crop_types: [],
@@ -61,7 +63,34 @@ const BuyerDashboard = () => {
 
   useEffect(() => {
     fetchDashboard();
+    fetchTrialStatus();
   }, []);
+
+  const fetchTrialStatus = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/buyer/trial-status`, getAuthHeaders());
+      setTrialStatus(response.data);
+    } catch (error) {
+      console.error('Error fetching trial status:', error);
+    }
+  };
+
+  const activateTrial = async () => {
+    try {
+      setActivatingTrial(true);
+      const response = await axios.post(`${API_URL}/api/buyer/start-trial`, {}, getAuthHeaders());
+      if (response.data.success) {
+        toast.success('🎉 Essai gratuit activé! Profitez de 15 jours d\'accès complet.');
+        fetchTrialStatus();
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de l\'activation');
+    } finally {
+      setActivatingTrial(false);
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'quotes') fetchQuotes();
@@ -223,6 +252,91 @@ const BuyerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-900" data-testid="buyer-dashboard">
+      {/* Trial Banner */}
+      {trialStatus && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          {trialStatus.can_start_trial && (
+            <Card className="bg-gradient-to-r from-emerald-600 to-teal-600 border-0 overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+                      <Star className="h-8 w-8 text-white" />
+                    </div>
+                    <div className="text-center md:text-left">
+                      <h3 className="text-xl font-bold text-white">🎁 Offre Spéciale Acheteurs</h3>
+                      <p className="text-emerald-100">Activez votre essai gratuit de 15 jours et accédez à toutes les fonctionnalités premium!</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={activateTrial}
+                    disabled={activatingTrial}
+                    className="bg-white text-emerald-700 hover:bg-emerald-50 font-semibold px-6"
+                    data-testid="activate-trial-btn"
+                  >
+                    {activatingTrial ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Activation...
+                      </>
+                    ) : (
+                      <>
+                        <Star className="h-4 w-4 mr-2" />
+                        Activer mon essai gratuit
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {trialStatus.has_trial && trialStatus.is_active && (
+            <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0 overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-6 w-6 text-white" />
+                    <div>
+                      <p className="text-white font-medium">
+                        Essai gratuit: <span className="font-bold">{trialStatus.days_remaining} jours restants</span>
+                      </p>
+                      <p className="text-blue-200 text-sm">
+                        Profitez de toutes les fonctionnalités premium jusqu'au {new Date(trialStatus.trial_end).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge className="bg-white/20 text-white border-0">
+                    <Star className="h-3 w-3 mr-1" />
+                    Premium Trial
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {trialStatus.has_trial && !trialStatus.is_active && (
+            <Card className="bg-gradient-to-r from-amber-600 to-orange-600 border-0 overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="h-6 w-6 text-white" />
+                    <div>
+                      <p className="text-white font-medium">Votre période d'essai est terminée</p>
+                      <p className="text-amber-200 text-sm">Souscrivez pour continuer à profiter des fonctionnalités premium</p>
+                    </div>
+                  </div>
+                  <Button className="bg-white text-amber-700 hover:bg-amber-50 font-semibold">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Souscrire maintenant
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-900/50 via-slate-900 to-purple-900/50 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

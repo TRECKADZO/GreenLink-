@@ -49,19 +49,19 @@ const mockPricingPlans = [
     name: 'Acheteurs',
     price: 'Sur devis',
     period: '',
-    badge: 'Négociants & Exportateurs',
-    badgeColor: 'blue',
+    badge: '15 jours gratuits',
+    badgeColor: 'green',
     popular: true,
     features: [
+      '15 jours d\'essai gratuit',
       'Accès Bourse des Récoltes',
       'Demandes de devis illimitées',
+      'Messagerie sécurisée',
       'Alertes nouvelles récoltes',
       'Favoris & comparateur',
-      'Analytics marché',
-      'Support prioritaire',
       'Badge vérifié'
     ],
-    cta: 'Demander un devis',
+    cta: 'Essai gratuit 15 jours',
     ctaVariant: 'default'
   },
   {

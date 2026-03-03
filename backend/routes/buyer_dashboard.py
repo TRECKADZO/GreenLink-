@@ -10,6 +10,9 @@ from bson import ObjectId
 from database import db
 from routes.auth import get_current_user
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/buyer", tags=["buyer-dashboard"])
 
@@ -39,6 +42,160 @@ class BuyerProfile(BaseModel):
     preferred_incoterms: List[str] = Field(default=[])
     preferred_certifications: List[str] = Field(default=[])
     annual_volume_target_kg: Optional[float] = None
+
+# ============= TRIAL MANAGEMENT =============
+
+@router.post("/start-trial")
+async def start_buyer_trial(
+    current_user: dict = Depends(get_current_user)
+):
+    """Activer les 15 jours d'essai gratuit pour un acheteur"""
+    user_id = str(current_user["_id"])
+    user_type = current_user.get("user_type")
+    
+    # Vérifier que c'est bien un acheteur
+    if user_type not in ["acheteur", "buyer"]:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cette offre est réservée aux acheteurs"
+        )
+    
+    # Vérifier si un essai existe déjà
+    existing_subscription = await db.subscriptions.find_one({"user_id": user_id})
+    
+    if existing_subscription:
+        status = existing_subscription.get("status")
+        if status in ["active", "trial"]:
+            return {
+                "success": False,
+                "message": "Vous avez déjà une période d'essai ou un abonnement actif",
+                "subscription": {
+                    "status": status,
+                    "trial_end": existing_subscription.get("trial_end"),
+                    "is_trial": existing_subscription.get("is_trial", False)
+                }
+            }
+    
+    # Créer la période d'essai
+    now = datetime.utcnow()
+    trial_end = now + timedelta(days=15)
+    
+    subscription_data = {
+        "user_id": user_id,
+        "plan": "starter",
+        "status": "trial",
+        "is_trial": True,
+        "trial_start": now,
+        "trial_end": trial_end,
+        "start_date": now,
+        "end_date": trial_end,
+        "billing_cycle": "monthly",
+        "price_paid": 0,
+        "next_billing_date": trial_end,
+        "payment_method": None,
+        "created_at": now,
+        "updated_at": now,
+    }
+    
+    if existing_subscription:
+        await db.subscriptions.update_one(
+            {"user_id": user_id},
+            {"$set": subscription_data}
+        )
+    else:
+        await db.subscriptions.insert_one(subscription_data)
+    
+    # Mettre à jour le profil utilisateur
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {
+            "trial_started": now,
+            "trial_end": trial_end,
+            "is_premium_trial": True
+        }}
+    )
+    
+    logger.info(f"Trial started for buyer {user_id} - ends {trial_end}")
+    
+    return {
+        "success": True,
+        "message": "Votre essai gratuit de 15 jours est activé!",
+        "trial": {
+            "start_date": now.isoformat(),
+            "end_date": trial_end.isoformat(),
+            "days_remaining": 15,
+            "features": [
+                "Accès complet à la Bourse des Récoltes",
+                "Demandes de devis illimitées",
+                "Messagerie sécurisée avec les vendeurs",
+                "Alertes personnalisées",
+                "Favoris et comparateur",
+                "Badge vérifié"
+            ]
+        }
+    }
+
+
+@router.get("/trial-status")
+async def get_buyer_trial_status(current_user: dict = Depends(get_current_user)):
+    """Vérifier le statut de l'essai gratuit"""
+    user_id = str(current_user["_id"])
+    
+    subscription = await db.subscriptions.find_one({"user_id": user_id})
+    
+    if not subscription:
+        return {
+            "has_trial": False,
+            "can_start_trial": True,
+            "message": "Vous pouvez activer votre essai gratuit de 15 jours"
+        }
+    
+    is_trial = subscription.get("is_trial", False)
+    trial_end = subscription.get("trial_end")
+    status = subscription.get("status")
+    
+    if status == "active" and not is_trial:
+        return {
+            "has_trial": False,
+            "has_subscription": True,
+            "can_start_trial": False,
+            "message": "Vous avez un abonnement actif"
+        }
+    
+    if is_trial and trial_end:
+        now = datetime.utcnow()
+        if isinstance(trial_end, str):
+            trial_end = datetime.fromisoformat(trial_end.replace('Z', '+00:00'))
+        
+        if now < trial_end:
+            days_remaining = (trial_end - now).days
+            hours_remaining = ((trial_end - now).seconds // 3600)
+            
+            return {
+                "has_trial": True,
+                "is_active": True,
+                "can_start_trial": False,
+                "days_remaining": days_remaining,
+                "hours_remaining": hours_remaining,
+                "trial_end": trial_end.isoformat(),
+                "message": f"Essai gratuit: {days_remaining} jours restants"
+            }
+        else:
+            return {
+                "has_trial": True,
+                "is_active": False,
+                "can_start_trial": False,
+                "days_remaining": 0,
+                "trial_end": trial_end.isoformat(),
+                "message": "Votre période d'essai est terminée. Souscrivez pour continuer!"
+            }
+    
+    return {
+        "has_trial": False,
+        "can_start_trial": True,
+        "message": "Vous pouvez activer votre essai gratuit de 15 jours"
+    }
+
 
 # ============= BUYER PROFILE =============
 

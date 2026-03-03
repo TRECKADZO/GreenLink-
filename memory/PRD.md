@@ -2,6 +2,31 @@
 
 ## Latest Updates - March 3, 2026 (Session 11)
 
+### 🎁 ESSAI GRATUIT 15 JOURS POUR ACHETEURS - NOUVEAU
+
+**Système d'essai gratuit de 15 jours pour les acheteurs sur la marketplace.**
+
+#### Fonctionnalités:
+- Activation de l'essai en un clic depuis le dashboard acheteur
+- Bannière promotionnelle dynamique (3 états: peut activer, actif, expiré)
+- Compteur de jours restants pendant l'essai
+- Accès complet à toutes les fonctionnalités premium pendant 15 jours
+- Badge "15 jours gratuits" sur la page tarifs
+
+#### API Endpoints:
+- `POST /api/buyer/start-trial` - Activer l'essai gratuit
+- `GET /api/buyer/trial-status` - Vérifier le statut de l'essai
+
+#### Fonctionnalités incluses dans l'essai:
+- Accès complet à la Bourse des Récoltes
+- Demandes de devis illimitées
+- Messagerie sécurisée avec les vendeurs
+- Alertes personnalisées
+- Favoris et comparateur
+- Badge vérifié
+
+---
+
 ### 💬 MESSAGERIE SÉCURISÉE - NOUVEAU
 
 **Système de messagerie temps réel de classe mondiale entre acheteurs et vendeurs (agriculteurs/coopératives) sur la marketplace.**
