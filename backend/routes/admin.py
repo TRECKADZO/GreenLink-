@@ -318,6 +318,92 @@ async def export_users_data(
     }
 
 
+# ============= TESTIMONIALS MANAGEMENT =============
+
+@router.get("/testimonials")
+async def get_testimonials():
+    """Get all testimonials (public endpoint)"""
+    testimonials = await db.testimonials.find({"is_active": True}).sort("order", 1).to_list(10)
+    for t in testimonials:
+        t["_id"] = str(t["_id"])
+    return testimonials
+
+
+@router.get("/admin/testimonials")
+async def get_all_testimonials(admin: dict = Depends(get_admin_user)):
+    """Get all testimonials for admin"""
+    testimonials = await db.testimonials.find().sort("created_at", -1).to_list(100)
+    for t in testimonials:
+        t["_id"] = str(t["_id"])
+    return testimonials
+
+
+@router.post("/admin/testimonials")
+async def create_testimonial(testimonial: dict, admin: dict = Depends(get_admin_user)):
+    """Create a new testimonial"""
+    testimonial_data = {
+        "text": testimonial.get("text"),
+        "author": testimonial.get("author"),
+        "role": testimonial.get("role"),
+        "initial": testimonial.get("initial") or testimonial.get("author", "U")[0].upper(),
+        "color": testimonial.get("color", "bg-[#2d5a4d]"),
+        "is_active": testimonial.get("is_active", True),
+        "order": testimonial.get("order", 0),
+        "created_at": datetime.utcnow(),
+        "created_by": str(admin.get("_id"))
+    }
+    
+    result = await db.testimonials.insert_one(testimonial_data)
+    testimonial_data["_id"] = str(result.inserted_id)
+    
+    return testimonial_data
+
+
+@router.put("/admin/testimonials/{testimonial_id}")
+async def update_testimonial(testimonial_id: str, testimonial: dict, admin: dict = Depends(get_admin_user)):
+    """Update a testimonial"""
+    try:
+        obj_id = ObjectId(testimonial_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID invalide")
+    
+    update_data = {
+        "text": testimonial.get("text"),
+        "author": testimonial.get("author"),
+        "role": testimonial.get("role"),
+        "initial": testimonial.get("initial"),
+        "color": testimonial.get("color"),
+        "is_active": testimonial.get("is_active"),
+        "order": testimonial.get("order"),
+        "updated_at": datetime.utcnow()
+    }
+    # Remove None values
+    update_data = {k: v for k, v in update_data.items() if v is not None}
+    
+    result = await db.testimonials.update_one({"_id": obj_id}, {"$set": update_data})
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Témoignage non trouvé")
+    
+    return {"message": "Témoignage mis à jour", "id": testimonial_id}
+
+
+@router.delete("/admin/testimonials/{testimonial_id}")
+async def delete_testimonial(testimonial_id: str, admin: dict = Depends(get_admin_user)):
+    """Delete a testimonial"""
+    try:
+        obj_id = ObjectId(testimonial_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID invalide")
+    
+    result = await db.testimonials.delete_one({"_id": obj_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Témoignage non trouvé")
+    
+    return {"message": "Témoignage supprimé", "id": testimonial_id}
+
+
 # ============= REAL-TIME DASHBOARD =============
 
 @router.get("/admin/realtime-dashboard")

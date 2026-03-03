@@ -3,38 +3,33 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Quote } from 'lucide-react';
-import { api } from '../services/api';
+import axios from 'axios';
 
-// Fallback mock data
-const mockTestimonials = [
-  {
-    text: 'Grâce à GreenLink, j\'ai augmenté mes revenus de 40% avec les primes carbone.',
-    author: 'Kouadio Yao',
-    role: 'Producteur de cacao, Soubré',
-    initial: 'K',
-    color: 'bg-amber-600'
-  },
-  {
-    text: 'La traçabilité nous a permis d\'accéder aux marchés européens premium.',
-    author: 'Aminata Koné',
-    role: 'Coopérative COOP-CA, Daloa',
-    initial: 'A',
-    color: 'bg-emerald-600'
-  }
-];
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const TestimonialsSection = () => {
-  const [testimonials, setTestimonials] = useState(mockTestimonials);
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
-      const data = await api.getTestimonials();
-      if (data) {
-        setTestimonials(data);
+      try {
+        const response = await axios.get(`${API_URL}/api/testimonials`);
+        if (response.data && response.data.length > 0) {
+          setTestimonials(response.data);
+        }
+      } catch (error) {
+        console.log('No testimonials found');
+      } finally {
+        setLoading(false);
       }
     };
     fetchTestimonials();
   }, []);
+
+  // Ne pas afficher la section s'il n'y a pas de témoignages
+  if (loading) return null;
+  if (testimonials.length === 0) return null;
   
   return (
     <section className="py-24 bg-gradient-to-b from-gray-50 to-white">
@@ -44,14 +39,14 @@ const TestimonialsSection = () => {
             Témoignages
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
-            Ils nous font confiance
+            Ce qu'ils disent de nous
           </h2>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className={`grid gap-8 ${testimonials.length === 1 ? 'max-w-xl mx-auto' : 'md:grid-cols-2'}`}>
           {testimonials.map((testimonial, index) => (
             <Card 
-              key={index} 
+              key={testimonial._id || index} 
               className="p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2 border-gray-100 group relative overflow-hidden"
             >
               <Quote className="absolute top-6 right-6 w-12 h-12 text-gray-200 group-hover:text-[#2d5a4d]/20 transition-colors duration-300" />
@@ -63,8 +58,8 @@ const TestimonialsSection = () => {
                 
                 <div className="flex items-center">
                   <Avatar className="w-12 h-12 mr-4">
-                    <AvatarFallback className={`${testimonial.color} text-white font-semibold`}>
-                      {testimonial.initial}
+                    <AvatarFallback className={`${testimonial.color || 'bg-[#2d5a4d]'} text-white font-semibold`}>
+                      {testimonial.initial || testimonial.author?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div>

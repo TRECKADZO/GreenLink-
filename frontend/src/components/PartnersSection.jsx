@@ -2,24 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { ArrowRight, Handshake } from 'lucide-react';
+import { Handshake } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Default partners (will be overridden by database)
-const defaultPartners = [
-  { 
-    name: 'Orange Côte d\'Ivoire', 
-    logo: null,
-    description: 'Partenaire Paiement Mobile',
-    type: 'payment',
-    color: 'bg-orange-500'
-  }
-];
-
 const PartnersSection = () => {
-  const [partners, setPartners] = useState(defaultPartners);
+  const [partners, setPartners] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPartners = async () => {
@@ -29,11 +19,17 @@ const PartnersSection = () => {
           setPartners(response.data);
         }
       } catch (error) {
-        console.log('Using default partners');
+        console.log('No partners found');
+      } finally {
+        setLoading(false);
       }
     };
     fetchPartners();
   }, []);
+
+  // Ne pas afficher la section s'il n'y a pas de partenaires
+  if (loading) return null;
+  if (partners.length === 0) return null;
   
   return (
     <section className="py-24 bg-white">
@@ -43,17 +39,22 @@ const PartnersSection = () => {
             Écosystème
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Nos Partenaires
+            Ils nous font confiance
           </h2>
           <p className="text-xl text-gray-600">
-            Ensemble pour une agriculture durable en Côte d'Ivoire
+            Nos partenaires pour une agriculture durable en Côte d'Ivoire
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className={`grid gap-6 mb-12 ${
+          partners.length === 1 ? 'max-w-xs mx-auto' :
+          partners.length === 2 ? 'md:grid-cols-2 max-w-2xl mx-auto' :
+          partners.length === 3 ? 'md:grid-cols-3 max-w-4xl mx-auto' :
+          'md:grid-cols-2 lg:grid-cols-4'
+        }`}>
           {partners.map((partner, index) => (
             <Card 
-              key={index} 
+              key={partner._id || index} 
               className="p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2 border-gray-100 group text-center"
             >
               {partner.logo ? (
@@ -78,9 +79,21 @@ const PartnersSection = () => {
                   {partner.type === 'payment' ? 'Paiement' : 
                    partner.type === 'certification' ? 'Certification' :
                    partner.type === 'logistics' ? 'Logistique' : 
-                   partner.type === 'technology' ? 'Technologie' : 
+                   partner.type === 'technology' ? 'Technologie' :
+                   partner.type === 'finance' ? 'Finance' :
+                   partner.type === 'government' ? 'Gouvernement' :
                    partner.type}
                 </Badge>
+              )}
+              {partner.website && (
+                <a 
+                  href={partner.website} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#2d5a4d] hover:underline mt-2 block"
+                >
+                  Visiter le site →
+                </a>
               )}
             </Card>
           ))}

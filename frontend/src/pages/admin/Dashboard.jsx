@@ -32,7 +32,8 @@ import {
   CreditCard,
   Target,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  FileText
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -347,6 +348,14 @@ const AdminDashboard = () => {
               >
                 <Users className="w-5 h-5 text-violet-600 group-hover:text-violet-700" />
                 <span className="text-xs text-gray-600 group-hover:text-violet-700">Utilisateurs</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/content')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-pink-50 rounded-lg transition group"
+                data-testid="content-management-btn"
+              >
+                <FileText className="w-5 h-5 text-pink-600 group-hover:text-pink-700" />
+                <span className="text-xs text-gray-600 group-hover:text-pink-700">Contenu</span>
               </button>
             </div>
           </div>
