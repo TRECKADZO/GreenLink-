@@ -42,6 +42,13 @@ const AdminDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [partners, setPartners] = useState([]);
+  const [stats, setStats] = useState({
+    total_users: 0,
+    total_products: 0,
+    total_orders: 0,
+    total_partners: 0,
+    users_by_type: {}
+  });
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -85,7 +92,20 @@ const AdminDashboard = () => {
       return;
     }
     fetchPartners();
+    fetchStats();
   }, [user, authLoading]);
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/admin/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
 
   const fetchPartners = async () => {
     try {
@@ -339,7 +359,7 @@ const AdminDashboard = () => {
                 <Users className="w-8 h-8 text-green-600" />
                 <div>
                   <p className="text-sm text-gray-600">Utilisateurs</p>
-                  <p className="text-2xl font-bold">-</p>
+                  <p className="text-2xl font-bold">{stats.total_users}</p>
                 </div>
               </div>
             </Card>
@@ -348,7 +368,7 @@ const AdminDashboard = () => {
                 <Package className="w-8 h-8 text-purple-600" />
                 <div>
                   <p className="text-sm text-gray-600">Produits</p>
-                  <p className="text-2xl font-bold">-</p>
+                  <p className="text-2xl font-bold">{stats.total_products}</p>
                 </div>
               </div>
             </Card>
@@ -356,12 +376,25 @@ const AdminDashboard = () => {
               <div className="flex items-center gap-3">
                 <Building2 className="w-8 h-8 text-orange-600" />
                 <div>
-                  <p className="text-sm text-gray-600">Entreprises</p>
-                  <p className="text-2xl font-bold">-</p>
+                  <p className="text-sm text-gray-600">Coopératives</p>
+                  <p className="text-2xl font-bold">{stats.users_by_type?.cooperative || 0}</p>
                 </div>
               </div>
             </Card>
           </div>
+
+          {/* Users by Type Breakdown */}
+          <Card className="p-4 mb-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-3">Répartition des Utilisateurs</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {Object.entries(stats.users_by_type || {}).map(([type, count]) => (
+                <div key={type} className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-2xl font-bold text-[#2d5a4d]">{count}</p>
+                  <p className="text-xs text-gray-600 capitalize">{type.replace(/_/g, ' ')}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
 
           {/* Partners Management */}
           <Card className="p-6">
