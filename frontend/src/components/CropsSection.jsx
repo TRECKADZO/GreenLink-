@@ -4,43 +4,25 @@ import { Badge } from './ui/badge';
 import { api } from '../services/api';
 import { MapPin } from 'lucide-react';
 
-// Fallback mock data
+// Cultures supportées : Cacao, Café, Anacarde
 const mockCrops = [
   {
     icon: '🍫',
     title: 'Cacao',
-    locations: 'Bouaflé, Daloa, Soubré',
+    locations: 'Bouaflé, Daloa, Soubré, Gagnoa',
     color: 'from-amber-600 to-amber-800'
   },
   {
     icon: '☕',
     title: 'Café',
-    locations: 'Man, Danané',
+    locations: 'Man, Danané, Biankouma',
     color: 'from-amber-700 to-amber-900'
   },
   {
     icon: '🥜',
     title: 'Anacarde',
-    locations: 'Korhogo, Boundiali',
+    locations: 'Korhogo, Boundiali, Ferkessédougou',
     color: 'from-orange-600 to-orange-800'
-  },
-  {
-    icon: '🌳',
-    title: 'Hévéa',
-    locations: 'Grand-Lahou, Dabou',
-    color: 'from-green-600 to-green-800'
-  },
-  {
-    icon: '🌾',
-    title: 'Riz',
-    locations: 'Nord et Centre',
-    color: 'from-yellow-600 to-yellow-800'
-  },
-  {
-    icon: '🥬',
-    title: 'Maraîchage',
-    locations: 'Toute la Côte d\'Ivoire',
-    color: 'from-emerald-600 to-emerald-800'
   }
 ];
 
@@ -50,7 +32,8 @@ const CropsSection = () => {
   useEffect(() => {
     const fetchCrops = async () => {
       const data = await api.getCrops();
-      if (data) {
+      // Ne mettre à jour que si l'API retourne des données non-vides
+      if (data && data.length > 0) {
         setCrops(data);
       }
     };
@@ -68,7 +51,7 @@ const CropsSection = () => {
             Toutes les cultures supportées
           </h2>
           <p className="text-xl text-gray-600">
-            Du cacao premium au maraîchage local
+            Cacao, Café et Anacarde de Côte d'Ivoire
           </p>
         </div>
         
