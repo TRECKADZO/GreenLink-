@@ -112,15 +112,37 @@ export const AuthProvider = ({ children }) => {
       const backendError = error.response?.data?.detail;
       
       if (backendError) {
-        if (backendError.includes('téléphone') || backendError.includes('phone')) {
-          errorMessage = 'Ce numéro de téléphone est déjà enregistré. Connectez-vous ou utilisez un autre numéro.';
-        } else if (backendError.includes('email')) {
-          errorMessage = 'Cet email est déjà enregistré.';
+        // Handle Pydantic validation errors (array of errors)
+        if (Array.isArray(backendError)) {
+          const messages = backendError.map(err => {
+            // Extract the message part after "Value error, "
+            const msg = err.msg || '';
+            return msg.replace('Value error, ', '');
+          });
+          errorMessage = messages.join('\n');
+        } else if (typeof backendError === 'string') {
+          // Normalize for comparison (handle accents)
+          const normalizedError = backendError.toLowerCase();
+          
+          if (normalizedError.includes('téléphone') || 
+              normalizedError.includes('telephone') || 
+              normalizedError.includes('phone') ||
+              normalizedError.includes('numéro')) {
+            errorMessage = 'Ce numéro de téléphone est déjà enregistré. Connectez-vous ou utilisez un autre numéro.';
+          } else if (normalizedError.includes('email') || normalizedError.includes('mail')) {
+            errorMessage = 'Cet email est déjà enregistré. Connectez-vous ou utilisez un autre email.';
+          } else if (normalizedError.includes('mot de passe') || normalizedError.includes('password')) {
+            errorMessage = 'Le mot de passe doit contenir au moins 6 caractères.';
+          } else {
+            errorMessage = backendError;
+          }
         } else {
-          errorMessage = backendError;
+          errorMessage = JSON.stringify(backendError);
         }
-      } else if (error.message.includes('Network')) {
+      } else if (error.message && error.message.includes('Network')) {
         errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet.';
+      } else if (error.message && error.message.includes('timeout')) {
+        errorMessage = 'Le serveur met trop de temps à répondre. Réessayez.';
       }
       
       return {

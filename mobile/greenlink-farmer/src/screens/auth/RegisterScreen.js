@@ -225,7 +225,28 @@ const RegisterScreen = ({ navigation, route }) => {
     setLoading(false);
 
     if (!result.success) {
-      Alert.alert('Erreur', result.error);
+      // Show more descriptive alert based on error type
+      if (result.error.includes('téléphone') || result.error.includes('numéro')) {
+        Alert.alert(
+          'Compte existant', 
+          result.error,
+          [
+            { text: 'Se connecter', onPress: () => navigation.navigate('Login') },
+            { text: 'OK', style: 'cancel' }
+          ]
+        );
+      } else if (result.error.includes('email')) {
+        Alert.alert(
+          'Email déjà utilisé', 
+          result.error,
+          [
+            { text: 'Se connecter', onPress: () => navigation.navigate('Login') },
+            { text: 'OK', style: 'cancel' }
+          ]
+        );
+      } else {
+        Alert.alert('Erreur d\'inscription', result.error);
+      }
     }
   };
 
