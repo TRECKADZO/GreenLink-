@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { COLORS, FONTS, SPACING } from '../config';
 
 // Bouton simplifié haute visibilité
@@ -56,7 +56,7 @@ export const Button = ({
 };
 
 // Menu item style USSD
-export const MenuItem = ({ number, title, subtitle, onPress, icon, highlight = false }) => (
+export const MenuItem = ({ number, title, subtitle, onPress, icon, iconImage, highlight = false }) => (
   <TouchableOpacity 
     style={[styles.menuItem, highlight && styles.menuItemHighlight]} 
     onPress={onPress} 
@@ -69,7 +69,11 @@ export const MenuItem = ({ number, title, subtitle, onPress, icon, highlight = f
       <Text style={[styles.menuTitle, highlight && styles.menuTitleHighlight]}>{title}</Text>
       {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
     </View>
-    {icon && <Text style={styles.menuIcon}>{icon}</Text>}
+    {iconImage ? (
+      <Image source={{ uri: iconImage }} style={styles.menuIconImage} />
+    ) : icon ? (
+      <Text style={styles.menuIcon}>{icon}</Text>
+    ) : null}
   </TouchableOpacity>
 );
 
@@ -217,6 +221,11 @@ const styles = StyleSheet.create({
   },
   menuIcon: {
     fontSize: FONTS.sizes.xxl,
+  },
+  menuIconImage: {
+    width: 32,
+    height: 32,
+    resizeMode: 'contain',
   },
   menuItemHighlight: {
     backgroundColor: COLORS.accent + '30',

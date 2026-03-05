@@ -152,7 +152,7 @@ const HomeScreen = ({ navigation }) => {
           number="2"
           title="Déclarer une Récolte"
           subtitle="Enregistrez votre production"
-          icon="🌰"
+          iconImage="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=64&h=64&fit=crop"
           onPress={() => navigation.navigate('Harvest')}
         />
         
