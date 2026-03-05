@@ -46,7 +46,7 @@ const CROP_TYPES = [
   { 
     id: 'cacao', 
     label: 'Cacao', 
-    icon: '🍫',
+    icon: '🌰',
     image: 'https://images.unsplash.com/photo-1573710661345-610f790e1218?w=200&q=80'
   },
   { 

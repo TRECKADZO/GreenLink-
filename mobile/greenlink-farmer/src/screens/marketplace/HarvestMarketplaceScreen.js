@@ -37,7 +37,7 @@ const HarvestMarketplaceScreen = () => {
 
   const cropTypes = [
     { id: 'all', name: 'Tous', icon: '📦' },
-    { id: 'cacao', name: 'Cacao', icon: '🍫' },
+    { id: 'cacao', name: 'Cacao', icon: '🌰' },
     { id: 'cafe', name: 'Café', icon: '☕' },
     { id: 'anacarde', name: 'Anacarde', icon: '🥜' },
   ];

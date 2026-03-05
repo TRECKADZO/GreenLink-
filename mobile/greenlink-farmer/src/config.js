@@ -152,7 +152,7 @@ export const DEPARTEMENTS = [
 
 // Cultures principales
 export const CULTURES = [
-  { id: "cacao", nom: "Cacao", emoji: "🍫" },
+  { id: "cacao", nom: "Cacao", emoji: "🌰" },
   { id: "cafe", nom: "Café", emoji: "☕" },
   { id: "anacarde", nom: "Anacarde", emoji: "🥜" },
   { id: "hevea", nom: "Hévéa", emoji: "🌳" },
