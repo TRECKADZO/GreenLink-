@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
 import { 
   Search, Filter, MapPin, Award, TrendingUp, 
   Plus, Eye, MessageSquare, ChevronRight, Leaf,
   DollarSign, Package, Star, Calendar, Building2,
   Check, X, ArrowUpDown, RefreshCw, FileText,
   Globe, Shield, Truck, Send, ClipboardList, Heart,
-  LayoutDashboard, ArrowLeft
+  LayoutDashboard, ArrowLeft, Lock
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -180,6 +181,7 @@ const DEMO_STATS = {
 
 const HarvestMarketplace = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [listings, setListings] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -204,6 +206,10 @@ const HarvestMarketplace = () => {
     additional_message: '',
     company_type: ''
   });
+
+  // Vérification des rôles
+  const isSeller = user && ['producteur', 'cooperative', 'farmer'].includes(user.user_type);
+  const isBuyer = user && ['acheteur', 'buyer'].includes(user.user_type);
 
   useEffect(() => {
     fetchListings();
@@ -371,30 +377,33 @@ const HarvestMarketplace = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Button 
-                onClick={() => navigate('/buyer/marketplace')}
-                variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800"
-              >
-                <LayoutDashboard className="h-4 w-4 mr-2" />
-                Mon Espace
-              </Button>
-              <Button 
-                onClick={() => navigate('/marketplace/my-listings')}
-                variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800"
-              >
-                Mes Annonces
-              </Button>
-              <Button 
-                onClick={() => navigate('/marketplace/create-listing')}
-                className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Publier ma Récolte
-              </Button>
-            </div>
+            {/* Menu vendeur - visible uniquement pour agriculteurs et coopératives */}
+            {isSeller && (
+              <div className="flex items-center gap-3">
+                <Button 
+                  onClick={() => navigate('/buyer/marketplace')}
+                  variant="outline"
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                >
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Mon Espace
+                </Button>
+                <Button 
+                  onClick={() => navigate('/marketplace/my-listings')}
+                  variant="outline"
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                >
+                  Mes Annonces
+                </Button>
+                <Button 
+                  onClick={() => navigate('/marketplace/create-listing')}
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Publier ma Récolte
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -624,30 +633,53 @@ const HarvestMarketplace = () => {
                       <Eye className="h-4 w-4" /> {listing.views_count || 0}
                     </span>
                     <div className="flex items-center gap-2">
-                      <Button 
-                        size="sm"
-                        variant="outline"
-                        className="border-slate-600 text-slate-300 hover:text-emerald-400 hover:border-emerald-500"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/messages?listing=${listing.listing_id}&seller=${listing.seller_id}`);
-                        }}
-                      >
-                        <MessageSquare className="h-3 w-3 mr-1" />
-                        Contacter
-                      </Button>
-                      <Button 
-                        size="sm"
-                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedListing(listing);
-                          setShowQuoteDialog(true);
-                        }}
-                      >
-                        <Send className="h-3 w-3 mr-1" />
-                        Devis
-                      </Button>
+                      {/* Boutons réservés aux acheteurs connectés */}
+                      {isBuyer ? (
+                        <>
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            className="border-slate-600 text-slate-300 hover:text-emerald-400 hover:border-emerald-500"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/messages?listing=${listing.listing_id}&seller=${listing.seller_id}`);
+                            }}
+                          >
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            Contacter
+                          </Button>
+                          <Button 
+                            size="sm"
+                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedListing(listing);
+                              setShowQuoteDialog(true);
+                            }}
+                          >
+                            <Send className="h-3 w-3 mr-1" />
+                            Devis
+                          </Button>
+                        </>
+                      ) : (
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="border-slate-600 text-slate-400"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!user) {
+                              toast.info('Connectez-vous en tant qu\'acheteur pour demander un devis');
+                              navigate('/login');
+                            } else {
+                              toast.info('Seuls les acheteurs peuvent demander des devis');
+                            }
+                          }}
+                        >
+                          <Lock className="h-3 w-3 mr-1" />
+                          Devis (Acheteurs)
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
