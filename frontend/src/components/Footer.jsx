@@ -127,6 +127,9 @@ const Footer = () => {
             <p className="text-white/60 text-sm">
               © 2026 GreenLink CI. Agriculture durable pour la Côte d'Ivoire.
             </p>
+            <p className="text-white/40 text-xs mt-2">
+              Emergent/fullstack App
+            </p>
           </div>
         </div>
       </div>
