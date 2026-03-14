@@ -39,12 +39,26 @@ const QRScannerScreen = ({ navigation }) => {
     
     try {
       // Le QR code contient l'ID du producteur ou ses informations
-      // Format attendu: GREENLINK_FARMER:id ou JSON avec les infos
+      // Format attendu: GREENLINK_FARMER:base64(json) ou JSON avec les infos
       let farmerId = null;
       let farmerData = null;
 
       if (data.startsWith('GREENLINK_FARMER:')) {
-        farmerId = data.replace('GREENLINK_FARMER:', '');
+        // Décoder le base64 pour obtenir les données JSON
+        const encodedData = data.replace('GREENLINK_FARMER:', '');
+        try {
+          // Décoder base64 URL-safe
+          const base64 = encodedData.replace(/-/g, '+').replace(/_/g, '/');
+          const decoded = atob(base64);
+          const parsed = JSON.parse(decoded);
+          farmerId = parsed.id || parsed.farmer_id;
+          farmerData = parsed;
+          console.log('Decoded farmer data:', parsed);
+        } catch (decodeError) {
+          // Si le décodage échoue, utiliser comme ID direct
+          console.log('Using raw ID:', encodedData);
+          farmerId = encodedData;
+        }
       } else {
         try {
           const parsed = JSON.parse(data);
@@ -62,17 +76,22 @@ const QRScannerScreen = ({ navigation }) => {
         const response = await cooperativeApi.getMemberDetail(token, farmerId);
         
         if (response.data) {
+          // Naviguer directement vers le profil avec options d'actions
           Alert.alert(
-            'Producteur trouvé!',
-            `${response.data.full_name || response.data.name}\n${response.data.phone_number || ''}\n${response.data.village || ''}`,
+            '✅ Producteur identifié',
+            `${response.data.full_name || response.data.name}\n📍 ${response.data.village || 'Village non défini'}\n📞 ${response.data.phone_number || ''}`,
             [
-              { text: 'Annuler', onPress: () => setScanned(false), style: 'cancel' },
+              { text: 'Fermer', onPress: () => setScanned(false), style: 'cancel' },
               { 
-                text: 'Voir profil', 
-                onPress: () => navigation.navigate('CoopMemberDetail', { memberId: farmerId }) 
+                text: '📋 Profil complet', 
+                onPress: () => navigation.navigate('CoopMemberDetail', { memberId: farmerId, memberData: response.data }) 
               },
               { 
-                text: 'Nouvelle visite SSRTE', 
+                text: '🌳 Ajouter Parcelle', 
+                onPress: () => navigation.navigate('AddParcel', { farmerId, farmerData: response.data }) 
+              },
+              { 
+                text: '📝 Formulaire SSRTE', 
                 onPress: () => navigation.navigate('SSRTEVisitForm', { farmerId, farmerData: response.data }) 
               },
             ]
@@ -80,7 +99,7 @@ const QRScannerScreen = ({ navigation }) => {
         } else {
           Alert.alert(
             'Producteur non trouvé',
-            'Ce QR code ne correspond à aucun producteur enregistré.',
+            'Ce QR code ne correspond à aucun producteur enregistré dans votre coopérative.',
             [
               { text: 'Réessayer', onPress: () => setScanned(false) },
               { text: 'Ajouter nouveau', onPress: () => navigation.navigate('AddCoopMember') },

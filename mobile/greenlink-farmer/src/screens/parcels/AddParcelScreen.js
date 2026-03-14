@@ -63,7 +63,10 @@ const CROP_TYPES = [
   },
 ];
 
-const AddParcelScreen = ({ navigation }) => {
+const AddParcelScreen = ({ navigation, route }) => {
+  // Récupérer les données du producteur depuis le scan QR (si disponible)
+  const { farmerId, farmerData } = route?.params || {};
+  
   const { isOnline, addPendingAction } = useOffline();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -76,6 +79,19 @@ const AddParcelScreen = ({ navigation }) => {
   const [showMemberPicker, setShowMemberPicker] = useState(false);
   const [searchMember, setSearchMember] = useState('');
   const [loadingMembers, setLoadingMembers] = useState(false);
+  
+  // Pré-remplir avec les données du scan QR
+  useEffect(() => {
+    if (farmerData && farmerId) {
+      setSelectedMember({
+        id: farmerId,
+        _id: farmerId,
+        full_name: farmerData.full_name || farmerData.name,
+        phone_number: farmerData.phone_number,
+        village: farmerData.village
+      });
+    }
+  }, [farmerId, farmerData]);
   
   const [formData, setFormData] = useState({
     location: '',
