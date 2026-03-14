@@ -403,10 +403,18 @@ const Dashboard = () => {
                 <Button 
                   variant="outline"
                   className="border-gray-300"
-                  onClick={() => navigate('/cooperative/members')}
+                  onClick={() => navigate('/cooperative/parcels')}
                 >
-                  <Users className="h-4 w-4 mr-2" />
-                  Voir Parcelles par Membre
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Toutes les Parcelles
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+                  onClick={() => navigate('/cooperative/parcels/verification')}
+                >
+                  <Clock className="h-4 w-4 mr-2" />
+                  En attente de vérification
                 </Button>
                 <Button 
                   variant="outline"

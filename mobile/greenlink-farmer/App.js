@@ -64,6 +64,7 @@ import {
 import {
   FieldAgentDashboard,
   QRScannerScreen,
+  ParcelVerificationScreen,
   GeoPhotoScreen,
   SSRTEVisitFormScreen,
 } from './src/screens/field-agent';
@@ -167,6 +168,7 @@ function AppNavigator() {
       {/* Field Agent Screens (SSRTE, QR, Geo Photos) */}
       <Stack.Screen name="FieldAgentDashboard" component={FieldAgentDashboard} />
       <Stack.Screen name="QRScanner" component={QRScannerScreen} />
+      <Stack.Screen name="ParcelVerification" component={ParcelVerificationScreen} />
       <Stack.Screen name="GeoPhoto" component={GeoPhotoScreen} />
       <Stack.Screen name="SSRTEVisitForm" component={SSRTEVisitFormScreen} />
       <Stack.Screen name="VisitsHistory" component={CoopReportsScreen} />

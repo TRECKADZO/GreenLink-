@@ -53,6 +53,34 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  // ============= PARCEL VERIFICATION =============
+  
+  getPendingParcels: async () => {
+    const response = await api.get('/cooperative/parcels/pending-verification');
+    return response.data;
+  },
+
+  getAllParcels: async (verificationStatus = null) => {
+    const params = verificationStatus ? { verification_status: verificationStatus } : {};
+    const response = await api.get('/cooperative/parcels/all', { params });
+    return response.data;
+  },
+
+  getParcelDetails: async (token, parcelId) => {
+    const response = await api.get(`/cooperative/parcels/${parcelId}/details`);
+    return response;
+  },
+
+  verifyParcel: async (token, parcelId, verificationData) => {
+    const response = await api.put(`/cooperative/parcels/${parcelId}/verify`, verificationData);
+    return response.data;
+  },
+
+  getMemberDetail: async (token, memberId) => {
+    const response = await api.get(`/cooperative/members/${memberId}`);
+    return response;
+  },
+
   // ============= LOTS =============
   
   getLots: async (status = null) => {

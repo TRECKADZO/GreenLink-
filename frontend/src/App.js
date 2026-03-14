@@ -79,6 +79,7 @@ import CooperativeNotifications from "./pages/cooperative/Notifications";
 import FieldAgentsPage from "./pages/cooperative/FieldAgentsPage";
 import AddParcelPage from "./pages/cooperative/AddParcelPage";
 import CarbonPremiumsPage from "./pages/cooperative/CarbonPremiumsPage";
+import ParcelsVerificationPage from "./pages/cooperative/ParcelsVerificationPage";
 
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
@@ -189,6 +190,8 @@ function App() {
               <Route path="/cooperative/members/import" element={<ImportMembersPage />} />
               <Route path="/cooperative/members/:memberId/parcels" element={<MemberParcelsPage />} />
               <Route path="/cooperative/parcels/new" element={<AddParcelPage />} />
+              <Route path="/cooperative/parcels" element={<ParcelsVerificationPage />} />
+              <Route path="/cooperative/parcels/verification" element={<ParcelsVerificationPage />} />
               <Route path="/cooperative/lots" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/lots/new" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />

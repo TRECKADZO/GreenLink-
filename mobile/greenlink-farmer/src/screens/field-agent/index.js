@@ -4,3 +4,4 @@ export { default as QRScannerScreen } from './QRScannerScreen';
 export { default as GeoPhotoScreen } from './GeoPhotoScreen';
 export { default as SSRTEVisitFormScreen } from './SSRTEVisitFormScreen';
 export { default as SSRTEAgentDashboard } from './SSRTEAgentDashboard';
+export { default as ParcelVerificationScreen } from './ParcelVerificationScreen';

@@ -431,6 +431,13 @@ async def add_member_parcel(
         "eudr_compliant": True,
         "deforestation_free": True,
         "status": "active",
+        # Statut de vérification terrain
+        "verification_status": "pending",  # pending, verified, rejected, needs_correction
+        "verified_at": None,
+        "verified_by": None,
+        "verification_notes": None,
+        "verification_photos": [],
+        "verified_gps_coordinates": None,
         "created_at": datetime.utcnow(),
         "created_by": current_user["_id"]
     }
@@ -494,6 +501,9 @@ async def get_member_parcels(
             "co2_captured_tonnes": p.get("co2_captured_tonnes", 0),
             "certification": p.get("certification"),
             "gps_coordinates": p.get("gps_coordinates"),
+            "verification_status": p.get("verification_status", "pending"),
+            "verified_at": p.get("verified_at"),
+            "verified_by": p.get("verified_by"),
             "created_at": p.get("created_at", "")
         } for p in parcels]
     }
@@ -526,6 +536,212 @@ async def delete_member_parcel(
     )
     
     return {"message": "Parcelle supprimée avec succès"}
+
+# ============= PARCEL VERIFICATION BY FIELD AGENTS =============
+
+class ParcelVerificationUpdate(BaseModel):
+    verification_status: str  # verified, rejected, needs_correction
+    verification_notes: Optional[str] = None
+    verified_gps_lat: Optional[float] = None
+    verified_gps_lng: Optional[float] = None
+    verification_photos: Optional[List[str]] = []
+    corrected_area_hectares: Optional[float] = None
+
+@router.get("/parcels/pending-verification")
+async def get_parcels_pending_verification(
+    current_user: dict = Depends(get_current_user),
+    limit: int = Query(50, le=200)
+):
+    """Liste des parcelles en attente de vérification pour cette coopérative"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    # Get parcels pending verification
+    parcels = await db.parcels.find({
+        "coop_id": coop_id,
+        "verification_status": {"$in": ["pending", "needs_correction", None]}
+    }).sort("created_at", -1).to_list(limit)
+    
+    # Get member info for each parcel
+    result = []
+    for p in parcels:
+        member = await db.coop_members.find_one({"_id": p.get("member_id")})
+        result.append({
+            "id": str(p["_id"]),
+            "farmer_id": p.get("farmer_id", ""),
+            "farmer_name": member.get("full_name", "Inconnu") if member else "Inconnu",
+            "farmer_phone": member.get("phone_number", "") if member else "",
+            "location": p.get("location", ""),
+            "village": p.get("village", ""),
+            "area_hectares": p.get("area_hectares", 0),
+            "crop_type": p.get("crop_type", "cacao"),
+            "gps_coordinates": p.get("gps_coordinates"),
+            "verification_status": p.get("verification_status", "pending"),
+            "created_at": p.get("created_at", "")
+        })
+    
+    return {
+        "total_pending": len(result),
+        "parcels": result
+    }
+
+@router.get("/parcels/all")
+async def get_all_coop_parcels(
+    current_user: dict = Depends(get_current_user),
+    verification_status: Optional[str] = Query(None),
+    limit: int = Query(100, le=500)
+):
+    """Liste de toutes les parcelles de la coopérative avec filtre par statut de vérification"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+    
+    query = {"coop_id": coop_id}
+    if verification_status:
+        query["verification_status"] = verification_status
+    
+    parcels = await db.parcels.find(query).sort("created_at", -1).to_list(limit)
+    
+    # Count by status
+    all_parcels = await db.parcels.find({"coop_id": coop_id}).to_list(1000)
+    status_counts = {
+        "pending": sum(1 for p in all_parcels if p.get("verification_status", "pending") in ["pending", None]),
+        "verified": sum(1 for p in all_parcels if p.get("verification_status") == "verified"),
+        "rejected": sum(1 for p in all_parcels if p.get("verification_status") == "rejected"),
+        "needs_correction": sum(1 for p in all_parcels if p.get("verification_status") == "needs_correction")
+    }
+    
+    result = []
+    for p in parcels:
+        member = await db.coop_members.find_one({"_id": p.get("member_id")})
+        result.append({
+            "id": str(p["_id"]),
+            "farmer_id": p.get("farmer_id", ""),
+            "farmer_name": member.get("full_name", "Inconnu") if member else "Inconnu",
+            "farmer_phone": member.get("phone_number", "") if member else "",
+            "location": p.get("location", ""),
+            "village": p.get("village", ""),
+            "area_hectares": p.get("area_hectares", 0),
+            "crop_type": p.get("crop_type", "cacao"),
+            "carbon_score": p.get("carbon_score", 0),
+            "gps_coordinates": p.get("gps_coordinates"),
+            "verification_status": p.get("verification_status", "pending"),
+            "verified_at": p.get("verified_at"),
+            "verified_by": p.get("verified_by"),
+            "verification_notes": p.get("verification_notes"),
+            "created_at": p.get("created_at", "")
+        })
+    
+    return {
+        "total": len(result),
+        "status_counts": status_counts,
+        "parcels": result
+    }
+
+@router.put("/parcels/{parcel_id}/verify")
+async def verify_parcel(
+    parcel_id: str,
+    verification: ParcelVerificationUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Vérifier/Valider une parcelle (pour agents terrain)"""
+    # Allow both cooperative managers and field agents
+    if current_user.get("user_type") not in ["cooperative", "field_agent", "agent_terrain", "super_admin"]:
+        raise HTTPException(status_code=403, detail="Non autorisé à vérifier les parcelles")
+    
+    parcel = await db.parcels.find_one({"_id": ObjectId(parcel_id)})
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcelle non trouvée")
+    
+    # Prepare update
+    update_data = {
+        "verification_status": verification.verification_status,
+        "verified_at": datetime.utcnow(),
+        "verified_by": str(current_user["_id"]),
+        "verifier_name": current_user.get("full_name", "Agent"),
+        "verification_notes": verification.verification_notes
+    }
+    
+    # Add verified GPS if provided
+    if verification.verified_gps_lat and verification.verified_gps_lng:
+        update_data["verified_gps_coordinates"] = {
+            "lat": verification.verified_gps_lat,
+            "lng": verification.verified_gps_lng
+        }
+    
+    # Add photos if provided
+    if verification.verification_photos:
+        update_data["verification_photos"] = verification.verification_photos
+    
+    # Correct area if provided
+    if verification.corrected_area_hectares and verification.corrected_area_hectares != parcel.get("area_hectares"):
+        update_data["area_hectares_declared"] = parcel.get("area_hectares")
+        update_data["area_hectares"] = verification.corrected_area_hectares
+        # Recalculate carbon score
+        new_carbon_score = round(min(9.5, 5.5 + (verification.corrected_area_hectares * 0.3)), 1)
+        update_data["carbon_score"] = new_carbon_score
+        update_data["co2_captured_tonnes"] = round(verification.corrected_area_hectares * new_carbon_score * 2.5, 2)
+    
+    await db.parcels.update_one(
+        {"_id": ObjectId(parcel_id)},
+        {"$set": update_data}
+    )
+    
+    # Get farmer info for notification
+    member = await db.coop_members.find_one({"_id": parcel.get("member_id")})
+    
+    return {
+        "message": f"Parcelle {'vérifiée' if verification.verification_status == 'verified' else 'mise à jour'}",
+        "parcel_id": parcel_id,
+        "verification_status": verification.verification_status,
+        "farmer_name": member.get("full_name", "Inconnu") if member else "Inconnu",
+        "verified_at": update_data["verified_at"].isoformat()
+    }
+
+@router.get("/parcels/{parcel_id}/details")
+async def get_parcel_details(
+    parcel_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Détails complets d'une parcelle pour vérification"""
+    parcel = await db.parcels.find_one({"_id": ObjectId(parcel_id)})
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcelle non trouvée")
+    
+    # Get member info
+    member = await db.coop_members.find_one({"_id": parcel.get("member_id")})
+    
+    # Get verifier info if verified
+    verifier = None
+    if parcel.get("verified_by"):
+        verifier = await db.users.find_one({"_id": ObjectId(parcel["verified_by"])})
+    
+    return {
+        "id": str(parcel["_id"]),
+        "farmer": {
+            "id": str(member["_id"]) if member else "",
+            "name": member.get("full_name", "Inconnu") if member else "Inconnu",
+            "phone": member.get("phone_number", "") if member else "",
+            "village": member.get("village", "") if member else ""
+        },
+        "location": parcel.get("location", ""),
+        "village": parcel.get("village", ""),
+        "area_hectares": parcel.get("area_hectares", 0),
+        "area_hectares_declared": parcel.get("area_hectares_declared"),
+        "crop_type": parcel.get("crop_type", "cacao"),
+        "carbon_score": parcel.get("carbon_score", 0),
+        "co2_captured_tonnes": parcel.get("co2_captured_tonnes", 0),
+        "certification": parcel.get("certification"),
+        "gps_coordinates": parcel.get("gps_coordinates"),
+        "verified_gps_coordinates": parcel.get("verified_gps_coordinates"),
+        "verification_status": parcel.get("verification_status", "pending"),
+        "verification_notes": parcel.get("verification_notes"),
+        "verification_photos": parcel.get("verification_photos", []),
+        "verified_at": parcel.get("verified_at"),
+        "verifier_name": verifier.get("full_name", "Agent") if verifier else parcel.get("verifier_name"),
+        "created_at": parcel.get("created_at"),
+        "eudr_compliant": parcel.get("eudr_compliant", True)
+    }
+
 
 # ============= LOT MANAGEMENT =============
 
