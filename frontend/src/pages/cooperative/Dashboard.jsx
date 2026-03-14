@@ -190,6 +190,18 @@ const Dashboard = () => {
             <CardContent className="space-y-2">
               <Button 
                 variant="outline" 
+                className="w-full justify-between bg-green-500/10 border-green-500/50 hover:bg-green-500/20"
+                onClick={() => navigate('/cooperative/parcels/new')}
+                data-testid="quick-action-new-parcel"
+              >
+                <span className="flex items-center text-green-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Enregistrer une Parcelle
+                </span>
+                <ChevronRight className="h-4 w-4 text-green-700" />
+              </Button>
+              <Button 
+                variant="outline" 
                 className="w-full justify-between"
                 onClick={() => navigate('/cooperative/members')}
                 data-testid="quick-action-members"
@@ -332,6 +344,79 @@ const Dashboard = () => {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Gestion des Parcelles - Section dédiée */}
+          <Card className="lg:col-span-3 border-2 border-green-200 bg-green-50/30">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-green-600" />
+                  Gestion des Parcelles des Planteurs
+                </CardTitle>
+                <CardDescription>
+                  Enregistrez et gérez les parcelles de vos membres producteurs
+                </CardDescription>
+              </div>
+              <Button 
+                onClick={() => navigate('/cooperative/parcels/new')}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle Parcelle
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                  <MapPin className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                  <p className="text-2xl font-bold text-gray-900">{parcels?.total_count || 0}</p>
+                  <p className="text-sm text-gray-500">Parcelles Totales</p>
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                  <Leaf className="h-8 w-8 mx-auto mb-2 text-emerald-600" />
+                  <p className="text-2xl font-bold text-gray-900">{parcels?.total_hectares?.toFixed(1) || 0}</p>
+                  <p className="text-sm text-gray-500">Hectares Cultivés</p>
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                  <TrendingUp className="h-8 w-8 mx-auto mb-2 text-teal-600" />
+                  <p className="text-2xl font-bold text-gray-900">{parcels?.average_carbon_score?.toFixed(1) || 0}/10</p>
+                  <p className="text-sm text-gray-500">Score Carbone Moyen</p>
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                  <p className="text-2xl font-bold text-gray-900">{parcels?.total_co2_tonnes?.toFixed(1) || 0}</p>
+                  <p className="text-sm text-gray-500">Tonnes CO₂ Capturées</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                <Button 
+                  variant="outline" 
+                  className="border-green-300 text-green-700 hover:bg-green-100"
+                  onClick={() => navigate('/cooperative/parcels/new')}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Enregistrer une Parcelle
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="border-gray-300"
+                  onClick={() => navigate('/cooperative/members')}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Voir Parcelles par Membre
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="border-gray-300"
+                  onClick={() => navigate('/cooperative/reports')}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Rapport EUDR Parcelles
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
