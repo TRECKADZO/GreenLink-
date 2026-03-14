@@ -75,17 +75,28 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
     verify_cooperative(current_user)
     coop_id = current_user["_id"]
     
+    # Query that searches in both coop_id and cooperative_id fields
+    member_query = {"$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]}
+    
     # Get members count
-    total_members = await db.coop_members.count_documents({"coop_id": coop_id})
-    active_members = await db.coop_members.count_documents({"coop_id": coop_id, "is_active": True})
+    total_members = await db.coop_members.count_documents(member_query)
+    active_members = await db.coop_members.count_documents({**member_query, "is_active": True})
     
     # Get parcels data
-    members = await db.coop_members.find({"coop_id": coop_id}).to_list(10000)
+    members = await db.coop_members.find(member_query).to_list(10000)
+    member_ids = [str(m["_id"]) for m in members]
     member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
     
-    parcels = await db.parcels.find({"farmer_id": {"$in": member_user_ids}}).to_list(10000)
+    # Search parcels by multiple possible fields
+    parcels = await db.parcels.find({
+        "$or": [
+            {"coop_id": coop_id},
+            {"farmer_id": {"$in": member_ids + member_user_ids}},
+            {"member_id": {"$in": [ObjectId(m) for m in member_ids]}}
+        ]
+    }).to_list(10000)
     total_hectares = sum([p.get("area_hectares", 0) for p in parcels])
-    total_co2 = sum([p.get("carbon_credits_earned", 0) for p in parcels])
+    total_co2 = sum([p.get("co2_captured_tonnes", 0) or p.get("carbon_credits_earned", 0) for p in parcels])
     avg_score = sum([p.get("carbon_score", 0) for p in parcels]) / len(parcels) if parcels else 0
     
     # Get lots
@@ -99,12 +110,12 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
     
     # Get recent activities
     recent_members = await db.coop_members.find(
-        {"coop_id": coop_id}
+        member_query
     ).sort("created_at", -1).limit(5).to_list(5)
     
     # Get pending validations
     pending_members = await db.coop_members.count_documents({
-        "coop_id": coop_id, 
+        **member_query, 
         "status": "pending_validation"
     })
     
@@ -140,8 +151,10 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
         },
         "recent_members": [{
             "id": str(m["_id"]),
-            "name": m.get("full_name", ""),
+            "name": m.get("full_name") or m.get("name") or "Membre",
+            "full_name": m.get("full_name") or m.get("name") or "Membre",
             "village": m.get("village", ""),
+            "phone_number": m.get("phone_number", ""),
             "created_at": m.get("created_at", datetime.utcnow()).isoformat() if isinstance(m.get("created_at"), datetime) else str(m.get("created_at", ""))
         } for m in recent_members]
     }
