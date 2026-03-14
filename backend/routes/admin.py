@@ -172,11 +172,11 @@ async def get_all_users(
     for u in users:
         user_data = {
             "id": str(u["_id"]),
-            "name": u.get("name") or u.get("full_name") or "Sans nom",
+            "name": u.get("full_name") or u.get("name") or "Sans nom",
             "email": u.get("email") or "-",
-            "phone": u.get("phone") or "-",
+            "phone": u.get("phone_number") or u.get("phone") or "-",
             "user_type": u.get("user_type") or "-",
-            "status": u.get("status") or "active",
+            "status": "active" if u.get("is_active", True) else "inactive",
             "created_at": u.get("created_at"),
             "last_login": u.get("last_login"),
             "cooperative_id": u.get("cooperative_id"),
