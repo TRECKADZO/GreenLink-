@@ -33,7 +33,7 @@ import FarmerQRCode from '../components/FarmerQRCode';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Profile = () => {
-  const { user, logout, updateProfile } = useAuth();
+  const { user, logout, updateProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
@@ -44,30 +44,63 @@ const Profile = () => {
   const [iciProfile, setIciProfile] = useState(null);
   const [loadingIci, setLoadingIci] = useState(false);
   const [formData, setFormData] = useState({
-    full_name: user?.full_name || '',
+    full_name: '',
     // Producteur
-    farm_location: user?.farm_location || '',
-    farm_size: user?.farm_size || '',
-    crops: user?.crops?.join(', ') || '',
+    farm_location: '',
+    farm_size: '',
+    crops: '',
     // Acheteur
-    company_name: user?.company_name || '',
-    purchase_volume: user?.purchase_volume || '',
+    company_name: '',
+    purchase_volume: '',
     // Entreprise RSE
-    company_name_rse: user?.company_name_rse || '',
-    sector: user?.sector || '',
-    carbon_goals: user?.carbon_goals || '',
+    company_name_rse: '',
+    sector: '',
+    carbon_goals: '',
     // Fournisseur
-    supplier_company: user?.supplier_company || '',
-    products_offered: user?.products_offered?.join(', ') || '',
+    supplier_company: '',
+    products_offered: '',
     // ICI Data
-    department: user?.department || '',
-    village: user?.village || '',
-    genre: user?.genre || '',
-    date_naissance: user?.date_naissance || '',
-    niveau_education: user?.niveau_education || '',
-    taille_menage: user?.taille_menage || '',
-    nombre_enfants: user?.nombre_enfants || ''
+    department: '',
+    village: '',
+    genre: '',
+    date_naissance: '',
+    niveau_education: '',
+    taille_menage: '',
+    nombre_enfants: ''
   });
+
+  // Update form data when user is loaded
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        full_name: user.full_name || '',
+        farm_location: user.farm_location || '',
+        farm_size: user.farm_size || '',
+        crops: user.crops?.join(', ') || '',
+        company_name: user.company_name || '',
+        purchase_volume: user.purchase_volume || '',
+        company_name_rse: user.company_name_rse || '',
+        sector: user.sector || '',
+        carbon_goals: user.carbon_goals || '',
+        supplier_company: user.supplier_company || '',
+        products_offered: user.products_offered?.join(', ') || '',
+        department: user.department || '',
+        village: user.village || '',
+        genre: user.genre || '',
+        date_naissance: user.date_naissance || '',
+        niveau_education: user.niveau_education || '',
+        taille_menage: user.taille_menage || '',
+        nombre_enfants: user.nombre_enfants || ''
+      });
+    }
+  }, [user]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login');
+    }
+  }, [user, authLoading, navigate]);
 
   // Fetch ICI profile for producers
   useEffect(() => {
@@ -94,6 +127,18 @@ const Profile = () => {
   if (!user) {
     navigate('/login');
     return null;
+  }
+
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2d5a4d] mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement du profil...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleLogout = () => {
