@@ -2,7 +2,7 @@
   "expo": {
     "name": "GreenLink Farmer",
     "slug": "greenlink-farmer",
-    "version": "1.20.0",
+    "version": "1.21.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -18,7 +18,7 @@
       "bundleIdentifier": "com.greenlink.farmer",
       "infoPlist": {
         "UIBackgroundModes": ["remote-notification"],
-        "NSCameraUsageDescription": "GreenLink a besoin d'accéder à la caméra pour scanner les QR codes et photographier les parcelles.",
+        "NSCameraUsageDescription": "GreenLink a besoin d'accéder à la caméra pour photographier les parcelles et preuves de vérification.",
         "NSLocationWhenInUseUsageDescription": "GreenLink a besoin de votre position pour géolocaliser vos photos et parcelles."
       }
     },

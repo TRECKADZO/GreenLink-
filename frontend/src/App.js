@@ -102,6 +102,7 @@ import ActivateAgent from "./pages/auth/ActivateAgent";
 
 // Agent Terrain
 import AgentTerrainDashboard from "./pages/agent/AgentTerrainDashboard";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 // Notifications (shared)
 import NotificationsPage from "./pages/NotificationsPage";
@@ -240,6 +241,7 @@ function App() {
           </BrowserRouter>
           <Toaster />
           <ToasterUI />
+          <PWAInstallPrompt />
         </CartProvider>
       </AuthProvider>
     </div>

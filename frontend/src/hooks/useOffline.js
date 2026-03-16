@@ -58,6 +58,18 @@ export function useOfflineAgent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline]);
 
+  // Écouter les messages du Service Worker pour Background Sync
+  useEffect(() => {
+    const handleSWSync = () => {
+      if (isOnline && !syncInProgress.current) {
+        syncAll();
+      }
+    };
+    window.addEventListener('sw-sync-available', handleSWSync);
+    return () => window.removeEventListener('sw-sync-available', handleSWSync);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline]);
+
   const getToken = () => localStorage.getItem('token');
 
   // Synchronisation complète (download + upload)
