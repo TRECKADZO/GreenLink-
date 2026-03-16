@@ -247,12 +247,12 @@ const SSRTEAgentDashboard = ({ navigation }) => {
             
             <TouchableOpacity 
               style={styles.actionButton}
-              onPress={() => navigation.navigate('QRScanner')}
+              onPress={() => navigation.navigate('FarmerSearch')}
             >
               <View style={[styles.actionIcon, { backgroundColor: '#8b5cf6' }]}>
-                <Ionicons name="qr-code" size={24} color="#fff" />
+                <Ionicons name="search" size={24} color="#fff" />
               </View>
-              <Text style={styles.actionText}>Scanner QR</Text>
+              <Text style={styles.actionText}>Chercher Planteur</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 

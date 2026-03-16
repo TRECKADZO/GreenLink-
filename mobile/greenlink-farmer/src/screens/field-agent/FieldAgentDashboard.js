@@ -156,15 +156,15 @@ const FieldAgentDashboard = ({ navigation }) => {
 
           <TouchableOpacity 
             style={[styles.statCard, { backgroundColor: '#f59e0b' }]}
-            onPress={() => navigation.navigate('QRScanner')}
+            onPress={() => navigation.navigate('FarmerSearch')}
           >
-            <Ionicons name="qr-code" size={28} color={COLORS.white} />
+            <Ionicons name="call" size={28} color={COLORS.white} />
             <Text style={styles.statValue}>{statistics?.qr_scans || 0}</Text>
-            <Text style={styles.statLabel}>QR Scannés</Text>
+            <Text style={styles.statLabel}>Recherches</Text>
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: '100%' }]} />
             </View>
-            <Text style={styles.progressText}>Scanner un producteur</Text>
+            <Text style={styles.progressText}>Chercher par téléphone</Text>
           </TouchableOpacity>
         </View>
 
@@ -245,10 +245,10 @@ const FieldAgentDashboard = ({ navigation }) => {
           
           <TouchableOpacity 
             style={[styles.actionButton, { backgroundColor: '#10b981' }]}
-            onPress={() => navigation.navigate('QRScanner')}
+            onPress={() => navigation.navigate('FarmerSearch')}
           >
-            <Ionicons name="qr-code" size={24} color={COLORS.white} />
-            <Text style={styles.actionText}>Scanner QR</Text>
+            <Ionicons name="search" size={24} color={COLORS.white} />
+            <Text style={styles.actionText}>Chercher Planteur</Text>
           </TouchableOpacity>
         </View>
 

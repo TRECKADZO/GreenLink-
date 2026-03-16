@@ -63,6 +63,7 @@ import {
 // Screens - Field Agent (SSRTE, QR Scanner, Geo Photos)
 import {
   FieldAgentDashboard,
+  FarmerSearchScreen,
   QRScannerScreen,
   ParcelVerificationScreen,
   GeoPhotoScreen,
@@ -95,7 +96,7 @@ const SCREENS_WITH_TAB_BAR = [
   'CoopDashboard', 'CoopMembers', 'CoopReports', 'FieldAgentDashboard',
   'Parcels', 'Harvest', 'Marketplace', 'Notifications', 'Messaging',
   'CarbonMarketplace', 'MyCarbonScore', 'MyCarbonPurchases',
-  'AuditorDashboard',
+  'AuditorDashboard', 'FarmerSearch',
 ];
 
 // Auth Navigator (Welcome/Login/Register)
@@ -165,8 +166,9 @@ function AppNavigator() {
       <Stack.Screen name="CoopReports" component={CoopReportsScreen} />
       <Stack.Screen name="CoopLots" component={CoopReportsScreen} />
       
-      {/* Field Agent Screens (SSRTE, QR, Geo Photos) */}
+      {/* Field Agent Screens (SSRTE, Farmer Search, Geo Photos) */}
       <Stack.Screen name="FieldAgentDashboard" component={FieldAgentDashboard} />
+      <Stack.Screen name="FarmerSearch" component={FarmerSearchScreen} />
       <Stack.Screen name="QRScanner" component={QRScannerScreen} />
       <Stack.Screen name="ParcelVerification" component={ParcelVerificationScreen} />
       <Stack.Screen name="GeoPhoto" component={GeoPhotoScreen} />

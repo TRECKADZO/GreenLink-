@@ -51,7 +51,7 @@ const QUICK_ACTIONS = {
     { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#10b981' },
     { name: 'Messaging', icon: 'chatbubbles', label: 'Messagerie', color: '#8b5cf6' },
     { name: 'SSRTEVisitForm', icon: 'clipboard', label: 'Visite SSRTE', color: '#f59e0b' },
-    { name: 'QRScanner', icon: 'qr-code', label: 'Scanner QR', color: '#3b82f6' },
+    { name: 'FarmerSearch', icon: 'search', label: 'Recherche Planteur', color: '#3b82f6' },
     { name: 'GeoPhoto', icon: 'camera', label: 'Photo Géolocalisée', color: '#06b6d4' },
     { name: 'FieldAgentDashboard', icon: 'shield-checkmark', label: 'Agent Terrain', color: '#ec4899' },
     { name: 'CoopLots', icon: 'layers', label: 'Lots Groupés', color: '#64748b' },
