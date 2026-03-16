@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, User, MapPin, Phone, FileText, Shield, Clock, Leaf, AlertTriangle, ChevronRight, Activity, Eye } from 'lucide-react';
+import { Search, User, MapPin, Phone, FileText, Shield, Leaf, AlertTriangle, ChevronRight, Activity, Eye, Wifi, WifiOff, RefreshCw, Download, Upload, Database, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import Navbar from '../../components/Navbar';
+import { useOfflineAgent } from '../../hooks/useOffline';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -16,42 +16,54 @@ const getAuthHeader = () => {
 };
 
 const AgentTerrainDashboard = () => {
-  const navigate = useNavigate();
   const [phone, setPhone] = useState('');
   const [searching, setSearching] = useState(false);
   const [farmer, setFarmer] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [stats, setStats] = useState(null);
-  const [loadingStats, setLoadingStats] = useState(false);
   const [auditLogs, setAuditLogs] = useState([]);
   const [showDetails, setShowDetails] = useState(false);
   const [farmerDetails, setFarmerDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
+  const {
+    isOnline,
+    syncing,
+    lastSync,
+    pendingCount,
+    cachedFarmers,
+    syncError,
+    syncAll,
+    searchOffline,
+    addPendingAction,
+    getFarmerOffline,
+  } = useOfflineAgent();
+
   const loadStats = useCallback(async () => {
-    setLoadingStats(true);
+    if (!isOnline) return;
     try {
       const res = await fetch(`${API_URL}/api/agent/dashboard/stats`, { headers: getAuthHeader() });
       if (res.ok) setStats(await res.json());
-    } catch (e) { console.error(e); }
-    finally { setLoadingStats(false); }
-  }, []);
+    } catch (e) { /* offline */ }
+  }, [isOnline]);
 
   const loadAuditLogs = useCallback(async () => {
+    if (!isOnline) return;
     try {
       const res = await fetch(`${API_URL}/api/agent/audit-logs?limit=10`, { headers: getAuthHeader() });
       if (res.ok) {
         const data = await res.json();
         setAuditLogs(data.logs || []);
       }
-    } catch (e) { console.error(e); }
-  }, []);
+    } catch (e) { /* offline */ }
+  }, [isOnline]);
 
   React.useEffect(() => {
     loadStats();
     loadAuditLogs();
   }, [loadStats, loadAuditLogs]);
 
+  // ============= RECHERCHE (online/offline) =============
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!phone.trim()) {
@@ -64,48 +76,138 @@ const AgentTerrainDashboard = () => {
     setNotFound(false);
     setShowDetails(false);
 
-    try {
-      const res = await fetch(`${API_URL}/api/agent/search?phone=${encodeURIComponent(phone.trim())}`, {
-        headers: getAuthHeader()
-      });
-
-      if (res.status === 403) {
-        toast.error('Accès non autorisé. Seuls les agents terrain peuvent effectuer cette recherche.');
-        return;
+    if (isOnline) {
+      // Recherche en ligne
+      try {
+        const res = await fetch(`${API_URL}/api/agent/search?phone=${encodeURIComponent(phone.trim())}`, {
+          headers: getAuthHeader()
+        });
+        if (res.status === 403) {
+          toast.error('Accès non autorisé');
+          return;
+        }
+        const data = await res.json();
+        if (data.found) {
+          setFarmer(data.farmer);
+          toast.success(`Planteur trouvé: ${data.farmer.full_name}`);
+          loadAuditLogs();
+        } else {
+          // Fallback: chercher dans le cache offline
+          const offlineResults = await searchOffline(phone.trim());
+          if (offlineResults.length > 0) {
+            setFarmer(offlineResults[0]);
+            toast.success(`Planteur trouvé (cache local): ${offlineResults[0].full_name}`);
+          } else {
+            setNotFound(true);
+            toast.error(data.message || 'Aucun planteur trouvé');
+          }
+        }
+      } catch (error) {
+        // Réseau échoué → fallback offline
+        const offlineResults = await searchOffline(phone.trim());
+        if (offlineResults.length > 0) {
+          setFarmer(offlineResults[0]);
+          toast.success(`Planteur trouvé (mode hors-ligne): ${offlineResults[0].full_name}`);
+          await addPendingAction({
+            action_type: 'search_log',
+            data: { phone: phone.trim(), farmer_name: offlineResults[0].full_name }
+          });
+        } else {
+          setNotFound(true);
+          toast.error('Aucun résultat dans le cache local');
+        }
       }
-
-      const data = await res.json();
-      if (data.found) {
-        setFarmer(data.farmer);
-        toast.success(`Planteur trouvé: ${data.farmer.full_name}`);
-        loadAuditLogs();
+    } else {
+      // Mode offline pur
+      const offlineResults = await searchOffline(phone.trim());
+      if (offlineResults.length > 0) {
+        setFarmer(offlineResults[0]);
+        toast.success(`Planteur trouvé (hors-ligne): ${offlineResults[0].full_name}`);
+        await addPendingAction({
+          action_type: 'search_log',
+          data: { phone: phone.trim(), farmer_name: offlineResults[0].full_name }
+        });
       } else {
         setNotFound(true);
-        toast.error(data.message || 'Aucun planteur trouvé');
+        toast.error('Aucun résultat dans le cache local. Synchronisez vos données.');
       }
-    } catch (error) {
-      toast.error('Erreur de connexion au serveur');
-    } finally {
-      setSearching(false);
     }
+    setSearching(false);
   };
 
+  // ============= DÉTAILS (online/offline) =============
   const viewFullDetails = async (farmerId) => {
     setLoadingDetails(true);
-    try {
-      const res = await fetch(`${API_URL}/api/agent/farmer/${farmerId}/details`, {
-        headers: getAuthHeader()
-      });
-      if (res.ok) {
-        setFarmerDetails(await res.json());
-        setShowDetails(true);
-      } else {
-        toast.error('Impossible de charger la fiche complète');
+    if (isOnline) {
+      try {
+        const res = await fetch(`${API_URL}/api/agent/farmer/${farmerId}/details`, { headers: getAuthHeader() });
+        if (res.ok) {
+          setFarmerDetails(await res.json());
+          setShowDetails(true);
+        } else {
+          // Fallback offline
+          const offlineFarmer = await getFarmerOffline(farmerId);
+          if (offlineFarmer) {
+            setFarmerDetails({
+              ...offlineFarmer,
+              harvests: [],
+              ssrte_visits: [],
+              ssrte_visits_count: 0,
+              total_premium_earned: 0
+            });
+            setShowDetails(true);
+          } else {
+            toast.error('Fiche non disponible');
+          }
+        }
+      } catch (e) {
+        const offlineFarmer = await getFarmerOffline(farmerId);
+        if (offlineFarmer) {
+          setFarmerDetails({
+            ...offlineFarmer,
+            harvests: [],
+            ssrte_visits: [],
+            ssrte_visits_count: 0,
+            total_premium_earned: 0
+          });
+          setShowDetails(true);
+          toast.info('Données chargées depuis le cache local');
+        }
       }
+    } else {
+      const offlineFarmer = await getFarmerOffline(farmerId);
+      if (offlineFarmer) {
+        setFarmerDetails({
+          ...offlineFarmer,
+          harvests: [],
+          ssrte_visits: [],
+          ssrte_visits_count: 0,
+          total_premium_earned: 0
+        });
+        setShowDetails(true);
+        toast.info('Mode hors-ligne: données locales');
+      } else {
+        toast.error('Fiche non disponible hors-ligne');
+      }
+    }
+    setLoadingDetails(false);
+  };
+
+  // ============= SYNC MANUELLE =============
+  const handleSync = async () => {
+    if (!isOnline) {
+      toast.error('Pas de connexion réseau');
+      return;
+    }
+    try {
+      const result = await syncAll();
+      toast.success(
+        `Synchronisation terminée: ${result.download.farmersCount} planteurs, ${result.download.parcelsCount} parcelles`
+      );
+      loadStats();
+      loadAuditLogs();
     } catch (e) {
-      toast.error('Erreur réseau');
-    } finally {
-      setLoadingDetails(false);
+      toast.error(`Erreur de synchronisation: ${e.message}`);
     }
   };
 
@@ -127,34 +229,97 @@ const AgentTerrainDashboard = () => {
     }
   };
 
+  const formatSyncTime = (ts) => {
+    if (!ts) return 'Jamais';
+    const d = new Date(ts);
+    return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div className="min-h-screen bg-slate-950" data-testid="agent-terrain-dashboard">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
+        {/* Header with online/offline status */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Shield className="w-6 h-6 text-emerald-400" />
-              Recherche Agent Terrain
+              Agent Terrain
             </h1>
             <p className="text-slate-400 text-sm mt-1">
-              Recherchez un planteur par son numéro de téléphone
+              Recherche sécurisée par téléphone
             </p>
           </div>
-          {stats && (
-            <div className="hidden md:flex items-center gap-3">
-              <div className="text-center px-3 py-1 bg-slate-800 rounded-lg">
-                <p className="text-emerald-400 font-bold text-lg">{stats.farmers_in_zone}</p>
-                <p className="text-slate-500 text-xs">Planteurs</p>
-              </div>
-              <div className="text-center px-3 py-1 bg-slate-800 rounded-lg">
-                <p className="text-blue-400 font-bold text-lg">{stats.total_searches}</p>
-                <p className="text-slate-500 text-xs">Recherches</p>
-              </div>
+          <div className="flex items-center gap-2">
+            {/* Online/Offline indicator */}
+            <div data-testid="online-status" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+              isOnline ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700' : 'bg-red-900/50 text-red-300 border border-red-700'
+            }`}>
+              {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              {isOnline ? 'En ligne' : 'Hors-ligne'}
             </div>
-          )}
+          </div>
         </div>
+
+        {/* Sync Bar */}
+        <Card className="bg-slate-900 border-slate-800" data-testid="sync-bar">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-1.5 text-slate-400">
+                  <Database className="w-3.5 h-3.5 text-blue-400" />
+                  <span><strong className="text-blue-400">{cachedFarmers}</strong> planteurs en cache</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-400">
+                  <Clock className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Sync: {formatSyncTime(lastSync)}</span>
+                </div>
+                {pendingCount > 0 && (
+                  <div className="flex items-center gap-1.5 text-amber-400">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span><strong>{pendingCount}</strong> action(s) en attente</span>
+                  </div>
+                )}
+                {syncError && (
+                  <span className="text-red-400 text-xs">{syncError}</span>
+                )}
+              </div>
+              <Button
+                data-testid="sync-button"
+                size="sm"
+                variant="outline"
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 h-8"
+                onClick={handleSync}
+                disabled={syncing || !isOnline}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Sync...' : 'Synchroniser'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* First sync prompt */}
+        {cachedFarmers === 0 && isOnline && (
+          <Card className="bg-blue-950/30 border-blue-800/40" data-testid="first-sync-prompt">
+            <CardContent className="p-5 text-center">
+              <Download className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+              <p className="text-white font-medium">Première synchronisation requise</p>
+              <p className="text-slate-400 text-sm mt-1">
+                Téléchargez les données de votre zone pour activer le mode hors-ligne
+              </p>
+              <Button
+                data-testid="initial-sync-button"
+                className="bg-blue-600 hover:bg-blue-700 mt-3"
+                onClick={handleSync}
+                disabled={syncing}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {syncing ? 'Téléchargement en cours...' : 'Télécharger les données'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Search Bar */}
         <Card className="bg-slate-900 border-slate-800">
@@ -180,10 +345,18 @@ const AgentTerrainDashboard = () => {
                 {searching ? 'Recherche...' : 'Rechercher'}
               </Button>
             </form>
-            <p className="text-slate-600 text-xs mt-2 flex items-center gap-1">
-              <Shield className="w-3 h-3" />
-              Accès sécurisé - Chaque recherche est enregistrée pour audit SSRTE
-            </p>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-slate-600 text-xs flex items-center gap-1">
+                <Shield className="w-3 h-3" />
+                Accès sécurisé - Audit SSRTE
+              </p>
+              {!isOnline && cachedFarmers > 0 && (
+                <p className="text-amber-500 text-xs flex items-center gap-1">
+                  <WifiOff className="w-3 h-3" />
+                  Recherche dans le cache local ({cachedFarmers} planteurs)
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -194,7 +367,9 @@ const AgentTerrainDashboard = () => {
               <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
               <p className="text-white font-medium">Aucun planteur trouvé</p>
               <p className="text-slate-400 text-sm mt-1">
-                Ce numéro n'existe pas dans votre périmètre de couverture
+                {isOnline 
+                  ? "Ce numéro n'existe pas dans votre périmètre" 
+                  : "Ce numéro n'est pas dans le cache local. Synchronisez vos données."}
               </p>
             </CardContent>
           </Card>
@@ -209,9 +384,14 @@ const AgentTerrainDashboard = () => {
                   <User className="w-5 h-5 text-emerald-400" />
                   {farmer.full_name}
                 </CardTitle>
-                <Badge className={farmer.is_active ? 'bg-emerald-900 text-emerald-300' : 'bg-red-900 text-red-300'}>
-                  {farmer.is_active ? 'Actif' : 'Inactif'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {!isOnline && (
+                    <Badge className="bg-amber-900/50 text-amber-300 text-xs">Cache local</Badge>
+                  )}
+                  <Badge className={farmer.is_active ? 'bg-emerald-900 text-emerald-300' : 'bg-red-900 text-red-300'}>
+                    {farmer.is_active ? 'Actif' : 'Inactif'}
+                  </Badge>
+                </div>
               </div>
               <CardDescription className="text-slate-400">
                 {farmer.cooperative_name}
@@ -267,15 +447,10 @@ const AgentTerrainDashboard = () => {
         {/* Full Details View */}
         {showDetails && farmerDetails && (
           <div className="space-y-4" data-testid="farmer-full-details">
-            <Button
-              variant="ghost"
-              className="text-slate-400 hover:text-white"
-              onClick={() => setShowDetails(false)}
-            >
+            <Button variant="ghost" className="text-slate-400 hover:text-white" onClick={() => setShowDetails(false)}>
               Retour aux résultats
             </Button>
 
-            {/* Header card */}
             <Card className="bg-slate-900 border-slate-800">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
@@ -284,9 +459,12 @@ const AgentTerrainDashboard = () => {
                     <p className="text-emerald-400 text-sm">{farmerDetails.cooperative_name}</p>
                     <p className="text-slate-500 text-xs mt-1">ID: {farmerDetails.id}</p>
                   </div>
-                  <Badge className={farmerDetails.status === 'active' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}>
-                    {farmerDetails.status}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {!isOnline && <Badge className="bg-amber-900/50 text-amber-300 text-xs">Hors-ligne</Badge>}
+                    <Badge className={farmerDetails.status === 'active' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}>
+                      {farmerDetails.status}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   <InfoItem icon={Phone} label="Téléphone" value={farmerDetails.phone_number} />
@@ -297,15 +475,13 @@ const AgentTerrainDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Stats KPI */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard label="Parcelles" value={farmerDetails.parcels_count} color="text-emerald-400" />
               <StatCard label="Superficie" value={`${farmerDetails.total_hectares} ha`} color="text-blue-400" />
-              <StatCard label="Prime totale" value={`${farmerDetails.total_premium_earned} FCFA`} color="text-amber-400" />
-              <StatCard label="Visites SSRTE" value={farmerDetails.ssrte_visits_count} color="text-purple-400" />
+              <StatCard label="Prime totale" value={`${farmerDetails.total_premium_earned || 0} FCFA`} color="text-amber-400" />
+              <StatCard label="Visites SSRTE" value={farmerDetails.ssrte_visits_count || 0} color="text-purple-400" />
             </div>
 
-            {/* Parcels */}
             <Card className="bg-slate-900 border-slate-800">
               <CardHeader>
                 <CardTitle className="text-white text-base flex items-center gap-2">
@@ -336,7 +512,6 @@ const AgentTerrainDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Harvests */}
             {farmerDetails.harvests?.length > 0 && (
               <Card className="bg-slate-900 border-slate-800">
                 <CardHeader>
@@ -356,7 +531,6 @@ const AgentTerrainDashboard = () => {
               </Card>
             )}
 
-            {/* SSRTE Visits */}
             {farmerDetails.ssrte_visits?.length > 0 && (
               <Card className="bg-slate-900 border-slate-800">
                 <CardHeader>
@@ -395,6 +569,8 @@ const AgentTerrainDashboard = () => {
                   <div key={i} className="flex items-center gap-3 py-2 border-b border-slate-800 last:border-0">
                     <div className={`w-2 h-2 rounded-full ${
                       log.action === 'SEARCH_SUCCESS' ? 'bg-emerald-400' :
+                      log.action === 'SYNC_DOWNLOAD' ? 'bg-blue-400' :
+                      log.action === 'SYNC_UPLOAD' ? 'bg-purple-400' :
                       log.action === 'ACCESS_DENIED' ? 'bg-red-400' :
                       log.action === 'SEARCH_NOT_FOUND' ? 'bg-amber-400' : 'bg-blue-400'
                     }`} />

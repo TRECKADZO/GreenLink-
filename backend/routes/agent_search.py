@@ -1,16 +1,10 @@
 """
 Routes sécurisées pour les agents terrain - Recherche par téléphone
 GreenLink Agritech - Côte d'Ivoire
-
-SECURITE:
-- Authentification JWT obligatoire (rôle "field_agent" ou "cooperative")
-- Filtrage par zone/coopérative (l'agent ne voit que son périmètre)
-- Audit logging complet de chaque accès (SSRTE/RGPD)
-- Rate limiting pour prévenir les abus
-- Aucune donnée sensible exposée sans rôle agent vérifié
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Request
+from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone
 from bson import ObjectId
@@ -520,3 +514,217 @@ async def _get_cooperative_name(coop_id) -> str:
         pass
 
     return "Non affilié"
+
+
+# ============= SYNCHRONISATION OFFLINE =============
+
+@router.get("/sync/download")
+async def download_zone_data(
+    request: Request,
+    current_user: dict = Depends(verify_agent_role)
+):
+    """
+    Télécharger toutes les données de la zone de l'agent pour le mode offline.
+    Retourne: planteurs + parcelles + visites SSRTE récentes.
+    Utilisé par IndexedDB côté client pour le cache offline-first.
+    """
+    agent_id = str(current_user.get("_id", ""))
+    client_ip = request.client.host if request.client else "unknown"
+
+    zone_filter = _get_agent_zone_filter(current_user)
+
+    members = await db.coop_members.find(zone_filter).to_list(2000)
+
+    farmers_data = []
+    all_parcels = []
+
+    for m in members:
+        mid = str(m["_id"])
+        lookup_id = m.get("user_id") or mid
+        parcels = await _get_farmer_parcels(lookup_id)
+        all_parcels.extend(parcels)
+        coop_name = await _get_cooperative_name(m.get("coop_id"))
+
+        farmers_data.append({
+            "id": mid,
+            "full_name": m.get("full_name", ""),
+            "phone_number": m.get("phone_number", ""),
+            "village": m.get("village", ""),
+            "department": m.get("department", ""),
+            "zone": m.get("zone", ""),
+            "cni_number": m.get("cni_number", ""),
+            "status": m.get("status", "active"),
+            "is_active": m.get("is_active", True),
+            "consent_given": m.get("consent_given", False),
+            "cooperative_name": coop_name,
+            "parcels_count": len(parcels),
+            "total_hectares": round(sum(p.get("area_hectares", 0) for p in parcels), 2),
+            "parcels": parcels,
+            "created_at": str(m.get("created_at", ""))
+        })
+
+    # Visites SSRTE récentes (30 jours)
+    from datetime import timedelta
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    farmer_ids = [f["id"] for f in farmers_data]
+    user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    lookup_ids = list(set(farmer_ids + [uid for uid in user_ids if uid]))
+
+    ssrte_visits = []
+    if lookup_ids:
+        visits = await db.ssrte_visits.find({
+            "farmer_id": {"$in": lookup_ids},
+            "visit_date": {"$gte": thirty_days_ago}
+        }).to_list(500)
+        ssrte_visits = [{
+            "id": str(v["_id"]),
+            "farmer_id": v.get("farmer_id", ""),
+            "visit_date": str(v.get("visit_date", "")),
+            "agent_name": v.get("agent_name", ""),
+            "status": v.get("status", ""),
+            "risk_level": v.get("risk_level", "")
+        } for v in visits]
+
+    sync_time = datetime.now(timezone.utc).isoformat()
+
+    await _log_audit(
+        agent_id, "SYNC_DOWNLOAD", "ALL",
+        f"Téléchargement zone: {len(farmers_data)} planteurs, {len(all_parcels)} parcelles",
+        client_ip
+    )
+
+    return {
+        "sync_timestamp": sync_time,
+        "data_version": sync_time,
+        "farmers": farmers_data,
+        "farmers_count": len(farmers_data),
+        "parcels_count": len(all_parcels),
+        "ssrte_visits": ssrte_visits,
+        "agent_zone": current_user.get("zone", "Non définie"),
+        "agent_name": current_user.get("full_name", "")
+    }
+
+
+class OfflineAction(BaseModel):
+    action_type: str
+    farmer_id: Optional[str] = None
+    data: dict = {}
+    timestamp: str
+    offline_id: str
+
+
+class SyncUploadRequest(BaseModel):
+    actions: list
+    sync_timestamp: str
+
+
+@router.post("/sync/upload")
+async def upload_offline_actions(
+    request: Request,
+    payload: SyncUploadRequest,
+    current_user: dict = Depends(verify_agent_role)
+):
+    """
+    Synchroniser les actions effectuées hors-ligne.
+    """
+    agent_id = str(current_user.get("_id", ""))
+    client_ip = request.client.host if request.client else "unknown"
+
+    results = []
+    errors = []
+
+    for action in payload.actions:
+        action_type = action.get("action_type", "")
+        offline_id = action.get("offline_id", "")
+        data = action.get("data", {})
+        farmer_id = action.get("farmer_id")
+
+        try:
+            existing = await db.sync_log.find_one({"offline_id": offline_id})
+            if existing:
+                results.append({"offline_id": offline_id, "status": "already_synced"})
+                continue
+
+            if action_type == "parcel_verification":
+                parcel_id = data.get("parcel_id")
+                if parcel_id:
+                    await db.parcels.update_one(
+                        {"_id": ObjectId(parcel_id)},
+                        {"$set": {
+                            "verification_status": data.get("status", "verified"),
+                            "verified_by": agent_id,
+                            "verified_at": datetime.now(timezone.utc),
+                            "verification_notes": data.get("notes", ""),
+                            "verified_gps_coordinates": data.get("gps_coordinates"),
+                            "verification_photos": data.get("photos", [])
+                        }}
+                    )
+            elif action_type == "ssrte_visit":
+                visit_doc = {
+                    "farmer_id": farmer_id,
+                    "agent_id": agent_id,
+                    "agent_name": current_user.get("full_name", ""),
+                    "visit_date": datetime.fromisoformat(action.get("timestamp", datetime.now(timezone.utc).isoformat())),
+                    "status": data.get("status", "completed"),
+                    "risk_level": data.get("risk_level", "low"),
+                    "notes": data.get("notes", ""),
+                    "gps_coordinates": data.get("gps_coordinates"),
+                    "children_observed": data.get("children_observed", 0),
+                    "created_at": datetime.now(timezone.utc),
+                    "synced_from_offline": True
+                }
+                await db.ssrte_visits.insert_one(visit_doc)
+            elif action_type == "search_log":
+                await _log_audit(
+                    agent_id, "SEARCH_OFFLINE",
+                    data.get("phone", "N/A"),
+                    f"Recherche offline: {data.get('farmer_name', 'N/A')}",
+                    "offline"
+                )
+
+            await db.sync_log.insert_one({
+                "offline_id": offline_id,
+                "action_type": action_type,
+                "agent_id": agent_id,
+                "synced_at": datetime.now(timezone.utc)
+            })
+            results.append({"offline_id": offline_id, "status": "synced"})
+
+        except Exception as e:
+            logger.error(f"Sync error for {offline_id}: {e}")
+            errors.append({"offline_id": offline_id, "status": "error", "message": str(e)})
+
+    await _log_audit(
+        agent_id, "SYNC_UPLOAD", "ALL",
+        f"Upload: {len(results)} réussies, {len(errors)} erreurs",
+        client_ip
+    )
+
+    return {
+        "synced": len(results),
+        "errors": len(errors),
+        "results": results + errors
+    }
+
+
+@router.get("/sync/status")
+async def get_sync_status(
+    current_user: dict = Depends(verify_agent_role)
+):
+    """Statut de synchronisation de l'agent."""
+    agent_id = str(current_user.get("_id", ""))
+
+    last_download = await db.audit_logs.find_one(
+        {"user_id": agent_id, "action": "SYNC_DOWNLOAD"},
+        sort=[("timestamp", -1)]
+    )
+    last_upload = await db.audit_logs.find_one(
+        {"user_id": agent_id, "action": "SYNC_UPLOAD"},
+        sort=[("timestamp", -1)]
+    )
+
+    return {
+        "last_download": last_download["timestamp"].isoformat() if last_download and isinstance(last_download.get("timestamp"), datetime) else None,
+        "last_upload": last_upload["timestamp"].isoformat() if last_upload and isinstance(last_upload.get("timestamp"), datetime) else None,
+        "total_synced_actions": await db.sync_log.count_documents({"agent_id": agent_id})
+    }
