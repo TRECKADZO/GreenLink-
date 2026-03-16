@@ -100,6 +100,9 @@ import MessagingPage from "./pages/messaging/MessagingPage";
 import ActivateMember from "./pages/auth/ActivateMember";
 import ActivateAgent from "./pages/auth/ActivateAgent";
 
+// Agent Terrain
+import AgentTerrainDashboard from "./pages/agent/AgentTerrainDashboard";
+
 // Notifications (shared)
 import NotificationsPage from "./pages/NotificationsPage";
 import AdminNotifications from "./pages/admin/Notifications";
@@ -205,6 +208,8 @@ function App() {
               {/* SSRTE Agent Routes */}
               <Route path="/ssrte/dashboard" element={<SSRTEAgentDashboard />} />
               <Route path="/agent/ssrte" element={<SSRTEAgentDashboard />} />
+              <Route path="/agent/terrain" element={<AgentTerrainDashboard />} />
+              <Route path="/agent/search" element={<AgentTerrainDashboard />} />
               <Route path="/ssrte/realtime" element={<SSRTERealTimeDashboard />} />
               <Route path="/ssrte/alerts" element={<SSRTERealTimeDashboard />} />
 

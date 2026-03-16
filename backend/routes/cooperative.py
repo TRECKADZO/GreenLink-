@@ -67,6 +67,16 @@ def verify_cooperative(current_user: dict):
         )
     return current_user
 
+
+def coop_id_query(coop_id) -> dict:
+    """Helper: crée un filtre qui matche coop_id en string OU ObjectId"""
+    coop_str = str(coop_id)
+    return {"$or": [
+        {"coop_id": coop_str},
+        {"coop_id": ObjectId(coop_str) if ObjectId.is_valid(coop_str) else coop_str},
+        {"cooperative_id": coop_str}
+    ]}
+
 # ============= DASHBOARD ENDPOINTS =============
 
 @router.get("/dashboard")
@@ -174,8 +184,8 @@ async def get_coop_members(
     verify_cooperative(current_user)
     coop_id = str(current_user["_id"])
     
-    # Support both field names for backward compatibility
-    query = {"$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]}
+    # Support both field names and types for backward compatibility
+    query = coop_id_query(coop_id)
     if status_filter:
         query["status"] = status_filter
     if village:
@@ -234,18 +244,18 @@ async def create_coop_member(
 ):
     """Ajouter un nouveau membre à la coopérative"""
     verify_cooperative(current_user)
-    coop_id = current_user["_id"]
+    coop_id = str(current_user["_id"])
     
-    # Check if member already exists
+    # Check if member already exists (support both string and ObjectId)
     existing = await db.coop_members.find_one({
-        "coop_id": coop_id,
+        **coop_id_query(coop_id),
         "phone_number": member.phone_number
     })
     if existing:
         raise HTTPException(status_code=400, detail="Ce membre existe déjà dans la coopérative")
     
     member_doc = {
-        "coop_id": coop_id,
+        "coop_id": coop_id,  # Stocké en string pour cohérence
         "full_name": member.full_name,
         "phone_number": member.phone_number,
         "village": member.village,
@@ -328,8 +338,9 @@ async def validate_member(
     """Valider un membre en attente"""
     verify_cooperative(current_user)
     
+    coop_id = str(current_user["_id"])
     result = await db.coop_members.update_one(
-        {"_id": ObjectId(member_id), "coop_id": current_user["_id"]},
+        {"_id": ObjectId(member_id), **coop_id_query(coop_id)},
         {
             "$set": {
                 "status": "active",
@@ -352,9 +363,10 @@ async def get_member_details(
     """Détails d'un membre"""
     verify_cooperative(current_user)
     
+    coop_id = str(current_user["_id"])
     member = await db.coop_members.find_one({
         "_id": ObjectId(member_id),
-        "coop_id": current_user["_id"]
+        **coop_id_query(coop_id)
     })
     
     if not member:
@@ -482,9 +494,10 @@ async def get_member_parcels(
     verify_cooperative(current_user)
     
     # Verify member belongs to this cooperative
+    coop_id = str(current_user["_id"])
     member = await db.coop_members.find_one({
         "_id": ObjectId(member_id),
-        "coop_id": current_user["_id"]
+        **coop_id_query(coop_id)
     })
     
     if not member:

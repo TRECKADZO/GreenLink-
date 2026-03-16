@@ -35,6 +35,7 @@ from routes import harvest_marketplace  # Harvest Marketplace for producers/coop
 from routes import buyer_dashboard  # Buyer Dashboard
 from routes import messaging  # Secure Messaging System
 from routes import marketplace_analytics  # Advanced Marketplace Analytics
+from routes import agent_search  # Agent Terrain - Recherche sécurisée
 from services.push_notifications import router as push_notifications_router
 
 
@@ -141,6 +142,7 @@ app.include_router(harvest_marketplace.router)
 app.include_router(buyer_dashboard.router)
 app.include_router(messaging.router)
 app.include_router(marketplace_analytics.router)
+app.include_router(agent_search.router)
 
 app.add_middleware(
     CORSMiddleware,

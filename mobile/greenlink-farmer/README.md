@@ -106,7 +106,7 @@ L'application utilise l'API backend GreenLink. L'URL est configurée dans :
 - `/app/mobile/greenlink-farmer/src/config.js`
 
 ```javascript
-API_URL: 'https://buyer-trial-promo.preview.emergentagent.com/api'
+API_URL: 'https://coop-dashboard-6.preview.emergentagent.com/api'
 ```
 
 ### Notifications Push

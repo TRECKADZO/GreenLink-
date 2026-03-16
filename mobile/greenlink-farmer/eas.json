@@ -32,7 +32,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://buyer-trial-promo.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://coop-dashboard-6.preview.emergentagent.com"
       }
     }
   },
