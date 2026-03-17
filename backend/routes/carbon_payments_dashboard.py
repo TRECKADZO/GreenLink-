@@ -458,3 +458,103 @@ async def get_carbon_projections(
             "improvement_potential": "Augmentez vos arbres d'ombrage pour améliorer votre score carbone"
         }
     }
+
+
+
+# ============= CALCULATEUR "MA PRIME" POUR LE PLANTEUR =============
+
+from pydantic import BaseModel, Field
+from carbon_business_model import (
+    SEQUESTRATION_RATES,
+    FEES_RATE,
+    GREENLINK_MARGIN_RATE
+)
+
+
+class MaPrimeRequest(BaseModel):
+    hectares: float = Field(..., gt=0, description="Superficie en hectares")
+    grands_arbres: int = Field(..., ge=0, description="Nombre d'arbres grands (>8m) par hectare")
+    culture: str = Field(..., description="cacao, cafe, anacarde")
+    engrais_chimique: bool = Field(..., description="Utilise des engrais chimiques?")
+    brulage: bool = Field(..., description="Pratique le brûlage des résidus?")
+    residus_au_sol: bool = Field(..., description="Laisse les résidus de récolte au sol?")
+    plantes_couverture: bool = Field(..., description="Utilise des plantes de couverture?")
+    especes_arbres: int = Field(..., ge=0, description="Nombre d'espèces d'arbres différentes")
+
+
+@router.post("/ma-prime")
+async def calculer_ma_prime(data: MaPrimeRequest):
+    """
+    Calculateur simple de prime carbone pour le planteur.
+    Répond aux 8 questions et retourne uniquement la prime estimée en FCFA/kg.
+    """
+    # 1. Calculer le taux de séquestration CO2 basé sur les arbres
+    trees_per_ha = data.grands_arbres
+    if trees_per_ha >= 81:
+        co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["very_high"]["rate"]
+    elif trees_per_ha >= 41:
+        co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["high"]["rate"]
+    elif trees_per_ha >= 21:
+        co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["medium"]["rate"]
+    else:
+        co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["low"]["rate"]
+
+    # 2. Bonus pour bonnes pratiques
+    if not data.engrais_chimique:
+        co2_rate += SEQUESTRATION_RATES["organic_practices"]
+    if not data.brulage:
+        co2_rate += 0.2  # Bonus non-brûlage
+    if data.residus_au_sol:
+        co2_rate += SEQUESTRATION_RATES["soil_residues"]
+    if data.plantes_couverture:
+        co2_rate += SEQUESTRATION_RATES["cover_crops"]
+    if data.especes_arbres >= 5:
+        co2_rate += SEQUESTRATION_RATES["agroforestry_diversity"]
+    elif data.especes_arbres >= 3:
+        co2_rate += SEQUESTRATION_RATES["agroforestry_diversity"] * 0.5
+
+    # 3. Total tonnes CO2 par an
+    tonnes_co2_year = co2_rate * data.hectares
+
+    # 4. Prix de vente fixé par le Super Admin
+    config = await db.carbon_config.find_one({"key": "default_price"})
+    price_per_tonne_xof = config.get("value", 15000) if config else 15000
+
+    # 5. Calcul de la prime planteur
+    gross = tonnes_co2_year * price_per_tonne_xof
+    net = gross * (1 - FEES_RATE)           # -30% frais
+    farmer_share = net * FARMER_SHARE_RATE   # 70% du net
+
+    # 6. Prime par kg selon la culture
+    yields = {"cacao": 600, "cafe": 400, "anacarde": 500}  # kg/ha typique
+    yield_kg_per_ha = yields.get(data.culture, 600)
+    total_yield_kg = data.hectares * yield_kg_per_ha
+    prime_par_kg = round(farmer_share / total_yield_kg) if total_yield_kg > 0 else 0
+
+    # 7. Projection annuelle
+    return {
+        "prime_par_kg_fcfa": prime_par_kg,
+        "prime_annuelle_fcfa": round(farmer_share),
+        "tonnes_co2_an": round(tonnes_co2_year, 1),
+        "culture": data.culture,
+        "hectares": data.hectares,
+        "arbres_par_ha": trees_per_ha,
+        "score_carbone": round(co2_rate, 1),
+        "rendement_kg_ha": yield_kg_per_ha,
+        "conseil": _generer_conseil(data, co2_rate, trees_per_ha)
+    }
+
+
+def _generer_conseil(data: MaPrimeRequest, co2_rate: float, trees: int) -> str:
+    """Génère un conseil personnalisé pour améliorer la prime"""
+    if trees < 21:
+        return f"Plantez plus d'arbres d'ombrage ! Passer de {trees} à 48 arbres/ha pourrait tripler votre prime."
+    if trees < 41:
+        return f"Vous êtes sur la bonne voie. Ajouter {48 - trees} arbres/ha de plus augmentera votre prime de 60%."
+    if data.engrais_chimique:
+        return "Passer aux pratiques biologiques ajouterait environ 15 FCFA/kg à votre prime."
+    if data.brulage:
+        return "Arrêter le brûlage des résidus améliorerait votre score carbone et votre prime."
+    if not data.plantes_couverture:
+        return "Les plantes de couverture protègent vos sols et augmentent votre prime carbone."
+    return "Excellent ! Vos pratiques sont déjà très bonnes. Maintenez-les pour une prime optimale."

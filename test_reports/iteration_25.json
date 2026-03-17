@@ -1,0 +1,82 @@
+{
+  "summary": "Iteration 25 - 'Ma Prime Carbone' farmer-facing calculator. ALL TESTS PASSED. Backend: POST /api/carbon-payments/ma-prime returns correct premium calculations and does NOT include distribution details. Frontend: Shows 'Comment ça marche' with 5 steps, 8-question calculator form, result displays prime_par_kg, prime_annuelle, CO2, and personalized conseil. No distribution breakdown visible to farmer.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ma_prime_calculator.py",
+    "/app/test_reports/pytest/pytest_ma_prime.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "carbon_payments_dashboard.py: /ma-prime endpoint correctly returns only farmer-facing fields (prime_par_kg_fcfa, prime_annuelle_fcfa, tonnes_co2_an, conseil)",
+    "carbon_payments_dashboard.py: MaPrimeRequest model has all 8 required fields with proper validation",
+    "carbon_payments_dashboard.py: _generer_conseil() provides personalized advice based on practices",
+    "CarbonPaymentsDashboard.jsx: Correctly shows 5-step 'Comment ça marche' section",
+    "CarbonPaymentsDashboard.jsx: All 8 question inputs have proper data-testid attributes",
+    "CarbonPaymentsDashboard.jsx: data-testid='distribution-model' REMOVED (correct - farmer should not see distribution)",
+    "CarbonPaymentsDashboard.jsx: Result prominently displays prime_par_kg, prime_annuelle, CO2, and conseil"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ma_prime_calculator.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 tests passed)",
+    "frontend": "100% (all UI elements verified via Playwright)"
+  },
+  "test_credentials": {
+    "cooperative": {
+      "identifier": "coop-gagnoa@greenlink.ci",
+      "password": "password"
+    },
+    "admin": {
+      "identifier": "klenakan.eric@gmail.com",
+      "password": "474Treckadzo"
+    }
+  },
+  "seed_data_creation": "No seed data needed - /ma-prime is a public calculator endpoint",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Ma Prime Carbone feature fully verified. The /api/carbon-payments/ma-prime endpoint is PUBLIC (no auth required) and returns ONLY farmer-facing fields. The /api/carbon-payments/dashboard endpoint requires auth and returns more details including distribution_model (for internal use, but frontend no longer displays it). Key carbon constants: FEES_RATE=0.30, FARMER_SHARE_RATE=0.70, GREENLINK_MARGIN_RATE=0.25, COOPERATIVE_SHARE_RATE=0.05. Yields: cacao=600, cafe=400, anacarde=500 kg/ha. Default price from carbon_config collection.",
+  "features_verified": {
+    "POST /api/carbon-payments/ma-prime (good practices)": "PASS - 48 arbres/ha, no chemicals, no burning → high premium (106 FCFA/kg, 191100 FCFA/year, 19.5t CO2)",
+    "POST /api/carbon-payments/ma-prime (poor practices)": "PASS - 15 arbres/ha, chemicals, burning → low premium (lower values as expected)",
+    "POST /api/carbon-payments/ma-prime response fields": "PASS - Returns prime_par_kg_fcfa, prime_annuelle_fcfa, tonnes_co2_an, conseil",
+    "POST /api/carbon-payments/ma-prime NO distribution": "PASS - Response does NOT include distribution_model, fees, greenlink_share, coop_share",
+    "Frontend: 'Comment ça marche' 5 steps": "PASS - All 5 steps displayed with correct text",
+    "Frontend: 'Estimer ma prime' button": "PASS - Button found and opens 8-question form",
+    "Frontend: 8-question form inputs": "PASS - All 8 inputs present: hectares, arbres, culture, engrais, brulage, residus, couverture, especes",
+    "Frontend: NO distribution breakdown": "PASS - data-testid='distribution-model' NOT present, no fees/shares visible",
+    "Frontend: Result displays prime_par_kg_fcfa": "PASS - 106 FCFA/kg prominently displayed",
+    "Frontend: Result displays prime_annuelle_fcfa": "PASS - 191,100 FCFA displayed",
+    "Frontend: 'Demander un versement' button": "PASS - Button present with Orange Money text"
+  },
+  "api_response_example": {
+    "endpoint": "POST /api/carbon-payments/ma-prime",
+    "input": {
+      "hectares": 3.0,
+      "grands_arbres": 48,
+      "culture": "cacao",
+      "engrais_chimique": false,
+      "brulage": false,
+      "residus_au_sol": true,
+      "plantes_couverture": true,
+      "especes_arbres": 5
+    },
+    "output": {
+      "prime_par_kg_fcfa": 106,
+      "prime_annuelle_fcfa": 191100,
+      "tonnes_co2_an": 19.5,
+      "conseil": "Excellent ! Vos pratiques sont déjà très bonnes. Maintenez-les pour une prime optimale.",
+      "score_carbone": 6.5,
+      "rendement_kg_ha": 600
+    }
+  },
+  "mocked_api_note": "Orange Money payment remains MOCKED as per original design"
+}
