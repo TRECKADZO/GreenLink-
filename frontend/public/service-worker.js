@@ -1,11 +1,9 @@
-const CACHE_NAME = 'greenlink-agent-v1';
-const API_CACHE = 'greenlink-api-v1';
+const CACHE_NAME = 'greenlink-v2';
+const API_CACHE = 'greenlink-api-v2';
 
 // Ressources statiques à pré-cacher
 const PRECACHE_URLS = [
   '/',
-  '/agent/terrain',
-  '/agent/search',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
@@ -16,7 +14,6 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_URLS).catch(() => {
-        // Certaines URLs peuvent échouer en dev, on continue
         console.log('[SW] Some precache URLs failed, continuing...');
       });
     })
@@ -124,7 +121,6 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncOfflineActions() {
-  // Notifier les clients qu'une sync est disponible
   const clients = await self.clients.matchAll();
   clients.forEach((client) => {
     client.postMessage({ type: 'SYNC_AVAILABLE' });
@@ -148,6 +144,6 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || '/agent/terrain';
+  const url = event.notification.data?.url || '/';
   event.waitUntil(self.clients.openWindow(url));
 });

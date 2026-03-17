@@ -1,7 +1,7 @@
 {
   "short_name": "GreenLink",
-  "name": "GreenLink - Agent Terrain",
-  "description": "Plateforme agritech pour agents terrain - Recherche planteurs, SSRTE, vérification parcelles",
+  "name": "GreenLink - Agriculture durable",
+  "description": "Plateforme agritech pour coopératives, producteurs et agents - Primes carbone, traçabilité, marketplace intrants",
   "icons": [
     {
       "src": "icon-192.png",
@@ -16,10 +16,10 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/agent/terrain",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#0f172a",
-  "background_color": "#0f172a",
+  "theme_color": "#2d5a4d",
+  "background_color": "#2d5a4d",
   "orientation": "portrait",
   "scope": "/",
   "lang": "fr",
