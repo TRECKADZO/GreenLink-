@@ -18,78 +18,57 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ### Modele de Repartition (CONFIDENTIEL - Admin uniquement)
 - 30% couts et frais
 - 70% montant net reparti: 70% agriculteurs + 25% GreenLink + 5% cooperative
-- Visible UNIQUEMENT dans:
-  - Dashboard RSE section distribution (admin uniquement)
-  - Endpoint /api/carbon-listings/distribution-summary (admin auth requise)
-- CACHE pour: agriculteurs, cooperatives, entreprises RSE, pages publiques
+- Visible UNIQUEMENT pour admin
 
 ### Calculateurs de Prime Carbone
-**Page d'accueil** (CarbonCalculator.jsx):
-- Appel API backend /api/ussd/calculate-premium (formule cachee cote serveur)
-- Affiche uniquement: score, prime/kg, prime annuelle, CO2/ha
-- Aucun detail de repartition expose
-
-**USSD *144*88#** (ussd.py):
-- Resultat simplifie: score, prime/kg, prime annuelle
-- Aucun taux de distribution dans le texte de reponse
-
-**Ma Prime** (carbon_payments_dashboard.py):
-- Resultat simplifie: score, prime/kg, prime annuelle, conseil
-
-### Dashboard RSE avec Analytics
-- Section distribution visible admin uniquement (user_type check)
-- Impact cards, carte territoriale pour tous les RSE
-- Endpoint distribution-summary protege par auth admin
-
-### Controle d'acces
-- Carbon Marketplace: RSE + admin uniquement
-- Distribution details: admin uniquement
-- Dashboard RSE: RSE + admin
-- Soumission carbone: cooperatives
-- Approbation: admin uniquement
+- Page accueil (CarbonCalculator.jsx) via API backend
+- USSD *144*88# (ussd.py)
+- Ma Prime (carbon_payments_dashboard.py)
 
 ### Integrations Orange (Preparees - 17 Mars 2026)
-**Orange Money** (services/orange_money.py):
-- Service avec OAuth 2.0 complet (client_credentials flow)
-- Mode MOCK quand credentials absentes
-- Initiation paiement, verification statut transaction
-- Variables: ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET, ORANGE_MERCHANT_KEY
+- **Orange Money** (services/orange_money.py): OAuth 2.0, mode MOCK
+- **Orange SMS** (services/orange_sms.py): OAuth 2.0, mode MOCK
+- **USSD Gateway** (services/ussd_gateway.py): Multi-fournisseur, mode MOCK
+- **Endpoint admin**: GET /api/payments/integrations-status
+- Tests: 24/24 passes (iteration 29)
 
-**Orange SMS** (services/orange_sms.py):
-- Service avec OAuth 2.0 complet
-- Mode MOCK quand credentials absentes
-- Templates: OTP, paiement, recolte, prime carbone
-- Variables: ORANGE_SMS_CLIENT_ID, ORANGE_SMS_CLIENT_SECRET, ORANGE_SMS_SENDER_NUMBER
+### Dashboard Cooperative - Corrections (17 Mars 2026)
+- Ajout stat card "Agents Terrain" avec decompte correct (ObjectId matching)
+- Ajout bouton "Accueil" (retour page accueil)
+- Ajout bouton "Profil"
+- Ajout menu "Naturalisation" dans Actions Rapides
+- Fix decompte membres avec ObjectId matching (coop_id string vs ObjectId)
+- Tests: Backend 10/10, Frontend 7/7 (iteration 30)
 
-**USSD Gateway** (services/ussd_gateway.py):
-- Adaptateur multi-fournisseur (Orange, Africa's Talking, Infobip)
-- Mode MOCK quand credentials absentes
-- Formatage reponses selon le fournisseur
-- Variables: USSD_GATEWAY_URL, USSD_GATEWAY_API_KEY, USSD_GATEWAY_PROVIDER
+### Comptes crees (17 Mars 2026)
+- Cooperative Bielaghana: bielaghana@gmail.com / greenlink2024
+- Agent Kone Alphone: +2250709005301 / greenlink2024
+- Membre Balde ibo (village zebia) sous cooperative Bielaghana
 
-**Endpoint admin**: GET /api/payments/integrations-status
-- Statut des 3 services en temps reel
-- Accessible uniquement par admin
+### Builds Mobile (17 Mars 2026)
+- APK v1.25.0: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/84a82645-cb1b-4fbd-80c5-9be5d147fa33
+- AAB v1.25.0: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/42b992b9-5c8c-47e5-990a-8c15367a9735
 
-## Etat Actuel (17 Mars 2026)
-- Web: FONCTIONNEL - Tout le workflow Carbon Market
-- Mobile: APK v1.24.0 en attente de test utilisateur
-- Integrations Orange: PRET (mode MOCK, activer avec credentials reelles)
+## Etat Actuel
+- Web: FONCTIONNEL
+- Mobile: APK/AAB v1.25.0 en build
+- Integrations Orange: PRET (mode MOCK)
 
 ## Backlog
 ### P0
-- [ ] Test APK v1.24.0 (ecran blanc fix)
+- [ ] Test APK v1.25.0 (ecran blanc fix)
 - [ ] Soumission AAB Google Play
 ### P1
-- [ ] Bug pages blanches (Nouvelle Parcelle, inscription)
+- [ ] Bug pages blanches mobile (Nouvelle Parcelle, inscription)
 ### P2
 - [ ] Langues Baoule/Dioula
 - [ ] Notifications multi-canal (Push, SMS, Email)
 - [ ] Stockage cloud fichiers
 - [ ] Refactoring cooperative.py
-- [ ] USSD reel (quand passerelle disponible)
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
-- Coop: coop-gagnoa@greenlink.ci / password
-- Agent: agent@greenlink.ci / password
+- Coop Gagnoa: coop-gagnoa@greenlink.ci / password
+- Coop Bielaghana: bielaghana@gmail.com / greenlink2024
+- Agent Kone: +2250709005301 / greenlink2024
+- Agent test: agent@greenlink.ci / password
