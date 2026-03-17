@@ -2,7 +2,7 @@
   "expo": {
     "name": "GreenLink Farmer",
     "slug": "greenlink-farmer",
-    "version": "1.22.0",
+    "version": "1.23.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -76,7 +76,8 @@
           "cameraPermission": "GreenLink a besoin de la caméra pour prendre des photos de vos parcelles.",
           "allowMediaLibraryAccess": false
         }
-      ]
+      ],
+      "./plugins/removeMediaPermissions"
     ],
     "notification": {
       "icon": "./assets/notification-icon.png",

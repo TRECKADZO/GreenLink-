@@ -175,12 +175,26 @@ const ChatScreen = () => {
     }, 2000);
   };
 
-  // Pick image - utilise la caméra directement (pas de galerie pour conformité Google Play)
+  // Pick image - utilise le System Photo Picker Android (pas de permission READ_MEDIA requise)
   const pickImage = async () => {
-    await takePhoto();
+    try {
+      // launchImageLibraryAsync utilise le photo picker système 
+      // qui ne nécessite aucune permission READ_MEDIA_IMAGES/VIDEO
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadAndSendFile(result.assets[0].uri, 'photo.jpg', 'image/jpeg');
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Erreur', 'Impossible de sélectionner la photo');
+    }
   };
 
-  // Take photo
+  // Take photo with camera (nécessite CAMERA permission uniquement)
   const takePhoto = async () => {
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();

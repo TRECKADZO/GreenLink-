@@ -3,7 +3,40 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Alert, AppState, View } from 'react-native';
+import { Alert, AppState, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
+// Error Boundary pour éviter les pages blanches
+class ErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error('App Error:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 20 }}>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#dc2626', marginBottom: 12 }}>Erreur</Text>
+          <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>
+            Une erreur est survenue. Veuillez redémarrer l'application.
+          </Text>
+          <Text style={{ fontSize: 10, color: '#999', textAlign: 'center' }}>
+            {this.state.error?.message || 'Erreur inconnue'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => this.setState({ hasError: false, error: null })}
+            style={{ marginTop: 20, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: '#059669', borderRadius: 8 }}
+          >
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Réessayer</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Context Providers
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -60,11 +93,10 @@ import {
   CoopReportsScreen,
 } from './src/screens/cooperative';
 
-// Screens - Field Agent (SSRTE, QR Scanner, Geo Photos)
+// Screens - Field Agent (SSRTE, Farmer Search, Geo Photos)
 import {
   FieldAgentDashboard,
   FarmerSearchScreen,
-  QRScannerScreen,
   ParcelVerificationScreen,
   GeoPhotoScreen,
   SSRTEVisitFormScreen,
@@ -169,7 +201,6 @@ function AppNavigator() {
       {/* Field Agent Screens (SSRTE, Farmer Search, Geo Photos) */}
       <Stack.Screen name="FieldAgentDashboard" component={FieldAgentDashboard} />
       <Stack.Screen name="FarmerSearch" component={FarmerSearchScreen} />
-      <Stack.Screen name="QRScanner" component={QRScannerScreen} />
       <Stack.Screen name="ParcelVerification" component={ParcelVerificationScreen} />
       <Stack.Screen name="GeoPhoto" component={GeoPhotoScreen} />
       <Stack.Screen name="SSRTEVisitForm" component={SSRTEVisitFormScreen} />
@@ -298,12 +329,14 @@ function RootNavigator() {
 // Main App Component - SDK 53 compatible
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <OfflineProvider>
-          <RootNavigator />
-        </OfflineProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <OfflineProvider>
+            <RootNavigator />
+          </OfflineProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
