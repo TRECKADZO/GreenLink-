@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Shield, Users, MapPin, Leaf, Camera, 
-  QrCode, TrendingUp, Award, ChevronRight,
+  TrendingUp, Award, ChevronRight, ChevronLeft,
   Home, Search, Phone, ClipboardCheck, Activity, 
   Target, Star, UserCircle, AlertTriangle
 } from 'lucide-react';
@@ -120,7 +120,6 @@ const AgentTerrainDashboard = () => {
   const quickActions = [
     { label: 'Visite SSRTE', icon: ClipboardCheck, path: '/agent/ssrte', color: 'bg-emerald-600 hover:bg-emerald-700' },
     { label: 'Recherche Planteur', icon: Search, action: () => setTab('search'), color: 'bg-blue-600 hover:bg-blue-700' },
-    { label: 'Scanner QR', icon: QrCode, path: '/agent/qr-scan', color: 'bg-purple-600 hover:bg-purple-700' },
   ];
 
   const riskColor = (level) => {
@@ -150,6 +149,9 @@ const AgentTerrainDashboard = () => {
         <div className="max-w-5xl mx-auto px-4 py-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={() => navigate(-1)} data-testid="back-btn">
+                <ChevronLeft className="h-4 w-4 mr-1" /> Retour
+              </Button>
               <div className={`w-14 h-14 rounded-full bg-white/20 flex items-center justify-center ring-2 ${badge.ring}`}>
                 <Shield className="h-7 w-7" />
               </div>
@@ -200,7 +202,7 @@ const AgentTerrainDashboard = () => {
         {tab === 'dashboard' && (
           <>
             {/* Quick Actions */}
-            <div className="grid grid-cols-3 gap-3" data-testid="quick-actions">
+            <div className="grid grid-cols-2 gap-3" data-testid="quick-actions">
               {quickActions.map((a, i) => (
                 <Button
                   key={i}
@@ -236,31 +238,18 @@ const AgentTerrainDashboard = () => {
               ))}
             </div>
 
-            {/* Extra stats row */}
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="border-0 shadow-sm">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-cyan-50">
-                    <QrCode className="h-4 w-4 text-cyan-500" />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold text-cyan-600">{stats.qr_scans || 0}</p>
-                    <p className="text-xs text-gray-500">QR Scannés</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-0 shadow-sm">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-red-50">
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold text-red-600">{stats.children_identified || 0}</p>
-                    <p className="text-xs text-gray-500">Enfants identifiés</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Extra stats */}
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-red-50">
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-red-600">{stats.children_identified || 0}</p>
+                  <p className="text-xs text-gray-500">Enfants identifiés</p>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Risk distribution */}
             {(risks.critique > 0 || risks.eleve > 0 || risks.modere > 0 || risks.faible > 0) && (

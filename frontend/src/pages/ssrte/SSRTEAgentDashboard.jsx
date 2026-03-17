@@ -154,6 +154,16 @@ const SSRTEAgentDashboard = () => {
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => window.history.back()}
+              className="text-slate-400 hover:text-white hover:bg-slate-700 mb-2"
+              data-testid="back-btn"
+            >
+              <ChevronRight className="h-4 w-4 mr-1 rotate-180" />
+              Retour
+            </Button>
             <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
               <Shield className="h-8 w-8 text-cyan-500" />
               Agent SSRTE
