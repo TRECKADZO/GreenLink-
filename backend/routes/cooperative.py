@@ -84,9 +84,13 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
     """Dashboard principal de la coopérative"""
     verify_cooperative(current_user)
     coop_id = current_user["_id"]
+    coop_oid = ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None
     
-    # Query that searches in both coop_id and cooperative_id fields
-    member_query = {"$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]}
+    # Query that searches in both coop_id and cooperative_id fields (string + ObjectId)
+    member_or = [{"coop_id": coop_id}, {"cooperative_id": coop_id}]
+    if coop_oid:
+        member_or.extend([{"coop_id": coop_oid}, {"cooperative_id": coop_oid}])
+    member_query = {"$or": member_or}
     
     # Get members count
     total_members = await db.coop_members.count_documents(member_query)
@@ -129,6 +133,15 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
         "status": "pending_validation"
     })
     
+    # Get agents terrain count
+    agents_or = [{"coop_id": coop_id}]
+    if coop_oid:
+        agents_or.append({"coop_id": coop_oid})
+    agents_query = {"$or": agents_or}
+    total_agents = await db.coop_agents.count_documents(agents_query)
+    active_agents = await db.coop_agents.count_documents({**agents_query, "is_active": True})
+    activated_agents = await db.coop_agents.count_documents({**agents_query, "account_activated": True})
+    
     return {
         "coop_info": {
             "name": current_user.get("coop_name", ""),
@@ -166,7 +179,12 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
             "village": m.get("village", ""),
             "phone_number": m.get("phone_number", ""),
             "created_at": m.get("created_at", datetime.utcnow()).isoformat() if isinstance(m.get("created_at"), datetime) else str(m.get("created_at", ""))
-        } for m in recent_members]
+        } for m in recent_members],
+        "agents": {
+            "total": total_agents,
+            "active": active_agents,
+            "activated": activated_agents
+        }
     }
 
 # ============= MEMBER MANAGEMENT =============

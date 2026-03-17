@@ -6,7 +6,8 @@ import {
   Users, MapPin, Leaf, DollarSign, Package, 
   TrendingUp, FileText, Plus, ChevronRight,
   CheckCircle, Clock, AlertTriangle, Building2,
-  ClipboardCheck, Shield, Store
+  ClipboardCheck, Shield, Store, Home, UserCircle,
+  TreePine
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -43,7 +44,7 @@ const Dashboard = () => {
     );
   }
 
-  const { coop_info, members, parcels, lots, financial, recent_members } = dashboardData || {};
+  const { coop_info, members, parcels, lots, financial, recent_members, agents } = dashboardData || {};
 
   const stats = [
     {
@@ -53,6 +54,14 @@ const Dashboard = () => {
       icon: Users,
       color: 'bg-blue-500',
       link: '/cooperative/members'
+    },
+    {
+      title: 'Agents Terrain',
+      value: agents?.active || 0,
+      total: agents?.total || 0,
+      icon: Shield,
+      color: 'bg-cyan-500',
+      link: '/cooperative/agents'
     },
     {
       title: 'Parcelles',
@@ -120,7 +129,25 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            <div className="mt-4 md:mt-0 flex gap-2">
+            <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
+              <Button 
+                onClick={() => navigate('/')}
+                variant="outline"
+                className="border-white text-white hover:bg-white/10"
+                data-testid="home-btn"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Accueil
+              </Button>
+              <Button 
+                onClick={() => navigate('/profile')}
+                variant="outline"
+                className="border-white text-white hover:bg-white/10"
+                data-testid="profile-btn"
+              >
+                <UserCircle className="h-4 w-4 mr-2" />
+                Profil
+              </Button>
               <Button 
                 onClick={() => navigate('/cooperative/ssrte')}
                 className="bg-amber-500 text-white hover:bg-amber-600"
@@ -137,15 +164,6 @@ const Dashboard = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter Membre
               </Button>
-              <Button 
-                onClick={() => navigate('/cooperative/lots/new')}
-                variant="outline"
-                className="border-white text-white hover:bg-white/10"
-                data-testid="create-lot-btn"
-              >
-                <Package className="h-4 w-4 mr-2" />
-                Créer Lot
-              </Button>
             </div>
           </div>
         </div>
@@ -153,7 +171,7 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
           {stats.map((stat, index) => (
             <Card 
               key={index} 
@@ -271,6 +289,18 @@ const Dashboard = () => {
                   Rapports EUDR
                 </span>
                 <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between bg-green-50 border-green-300 hover:bg-green-100"
+                onClick={() => navigate('/cooperative/parcels/verification')}
+                data-testid="quick-action-naturalisation"
+              >
+                <span className="flex items-center text-green-700">
+                  <TreePine className="h-4 w-4 mr-2" />
+                  Naturalisation
+                </span>
+                <ChevronRight className="h-4 w-4 text-green-700" />
               </Button>
               <Button 
                 variant="outline" 
