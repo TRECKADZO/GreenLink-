@@ -1,21 +1,13 @@
 # GreenLink - Product Requirements Document
 
 ## Problème Original
-Plateforme agritech multi-persona pour la Côte d'Ivoire. Gestion des coopératives agricoles, producteurs, acheteurs, agents terrain et entreprises RSE. Traçabilité EUDR/SSRTE, commerce de récoltes et crédits carbone.
+Plateforme agritech multi-persona pour la Côte d'Ivoire. Gestion des coopératives, producteurs, acheteurs, agents terrain et entreprises RSE.
 
 ## Architecture
 - **Frontend**: React (CRA) + TailwindCSS + Shadcn/UI
 - **Backend**: FastAPI + MongoDB Atlas
 - **Mobile**: React Native (Expo/EAS)
 - **PWA**: Service Worker + IndexedDB (mode offline)
-
-## Personas
-1. **Super Admin** — Gestion globale, fixation prix carbone, approbation crédits
-2. **Coopérative** — Gestion membres, parcelles, récoltes, lots, soumission crédits carbone (quantité)
-3. **Producteur** — Déclaration parcelles/récoltes, accès marchés, réception primes carbone
-4. **Acheteur** — Achat récoltes, traçabilité
-5. **Agent Terrain** — Recherche producteurs par téléphone, vérification terrain
-6. **Entreprise RSE** — Achat crédits carbone
 
 ## Modèle de Revenus Carbone
 ```
@@ -26,31 +18,33 @@ Prix de vente (fixé par Super Admin) aux entreprises RSE
     → 25% GreenLink (revenu plateforme)
     → 5% Coopérative (commission)
 ```
-Exemple : 1000t à 20 000 XOF/t = 20 000 000 XOF
-- Frais : 6 000 000 XOF
-- Agriculteurs : 9 800 000 XOF
-- GreenLink : 3 500 000 XOF
-- Coopérative : 700 000 XOF
 
-## Fonctionnalités Implémentées
+## Fonctionnalités Implémentées (Mars 2026)
 
-### Activation & Connexion Membres/Agents (Mars 2026)
-- Flux complet : Création par coop → Vérification téléphone → Activation → Login (web + mobile)
+### "Ma Prime Carbone" — Dashboard Planteur
+- **Expérience simplifiée** : le planteur ne voit QUE sa prime résultante
+- **Comment ça marche** en 5 étapes : *144*88# → 8 questions → prime → vente → Orange Money
+- **Calculateur** : 8 questions (hectares, arbres >8m, culture, engrais, brûlage, résidus, couverture, espèces)
+- **Résultat** : prime en FCFA/kg (ex: 106 FCFA/kg pour 48 arbres/ha), prime annuelle, conseil personnalisé
+- Aucune clé de répartition visible au planteur
 
-### Marché Carbone avec Modèle de Prix Admin (Mars 2026)
-- Coopérative soumet quantité CO2 uniquement
-- Super Admin fixe le prix de vente par tonne lors de l'approbation
-- Prime calculée selon le modèle ci-dessus
-- Dashboard producteur affiche prix RSE + répartition complète
-- Endpoint simulation : /api/carbon-listings/simulate-premium
-- Gestion prix par défaut : /api/carbon-listings/carbon-price
+### Marché Carbone — Workflow Admin
+- Coopérative soumet quantité uniquement
+- Super Admin fixe le prix et approuve
+- Distribution automatique : 30% frais → 70% farmer / 25% GreenLink / 5% coop
 
-### Accès Rapide Marchés + Suppression QR Code (Mars 2026)
-- Boutons Bourse des Récoltes + Marché Carbone sur tous les dashboards
-- QR Code entièrement supprimé et remplacé par recherche téléphone
+### Activation Comptes
+- Membres/agents créés par coop → activation par téléphone → login web + mobile
 
-### Système Recherche Agent + PWA Offline + Bourse Récoltes (Sessions précédentes)
-- Voir sessions précédentes
+### Accès Rapide + Suppression QR Code
+- Boutons Bourse Récoltes + Marché Carbone sur dashboards
+- QR Code supprimé, remplacé par recherche téléphone
+
+## Endpoints API Clés
+- `POST /api/carbon-payments/ma-prime` — Calculateur prime planteur (public, 8 questions)
+- `POST /api/carbon-listings/submit` — Soumettre crédits (quantité uniquement)
+- `PUT /api/carbon-listings/{id}/review` — Approuver avec prix (admin)
+- `GET/PUT /api/carbon-listings/carbon-price` — Prix par défaut
 
 ## Comptes Test
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
@@ -58,16 +52,14 @@ Exemple : 1000t à 20 000 XOF/t = 20 000 000 XOF
 - Agent: agent@greenlink.ci / password
 
 ## Issues Connues
-- P0: Google Play - hashtags à supprimer (action utilisateur)
+- P0: Google Play - hashtags (action utilisateur)
 - P1: Page blanche inscription web (vérification utilisateur)
-- P2: Page blanche après soumission formulaire parcelle
+- P2: Page blanche formulaire parcelle
 
-## Backlog (P1-P2)
+## Backlog
 - Données démo Marketplace Intrants
 - Builds APK/AAB v1.21.2
 - Intégration Orange Money
 - Langues Baoulé/Dioula mobile
 - Notifications multi-canal
-- Intégration USSD réelle
-- Refactoring cooperative.py / auth.py
-- Stockage cloud S3
+- USSD réelle, refactoring backend, stockage S3
