@@ -199,8 +199,15 @@ async def get_coop_members(
     limit: int = 50
 ):
     """Liste des membres de la coopérative"""
-    verify_cooperative(current_user)
-    coop_id = str(current_user["_id"])
+    user_type = current_user.get("user_type")
+    if user_type in ("field_agent", "agent_terrain"):
+        coop_id = current_user.get("cooperative_id", "")
+    elif user_type in ("cooperative",):
+        coop_id = str(current_user["_id"])
+    elif user_type in ("admin", "super_admin"):
+        coop_id = str(current_user["_id"])
+    else:
+        raise HTTPException(status_code=403, detail="Accès réservé aux coopératives ou agents terrain")
     
     # Support both field names and types for backward compatibility
     query = coop_id_query(coop_id)

@@ -16,8 +16,8 @@ router = APIRouter(prefix="/api/ssrte", tags=["SSRTE Analytics"])
 
 
 async def get_admin_or_coop_user(current_user: dict = Depends(get_current_user)):
-    if current_user.get('user_type') not in ['admin', 'super_admin', 'cooperative']:
-        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs ou coopératives")
+    if current_user.get('user_type') not in ['admin', 'super_admin', 'cooperative', 'field_agent', 'agent_terrain']:
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs, coopératives ou agents terrain")
     return current_user
 
 
@@ -277,6 +277,8 @@ async def get_ssrte_visits(
     # Filtre coopérative
     if user_type == 'cooperative':
         query["cooperative_id"] = str(current_user.get('_id'))
+    elif user_type in ('field_agent', 'agent_terrain'):
+        query["cooperative_id"] = current_user.get('cooperative_id', '')
     elif cooperative_id:
         query["cooperative_id"] = cooperative_id
     

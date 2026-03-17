@@ -474,6 +474,8 @@ async def list_cases(
         query["cooperative_id"] = cooperative_id
     elif current_user.get('user_type') == 'cooperative':
         query["cooperative_id"] = str(current_user["_id"])
+    elif current_user.get('user_type') in ('field_agent', 'agent_terrain'):
+        query["cooperative_id"] = current_user.get('cooperative_id', '')
     
     if status:
         query["status"] = status
@@ -666,6 +668,8 @@ async def list_remediations(
         query["cooperative_id"] = cooperative_id
     elif current_user.get('user_type') == 'cooperative':
         query["cooperative_id"] = str(current_user["_id"])
+    elif current_user.get('user_type') in ('field_agent', 'agent_terrain'):
+        query["cooperative_id"] = current_user.get('cooperative_id', '')
     if status:
         query["status"] = status
     
@@ -702,6 +706,8 @@ async def get_ssrte_overview(
         query["cooperative_id"] = cooperative_id
     elif current_user.get('user_type') == 'cooperative':
         query["cooperative_id"] = str(current_user["_id"])
+    elif current_user.get('user_type') in ('field_agent', 'agent_terrain'):
+        query["cooperative_id"] = current_user.get('cooperative_id', '')
     
     # Statistiques des visites
     total_visits = await db.ssrte_visits.count_documents(query)

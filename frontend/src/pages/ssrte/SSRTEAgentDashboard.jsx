@@ -62,17 +62,18 @@ const SSRTEAgentDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statsRes, visitsRes, casesRes, membersRes] = await Promise.all([
-        apiClient.get('/api/ssrte/stats/overview'),
-        apiClient.get('/api/ssrte/visits?limit=50'),
-        apiClient.get('/api/ssrte/cases?limit=50'),
-        apiClient.get('/api/cooperative/members?limit=200')
-      ]);
+      const requests = [
+        apiClient.get('/api/ssrte/stats/overview').catch(() => ({ data: {} })),
+        apiClient.get('/api/ssrte/visits?limit=50').catch(() => ({ data: { visits: [] } })),
+        apiClient.get('/api/ssrte/cases?limit=50').catch(() => ({ data: { cases: [] } })),
+        apiClient.get('/api/cooperative/members?limit=200').catch(() => ({ data: { members: [] } }))
+      ];
+      const [statsRes, visitsRes, casesRes, membersRes] = await Promise.all(requests);
       
       setStats(statsRes.data);
       setVisits(visitsRes.data.visits || []);
       setCases(casesRes.data.cases || []);
-      setMembers(membersRes.data.members || []);
+      setMembers(membersRes.data.members || membersRes.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Erreur de chargement des données');
