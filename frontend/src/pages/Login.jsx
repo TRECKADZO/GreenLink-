@@ -29,7 +29,7 @@ const Login = () => {
       case 'carbon_auditor':
         return '/auditor/dashboard';
       case 'field_agent':
-        return '/profile'; // Field agents primarily use mobile
+        return '/agent/terrain';
       case 'producer':
       default:
         return '/profile';

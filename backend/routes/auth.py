@@ -107,6 +107,10 @@ async def register(user_data: UserCreate):
             user_dict["headquarters_region"] = getattr(user_data, 'headquarters_region', None)
             user_dict["commission_rate"] = getattr(user_data, 'commission_rate', 0.10)
             user_dict["orange_money_business"] = getattr(user_data, 'orange_money_business', None)
+        elif user_data.user_type == "field_agent":
+            user_dict["zone"] = getattr(user_data, 'zone', None)
+            user_dict["village_coverage"] = []
+            user_dict["roles"] = ["field_agent"]
         
         result = await db.users.insert_one(user_dict)
         user_dict["_id"] = str(result.inserted_id)
@@ -256,6 +260,12 @@ async def login(request: Request, credentials: UserLogin):
     user["_id"] = user_id
     user.pop("hashed_password", None)
     
+    # Sérialiser tous les ObjectId pour éviter les erreurs JSON
+    from bson import ObjectId as BsonObjectId
+    for key, val in list(user.items()):
+        if isinstance(val, BsonObjectId):
+            user[key] = str(val)
+    
     logger.info(f"Login successful for: {credentials.identifier}")
     
     return {
@@ -264,9 +274,13 @@ async def login(request: Request, credentials: UserLogin):
         "user": user
     }
 
-@router.get("/me", response_model=User)
+@router.get("/me")
 async def get_profile(current_user: dict = Depends(get_current_user)):
     current_user.pop("hashed_password", None)
+    from bson import ObjectId as BsonObjectId
+    for key, val in list(current_user.items()):
+        if isinstance(val, BsonObjectId):
+            current_user[key] = str(val)
     return current_user
 
 @router.put("/profile", response_model=User)
@@ -298,6 +312,10 @@ async def update_profile(
     updated_user = await db.users.find_one({"_id": ObjectId(current_user["_id"])})
     updated_user["_id"] = str(updated_user["_id"])
     updated_user.pop("hashed_password", None)
+    from bson import ObjectId as BsonObjectId
+    for key, val in list(updated_user.items()):
+        if isinstance(val, BsonObjectId):
+            updated_user[key] = str(val)
     
     return updated_user
 

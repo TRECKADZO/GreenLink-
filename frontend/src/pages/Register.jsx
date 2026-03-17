@@ -15,6 +15,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const userTypes = [
   { value: 'producteur', label: 'Producteur', icon: '🌱', desc: 'Je vends mes récoltes' },
   { value: 'acheteur', label: 'Acheteur', icon: '🛒', desc: 'J\'achète des produits agricoles' },
+  { value: 'field_agent', label: 'Agent Terrain', icon: '📋', desc: 'Je vérifie les parcelles sur le terrain' },
   { value: 'entreprise_rse', label: 'Entreprise RSE', icon: '🏢', desc: 'Je cherche des crédits carbone' },
   { value: 'fournisseur', label: 'Fournisseur', icon: '📦', desc: 'Je fournis des intrants agricoles' },
   { value: 'cooperative', label: 'Coopérative', icon: '🤝', desc: 'Je gère une coopérative agricole' }
