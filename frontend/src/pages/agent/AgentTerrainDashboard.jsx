@@ -69,7 +69,7 @@ const AgentTerrainDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pt-20">
         <Navbar />
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
@@ -142,7 +142,7 @@ const AgentTerrainDashboard = () => {
   const badge = levelBadge();
 
   return (
-    <div className="min-h-screen bg-gray-50" data-testid="agent-terrain-dashboard">
+    <div className="min-h-screen bg-gray-50 pt-20" data-testid="agent-terrain-dashboard">
       <Navbar />
 
       {/* Header */}
