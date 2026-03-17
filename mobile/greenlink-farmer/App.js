@@ -118,7 +118,7 @@ import AuditorMissionScreen from './src/screens/auditor/AuditorMissionScreen';
 import AuditFormScreen from './src/screens/auditor/AuditFormScreen';
 
 // Screens - USSD
-import { USSDSimulatorScreen } from './src/screens/ussd';
+import { USSDSimulatorScreen, USSDCarbonScreen } from './src/screens/ussd';
 
 // Screens - Messaging
 import { MessagingScreen, ChatScreen } from './src/screens/messaging';
@@ -202,6 +202,7 @@ function AppNavigator() {
       
       {/* USSD Simulator */}
       <Stack.Screen name="USSDSimulator" component={USSDSimulatorScreen} />
+      <Stack.Screen name="USSDCarbon" component={USSDCarbonScreen} />
       <Stack.Screen name="AuditHistory" component={AuditorDashboardScreen} />
       
       {/* Messaging Screens */}
