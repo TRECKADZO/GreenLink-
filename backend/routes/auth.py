@@ -1052,10 +1052,11 @@ async def activate_agent_account(request: AgentActivationRequest):
         "message": f"Compte agent activé avec succès! Bienvenue {user_dict.get('full_name')}.",
         "cooperative": coop_name,
         "permissions": [
+            "dashboard_performance",
             "ssrte_visits",
-            "qr_scanner",
             "geotagged_photos",
             "member_registration",
-            "parcel_declaration"
+            "parcel_declaration",
+            "child_labor_monitoring"
         ]
     }

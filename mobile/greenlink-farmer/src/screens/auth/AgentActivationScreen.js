@@ -94,14 +94,16 @@ const AgentActivationScreen = ({ navigation }) => {
       const data = await response.json();
 
       if (response.ok) {
+        // Auto-login et redirection vers le dashboard
+        await login(data.access_token, data.user);
         Alert.alert(
           'Compte Activé!',
-          data.message,
+          `Bienvenue ${data.user?.full_name || 'Agent'}! Vous êtes connecté.`,
           [
             {
-              text: 'Commencer',
+              text: 'Aller au tableau de bord',
               onPress: () => {
-                login(data.access_token, data.user);
+                // Navigation will happen automatically via AuthContext
               },
             },
           ]

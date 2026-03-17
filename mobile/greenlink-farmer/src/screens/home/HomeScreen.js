@@ -21,6 +21,11 @@ const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    // Rediriger les agents terrain vers leur dashboard dédié
+    if (user?.user_type === 'field_agent' || user?.user_type === 'agent_terrain') {
+      navigation.replace('FieldAgentDashboard');
+      return;
+    }
     loadDashboard();
   }, []);
 
@@ -59,7 +64,8 @@ const HomeScreen = ({ navigation }) => {
     return <Loader message="Chargement du tableau de bord..." />;
   }
 
-  const userType = user?.user_type === 'cooperative' ? 'cooperative' : 'farmer';
+  const userType = user?.user_type === 'cooperative' ? 'cooperative' : 
+                   (user?.user_type === 'field_agent' || user?.user_type === 'agent_terrain') ? 'field_agent' : 'farmer';
 
   return (
     <MainLayout userType={userType}>
