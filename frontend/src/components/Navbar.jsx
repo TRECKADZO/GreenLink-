@@ -59,6 +59,8 @@ const Navbar = () => {
       case 'fournisseur': return '/supplier/dashboard';
       case 'cooperative': return '/cooperative/dashboard';
       case 'admin': return '/admin/dashboard';
+      case 'field_agent': return '/agent/terrain';
+      case 'agent_terrain': return '/agent/terrain';
       default: return '/profile';
     }
   };
@@ -67,7 +69,8 @@ const Navbar = () => {
     if (!user) return '';
     const labels = {
       producteur: 'Producteur', acheteur: 'Acheteur', entreprise_rse: 'Entreprise RSE',
-      fournisseur: 'Fournisseur', cooperative: 'Coopérative', admin: 'Administrateur'
+      fournisseur: 'Fournisseur', cooperative: 'Coopérative', admin: 'Administrateur',
+      field_agent: 'Agent Terrain', agent_terrain: 'Agent Terrain'
     };
     return labels[user.user_type] || 'Utilisateur';
   };
@@ -76,7 +79,7 @@ const Navbar = () => {
     if (!user) return User;
     const icons = {
       producteur: Leaf, acheteur: ShoppingCart, entreprise_rse: Building2,
-      fournisseur: Package, cooperative: Building2
+      fournisseur: Package, cooperative: Building2, field_agent: Leaf, agent_terrain: Leaf
     };
     return icons[user.user_type] || User;
   };
@@ -98,6 +101,12 @@ const Navbar = () => {
       cooperative: [
         { icon: User, label: 'Membres', route: '/cooperative/members' },
         { icon: Package, label: 'Ventes Groupées', route: '/cooperative/lots' },
+      ],
+      field_agent: [
+        { icon: Recycle, label: 'Visite SSRTE', route: '/agent/ssrte' },
+      ],
+      agent_terrain: [
+        { icon: Recycle, label: 'Visite SSRTE', route: '/agent/ssrte' },
       ],
     };
     return [...common, ...(extras[user.user_type] || [])];
