@@ -1167,9 +1167,13 @@ async def get_coop_agents(current_user: dict = Depends(get_current_user)):
     """Liste des agents terrain"""
     verify_cooperative(current_user)
     
-    agents = await db.coop_agents.find({
-        "coop_id": current_user["_id"]
-    }).to_list(100)
+    coop_id = current_user["_id"]
+    coop_oid = ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None
+    agents_or = [{"coop_id": coop_id}]
+    if coop_oid:
+        agents_or.append({"coop_id": coop_oid})
+    
+    agents = await db.coop_agents.find({"$or": agents_or}).to_list(100)
     
     return [{
         "id": str(a["_id"]),

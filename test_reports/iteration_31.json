@@ -1,0 +1,77 @@
+{
+  "summary": "Iteration 31 - Field Agent Dashboard Performance Testing. ALL 16 BACKEND TESTS PASSED. Frontend UI testing completed. Agent terrain login works correctly, dashboard displays KPIs with progress bars, quick actions, and search functionality. Cooperative FieldAgentsPage correctly shows agent 'Kone Alphone' with ObjectId matching fix working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "AgentTerrainDashboard.jsx",
+        "issue": "Green header with performance score (agent name, level badge, performance %) is covered by main Navbar. Header is at top=0 with height=104px but Navbar also at top=0 with height=84px.",
+        "selector": ".bg-gradient-to-r.from-emerald-700",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Agent Terrain Dashboard",
+        "issues": [
+          "Green header section with performance score is hidden behind main Navbar - users cannot see agent name, level badge (Débutant), and performance score (0%) unless they scroll or the header is repositioned"
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_field_agent_dashboard_iteration31.py",
+    "/app/test_reports/pytest/pytest_field_agent_dashboard_iteration31.xml"
+  ],
+  "action_items": [
+    "Add padding-top or margin-top to AgentTerrainDashboard.jsx green header section to account for Navbar height (~85px)"
+  ],
+  "critical_code_review_comments": [
+    "AgentTerrainDashboard.jsx correctly implements data-testid attributes for all key elements",
+    "GET /api/field-agent/dashboard returns complete data: agent_info, performance, statistics, achievements, risk_distribution, recent_activities",
+    "GET /api/cooperative/agents correctly uses ObjectId matching - returns agent 'Kone Alphone' for bielaghana cooperative",
+    "Search functionality works - finds farmer by phone number via GET /api/agent/search?phone=XXX",
+    "Tab navigation between 'Tableau de bord' and 'Recherche' works correctly"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_field_agent_dashboard_iteration31.py"
+  ],
+  "success_rate": {
+    "backend": "100% (16/16 tests passed)",
+    "frontend": "95% (green header overlap issue is only cosmetic)"
+  },
+  "test_credentials": {
+    "agent_terrain": {
+      "identifier": "+2250709005301",
+      "password": "greenlink2024"
+    },
+    "cooperative": {
+      "identifier": "bielaghana@gmail.com",
+      "password": "greenlink2024"
+    }
+  },
+  "seed_data_creation": "None - used existing agent 'Kone Alphone' from bielaghana cooperative",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Iteration 31 tested the NEW agent terrain performance dashboard at /agent/terrain. All APIs work correctly: GET /api/field-agent/dashboard returns agent_info (name, cooperative), performance (score=0, level=Débutant), statistics (ssrte_visits, members_onboarded, parcels_declared, geotagged_photos with targets and progress), achievements, risk_distribution, recent_activities. Search tab works via GET /api/agent/search?phone=XXX. Cooperative's FieldAgentsPage at /cooperative/agents correctly shows agent 'Kone Alphone' with activated status. DESIGN ISSUE: The green header with agent name, performance score and level badge is hidden behind main Navbar (needs top padding). Login uses 'identifier' field and returns 'access_token'.",
+  "features_verified": {
+    "POST /api/auth/login (agent terrain)": "PASS - Returns access_token, user_type=field_agent, full_name=Kone Alphone",
+    "GET /api/field-agent/dashboard": "PASS - Returns agent_info, performance, statistics, achievements, risk_distribution, recent_activities",
+    "GET /api/agent/search?phone=0701234567": "PASS - Returns found=true with farmer 'Kouassi Yao Jean'",
+    "GET /api/cooperative/agents (bielaghana)": "PASS - Returns agent 'Kone Alphone' with ObjectId matching",
+    "GET /api/cooperative/dashboard (bielaghana)": "PASS - Returns agents.total=1, agents.active=1, agents.activated=1",
+    "UI - Tab navigation": "PASS - 'Tableau de bord' and 'Recherche' tabs work",
+    "UI - Quick Actions": "PASS - Visite SSRTE, Recherche Planteur, Scanner QR buttons displayed",
+    "UI - KPI Cards": "PASS - Visites SSRTE (0, Obj: 20), Membres Enregistrés (0, Obj: 10), Parcelles Déclarées (0, Obj: 15), Photos Géotag (0, Obj: 30) with progress bars",
+    "UI - Search functionality": "PASS - Search by phone returns farmer result card",
+    "UI - Agent name in header": "PASS - data-testid='agent-name' shows 'Kone Alphone' (but covered by Navbar)",
+    "UI - Performance score": "PASS - data-testid='performance-score' shows '0%' (but covered by Navbar)",
+    "UI - Level badge": "PASS - data-testid='agent-level' shows 'Débutant' (but covered by Navbar)",
+    "UI - Cooperative FieldAgentsPage": "PASS - Shows 'Kone Alphone' with +2250709005301, Activé badge, 0 membres, 0 visites SSRTE"
+  },
+  "mocked_api_note": "No mocked APIs for this test. Orange Money, Orange SMS, USSD Gateway remain in mock mode (not relevant to this iteration)."
+}
