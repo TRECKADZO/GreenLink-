@@ -2,7 +2,7 @@
   "expo": {
     "name": "GreenLink Farmer",
     "slug": "greenlink-farmer",
-    "version": "1.21.0",
+    "version": "1.21.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -33,9 +33,7 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "VIBRATE"
       ]
     },
     "web": {
@@ -60,6 +58,13 @@
         "expo-camera",
         {
           "cameraPermission": "GreenLink a besoin d'accéder à la caméra pour photographier vos parcelles."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": false,
+          "cameraPermission": "GreenLink a besoin de la caméra pour prendre des photos de vos parcelles."
         }
       ]
     ],
