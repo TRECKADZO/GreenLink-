@@ -48,9 +48,33 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Soumission carbone: cooperatives
 - Approbation: admin uniquement
 
+### Integrations Orange (Preparees - 17 Mars 2026)
+**Orange Money** (services/orange_money.py):
+- Service avec OAuth 2.0 complet (client_credentials flow)
+- Mode MOCK quand credentials absentes
+- Initiation paiement, verification statut transaction
+- Variables: ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET, ORANGE_MERCHANT_KEY
+
+**Orange SMS** (services/orange_sms.py):
+- Service avec OAuth 2.0 complet
+- Mode MOCK quand credentials absentes
+- Templates: OTP, paiement, recolte, prime carbone
+- Variables: ORANGE_SMS_CLIENT_ID, ORANGE_SMS_CLIENT_SECRET, ORANGE_SMS_SENDER_NUMBER
+
+**USSD Gateway** (services/ussd_gateway.py):
+- Adaptateur multi-fournisseur (Orange, Africa's Talking, Infobip)
+- Mode MOCK quand credentials absentes
+- Formatage reponses selon le fournisseur
+- Variables: USSD_GATEWAY_URL, USSD_GATEWAY_API_KEY, USSD_GATEWAY_PROVIDER
+
+**Endpoint admin**: GET /api/payments/integrations-status
+- Statut des 3 services en temps reel
+- Accessible uniquement par admin
+
 ## Etat Actuel (17 Mars 2026)
 - Web: FONCTIONNEL - Tout le workflow Carbon Market
-- Mobile: APK v1.24.0 en attente de test
+- Mobile: APK v1.24.0 en attente de test utilisateur
+- Integrations Orange: PRET (mode MOCK, activer avec credentials reelles)
 
 ## Backlog
 ### P0
@@ -59,7 +83,11 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ### P1
 - [ ] Bug pages blanches (Nouvelle Parcelle, inscription)
 ### P2
-- [ ] Orange Money, Langues Baoule/Dioula, Notifications, USSD reel, Refactoring
+- [ ] Langues Baoule/Dioula
+- [ ] Notifications multi-canal (Push, SMS, Email)
+- [ ] Stockage cloud fichiers
+- [ ] Refactoring cooperative.py
+- [ ] USSD reel (quand passerelle disponible)
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
