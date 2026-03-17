@@ -194,6 +194,7 @@ function App() {
               <Route path="/cooperative/members/import" element={<ImportMembersPage />} />
               <Route path="/cooperative/members/:memberId/parcels" element={<MemberParcelsPage />} />
               <Route path="/cooperative/parcels/new" element={<AddParcelPage />} />
+              <Route path="/cooperative/add-parcel" element={<AddParcelPage />} />
               <Route path="/cooperative/parcels" element={<ParcelsVerificationPage />} />
               <Route path="/cooperative/parcels/verification" element={<ParcelsVerificationPage />} />
               <Route path="/cooperative/lots" element={<CooperativeLotsPage />} />
@@ -204,6 +205,7 @@ function App() {
               <Route path="/cooperative/qrcodes" element={<QRCodeGenerator />} />
               <Route path="/cooperative/notifications" element={<CooperativeNotifications />} />
               <Route path="/cooperative/agents" element={<FieldAgentsPage />} />
+              <Route path="/cooperative/field-agents" element={<FieldAgentsPage />} />
               <Route path="/cooperative/carbon-premiums" element={<CarbonPremiumsPage />} />
 
               {/* SSRTE Agent Routes */}
