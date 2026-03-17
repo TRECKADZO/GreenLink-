@@ -4,7 +4,7 @@ import { Alert, Linking, Platform } from 'react-native';
 import { api } from './api';
 
 class CameraService {
-  // Demander les permissions
+  // Demander les permissions caméra uniquement
   async requestCameraPermissions() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     
@@ -22,23 +22,6 @@ class CameraService {
     return true;
   }
 
-  async requestMediaLibraryPermissions() {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert(
-        'Permission requise',
-        'GreenLink a besoin d\'accéder à vos photos.',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Paramètres', onPress: () => Linking.openSettings() },
-        ]
-      );
-      return false;
-    }
-    return true;
-  }
-
   // Prendre une photo avec la caméra
   async takePhoto(options = {}) {
     const hasPermission = await this.requestCameraPermissions();
@@ -46,10 +29,10 @@ class CameraService {
 
     try {
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: options.allowsEditing ?? true,
         aspect: options.aspect ?? [4, 3],
-        quality: options.quality ?? 0.7, // Compression pour économiser les données
+        quality: options.quality ?? 0.7,
         base64: options.base64 ?? false,
       });
 
@@ -71,92 +54,18 @@ class CameraService {
     }
   }
 
-  // Sélectionner une image de la galerie
-  async pickImage(options = {}) {
-    const hasPermission = await this.requestMediaLibraryPermissions();
-    if (!hasPermission) return null;
-
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: options.allowsEditing ?? true,
-        aspect: options.aspect ?? [4, 3],
-        quality: options.quality ?? 0.7,
-        allowsMultipleSelection: options.multiple ?? false,
-        selectionLimit: options.limit ?? 5,
-      });
-
-      if (result.canceled) {
-        return null;
-      }
-
-      if (options.multiple) {
-        return result.assets.map((asset) => ({
-          uri: asset.uri,
-          width: asset.width,
-          height: asset.height,
-          type: asset.type,
-          fileSize: asset.fileSize,
-        }));
-      }
-
-      return {
-        uri: result.assets[0].uri,
-        width: result.assets[0].width,
-        height: result.assets[0].height,
-        type: result.assets[0].type,
-        fileSize: result.assets[0].fileSize,
-      };
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Erreur', 'Impossible de sélectionner l\'image');
-      return null;
-    }
-  }
-
-  // Afficher le sélecteur (caméra ou galerie)
-  showImagePicker(options = {}) {
-    return new Promise((resolve) => {
-      Alert.alert(
-        'Ajouter une photo',
-        'Choisissez une option',
-        [
-          {
-            text: 'Appareil photo',
-            onPress: async () => {
-              const result = await this.takePhoto(options);
-              resolve(result);
-            },
-          },
-          {
-            text: 'Galerie',
-            onPress: async () => {
-              const result = await this.pickImage(options);
-              resolve(result);
-            },
-          },
-          {
-            text: 'Annuler',
-            style: 'cancel',
-            onPress: () => resolve(null),
-          },
-        ]
-      );
-    });
+  // Prendre une ou plusieurs photos (remplace pickImage et showImagePicker)
+  async showImagePicker(options = {}) {
+    return this.takePhoto(options);
   }
 
   // Compresser une image
   async compressImage(uri, quality = 0.5) {
     try {
       const fileInfo = await FileSystem.getInfoAsync(uri);
-      
-      // Si l'image fait moins de 500KB, pas besoin de compresser
       if (fileInfo.size < 500000) {
         return uri;
       }
-
-      // Pour une vraie compression, il faudrait utiliser expo-image-manipulator
-      // Mais pour économiser les dépendances, on retourne l'image originale
       return uri;
     } catch (error) {
       console.error('Error compressing image:', error);

@@ -175,21 +175,9 @@ const ChatScreen = () => {
     }, 2000);
   };
 
-  // Pick image
+  // Pick image - utilise la caméra directement (pas de galerie pour conformité Google Play)
   const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        await uploadAndSendFile(result.assets[0].uri, 'image.jpg', 'image/jpeg');
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Erreur', 'Impossible de sélectionner l\'image');
-    }
+    await takePhoto();
   };
 
   // Take photo
@@ -202,6 +190,7 @@ const ChatScreen = () => {
       }
 
       const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
         quality: 0.8,
       });
 

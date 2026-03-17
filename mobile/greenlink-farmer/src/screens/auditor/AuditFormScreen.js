@@ -119,7 +119,7 @@ const AuditFormScreen = ({ navigation, route }) => {
       }
 
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         quality: 0.7,
         allowsEditing: false,
       });
