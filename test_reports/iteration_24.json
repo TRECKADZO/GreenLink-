@@ -1,0 +1,74 @@
+{
+  "summary": "Carbon Pricing Model Iteration 24 - ALL TESTS PASSED. Verified: 1) Carbon listing submission has NO price field (coop only submits quantity), 2) Admin approval REQUIRES price_per_tonne (fails 400 without it), 3) Admin approval WITH price returns premium_distribution object with correct math, 4) Premium math verified: 30% fees, then 70% farmer / 25% GreenLink / 5% coop, 5) simulate-premium endpoint returns correct breakdown, 6) carbon-price GET/PUT endpoints work, 7) Farmer dashboard shows full distribution model with 'Prix de vente aux entreprises RSE'",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_carbon_pricing_model.py",
+    "/app/test_reports/pytest/pytest_carbon_pricing_model.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "carbon_listings.py: CarbonListingCreate model correctly has NO price_per_tonne field - cooperative only submits quantity (lines 49-65)",
+    "carbon_listings.py: Admin review endpoint requires price_per_tonne for approval, returns 400 without it (lines 220-225)",
+    "carbon_listings.py: calculate_premium_distribution function correctly calculates: total*0.30 fees, then net*0.70/0.25/0.05 for farmer/greenlink/coop",
+    "carbon_listings.py: Constants: FEES_RATE=0.30, FARMER_SHARE=0.70, GREENLINK_SHARE=0.25, COOP_SHARE=0.05",
+    "carbon_business_model.py: Updated with FEES_RATE=0.30, FARMER_SHARE_RATE=0.70, GREENLINK_MARGIN_RATE=0.25, COOPERATIVE_SHARE_RATE=0.05",
+    "carbon_payments_dashboard.py: Uses carbon_config for real admin-set price, returns distribution_model with all fields for farmer users",
+    "CreateCarbonListing.jsx: NO price input field, displays 'Le Super Admin fixera le prix de vente' message",
+    "AdminCarbonApprovals.jsx: Price input in approval modal with live premium breakdown calculation (30%/70%/25%/5%)",
+    "CarbonPaymentsDashboard.jsx: Shows 'Prix de vente aux entreprises RSE' with full distribution table"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_carbon_pricing_model.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 tests passed, 1 skipped for cooperative dashboard - by design)",
+    "frontend": "100% (all UI elements verified via Playwright)"
+  },
+  "test_credentials": {
+    "admin": {
+      "identifier": "klenakan.eric@gmail.com",
+      "password": "474Treckadzo"
+    },
+    "cooperative": {
+      "identifier": "coop-gagnoa@greenlink.ci",
+      "password": "password"
+    }
+  },
+  "seed_data_creation": "Test created carbon listings with TEST_ prefix for verification (TEST_NoPriceSubmit_*, TEST_ApprovalNoPrice_*, TEST_ApprovalWithPrice_*, TEST_PendingPrice_*)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Carbon pricing model fully verified: 1) Cooperative submits quantity only (no price field), 2) Admin sets price during approval (required), 3) Premium distribution: total * 0.30 fees, then net * 0.70 farmer / 0.25 greenlink / 0.05 coop. The carbon_config collection stores default_price_per_tonne. Farmer dashboard shows 'Prix de vente aux entreprises RSE' with full breakdown. Cooperative dashboard has different structure (no distribution_model - by design).",
+  "features_verified": {
+    "POST /api/carbon-listings/submit (no price)": "PASS - Cooperative can submit without price_per_tonne, status=pending_approval",
+    "PUT /api/carbon-listings/{id}/review (no price)": "PASS - Returns 400 when no price provided for approval",
+    "PUT /api/carbon-listings/{id}/review (with price)": "PASS - Returns premium_distribution with correct math",
+    "GET /api/carbon-listings/simulate-premium": "PASS - Returns correct breakdown for given quantity/price",
+    "GET /api/carbon-listings/carbon-price": "PASS - Public endpoint returns default_price_per_tonne",
+    "PUT /api/carbon-listings/carbon-price": "PASS - Admin can update default price, non-admin gets 403",
+    "GET /api/carbon-payments/dashboard": "PASS - Returns distribution_model for farmer users with price_per_tonne_xof and rates",
+    "Frontend: CreateCarbonListing.jsx": "PASS - NO price input field, message about admin setting price visible",
+    "Frontend: AdminCarbonApprovals.jsx": "PASS - Price input in modal, live premium breakdown (30%/70%/25%/5%), 'Prix à fixer' for pending",
+    "Frontend: CarbonPaymentsDashboard.jsx": "PASS - Shows 'Prix de vente aux entreprises RSE' 15,000 XOF/tonne, full distribution table"
+  },
+  "premium_distribution_verified": {
+    "formula": "total = price_per_tonne * quantity, fees = total * 0.30, net = total - fees, farmer = net * 0.70, greenlink = net * 0.25, coop = net * 0.05",
+    "example_300t_at_20000XOF": {
+      "input": {"quantity_tonnes": 300, "price_per_tonne": 20000},
+      "total_revenue": 6000000,
+      "fees_30pct": 1800000,
+      "net_amount": 4200000,
+      "farmer_premium_70pct": 2940000,
+      "greenlink_25pct": 1050000,
+      "coop_5pct": 210000
+    }
+  },
+  "mocked_api_note": "Orange Money payment is still MOCKED as noted in review request"
+}

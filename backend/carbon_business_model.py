@@ -72,27 +72,24 @@ BUYER_PRICING = {
 }
 
 # GreenLink business model parameters
-# Distribution is % of NET REVENUE (after costs)
-GREENLINK_MARGIN_RATE = 0.20       # 20% margin for GreenLink (of NET)
-FARMER_SHARE_RATE = 0.75           # 75% goes to farmers (of NET)
+# Distribution is % of NET REVENUE (after 30% fees)
+GREENLINK_MARGIN_RATE = 0.25       # 25% margin for GreenLink (of NET)
+FARMER_SHARE_RATE = 0.70           # 70% goes to farmers (of NET)
 COOPERATIVE_SHARE_RATE = 0.05      # 5% for cooperative management (of NET)
 # Total = 100% of NET
 
-# Cost structure (% of GROSS revenue) - deducted first
-COST_STRUCTURE = {
-    "verification_audit": 0.07,     # 7% for Verra/Gold Standard audits
-    "field_verification": 0.05,     # 5% for drone/terrain verification
-    "permanence_buffer": 0.10,      # 10% held as permanence buffer (standard)
-    "bmc_fees": 0.02,              # 2% BMC/registry fees
-    "operational": 0.03,           # 3% operational costs
-}
-# Total costs = 27% of gross → Net = 73% of gross
+# Fee structure (% of GROSS revenue) - deducted first
+FEES_RATE = 0.30                   # 30% frais de service
+# Net = 70% of gross
 
-# Summary of final distribution (% of GROSS):
-# - Costs: 27%
-# - GreenLink: 20% × 73% = ~14.6% of gross
-# - Farmers: 75% × 73% = ~54.75% of gross
-# - Cooperatives: 5% × 73% = ~3.65% of gross
+# Backward-compatible COST_STRUCTURE (broken down for detailed reports)
+COST_STRUCTURE = {
+    "verification_audit": 0.10,     # 10% verification/audit
+    "field_verification": 0.08,     # 8% drone/terrain verification
+    "permanence_buffer": 0.07,      # 7% permanence buffer
+    "operational": 0.05,            # 5% operational costs
+}
+# Total = 30% of gross = FEES_RATE
 
 # USD to XOF conversion
 USD_TO_XOF = 655  # 1 USD = 655 XOF (approximate)
@@ -408,30 +405,41 @@ def calculate_farmer_premium_per_kg(
     """
     Calculate the carbon premium per kg of cacao for a farmer
     
-    Example: 4.8 t CO2/ha × 30 USD/t × 70% farmer share / 2200 kg/ha = ~46 XOF/kg premium
+    Model: Prix vente (fixé par Admin) → 30% frais → 70% net → 70% farmer / 25% GreenLink / 5% coop
+    Example: 4.8 t CO2/ha × 30 USD/t × (1 - 0.30) × 0.70 / 2200 kg/ha
     """
     gross_usd = tonnes_co2 * price_per_tonne_usd
-    net_after_costs = gross_usd * (1 - sum(COST_STRUCTURE.values()))
-    farmer_share = net_after_costs * FARMER_SHARE_RATE
+    net_after_fees = gross_usd * (1 - FEES_RATE)
+    farmer_share = net_after_fees * FARMER_SHARE_RATE
+    greenlink_share = net_after_fees * GREENLINK_MARGIN_RATE
+    coop_share = net_after_fees * COOPERATIVE_SHARE_RATE
     
     total_yield_kg = area_hectares * yield_kg_per_ha
     premium_per_kg_usd = farmer_share / total_yield_kg if total_yield_kg > 0 else 0
     premium_per_kg_xof = premium_per_kg_usd * USD_TO_XOF
     
     return {
+        "price_per_tonne_usd": price_per_tonne_usd,
+        "price_per_tonne_xof": round(price_per_tonne_usd * USD_TO_XOF, 0),
         "gross_revenue_usd": round(gross_usd, 2),
+        "gross_revenue_xof": round(gross_usd * USD_TO_XOF, 0),
+        "fees_rate": f"{FEES_RATE * 100:.0f}%",
+        "fees_usd": round(gross_usd * FEES_RATE, 2),
+        "fees_xof": round(gross_usd * FEES_RATE * USD_TO_XOF, 0),
+        "net_revenue_usd": round(net_after_fees, 2),
+        "net_revenue_xof": round(net_after_fees * USD_TO_XOF, 0),
+        "farmer_share_rate": f"{FARMER_SHARE_RATE * 100:.0f}%",
         "farmer_share_usd": round(farmer_share, 2),
         "farmer_share_xof": round(farmer_share * USD_TO_XOF, 0),
+        "greenlink_share_rate": f"{GREENLINK_MARGIN_RATE * 100:.0f}%",
+        "greenlink_share_usd": round(greenlink_share, 2),
+        "greenlink_share_xof": round(greenlink_share * USD_TO_XOF, 0),
+        "coop_share_rate": f"{COOPERATIVE_SHARE_RATE * 100:.0f}%",
+        "coop_share_usd": round(coop_share, 2),
+        "coop_share_xof": round(coop_share * USD_TO_XOF, 0),
         "total_yield_kg": total_yield_kg,
         "premium_per_kg_usd": round(premium_per_kg_usd, 4),
         "premium_per_kg_xof": round(premium_per_kg_xof, 0),
-        # Range based on tree count
-        "premium_range_xof": {
-            "low_shade": 80,    # ~20 trees/ha
-            "medium_shade": 120, # ~40 trees/ha
-            "high_shade": 160,   # ~60 trees/ha
-            "optimal_shade": 180 # 48+ trees/ha with biochar
-        }
     }
 
 

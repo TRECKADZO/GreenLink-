@@ -99,11 +99,16 @@ async def get_carbon_payments_dashboard(
     pending_xof = sum(p.get('amount_xof', 0) for p in carbon_payments if p.get('status') == 'pending')
     
     # Calculer les projections annuelles
-    # Prix moyen du marché: 25 USD/tonne
-    price_per_tonne_usd = 25
-    annual_gross_usd = total_tonnes_co2 * price_per_tonne_usd
-    annual_farmer_share_usd = annual_gross_usd * 0.73 * FARMER_SHARE_RATE  # 73% net après coûts
-    annual_farmer_share_xof = annual_farmer_share_usd * USD_TO_XOF
+    # Utiliser le prix réel fixé par le Super Admin sur le Marché Carbone
+    config = await db.carbon_config.find_one({"key": "default_price"})
+    price_per_tonne_xof = config.get("value", 15000) if config else 15000
+    price_per_tonne_usd = price_per_tonne_xof / USD_TO_XOF
+    
+    annual_gross_xof = total_tonnes_co2 * price_per_tonne_xof
+    annual_net_xof = annual_gross_xof * (1 - 0.30)  # 30% frais
+    annual_farmer_share_xof = annual_net_xof * FARMER_SHARE_RATE  # 70% du net
+    annual_greenlink_xof = annual_net_xof * 0.25  # 25% du net
+    annual_coop_xof = annual_net_xof * COOPERATIVE_SHARE_RATE  # 5% du net
     
     # Prime par kg de cacao
     premium_data = calculate_farmer_premium_per_kg(
@@ -194,11 +199,22 @@ async def get_carbon_payments_dashboard(
             for p in carbon_payments[:10]
         ],
         "distribution_model": {
+            "price_per_tonne_xof": price_per_tonne_xof,
+            "price_per_tonne_usd": round(price_per_tonne_usd, 2),
+            "fees_rate": "30%",
+            "gross_annual_xof": round(annual_gross_xof, 0),
+            "fees_annual_xof": round(annual_gross_xof * 0.30, 0),
+            "net_annual_xof": round(annual_net_xof, 0),
             "farmer_share_rate": f"{FARMER_SHARE_RATE * 100:.0f}%",
-            "cooperative_share_rate": f"{COOPERATIVE_SHARE_RATE * 100:.0f}%",
-            "payment_method": "Via Coopérative → Orange Money",
+            "farmer_annual_xof": round(annual_farmer_share_xof, 0),
+            "greenlink_share_rate": "25%",
+            "greenlink_annual_xof": round(annual_greenlink_xof, 0),
+            "coop_share_rate": f"{COOPERATIVE_SHARE_RATE * 100:.0f}%",
+            "coop_annual_xof": round(annual_coop_xof, 0),
+            "payment_method": "Via Coopérative",
             "payment_frequency": "Trimestriel"
-        }
+        },
+        "premium_details": premium_data
     }
 
 

@@ -326,21 +326,52 @@ const CarbonPaymentsDashboard = () => {
 
             {/* Distribution Model */}
             <div className="bg-white rounded-2xl shadow-sm p-6" data-testid="distribution-model">
-              <h3 className="font-semibold text-gray-800 mb-4">Modèle de distribution</h3>
+              <h3 className="font-semibold text-gray-800 mb-4">Répartition de la Prime Carbone</h3>
               
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
-                  <span className="text-sm text-gray-600">Votre part</span>
-                  <span className="font-bold text-emerald-700">{distribution_model?.farmer_share_rate}</span>
+              {/* Prix de vente aux entreprises RSE */}
+              <div className="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl mb-4 border border-emerald-200">
+                <p className="text-xs text-emerald-600 font-medium mb-1">Prix de vente aux entreprises RSE</p>
+                <p className="text-2xl font-bold text-emerald-700">
+                  {distribution_model?.price_per_tonne_xof ? formatCurrency(distribution_model.price_per_tonne_xof) : '15 000'} <span className="text-sm font-normal">XOF/tonne CO2</span>
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {/* Revenu brut */}
+                <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
+                  <span className="text-xs text-gray-500">Revenu brut annuel</span>
+                  <span className="text-sm font-bold text-gray-700">{formatCurrency(distribution_model?.gross_annual_xof || 0)} XOF</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <span className="text-sm text-gray-600">Part coopérative</span>
-                  <span className="font-bold text-blue-700">{distribution_model?.cooperative_share_rate}</span>
+                {/* 30% frais */}
+                <div className="flex items-center justify-between p-2.5 bg-red-50 rounded-lg">
+                  <span className="text-xs text-red-600">Frais de service ({distribution_model?.fees_rate || '30%'})</span>
+                  <span className="text-sm font-semibold text-red-600">-{formatCurrency(distribution_model?.fees_annual_xof || 0)} XOF</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-600">Fréquence</span>
-                  <span className="font-medium text-gray-700">{distribution_model?.payment_frequency}</span>
+                {/* Net */}
+                <div className="flex items-center justify-between p-2.5 bg-slate-100 rounded-lg">
+                  <span className="text-xs text-slate-600 font-medium">Net à distribuer</span>
+                  <span className="text-sm font-bold text-slate-700">{formatCurrency(distribution_model?.net_annual_xof || 0)} XOF</span>
                 </div>
+                <hr className="border-gray-200 my-1" />
+                {/* 70% agriculteurs */}
+                <div className="flex items-center justify-between p-2.5 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <span className="text-xs text-emerald-700 font-medium">Votre part ({distribution_model?.farmer_share_rate || '70%'})</span>
+                  <span className="text-sm font-bold text-emerald-700">{formatCurrency(distribution_model?.farmer_annual_xof || 0)} XOF</span>
+                </div>
+                {/* 25% GreenLink */}
+                <div className="flex items-center justify-between p-2.5 bg-blue-50 rounded-lg">
+                  <span className="text-xs text-blue-600">GreenLink ({distribution_model?.greenlink_share_rate || '25%'})</span>
+                  <span className="text-sm font-semibold text-blue-600">{formatCurrency(distribution_model?.greenlink_annual_xof || 0)} XOF</span>
+                </div>
+                {/* 5% coopérative */}
+                <div className="flex items-center justify-between p-2.5 bg-amber-50 rounded-lg">
+                  <span className="text-xs text-amber-600">Coopérative ({distribution_model?.coop_share_rate || '5%'})</span>
+                  <span className="text-sm font-semibold text-amber-600">{formatCurrency(distribution_model?.coop_annual_xof || 0)} XOF</span>
+                </div>
+              </div>
+
+              <div className="mt-3 p-2 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-500 text-center">Versement : {distribution_model?.payment_frequency || 'Trimestriel'} via Coopérative</p>
               </div>
             </div>
 
