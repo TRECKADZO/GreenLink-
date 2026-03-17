@@ -5,7 +5,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Shield, Phone, Lock, ArrowLeft, CheckCircle, Eye, EyeOff, Clipboard, QrCode, Camera, UserPlus } from 'lucide-react';
+import { Shield, Phone, Lock, ArrowLeft, CheckCircle, Eye, EyeOff, ClipboardCheck, Camera, UserPlus, MapPin, Activity } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -117,7 +117,7 @@ const ActivateAgent = () => {
         // Auto login
         if (data.access_token) {
           login(data.access_token, data.user);
-          navigate('/profile');
+          navigate('/agent/terrain');
         } else {
           navigate('/login');
         }
@@ -141,10 +141,12 @@ const ActivateAgent = () => {
   };
 
   const permissions = [
-    { icon: Clipboard, label: 'Visites SSRTE' },
-    { icon: QrCode, label: 'Scanner QR' },
-    { icon: Camera, label: 'Photos géolocalisées' },
+    { icon: Activity, label: 'Tableau de bord performance' },
+    { icon: ClipboardCheck, label: 'Visites SSRTE' },
     { icon: UserPlus, label: 'Enregistrement membres' },
+    { icon: MapPin, label: 'Déclaration parcelles' },
+    { icon: Camera, label: 'Photos géolocalisées' },
+    { icon: Shield, label: 'Suivi travail des enfants' },
   ];
 
   return (
@@ -242,7 +244,7 @@ const ActivateAgent = () => {
               {/* Permissions */}
               <div className="mt-3 pt-3 border-t border-cyan-200">
                 <p className="text-xs font-semibold text-gray-600 mb-2">Vos permissions:</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   {permissions.map((perm, i) => (
                     <div key={i} className="flex items-center gap-1 text-xs text-gray-600">
                       <perm.icon className="w-3 h-3 text-cyan-500" />

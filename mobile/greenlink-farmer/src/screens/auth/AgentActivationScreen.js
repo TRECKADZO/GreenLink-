@@ -215,20 +215,28 @@ const AgentActivationScreen = ({ navigation }) => {
                 <Text style={styles.permissionsTitle}>Vos permissions:</Text>
                 <View style={styles.permissionsList}>
                   <View style={styles.permissionItem}>
+                    <Ionicons name="stats-chart" size={16} color="#06b6d4" />
+                    <Text style={styles.permissionText}>Tableau de bord performance</Text>
+                  </View>
+                  <View style={styles.permissionItem}>
                     <Ionicons name="clipboard" size={16} color="#06b6d4" />
                     <Text style={styles.permissionText}>Visites SSRTE</Text>
                   </View>
                   <View style={styles.permissionItem}>
-                    <Ionicons name="qr-code" size={16} color="#06b6d4" />
-                    <Text style={styles.permissionText}>Scanner QR</Text>
+                    <Ionicons name="person-add" size={16} color="#06b6d4" />
+                    <Text style={styles.permissionText}>Enregistrement membres</Text>
+                  </View>
+                  <View style={styles.permissionItem}>
+                    <Ionicons name="map" size={16} color="#06b6d4" />
+                    <Text style={styles.permissionText}>Déclaration parcelles</Text>
                   </View>
                   <View style={styles.permissionItem}>
                     <Ionicons name="camera" size={16} color="#06b6d4" />
                     <Text style={styles.permissionText}>Photos géolocalisées</Text>
                   </View>
                   <View style={styles.permissionItem}>
-                    <Ionicons name="person-add" size={16} color="#06b6d4" />
-                    <Text style={styles.permissionText}>Enregistrement membres</Text>
+                    <Ionicons name="shield-checkmark" size={16} color="#06b6d4" />
+                    <Text style={styles.permissionText}>Suivi travail des enfants</Text>
                   </View>
                 </View>
               </View>
