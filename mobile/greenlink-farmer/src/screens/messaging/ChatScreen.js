@@ -20,11 +20,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '../../context/AuthContext';
 import { messagingApi, MessagingWebSocket } from '../../services/messaging';
 import { CONFIG, COLORS } from '../../config';
+
+// Lazy import native pickers to prevent crash if modules fail
+let ImagePicker = null;
+let DocumentPicker = null;
+try { ImagePicker = require('expo-image-picker'); } catch (e) { console.error('[Chat] expo-image-picker failed:', e?.message); }
+try { DocumentPicker = require('expo-document-picker'); } catch (e) { console.error('[Chat] expo-document-picker failed:', e?.message); }
 
 const ChatScreen = () => {
   const navigation = useNavigation();

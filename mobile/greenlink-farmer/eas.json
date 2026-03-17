@@ -21,7 +21,7 @@
       },
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://harvest-carbon-fix.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://carbon-calc-fix.preview.emergentagent.com"
       }
     },
     "production": {
@@ -35,7 +35,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://harvest-carbon-fix.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://carbon-calc-fix.preview.emergentagent.com"
       }
     }
   },

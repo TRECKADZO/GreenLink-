@@ -159,7 +159,7 @@ const FieldAgentDashboard = ({ navigation }) => {
             onPress={() => navigation.navigate('FarmerSearch')}
           >
             <Ionicons name="call" size={28} color={COLORS.white} />
-            <Text style={styles.statValue}>{statistics?.qr_scans || 0}</Text>
+            <Text style={styles.statValue}>{statistics?.searches || 0}</Text>
             <Text style={styles.statLabel}>Recherches</Text>
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: '100%' }]} />

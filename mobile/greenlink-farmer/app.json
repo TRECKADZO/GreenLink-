@@ -2,22 +2,26 @@
   "expo": {
     "name": "GreenLink Farmer",
     "slug": "greenlink-farmer",
-    "version": "1.23.0",
+    "version": "1.24.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#2d5a4d"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.greenlink.farmer",
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"],
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
         "NSCameraUsageDescription": "GreenLink a besoin d'accéder à la caméra pour photographier les parcelles et preuves de vérification.",
         "NSLocationWhenInUseUsageDescription": "GreenLink a besoin de votre position pour géolocaliser vos photos et parcelles."
       }
@@ -75,7 +79,8 @@
           "cameraPermission": "GreenLink a besoin de la caméra pour prendre des photos de vos parcelles."
         }
       ],
-      "./plugins/removeMediaPermissions"
+      "./plugins/removeMediaPermissions",
+      "expo-font"
     ],
     "notification": {
       "icon": "./assets/notification-icon.png",

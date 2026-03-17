@@ -1,7 +1,10 @@
-import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Alert, Linking } from 'react-native';
 import { api } from './api';
+
+// Lazy import to prevent crash at module level
+let ImagePicker = null;
+try { ImagePicker = require('expo-image-picker'); } catch (e) { console.error('[CameraService] expo-image-picker failed:', e?.message); }
 
 class CameraService {
   // Demander les permissions caméra uniquement (pas de galerie)

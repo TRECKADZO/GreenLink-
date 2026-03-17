@@ -5,7 +5,7 @@ export const CONFIG = {
   // API Backend - Uses EXPO_PUBLIC_API_URL from EAS build or falls back to hardcoded URL
   API_URL: process.env.EXPO_PUBLIC_API_URL 
     ? `${process.env.EXPO_PUBLIC_API_URL}/api` 
-    : 'https://harvest-carbon-fix.preview.emergentagent.com/api',
+    : 'https://carbon-calc-fix.preview.emergentagent.com/api',
   
   // Timeouts adaptés à la faible connectivité
   REQUEST_TIMEOUT: 30000, // 30 secondes

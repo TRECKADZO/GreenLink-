@@ -1,218 +1,178 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was to build a multi-persona agritech platform. Previous sessions focused on adding a secure messaging system, mobile integration, a buyer free trial, and marketplace analytics.
+The user initially requested a major overhaul of the Carbon Market workflow, simplification of the farmer-facing Ma Prime Carbone calculator, and the complete removal of an old QR code system. Critically, the user was blocked by two mobile app issues: repeated rejection from the Google Play Store due to media permissions and a white screen on startup that rendered the app unusable.
 
-In this session, the user introduced new, high-priority requirements:
-1.  **Secure Farmer Search**: Implement a secure, professional, and highly-auditable system for field agents to search for farmers using only a phone number. This feature must be restricted by the agent's assigned zone, log all access for SSRTE/EUDR compliance, and work in an offline-first PWA. This new workflow explicitly replaces the previous, broken QR code system.
-2.  **Offline-First Mobile Experience**: The field agent's primary tool is a mobile app. The user requested a complete offline mode, allowing agents to download all farmers in their zone, perform searches, and record data without an internet connection, with changes synchronized later.
-3.  **PWA & Mobile Builds**: Make the web application an installable PWA and generate new, compliant APK/AAB builds for the mobile app to be deployed on the Google Play Store.
-4.  **Bug Fixes**: The user reported several critical bugs:
-    *   **Google Play Rejections**: The app was rejected for using broad media permissions and for having hashtag spam in its store description.
-    *   **Cooperative Dashboard Errors**: Multiple pages within the cooperative dashboard were showing blank white pages due to loading errors and broken links.
-    *   **Agent Login Failure**: A newly created field agent account could not log in, receiving a generic erreur de connexion au serveur.
+Subsequent requests during the session included:
+1.  Fixing the Progressive Web App (PWA) homepage, which incorrectly defaulted to an agent-specific dashboard.
+2.  Making the web application's landing page fully responsive for mobile devices.
+3.  Creating a USSD interface () to allow farmers to calculate their carbon premium via a simple 8-question text-based menu.
+4.  Adding a simulator for this new USSD flow into the existing mobile app.
+5.  The final request was a re-iteration of the most critical bug: fixing the white screen on the mobile APK, suggesting a robust solution was needed.
 
 **PRODUCT REQUIREMENTS:**
-*   A secure, offline-first search system for field agents based on phone numbers, with RBAC and audit logs.
-*   The web application must be an installable Progressive Web App (PWA).
-*   The React Native mobile app must have a compliant build (APK/AAB) that can pass Google Play Store review.
-*   Producers and field agents must be able to register and log in on both the web and mobile platforms.
-*   All critical white page and server connection errors must be resolved to ensure a stable user experience.
-*   A functional mobile app with features for farmer search and data verification, optimized for on-the-ground use.
-*   Accurate and data-rich dashboards for all user personas.
+*   A robust, admin-gated workflow for publishing carbon credits.
+*   A simplified, user-friendly carbon premium calculator for farmers (via Web, USSD, and Mobile App).
+*   A clean codebase with all obsolete QR code functionality removed.
+*   A compliant mobile app (APK/AAB) that can pass Google Play Store review without permission-related rejections.
+*   A functional mobile app that does not crash or show a white screen on startup.
 
 **User's preferred language**: French. The next agent MUST respond in French.
 
 **what currently exists?**
-The application is a full-stack platform (React/FastAPI/MongoDB). This session focused on implementing a new core feature for field agents and fixing critical bugs.
-*   **Secure Agent Search System (Full-Stack)**: A complete, secure system for field agents was built from scratch.
-    *   **Backend**: New endpoints (, ) were created with strict role-based access control () and a new  collection in MongoDB to log every data access for compliance.
-    *   **Frontend (Web)**: A new responsive, mobile-first dashboard () was created, allowing agents to search for farmers by phone number and view their details and associated parcels.
-*   **Offline-First & PWA**: The agent dashboard is now a fully-featured PWA.
-    *   **PWA**: The web app is now installable, with a , , and an install prompt.
-    *   **Offline Mode**: The PWA uses  to cache farmer data locally. A  hook and sync bar UI were implemented, allowing agents to download data for their zone and work completely offline. Background Sync is used to upload changes when connectivity is restored.
-*   **Mobile App Overhaul**: The field agent workflow on the React Native mobile app was updated to replace the faulty QR scanner with the new phone number search functionality.
-    *   A new  was created.
-    *   The , , and  were all updated to remove QR code references and integrate the new search feature.
-*   **Critical Bug Fixes**:
-    *   **Google Play Permissions**: The app was rejected for using /. This was fixed by explicitly blocking these permissions in  using . New builds (v1.21.2) were generated.
-    *   **Agent Login Failure**: The erreur de connexion au serveur was fixed. The root causes were identified and resolved:
-        1.  Corrected BSON  serialization errors in the  and  endpoints in .
-        2.  Added  as a selectable role on the web registration page.
-        3.  Fixed the login redirection for agents to point to the correct dashboard ().
-    *   **Cooperative Dashboard White Pages**: Fixed multiple blank pages by correcting broken navigation links in  and adding missing routes/aliases in .
-    *   **Backend  Bug**: Fixed a recurring bug in  where queries failed due to comparing an  with a string.
+The application is a full-stack platform (React/FastAPI/MongoDB). In this session, the agent successfully implemented all requested web features and made a comprehensive attempt to fix the critical mobile app issues.
+
+*   **Web Features (Completed & Tested):**
+    *   **PWA Homepage Fix:** The  and  files were corrected to ensure the PWA opens to the public landing page.
+    *   **Mobile Web Responsiveness:** The entire public-facing web app (Navbar, landing page, marketplace) was overhauled with TailwindCSS to be fully responsive and mobile-friendly.
+    *   **Marketplace Content:** The previously empty Marketplace Intrants was populated with 12 demo products, complete with AI-generated images.
+    *   **USSD Carbon Calculator:** A new stateless backend endpoint () and a corresponding web-based simulator UI () were built and tested for the  flow.
+*   **Mobile App (Partially Fixed, Still Broken):**
+    *   **USSD Simulator:** The new USSD calculator was successfully integrated as a new screen within the mobile app.
+    *   **White Screen Fix (Attempted):** The agent performed a major refactor to fix the white screen crash. This involved implementing lazy loading with  for all screens, creating a  utility to catch import errors, adding the missing  dependency, and cleaning up dead code.
+    *   **Permission Fix (Verified):** The agent successfully built a new AAB and used an APK analyzer to **confirm** that the problematic permissions (, ) have been completely removed.
 
 **Last working item**:
--   **Last item agent was working**: Fixing the erreur de connexion au serveur reported by the user when trying to log in with a field agent account. The user also requested that producers and agents be able to log in and activate accounts on both web and mobile. The agent successfully identified and fixed three root causes: backend ObjectId serialization errors, missing  role in web registration, and incorrect frontend redirection after login.
+-   **Last item agent was working**: The user's last message was a bug report re-stating that the mobile app still shows a white screen (page blanche). This came immediately after the agent implemented a major refactor intended to be a robust fix. The agent's work was focused on making the app's startup process resilient to crashes.
 -   **Status**: 
--   **Agent Testing Done**: Y (The agent ran extensive  tests and used the  which confirmed the fix with 100% success.)
--   **Which testing method agent to use?**: Manual testing by user. The user needs to try creating and logging in with a field agent account on both the web and mobile platforms to confirm the issue is resolved for them.
--   **User Testing Done**: N
+-   **Agent Testing Done**: Y (Agent implemented a solution they believed was robust, but could not get final user validation before the session ended. All web features were validated with the testing agent.)
+-   **Which testing method agent to use?**: Troubleshoot agent. The previous robust fix failed or wasn't tested by the user. A systematic approach is required, starting with ensuring the user tests the *correct* build, and if that fails, moving to remote debugging to capture live error logs.
+-   **User Testing Done**: Y (User has confirmed the white screen issue persists).
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Google Play Metadata Rejection (P0)**
-    -   **Description**: The app was rejected for hashtag spam in its store description. This is not a code issue.
-    -   **Attempted fixes**: The agent provided the user with professionally written, compliant descriptions in French and English and instructed them to remove all hashtags from the app's listing on the Google Play Console.
-    -   **Next debug checklist**: This is pending user action. The user must log in to their Google Play Console and update the store listing.
-    -   **Why fix this issue and what will be achieved with the fix?**: The app cannot be published or updated on the Google Play Store until this is resolved.
-    -   **Status**:  (on user action)
-    -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: NA
-    -   **Blocked on other issue**: None.
--   **Issue 2: Critical Web Registration White Page in Production (P1 - recurring)**
-    -   **Description**: From a previous handoff, new users see a white page after registering on the production website.
-    -   **Attempted fixes**: The agent's work on the agent login/registration flow may have resolved this, but it was not explicitly tested for other user roles (e.g., buyer, cooperative).
+-   **Issue 1: Mobile App White Screen on Startup (P0 - Critical Blocker)**
+    -   **Description**: The generated APK shows a blank white screen immediately after the splash screen, rendering the mobile app completely unusable. This is a severe, recurring regression. The user has just confirmed the issue still exists after the latest fix attempt.
+    -   **Attempted fixes**:
+        1.  (Previous sessions) Basic cleanup, adding Error Boundaries, and creating a custom Expo Config Plugin.
+        2.  (This session) A major architectural refactor: Implemented lazy-loading for all screens in  using a  utility to prevent silent crashes from broken imports. Added the missing  dependency.
     -   **Next debug checklist**:
-        1.  Ask the user to test the registration flow with a non-agent role (e.g., a producer) on their production site.
-        2.  Instruct them to perform a hard refresh (Ctrl+Shift+R) and check the browser console for errors if it fails.
-    -   **Why fix this issue and what will be achieved with the fix?**: This bug blocks all new user acquisition on the web platform.
+        1.  **Crucial First Step:** The agent implemented the robust fix but it's unclear if the user tested an APK *containing* that fix. The absolute first step is to **build a new APK** from the current codebase and provide it to the user for testing.
+        2.  If the new build still fails, stop attempting blind fixes. Set up a development build () and use a remote debugger () to capture the JavaScript console logs from the device at startup to get the exact error message.
+        3.  Re-investigate  and other providers. An unhandled error or promise rejection during the initial authentication check can cause a silent crash that an  inside the main  component might not catch.
+    -   **Why fix this issue and what will be achieved with the fix?**: The mobile app is currently non-functional. This is the top priority.
     -   **Status**: 
     -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: Frontend.
-    -   **Blocked on other issue**: None.
--   **Issue 3: Parcel Form White Page After Submission (P2 - recurring)**
-    -   **Description**: From a previous handoff, users see a white page *after submitting* the New Parcel form.
-    -   **Attempted fixes**: The agent fixed a related bug that caused a white page when *navigating to* the form. The post-submission bug was not explicitly addressed or tested.
-    -   **Next debug checklist**:
-        1.  As a cooperative user, navigate to the New Parcel page.
-        2.  Fill out and submit the form to reproduce the error.
-        3.  Check the  handler in  and the browser's network tab to see if the API call succeeds and what the redirect is doing.
-    -   **Why fix this issue and what will be achieved with the fix?**: Fixes a core data entry function for cooperatives.
+    -   **Should Test frontend/backend/both after fix?**: Frontend (Mobile).
+    -   **Blocked on other issue**: This is the primary blocker for all mobile-related progress.
+-   **Issue 2: Google Play Permission Rejection (P0 - Recurring Blocker)**
+    -   **Description**: Google Play repeatedly rejects the app for including  and  permissions.
+    -   **Attempted fixes**: A comprehensive fix is in place (config plugin,  blocks). The agent analyzed the latest AAB and **confirmed the permissions are gone**.
+    -   **Next debug checklist**: This issue is likely resolved, but verification is blocked. Once a working APK is produced, the user must be instructed to submit the corresponding AAB to a Google Play testing track.
+    -   **Why fix this issue and what will be achieved with the fix?**: The app cannot be published on the Google Play Store until this is resolved.
     -   **Status**: 
     -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: Frontend.
-    -   **Blocked on other issue**: None.
+    -   **Blocked on other issue**: Issue 1: Mobile App White Screen on Startup.
 
 **In progress Task List**:
 -   None.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P1) Provide new APK/AAB builds**: The user needs the URLs for the  builds that contain the Google Play permission fixes.
-    *   **(P1) Add Demo Data for  and **: These marketplaces are empty. Adding static fallback data would improve the UX, similar to what was done for other pages in the past.
-    *   **(P2) Implement Real Payment Integration (Orange Money)**: A requirement from the previous handoff. Use  for this.
+    *   **(P1) Provide new working APK/AAB builds**: This is part of resolving the White Screen issue.
+    *   **(P2) Implement Real Payment Integration (Orange Money)**: A requirement from a previous handoff. Use .
 *   **Future Tasks:**
     *   (P2) Implement Baoulé and Dioula languages in the mobile app.
     *   (P2) Implement multi-channel notifications for Payments (Push, SMS, Email).
-    *   (P2) Real USSD Integration (beyond the current API simulator).
-    *   (P2) Refactor backend to use a cloud storage solution (e.g., S3) for file uploads.
+    *   (P2) Implement real USSD Integration (the current version is a simulator).
+    *   (P2) Refactor backend to use a cloud storage solution for file uploads.
     *   (P2) Refactor the monolithic  file.
-    *   (P2) Customize SSRTE Alert Recipients.
 
 **Completed work in this session**
--   **Secure Agent Search Feature (Full-Stack)**: Built a new, secure, offline-capable search feature for field agents, replacing the old QR code system.
--   **Offline-First & PWA Implementation**: Converted the web application into an installable PWA with full offline capabilities for the agent dashboard using a Service Worker and IndexedDB.
--   **Mobile App Overhaul**: Updated the React Native app to use the new phone number search workflow, creating new screens and modifying existing dashboards.
--   **Critical Bug Fixes**:
-    -   **Google Play Compliance**: Fixed a permission-related rejection by blocking / in .
-    -   **Agent Login Failure**: Resolved the connexion au serveur error by fixing backend ObjectId serialization, and updating frontend registration/login logic.
-    -   **Cooperative Dashboard Loading Errors**: Eliminated white pages by fixing broken navigation links and routes.
--   **Build Management**: Generated new, compliant APK/AAB builds () ready for submission to Google Play.
--   **Resolved By Replacement**: The initial Malicious QR Code bug was rendered obsolete by replacing the entire QR code workflow with the new, more secure phone number search feature as requested by the user.
+-   **Mobile White Screen Fix (Attempted)**: Executed a major refactor of the mobile app's startup process, implementing lazy-loading for all screens with a  utility to improve robustness.
+-   **Google Play Permission Fix (Verified)**: Built a new AAB and confirmed via APK analysis that all problematic media permissions have been successfully stripped.
+-   **PWA Homepage Fix**: Corrected  and  to launch the correct public landing page.
+-   **Full Mobile Web Responsiveness**: Overhauled the public web UI (Navbar, Hero, Marketplace, etc.) to be fully responsive.
+-   **Marketplace Content Population**: Seeded the  with 12 demo products and generated unique images for each.
+-   **USSD Carbon Calculator Feature**: Built and tested a complete, stateless USSD simulation flow () on both the backend and web frontend.
+-   **Mobile App Feature Addition**: Integrated the new USSD calculator simulator as a screen in the React Native app.
+-   **Web Bug Fixes**: Investigated and confirmed fixes for previously reported white page issues related to the parcel form and web registration.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Parcel Form White Page After Submission (P2)**: This issue, carried over from a previous handoff, describes a white page appearing after a user submits the new parcel form. While the agent fixed navigation *to* the form, the bug *after submission* was not explicitly addressed or tested.
+-   None. All previously known issues were either addressed, fixed, or are part of the current P0 White Screen bug.
 
 **Known issue recurrence from previous fork**
--   **Authentication/Deployment Failures (White Page on Web Registration)**: This is a persistent issue. The fixes implemented for the  role might solve the problem, but it requires verification across all user roles in the user's production environment.
--   **Recurrence count**: 4
--   **Status**: 
+-   **Google Play Rejections**: This is a persistent issue. The latest fix (config plugin + AAB analysis) appears definitive but awaits final confirmation from Google.
+    -   Recurrence count: 5+
+    -   Status: 
+-   **Mobile App White Screen**: This has become a recurring critical blocker. The agent's latest robust fix was reported as failed by the user.
+    -   Recurrence count: 2+
+    -   Status: 
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Offline-First Architecture (PWA)**: Using  for local data storage, a  for background caching/sync, and a custom React hook () to manage online/offline state.
--   **Secure API Design (RBAC + Audit)**: Building dedicated endpoints with role-based access control () and creating a new  collection for comprehensive, compliant data access tracking.
--   **PWA (Progressive Web App)**: Enabling the web application to be installable on devices via a  and .
--   **BSON/JSON Serialization**: Resolving backend crashes by ensuring all MongoDB  fields are converted to strings in JSON API responses, particularly in authentication flows.
--   **Android Permission Management**: Using  in  to explicitly block forbidden permissions and pass Google Play review.
--   **Feature Replacement over Bug Fixing**: The critical QR code security flaw was addressed by completely replacing the workflow with a more secure phone number search system, as per the user's new requirements.
+-   **React Lazy Loading for Robustness**:  and  were used to dynamically import screen components in the mobile app. This prevents a crash in one non-critical screen (e.g., one using a broken native module) from taking down the entire application on startup.
+-   **Stateless USSD Backend**: The USSD endpoint was built to be stateless. It parses the entire history of user inputs ( separated string) on each request to determine context, a robust pattern for telco integrations.
+-   **PWA Configuration**: Key PWA behavior was fixed by modifying  () and  (caching strategy, offline page).
+-   **Responsive Web Design (Mobile-First)**: Extensive use of TailwindCSS responsive prefixes (, ) to create a fluid and user-friendly experience on both mobile and desktop browsers, including a hamburger menu for mobile navigation.
 
 **key DB schema**
--   ** (New)**: 
--   ****: Modified backend logic to correctly handle serialization of  and  fields.
+-    (collection in ): The schema was modified to include an  field to store URLs for product imagery.
 
 **changes in tech stack**
--   : Used extensively to manage and submit mobile application builds (APK/AAB).
+-   ****: This crucial dependency was missing and has now been added to  to prevent crashes related to icon rendering.
 
 **All files of reference**
--   : New secure search endpoint for agents.
--   : New endpoints for offline data synchronization.
--   : Heavily modified to fix serialization bugs and agent login flow.
--   : The new PWA/offline dashboard for field agents.
--   : Core logic for managing offline state and synchronization.
--   : Handles caching and background sync for the PWA.
--   : Modified to fix Google Play permission rejections.
--   : The new search screen in the mobile app.
+-   : The root of the mobile app, heavily refactored for robust lazy-loading. This remains the primary file to investigate for the White Screen issue.
+-   : The new utility created to safely lazy-load components with fallbacks.
+-   : Contains the stateless backend logic for the new USSD carbon calculator.
+-   : The web UI for the new USSD calculator.
+-   : The main navigation component, now fully responsive.
+-   The generated AAB: . This file is confirmed to be free of bad permissions and should be used for the next Google Play submission.
 
 **Areas that need refactoring**:
--   : Remains a large, monolithic file that should be broken down into smaller, resource-specific modules.
--   : Has grown significantly and could be refactored to separate concerns (e.g., registration, login, profile management).
+-   The  (mobile) and  (web) components share significant logic. This could be extracted into a reusable React hook to avoid code duplication.
+-   : This remains a large, monolithic file that could be broken down into smaller, more focused route files.
 
 **key api endpoints**
--   : **(New)** Securely searches for a farmer by phone number.
--   : **(New)** Downloads all data needed for an agent to work offline.
--   : **(New)** Uploads actions performed while offline.
--   : **(Fixed)** Now correctly handles  login and serializes all ObjectId fields.
--   : **(Fixed)** Now correctly serializes all ObjectId fields.
--   : **(Fixed)** Several endpoints that were failing due to  mismatch have been corrected.
+-   : **(New)** Stateless endpoint for the 8-question USSD carbon prime calculation flow.
+-   : **(New, Development Only)** Endpoint to populate the marketplace with demo data.
 
 **Critical Info for New Agent**
--   **Répondez en français.** All user interactions must be in French.
--   **The QR code issue is obsolete.** It was replaced by the new phone number search feature at the user's request. Do not try to fix the QR code.
--   **Google Play Rejections are a priority.** The app has code fixes for permissions ( build) but is **blocked** on the user removing hashtags from their store description. You may need to remind the user about this.
--   **Verify fixes with the user.** Several critical bugs (white pages, agent login) have been fixed in the preview environment. You must guide the user to test these on their end, as they are the only ones with access to production and their specific test accounts.
--   **The application is now a PWA.** The web frontend has offline capabilities focused on the agent dashboard. This is a core part of the new architecture.
+-   **Répondez en français.** All user communication must be in French.
+-   **The White Screen bug is the only P0 priority.** The user has just reported it again, even after your predecessor implemented a major refactor. Your **first action** must be to build a new APK from the current code and ask the user to test it. It's possible they are testing an old build. If the new build still fails, you must use a remote debugger () to get a real error message. Stop trying to fix it blindly.
+-   **The Google Play Permission issue is VERIFIED as fixed.** Your predecessor analyzed the latest AAB file and confirmed the permissions are gone. Do not work on this. Once the white screen is fixed, the user can submit the new AAB.
+-   **Web features are complete and tested.** The USSD simulator, responsive web UI, and populated marketplace were all validated by the testing agent. Do not modify them unless the user reports a specific new bug.
 
 **documents and test reports created in this job**
--    was updated multiple times.
--   : Final test run validating agent login fixes.
--   : Validated PWA and mobile build preparation.
--   : Validated mobile-first UI changes.
--   : Validated offline-first features.
--   : Validated the initial secure agent search feature.
+-    (updated)
+-    (Final web UI validation)
+-    (USSD feature validation)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: I created an agent account but get a server connection error when I log in. (Status: , fix implemented and tested).
-2.  **User**: Correct the Google Play errors. (Status: , provided details on metadata error).
-3.  **User**: The corrections for permissions were not enough. (Status: , re-analyzed and implemented a more robust fix with ).
-4.  **User**: Correct the loading errors on the cooperative dashboard on the web version. (Status: , fixed broken links and missing routes).
-5.  **User**: Google Play rejected the app for invalid use of photo/video permissions. (Status: , fixed in  and generated new build ).
-6.  **User**: I need a Service Worker for an installable PWA and a new APK/AAB build with all changes. (Status: ).
-7.  **User**: The field agent uses a mobile phone, so the app must be mobile-first. The QR code is replaced by phone number ID. (Status: ).
-8.  **User**: The offline mode should allow syncing all planters in an agent's zone for offline search. (Status: ).
-9.  **User**: Asks for clarification on offline mode capabilities. (Status: , agent clarified and implemented the requested scope).
-10. **User**: Acknowledges completion of the secure search feature and asks to proceed. (Status: ).
+1.  **User**: Fix the PWA homepage which shows the agent dashboard. (Status: )
+2.  **User**: Optimize the mobile web view and PWA. (Status: )
+3.  **User**: Create a USSD interface () for farmers to calculate their carbon prime in 8 questions. (Status: )
+4.  **User**: Does USSD use voice commands? (Status: , clarified it's text-based).
+5.  **User**: Acknowledged USSD is text-based. Asked if it has been added to the mobile app version. (Status: , it was added).
+6.  **User**: Why is the APK showing a white page? (Status: , this is the current P0 bug).
+7.  **User**: Delete QR code references that might be blocking the app. (Status: , investigated as part of the white screen fix).
+8.  **User**: Find another robust way to fix the APK white screen error. (Status: , this triggered the agent's major refactor).
+9.  **User**: (Implicit in last message) Confirmed the white screen issue still exists, making it the top priority for the next agent. (Status: ).
 
 **Project Health Check:**
--   **Broken**: None.
+-   **Broken**:
+    -   **Mobile Application**: Critically broken. Shows a white screen on startup, making it unusable.
 -   **Mocked/Simulated**:
+    -   Real USSD Gateway Integration.
     -   Real Payment Gateway (Orange Money).
-    -   Real USSD Integration.
--   **User Verification Pending**:
-    -   **Agent Login Flow**: User needs to confirm they can successfully log in with their agent account.
-    -   **Web Registration White Page**: User needs to test if the registration flow for non-agent roles is fixed in production.
-    -   **Cooperative Dashboard Links**: User needs to confirm all pages in the cooperative dashboard now load correctly.
 -   **Blocked**:
-    -   **Google Play Deployment**: Blocked on the user removing hashtags from the app's store listing in the Google Play Console.
+    -   **Google Play Deployment**: Blocked by the White Screen bug.
 
 **3rd Party Integrations**
--   ****: Still in the codebase but the primary workflow has been replaced.
--   **Expo / EAS ()**: Used for building and submitting the React Native mobile app.
+-   **Expo / EAS ()**: Used for building and managing mobile app builds.
 -   **MongoDB Atlas**: Primary database.
--   **Leaflet & OpenStreetMap**: Used for map functionalities.
+-   **Emergent Image Generation ()**: Used to create product images for the marketplace.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. The testing agent was used successfully after every major feature implementation and bug fix cycle.
+-   **Testing agent used after significant changes**: YES. Extensively used to validate all web features, including responsiveness and the new USSD simulator.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: [ ]
--   **Known regressions**: The regressions identified at the start of the session (malicious QR code, web registration failure, agent login failure) have all been addressed. No new regressions were identified.
+-   **Known regressions**: A major, persistent regression exists in the mobile app, causing a White Screen crash on startup.
 
 **Credentials to test flow:**
 -   **Super Admin**:  / 
 -   **Cooperative**:  / 
--   **Field Agent (Test)**:  /  (This was created during testing).
+-   **Field Agent (Test)**:  / 
 
 **What agent forgot to execute**
--   The agent did not add demo data for the  and  sections, a task carried over from the previous handoff.
--   The agent fixed navigation *to* the New Parcel form but did not explicitly test or fix the long-standing bug where a white page appears *after submitting* the form.</analysis>
+-   The agent did not build and provide a new APK to the user for testing *after* implementing the major robust fix for the white screen. This led to ambiguity about whether the fix was ineffective or simply not tested by the user. The next agent must close this loop immediately.</analysis>

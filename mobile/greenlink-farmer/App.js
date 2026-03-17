@@ -1,35 +1,44 @@
-import React, { useEffect, useRef, useCallback } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Alert, AppState, View, Text, TouchableOpacity } from 'react-native';
+/**
+ * GreenLink Farmer - Ultra-Safe Entry Point
+ * 
+ * This file is intentionally minimal. ALL heavy imports are deferred
+ * to AppContent.js via require() inside the component body.
+ * This ensures that if ANY dependency fails to load, we show a visible
+ * error screen instead of a white screen.
+ */
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 
-// Error Boundary pour capturer les erreurs de rendu
+// Error Boundary class - catches render-time errors
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
   componentDidCatch(error, info) {
-    console.error('App Error:', error, info);
+    console.error('[ErrorBoundary]', error?.message, info?.componentStack?.slice(0, 500));
   }
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 20 }}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#dc2626', marginBottom: 12 }}>Erreur</Text>
-          <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>
-            Une erreur est survenue. Veuillez redémarrer l'application.
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 24 }}>
+          <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#dc2626', marginBottom: 12 }}>Erreur</Text>
+          <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 8 }}>
+            Une erreur est survenue au demarrage.
           </Text>
-          <Text style={{ fontSize: 10, color: '#999', textAlign: 'center' }}>
-            {this.state.error?.message || 'Erreur inconnue'}
-          </Text>
+          <ScrollView style={{ maxHeight: 200, marginBottom: 20 }}>
+            <Text style={{ fontSize: 11, color: '#999', textAlign: 'center' }}>
+              {this.state.error?.message || 'Erreur inconnue'}
+            </Text>
+            <Text style={{ fontSize: 10, color: '#ccc', textAlign: 'center', marginTop: 4 }}>
+              {this.state.error?.stack?.slice(0, 300)}
+            </Text>
+          </ScrollView>
           <TouchableOpacity
             onPress={() => this.setState({ hasError: false, error: null })}
-            style={{ marginTop: 20, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: '#059669', borderRadius: 8 }}
+            style={{ paddingHorizontal: 24, paddingVertical: 12, backgroundColor: '#059669', borderRadius: 8 }}
           >
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Réessayer</Text>
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Reessayer</Text>
           </TouchableOpacity>
         </View>
       );
@@ -38,295 +47,85 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Context Providers
-import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { OfflineProvider } from './src/context/OfflineContext';
+// SafeApp - Loads the actual app content dynamically
+function SafeApp() {
+  const [AppContent, setAppContent] = useState(null);
+  const [loadError, setLoadError] = useState(null);
 
-// Services - import safely
-let notificationService = null;
-let syncService = null;
-try {
-  notificationService = require('./src/services/notifications').notificationService;
-} catch (e) {
-  console.error('[App] Failed to import notifications:', e.message);
-}
-try {
-  syncService = require('./src/services/sync').syncService;
-} catch (e) {
-  console.error('[App] Failed to import sync:', e.message);
-}
-
-// Screens - Auth
-import LoginScreen from './src/screens/auth/LoginScreen';
-import RegisterScreen from './src/screens/auth/RegisterScreen';
-import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
-import MemberActivationScreen from './src/screens/auth/MemberActivationScreen';
-import AgentActivationScreen from './src/screens/auth/AgentActivationScreen';
-
-// Screens - Welcome (Landing Page)
-import WelcomeScreen from './src/screens/welcome/WelcomeScreen';
-
-// Screens - Main
-import HomeScreen from './src/screens/home/HomeScreen';
-import ParcelsScreen from './src/screens/parcels/ParcelsScreen';
-import AddParcelScreen from './src/screens/parcels/AddParcelScreen';
-import HarvestScreen from './src/screens/harvest/HarvestScreen';
-import PaymentsScreen from './src/screens/payments/PaymentsScreen';
-import CarbonPaymentsDashboard from './src/screens/payments/CarbonPaymentsDashboard';
-import NotificationsScreen from './src/screens/notifications/NotificationsScreen';
-import ProfileScreen from './src/screens/profile/ProfileScreen';
-
-// Screens - Marketplace
-import {
-  MarketplaceScreen,
-  ProductDetailScreen,
-  CartScreen,
-  CheckoutScreen,
-  OrdersScreen,
-  WishlistScreen,
-} from './src/screens/marketplace';
-
-// Screens - Carbon/RSE
-import {
-  CarbonMarketplaceScreen,
-  MyCarbonPurchasesScreen,
-  MyCarbonScoreScreen,
-} from './src/screens/carbon';
-
-// Screens - Cooperative (Agent de terrain)
-import {
-  CoopDashboardScreen,
-  CoopMembersScreen,
-  CoopMemberDetailScreen,
-  AddCoopMemberScreen,
-  AddMemberParcelScreen,
-  CoopReportsScreen,
-} from './src/screens/cooperative';
-
-// Screens - Field Agent (SSRTE, Farmer Search, Geo Photos)
-import {
-  FieldAgentDashboard,
-  FarmerSearchScreen,
-  ParcelVerificationScreen,
-  GeoPhotoScreen,
-  SSRTEVisitFormScreen,
-} from './src/screens/field-agent';
-
-// Screens - Carbon Auditor
-import AuditorDashboardScreen from './src/screens/auditor/AuditorDashboardScreen';
-import AuditorMissionScreen from './src/screens/auditor/AuditorMissionScreen';
-import AuditFormScreen from './src/screens/auditor/AuditFormScreen';
-
-// Screens - USSD
-import { USSDSimulatorScreen, USSDCarbonScreen } from './src/screens/ussd';
-
-// Screens - Messaging
-import { MessagingScreen, ChatScreen } from './src/screens/messaging';
-
-// Screens - Settings
-import { NotificationPreferencesScreen } from './src/screens/settings';
-
-import { Loader } from './src/components/UI';
-import { COLORS } from './src/config';
-
-const Stack = createNativeStackNavigator();
-
-// Auth Navigator (Welcome/Login/Register)
-function AuthNavigator() {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <Stack.Screen name="MemberActivation" component={MemberActivationScreen} />
-      <Stack.Screen name="AgentActivation" component={AgentActivationScreen} />
-    </Stack.Navigator>
-  );
-}
-
-// Main App Navigator
-function AppNavigator() {
-  return (
-    <Stack.Navigator 
-      screenOptions={{ 
-        headerShown: false,
-        animation: 'slide_from_right',
-      }}
-    >
-      {/* Main Screens */}
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Parcels" component={ParcelsScreen} />
-      <Stack.Screen name="AddParcel" component={AddParcelScreen} />
-      <Stack.Screen name="Harvest" component={HarvestScreen} />
-      <Stack.Screen name="Payments" component={PaymentsScreen} />
-      <Stack.Screen name="CarbonPayments" component={CarbonPaymentsDashboard} />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} />
-      
-      {/* Marketplace Screens */}
-      <Stack.Screen name="Marketplace" component={MarketplaceScreen} />
-      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-      <Stack.Screen name="Cart" component={CartScreen} />
-      <Stack.Screen name="Checkout" component={CheckoutScreen} />
-      <Stack.Screen name="Orders" component={OrdersScreen} />
-      <Stack.Screen name="Wishlist" component={WishlistScreen} />
-      
-      {/* Carbon/RSE Screens */}
-      <Stack.Screen name="CarbonMarketplace" component={CarbonMarketplaceScreen} />
-      <Stack.Screen name="MyCarbonPurchases" component={MyCarbonPurchasesScreen} />
-      <Stack.Screen name="MyCarbonScore" component={MyCarbonScoreScreen} />
-      
-      {/* Cooperative Screens (Agent de terrain) */}
-      <Stack.Screen name="CoopDashboard" component={CoopDashboardScreen} />
-      <Stack.Screen name="CoopMembers" component={CoopMembersScreen} />
-      <Stack.Screen name="CoopMemberDetail" component={CoopMemberDetailScreen} />
-      <Stack.Screen name="AddCoopMember" component={AddCoopMemberScreen} />
-      <Stack.Screen name="AddMemberParcel" component={AddMemberParcelScreen} />
-      <Stack.Screen name="CoopReports" component={CoopReportsScreen} />
-      <Stack.Screen name="CoopLots" component={CoopReportsScreen} />
-      
-      {/* Field Agent Screens (SSRTE, Farmer Search, Geo Photos) */}
-      <Stack.Screen name="FieldAgentDashboard" component={FieldAgentDashboard} />
-      <Stack.Screen name="FarmerSearch" component={FarmerSearchScreen} />
-      <Stack.Screen name="ParcelVerification" component={ParcelVerificationScreen} />
-      <Stack.Screen name="GeoPhoto" component={GeoPhotoScreen} />
-      <Stack.Screen name="SSRTEVisitForm" component={SSRTEVisitFormScreen} />
-      <Stack.Screen name="VisitsHistory" component={CoopReportsScreen} />
-      
-      {/* Carbon Auditor Screens */}
-      <Stack.Screen name="AuditorDashboard" component={AuditorDashboardScreen} />
-      <Stack.Screen name="AuditorMission" component={AuditorMissionScreen} />
-      <Stack.Screen name="AuditForm" component={AuditFormScreen} />
-      <Stack.Screen name="AuditorMissions" component={AuditorDashboardScreen} />
-      
-      {/* USSD Simulator */}
-      <Stack.Screen name="USSDSimulator" component={USSDSimulatorScreen} />
-      <Stack.Screen name="USSDCarbon" component={USSDCarbonScreen} />
-      <Stack.Screen name="AuditHistory" component={AuditorDashboardScreen} />
-      
-      {/* Messaging Screens */}
-      <Stack.Screen name="Messaging" component={MessagingScreen} />
-      <Stack.Screen name="Chat" component={ChatScreen} />
-      
-      {/* Settings Screens */}
-      <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
-    </Stack.Navigator>
-  );
-}
-
-// Root Navigator with notification and sync handling
-function RootNavigator() {
-  const { isAuthenticated, loading, user } = useAuth();
-  const navigationRef = useRef(null);
-  const notificationListener = useRef(null);
-  const responseListener = useRef(null);
-  const appState = useRef(AppState.currentState);
-
-  // Setup push notifications when user is authenticated
   useEffect(() => {
-    if (!isAuthenticated || !user || !notificationService) return;
-
-    let isMounted = true;
-
-    const setupNotifications = async () => {
-      try {
-        await notificationService.registerForPushNotifications();
-
-        if (!isMounted) return;
-
-        notificationListener.current = notificationService.addNotificationReceivedListener(
-          (notification) => {
-            console.log('[App] Notification received:', notification.request.content.title);
-          }
-        );
-
-        responseListener.current = notificationService.addNotificationResponseReceivedListener(
-          (response) => {
-            const data = response.notification.request.content.data;
-            console.log('[App] Notification clicked:', data);
-            
-            if (data?.screen && navigationRef.current) {
-              navigationRef.current.navigate(data.screen, data.params || {});
-            }
-          }
-        );
-      } catch (error) {
-        console.error('[App] Error setting up notifications:', error.message);
-      }
-    };
-
-    setupNotifications();
-
-    return () => {
-      isMounted = false;
-      notificationListener.current?.remove();
-      responseListener.current?.remove();
-    };
-  }, [isAuthenticated, user]);
-
-  // Setup background sync
-  useEffect(() => {
-    if (!isAuthenticated || !syncService) return;
-
-    syncService.registerBackgroundSync().catch((error) => {
-      console.error('[App] Error registering background sync:', error.message);
-    });
-  }, [isAuthenticated]);
-
-  // Sync when app comes to foreground
-  const handleAppStateChange = useCallback(async (nextAppState) => {
-    if (
-      appState.current.match(/inactive|background/) &&
-      nextAppState === 'active' &&
-      isAuthenticated &&
-      syncService
-    ) {
-      console.log('[App] App came to foreground, syncing...');
-      try {
-        const result = await syncService.syncNow();
-        if (result.synced > 0) {
-          Alert.alert(
-            'Synchronisation',
-            `${result.synced} élément(s) synchronisé(s)`,
-            [{ text: 'OK' }]
-          );
-        }
-      } catch (error) {
-        console.error('[App] Sync on foreground error:', error.message);
-      }
+    try {
+      // This require() is deferred to render-time, NOT module-evaluation-time.
+      // If AppContent.js or ANY of its transitive dependencies fail,
+      // we catch it here and show a visible error instead of a white screen.
+      const Content = require('./src/AppContent').default;
+      setAppContent(() => Content);
+    } catch (e) {
+      console.error('[SafeApp] Failed to load AppContent:', e?.message, e?.stack);
+      setLoadError(e);
     }
-    appState.current = nextAppState;
-  }, [isAuthenticated]);
+  }, []);
 
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription.remove();
-  }, [handleAppStateChange]);
-
-  if (loading) {
-    return <Loader message="Chargement..." />;
+  if (loadError) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2d5a4d', padding: 24 }}>
+        <Text style={{ fontSize: 40, marginBottom: 16 }}>⚠️</Text>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 12, textAlign: 'center' }}>
+          GreenLink - Erreur de chargement
+        </Text>
+        <Text style={{ fontSize: 14, color: '#a7f3d0', textAlign: 'center', marginBottom: 16 }}>
+          L'application n'a pas pu demarrer correctement.
+        </Text>
+        <ScrollView style={{ maxHeight: 150, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: 12, width: '100%' }}>
+          <Text style={{ fontSize: 11, color: '#fca5a5', fontFamily: 'monospace' }}>
+            {loadError?.message || 'Unknown error'}
+          </Text>
+          <Text style={{ fontSize: 9, color: '#999', marginTop: 4 }}>
+            {loadError?.stack?.slice(0, 400)}
+          </Text>
+        </ScrollView>
+        <TouchableOpacity
+          onPress={() => {
+            setLoadError(null);
+            setAppContent(null);
+            // Retry loading
+            setTimeout(() => {
+              try {
+                const Content = require('./src/AppContent').default;
+                setAppContent(() => Content);
+              } catch (e) {
+                setLoadError(e);
+              }
+            }, 100);
+          }}
+          style={{ marginTop: 20, paddingHorizontal: 32, paddingVertical: 14, backgroundColor: '#d4a574', borderRadius: 10 }}
+        >
+          <Text style={{ color: '#2d5a4d', fontWeight: 'bold', fontSize: 16 }}>Reessayer</Text>
+        </TouchableOpacity>
+        <Text style={{ fontSize: 11, color: '#6b7280', marginTop: 16 }}>
+          Version 1.23.0 | Contactez +225 07 87 76 10 23
+        </Text>
+      </View>
+    );
   }
 
-  return (
-    <NavigationContainer ref={navigationRef}>
-      <StatusBar style="light" backgroundColor={COLORS.primary} />
-      {isAuthenticated ? <AppNavigator /> : <AuthNavigator />}
-    </NavigationContainer>
-  );
+  if (!AppContent) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2d5a4d' }}>
+        <Text style={{ fontSize: 40, marginBottom: 12 }}>🌿</Text>
+        <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>GreenLink</Text>
+        <Text style={{ color: '#a7f3d0', fontSize: 14, marginTop: 4 }}>Chargement...</Text>
+      </View>
+    );
+  }
+
+  return <AppContent />;
 }
 
-// Main App Component - SDK 53 compatible
+// Main App export
 export default function App() {
   return (
     <ErrorBoundary>
-      <SafeAreaProvider>
-        <AuthProvider>
-          <OfflineProvider>
-            <RootNavigator />
-          </OfflineProvider>
-        </AuthProvider>
-      </SafeAreaProvider>
+      <SafeApp />
     </ErrorBoundary>
   );
 }

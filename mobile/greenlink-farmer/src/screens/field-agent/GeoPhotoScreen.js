@@ -11,12 +11,22 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Camera, CameraView } from 'expo-camera';
 import * as Location from 'expo-location';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
+
+// Lazy import expo-camera to prevent crash if module fails
+let Camera = null;
+let CameraView = null;
+try {
+  const cam = require('expo-camera');
+  Camera = cam.Camera;
+  CameraView = cam.CameraView;
+} catch (e) {
+  console.error('[GeoPhoto] expo-camera failed to load:', e?.message);
+}
 
 const OFFLINE_PHOTOS_KEY = 'offline_photos';
 
