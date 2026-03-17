@@ -6,7 +6,7 @@ import {
   Users, MapPin, Leaf, DollarSign, Package, 
   TrendingUp, FileText, Plus, ChevronRight,
   CheckCircle, Clock, AlertTriangle, Building2,
-  ClipboardCheck, QrCode, Shield
+  ClipboardCheck, Shield, Store
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -262,15 +262,27 @@ const Dashboard = () => {
               </Button>
               <Button 
                 variant="outline" 
-                className="w-full justify-between bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
-                onClick={() => navigate('/cooperative/qrcodes')}
-                data-testid="quick-action-qrcodes"
+                className="w-full justify-between bg-amber-50 border-amber-200 hover:bg-amber-100"
+                onClick={() => navigate('/marketplace/harvest')}
+                data-testid="quick-action-harvest-marketplace"
               >
-                <span className="flex items-center text-emerald-700">
-                  <QrCode className="h-4 w-4 mr-2" />
-                  QR Codes Membres
+                <span className="flex items-center text-amber-700">
+                  <Store className="h-4 w-4 mr-2" />
+                  Bourse des Récoltes
                 </span>
-                <ChevronRight className="h-4 w-4 text-emerald-700" />
+                <ChevronRight className="h-4 w-4 text-amber-700" />
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between bg-teal-50 border-teal-200 hover:bg-teal-100"
+                onClick={() => navigate('/carbon-marketplace')}
+                data-testid="quick-action-carbon-marketplace"
+              >
+                <span className="flex items-center text-teal-700">
+                  <Leaf className="h-4 w-4 mr-2" />
+                  Marché Carbone
+                </span>
+                <ChevronRight className="h-4 w-4 text-teal-700" />
               </Button>
               <Button 
                 variant="outline" 

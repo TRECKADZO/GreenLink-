@@ -249,6 +249,20 @@ const SuperAdminDashboard = () => {
               <Package className="w-5 h-5 text-amber-400 group-hover:text-amber-300" />
               <span className="text-sm text-slate-300 group-hover:text-white">Bourse Récoltes</span>
             </button>
+            <button
+              onClick={() => navigate('/admin/carbon-approvals')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-teal-600/20 rounded-lg transition text-left group"
+            >
+              <Shield className="w-5 h-5 text-teal-400 group-hover:text-teal-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Approbation Carbone</span>
+            </button>
+            <button
+              onClick={() => navigate('/carbon-marketplace')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-emerald-600/20 rounded-lg transition text-left group"
+            >
+              <Store className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Marché Carbone</span>
+            </button>
           </div>
         </div>
       </div>

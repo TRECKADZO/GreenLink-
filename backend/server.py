@@ -20,7 +20,6 @@ from routes import admin_analytics
 from routes import tracking, analytics_advanced, notifications, subscriptions, carbon_sales, billing, sms
 from routes import premium_analytics, ici_analytics, ici_data_collection, ici_export
 from routes import pdf_reports, websocket_routes
-from routes import qrcode_generator
 from routes import farmer_cards_pdf
 from routes import photo_storage
 from routes import ssrte_analytics
@@ -36,6 +35,7 @@ from routes import buyer_dashboard  # Buyer Dashboard
 from routes import messaging  # Secure Messaging System
 from routes import marketplace_analytics  # Advanced Marketplace Analytics
 from routes import agent_search  # Agent Terrain - Recherche sécurisée
+from routes import carbon_listings  # Carbon Credit Listings - Soumission/Approbation
 from services.push_notifications import router as push_notifications_router
 
 
@@ -127,7 +127,6 @@ app.include_router(ici_export.router)
 app.include_router(pdf_reports.router)
 app.include_router(websocket_routes.router)
 app.include_router(push_notifications_router)
-app.include_router(qrcode_generator.router)
 app.include_router(farmer_cards_pdf.router)
 app.include_router(photo_storage.router)
 app.include_router(ssrte_analytics.router)
@@ -143,6 +142,7 @@ app.include_router(buyer_dashboard.router)
 app.include_router(messaging.router)
 app.include_router(marketplace_analytics.router)
 app.include_router(agent_search.router)
+app.include_router(carbon_listings.router)
 
 app.add_middleware(
     CORSMiddleware,

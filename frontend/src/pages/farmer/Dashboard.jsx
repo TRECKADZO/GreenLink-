@@ -16,7 +16,9 @@ import {
   Smartphone,
   CheckCircle,
   MessageSquare,
-  Send
+  Send,
+  Store,
+  Leaf
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -147,10 +149,11 @@ const FarmerDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <Button 
             className="h-20 bg-green-600 hover:bg-green-700 text-white text-lg"
             onClick={() => navigate('/farmer/parcels/new')}
+            data-testid="action-new-parcel"
           >
             <Plus className="w-6 h-6 mr-2" />
             Déclarer une Parcelle
@@ -158,16 +161,34 @@ const FarmerDashboard = () => {
           <Button 
             className="h-20 bg-blue-600 hover:bg-blue-700 text-white text-lg"
             onClick={() => navigate('/farmer/harvests/new')}
+            data-testid="action-new-harvest"
           >
             <TrendingUp className="w-6 h-6 mr-2" />
             Déclarer une Récolte
           </Button>
           <Button 
             className="h-20 bg-amber-600 hover:bg-amber-700 text-white text-lg"
+            onClick={() => navigate('/marketplace/harvest')}
+            data-testid="action-harvest-marketplace"
+          >
+            <Store className="w-6 h-6 mr-2" />
+            Bourse des Récoltes
+          </Button>
+          <Button 
+            className="h-20 bg-teal-600 hover:bg-teal-700 text-white text-lg"
+            onClick={() => navigate('/carbon-marketplace')}
+            data-testid="action-carbon-marketplace"
+          >
+            <Leaf className="w-6 h-6 mr-2" />
+            Marché Carbone
+          </Button>
+          <Button 
+            className="h-20 bg-slate-600 hover:bg-slate-700 text-white text-lg"
             onClick={() => navigate('/farmer/ussd')}
+            data-testid="action-ussd"
           >
             <Smartphone className="w-6 h-6 mr-2" />
-            Accès USSD/SMS
+            USSD/SMS
           </Button>
         </div>
 

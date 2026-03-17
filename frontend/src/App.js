@@ -75,6 +75,8 @@ import MemberParcelsPage from "./pages/cooperative/MemberParcelsPage";
 import ImportMembersPage from "./pages/cooperative/ImportMembersPage";
 import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 import QRCodeGenerator from "./pages/cooperative/QRCodeGenerator";
+import AdminCarbonApprovals from "./pages/admin/AdminCarbonApprovals";
+import CreateCarbonListing from "./pages/rse/CreateCarbonListing";
 import CooperativeNotifications from "./pages/cooperative/Notifications";
 import FieldAgentsPage from "./pages/cooperative/FieldAgentsPage";
 import AddParcelPage from "./pages/cooperative/AddParcelPage";
@@ -156,6 +158,7 @@ function App() {
               <Route path="/rse/dashboard" element={<RSEDashboard />} />
               <Route path="/rse/carbon-marketplace" element={<CarbonMarketplace />} />
               <Route path="/carbon-marketplace" element={<CarbonMarketplace />} />
+              <Route path="/carbon-marketplace/create" element={<CreateCarbonListing />} />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
@@ -179,6 +182,7 @@ function App() {
               <Route path="/admin/agents-map-simple" element={<AgentMapDashboard />} />
               <Route path="/admin/users" element={<UsersManagement />} />
               <Route path="/admin/content" element={<ContentManagement />} />
+              <Route path="/admin/carbon-approvals" element={<AdminCarbonApprovals />} />
 
               {/* Carbon Auditor Routes */}
               <Route path="/auditor/dashboard" element={<AuditorDashboard />} />
@@ -202,11 +206,10 @@ function App() {
               <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />
               <Route path="/cooperative/reports" element={<CooperativeReportsPage />} />
               <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
-              <Route path="/cooperative/qrcodes" element={<QRCodeGenerator />} />
+              <Route path="/cooperative/carbon-premiums" element={<CarbonPremiumsPage />} />
               <Route path="/cooperative/notifications" element={<CooperativeNotifications />} />
               <Route path="/cooperative/agents" element={<FieldAgentsPage />} />
               <Route path="/cooperative/field-agents" element={<FieldAgentsPage />} />
-              <Route path="/cooperative/carbon-premiums" element={<CarbonPremiumsPage />} />
 
               {/* SSRTE Agent Routes */}
               <Route path="/ssrte/dashboard" element={<SSRTEAgentDashboard />} />
