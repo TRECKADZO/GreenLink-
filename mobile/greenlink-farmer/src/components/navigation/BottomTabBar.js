@@ -26,6 +26,13 @@ const TAB_CONFIG = {
     { name: 'Payments', icon: 'wallet', iconOutline: 'wallet-outline', label: 'Paiements', hasBadge: true },
     { name: 'Profile', icon: 'person', iconOutline: 'person-outline', label: 'Profil' },
   ],
+  field_agent: [
+    { name: 'FieldAgentDashboard', icon: 'shield-checkmark', iconOutline: 'shield-checkmark-outline', label: 'Accueil', hasBadge: true },
+    { name: 'FarmerSearch', icon: 'people', iconOutline: 'people-outline', label: 'Fermiers' },
+    { name: 'QuickActions', icon: 'add-circle', iconOutline: 'add-circle-outline', label: 'Plus', isMain: true },
+    { name: 'SSRTEVisitForm', icon: 'clipboard', iconOutline: 'clipboard-outline', label: 'Visites' },
+    { name: 'Profile', icon: 'person', iconOutline: 'person-outline', label: 'Profil' },
+  ],
   cooperative: [
     { name: 'CoopDashboard', icon: 'home', iconOutline: 'home-outline', label: 'Accueil', hasBadge: true },
     { name: 'CoopMembers', icon: 'people', iconOutline: 'people-outline', label: 'Membres', hasBadge: true },
@@ -45,6 +52,16 @@ const QUICK_ACTIONS = {
     { name: 'CarbonPayments', icon: 'cash', label: 'Mes Revenus Carbone', color: '#06b6d4' },
     { name: 'Marketplace', icon: 'cart', label: 'Marketplace', color: '#64748b' },
     { name: 'USSDCarbon', icon: 'call', label: '*144*88# Prime', color: '#f97316' },
+    { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
+  ],
+  field_agent: [
+    { name: 'SSRTEVisitForm', icon: 'clipboard', label: 'Visite SSRTE', color: '#06b6d4' },
+    { name: 'FarmerSearch', icon: 'search', label: 'Recherche Planteur', color: '#3b82f6' },
+    { name: 'GeoPhoto', icon: 'camera', label: 'Photo Géo', color: '#8b5cf6' },
+    { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#10b981' },
+    { name: 'ParcelVerification', icon: 'checkmark-circle', label: 'Vérif. Parcelle', color: '#f59e0b' },
+    { name: 'Messaging', icon: 'chatbubbles', label: 'Messagerie', color: '#ec4899' },
+    { name: 'FieldAgentDashboard', icon: 'bar-chart', label: 'Statistiques', color: '#64748b' },
     { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
   ],
   cooperative: [
@@ -376,6 +393,9 @@ const BottomTabBar = ({ userType = 'farmer', notifications = {} }) => {
       CoopMembers: ['CoopMembers', 'CoopMemberDetail', 'AddMemberParcel'],
       AddCoopMember: ['AddCoopMember'],
       CoopReports: ['CoopReports'],
+      FieldAgentDashboard: ['FieldAgentDashboard'],
+      FarmerSearch: ['FarmerSearch'],
+      SSRTEVisitForm: ['SSRTEVisitForm', 'SSRTEAgentDashboard'],
     };
     
     return relatedScreens[tabName]?.includes(currentRoute) || false;

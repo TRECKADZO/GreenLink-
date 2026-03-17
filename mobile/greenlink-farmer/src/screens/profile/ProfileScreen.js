@@ -100,7 +100,9 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
-  const userType = user?.user_type === 'cooperative' ? 'cooperative' : 'farmer';
+  const isFieldAgent = user?.user_type === 'field_agent' || user?.user_type === 'agent_terrain';
+  const userType = user?.user_type === 'cooperative' ? 'cooperative' : isFieldAgent ? 'field_agent' : 'farmer';
+  const userTypeLabel = user?.user_type === 'cooperative' ? 'Coopérative' : isFieldAgent ? 'Agent Terrain' : 'Producteur';
 
   return (
     <MainLayout userType={userType}>
@@ -112,13 +114,13 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         
         <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
+          <View style={[styles.avatar, isFieldAgent && { backgroundColor: '#06b6d4' }]}>
             <Text style={styles.avatarText}>
               {user?.full_name?.charAt(0) || 'P'}
             </Text>
           </View>
-          <Text style={styles.userName}>{user?.full_name || 'Producteur'}</Text>
-          <Text style={styles.userType}>Producteur</Text>
+          <Text style={styles.userName}>{user?.full_name || 'Utilisateur'}</Text>
+          <Text style={styles.userType}>{userTypeLabel}</Text>
         </View>
       </View>
 
@@ -170,19 +172,37 @@ const ProfileScreen = ({ navigation }) => {
             </Text>
           </View>
           
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Localisation</Text>
-            <Text style={styles.infoValue}>
-              {user?.farm_location || 'Non renseigné'}
-            </Text>
-          </View>
-          
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Surface totale</Text>
-            <Text style={styles.infoValue}>
-              {user?.farm_size ? `${user.farm_size} ha` : 'Non renseigné'}
-            </Text>
-          </View>
+          {isFieldAgent ? (
+            <>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Zone</Text>
+                <Text style={styles.infoValue}>
+                  {user?.zone || 'Non renseigné'}
+                </Text>
+              </View>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Coopérative</Text>
+                <Text style={styles.infoValue}>
+                  {user?.cooperative_name || 'Non renseigné'}
+                </Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Localisation</Text>
+                <Text style={styles.infoValue}>
+                  {user?.farm_location || 'Non renseigné'}
+                </Text>
+              </View>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Surface totale</Text>
+                <Text style={styles.infoValue}>
+                  {user?.farm_size ? `${user.farm_size} ha` : 'Non renseigné'}
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Actions */}

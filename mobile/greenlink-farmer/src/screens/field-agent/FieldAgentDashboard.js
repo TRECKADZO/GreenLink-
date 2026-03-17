@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Loader } from '../../components/UI';
+import { MainLayout } from '../../components/navigation';
 import { COLORS, FONTS, SPACING, API_URL } from '../../config';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -79,16 +80,10 @@ const FieldAgentDashboard = ({ navigation }) => {
   const { agent_info, performance, statistics, risk_distribution, recent_activities, achievements } = data || {};
 
   return (
+    <MainLayout userType="field_agent">
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-        </TouchableOpacity>
-        
         <View style={styles.headerContent}>
           <View style={styles.avatarContainer}>
             <Ionicons name="shield-checkmark" size={32} color={COLORS.white} />
@@ -255,6 +250,7 @@ const FieldAgentDashboard = ({ navigation }) => {
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
+    </MainLayout>
   );
 };
 

@@ -11,56 +11,46 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ## Fonctionnalites Implementees
 
 ### Carbon Market V2 - Workflow Complet
-- Soumission (Cooperative): /cooperative/carbon-submit, /cooperative/carbon-submissions
-- Approbation (Admin): /admin/carbon-approvals
-- Marketplace RSE: /carbon-marketplace (acces RSE/admin uniquement)
+- Soumission, Approbation, Marketplace RSE
 
 ### Modele de Repartition (CONFIDENTIEL - Admin uniquement)
 - 30% couts et frais, 70% net: 70% agriculteurs + 25% GreenLink + 5% cooperative
 
-### Calculateurs de Prime Carbone
-- Page accueil, USSD *144*88#, Ma Prime - tous via API backend (formule cachee)
-
-### Integrations Orange (Preparees)
-- Orange Money (services/orange_money.py): OAuth 2.0, mode MOCK
-- Orange SMS (services/orange_sms.py): OAuth 2.0, mode MOCK
-- USSD Gateway (services/ussd_gateway.py): Multi-fournisseur, mode MOCK
-- Endpoint admin: GET /api/payments/integrations-status
+### Integrations Orange (Preparees - MOCK)
+- Orange Money, Orange SMS, USSD Gateway
 
 ### Dashboard Cooperative - Corrections
-- Stat card "Agents Terrain" avec decompte (ObjectId matching)
-- Boutons "Accueil" et "Profil" dans le header
-- Menu "Naturalisation" dans Actions Rapides
-- Fix decompte membres/agents avec ObjectId matching
+- Stats, boutons nav, ObjectId matching
 
 ### Dashboard Agent Terrain
-- Header: nom agent, cooperative, badge niveau, score performance
-- KPI Cards: Visites SSRTE, Membres Enregistres, Parcelles Declarees, Photos Geotag
-- Objectifs mensuels, stats supplementaires, distribution risques
-- Actions rapides, recherche planteur, badges
+- KPIs, Objectifs, Actions rapides, Badges
 
 ### Attribution Fermier-Agent Terrain (17 Mars 2026)
-- Backend: 5 endpoints (assign, unassign, list assigned, agents enrichis, my-farmers offline)
-- Frontend: Modale d'attribution dans /cooperative/agents
-- Mobile: Pre-chargement offline dans sync.js + getOfflineFarmers()
-- Regle metier: un fermier = un seul agent
-- Tests: 13/13 backend, 100% frontend (iteration 32)
+- Backend: 5 endpoints API (assign, unassign, list, agents enrichis, my-farmers offline)
+- Frontend: Modale attribution dans /cooperative/agents
+- Mobile: Pre-chargement offline dans sync.js
+- Tests: 13/13 backend, 100% frontend
 
-### Builds Mobile v1.27.0 (17 Mars 2026)
-- APK: https://expo.dev/artifacts/eas/fViHgUZYjEMmyLkBFF7oB3.apk
-- AAB: https://expo.dev/artifacts/eas/tJdqAxSgdRRbmtG4exKMwj.aab
-- Build APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/78d146b6-df33-4001-8469-c13bd63c5508
-- Build AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/e08ba385-d49f-4f86-b8bf-f78f151902ba
+### Interface Agent Terrain Mobile Specifique (17 Mars 2026)
+- **BottomTabBar**: Config `field_agent` ajoutee (Accueil, Fermiers, Plus, Visites, Profil)
+- **Actions Rapides Agent**: Visite SSRTE, Recherche Planteur, Photo Geo, Nouveau Membre, Verif Parcelle, Messagerie, Stats
+- **ProfileScreen**: Affiche "Agent Terrain" (pas "Producteur"), champs Zone et Cooperative
+- **FieldAgentDashboard**: Enveloppe dans MainLayout avec barre onglets agent specifique, suppression bouton retour
+
+### Builds Mobile v1.27.1 (17 Mars 2026)
+- APK: https://expo.dev/artifacts/eas/sTauSngohed1JrxTesFirG.apk
+- AAB: https://expo.dev/artifacts/eas/s7qaLmsDR4G6Zz2tfbEixs.aab
+- Build APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/d9b263ff-4ce9-4802-9717-d042111fff4e
+- Build AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/d372f649-7dc1-40ed-a12a-12dcac8fdc14
 
 ## Etat Actuel
 - Web: FONCTIONNEL
-- Mobile: APK/AAB v1.27.0 prets
-- Integrations Orange: PRET (mode MOCK)
-- Attribution fermier-agent: FONCTIONNEL
+- Mobile: v1.27.1 (APK + AAB prets)
+- Integrations Orange: MOCK
 
 ## Backlog
 ### P1
-- [ ] Soumission AAB v1.27.0 Google Play
+- [ ] Soumission AAB Google Play
 - [ ] Bug pages blanches mobile (Nouvelle Parcelle, inscription)
 ### P2
 - [ ] Langues Baoule/Dioula
