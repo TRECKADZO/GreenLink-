@@ -14,6 +14,7 @@ import {
   Award,
   Plus,
   Smartphone,
+  Phone,
   CheckCircle,
   MessageSquare,
   Send,
@@ -189,6 +190,14 @@ const FarmerDashboard = () => {
           >
             <Smartphone className="w-6 h-6 mr-2" />
             USSD/SMS
+          </Button>
+          <Button 
+            className="h-20 bg-orange-600 hover:bg-orange-700 text-white text-lg"
+            onClick={() => navigate('/farmer/prime-carbone')}
+            data-testid="action-prime-ussd"
+          >
+            <Phone className="w-6 h-6 mr-2" />
+            *144*88# Prime
           </Button>
         </div>
 

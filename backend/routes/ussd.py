@@ -687,3 +687,189 @@ async def test_ussd(phone: str = Query(..., description="Phone number to test"))
     )
     
     return await ussd_callback(test_request)
+
+
+
+# ============= USSD PRIME CARBONE *144*88# =============
+
+CARBON_QUESTIONS = [
+    {"key": "hectares", "text": "PRIME CARBONE *144*88#\n\nQuestion 1/8\nSurface de votre plantation (en hectares) ?\n\nEx: 3.5", "type": "number"},
+    {"key": "arbres_grands", "text": "Question 2/8\nCombien d'arbres grands (>8 metres) sur votre parcelle ?\n\nEx: 48", "type": "number"},
+    {"key": "culture", "text": "Question 3/8\nQuelle est votre culture principale ?\n\n1. Cacao\n2. Cafe\n3. Anacarde\n\nTapez 1, 2 ou 3:", "type": "choice"},
+    {"key": "engrais_chimique", "text": "Question 4/8\nUtilisez-vous des engrais chimiques ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+    {"key": "brulage", "text": "Question 5/8\nFaites-vous le brulage sur vos parcelles ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+    {"key": "compost", "text": "Question 6/8\nUtilisez-vous du compost organique ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+    {"key": "agroforesterie", "text": "Question 7/8\nPratiquez-vous l'agroforesterie (arbres fruitiers, ombrage) ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+    {"key": "couverture_sol", "text": "Question 8/8\nAvez-vous une couverture vegetale au sol (herbes, paillage) ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+]
+
+
+def parse_carbon_answer(question, raw_input):
+    """Parse and validate a single USSD answer. Returns (value, valid)."""
+    if question["type"] == "number":
+        try:
+            val = float(raw_input.replace(",", "."))
+            return val if val > 0 else None, val > 0
+        except (ValueError, AttributeError):
+            return None, False
+    elif question["type"] == "choice":
+        mapping = {"1": "cacao", "2": "cafe", "3": "anacarde"}
+        return mapping.get(raw_input), raw_input in mapping
+    elif question["type"] == "yesno":
+        mapping = {"1": "oui", "2": "non"}
+        return mapping.get(raw_input), raw_input in mapping
+    return None, False
+
+
+def calculate_ussd_carbon_premium(answers: dict) -> dict:
+    """Calculate carbon premium from USSD answers"""
+    hectares = float(answers.get("hectares", 1))
+    arbres = int(answers.get("arbres_grands", 0))
+    arbres_par_ha = arbres / max(hectares, 0.1)
+    
+    score = 4.0
+    if arbres_par_ha >= 60: score += 2.0
+    elif arbres_par_ha >= 40: score += 1.5
+    elif arbres_par_ha >= 20: score += 1.0
+    elif arbres_par_ha >= 10: score += 0.5
+    
+    if answers.get("engrais_chimique") == "oui": score -= 0.5
+    else: score += 0.5
+    
+    if answers.get("brulage") == "oui": score -= 1.5
+    else: score += 0.5
+    
+    if answers.get("compost") == "oui": score += 1.0
+    if answers.get("agroforesterie") == "oui": score += 1.0
+    if answers.get("couverture_sol") == "oui": score += 0.5
+    
+    score = max(0, min(10, score))
+    
+    if score >= 7: prime_fcfa_kg = round(score * 20 + (score - 7) * 15)
+    elif score >= 5: prime_fcfa_kg = round(score * 15)
+    else: prime_fcfa_kg = round(score * 10)
+    
+    culture = answers.get("culture", "cacao")
+    rendement_kg_ha = {"cacao": 700, "cafe": 500, "anacarde": 400}.get(culture, 600)
+    prime_annuelle = prime_fcfa_kg * rendement_kg_ha * hectares
+    
+    return {
+        "score": round(score, 1),
+        "prime_fcfa_kg": prime_fcfa_kg,
+        "arbres_par_ha": round(arbres_par_ha),
+        "prime_annuelle": round(prime_annuelle),
+        "eligible": score >= 5.0,
+        "hectares": hectares,
+        "culture": culture,
+        "rendement_kg_ha": rendement_kg_ha,
+    }
+
+
+@router.post("/carbon-calculator")
+async def ussd_carbon_calculator(request: USSDRequest):
+    """
+    Stateless USSD Carbon Calculator - *144*88#
+    Parses all answers from accumulated text (standard USSD protocol).
+    """
+    try:
+        text_input = request.text.strip()
+        inputs = text_input.split("*") if text_input else []
+        num_answers = len(inputs)
+        
+        # First call: no answers yet → show Q1
+        if num_answers == 0:
+            return {
+                "session_id": request.sessionId,
+                "text": "CON " + CARBON_QUESTIONS[0]["text"],
+                "continue_session": True,
+                "raw_response": CARBON_QUESTIONS[0]["text"],
+                "step": 1,
+                "total_steps": 8,
+            }
+        
+        # Validate ALL answers received so far
+        answers = {}
+        for i, raw in enumerate(inputs):
+            if i >= len(CARBON_QUESTIONS):
+                break
+            q = CARBON_QUESTIONS[i]
+            value, valid = parse_carbon_answer(q, raw.strip())
+            if not valid:
+                # Invalid answer at position i → re-ask that question
+                error_text = f"Reponse invalide.\n\n{q['text']}"
+                return {
+                    "session_id": request.sessionId,
+                    "text": "CON " + error_text,
+                    "continue_session": True,
+                    "raw_response": error_text,
+                    "step": i + 1,
+                    "total_steps": 8,
+                }
+            answers[q["key"]] = value
+        
+        # If we haven't answered all 8 questions yet → show next question
+        if num_answers < len(CARBON_QUESTIONS):
+            next_q = CARBON_QUESTIONS[num_answers]
+            return {
+                "session_id": request.sessionId,
+                "text": "CON " + next_q["text"],
+                "continue_session": True,
+                "raw_response": next_q["text"],
+                "step": num_answers + 1,
+                "total_steps": 8,
+            }
+        
+        # All 8 answers received → calculate result
+        result = calculate_ussd_carbon_premium(answers)
+        cultures_label = {"cacao": "Cacao", "cafe": "Cafe", "anacarde": "Anacarde"}
+        culture_name = cultures_label.get(result["culture"], "Culture")
+        
+        if result["eligible"]:
+            result_text = (
+                f"VOTRE PRIME CARBONE\n\n"
+                f"Score: {result['score']}/10\n"
+                f"Arbres/ha: {result['arbres_par_ha']}\n\n"
+                f"PRIME ESTIMEE:\n"
+                f"{result['prime_fcfa_kg']} FCFA/kg\n\n"
+                f"Pour {result['hectares']} ha de {culture_name}\n"
+                f"({result['rendement_kg_ha']} kg/ha)\n\n"
+                f"Prime annuelle estimee:\n"
+                f"{result['prime_annuelle']:,.0f} FCFA\n\n"
+                f"Inscrivez-vous sur GreenLink\n"
+                f"ou contactez votre cooperative!\n"
+                f"Tel: 07 87 76 10 23"
+            )
+        else:
+            result_text = (
+                f"VOTRE ESTIMATION\n\n"
+                f"Score: {result['score']}/10\n"
+                f"(Minimum requis: 5/10)\n\n"
+                f"Prime actuelle: {result['prime_fcfa_kg']} FCFA/kg\n\n"
+                f"Pour ameliorer votre score:\n"
+                f"- Plantez plus d'arbres d'ombrage\n"
+                f"- Arretez le brulage\n"
+                f"- Utilisez du compost\n"
+                f"- Pratiquez l'agroforesterie\n\n"
+                f"Contactez-nous:\n"
+                f"Tel: 07 87 76 10 23"
+            )
+        
+        return {
+            "session_id": request.sessionId,
+            "text": "END " + result_text,
+            "continue_session": False,
+            "raw_response": result_text,
+            "step": 9,
+            "total_steps": 8,
+            "result": result,
+        }
+    
+    except Exception as e:
+        logger.error(f"Carbon Calculator USSD Error: {str(e)}")
+        return {
+            "session_id": request.sessionId,
+            "text": "END Erreur. Reessayez *144*88#",
+            "continue_session": False,
+            "error": str(e),
+        }
+
