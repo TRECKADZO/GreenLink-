@@ -82,6 +82,7 @@ import CooperativeNotifications from "./pages/cooperative/Notifications";
 import FieldAgentsPage from "./pages/cooperative/FieldAgentsPage";
 import AddParcelPage from "./pages/cooperative/AddParcelPage";
 import CarbonPremiumsPage from "./pages/cooperative/CarbonPremiumsPage";
+import CarbonSubmissionsPage from "./pages/cooperative/CarbonSubmissionsPage";
 import ParcelsVerificationPage from "./pages/cooperative/ParcelsVerificationPage";
 
 // SSRTE Agent Routes
@@ -209,6 +210,8 @@ function App() {
               <Route path="/cooperative/reports" element={<CooperativeReportsPage />} />
               <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
               <Route path="/cooperative/carbon-premiums" element={<CarbonPremiumsPage />} />
+              <Route path="/cooperative/carbon-submissions" element={<CarbonSubmissionsPage />} />
+              <Route path="/cooperative/carbon-submit" element={<CreateCarbonListing />} />
               <Route path="/cooperative/notifications" element={<CooperativeNotifications />} />
               <Route path="/cooperative/agents" element={<FieldAgentsPage />} />
               <Route path="/cooperative/field-agents" element={<FieldAgentsPage />} />

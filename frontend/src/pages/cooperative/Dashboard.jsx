@@ -250,6 +250,18 @@ const Dashboard = () => {
               </Button>
               <Button 
                 variant="outline" 
+                className="w-full justify-between bg-teal-50 border-teal-200 hover:bg-teal-100"
+                onClick={() => navigate('/cooperative/carbon-submissions')}
+                data-testid="quick-action-carbon-submissions"
+              >
+                <span className="flex items-center text-teal-700">
+                  <Leaf className="h-4 w-4 mr-2" />
+                  Declarer Tonnage Carbone
+                </span>
+                <ChevronRight className="h-4 w-4 text-teal-700" />
+              </Button>
+              <Button 
+                variant="outline" 
                 className="w-full justify-between"
                 onClick={() => navigate('/cooperative/reports')}
                 data-testid="quick-action-reports"

@@ -291,6 +291,14 @@ const AdminDashboard = () => {
                 <span className="text-xs text-gray-600 group-hover:text-green-700">Business Carbone</span>
               </button>
               <button
+                onClick={() => navigate('/admin/carbon-approvals')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-emerald-50 rounded-lg transition group"
+                data-testid="carbon-approvals-btn"
+              >
+                <Leaf className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700" />
+                <span className="text-xs text-gray-600 group-hover:text-emerald-700">Approbations</span>
+              </button>
+              <button
                 onClick={() => navigate('/admin/cooperative-comparison')}
                 className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-cyan-50 rounded-lg transition group"
               >

@@ -85,7 +85,7 @@ const CreateCarbonListing = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Crédits carbone soumis. Le Super Admin fixera le prix de vente.');
-      navigate('/carbon-marketplace');
+      navigate('/cooperative/carbon-submissions');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erreur lors de la soumission');
     } finally {
@@ -105,7 +105,7 @@ const CreateCarbonListing = () => {
             data-testid="back-button"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour au Marché Carbone
+            Retour
           </Button>
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
