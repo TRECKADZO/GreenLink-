@@ -7,7 +7,6 @@ Plateforme numérique pour les coopératives de cacao/café en Côte d'Ivoire.
 - **Frontend**: React + Shadcn/UI + Tailwind CSS
 - **Backend**: FastAPI + MongoDB Atlas
 - **Mobile**: Expo SDK 53 + React Native
-- **Déploiement**: Kubernetes (preview), EAS Build (mobile)
 
 ## Fonctionnalités Implémentées
 
@@ -15,43 +14,44 @@ Plateforme numérique pour les coopératives de cacao/café en Côte d'Ivoire.
 - Inscription par téléphone/email, Connexion multi-identifiant
 - Activation comptes membres/agents, Profil par type
 
-### Carbon Market V2
+### Carbon Market V2 (Admin-gated)
 - Soumission crédits (coopératives), Approbation/prix (admin)
-- Distribution primes (70/25/5)
+- Distribution primes 70/25/5
 
-### Calculatrice Prime Carbone
-- Questionnaire 5 étapes, 8 questions, résultat en FCFA/kg
+### Calculatrice Prime Carbone Web
+- Questionnaire 5 étapes, 8 questions, résultat FCFA/kg
+
+### USSD Carbon Calculator *144*88# (NEW)
+- Simulateur USSD avec design téléphone mobile
+- 8 questions: hectares, arbres, culture, engrais, brûlage, compost, agroforesterie, couverture sol
+- Calcul stateless (standard USSD protocol, texte accumulé)
+- Résultat: score/10, prime FCFA/kg, prime annuelle estimée
+- Backend: POST /api/ussd/carbon-calculator
+- Frontend: /farmer/prime-carbone
+- Lien rapide sur le dashboard producteur
 
 ### Marketplace Intrants
 - 12 produits avec images IA, filtrage par catégorie
 
-### PWA Mobile-Optimized (Session actuelle)
-- Navbar responsive: hamburger menu mobile, dropdown desktop
-- Hero responsive: texte/boutons adaptatifs
-- Marketplace responsive: grille 1→2→3→4 colonnes
-- Features/CTA responsive
-- PWA: manifest corrigé (start_url=/), service worker mis à jour
-- Meta tags PWA: theme-color, apple-mobile-web-app
+### PWA Mobile-Optimized
+- Navbar responsive avec hamburger, Hero/Features/CTA responsive
+- PWA manifest corrigé, service worker v2
 
-### Mobile App (Expo)
-- Corrections écran blanc, permissions Google Play supprimées
+### Mobile App (Expo SDK 53)
+- Corrections écran blanc, permissions Google Play
 - APK/AAB builds disponibles
 
 ## État Actuel (17 Mars 2026)
 
 ### Tests
-- Backend: 19/19 (100%) - Iteration 26
-- Frontend: 9/9 (100%) - Iteration 27
-- Builds: APK + AAB terminés, permissions vérifiées via aapt
-
-### Builds Mobile
-- APK: https://expo.dev/artifacts/eas/8tzCa4cbvgcMXyXmhTW2gk.apk
-- AAB: https://expo.dev/artifacts/eas/pAMFd7oCsmus1ZqknjwG3F.aab
+- Backend: 10/10 USSD + 19/19 API (Iterations 26, 28)
+- Frontend: 5/5 USSD + 9/9 UI (Iterations 27, 28)
+- Builds mobile: APK + AAB, permissions vérifiées
 
 ## Backlog
 
 ### P0
-- [ ] Test APK sur appareil physique (écran blanc)
+- [ ] Test APK sur appareil physique
 - [ ] Soumission AAB Google Play
 
 ### P1
@@ -59,8 +59,12 @@ Plateforme numérique pour les coopératives de cacao/café en Côte d'Ivoire.
 - [ ] Bug "page blanche" après inscription web
 
 ### P2
-- [ ] Orange Money, Langues Baoulé/Dioula, Notifications multi-canal
-- [ ] USSD réel, Refactoring cooperative.py, Stockage cloud
+- [ ] Orange Money (paiement réel)
+- [ ] Langues Baoulé/Dioula
+- [ ] Notifications multi-canal
+- [ ] USSD réel (connecter à gateway telco)
+- [ ] Refactoring cooperative.py
+- [ ] Stockage cloud uploads
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
