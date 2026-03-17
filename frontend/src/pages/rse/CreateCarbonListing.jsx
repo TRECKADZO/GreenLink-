@@ -48,7 +48,6 @@ const CreateCarbonListing = () => {
     project_description: '',
     verification_standard: '',
     quantity_tonnes_co2: '',
-    price_per_tonne: '',
     vintage_year: new Date().getFullYear().toString(),
     region: '',
     department: '',
@@ -64,7 +63,7 @@ const CreateCarbonListing = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.credit_type || !form.project_name || !form.verification_standard ||
-        !form.quantity_tonnes_co2 || !form.price_per_tonne) {
+        !form.quantity_tonnes_co2) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -74,7 +73,6 @@ const CreateCarbonListing = () => {
       const payload = {
         ...form,
         quantity_tonnes_co2: parseFloat(form.quantity_tonnes_co2),
-        price_per_tonne: parseFloat(form.price_per_tonne),
         vintage_year: parseInt(form.vintage_year),
         area_hectares: form.area_hectares ? parseFloat(form.area_hectares) : null,
         trees_planted: form.trees_planted ? parseInt(form.trees_planted) : null,
@@ -86,7 +84,7 @@ const CreateCarbonListing = () => {
       await axios.post(`${API_URL}/api/carbon-listings/submit`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success('Crédits carbone soumis pour approbation par le Super Admin');
+      toast.success('Crédits carbone soumis. Le Super Admin fixera le prix de vente.');
       navigate('/carbon-marketplace');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erreur lors de la soumission');
@@ -94,10 +92,6 @@ const CreateCarbonListing = () => {
       setLoading(false);
     }
   };
-
-  const totalValue = form.quantity_tonnes_co2 && form.price_per_tonne
-    ? parseFloat(form.quantity_tonnes_co2) * parseFloat(form.price_per_tonne)
-    : 0;
 
   return (
     <div className="min-h-screen bg-slate-900" data-testid="create-carbon-listing">
@@ -122,7 +116,7 @@ const CreateCarbonListing = () => {
                 Soumettre des Crédits Carbone
               </h1>
               <p className="text-slate-400">
-                Votre soumission sera examinée par le Super Admin avant publication
+                Soumettez vos tonnes CO2. Le Super Admin fixera le prix de vente.
               </p>
             </div>
           </div>
@@ -136,8 +130,9 @@ const CreateCarbonListing = () => {
           <div>
             <p className="text-amber-300 font-medium text-sm">Processus de validation</p>
             <p className="text-slate-400 text-sm mt-1">
-              Vos crédits carbone seront vérifiés et approuvés par le Super Admin avant d'être mis en vente sur le Marché Carbone.
-              Ce processus garantit la qualité et la conformité aux standards internationaux.
+              Soumettez la quantité de crédits carbone. Le Super Admin vérifiera votre projet, fixera le prix de vente
+              et approuvera la publication. La prime sera répartie : <span className="text-emerald-400 font-medium">70% agriculteurs</span>,
+              25% GreenLink, 5% coopérative (après 30% de frais de service).
             </p>
           </div>
         </div>
@@ -242,7 +237,7 @@ const CreateCarbonListing = () => {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-slate-300">Quantité (tonnes CO2) *</Label>
                 <Input
@@ -252,18 +247,6 @@ const CreateCarbonListing = () => {
                   className="bg-slate-700 border-slate-600 text-white mt-2"
                   placeholder="500"
                   data-testid="quantity-input"
-                  required
-                />
-              </div>
-              <div>
-                <Label className="text-slate-300">Prix par tonne (XOF) *</Label>
-                <Input
-                  type="number"
-                  value={form.price_per_tonne}
-                  onChange={(e) => setForm({ ...form, price_per_tonne: e.target.value })}
-                  className="bg-slate-700 border-slate-600 text-white mt-2"
-                  placeholder="15000"
-                  data-testid="price-input"
                   required
                 />
               </div>
@@ -279,14 +262,12 @@ const CreateCarbonListing = () => {
                 />
               </div>
             </div>
-            {totalValue > 0 && (
-              <div className="p-4 rounded-lg bg-gradient-to-r from-emerald-900/50 to-teal-900/50 border border-emerald-700/30">
-                <div className="flex justify-between items-center">
-                  <span className="text-emerald-400">Valeur totale estimée</span>
-                  <span className="text-3xl font-bold text-white">
-                    {new Intl.NumberFormat('fr-FR').format(totalValue)} XOF
-                  </span>
-                </div>
+            {form.quantity_tonnes_co2 && (
+              <div className="p-4 rounded-lg bg-slate-700/50 border border-slate-600">
+                <p className="text-slate-300 text-sm">
+                  Le prix de vente sera fixé par le Super Admin lors de l'approbation.
+                  La prime sera automatiquement répartie selon le modèle GreenLink.
+                </p>
               </div>
             )}
           </CardContent>

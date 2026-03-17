@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Textarea } from '../../components/ui/textarea';
+import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
@@ -34,6 +35,7 @@ const AdminCarbonApprovals = () => {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewAction, setReviewAction] = useState('');
   const [adminNote, setAdminNote] = useState('');
+  const [pricePerTonne, setPricePerTonne] = useState('');
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
@@ -74,17 +76,26 @@ const AdminCarbonApprovals = () => {
 
   const handleReview = async () => {
     if (!selectedListing || !reviewAction) return;
+    if (reviewAction === 'approve' && (!pricePerTonne || parseFloat(pricePerTonne) <= 0)) {
+      toast.error('Veuillez fixer le prix par tonne pour approuver');
+      return;
+    }
     setProcessing(true);
     try {
       const token = localStorage.getItem('token');
+      const body = { action: reviewAction, admin_note: adminNote };
+      if (reviewAction === 'approve') {
+        body.price_per_tonne = parseFloat(pricePerTonne);
+      }
       await axios.put(
         `${API_URL}/api/carbon-listings/${selectedListing.listing_id}/review`,
-        { action: reviewAction, admin_note: adminNote },
+        body,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(reviewAction === 'approve' ? 'Crédits approuvés et publiés' : 'Soumission rejetée');
       setShowReviewDialog(false);
       setAdminNote('');
+      setPricePerTonne('');
       setSelectedListing(null);
       fetchListings();
       fetchStats();
@@ -99,6 +110,7 @@ const AdminCarbonApprovals = () => {
     setSelectedListing(listing);
     setReviewAction(action);
     setAdminNote('');
+    setPricePerTonne(listing.suggested_price_per_tonne?.toString() || listing.price_per_tonne?.toString() || '15000');
     setShowReviewDialog(true);
   };
 
@@ -272,12 +284,25 @@ const AdminCarbonApprovals = () => {
                           {formatNumber(listing.quantity_tonnes_co2)} t
                         </p>
                         <p className="text-sm text-slate-400">CO2</p>
-                        <p className="text-lg font-semibold text-white mt-1">
-                          {formatNumber(listing.price_per_tonne)} XOF/t
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Total: {formatNumber(listing.quantity_tonnes_co2 * listing.price_per_tonne)} XOF
-                        </p>
+                        {listing.price_per_tonne ? (
+                          <>
+                            <p className="text-lg font-semibold text-white mt-1">
+                              {formatNumber(listing.price_per_tonne)} XOF/t
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Total: {formatNumber(listing.quantity_tonnes_co2 * listing.price_per_tonne)} XOF
+                            </p>
+                            {listing.premium_distribution && (
+                              <div className="mt-2 text-xs space-y-0.5">
+                                <p className="text-emerald-400">Agriculteurs: {formatNumber(listing.premium_distribution.farmer_premium)} XOF</p>
+                                <p className="text-blue-400">GreenLink: {formatNumber(listing.premium_distribution.greenlink_revenue)} XOF</p>
+                                <p className="text-amber-400">Coopérative: {formatNumber(listing.premium_distribution.coop_commission)} XOF</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-sm text-amber-400 mt-1 font-medium">Prix à fixer</p>
+                        )}
                         {listing.status === 'pending_approval' && (
                           <div className="flex gap-2 mt-3">
                             <Button
@@ -330,6 +355,54 @@ const AdminCarbonApprovals = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {reviewAction === 'approve' && (
+              <div>
+                <Label className="text-slate-300 font-medium">Prix par tonne (XOF) *</Label>
+                <Input
+                  type="number"
+                  value={pricePerTonne}
+                  onChange={(e) => setPricePerTonne(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white mt-2 text-lg"
+                  placeholder="15000"
+                  data-testid="price-per-tonne-input"
+                />
+                {pricePerTonne && parseFloat(pricePerTonne) > 0 && selectedListing && (
+                  <div className="mt-3 p-3 rounded-lg bg-slate-700/50 border border-slate-600 space-y-2">
+                    <p className="text-sm text-slate-300 font-medium">Répartition des revenus :</p>
+                    {(() => {
+                      const total = parseFloat(pricePerTonne) * selectedListing.quantity_tonnes_co2;
+                      const fees = total * 0.30;
+                      const net = total - fees;
+                      return (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-slate-400">Total vente</span>
+                            <span className="text-white font-bold">{formatNumber(total)} XOF</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-red-400">Frais 30%</span>
+                            <span className="text-red-400">-{formatNumber(fees)} XOF</span>
+                          </div>
+                          <hr className="border-slate-600" />
+                          <div className="flex justify-between text-sm">
+                            <span className="text-emerald-400">Agriculteurs (70%)</span>
+                            <span className="text-emerald-400 font-bold">{formatNumber(net * 0.70)} XOF</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-blue-400">GreenLink (25%)</span>
+                            <span className="text-blue-400">{formatNumber(net * 0.25)} XOF</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-amber-400">Coopérative (5%)</span>
+                            <span className="text-amber-400">{formatNumber(net * 0.05)} XOF</span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <Label className="text-slate-300">Note pour le soumetteur (optionnel)</Label>
               <Textarea

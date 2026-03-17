@@ -1004,7 +1004,7 @@ async def activate_agent_account(request: AgentActivationRequest):
         await db.notifications.insert_one({
             "user_id": user_id,
             "title": f"Bienvenue Agent {user_dict.get('full_name')}!",
-            "body": f"Votre compte agent terrain est activé. Vous pouvez maintenant effectuer des visites SSRTE, scanner des QR codes et enregistrer des photos géolocalisées.",
+            "body": f"Votre compte agent terrain est activé. Vous pouvez maintenant effectuer des visites SSRTE, rechercher des producteurs par téléphone et enregistrer des photos géolocalisées.",
             "type": "welcome",
             "data": {"role": "field_agent"},
             "created_at": datetime.utcnow(),
