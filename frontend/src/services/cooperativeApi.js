@@ -138,6 +138,28 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  // Farmer Attribution
+  getAssignedFarmers: async (agentId) => {
+    const response = await axios.get(`${API}/agents/${agentId}/assigned-farmers`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  assignFarmers: async (agentId, farmerIds) => {
+    const response = await axios.post(`${API}/agents/${agentId}/assign-farmers`, { farmer_ids: farmerIds }, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  unassignFarmers: async (agentId, farmerIds) => {
+    const response = await axios.post(`${API}/agents/${agentId}/unassign-farmers`, { farmer_ids: farmerIds }, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Reports
   getEUDRReport: async () => {
     const response = await axios.get(`${API}/reports/eudr`, {

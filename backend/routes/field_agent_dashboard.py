@@ -372,6 +372,67 @@ async def get_my_visits(
     }
 
 
+@router.get("/my-farmers")
+async def get_my_assigned_farmers(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Récupérer les fermiers assignés à l'agent connecté (pour usage offline mobile)
+    """
+    verify_field_agent(current_user)
+    user_id = str(current_user.get('_id'))
+
+    # Find this agent's coop_agents record by user_id
+    agent_doc = await db.coop_agents.find_one({"user_id": user_id})
+    if not agent_doc:
+        # Try by phone number
+        phone = current_user.get('phone_number', '')
+        agent_doc = await db.coop_agents.find_one({"phone_number": phone})
+
+    if not agent_doc:
+        return {"farmers": [], "total": 0, "last_updated": datetime.utcnow().isoformat()}
+
+    assigned_ids = agent_doc.get("assigned_farmers", [])
+    if not assigned_ids:
+        return {"farmers": [], "total": 0, "last_updated": datetime.utcnow().isoformat()}
+
+    oid_list = [ObjectId(fid) for fid in assigned_ids if ObjectId.is_valid(str(fid))]
+    members = await db.coop_members.find({"_id": {"$in": oid_list}}).to_list(500)
+
+    # Enrich with parcel data for offline use
+    farmers = []
+    for m in members:
+        member_id = str(m["_id"])
+        parcels = []
+        if m.get("user_id"):
+            parcels = await db.parcels.find({"farmer_id": m["user_id"]}, {"_id": 0}).to_list(50)
+
+        farmers.append({
+            "id": member_id,
+            "full_name": m.get("full_name", ""),
+            "phone_number": m.get("phone_number", ""),
+            "village": m.get("village", ""),
+            "department": m.get("department", ""),
+            "zone": m.get("zone", ""),
+            "cni_number": m.get("cni_number", ""),
+            "is_active": m.get("is_active", True),
+            "status": m.get("status", "active"),
+            "parcels": [{
+                "area_hectares": p.get("area_hectares", 0),
+                "carbon_score": p.get("carbon_score", 0),
+                "crop_type": p.get("crop_type", "cacao"),
+                "gps_coordinates": p.get("gps_coordinates"),
+            } for p in parcels],
+            "parcels_count": len(parcels),
+        })
+
+    return {
+        "farmers": farmers,
+        "total": len(farmers),
+        "last_updated": datetime.utcnow().isoformat()
+    }
+
+
 @router.post("/log-activity")
 async def log_agent_activity(
     activity_type: str,

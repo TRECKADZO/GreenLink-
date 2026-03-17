@@ -56,6 +56,9 @@ class AgentCreate(BaseModel):
     zone: str
     village_coverage: List[str] = []
 
+class FarmerAssignRequest(BaseModel):
+    farmer_ids: List[str]
+
 # ============= HELPER FUNCTIONS =============
 
 def verify_cooperative(current_user: dict):
@@ -1195,6 +1198,8 @@ async def get_coop_agents(current_user: dict = Depends(get_current_user)):
         "is_active": a.get("is_active", True),
         "account_activated": a.get("account_activated", False),
         "user_id": a.get("user_id"),
+        "assigned_farmers": [str(f) for f in a.get("assigned_farmers", [])],
+        "assigned_farmers_count": len(a.get("assigned_farmers", [])),
         "created_at": a.get("created_at", datetime.utcnow()).isoformat() if isinstance(a.get("created_at"), datetime) else str(a.get("created_at", ""))
     } for a in agents]
 
@@ -1245,6 +1250,127 @@ async def create_agent(
         "agent_id": str(result.inserted_id),
         "activation_instructions": f"L'agent {agent.full_name} doit télécharger l'application GreenLink et utiliser le numéro {agent.phone_number} pour activer son compte."
     }
+
+# ============= FARMER ATTRIBUTION =============
+
+@router.get("/agents/{agent_id}/assigned-farmers")
+async def get_assigned_farmers(agent_id: str, current_user: dict = Depends(get_current_user)):
+    """Liste des fermiers assignés à un agent terrain"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+
+    if not ObjectId.is_valid(agent_id):
+        raise HTTPException(status_code=400, detail="ID agent invalide")
+
+    agent = await db.coop_agents.find_one({"_id": ObjectId(agent_id)})
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    if str(agent.get("coop_id")) != str(coop_id) and agent.get("coop_id") != (ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None):
+        raise HTTPException(status_code=403, detail="Cet agent n'appartient pas à votre coopérative")
+
+    assigned_ids = agent.get("assigned_farmers", [])
+    if not assigned_ids:
+        return {"agent_id": agent_id, "agent_name": agent.get("full_name", ""), "farmers": [], "total": 0}
+
+    oid_list = [ObjectId(fid) for fid in assigned_ids if ObjectId.is_valid(str(fid))]
+    members = await db.coop_members.find({"_id": {"$in": oid_list}}).to_list(500)
+
+    farmers = [{
+        "id": str(m["_id"]),
+        "full_name": m.get("full_name", ""),
+        "phone_number": m.get("phone_number", ""),
+        "village": m.get("village", ""),
+        "is_active": m.get("is_active", True),
+        "parcels_count": m.get("parcels_count", 0),
+    } for m in members]
+
+    return {"agent_id": agent_id, "agent_name": agent.get("full_name", ""), "farmers": farmers, "total": len(farmers)}
+
+
+@router.post("/agents/{agent_id}/assign-farmers")
+async def assign_farmers_to_agent(agent_id: str, body: FarmerAssignRequest, current_user: dict = Depends(get_current_user)):
+    """Assigner des fermiers (membres) à un agent terrain"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+
+    if not ObjectId.is_valid(agent_id):
+        raise HTTPException(status_code=400, detail="ID agent invalide")
+
+    agent = await db.coop_agents.find_one({"_id": ObjectId(agent_id)})
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    if str(agent.get("coop_id")) != str(coop_id) and agent.get("coop_id") != (ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None):
+        raise HTTPException(status_code=403, detail="Cet agent n'appartient pas à votre coopérative")
+
+    if not body.farmer_ids:
+        raise HTTPException(status_code=400, detail="La liste de fermiers ne peut pas être vide")
+
+    # Validate all farmer IDs exist and belong to this cooperative
+    coop_q = coop_id_query(coop_id)
+    valid_ids = []
+    for fid in body.farmer_ids:
+        if not ObjectId.is_valid(fid):
+            continue
+        member = await db.coop_members.find_one({"_id": ObjectId(fid), **coop_q})
+        if member:
+            valid_ids.append(fid)
+
+    if not valid_ids:
+        raise HTTPException(status_code=400, detail="Aucun fermier valide trouvé dans la coopérative")
+
+    # Unassign these farmers from any other agent first (one farmer = one agent)
+    await db.coop_agents.update_many(
+        {"coop_id": {"$in": [coop_id, ObjectId(coop_id) if ObjectId.is_valid(coop_id) else coop_id]}},
+        {"$pull": {"assigned_farmers": {"$in": valid_ids}}}
+    )
+
+    # Assign to this agent
+    await db.coop_agents.update_one(
+        {"_id": ObjectId(agent_id)},
+        {"$addToSet": {"assigned_farmers": {"$each": valid_ids}}}
+    )
+
+    updated_agent = await db.coop_agents.find_one({"_id": ObjectId(agent_id)})
+    new_count = len(updated_agent.get("assigned_farmers", []))
+
+    return {
+        "message": f"{len(valid_ids)} fermier(s) assigné(s) à {agent.get('full_name', 'agent')}",
+        "assigned_count": new_count,
+        "assigned_ids": valid_ids
+    }
+
+
+@router.post("/agents/{agent_id}/unassign-farmers")
+async def unassign_farmers_from_agent(agent_id: str, body: FarmerAssignRequest, current_user: dict = Depends(get_current_user)):
+    """Retirer l'attribution de fermiers d'un agent"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+
+    if not ObjectId.is_valid(agent_id):
+        raise HTTPException(status_code=400, detail="ID agent invalide")
+
+    agent = await db.coop_agents.find_one({"_id": ObjectId(agent_id)})
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    if str(agent.get("coop_id")) != str(coop_id) and agent.get("coop_id") != (ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None):
+        raise HTTPException(status_code=403, detail="Cet agent n'appartient pas à votre coopérative")
+
+    if not body.farmer_ids:
+        raise HTTPException(status_code=400, detail="La liste de fermiers ne peut pas être vide")
+
+    await db.coop_agents.update_one(
+        {"_id": ObjectId(agent_id)},
+        {"$pull": {"assigned_farmers": {"$in": body.farmer_ids}}}
+    )
+
+    updated_agent = await db.coop_agents.find_one({"_id": ObjectId(agent_id)})
+    remaining = len(updated_agent.get("assigned_farmers", []))
+
+    return {
+        "message": f"{len(body.farmer_ids)} fermier(s) retiré(s) de {agent.get('full_name', 'agent')}",
+        "remaining_count": remaining
+    }
+
 
 # ============= REPORTS & EXPORTS =============
 

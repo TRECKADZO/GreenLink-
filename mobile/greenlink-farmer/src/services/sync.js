@@ -152,6 +152,30 @@ class SyncService {
         };
       }
 
+      // Récupérer le token
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        api.setToken(token);
+      }
+
+      // Pre-fetch assigned farmers for offline use (field agents)
+      try {
+        const userDataStr = await AsyncStorage.getItem('userData');
+        if (userDataStr) {
+          const userData = JSON.parse(userDataStr);
+          if (userData.user_type === 'field_agent' || userData.user_type === 'agent_terrain') {
+            console.log('[SyncService] Pre-loading assigned farmers for offline use');
+            const farmersResp = await api.get('/field-agent/my-farmers');
+            if (farmersResp && farmersResp.data) {
+              await AsyncStorage.setItem('assignedFarmers', JSON.stringify(farmersResp.data));
+              console.log(`[SyncService] Cached ${farmersResp.data.total || 0} assigned farmers`);
+            }
+          }
+        }
+      } catch (farmerErr) {
+        console.warn('[SyncService] Failed to pre-load assigned farmers:', farmerErr.message);
+      }
+
       // Récupérer les actions en attente
       const pendingActionsStr = await AsyncStorage.getItem('pendingActions');
       if (!pendingActionsStr) {
@@ -161,12 +185,6 @@ class SyncService {
       const pendingActions = JSON.parse(pendingActionsStr);
       if (pendingActions.length === 0) {
         return { success: true, synced: 0, failed: 0 };
-      }
-
-      // Récupérer le token
-      const token = await AsyncStorage.getItem('token');
-      if (token) {
-        api.setToken(token);
       }
 
       let synced = 0;
@@ -267,6 +285,20 @@ class SyncService {
     } catch (error) {
       console.error('[SyncService] Error clearing pending actions:', error);
       return false;
+    }
+  }
+
+  // Récupérer les fermiers assignés depuis le cache offline
+  async getOfflineFarmers() {
+    try {
+      const data = await AsyncStorage.getItem('assignedFarmers');
+      if (data) {
+        return JSON.parse(data);
+      }
+      return { farmers: [], total: 0, last_updated: null };
+    } catch (error) {
+      console.error('[SyncService] Error reading cached farmers:', error);
+      return { farmers: [], total: 0, last_updated: null };
     }
   }
 }
