@@ -721,47 +721,80 @@ def parse_carbon_answer(question, raw_input):
     return None, False
 
 
-def calculate_ussd_carbon_premium(answers: dict) -> dict:
-    """Calculate carbon premium from USSD answers"""
+def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -> dict:
+    """
+    Calculate carbon premium from USSD answers.
+    
+    Formula linked to the actual RSE distribution model:
+    1. RSE sale price per tonne CO2
+    2. Deduct 30% costs -> net amount (70%)
+    3. Farmer gets UP TO 70% of net, based on their practice score
+    4. CO2 sequestration per hectare depends on score (2-8 t/ha)
+    5. Prime per kg = (farmer_share_per_tonne * CO2_per_ha) / yield_per_ha
+    """
     hectares = float(answers.get("hectares", 1))
     arbres = int(answers.get("arbres_grands", 0))
     arbres_par_ha = arbres / max(hectares, 0.1)
-    
+
+    # === Calculate practice score (0-10) ===
     score = 4.0
     if arbres_par_ha >= 60: score += 2.0
     elif arbres_par_ha >= 40: score += 1.5
     elif arbres_par_ha >= 20: score += 1.0
     elif arbres_par_ha >= 10: score += 0.5
-    
+
     if answers.get("engrais_chimique") == "oui": score -= 0.5
     else: score += 0.5
-    
+
     if answers.get("brulage") == "oui": score -= 1.5
     else: score += 0.5
-    
+
     if answers.get("compost") == "oui": score += 1.0
     if answers.get("agroforesterie") == "oui": score += 1.0
     if answers.get("couverture_sol") == "oui": score += 0.5
-    
+
     score = max(0, min(10, score))
-    
-    if score >= 7: prime_fcfa_kg = round(score * 20 + (score - 7) * 15)
-    elif score >= 5: prime_fcfa_kg = round(score * 15)
-    else: prime_fcfa_kg = round(score * 10)
-    
+    score_ratio = score / 10.0
+
+    # === Distribution model (30% costs, 70% net) ===
+    FEES_RATE = 0.30
+    FARMER_MAX_SHARE = 0.70  # 70% du net
+
+    prix_rse_tonne = avg_rse_price
+    net_per_tonne = prix_rse_tonne * (1 - FEES_RATE)
+    max_farmer_per_tonne = net_per_tonne * FARMER_MAX_SHARE
+    actual_farmer_per_tonne = max_farmer_per_tonne * score_ratio
+
+    # === CO2 sequestration depends on practices ===
+    # Low score (0) -> 2 t CO2/ha, High score (10) -> 8 t CO2/ha
+    co2_per_ha = 2 + score_ratio * 6
+
+    # === Revenue per hectare for farmer ===
+    farmer_revenue_per_ha = actual_farmer_per_tonne * co2_per_ha
+
+    # === Prime per kg of production ===
     culture = answers.get("culture", "cacao")
     rendement_kg_ha = {"cacao": 700, "cafe": 500, "anacarde": 400}.get(culture, 600)
-    prime_annuelle = prime_fcfa_kg * rendement_kg_ha * hectares
-    
+    prime_fcfa_kg = farmer_revenue_per_ha / max(rendement_kg_ha, 1)
+
+    # === Annual premium ===
+    prime_annuelle = farmer_revenue_per_ha * hectares
+
     return {
         "score": round(score, 1),
-        "prime_fcfa_kg": prime_fcfa_kg,
+        "prime_fcfa_kg": round(prime_fcfa_kg),
         "arbres_par_ha": round(arbres_par_ha),
         "prime_annuelle": round(prime_annuelle),
         "eligible": score >= 5.0,
         "hectares": hectares,
         "culture": culture,
         "rendement_kg_ha": rendement_kg_ha,
+        "prix_rse_reference": round(prix_rse_tonne),
+        "co2_par_ha": round(co2_per_ha, 1),
+        "farmer_per_tonne": round(actual_farmer_per_tonne),
+        "max_farmer_per_tonne": round(max_farmer_per_tonne),
+        "net_per_tonne": round(net_per_tonne),
+        "farmer_revenue_per_ha": round(farmer_revenue_per_ha),
     }
 
 
@@ -820,7 +853,20 @@ async def ussd_carbon_calculator(request: USSDRequest):
             }
         
         # All 8 answers received → calculate result
-        result = calculate_ussd_carbon_premium(answers)
+        # Fetch average RSE price from approved listings
+        avg_price = 18000  # default
+        try:
+            pipeline = [
+                {"$match": {"status": "approved", "price_per_tonne": {"$gt": 0}}},
+                {"$group": {"_id": None, "avg": {"$avg": "$price_per_tonne"}}}
+            ]
+            agg = await db.carbon_listings.aggregate(pipeline).to_list(1)
+            if agg and agg[0].get("avg"):
+                avg_price = round(agg[0]["avg"])
+        except Exception:
+            pass
+
+        result = calculate_ussd_carbon_premium(answers, avg_rse_price=avg_price)
         cultures_label = {"cacao": "Cacao", "cafe": "Cafe", "anacarde": "Anacarde"}
         culture_name = cultures_label.get(result["culture"], "Culture")
         
@@ -828,7 +874,13 @@ async def ussd_carbon_calculator(request: USSDRequest):
             result_text = (
                 f"VOTRE PRIME CARBONE\n\n"
                 f"Score: {result['score']}/10\n"
-                f"Arbres/ha: {result['arbres_par_ha']}\n\n"
+                f"Arbres/ha: {result['arbres_par_ha']}\n"
+                f"CO2 sequestre: {result['co2_par_ha']}t/ha\n\n"
+                f"--- REPARTITION ---\n"
+                f"Prix RSE: {result['prix_rse_reference']:,} XOF/t\n"
+                f"Net (70%): {result['net_per_tonne']:,} XOF/t\n"
+                f"Votre part (70% du net):\n"
+                f"{result['farmer_per_tonne']:,} XOF/t CO2\n\n"
                 f"PRIME ESTIMEE:\n"
                 f"{result['prime_fcfa_kg']} FCFA/kg\n\n"
                 f"Pour {result['hectares']} ha de {culture_name}\n"
@@ -844,7 +896,11 @@ async def ussd_carbon_calculator(request: USSDRequest):
                 f"VOTRE ESTIMATION\n\n"
                 f"Score: {result['score']}/10\n"
                 f"(Minimum requis: 5/10)\n\n"
-                f"Prime actuelle: {result['prime_fcfa_kg']} FCFA/kg\n\n"
+                f"--- REPARTITION ---\n"
+                f"Prix RSE: {result['prix_rse_reference']:,} XOF/t\n"
+                f"Net (70%): {result['net_per_tonne']:,} XOF/t\n"
+                f"Votre part: {result['farmer_per_tonne']:,} XOF/t\n"
+                f"Prime: {result['prime_fcfa_kg']} FCFA/kg\n\n"
                 f"Pour ameliorer votre score:\n"
                 f"- Plantez plus d'arbres d'ombrage\n"
                 f"- Arretez le brulage\n"

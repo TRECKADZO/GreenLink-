@@ -10,73 +10,55 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 
 ## Fonctionnalites Implementees
 
-### Authentification et Profil
-- Inscription par telephone/email, Connexion multi-identifiant
-- Activation comptes membres/agents, Profil par type
-
 ### Carbon Market V2 - Workflow Complet
-**Etape 1 - Soumission (Cooperative/Agriculteur)**:
-- Route: /cooperative/carbon-submit | /cooperative/carbon-submissions
-- API: POST /api/carbon-listings/submit | GET /api/carbon-listings/my
+**Soumission (Cooperative)**: /cooperative/carbon-submit, /cooperative/carbon-submissions
+**Approbation (Admin)**: /admin/carbon-approvals (fixe prix + approuve)
+**Marketplace RSE**: /carbon-marketplace (acces RSE/admin uniquement)
 
-**Etape 2 - Approbation (Super Admin)**:
-- Route: /admin/carbon-approvals
-- API: PUT /api/carbon-listings/{id}/review (fixe prix + approuve)
+### Modele de Repartition (Verifie 17 Mars 2026)
+- 30% couts et frais (FEES_RATE = 0.30)
+- 70% montant net reparti:
+  - 70% agriculteurs (FARMER_SHARE_RATE = 0.70)
+  - 25% GreenLink (GREENLINK_MARGIN_RATE = 0.25)
+  - 5% cooperative (COOPERATIVE_SHARE_RATE = 0.05)
+- Constantes coherentes dans: carbon_listings.py, carbon_business_model.py, carbon_payments_dashboard.py, ussd.py
 
-**Etape 3 - Publication (Carbon Marketplace RSE)**:
-- Route: /carbon-marketplace (acces RSE/admin uniquement)
-- API: GET /api/carbon-sales/credits
+### Calculateurs de Prime Carbone
+**USSD *144*88#** (ussd.py):
+- Formule liee au prix RSE moyen de la base de donnees
+- Score (0-10) determine le % du max (70% du net)
+- CO2/ha = 2 + (score/10) * 6 (2-8 t/ha selon pratiques)
+- Prime/kg = (farmer_per_tonne * CO2/ha) / rendement_kg_ha
+- Resultat affiche la repartition RSE detaillee
 
-### Repartition des Primes (Verifie 17 Mars 2026)
-- 30% couts et frais
-- 70% montant net reparti: 70% agriculteurs + 25% GreenLink + 5% cooperative
-- Backend: carbon_listings.py (FEES_RATE=0.30, FARMER_SHARE=0.70, GREENLINK_SHARE=0.25, COOP_SHARE=0.05)
-- carbon_business_model.py (meme constantes, coherent)
-- Verifie sur 8 projets approuves, toutes les distributions sont correctes
+**Ma Prime** (carbon_payments_dashboard.py):
+- Formule detaillee avec SEQUESTRATION_RATES
+- Prix depuis carbon_config (admin configurable)
+- Meme distribution: 30% couts, 70% net, farmer 70% du net
 
-### Dashboard RSE avec Analytics Impact
-- Route: /rse/dashboard (acces RSE/admin)
-- Metriques: CO2 compense, agriculteurs impactes, femmes beneficiaires, arbres plantes
-- Visualisation de la repartition des primes (barres visuelles 30/70 et 70/25/5)
-- Carte d'impact territorial interactive
-- Evolution mensuelle, histoires d'impact
-- Export rapport CSRD
+### Dashboard RSE avec Analytics
+- Visualisation barres de repartition 30/70 et 70/25/5
+- Metriques: revenu total, tonnes CO2, prix moyen, par type de projet
 - API: GET /api/carbon-listings/distribution-summary
 
-### Controle d'acces Carbon Marketplace
-- Web + Mobile: restreint aux entreprises RSE et admins
-- Gardes d'acces, redirections, toast/alerts
-
-### USSD Carbon Calculator *144*88#
-- Simulateur USSD stateless
-- Backend: POST /api/ussd/carbon-calculator
-
-### Mobile App (Expo SDK 53) - v1.24.0
-- babel.config.js ajoute, expo-font installe
-- newArchEnabled: false, structure App.js ultra-resiliente
-- Build: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/72345002-d65b-410f-a282-6b3be5c5e3d2
+### Controle d'acces
+- Carbon Marketplace: RSE + admin uniquement
+- Dashboard RSE: RSE + admin
+- Soumission carbone: cooperatives + producteurs
+- Approbation: admin uniquement
 
 ## Etat Actuel (17 Mars 2026)
-- Web: FONCTIONNEL - Workflow Carbon Market + Dashboard RSE complets
-- Mobile: APK v1.24.0 en attente de test utilisateur
+- Web: FONCTIONNEL - Tout le workflow Carbon Market
+- Mobile: APK v1.24.0 en attente de test
 
 ## Backlog
-
 ### P0
 - [ ] Test APK v1.24.0 (ecran blanc fix)
 - [ ] Soumission AAB Google Play
-
 ### P1
-- [ ] Bug "page blanche" formulaire Nouvelle Parcelle
-- [ ] Bug "page blanche" apres inscription web
-
+- [ ] Bug pages blanches (Nouvelle Parcelle, inscription)
 ### P2
-- [ ] Orange Money (paiement reel)
-- [ ] Langues Baoule/Dioula
-- [ ] Notifications multi-canal
-- [ ] USSD reel (gateway telco)
-- [ ] Refactoring cooperative.py
-- [ ] Stockage cloud uploads
+- [ ] Orange Money, Langues Baoule/Dioula, Notifications, USSD reel, Refactoring
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
