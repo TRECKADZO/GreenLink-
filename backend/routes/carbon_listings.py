@@ -411,3 +411,58 @@ async def get_carbon_listing_stats():
             "coop_share": "5% du net"
         }
     }
+
+
+@router.get("/distribution-summary")
+async def get_distribution_summary():
+    """Retourne le resume complet de la repartition des primes carbone"""
+    pipeline = [
+        {"$match": {"status": "approved", "price_per_tonne": {"$exists": True, "$gt": 0}}},
+        {"$group": {
+            "_id": None,
+            "total_tonnes": {"$sum": "$quantity_tonnes_co2"},
+            "total_revenue": {"$sum": {"$multiply": ["$quantity_tonnes_co2", "$price_per_tonne"]}},
+            "count": {"$sum": 1},
+            "avg_price": {"$avg": "$price_per_tonne"},
+        }}
+    ]
+    agg = await db.carbon_listings.aggregate(pipeline).to_list(1)
+    totals = agg[0] if agg else {"total_tonnes": 0, "total_revenue": 0, "count": 0, "avg_price": 0}
+
+    total_revenue = totals.get("total_revenue", 0)
+    fees = total_revenue * FEES_RATE
+    net = total_revenue - fees
+    farmer_total = net * FARMER_SHARE
+    greenlink_total = net * GREENLINK_SHARE
+    coop_total = net * COOP_SHARE
+
+    # By project type
+    type_pipeline = [
+        {"$match": {"status": "approved", "price_per_tonne": {"$exists": True, "$gt": 0}}},
+        {"$group": {
+            "_id": "$credit_type",
+            "tonnes": {"$sum": "$quantity_tonnes_co2"},
+            "revenue": {"$sum": {"$multiply": ["$quantity_tonnes_co2", "$price_per_tonne"]}},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"tonnes": -1}}
+    ]
+    by_type = await db.carbon_listings.aggregate(type_pipeline).to_list(20)
+
+    return {
+        "total_projects": totals.get("count", 0),
+        "total_tonnes_co2": round(totals.get("total_tonnes", 0), 1),
+        "avg_price_per_tonne": round(totals.get("avg_price", 0)),
+        "total_revenue": round(total_revenue),
+        "distribution": {
+            "fees": {"amount": round(fees), "rate": FEES_RATE, "label": "Couts et frais (30%)"},
+            "net_amount": round(net),
+            "farmer": {"amount": round(farmer_total), "rate": FARMER_SHARE, "label": "Agriculteurs (70% du net)"},
+            "greenlink": {"amount": round(greenlink_total), "rate": GREENLINK_SHARE, "label": "GreenLink (25% du net)"},
+            "coop": {"amount": round(coop_total), "rate": COOP_SHARE, "label": "Cooperatives (5% du net)"},
+        },
+        "by_project_type": [
+            {"type": t["_id"], "tonnes": round(t["tonnes"], 1), "revenue": round(t["revenue"]), "count": t["count"]}
+            for t in by_type
+        ]
+    }

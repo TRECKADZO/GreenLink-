@@ -567,28 +567,34 @@ async def get_impact_dashboard(current_user: dict = Depends(get_current_user)):
     """Dashboard impact RSE"""
     purchases = await db.carbon_purchases.find({"buyer_id": current_user["_id"]}).to_list(1000)
     
-    total_co2 = sum([p["quantity_tonnes"] for p in purchases])
+    total_co2 = sum([p.get("quantity_tonnes", 0) for p in purchases])
     
     # Get impact from related parcels
     parcels = await db.parcels.find({"is_active": True}).to_list(1000)
-    total_farmers = len(set([p["farmer_id"] for p in parcels]))
-    total_trees = sum([p["trees_count"] for p in parcels])
+    total_farmers = len(set([str(p.get("farmer_id", "")) for p in parcels]))
+    total_trees = sum([p.get("trees_count", 0) for p in parcels])
     
     # Mock women percentage
     women_percentage = 42.5
     
-    regions = list(set([p["region"] for p in parcels]))
+    regions = list(set([p.get("region", "Inconnue") for p in parcels if p.get("region")]))
     
     # Monthly breakdown
     monthly_data = []
     for i in range(6):
         month_date = datetime.utcnow() - timedelta(days=30 * i)
-        month_purchases = [p for p in purchases if 
-                          datetime.fromisoformat(p["transaction_date"].isoformat()).month == month_date.month]
+        month_purchases = []
+        for p in purchases:
+            try:
+                td = p.get("transaction_date")
+                if td and hasattr(td, 'month') and td.month == month_date.month:
+                    month_purchases.append(p)
+            except Exception:
+                pass
         monthly_data.append({
             "month": month_date.strftime("%B %Y"),
-            "co2_offset": sum([p["quantity_tonnes"] for p in month_purchases]),
-            "investment": sum([p["total_price"] for p in month_purchases])
+            "co2_offset": sum([p.get("quantity_tonnes", 0) for p in month_purchases]),
+            "investment": sum([p.get("total_price", 0) for p in month_purchases])
         })
     
     return {

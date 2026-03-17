@@ -7,6 +7,7 @@ import { Badge } from '../../components/ui/badge';
 import Navbar from '../../components/Navbar';
 import InteractiveMap from '../../components/InteractiveMap';
 import { greenlinkApi } from '../../services/greenlinkApi';
+import axios from 'axios';
 import { 
   Leaf, 
   Users, 
@@ -17,9 +18,14 @@ import {
   Download,
   Heart,
   Building2,
-  Map
+  Map,
+  PieChart,
+  DollarSign,
+  ShoppingCart
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const RSEDashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -27,11 +33,12 @@ const RSEDashboard = () => {
   const { toast } = useToast();
   const [impact, setImpact] = useState(null);
   const [credits, setCredits] = useState([]);
+  const [distrib, setDistrib] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || user.user_type !== 'entreprise_rse') {
+    if (!user || !['entreprise_rse', 'admin'].includes(user.user_type)) {
       navigate('/');
       return;
     }
@@ -40,12 +47,14 @@ const RSEDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [impactData, creditsData] = await Promise.all([
+      const [impactData, creditsData, distribData] = await Promise.all([
         greenlinkApi.getRSEImpactDashboard(),
-        greenlinkApi.getCarbonCredits()
+        greenlinkApi.getCarbonCredits(),
+        axios.get(`${API_URL}/api/carbon-listings/distribution-summary`).then(r => r.data).catch(() => null)
       ]);
       setImpact(impactData);
       setCredits(creditsData);
+      setDistrib(distribData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -210,6 +219,126 @@ www.greenlink-agritech.com
             </Card>
           ))}
         </div>
+
+        {/* Distribution Model Section */}
+        {distrib && (
+          <Card className="p-6 mb-8" data-testid="distribution-section">
+            <div className="flex items-center gap-3 mb-6">
+              <PieChart className="w-6 h-6 text-emerald-600" />
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Repartition des Primes Carbone</h2>
+                <p className="text-sm text-gray-500">Modele de distribution GreenLink - {distrib.total_projects} projets approuves</p>
+              </div>
+            </div>
+
+            {/* Totals Row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Revenu Total</p>
+                <p className="text-2xl font-bold text-gray-900">{(distrib.total_revenue / 1000000).toFixed(1)}M</p>
+                <p className="text-xs text-gray-500">XOF</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Tonnes CO2</p>
+                <p className="text-2xl font-bold text-gray-900">{distrib.total_tonnes_co2?.toLocaleString()}</p>
+                <p className="text-xs text-gray-500">tonnes</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Prix Moyen</p>
+                <p className="text-2xl font-bold text-gray-900">{distrib.avg_price_per_tonne?.toLocaleString()}</p>
+                <p className="text-xs text-gray-500">XOF/tonne</p>
+              </div>
+              <div className="bg-emerald-50 rounded-xl p-4 text-center">
+                <p className="text-xs text-emerald-600 uppercase tracking-wide">Aux Agriculteurs</p>
+                <p className="text-2xl font-bold text-emerald-700">{(distrib.distribution.farmer.amount / 1000000).toFixed(1)}M</p>
+                <p className="text-xs text-emerald-600">XOF (49% du total)</p>
+              </div>
+            </div>
+
+            {/* Visual Distribution Bar */}
+            <div className="mb-6">
+              <p className="text-sm font-medium text-gray-700 mb-3">Etape 1: Revenu Total → 30% Couts + 70% Net</p>
+              <div className="flex h-12 rounded-xl overflow-hidden shadow-inner">
+                <div className="bg-gray-400 flex items-center justify-center" style={{width: '30%'}}>
+                  <span className="text-white text-xs font-bold">30% Couts</span>
+                </div>
+                <div className="bg-emerald-500 flex items-center justify-center" style={{width: '70%'}}>
+                  <span className="text-white text-xs font-bold">70% Montant Net</span>
+                </div>
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-xs text-gray-500">{(distrib.distribution.fees.amount / 1000000).toFixed(1)}M XOF</span>
+                <span className="text-xs text-emerald-600 font-medium">{(distrib.distribution.net_amount / 1000000).toFixed(1)}M XOF</span>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm font-medium text-gray-700 mb-3">Etape 2: Montant Net → 70% Agriculteurs + 25% GreenLink + 5% Cooperative</p>
+              <div className="flex h-12 rounded-xl overflow-hidden shadow-inner">
+                <div className="bg-emerald-600 flex items-center justify-center" style={{width: '70%'}}>
+                  <span className="text-white text-xs font-bold">70% Agriculteurs</span>
+                </div>
+                <div className="bg-blue-500 flex items-center justify-center" style={{width: '25%'}}>
+                  <span className="text-white text-xs font-bold">25% GL</span>
+                </div>
+                <div className="bg-amber-500 flex items-center justify-center" style={{width: '5%'}}>
+                </div>
+              </div>
+              <div className="flex mt-1">
+                <span className="text-xs text-emerald-600 font-medium" style={{width: '70%'}}>{(distrib.distribution.farmer.amount / 1000000).toFixed(1)}M</span>
+                <span className="text-xs text-blue-600 font-medium" style={{width: '25%'}}>{(distrib.distribution.greenlink.amount / 1000000).toFixed(1)}M</span>
+                <span className="text-xs text-amber-600 font-medium text-right" style={{width: '5%'}}></span>
+              </div>
+            </div>
+
+            {/* Detailed breakdown cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="border-l-4 border-gray-400 bg-gray-50 p-3 rounded-r-lg">
+                <p className="text-xs text-gray-500">Couts & Frais</p>
+                <p className="text-lg font-bold text-gray-700">{distrib.distribution.fees.amount?.toLocaleString()} XOF</p>
+                <p className="text-xs text-gray-400">30% du revenu total</p>
+              </div>
+              <div className="border-l-4 border-emerald-500 bg-emerald-50 p-3 rounded-r-lg">
+                <p className="text-xs text-emerald-600">Agriculteurs</p>
+                <p className="text-lg font-bold text-emerald-700">{distrib.distribution.farmer.amount?.toLocaleString()} XOF</p>
+                <p className="text-xs text-emerald-500">70% du montant net</p>
+              </div>
+              <div className="border-l-4 border-blue-500 bg-blue-50 p-3 rounded-r-lg">
+                <p className="text-xs text-blue-600">GreenLink</p>
+                <p className="text-lg font-bold text-blue-700">{distrib.distribution.greenlink.amount?.toLocaleString()} XOF</p>
+                <p className="text-xs text-blue-500">25% du montant net</p>
+              </div>
+              <div className="border-l-4 border-amber-500 bg-amber-50 p-3 rounded-r-lg">
+                <p className="text-xs text-amber-600">Cooperatives</p>
+                <p className="text-lg font-bold text-amber-700">{distrib.distribution.coop.amount?.toLocaleString()} XOF</p>
+                <p className="text-xs text-amber-500">5% du montant net</p>
+              </div>
+            </div>
+
+            {/* By Project Type */}
+            {distrib.by_project_type?.length > 0 && (
+              <div className="mt-6">
+                <p className="text-sm font-medium text-gray-700 mb-3">Par type de projet</p>
+                <div className="space-y-2">
+                  {distrib.by_project_type.map((t, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="text-sm text-gray-600 w-44 truncate">{t.type}</span>
+                      <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 flex items-center justify-end pr-2"
+                          style={{width: `${Math.min((t.tonnes / distrib.total_tonnes_co2) * 100, 100)}%`}}
+                        >
+                          <span className="text-white text-xs font-medium">{t.tonnes}t</span>
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-500 w-20 text-right">{t.count} projets</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
 
         {/* Interactive Map Section */}
         <Card className="p-6 mb-8">
