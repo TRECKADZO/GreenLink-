@@ -21,64 +21,73 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ### Calculateurs de Prime Carbone
 - Page accueil, USSD *144*88#, Ma Prime - tous via API backend (formule cachee)
 
-### Integrations Orange (Preparees - 17 Mars 2026)
+### Integrations Orange (Preparees)
 - Orange Money (services/orange_money.py): OAuth 2.0, mode MOCK
 - Orange SMS (services/orange_sms.py): OAuth 2.0, mode MOCK
 - USSD Gateway (services/ussd_gateway.py): Multi-fournisseur, mode MOCK
 - Endpoint admin: GET /api/payments/integrations-status
-- Tests: 24/24 passes (iteration 29)
 
-### Dashboard Cooperative - Corrections (17 Mars 2026)
+### Dashboard Cooperative - Corrections
 - Stat card "Agents Terrain" avec decompte (ObjectId matching)
 - Boutons "Accueil" et "Profil" dans le header
 - Menu "Naturalisation" dans Actions Rapides
 - Fix decompte membres/agents avec ObjectId matching
-- Tests: Backend 10/10, Frontend 7/7 (iteration 30)
 
-### Dashboard Agent Terrain - NOUVEAU (17 Mars 2026)
-- Header: nom agent, cooperative, badge niveau (Debutant/Confirme/Expert), score performance
-- KPI Cards avec barres de progression: Visites SSRTE, Membres Enregistres, Parcelles Declarees, Photos Geotag
-- Objectifs mensuels: 20 visites, 10 membres, 15 parcelles, 30 photos
-- Stats supplementaires: QR Scannes, Enfants identifies
-- Distribution des risques (critique/eleve/modere/faible)
-- Badges/Achievements debloques
-- Activites recentes
-- Actions rapides: Visite SSRTE, Recherche Planteur, Scanner QR
-- Onglet Recherche: trouver un planteur par telephone
-- Boutons Accueil et Profil
-- Backend: GET /api/field-agent/dashboard, /leaderboard, /my-visits
-- Fix ObjectId matching pour GET /api/cooperative/agents
-- Tests: Backend 16/16, Frontend 95% -> 100% apres fix header (iteration 31)
+### Dashboard Agent Terrain
+- Header: nom agent, cooperative, badge niveau, score performance
+- KPI Cards: Visites SSRTE, Membres Enregistres, Parcelles Declarees, Photos Geotag
+- Objectifs mensuels, stats supplementaires, distribution risques
+- Actions rapides, recherche planteur, badges
 
-### Comptes crees (17 Mars 2026)
+### Attribution Fermier-Agent Terrain - NOUVEAU (17 Mars 2026)
+- **Backend** - 5 endpoints:
+  - GET /api/cooperative/agents (enrichi: assigned_farmers_count, assigned_farmers)
+  - POST /api/cooperative/agents/{id}/assign-farmers
+  - POST /api/cooperative/agents/{id}/unassign-farmers
+  - GET /api/cooperative/agents/{id}/assigned-farmers
+  - GET /api/field-agent/my-farmers (donnees enrichies pour offline mobile)
+- **Frontend** - Page /cooperative/agents:
+  - Bouton "Attribuer" sur chaque carte agent
+  - Modale d'attribution avec liste membres, recherche, checkboxes
+  - Section "Fermiers assignes" avec bouton Retirer
+  - Badge "Deja assigne" pour fermiers deja attribues
+  - Indicateur "Chez [autre agent]" pour reassignation
+- **Mobile** - sync.js:
+  - Pre-chargement automatique des fermiers assignes (AsyncStorage)
+  - Methode getOfflineFarmers() pour acces hors-ligne
+- **Regle metier**: Un fermier ne peut etre assigne qu'a un seul agent (reassignation automatique)
+- **Tests**: 13/13 backend, 100% frontend (iteration 32)
+
+### Comptes crees
 - Cooperative Bielaghana: bielaghana@gmail.com / greenlink2024
+- Cooperative Cacao: coopcacao@greenlink.ci / greenlink2024
 - Agent Kone Alphone: +2250709005301 / greenlink2024
-- Membre Balde ibo (village zebia)
+- Agent Coop Cacao: +2250709005310 / greenlink2024
 
-### Builds Mobile (17 Mars 2026)
-- APK v1.25.0: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/84a82645-cb1b-4fbd-80c5-9be5d147fa33
-- AAB v1.25.0: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/42b992b9-5c8c-47e5-990a-8c15367a9735
+### Builds Mobile
+- APK/AAB v1.26.0 disponibles
 
 ## Etat Actuel
 - Web: FONCTIONNEL
-- Mobile: APK/AAB v1.25.0 en build
+- Mobile: APK/AAB v1.26.0
 - Integrations Orange: PRET (mode MOCK)
+- Attribution fermier-agent: FONCTIONNEL
 
 ## Backlog
 ### P0
-- [ ] Test APK v1.25.0 (ecran blanc fix)
-- [ ] Soumission AAB Google Play
+- [ ] Soumission AAB v1.26.0 Google Play
 ### P1
+- [ ] Guide soumission Google Play Store
 - [ ] Bug pages blanches mobile (Nouvelle Parcelle, inscription)
 ### P2
 - [ ] Langues Baoule/Dioula
 - [ ] Notifications multi-canal
 - [ ] Stockage cloud fichiers
-- [ ] Refactoring cooperative.py
+- [ ] Refactoring cooperative.py et ssrte.py
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
-- Coop Gagnoa: coop-gagnoa@greenlink.ci / password
 - Coop Bielaghana: bielaghana@gmail.com / greenlink2024
+- Coop Cacao: coopcacao@greenlink.ci / greenlink2024
 - Agent Kone: +2250709005301 / greenlink2024
-- Agent test: agent@greenlink.ci / password
+- Agent Cacao: +2250709005310 / greenlink2024
