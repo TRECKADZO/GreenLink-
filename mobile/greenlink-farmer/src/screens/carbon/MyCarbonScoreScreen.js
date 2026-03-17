@@ -180,15 +180,6 @@ const MyCarbonScoreScreen = ({ navigation }) => {
               ➕ Déclarer une nouvelle parcelle
             </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => navigation.navigate('CarbonMarketplace')}
-          >
-            <Text style={styles.secondaryButtonText}>
-              🌍 Voir le marketplace carbone
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -177,11 +177,11 @@ const FarmerDashboard = () => {
           </Button>
           <Button 
             className="h-20 bg-teal-600 hover:bg-teal-700 text-white text-lg"
-            onClick={() => navigate('/carbon-marketplace')}
-            data-testid="action-carbon-marketplace"
+            onClick={() => navigate('/farmer/carbon-payments')}
+            data-testid="action-carbon-payments"
           >
             <Leaf className="w-6 h-6 mr-2" />
-            Marché Carbone
+            Mes Primes Carbone
           </Button>
           <Button 
             className="h-20 bg-slate-600 hover:bg-slate-700 text-white text-lg"

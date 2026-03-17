@@ -32,6 +32,17 @@ const CarbonMarketplaceScreen = ({ navigation }) => {
   const [selectedStandard, setSelectedStandard] = useState('');
   const [purchasingId, setPurchasingId] = useState(null);
 
+  // Access guard: Only RSE enterprises can access this screen
+  useEffect(() => {
+    if (user && !['entreprise_rse', 'admin'].includes(user.user_type)) {
+      Alert.alert(
+        'Acces restreint',
+        'Le Marche Carbone est reserve aux entreprises RSE.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    }
+  }, [user]);
+
   const fetchCredits = useCallback(async () => {
     try {
       const params = {};

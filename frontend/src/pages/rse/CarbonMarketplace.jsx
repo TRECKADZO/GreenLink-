@@ -117,6 +117,20 @@ const CarbonMarketplace = () => {
   const [selectedStandard, setSelectedStandard] = useState('');
   const [purchasingId, setPurchasingId] = useState(null);
 
+  // Access guard: Only RSE enterprises and admins can access this page
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user || !['entreprise_rse', 'admin'].includes(user.user_type)) {
+      toast({
+        title: 'Acces restreint',
+        description: 'Le Marche Carbone est reserve aux entreprises RSE.',
+        variant: 'destructive'
+      });
+      navigate('/');
+      return;
+    }
+  }, [user, authLoading]);
+
   const standards = [
     { value: '', label: 'Tous les standards' },
     { value: 'Verra VCS', label: 'Verra VCS' },

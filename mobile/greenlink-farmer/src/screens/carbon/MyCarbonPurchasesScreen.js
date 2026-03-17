@@ -197,14 +197,8 @@ const MyCarbonPurchasesScreen = ({ navigation }) => {
           <Text style={styles.emptyIcon}>🌍</Text>
           <Text style={styles.emptyText}>Aucun achat de crédit carbone</Text>
           <Text style={styles.emptySubtext}>
-            Compensez votre empreinte carbone en soutenant des projets durables
+            Les achats de credits carbone sont reserves aux entreprises RSE
           </Text>
-          <TouchableOpacity
-            style={styles.browseButton}
-            onPress={() => navigation.navigate('CarbonMarketplace')}
-          >
-            <Text style={styles.browseButtonText}>Voir les crédits disponibles</Text>
-          </TouchableOpacity>
         </View>
       ) : (
         <FlatList

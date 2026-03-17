@@ -117,25 +117,6 @@ const HomeScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Carbon RSE Banner */}
-      <View style={styles.carbonBanner}>
-        <View style={styles.carbonBannerLeft}>
-          <Text style={styles.carbonBannerEmoji}>🌍</Text>
-          <View>
-            <Text style={styles.carbonBannerTitle}>Marketplace Carbone RSE</Text>
-            <Text style={styles.carbonBannerSubtitle}>
-              Compensez votre empreinte carbone
-            </Text>
-          </View>
-        </View>
-        <Text 
-          style={styles.carbonBannerArrow}
-          onPress={() => navigation.navigate('CarbonMarketplace')}
-        >
-          →
-        </Text>
-      </View>
-
       {/* Menu principal style USSD */}
       <View style={styles.menuContainer}>
         <Text style={styles.menuTitle}>{MESSAGES.selectOption}</Text>
@@ -167,15 +148,6 @@ const HomeScreen = ({ navigation }) => {
         
         <MenuItem
           number="4"
-          title="Marketplace Carbone RSE"
-          subtitle="Crédits carbone & impact climat"
-          icon="🌍"
-          onPress={() => navigation.navigate('CarbonMarketplace')}
-          highlight={true}
-        />
-        
-        <MenuItem
-          number="5"
           title="Mon Score Carbone"
           subtitle={`Score: ${dashboard?.average_carbon_score?.toFixed(1) || '0'}/10`}
           icon="🌱"
@@ -183,7 +155,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="6"
+          number="5"
           title="Mes Commandes"
           subtitle="Suivez vos achats"
           icon="📦"
@@ -191,7 +163,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="7"
+          number="6"
           title="Mes Paiements"
           subtitle="Primes et historique"
           icon="💳"
@@ -199,7 +171,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="8"
+          number="7"
           title="Notifications"
           subtitle={`${dashboard?.unread_notifications || 0} non lue(s)`}
           icon="🔔"
@@ -207,7 +179,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="9"
+          number="8"
           title="Accès USSD/SMS"
           subtitle="Sans internet *123*45#"
           icon="📱"
@@ -216,7 +188,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="#"
+          number="9"
           title="*144*88# Prime Carbone"
           subtitle="Calculez votre prime en 60s"
           icon="📞"
@@ -308,39 +280,6 @@ const styles = StyleSheet.create({
   statsContainer: {
     padding: SPACING.md,
     marginTop: -SPACING.lg,
-  },
-  carbonBanner: {
-    marginHorizontal: SPACING.md,
-    marginBottom: SPACING.sm,
-    backgroundColor: '#065f46',
-    borderRadius: 12,
-    padding: SPACING.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  carbonBannerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  carbonBannerEmoji: {
-    fontSize: 32,
-    marginRight: SPACING.sm,
-  },
-  carbonBannerTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: 'bold',
-    color: COLORS.white,
-  },
-  carbonBannerSubtitle: {
-    fontSize: FONTS.sizes.xs,
-    color: '#a7f3d0',
-  },
-  carbonBannerArrow: {
-    fontSize: 24,
-    color: COLORS.white,
-    fontWeight: 'bold',
   },
   menuContainer: {
     padding: SPACING.md,

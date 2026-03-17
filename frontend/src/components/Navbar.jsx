@@ -108,7 +108,10 @@ const Navbar = () => {
   const marketplaceItems = [
     { icon: Leaf, label: 'Bourse des Récoltes', desc: 'Cacao, Café, Anacarde', route: '/marketplace/harvest', color: 'from-amber-500 to-orange-600', badge: 'NOUVEAU' },
     { icon: Package, label: 'Marketplace Intrants', desc: 'Engrais, Semences, Équipements', route: '/supplier/marketplace', color: 'from-emerald-500 to-teal-600' },
-    { icon: Recycle, label: 'Marché Carbone', desc: 'Crédits carbone certifiés', route: '/carbon-marketplace', color: 'from-blue-500 to-indigo-600', badge: 'RSE' },
+    // Carbon Marketplace only visible to RSE enterprises and admins
+    ...(user && ['entreprise_rse', 'admin'].includes(user.user_type) ? [
+      { icon: Recycle, label: 'Marché Carbone', desc: 'Crédits carbone certifiés', route: '/carbon-marketplace', color: 'from-blue-500 to-indigo-600', badge: 'RSE' },
+    ] : []),
   ];
 
   return (
