@@ -113,8 +113,18 @@ const Marketplace = () => {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
                   <Card key={product._id} className="overflow-hidden hover:shadow-xl transition-all duration-200 hover:-translate-y-1">
-                    <div className="h-48 bg-gradient-to-br from-[#2d5a4d] to-[#4a8a7a] flex items-center justify-center">
-                      <Package className="w-20 h-20 text-white/20" />
+                    <div className="h-48 bg-gradient-to-br from-[#f8f6f3] to-[#eee] flex items-center justify-center overflow-hidden">
+                      {product.images && product.images.length > 0 ? (
+                        <img 
+                          src={product.images[0]} 
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-full items-center justify-center bg-gradient-to-br from-[#2d5a4d] to-[#4a8a7a] ${product.images && product.images.length > 0 ? 'hidden' : 'flex'}`}>
+                        <Package className="w-20 h-20 text-white/20" />
+                      </div>
                     </div>
                     <div className="p-5">
                       <Badge className="mb-3 bg-[#d4a574] text-[#2d5a4d]">

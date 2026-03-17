@@ -36,49 +36,34 @@ Plateforme numérique pour les coopératives de cacao/café en Côte d'Ivoire. C
 - Interface simplifiée (pas de détails de distribution)
 
 ### Marketplace Intrants
-- 12 produits de démonstration (engrais, pesticides, semences, outils, équipements)
+- 12 produits de démonstration avec images générées par IA
 - Recherche et filtrage par catégorie
 - Fournisseurs locaux ivoiriens
+- Images produits professionnelles pour chaque catégorie
 
-### Coopérative
-- Dashboard avec statistiques
-- Gestion des membres (ajout, activation)
-- Gestion des parcelles par membre
-- Rapports coopérative
-
-### Agent de terrain
-- Recherche producteurs par téléphone
-- Vérification de parcelles avec géolocalisation
-- Formulaires de visites SSRTE
-- Photos géolocalisées
-
-### Marketplace Récoltes
-- Publication des récoltes par les producteurs
-- Système de commandes et panier
-
-### Messagerie
-- Système de messages entre utilisateurs
-- WebSocket pour temps réel
-
-### Mobile (Expo SDK 53)
+### Mobile App
 - Toutes les fonctionnalités web adaptées au mobile
 - Synchronisation hors-ligne
 - Notifications push
-- Simulateur USSD
+- Corrections écran blanc (metro.config, crash-resilience, etc.)
+- Permissions Google Play corrigées (READ_MEDIA_IMAGES/VIDEO supprimées)
 
 ## État Actuel (17 Mars 2026)
 
-### Corrections Récentes
-- **Écran blanc mobile (P0)**: Corrections appliquées:
-  - `metro.config.js` simplifié (suppression blocking Node builtins)
-  - `COLORS.accent` ajouté dans `config.js`
-  - `app.json` corrigé (photosPermission invalide)
-  - `App.js` rendu crash-resilient (try-catch imports services)
-  - `sync.js` et `notifications.js` protégés (try-catch top-level)
-  - `QRScannerScreen.js` nettoyé (code mort → redirect minimal)
-  - **EN ATTENTE**: L'utilisateur doit rebuilder l'APK via EAS pour vérifier
-- **Marketplace Intrants**: 12 produits démo ajoutés et vérifiés
-- **QR Code**: Complètement supprimé du web et mobile
+### Builds Mobile Disponibles
+- **APK Preview**: https://expo.dev/artifacts/eas/8tzCa4cbvgcMXyXmhTW2gk.apk
+- **AAB Production**: https://expo.dev/artifacts/eas/pAMFd7oCsmus1ZqknjwG3F.aab
+- **Permissions vérifiées**: READ_MEDIA_IMAGES/VIDEO confirmées ABSENTES via aapt
+
+### Corrections Appliquées (Session actuelle)
+1. `metro.config.js` simplifié (suppression blocking Node builtins)
+2. `COLORS.accent` ajouté dans `config.js`
+3. `app.json` corrigé (photosPermission invalide supprimé)
+4. `App.js` rendu crash-resilient (try-catch imports services)
+5. `sync.js` et `notifications.js` protégés (try-catch top-level)
+6. `QRScannerScreen.js` nettoyé (code mort -> redirect minimal)
+7. 12 images produits générées par IA pour la Marketplace Intrants
+8. Frontend Marketplace mis à jour pour afficher les images produits
 
 ### Tests (Iteration 26)
 - Backend: 19/19 tests passés (100%)
@@ -87,12 +72,13 @@ Plateforme numérique pour les coopératives de cacao/café en Côte d'Ivoire. C
 ## Backlog Prioritisé
 
 ### P0 (Bloquant)
-- [ ] Vérifier que l'APK mobile fonctionne après corrections écran blanc
-- [ ] Vérifier les permissions Google Play dans l'AAB final
+- [x] Corrections écran blanc mobile - TERMINÉ
+- [x] Vérification permissions Google Play - TERMINÉ (confirmé via aapt)
+- [ ] **EN ATTENTE**: Test utilisateur de l'APK sur appareil physique
 
 ### P1 (Important)
-- [ ] Bug "page blanche" après soumission formulaire Nouvelle Parcelle (à reproduire)
-- [ ] Bug "page blanche" après inscription web (non reproduit - peut être résolu)
+- [ ] Bug "page blanche" après soumission formulaire Nouvelle Parcelle
+- [ ] Bug "page blanche" après inscription web (non reproduit)
 
 ### P2 (Futur)
 - [ ] Intégration Orange Money (paiement réel)
