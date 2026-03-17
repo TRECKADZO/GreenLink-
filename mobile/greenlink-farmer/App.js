@@ -102,7 +102,7 @@ function SafeApp() {
           <Text style={{ color: '#2d5a4d', fontWeight: 'bold', fontSize: 16 }}>Reessayer</Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 11, color: '#6b7280', marginTop: 16 }}>
-          Version 1.25.0 | Contactez +225 07 87 76 10 23
+          Version 1.26.0 | Contactez +225 07 87 76 10 23
         </Text>
       </View>
     );
