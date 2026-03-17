@@ -780,7 +780,8 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     # === Annual premium ===
     prime_annuelle = farmer_revenue_per_ha * hectares
 
-    return {
+    # Public result (visible by farmer) - hide distribution details
+    public_result = {
         "score": round(score, 1),
         "prime_fcfa_kg": round(prime_fcfa_kg),
         "arbres_par_ha": round(arbres_par_ha),
@@ -789,13 +790,10 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
         "hectares": hectares,
         "culture": culture,
         "rendement_kg_ha": rendement_kg_ha,
-        "prix_rse_reference": round(prix_rse_tonne),
         "co2_par_ha": round(co2_per_ha, 1),
-        "farmer_per_tonne": round(actual_farmer_per_tonne),
-        "max_farmer_per_tonne": round(max_farmer_per_tonne),
-        "net_per_tonne": round(net_per_tonne),
-        "farmer_revenue_per_ha": round(farmer_revenue_per_ha),
     }
+
+    return public_result
 
 
 @router.post("/carbon-calculator")
@@ -876,11 +874,6 @@ async def ussd_carbon_calculator(request: USSDRequest):
                 f"Score: {result['score']}/10\n"
                 f"Arbres/ha: {result['arbres_par_ha']}\n"
                 f"CO2 sequestre: {result['co2_par_ha']}t/ha\n\n"
-                f"--- REPARTITION ---\n"
-                f"Prix RSE: {result['prix_rse_reference']:,} XOF/t\n"
-                f"Net (70%): {result['net_per_tonne']:,} XOF/t\n"
-                f"Votre part (70% du net):\n"
-                f"{result['farmer_per_tonne']:,} XOF/t CO2\n\n"
                 f"PRIME ESTIMEE:\n"
                 f"{result['prime_fcfa_kg']} FCFA/kg\n\n"
                 f"Pour {result['hectares']} ha de {culture_name}\n"
@@ -896,11 +889,7 @@ async def ussd_carbon_calculator(request: USSDRequest):
                 f"VOTRE ESTIMATION\n\n"
                 f"Score: {result['score']}/10\n"
                 f"(Minimum requis: 5/10)\n\n"
-                f"--- REPARTITION ---\n"
-                f"Prix RSE: {result['prix_rse_reference']:,} XOF/t\n"
-                f"Net (70%): {result['net_per_tonne']:,} XOF/t\n"
-                f"Votre part: {result['farmer_per_tonne']:,} XOF/t\n"
-                f"Prime: {result['prime_fcfa_kg']} FCFA/kg\n\n"
+                f"Prime actuelle: {result['prime_fcfa_kg']} FCFA/kg\n\n"
                 f"Pour ameliorer votre score:\n"
                 f"- Plantez plus d'arbres d'ombrage\n"
                 f"- Arretez le brulage\n"
@@ -929,3 +918,58 @@ async def ussd_carbon_calculator(request: USSDRequest):
             "error": str(e),
         }
 
+
+
+@router.post("/calculate-premium")
+async def calculate_premium_public(data: dict):
+    """
+    Public carbon premium calculator for the homepage.
+    Returns only score, prime/kg, annual premium - no distribution details.
+    """
+    try:
+        hectares = float(data.get("hectares", 1))
+        trees = int(data.get("trees", 0))
+        culture = data.get("culture", "cacao")
+        practices = data.get("practices", [])
+
+        # Build answers dict compatible with USSD calculator
+        answers = {
+            "hectares": hectares,
+            "arbres_grands": trees,
+            "culture": culture,
+            "engrais_chimique": "non" if "zero_pesticides" in practices else "oui",
+            "brulage": "non",
+            "compost": "oui" if "compost" in practices else "non",
+            "agroforesterie": "oui" if "agroforesterie" in practices else "non",
+            "couverture_sol": "oui" if ("couverture_vegetale" in practices or "rotation_cultures" in practices) else "non",
+        }
+
+        # Fetch avg RSE price
+        avg_price = 18000
+        try:
+            pipeline = [
+                {"$match": {"status": "approved", "price_per_tonne": {"$gt": 0}}},
+                {"$group": {"_id": None, "avg": {"$avg": "$price_per_tonne"}}}
+            ]
+            agg = await db.carbon_listings.aggregate(pipeline).to_list(1)
+            if agg and agg[0].get("avg"):
+                avg_price = round(agg[0]["avg"])
+        except Exception:
+            pass
+
+        result = calculate_ussd_carbon_premium(answers, avg_rse_price=avg_price)
+
+        # Return only public-facing data (no distribution details)
+        return {
+            "score": result["score"],
+            "prime_fcfa_kg": result["prime_fcfa_kg"],
+            "prime_annuelle": result["prime_annuelle"],
+            "co2_par_ha": result["co2_par_ha"],
+            "eligible": result["eligible"],
+            "hectares": result["hectares"],
+            "culture": result["culture"],
+            "rendement_kg_ha": result["rendement_kg_ha"],
+            "arbres_par_ha": result["arbres_par_ha"],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

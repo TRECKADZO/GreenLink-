@@ -414,8 +414,10 @@ async def get_carbon_listing_stats():
 
 
 @router.get("/distribution-summary")
-async def get_distribution_summary():
-    """Retourne le resume complet de la repartition des primes carbone"""
+async def get_distribution_summary(current_user: dict = Depends(get_current_user)):
+    """Retourne le resume complet de la repartition - Admin uniquement"""
+    if current_user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="Acces reserve a l'administration")
     pipeline = [
         {"$match": {"status": "approved", "price_per_tonne": {"$exists": True, "$gt": 0}}},
         {"$group": {

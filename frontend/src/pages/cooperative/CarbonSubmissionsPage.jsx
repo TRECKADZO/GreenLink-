@@ -47,9 +47,8 @@ const CarbonSubmissionsPage = () => {
 
   const pendingCount = listings.filter(l => l.status === 'pending_approval').length;
   const approvedCount = listings.filter(l => l.status === 'approved').length;
+  const rejectedCount = listings.filter(l => l.status === 'rejected').length;
   const totalTonnes = listings.reduce((sum, l) => sum + (l.quantity_tonnes_co2 || 0), 0);
-  const totalRevenue = listings.filter(l => l.status === 'approved')
-    .reduce((sum, l) => sum + ((l.premium_distribution?.farmer_premium) || 0), 0);
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="carbon-submissions-page">
@@ -154,18 +153,11 @@ const CarbonSubmissionsPage = () => {
                       <div className="text-right">
                         {listing.status === 'approved' && listing.price_per_tonne ? (
                           <div>
-                            <p className="text-lg font-bold text-emerald-700">
-                              {listing.price_per_tonne?.toLocaleString()} XOF/t
-                            </p>
-                            <p className="text-xs text-gray-500">Prix fixe par l'admin</p>
-                            {listing.premium_distribution && (
-                              <p className="text-sm text-emerald-600 font-medium mt-1">
-                                Prime: {listing.premium_distribution.farmer_premium?.toLocaleString()} XOF
-                              </p>
-                            )}
+                            <p className="text-lg font-bold text-emerald-700">Approuve</p>
+                            <p className="text-xs text-gray-500">Credit publie sur le marche</p>
                           </div>
                         ) : listing.status === 'pending_approval' ? (
-                          <p className="text-sm text-amber-600">Prix en attente</p>
+                          <p className="text-sm text-amber-600">En cours de verification</p>
                         ) : (
                           <p className="text-sm text-red-600">
                             {listing.admin_note || 'Soumission rejetee'}
@@ -186,10 +178,10 @@ const CarbonSubmissionsPage = () => {
             <h4 className="font-medium text-blue-900 mb-2">Comment fonctionne le processus ?</h4>
             <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
               <li>Vous soumettez votre tonnage carbone avec les details du projet</li>
-              <li>Le Super Admin verifie et fixe le prix de vente par tonne</li>
-              <li>Une fois approuve, le credit est publie sur le Marche Carbone RSE</li>
+              <li>Le Super Admin verifie les informations</li>
+              <li>Une fois approuve, le credit est publie sur le Marche Carbone</li>
               <li>Les entreprises RSE achetent les credits</li>
-              <li>Les revenus sont repartis : 70% agriculteurs, 25% GreenLink, 5% cooperative</li>
+              <li>Votre prime est calculee et distribuee</li>
             </ol>
           </CardContent>
         </Card>

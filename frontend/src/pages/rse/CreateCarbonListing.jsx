@@ -132,7 +132,7 @@ const CreateCarbonListing = () => {
             <p className="text-slate-400 text-sm mt-1">
               Soumettez la quantité de crédits carbone. Le Super Admin vérifiera votre projet, fixera le prix de vente
               et approuvera la publication. La prime sera répartie : <span className="text-emerald-400 font-medium">70% agriculteurs</span>,
-              25% GreenLink, 5% coopérative (après 30% de frais de service).
+              La prime sera calculee apres verification et approbation de votre soumission par l'administration.
             </p>
           </div>
         </div>

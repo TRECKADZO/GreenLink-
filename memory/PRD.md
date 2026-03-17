@@ -15,36 +15,37 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 **Approbation (Admin)**: /admin/carbon-approvals (fixe prix + approuve)
 **Marketplace RSE**: /carbon-marketplace (acces RSE/admin uniquement)
 
-### Modele de Repartition (Verifie 17 Mars 2026)
-- 30% couts et frais (FEES_RATE = 0.30)
-- 70% montant net reparti:
-  - 70% agriculteurs (FARMER_SHARE_RATE = 0.70)
-  - 25% GreenLink (GREENLINK_MARGIN_RATE = 0.25)
-  - 5% cooperative (COOPERATIVE_SHARE_RATE = 0.05)
-- Constantes coherentes dans: carbon_listings.py, carbon_business_model.py, carbon_payments_dashboard.py, ussd.py
+### Modele de Repartition (CONFIDENTIEL - Admin uniquement)
+- 30% couts et frais
+- 70% montant net reparti: 70% agriculteurs + 25% GreenLink + 5% cooperative
+- Visible UNIQUEMENT dans:
+  - Dashboard RSE section distribution (admin uniquement)
+  - Endpoint /api/carbon-listings/distribution-summary (admin auth requise)
+- CACHE pour: agriculteurs, cooperatives, entreprises RSE, pages publiques
 
 ### Calculateurs de Prime Carbone
+**Page d'accueil** (CarbonCalculator.jsx):
+- Appel API backend /api/ussd/calculate-premium (formule cachee cote serveur)
+- Affiche uniquement: score, prime/kg, prime annuelle, CO2/ha
+- Aucun detail de repartition expose
+
 **USSD *144*88#** (ussd.py):
-- Formule liee au prix RSE moyen de la base de donnees
-- Score (0-10) determine le % du max (70% du net)
-- CO2/ha = 2 + (score/10) * 6 (2-8 t/ha selon pratiques)
-- Prime/kg = (farmer_per_tonne * CO2/ha) / rendement_kg_ha
-- Resultat affiche la repartition RSE detaillee
+- Resultat simplifie: score, prime/kg, prime annuelle
+- Aucun taux de distribution dans le texte de reponse
 
 **Ma Prime** (carbon_payments_dashboard.py):
-- Formule detaillee avec SEQUESTRATION_RATES
-- Prix depuis carbon_config (admin configurable)
-- Meme distribution: 30% couts, 70% net, farmer 70% du net
+- Resultat simplifie: score, prime/kg, prime annuelle, conseil
 
 ### Dashboard RSE avec Analytics
-- Visualisation barres de repartition 30/70 et 70/25/5
-- Metriques: revenu total, tonnes CO2, prix moyen, par type de projet
-- API: GET /api/carbon-listings/distribution-summary
+- Section distribution visible admin uniquement (user_type check)
+- Impact cards, carte territoriale pour tous les RSE
+- Endpoint distribution-summary protege par auth admin
 
 ### Controle d'acces
 - Carbon Marketplace: RSE + admin uniquement
+- Distribution details: admin uniquement
 - Dashboard RSE: RSE + admin
-- Soumission carbone: cooperatives + producteurs
+- Soumission carbone: cooperatives
 - Approbation: admin uniquement
 
 ## Etat Actuel (17 Mars 2026)

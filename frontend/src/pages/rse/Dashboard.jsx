@@ -220,8 +220,8 @@ www.greenlink-agritech.com
           ))}
         </div>
 
-        {/* Distribution Model Section */}
-        {distrib && (
+        {/* Distribution Model Section - Admin Only */}
+        {distrib && user?.user_type === 'admin' && (
           <Card className="p-6 mb-8" data-testid="distribution-section">
             <div className="flex items-center gap-3 mb-6">
               <PieChart className="w-6 h-6 text-emerald-600" />

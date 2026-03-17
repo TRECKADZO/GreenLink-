@@ -11,19 +11,23 @@ import {
   DollarSign, 
   X,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 const farmingPractices = [
-  { id: 'agroforesterie', label: 'Agroforesterie', bonus: 2.0 },
-  { id: 'compost', label: 'Compost organique', bonus: 1.5 },
-  { id: 'zero_pesticides', label: 'Zéro pesticides', bonus: 1.5 },
-  { id: 'couverture_vegetale', label: 'Couverture végétale', bonus: 1.0 },
-  { id: 'rotation_cultures', label: 'Rotation des cultures', bonus: 0.5 },
+  { id: 'agroforesterie', label: 'Agroforesterie', description: 'Arbres et cultures ensemble' },
+  { id: 'compost', label: 'Compost organique', description: 'Engrais naturel' },
+  { id: 'zero_pesticides', label: 'Zero pesticides chimiques', description: 'Agriculture propre' },
+  { id: 'couverture_vegetale', label: 'Couverture vegetale', description: 'Protection du sol' },
+  { id: 'rotation_cultures', label: 'Rotation des cultures', description: 'Diversification' },
 ];
 
 const CarbonCalculator = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(1);
+  const [calculating, setCalculating] = useState(false);
   const [formData, setFormData] = useState({
     hectares: '',
     trees: '',
@@ -41,47 +45,27 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
     }));
   };
 
-  const calculatePremium = () => {
-    const hectares = parseFloat(formData.hectares) || 0;
-    const trees = parseInt(formData.trees) || 0;
-    
-    // Base carbon score calculation
-    let carbonScore = 5.0;
-    
-    // Add bonus for practices
-    const practiceBonus = formData.practices.reduce((acc, practiceId) => {
-      const practice = farmingPractices.find(p => p.id === practiceId);
-      return acc + (practice?.bonus || 0);
-    }, 0);
-    
-    carbonScore = Math.min(10, carbonScore + practiceBonus);
-    
-    // Trees bonus
-    const treesPerHa = trees / (hectares || 1);
-    if (treesPerHa > 400) carbonScore = Math.min(10, carbonScore + 0.5);
-    
-    // Calculate carbon credits (simplified formula)
-    const carbonCredits = (hectares * carbonScore * 0.8).toFixed(1);
-    
-    // Calculate premium (10% bonus if score >= 7)
-    const baseRevenue = hectares * 850 * 1000; // XOF per hectare per year
-    const premiumRate = carbonScore >= 7 ? 0.10 : 0;
-    const carbonPremium = baseRevenue * premiumRate;
-    
-    // Eligibility
-    const isEligible = carbonScore >= 7;
-    
-    setResult({
-      carbonScore,
-      carbonCredits,
-      isEligible,
-      premiumRate: premiumRate * 100,
-      estimatedPremium: carbonPremium,
-      estimatedRevenue: baseRevenue,
-      treesPerHa
-    });
-    
-    setStep(3);
+  const calculatePremium = async () => {
+    setCalculating(true);
+    try {
+      const response = await fetch(`${API_URL}/api/ussd/calculate-premium`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hectares: parseFloat(formData.hectares) || 1,
+          trees: parseInt(formData.trees) || 0,
+          culture: formData.cropType,
+          practices: formData.practices
+        })
+      });
+      const data = await response.json();
+      setResult(data);
+      setStep(3);
+    } catch (error) {
+      console.error('Calculation error:', error);
+    } finally {
+      setCalculating(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -97,19 +81,18 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                 <Calculator className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Calculateur de Prime Carbone</h2>
-                <p className="text-white/80 text-sm">Estimez vos revenus carbone en 2 minutes</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">Calculateur de Prime Carbone</h2>
+                <p className="text-white/80 text-sm">Estimez votre prime en 2 minutes</p>
               </div>
             </div>
             <button 
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              data-testid="close-calculator"
             >
               <X className="w-6 h-6 text-white" />
             </button>
           </div>
-          
-          {/* Progress */}
           <div className="flex gap-2 mt-6">
             {[1, 2, 3].map((s) => (
               <div 
@@ -133,7 +116,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="hectares" className="text-gray-700">
-                    Surface cultivée (hectares)
+                    Surface cultivee (hectares)
                   </Label>
                   <Input
                     id="hectares"
@@ -144,21 +127,22 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                     className="mt-1"
                     min="0.1"
                     step="0.1"
+                    data-testid="input-hectares"
                   />
                 </div>
-                
                 <div>
                   <Label htmlFor="trees" className="text-gray-700">
-                    Nombre d'arbres plantés
+                    Nombre d'arbres d'ombrage
                   </Label>
                   <Input
                     id="trees"
                     type="number"
-                    placeholder="Ex: 2000"
+                    placeholder="Ex: 200"
                     value={formData.trees}
                     onChange={(e) => setFormData({...formData, trees: e.target.value})}
                     className="mt-1"
                     min="0"
+                    data-testid="input-trees"
                   />
                 </div>
               </div>
@@ -166,17 +150,18 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
               <div>
                 <Label className="text-gray-700">Type de culture principale</Label>
                 <div className="grid grid-cols-3 gap-3 mt-2">
-                  {['cacao', 'anacarde', 'cafe'].map((crop) => (
+                  {[{id: 'cacao', label: 'Cacao'}, {id: 'cafe', label: 'Cafe'}, {id: 'anacarde', label: 'Anacarde'}].map((crop) => (
                     <button
-                      key={crop}
-                      onClick={() => setFormData({...formData, cropType: crop})}
-                      className={`p-3 rounded-lg border-2 transition-all capitalize ${
-                        formData.cropType === crop
-                          ? 'border-[#2d5a4d] bg-[#2d5a4d]/10 text-[#2d5a4d]'
+                      key={crop.id}
+                      onClick={() => setFormData({...formData, cropType: crop.id})}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        formData.cropType === crop.id
+                          ? 'border-[#2d5a4d] bg-[#2d5a4d]/10 text-[#2d5a4d] font-medium'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
+                      data-testid={`crop-${crop.id}`}
                     >
-                      {crop === 'cafe' ? 'Café' : crop.charAt(0).toUpperCase() + crop.slice(1)}
+                      {crop.label}
                     </button>
                   ))}
                 </div>
@@ -186,6 +171,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                 onClick={() => setStep(2)}
                 className="w-full bg-[#2d5a4d] hover:bg-[#1a4038]"
                 disabled={!formData.hectares || !formData.trees}
+                data-testid="step1-next"
               >
                 Continuer
                 <ArrowRight className="ml-2 w-4 h-4" />
@@ -193,14 +179,14 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* Step 2: Farming Practices */}
+          {/* Step 2: Practices */}
           {step === 2 && (
             <div className="space-y-6">
               <h3 className="text-xl font-semibold text-gray-900">
                 Vos pratiques agricoles durables
               </h3>
               <p className="text-gray-600 text-sm">
-                Sélectionnez les pratiques que vous appliquez sur votre exploitation
+                Selectionnez les pratiques que vous appliquez
               </p>
               
               <div className="space-y-3">
@@ -213,6 +199,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                         ? 'border-green-500 bg-green-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
+                    data-testid={`practice-${practice.id}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
@@ -224,29 +211,36 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                           <CheckCircle className="w-4 h-4 text-white" />
                         )}
                       </div>
-                      <span className="font-medium text-gray-900">{practice.label}</span>
+                      <div className="text-left">
+                        <span className="font-medium text-gray-900">{practice.label}</span>
+                        <p className="text-xs text-gray-500">{practice.description}</p>
+                      </div>
                     </div>
-                    <Badge className="bg-green-100 text-green-700">
-                      +{practice.bonus} pts
-                    </Badge>
                   </button>
                 ))}
               </div>
 
               <div className="flex gap-3">
-                <Button 
-                  variant="outline"
-                  onClick={() => setStep(1)}
-                  className="flex-1"
-                >
+                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
                   Retour
                 </Button>
                 <Button 
                   onClick={calculatePremium}
                   className="flex-1 bg-[#2d5a4d] hover:bg-[#1a4038]"
+                  disabled={calculating}
+                  data-testid="calculate-btn"
                 >
-                  Calculer ma prime
-                  <Calculator className="ml-2 w-4 h-4" />
+                  {calculating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Calcul...
+                    </>
+                  ) : (
+                    <>
+                      Calculer ma prime
+                      <Calculator className="ml-2 w-4 h-4" />
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -257,118 +251,126 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
             <div className="space-y-6">
               <div className="text-center">
                 <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${
-                  result.isEligible ? 'bg-green-100' : 'bg-orange-100'
+                  result.eligible ? 'bg-green-100' : 'bg-orange-100'
                 }`}>
-                  {result.isEligible ? (
+                  {result.eligible ? (
                     <CheckCircle className="w-10 h-10 text-green-600" />
                   ) : (
                     <Leaf className="w-10 h-10 text-orange-600" />
                   )}
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {result.isEligible ? 'Félicitations !' : 'Presque éligible !'}
+                <h3 className="text-2xl font-bold text-gray-900" data-testid="result-title">
+                  {result.eligible ? 'Vous etes eligible !' : 'Continuez vos efforts !'}
                 </h3>
                 <p className="text-gray-600">
-                  {result.isEligible 
-                    ? 'Vous êtes éligible à la prime carbone de 10%'
-                    : 'Améliorez vos pratiques pour atteindre le score de 7/10'
+                  {result.eligible 
+                    ? 'Votre exploitation est eligible a la prime carbone GreenLink'
+                    : 'Ameliorez vos pratiques pour atteindre un score de 5/10'
                   }
                 </p>
               </div>
 
-              {/* Score Card */}
+              {/* Score */}
               <div className="bg-gradient-to-br from-[#2d5a4d] to-[#1a4038] rounded-2xl p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-white/80">Votre Score Carbone</span>
                   <Badge className={`text-lg px-3 py-1 ${
-                    result.isEligible 
+                    result.eligible 
                       ? 'bg-green-400/30 text-green-100' 
                       : 'bg-orange-400/30 text-orange-100'
-                  }`}>
-                    {result.carbonScore.toFixed(1)}/10
+                  }`} data-testid="score-badge">
+                    {result.score}/10
                   </Badge>
                 </div>
-                
                 <div className="w-full bg-white/20 rounded-full h-4 mb-2">
                   <div 
                     className={`h-4 rounded-full transition-all duration-1000 ${
-                      result.isEligible ? 'bg-green-400' : 'bg-orange-400'
+                      result.eligible ? 'bg-green-400' : 'bg-orange-400'
                     }`}
-                    style={{ width: `${result.carbonScore * 10}%` }}
+                    style={{ width: `${result.score * 10}%` }}
                   />
                 </div>
                 <div className="flex justify-between text-xs text-white/60">
                   <span>0</span>
-                  <span className="text-[#d4a574]">Seuil: 7</span>
+                  <span className="text-[#d4a574]">Seuil: 5</span>
                   <span>10</span>
                 </div>
               </div>
 
-              {/* Stats Grid */}
+              {/* Stats */}
               <div className="grid grid-cols-2 gap-4">
                 <Card className="p-4 bg-green-50 border-green-200">
                   <div className="flex items-center gap-2 mb-2">
                     <Leaf className="w-5 h-5 text-green-600" />
-                    <span className="text-sm text-green-700">Crédits Carbone</span>
+                    <span className="text-sm text-green-700">CO2 sequestre</span>
                   </div>
-                  <p className="text-2xl font-bold text-green-800">
-                    {result.carbonCredits} <span className="text-sm">tCO₂</span>
+                  <p className="text-2xl font-bold text-green-800" data-testid="co2-value">
+                    {result.co2_par_ha} <span className="text-sm">t/ha/an</span>
                   </p>
                 </Card>
                 
                 <Card className="p-4 bg-purple-50 border-purple-200">
                   <div className="flex items-center gap-2 mb-2">
                     <TreePine className="w-5 h-5 text-purple-600" />
-                    <span className="text-sm text-purple-700">Densité arbres</span>
+                    <span className="text-sm text-purple-700">Densite arbres</span>
                   </div>
                   <p className="text-2xl font-bold text-purple-800">
-                    {result.treesPerHa.toFixed(0)} <span className="text-sm">/ha</span>
+                    {result.arbres_par_ha} <span className="text-sm">/ha</span>
                   </p>
                 </Card>
                 
-                <Card className="p-4 bg-blue-50 border-blue-200">
+                <Card className={`p-4 ${result.eligible ? 'bg-[#d4a574]/20 border-[#d4a574]' : 'bg-gray-50 border-gray-200'}`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm text-blue-700">Revenu estimé/an</span>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-800">
-                    {(result.estimatedRevenue / 1000000).toFixed(1)}M <span className="text-sm">XOF</span>
-                  </p>
-                </Card>
-                
-                <Card className={`p-4 ${result.isEligible ? 'bg-[#d4a574]/20 border-[#d4a574]' : 'bg-gray-50 border-gray-200'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className={`w-5 h-5 ${result.isEligible ? 'text-[#c49564]' : 'text-gray-400'}`} />
-                    <span className={`text-sm ${result.isEligible ? 'text-[#8b6914]' : 'text-gray-500'}`}>
-                      Prime Carbone ({result.premiumRate}%)
+                    <DollarSign className={`w-5 h-5 ${result.eligible ? 'text-[#c49564]' : 'text-gray-400'}`} />
+                    <span className={`text-sm ${result.eligible ? 'text-[#8b6914]' : 'text-gray-500'}`}>
+                      Prime par kg
                     </span>
                   </div>
-                  <p className={`text-2xl font-bold ${result.isEligible ? 'text-[#8b6914]' : 'text-gray-400'}`}>
-                    {result.isEligible 
-                      ? `+${(result.estimatedPremium / 1000000).toFixed(1)}M` 
-                      : '0'
-                    } <span className="text-sm">XOF</span>
+                  <p className={`text-2xl font-bold ${result.eligible ? 'text-[#8b6914]' : 'text-gray-400'}`} data-testid="prime-kg-value">
+                    {result.prime_fcfa_kg} <span className="text-sm">FCFA/kg</span>
+                  </p>
+                </Card>
+                
+                <Card className={`p-4 ${result.eligible ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign className={`w-5 h-5 ${result.eligible ? 'text-emerald-600' : 'text-gray-400'}`} />
+                    <span className={`text-sm ${result.eligible ? 'text-emerald-700' : 'text-gray-500'}`}>
+                      Prime annuelle
+                    </span>
+                  </div>
+                  <p className={`text-2xl font-bold ${result.eligible ? 'text-emerald-800' : 'text-gray-400'}`} data-testid="prime-annual-value">
+                    {(result.prime_annuelle / 1000).toFixed(0)}K <span className="text-sm">FCFA</span>
                   </p>
                 </Card>
               </div>
 
-              {/* CTA */}
+              {!result.eligible && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <p className="text-sm text-amber-800 font-medium mb-2">Pour ameliorer votre score :</p>
+                  <ul className="text-sm text-amber-700 space-y-1">
+                    <li>- Plantez plus d'arbres d'ombrage</li>
+                    <li>- Pratiquez l'agroforesterie</li>
+                    <li>- Utilisez du compost organique</li>
+                    <li>- Evitez les pesticides chimiques</li>
+                  </ul>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <Button 
                   variant="outline"
-                  onClick={() => {
-                    setStep(1);
-                    setResult(null);
-                  }}
+                  onClick={() => { setStep(1); setResult(null); }}
                   className="flex-1"
+                  data-testid="recalculate-btn"
                 >
                   Recalculer
                 </Button>
                 <Button 
                   onClick={onClose}
                   className="flex-1 bg-[#2d5a4d] hover:bg-[#1a4038]"
+                  data-testid="calculator-cta-btn"
                 >
-                  {result.isEligible ? "S'inscrire maintenant" : "Améliorer mon score"}
+                  {result.eligible ? "S'inscrire" : "Ameliorer mon score"}
                 </Button>
               </div>
             </div>

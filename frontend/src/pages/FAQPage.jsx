@@ -62,7 +62,7 @@ const FAQPage = () => {
       id: 7,
       category: 'carbon',
       question: "Quelle prime carbone puis-je recevoir comme planteur ?",
-      answer: "La prime carbone depend de vos pratiques agricoles. Le calcul suit le modele de repartition GreenLink :\n\n**Formule :**\n1. Prix de vente RSE par tonne CO2\n2. -30% couts et frais\n3. Montant net x 70% = votre prime maximum\n\n**Votre score (0-10) determine le montant final :**\n- Score 5/10 (moyen) : ~44 FCFA/kg de cacao\n- Score 8/10 (bon) : ~69 FCFA/kg\n- Score 9.5/10 (excellent) : ~92 FCFA/kg\n\nPlus vos pratiques sont durables (arbres d'ombrage, pas de brulage, compost, agroforesterie), plus votre prime est elevee !\n\nUtilisez le calculateur *144*88# pour estimer votre prime."
+      answer: "La prime carbone depend de vos pratiques agricoles et de votre score carbone (0 a 10).\n\n**Votre score determine le montant de votre prime :**\n- Score 5/10 (moyen) : ~44 FCFA/kg de cacao\n- Score 8/10 (bon) : ~69 FCFA/kg\n- Score 9.5/10 (excellent) : ~92 FCFA/kg\n\nPlus vos pratiques sont durables (arbres d'ombrage, pas de brulage, compost, agroforesterie), plus votre prime est elevee !\n\nUtilisez le calculateur *144*88# pour estimer votre prime."
     },
     {
       id: 8,
