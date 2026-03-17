@@ -15,27 +15,29 @@ class OrangeSMSService:
     Service d'envoi de SMS via l'API Orange Côte d'Ivoire
     
     Configuration requise dans .env:
-    - ORANGE_CLIENT_ID: Client ID de l'application Orange Developer
-    - ORANGE_CLIENT_SECRET: Client Secret 
-    - ORANGE_SENDER_NUMBER: Numéro expéditeur enregistré (+225XXXXXXXXX)
+    - ORANGE_SMS_CLIENT_ID: Client ID de l'application Orange Developer
+    - ORANGE_SMS_CLIENT_SECRET: Client Secret 
+    - ORANGE_SMS_SENDER_NUMBER: Numéro expéditeur enregistré (+225XXXXXXXXX)
+    - ORANGE_SMS_API_URL: URL de base (default: https://api.orange.com)
     """
     
-    BASE_URL = "https://api.orange.com"
-    TOKEN_URL = f"{BASE_URL}/oauth/v3/token"
-    SMS_URL = f"{BASE_URL}/smsmessaging/v1/outbound"
-    
     def __init__(self):
-        self.client_id = os.environ.get("ORANGE_CLIENT_ID")
-        self.client_secret = os.environ.get("ORANGE_CLIENT_SECRET")
-        self.sender_number = os.environ.get("ORANGE_SENDER_NUMBER", "+2250787761023")
+        self.base_url = os.environ.get("ORANGE_SMS_API_URL", "https://api.orange.com")
+        self.token_url = f"{self.base_url}/oauth/v3/token"
+        self.sms_url = f"{self.base_url}/smsmessaging/v1/outbound"
+        self.client_id = os.environ.get("ORANGE_SMS_CLIENT_ID", "")
+        self.client_secret = os.environ.get("ORANGE_SMS_CLIENT_SECRET", "")
+        self.sender_number = os.environ.get("ORANGE_SMS_SENDER_NUMBER", "+2250787761023")
         self.access_token: Optional[str] = None
         self.token_expires_at: Optional[datetime] = None
         
-        # Check if credentials are configured
         self.is_configured = bool(self.client_id and self.client_secret)
         
         if not self.is_configured:
-            logger.warning("Orange SMS API not configured. Using mock mode.")
+            logger.warning(
+                "[OrangeSMS] Credentials absentes -> mode MOCK. "
+                "Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env."
+            )
     
     async def _get_access_token(self) -> str:
         """
@@ -46,14 +48,13 @@ class OrangeSMSService:
             if datetime.now() < self.token_expires_at - timedelta(minutes=5):
                 return self.access_token
         
-        # Request new token
         import base64
         auth_string = f"{self.client_id}:{self.client_secret}"
         auth_header = base64.b64encode(auth_string.encode()).decode()
         
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(
-                self.TOKEN_URL,
+                self.token_url,
                 headers={
                     "Authorization": f"Basic {auth_header}",
                     "Content-Type": "application/x-www-form-urlencoded"
@@ -124,7 +125,7 @@ class OrangeSMSService:
             import urllib.parse
             encoded_sender = urllib.parse.quote(formatted_sender, safe='')
             
-            sms_endpoint = f"{self.SMS_URL}/{encoded_sender}/requests"
+            sms_endpoint = f"{self.sms_url}/{encoded_sender}/requests"
             
             payload = {
                 "outboundSMSMessageRequest": {
@@ -199,6 +200,15 @@ class OrangeSMSService:
         """
         message = f"GreenLink: Prime carbone de {amount:,.0f} XOF! Score: {score}/10. Montant versé sur Orange Money."
         return await self.send_sms(phone, message)
+
+    def get_status(self) -> dict:
+        return {
+            "service": "orange_sms",
+            "configured": self.is_configured,
+            "mode": "production" if self.is_configured else "mock",
+            "sender_number": self.sender_number,
+            "api_url": self.base_url,
+        }
 
 
 # Singleton instance

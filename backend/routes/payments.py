@@ -7,7 +7,6 @@ from typing import Optional
 import os
 import uuid
 import logging
-import httpx
 import hmac
 import hashlib
 import base64
@@ -15,18 +14,12 @@ from database import db
 from routes.auth import get_current_user
 from datetime import datetime
 from bson import ObjectId
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
+from services.orange_money import orange_money_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
-
-# Orange Money Configuration
-ORANGE_MONEY_CLIENT_ID = os.environ.get('ORANGE_MONEY_CLIENT_ID', '')
-ORANGE_MONEY_CLIENT_SECRET = os.environ.get('ORANGE_MONEY_CLIENT_SECRET', '')
-ORANGE_MERCHANT_KEY = os.environ.get('ORANGE_MERCHANT_KEY', '')
-ORANGE_API_URL = os.environ.get('ORANGE_API_URL', 'https://api.orange.com/orange-money-webpay/dev/v1')
-SIMULATION_MODE = not (ORANGE_MONEY_CLIENT_ID and ORANGE_MONEY_CLIENT_SECRET and ORANGE_MERCHANT_KEY)
 
 # ============= PYDANTIC MODELS =============
 
@@ -37,122 +30,6 @@ class PaymentInitRequest(BaseModel):
     
 class PaymentStatusRequest(BaseModel):
     merchant_reference: str
-
-# ============= ORANGE MONEY SERVICE =============
-
-class OrangeMoneyService:
-    def __init__(self):
-        self.merchant_key = ORANGE_MERCHANT_KEY
-        self.api_url = ORANGE_API_URL
-        self.simulation_mode = SIMULATION_MODE
-        self.timeout = 30
-    
-    async def initiate_payment(
-        self,
-        order_id: str,
-        amount: float,
-        customer_phone: str,
-        merchant_reference: str,
-        return_url: str,
-        cancel_url: str,
-        notification_url: str
-    ) -> dict:
-        """Initiate payment with Orange Money API or simulation"""
-        
-        if self.simulation_mode:
-            # Simulation mode - return mock response
-            payment_token = f"SIM_{uuid.uuid4().hex[:12].upper()}"
-            return {
-                "status": "initiated",
-                "token": payment_token,
-                "payment_url": f"/payment/simulate/{payment_token}",
-                "message": "Mode simulation activé - Cliquez pour simuler le paiement"
-            }
-        
-        # Real API call
-        payload = {
-            "merchant_key": self.merchant_key,
-            "currency": "XOF",
-            "order_id": order_id,
-            "amount": int(amount),  # Orange Money uses integer amounts
-            "return_url": return_url,
-            "cancel_url": cancel_url,
-            "notif_url": notification_url,
-            "reference": merchant_reference,
-            "lang": "fr"
-        }
-        
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.post(
-                    f"{self.api_url}/webpayment",
-                    json=payload,
-                    headers={"Content-Type": "application/json"}
-                )
-            
-            if response.status_code == 200:
-                return response.json()
-            else:
-                logger.error(f"Orange Money API error: {response.text}")
-                raise Exception(f"Erreur Orange Money: {response.status_code}")
-        
-        except httpx.RequestError as e:
-            logger.error(f"Network error: {str(e)}")
-            raise Exception("Impossible de contacter le service de paiement")
-    
-    async def check_status(self, merchant_reference: str) -> dict:
-        """Check payment status"""
-        
-        if self.simulation_mode:
-            # Check our local database for simulated payments
-            payment = await db.payments.find_one({"merchant_reference": merchant_reference})
-            if payment:
-                return {
-                    "status": payment.get("status", "pending"),
-                    "transaction_id": payment.get("transaction_id"),
-                    "amount": payment.get("amount")
-                }
-            return {"status": "unknown"}
-        
-        # Real API call
-        payload = {
-            "merchant_key": self.merchant_key,
-            "reference": merchant_reference
-        }
-        
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.post(
-                    f"{self.api_url}/transactionstatus",
-                    json=payload,
-                    headers={"Content-Type": "application/json"}
-                )
-            
-            if response.status_code == 200:
-                return response.json()
-            else:
-                raise Exception("Erreur lors de la vérification du statut")
-        
-        except httpx.RequestError as e:
-            logger.error(f"Status check error: {str(e)}")
-            raise Exception("Impossible de vérifier le statut du paiement")
-    
-    def verify_webhook_signature(self, payload: str, signature: str, secret: str = None) -> bool:
-        """Verify webhook authenticity using HMAC-SHA256"""
-        if secret is None:
-            secret = self.merchant_key
-        
-        expected = base64.b64encode(
-            hmac.new(
-                secret.encode('utf-8'),
-                payload.encode('utf-8'),
-                hashlib.sha256
-            ).digest()
-        ).decode('utf-8')
-        
-        return hmac.compare_digest(expected, signature)
-
-orange_service = OrangeMoneyService()
 
 # ============= PAYMENT ROUTES =============
 
@@ -190,7 +67,7 @@ async def initiate_payment(
     
     try:
         # Initiate with Orange Money
-        orange_response = await orange_service.initiate_payment(
+        orange_response = await orange_money_service.initiate_payment(
             order_id=",".join(request.order_ids),
             amount=total_amount,
             customer_phone=request.customer_phone,
@@ -211,7 +88,7 @@ async def initiate_payment(
             "customer_email": request.customer_email or current_user.get("email"),
             "status": "initiated",
             "payment_method": "orange_money",
-            "simulation_mode": orange_service.simulation_mode,
+            "simulation_mode": not orange_money_service.is_configured,
             "return_url": return_url,
             "cancel_url": cancel_url,
             "notification_url": notification_url,
@@ -239,7 +116,7 @@ async def initiate_payment(
             "payment_url": orange_response.get("payment_url"),
             "amount": total_amount,
             "currency": "XOF",
-            "simulation_mode": orange_service.simulation_mode,
+            "simulation_mode": not orange_money_service.is_configured,
             "message": orange_response.get("message", "Redirection vers Orange Money...")
         }
         
@@ -284,8 +161,16 @@ async def payment_webhook(
     signature = request.headers.get("X-Signature-SHA256", "")
     
     # In simulation mode, we trust all webhooks from our system
-    if not orange_service.simulation_mode:
-        if not orange_service.verify_webhook_signature(body.decode('utf-8'), signature):
+    if orange_money_service.is_configured:
+        merchant_key = orange_money_service.merchant_key
+        expected = base64.b64encode(
+            hmac.new(
+                merchant_key.encode('utf-8'),
+                body,
+                hashlib.sha256
+            ).digest()
+        ).decode('utf-8')
+        if not hmac.compare_digest(expected, signature):
             logger.warning("Invalid webhook signature")
             return {"status": "rejected", "reason": "invalid_signature"}
     
@@ -383,7 +268,7 @@ async def simulate_payment_completion(
 ):
     """Simulate payment completion (for testing without real Orange Money)"""
     
-    if not orange_service.simulation_mode:
+    if orange_money_service.is_configured:
         raise HTTPException(status_code=400, detail="Simulation non disponible en mode production")
     
     # Find payment by token pattern in reference
@@ -453,7 +338,29 @@ async def simulate_payment_completion(
 @router.get("/simulation-status")
 async def get_simulation_status():
     """Check if system is in simulation mode"""
+    is_mock = not orange_money_service.is_configured
     return {
-        "simulation_mode": orange_service.simulation_mode,
-        "message": "Mode simulation activé - Les paiements sont simulés" if orange_service.simulation_mode else "Mode production - Paiements réels via Orange Money"
+        "simulation_mode": is_mock,
+        "message": "Mode simulation activé - Les paiements sont simulés" if is_mock else "Mode production - Paiements réels via Orange Money"
+    }
+
+
+@router.get("/integrations-status")
+async def get_integrations_status(current_user: dict = Depends(get_current_user)):
+    """Admin-only: statut de toutes les intégrations Orange/USSD"""
+    if current_user.get("user_type") not in ("admin", "super_admin"):
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+
+    from services.orange_sms import orange_sms
+    from services.ussd_gateway import ussd_gateway_service
+
+    return {
+        "orange_money": orange_money_service.get_status(),
+        "orange_sms": orange_sms.get_status(),
+        "ussd_gateway": ussd_gateway_service.get_status(),
+        "all_configured": (
+            orange_money_service.is_configured
+            and orange_sms.is_configured
+            and ussd_gateway_service.is_configured
+        ),
     }
