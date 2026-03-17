@@ -1021,3 +1021,146 @@ async def get_price_history(product_id: str):
     """Get price history for a product"""
     history = await db.price_history.find({"product_id": product_id}).sort("date", -1).limit(30).to_list(30)
     return [{**h, "_id": str(h["_id"])} for h in history]
+
+
+# ============= SEED DEMO DATA =============
+
+@router.post("/seed-demo-products")
+async def seed_demo_products():
+    """Seed the marketplace with demo products for testing"""
+    existing = await db.products.count_documents({"is_demo": True})
+    if existing > 0:
+        return {"message": f"{existing} produits démo existent déjà", "count": existing}
+    
+    demo_products = [
+        {
+            "name": "Engrais NPK 15-15-15 (50kg)",
+            "description": "Engrais complet pour cultures de cacao et café. Formule équilibrée NPK pour une croissance optimale. Sac de 50kg certifié pour l'agriculture ivoirienne.",
+            "category": "engrais",
+            "price": 25000,
+            "unit": "sac",
+            "stock_quantity": 500,
+            "minimum_order": 5,
+        },
+        {
+            "name": "Fongicide Ridomil Gold MZ 68 WG",
+            "description": "Fongicide systémique pour la protection du cacao contre la pourriture brune des cabosses. Application foliaire, efficacité prouvée.",
+            "category": "pesticides",
+            "price": 12500,
+            "unit": "sachet 250g",
+            "stock_quantity": 1200,
+            "minimum_order": 10,
+        },
+        {
+            "name": "Herbicide Glyphosate 360 SL (5L)",
+            "description": "Herbicide non sélectif pour le désherbage des plantations. Efficace contre les mauvaises herbes annuelles et vivaces.",
+            "category": "pesticides",
+            "price": 8500,
+            "unit": "bidon 5L",
+            "stock_quantity": 300,
+            "minimum_order": 2,
+        },
+        {
+            "name": "Semences Cacao Mercedes (1kg)",
+            "description": "Semences de cacao variété Mercedes, haut rendement et résistance aux maladies. Certifiées par le CNRA de Côte d'Ivoire.",
+            "category": "semences",
+            "price": 15000,
+            "unit": "kg",
+            "stock_quantity": 200,
+            "minimum_order": 1,
+        },
+        {
+            "name": "Machette agricole renforcée",
+            "description": "Machette en acier trempé haute résistance. Manche ergonomique en bois. Idéale pour l'entretien des plantations de cacao.",
+            "category": "outils",
+            "price": 3500,
+            "unit": "pièce",
+            "stock_quantity": 800,
+            "minimum_order": 1,
+        },
+        {
+            "name": "Pulvérisateur à dos 16L",
+            "description": "Pulvérisateur manuel à pression pour traitement phytosanitaire. Capacité 16 litres, buse réglable, bretelles confortables.",
+            "category": "equipements",
+            "price": 35000,
+            "unit": "pièce",
+            "stock_quantity": 150,
+            "minimum_order": 1,
+        },
+        {
+            "name": "Engrais organique compost (25kg)",
+            "description": "Compost organique enrichi pour améliorer la fertilité du sol. Produit localement, adapté aux sols tropicaux. Sac de 25kg.",
+            "category": "engrais",
+            "price": 8000,
+            "unit": "sac",
+            "stock_quantity": 1000,
+            "minimum_order": 10,
+        },
+        {
+            "name": "Insecticide Karate Zeon 5 CS",
+            "description": "Insecticide de contact pour la lutte contre les mirides et autres ravageurs du cacao. Formulation micro-encapsulée longue durée.",
+            "category": "pesticides",
+            "price": 9800,
+            "unit": "flacon 250ml",
+            "stock_quantity": 600,
+            "minimum_order": 5,
+        },
+        {
+            "name": "Kit de greffage professionnel",
+            "description": "Kit complet pour le greffage du cacao : couteau de greffage, ruban parafilm, sécateur. Matériel professionnel durable.",
+            "category": "outils",
+            "price": 18000,
+            "unit": "kit",
+            "stock_quantity": 100,
+            "minimum_order": 1,
+        },
+        {
+            "name": "Bâche de séchage cacao (4x6m)",
+            "description": "Bâche en polypropylène tissé pour le séchage du cacao après fermentation. Résistante aux UV, dimensions 4x6 mètres.",
+            "category": "equipements",
+            "price": 12000,
+            "unit": "pièce",
+            "stock_quantity": 250,
+            "minimum_order": 2,
+        },
+        {
+            "name": "Engrais foliaire Callivoire (1L)",
+            "description": "Engrais foliaire liquide riche en oligo-éléments. Stimule la floraison et la fructification du cacaoyer. Bidon de 1 litre.",
+            "category": "engrais",
+            "price": 6500,
+            "unit": "bidon 1L",
+            "stock_quantity": 400,
+            "minimum_order": 3,
+        },
+        {
+            "name": "Sacs de jute pour cacao (100 pcs)",
+            "description": "Sacs en jute naturel pour le conditionnement et le transport du cacao sec. Lot de 100 sacs, capacité 65kg chacun.",
+            "category": "equipements",
+            "price": 75000,
+            "unit": "lot 100",
+            "stock_quantity": 50,
+            "minimum_order": 1,
+        },
+    ]
+    
+    now = datetime.utcnow()
+    suppliers = [
+        "Agro-Intrants CI", "SOGB Distribution", "CemOI Fournitures",
+        "Ivoire Agri-Services", "SIFCA Intrants", "ProCacao CI"
+    ]
+    
+    for i, product in enumerate(demo_products):
+        product["supplier_id"] = "demo_supplier"
+        product["supplier_name"] = suppliers[i % len(suppliers)]
+        product["created_at"] = now
+        product["updated_at"] = now
+        product["is_active"] = True
+        product["is_demo"] = True
+        product["total_sales"] = 0
+        product["rating"] = round(3.5 + (i % 5) * 0.3, 1)
+        product["reviews_count"] = i * 3
+        if "image_url" not in product:
+            product["image_url"] = None
+    
+    result = await db.products.insert_many(demo_products)
+    return {"message": f"{len(result.inserted_ids)} produits démo ajoutés", "count": len(result.inserted_ids)}

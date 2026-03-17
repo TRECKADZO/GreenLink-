@@ -3,9 +3,9 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Alert, AppState, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Alert, AppState, View, Text, TouchableOpacity } from 'react-native';
 
-// Error Boundary pour éviter les pages blanches
+// Error Boundary pour capturer les erreurs de rendu
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) {
@@ -42,9 +42,19 @@ class ErrorBoundary extends React.Component {
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { OfflineProvider } from './src/context/OfflineContext';
 
-// Services
-import { notificationService } from './src/services/notifications';
-import { syncService } from './src/services/sync';
+// Services - import safely
+let notificationService = null;
+let syncService = null;
+try {
+  notificationService = require('./src/services/notifications').notificationService;
+} catch (e) {
+  console.error('[App] Failed to import notifications:', e.message);
+}
+try {
+  syncService = require('./src/services/sync').syncService;
+} catch (e) {
+  console.error('[App] Failed to import sync:', e.message);
+}
 
 // Screens - Auth
 import LoginScreen from './src/screens/auth/LoginScreen';
@@ -117,19 +127,9 @@ import { MessagingScreen, ChatScreen } from './src/screens/messaging';
 import { NotificationPreferencesScreen } from './src/screens/settings';
 
 import { Loader } from './src/components/UI';
-import BottomTabBar from './src/components/navigation/BottomTabBar';
 import { COLORS } from './src/config';
 
 const Stack = createNativeStackNavigator();
-
-// Screens that should show the bottom tab bar
-const SCREENS_WITH_TAB_BAR = [
-  'Home', 'MyParcels', 'DeclareHarvest', 'Payments', 'Profile',
-  'CoopDashboard', 'CoopMembers', 'CoopReports', 'FieldAgentDashboard',
-  'Parcels', 'Harvest', 'Marketplace', 'Notifications', 'Messaging',
-  'CarbonMarketplace', 'MyCarbonScore', 'MyCarbonPurchases',
-  'AuditorDashboard', 'FarmerSearch',
-];
 
 // Auth Navigator (Welcome/Login/Register)
 function AuthNavigator() {
@@ -142,18 +142,6 @@ function AuthNavigator() {
       <Stack.Screen name="MemberActivation" component={MemberActivationScreen} />
       <Stack.Screen name="AgentActivation" component={AgentActivationScreen} />
     </Stack.Navigator>
-  );
-}
-
-// Screen wrapper with bottom tab bar
-function ScreenWithTabBar({ children, route, userType }) {
-  const showTabBar = SCREENS_WITH_TAB_BAR.includes(route?.name);
-  
-  return (
-    <View style={{ flex: 1 }}>
-      {children}
-      {showTabBar && <BottomTabBar userType={userType} />}
-    </View>
   );
 }
 
@@ -236,7 +224,7 @@ function RootNavigator() {
 
   // Setup push notifications when user is authenticated
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user || !notificationService) return;
 
     let isMounted = true;
 
@@ -278,7 +266,7 @@ function RootNavigator() {
 
   // Setup background sync
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !syncService) return;
 
     syncService.registerBackgroundSync().catch((error) => {
       console.error('[App] Error registering background sync:', error.message);
@@ -290,7 +278,8 @@ function RootNavigator() {
     if (
       appState.current.match(/inactive|background/) &&
       nextAppState === 'active' &&
-      isAuthenticated
+      isAuthenticated &&
+      syncService
     ) {
       console.log('[App] App came to foreground, syncing...');
       try {

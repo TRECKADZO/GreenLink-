@@ -2,8 +2,10 @@
 // Optimisée pour faible connectivité en Côte d'Ivoire
 
 export const CONFIG = {
-  // API Backend - Utilise la même API que le web
-  API_URL: 'https://secure-phone-lookup-1.preview.emergentagent.com/api',
+  // API Backend - Uses EXPO_PUBLIC_API_URL from EAS build or falls back to hardcoded URL
+  API_URL: process.env.EXPO_PUBLIC_API_URL 
+    ? `${process.env.EXPO_PUBLIC_API_URL}/api` 
+    : 'https://harvest-carbon-fix.preview.emergentagent.com/api',
   
   // Timeouts adaptés à la faible connectivité
   REQUEST_TIMEOUT: 30000, // 30 secondes
@@ -48,6 +50,7 @@ export const COLORS = {
     900: '#111827',
   },
   orange: '#f97316', // Orange Money
+  accent: '#d4a574', // Accent color (same as secondary)
 };
 
 export const FONTS = {

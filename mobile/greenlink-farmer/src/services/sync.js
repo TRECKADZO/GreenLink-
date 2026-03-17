@@ -6,7 +6,8 @@ import { api } from './api';
 
 const BACKGROUND_SYNC_TASK = 'greenlink-background-sync';
 
-// Définir la tâche de synchronisation
+// Définir la tâche de synchronisation (protégé contre les erreurs d'initialisation)
+try {
 TaskManager.defineTask(BACKGROUND_SYNC_TASK, async () => {
   try {
     console.log('[BackgroundSync] Task started');
@@ -67,6 +68,9 @@ TaskManager.defineTask(BACKGROUND_SYNC_TASK, async () => {
     return BackgroundFetch.BackgroundFetchResult.Failed;
   }
 });
+} catch (e) {
+  console.error('[BackgroundSync] Failed to define task:', e.message);
+}
 
 // Traiter une action en attente
 async function processAction(action) {

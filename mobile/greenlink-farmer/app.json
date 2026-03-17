@@ -72,9 +72,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": false,
-          "cameraPermission": "GreenLink a besoin de la caméra pour prendre des photos de vos parcelles.",
-          "allowMediaLibraryAccess": false
+          "cameraPermission": "GreenLink a besoin de la caméra pour prendre des photos de vos parcelles."
         }
       ],
       "./plugins/removeMediaPermissions"

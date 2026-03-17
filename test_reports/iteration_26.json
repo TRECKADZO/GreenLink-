@@ -1,0 +1,88 @@
+{
+  "summary": "Iteration 26 - GreenLink Backend & Frontend Testing. ALL 19 BACKEND TESTS PASSED. Frontend verified: Home page loads, Marketplace Intrants shows 12 demo products with filtering, Admin login successful, Profile page works.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Marketplace select dropdown",
+        "issues": ["Console warning: In HTML, span cannot be a child of option/select - hydration warning (non-breaking)"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration26_greenlink.py",
+    "/app/test_reports/pytest/pytest_iteration26.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "marketplace.py: GET /api/marketplace/products returns correct product structure (name, price, category, supplier_name, stock_quantity)",
+    "marketplace.py: POST /api/marketplace/seed-demo-products correctly seeds 12 demo agricultural products with is_demo=true flag",
+    "auth.py: POST /api/auth/register validates phone format correctly (+225XXXXXXXXXX)",
+    "auth.py: POST /api/auth/login accepts identifier (email or phone) and password",
+    "auth.py: Admin self-healing password feature works correctly for known admin accounts",
+    "carbon_payments_dashboard.py: POST /api/carbon-payments/ma-prime returns farmer-facing fields only (no distribution breakdown)",
+    "carbon_listings.py: POST /api/carbon-listings/submit works for cooperatives, returns listing_id and status=pending_approval",
+    "carbon_listings.py: GET /api/carbon-listings/pending requires admin auth, returns 403 for non-admin"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration26_greenlink.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "100% (Home, Marketplace, Login, Profile all verified)"
+  },
+  "test_credentials": {
+    "admin": {
+      "identifier": "klenakan.eric@gmail.com",
+      "password": "474Treckadzo"
+    },
+    "cooperative": {
+      "identifier": "coop-gagnoa@greenlink.ci",
+      "password": "password"
+    }
+  },
+  "seed_data_creation": "POST /api/marketplace/seed-demo-products seeds 12 demo agricultural products (engrais, pesticides, semences, outils, equipements)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 26 verified: Marketplace Intrants shows 12 products, Auth (register/login) works with valid Ivory Coast phone format (+225XXXXXXXXXX), Carbon Premium Calculator (/api/carbon-payments/ma-prime) returns farmer-facing data only, Carbon Credits submission/pending workflow verified. Admin dashboard shows 47 users, 12 products, 9 cooperatives.",
+  "features_verified": {
+    "GET /api/marketplace/products": "PASS - Returns 12 products with name, price, category, supplier_name, stock_quantity",
+    "POST /api/marketplace/seed-demo-products": "PASS - Seeds demo products if not present",
+    "Marketplace category filter": "PASS - Filter by 'engrais' works correctly",
+    "POST /api/auth/register (producteur)": "PASS - Returns access_token and user with user_type=producteur",
+    "POST /api/auth/login (admin)": "PASS - Admin login with klenakan.eric@gmail.com works",
+    "POST /api/auth/login (phone)": "PASS - Login with phone number as identifier works",
+    "POST /api/auth/login (email)": "PASS - Login with email as identifier works",
+    "Duplicate phone registration": "PASS - Returns 400 as expected",
+    "POST /api/carbon-payments/ma-prime": "PASS - Returns prime_par_kg_fcfa, prime_annuelle_fcfa, tonnes_co2_an, conseil",
+    "Ma Prime distribution hidden": "PASS - Response does NOT include distribution_model, fees, greenlink_share",
+    "POST /api/carbon-listings/submit": "PASS - Cooperative can submit, returns listing_id with status=pending_approval",
+    "GET /api/carbon-listings/pending (admin)": "PASS - Admin can view pending listings",
+    "GET /api/carbon-listings/pending (non-admin)": "PASS - Returns 403 for cooperative user",
+    "Frontend: Home page": "PASS - GreenLink branding, Primes Carbone, Calculer ma prime button visible",
+    "Frontend: Marketplace page": "PASS - 12 produits disponibles, search, category filter, product cards with XOF prices",
+    "Frontend: Login page": "PASS - Email/phone input, password field, Se connecter button",
+    "Frontend: Profile page": "PASS - Shows user profile with name, role, email, phone, account status"
+  },
+  "api_response_examples": {
+    "marketplace_product_structure": {
+      "name": "Engrais NPK 15-15-15 (50kg)",
+      "price": 25000,
+      "category": "engrais",
+      "supplier_name": "Agro-Intrants CI",
+      "stock_quantity": 500
+    },
+    "ma_prime_response": {
+      "prime_par_kg_fcfa": 106,
+      "prime_annuelle_fcfa": 191100,
+      "tonnes_co2_an": 19.5,
+      "conseil": "Excellent ! Vos pratiques sont déjà très bonnes..."
+    }
+  },
+  "mocked_api_note": "Orange Money payment and USSD integration remain MOCKED as per original design"
+}
