@@ -39,45 +39,28 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Objectifs mensuels, stats supplementaires, distribution risques
 - Actions rapides, recherche planteur, badges
 
-### Attribution Fermier-Agent Terrain - NOUVEAU (17 Mars 2026)
-- **Backend** - 5 endpoints:
-  - GET /api/cooperative/agents (enrichi: assigned_farmers_count, assigned_farmers)
-  - POST /api/cooperative/agents/{id}/assign-farmers
-  - POST /api/cooperative/agents/{id}/unassign-farmers
-  - GET /api/cooperative/agents/{id}/assigned-farmers
-  - GET /api/field-agent/my-farmers (donnees enrichies pour offline mobile)
-- **Frontend** - Page /cooperative/agents:
-  - Bouton "Attribuer" sur chaque carte agent
-  - Modale d'attribution avec liste membres, recherche, checkboxes
-  - Section "Fermiers assignes" avec bouton Retirer
-  - Badge "Deja assigne" pour fermiers deja attribues
-  - Indicateur "Chez [autre agent]" pour reassignation
-- **Mobile** - sync.js:
-  - Pre-chargement automatique des fermiers assignes (AsyncStorage)
-  - Methode getOfflineFarmers() pour acces hors-ligne
-- **Regle metier**: Un fermier ne peut etre assigne qu'a un seul agent (reassignation automatique)
-- **Tests**: 13/13 backend, 100% frontend (iteration 32)
+### Attribution Fermier-Agent Terrain (17 Mars 2026)
+- Backend: 5 endpoints (assign, unassign, list assigned, agents enrichis, my-farmers offline)
+- Frontend: Modale d'attribution dans /cooperative/agents
+- Mobile: Pre-chargement offline dans sync.js + getOfflineFarmers()
+- Regle metier: un fermier = un seul agent
+- Tests: 13/13 backend, 100% frontend (iteration 32)
 
-### Comptes crees
-- Cooperative Bielaghana: bielaghana@gmail.com / greenlink2024
-- Cooperative Cacao: coopcacao@greenlink.ci / greenlink2024
-- Agent Kone Alphone: +2250709005301 / greenlink2024
-- Agent Coop Cacao: +2250709005310 / greenlink2024
-
-### Builds Mobile
-- APK/AAB v1.26.0 disponibles
+### Builds Mobile v1.27.0 (17 Mars 2026)
+- APK: https://expo.dev/artifacts/eas/fViHgUZYjEMmyLkBFF7oB3.apk
+- AAB: https://expo.dev/artifacts/eas/tJdqAxSgdRRbmtG4exKMwj.aab
+- Build APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/78d146b6-df33-4001-8469-c13bd63c5508
+- Build AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/e08ba385-d49f-4f86-b8bf-f78f151902ba
 
 ## Etat Actuel
 - Web: FONCTIONNEL
-- Mobile: APK/AAB v1.26.0
+- Mobile: APK/AAB v1.27.0 prets
 - Integrations Orange: PRET (mode MOCK)
 - Attribution fermier-agent: FONCTIONNEL
 
 ## Backlog
-### P0
-- [ ] Soumission AAB v1.26.0 Google Play
 ### P1
-- [ ] Guide soumission Google Play Store
+- [ ] Soumission AAB v1.27.0 Google Play
 - [ ] Bug pages blanches mobile (Nouvelle Parcelle, inscription)
 ### P2
 - [ ] Langues Baoule/Dioula
