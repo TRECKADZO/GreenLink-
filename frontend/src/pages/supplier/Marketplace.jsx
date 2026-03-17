@@ -54,20 +54,20 @@ const Marketplace = () => {
       <Navbar />
       {isFournisseur && <SupplierSidebar />}
       
-      <div className={`${isFournisseur ? 'ml-64' : ''} pt-20 p-8`}>
+      <div className={`${isFournisseur ? 'md:ml-64' : ''} pt-20 p-4 sm:p-6 lg:p-8`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Store className="w-10 h-10 text-[#2d5a4d]" />
-              <h1 className="text-4xl font-bold text-gray-900">Marketplace</h1>
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <Store className="w-7 h-7 sm:w-10 sm:h-10 text-[#2d5a4d]" />
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">Marketplace</h1>
             </div>
-            <p className="text-gray-600">Découvrez tous les intrants agricoles disponibles en Côte d'Ivoire</p>
+            <p className="text-sm sm:text-base text-gray-600">Découvrez tous les intrants agricoles disponibles en Côte d'Ivoire</p>
           </div>
 
           {/* Filters */}
-          <Card className="p-6 mb-6">
-            <div className="grid md:grid-cols-2 gap-4">
+          <Card className="p-4 sm:p-6 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                 <Input
@@ -77,11 +77,10 @@ const Marketplace = () => {
                   className="pl-10"
                 />
               </div>
-              
               <div className="flex items-center gap-2">
-                <Filter className="w-5 h-5 text-gray-400" />
+                <Filter className="w-5 h-5 text-gray-400 shrink-0" />
                 <select
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                 >
@@ -110,7 +109,7 @@ const Marketplace = () => {
               <div className="mb-4 text-gray-600">
                 <strong>{filteredProducts.length}</strong> produit(s) disponible(s)
               </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filteredProducts.map((product) => (
                   <Card key={product._id} className="overflow-hidden hover:shadow-xl transition-all duration-200 hover:-translate-y-1">
                     <div className="h-48 bg-gradient-to-br from-[#f8f6f3] to-[#eee] flex items-center justify-center overflow-hidden">

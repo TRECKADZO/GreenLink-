@@ -7,55 +7,55 @@ const CTASection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-24 bg-gradient-to-br from-[#2d5a4d] via-[#235043] to-[#1a4038] relative overflow-hidden">
-      <div className="absolute top-20 right-20 w-72 h-72 bg-[#d4a574]/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-20 left-20 w-96 h-96 bg-[#d4a574]/5 rounded-full blur-3xl"></div>
+    <section className="py-16 sm:py-24 bg-gradient-to-br from-[#2d5a4d] via-[#235043] to-[#1a4038] relative overflow-hidden">
+      <div className="absolute top-20 right-10 sm:right-20 w-48 sm:w-72 h-48 sm:h-72 bg-[#d4a574]/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-20 left-10 sm:left-20 w-64 sm:w-96 h-64 sm:h-96 bg-[#d4a574]/5 rounded-full blur-3xl"></div>
       
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
             Rejoignez la révolution agricole
           </h2>
-          <p className="text-xl text-white/90 max-w-3xl mx-auto">
+          <p className="text-sm sm:text-lg lg:text-xl text-white/90 max-w-3xl mx-auto px-2">
             Producteurs, coopératives ou entreprises RSE, créez votre compte gratuit et commencez à transformer votre activité.
           </p>
         </div>
         
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-3 sm:gap-4">
           <Button 
             size="lg" 
-            className="bg-[#d4a574] hover:bg-[#c49564] text-[#2d5a4d] font-semibold px-6 py-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            className="bg-[#d4a574] hover:bg-[#c49564] text-[#2d5a4d] font-semibold px-4 sm:px-6 py-4 sm:py-6 text-sm sm:text-base shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
             onClick={() => navigate('/register')}
           >
-            <Users className="w-5 h-5 mr-2" />
-            Je suis producteur
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
+            <span>Producteur</span>
           </Button>
           <Button 
             size="lg" 
             variant="outline"
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold px-6 py-6 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+            className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold px-4 sm:px-6 py-4 sm:py-6 text-sm sm:text-base backdrop-blur-sm transition-all duration-300 hover:scale-105"
             onClick={() => navigate('/register')}
           >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            Je suis acheteur
+            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
+            <span>Acheteur</span>
           </Button>
           <Button 
             size="lg" 
             variant="outline"
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold px-6 py-6 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+            className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold px-4 sm:px-6 py-4 sm:py-6 text-sm sm:text-base backdrop-blur-sm transition-all duration-300 hover:scale-105"
             onClick={() => navigate('/register')}
           >
-            <Building2 className="w-5 h-5 mr-2" />
-            Entreprise RSE
+            <Building2 className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
+            <span>RSE</span>
           </Button>
           <Button 
             size="lg" 
             variant="outline"
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold px-6 py-6 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+            className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold px-4 sm:px-6 py-4 sm:py-6 text-sm sm:text-base backdrop-blur-sm transition-all duration-300 hover:scale-105"
             onClick={() => navigate('/register')}
           >
-            <Package className="w-5 h-5 mr-2" />
-            Fournisseur intrants
+            <Package className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
+            <span>Fournisseur</span>
           </Button>
         </div>
       </div>

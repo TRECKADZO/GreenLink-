@@ -79,8 +79,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2d5a4d] via-[#235043] to-[#1a4038] flex items-center justify-center p-6">
-      <Card className="w-full max-w-md p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#2d5a4d] via-[#235043] to-[#1a4038] flex items-center justify-center p-4 sm:p-6">
+      <Card className="w-full max-w-md p-6 sm:p-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 bg-[#d4a574] rounded-lg flex items-center justify-center">
             <Sprout className="w-7 h-7 text-[#2d5a4d]" />

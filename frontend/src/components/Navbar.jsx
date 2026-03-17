@@ -1,22 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Sprout, 
-  LogOut, 
-  User, 
-  ChevronDown,
-  LayoutDashboard,
-  Settings,
-  Bell,
-  Package,
-  ShoppingCart,
-  Leaf,
-  Building2,
-  Smartphone,
-  Recycle,
-  Store,
-  ArrowRight,
-  MessageSquare
+  Sprout, LogOut, User, ChevronDown, LayoutDashboard,
+  Bell, Package, ShoppingCart, Leaf, Building2, Smartphone,
+  Recycle, Store, ArrowRight, MessageSquare, Menu, X
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -30,31 +17,39 @@ const Navbar = () => {
   const { cart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [marketplaceMenuOpen, setMarketplaceMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const marketplaceRef = useRef(null);
 
-  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
-      }
-      if (marketplaceRef.current && !marketplaceRef.current.contains(event.target)) {
-        setMarketplaceMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(event.target)) setMenuOpen(false);
+      if (marketplaceRef.current && !marketplaceRef.current.contains(event.target)) setMarketplaceMenuOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileMenuOpen]);
+
   const handleLogout = () => {
     logout();
     setMenuOpen(false);
+    setMobileMenuOpen(false);
     navigate('/');
   };
 
-  // Get dashboard route based on user type
+  const navTo = (route) => {
+    navigate(route);
+    setMobileMenuOpen(false);
+    setMarketplaceMenuOpen(false);
+  };
+
   const getDashboardRoute = () => {
     if (!user) return '/';
     switch (user.user_type) {
@@ -68,328 +63,287 @@ const Navbar = () => {
     }
   };
 
-  // Get user type label in French
   const getUserTypeLabel = () => {
     if (!user) return '';
-    switch (user.user_type) {
-      case 'producteur': return 'Producteur';
-      case 'acheteur': return 'Acheteur';
-      case 'entreprise_rse': return 'Entreprise RSE';
-      case 'fournisseur': return 'Fournisseur';
-      case 'cooperative': return 'Coopérative';
-      case 'admin': return 'Administrateur';
-      default: return 'Utilisateur';
-    }
+    const labels = {
+      producteur: 'Producteur', acheteur: 'Acheteur', entreprise_rse: 'Entreprise RSE',
+      fournisseur: 'Fournisseur', cooperative: 'Coopérative', admin: 'Administrateur'
+    };
+    return labels[user.user_type] || 'Utilisateur';
   };
 
-  // Get user type icon
   const getUserTypeIcon = () => {
     if (!user) return User;
-    switch (user.user_type) {
-      case 'producteur': return Leaf;
-      case 'acheteur': return ShoppingCart;
-      case 'entreprise_rse': return Building2;
-      case 'fournisseur': return Package;
-      case 'cooperative': return Building2;
-      default: return User;
-    }
+    const icons = {
+      producteur: Leaf, acheteur: ShoppingCart, entreprise_rse: Building2,
+      fournisseur: Package, cooperative: Building2
+    };
+    return icons[user.user_type] || User;
   };
 
-  // Get menu items based on user type
   const getMenuItems = () => {
     if (!user) return [];
-    
-    const commonItems = [
+    const common = [
       { icon: LayoutDashboard, label: 'Tableau de bord', route: getDashboardRoute() },
       { icon: User, label: 'Mon profil', route: '/profile' },
     ];
-
-    switch (user.user_type) {
-      case 'producteur':
-        return [
-          ...commonItems,
-          { icon: Smartphone, label: 'Simulateur USSD', route: '/farmer/ussd' },
-          { icon: Bell, label: 'Notifications SMS', route: '/farmer/dashboard#sms' },
-        ];
-      case 'acheteur':
-        return [
-          ...commonItems,
-          { icon: ShoppingCart, label: 'Mes commandes', route: '/buyer/dashboard' },
-        ];
-      case 'entreprise_rse':
-        return [
-          ...commonItems,
-          { icon: Leaf, label: 'Crédits carbone', route: '/rse/dashboard' },
-        ];
-      case 'fournisseur':
-        return [
-          ...commonItems,
-          { icon: Package, label: 'Mes produits', route: '/supplier/products' },
-          { icon: ShoppingCart, label: 'Commandes', route: '/supplier/orders' },
-          { icon: Bell, label: 'Notifications', route: '/supplier/notifications' },
-        ];
-      case 'cooperative':
-        return [
-          ...commonItems,
-          { icon: User, label: 'Membres', route: '/cooperative/members' },
-          { icon: Package, label: 'Ventes Groupées', route: '/cooperative/lots' },
-          { icon: Bell, label: 'Rapports EUDR', route: '/cooperative/reports' },
-        ];
-      default:
-        return commonItems;
-    }
+    const extras = {
+      producteur: [{ icon: Smartphone, label: 'Simulateur USSD', route: '/farmer/ussd' }],
+      acheteur: [{ icon: ShoppingCart, label: 'Mes commandes', route: '/buyer/dashboard' }],
+      entreprise_rse: [{ icon: Leaf, label: 'Crédits carbone', route: '/rse/dashboard' }],
+      fournisseur: [
+        { icon: Package, label: 'Mes produits', route: '/supplier/products' },
+        { icon: ShoppingCart, label: 'Commandes', route: '/supplier/orders' },
+      ],
+      cooperative: [
+        { icon: User, label: 'Membres', route: '/cooperative/members' },
+        { icon: Package, label: 'Ventes Groupées', route: '/cooperative/lots' },
+      ],
+    };
+    return [...common, ...(extras[user.user_type] || [])];
   };
 
   const UserIcon = getUserTypeIcon();
 
-  const scrollToMarketplace = () => {
-    const element = document.getElementById('marketplace');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      navigate('/#marketplace');
-    }
-  };
+  const marketplaceItems = [
+    { icon: Leaf, label: 'Bourse des Récoltes', desc: 'Cacao, Café, Anacarde', route: '/marketplace/harvest', color: 'from-amber-500 to-orange-600', badge: 'NOUVEAU' },
+    { icon: Package, label: 'Marketplace Intrants', desc: 'Engrais, Semences, Équipements', route: '/supplier/marketplace', color: 'from-emerald-500 to-teal-600' },
+    { icon: Recycle, label: 'Marché Carbone', desc: 'Crédits carbone certifiés', route: '/carbon-marketplace', color: 'from-blue-500 to-indigo-600', badge: 'RSE' },
+  ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 bg-[#2d5a4d]/95 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div 
-          className="flex items-center gap-3 cursor-pointer" 
-          onClick={() => navigate('/')}
-        >
-          <div className="w-10 h-10 bg-[#d4a574] rounded-lg flex items-center justify-center">
-            <Sprout className="w-6 h-6 text-[#2d5a4d]" />
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 px-4 md:px-6 py-3 md:py-4 bg-[#2d5a4d]/95 backdrop-blur-sm" data-testid="navbar">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navTo('/')}>
+            <div className="w-9 h-9 md:w-10 md:h-10 bg-[#d4a574] rounded-lg flex items-center justify-center shrink-0">
+              <Sprout className="w-5 h-5 md:w-6 md:h-6 text-[#2d5a4d]" />
+            </div>
+            <div>
+              <h1 className="text-white text-base md:text-lg font-bold leading-tight">GreenLink</h1>
+              <p className="text-white/70 text-[10px] md:text-xs leading-tight">Agriculture durable</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-white text-lg font-bold">GreenLink</h1>
-            <p className="text-white/70 text-xs">Agriculture durable</p>
-          </div>
-        </div>
 
-        {/* Navigation Links */}
-        <div className="hidden md:flex items-center gap-6">
-          {/* Marketplace Dropdown */}
-          <div className="relative" ref={marketplaceRef}>
-            <button 
-              onClick={() => setMarketplaceMenuOpen(!marketplaceMenuOpen)}
-              className="flex items-center gap-1 text-white/80 hover:text-white transition-colors font-medium"
-            >
-              <Store className="h-4 w-4" />
-              Marketplaces
-              <ChevronDown className={`h-4 w-4 transition-transform ${marketplaceMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {marketplaceMenuOpen && (
-              <div className="absolute top-full left-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
-                {/* Bourse des Récoltes */}
-                <button
-                  onClick={() => {
-                    navigate('/marketplace/harvest');
-                    setMarketplaceMenuOpen(false);
-                  }}
-                  className="w-full p-4 hover:bg-amber-600/20 transition-colors text-left group border-b border-slate-700"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
-                      <Leaf className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-white font-semibold">Bourse des Récoltes</span>
-                        <Badge className="bg-amber-500 text-white text-xs">NOUVEAU</Badge>
-                      </div>
-                      <p className="text-slate-400 text-sm mt-1">Cacao, Café, Anacarde - Normes internationales</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-amber-400 transition-colors" />
-                  </div>
-                </button>
-
-                {/* Marketplace Intrants */}
-                <button
-                  onClick={() => {
-                    navigate('/marketplace');
-                    setMarketplaceMenuOpen(false);
-                  }}
-                  className="w-full p-4 hover:bg-emerald-600/20 transition-colors text-left group border-b border-slate-700"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg">
-                      <Package className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-white font-semibold">Marketplace Intrants</span>
-                      <p className="text-slate-400 text-sm mt-1">Engrais, Semences, Équipements agricoles</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
-                  </div>
-                </button>
-
-                {/* Marché Carbone */}
-                <button
-                  onClick={() => {
-                    navigate('/carbon-marketplace');
-                    setMarketplaceMenuOpen(false);
-                  }}
-                  className="w-full p-4 hover:bg-blue-600/20 transition-colors text-left group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
-                      <Recycle className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-white font-semibold">Marché Carbone</span>
-                        <Badge className="bg-blue-500 text-white text-xs">RSE</Badge>
-                      </div>
-                      <p className="text-slate-400 text-sm mt-1">Crédits carbone certifiés VCS, Gold Standard</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                  </div>
-                </button>
-
-                {/* View All Link */}
-                <div className="p-3 bg-slate-900/50 border-t border-slate-700">
-                  <button
-                    onClick={() => {
-                      navigate('/marketplaces');
-                      setMarketplaceMenuOpen(false);
-                    }}
-                    className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors"
-                  >
-                    Voir tous les marketplaces →
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <button 
-            onClick={() => navigate('/#features')}
-            className="text-white/80 hover:text-white transition-colors font-medium"
-          >
-            Services
-          </button>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {/* Messaging Button - Only for logged in users */}
-          {user && (
-            <button
-              onClick={() => navigate('/messages')}
-              className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
-              data-testid="messages-button"
-              title="Messagerie"
-            >
-              <MessageSquare className="w-6 h-6 text-white" />
-            </button>
-          )}
-
-          {/* Shopping Cart Button */}
-          <button
-            onClick={() => setCartOpen(true)}
-            className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
-            data-testid="cart-button"
-          >
-            <ShoppingCart className="w-6 h-6 text-white" />
-            {cart.items_count > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#d4a574] text-[#2d5a4d] text-xs font-bold rounded-full flex items-center justify-center">
-                {cart.items_count}
-              </span>
-            )}
-          </button>
-
-          {user ? (
-            <div className="relative" ref={menuRef}>
-              {/* User Button */}
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-300"
-                data-testid="user-menu-button"
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex items-center gap-6">
+            <div className="relative" ref={marketplaceRef}>
+              <button 
+                onClick={() => setMarketplaceMenuOpen(!marketplaceMenuOpen)}
+                className="flex items-center gap-1 text-white/80 hover:text-white transition-colors font-medium"
               >
-                <div className="w-8 h-8 rounded-full bg-[#d4a574] flex items-center justify-center">
-                  <UserIcon className="w-4 h-4 text-[#2d5a4d]" />
-                </div>
-                <div className="text-left hidden sm:block">
-                  <p className="text-white font-medium text-sm">{user.full_name}</p>
-                  <p className="text-white/60 text-xs">{getUserTypeLabel()}</p>
-                </div>
-                <ChevronDown className={`w-4 h-4 text-white/70 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`} />
+                <Store className="h-4 w-4" />
+                Marketplaces
+                <ChevronDown className={`h-4 w-4 transition-transform ${marketplaceMenuOpen ? 'rotate-180' : ''}`} />
               </button>
-
-              {/* Dropdown Menu */}
-              {menuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                  {/* User Info Header */}
-                  <div className="p-4 bg-gradient-to-r from-[#2d5a4d] to-[#1a4038]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-[#d4a574] flex items-center justify-center">
-                        <UserIcon className="w-6 h-6 text-[#2d5a4d]" />
+              
+              {marketplaceMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                  {marketplaceItems.map((item, i) => (
+                    <button key={i} onClick={() => navTo(item.route)}
+                      className="w-full p-4 hover:bg-white/5 transition-colors text-left group border-b border-slate-700 last:border-b-0">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 bg-gradient-to-br ${item.color} rounded-lg`}>
+                          <item.icon className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-semibold">{item.label}</span>
+                            {item.badge && <Badge className="bg-white/20 text-white text-xs">{item.badge}</Badge>}
+                          </div>
+                          <p className="text-slate-400 text-sm mt-1">{item.desc}</p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-white transition-colors" />
                       </div>
-                      <div>
-                        <p className="text-white font-semibold">{user.full_name}</p>
-                        <Badge className="bg-white/20 text-white text-xs mt-1">
-                          {getUserTypeLabel()}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Menu Items */}
-                  <div className="py-2">
-                    {getMenuItems().map((item, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          navigate(item.route);
-                          setMenuOpen(false);
-                        }}
-                        className="w-full px-4 py-3 flex items-center gap-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        data-testid={`menu-item-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
-                      >
-                        <item.icon className="w-5 h-5 text-gray-400" />
-                        <span className="font-medium">{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Logout */}
-                  <div className="border-t border-gray-100 py-2">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-3 flex items-center gap-3 text-red-600 hover:bg-red-50 transition-colors"
-                      data-testid="logout-button"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="font-medium">Déconnexion</span>
                     </button>
-                  </div>
+                  ))}
                 </div>
               )}
             </div>
-          ) : (
-            <>
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-white hover:bg-white/10 transition-all duration-300"
-                onClick={() => navigate('/login')}
-              >
-                Se connecter
-              </Button>
-              <Button 
-                className="bg-[#d4a574] hover:bg-[#c49564] text-[#2d5a4d] font-semibold transition-all duration-300"
-                onClick={() => navigate('/register')}
-              >
-                S'inscrire
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+            <button onClick={() => navTo('/#features')} className="text-white/80 hover:text-white transition-colors font-medium">
+              Services
+            </button>
+          </div>
+          
+          {/* Right actions */}
+          <div className="flex items-center gap-1 md:gap-3">
+            {user && (
+              <button onClick={() => navTo('/messages')} className="p-2 rounded-lg hover:bg-white/10 transition-colors" data-testid="messages-button">
+                <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </button>
+            )}
 
-      {/* Cart Drawer */}
+            <button onClick={() => setCartOpen(true)} className="relative p-2 rounded-lg hover:bg-white/10 transition-colors" data-testid="cart-button">
+              <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              {cart.items_count > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-[#d4a574] text-[#2d5a4d] text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
+                  {cart.items_count}
+                </span>
+              )}
+            </button>
+
+            {/* Desktop: user menu or auth buttons */}
+            {user ? (
+              <div className="relative hidden md:block" ref={menuRef}>
+                <button onClick={() => setMenuOpen(!menuOpen)}
+                  className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all" data-testid="user-menu-button">
+                  <div className="w-8 h-8 rounded-full bg-[#d4a574] flex items-center justify-center">
+                    <UserIcon className="w-4 h-4 text-[#2d5a4d]" />
+                  </div>
+                  <div className="text-left hidden sm:block">
+                    <p className="text-white font-medium text-sm">{user.full_name}</p>
+                    <p className="text-white/60 text-xs">{getUserTypeLabel()}</p>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-white/70 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
+                    <div className="p-4 bg-gradient-to-r from-[#2d5a4d] to-[#1a4038]">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-[#d4a574] flex items-center justify-center">
+                          <UserIcon className="w-6 h-6 text-[#2d5a4d]" />
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold">{user.full_name}</p>
+                          <Badge className="bg-white/20 text-white text-xs mt-1">{getUserTypeLabel()}</Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="py-2">
+                      {getMenuItems().map((item, i) => (
+                        <button key={i} onClick={() => { navigate(item.route); setMenuOpen(false); }}
+                          className="w-full px-4 py-3 flex items-center gap-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                          data-testid={`menu-item-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <item.icon className="w-5 h-5 text-gray-400" />
+                          <span className="font-medium">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="border-t border-gray-100 py-2">
+                      <button onClick={handleLogout} className="w-full px-4 py-3 flex items-center gap-3 text-red-600 hover:bg-red-50 transition-colors" data-testid="logout-button">
+                        <LogOut className="w-5 h-5" /><span className="font-medium">Déconnexion</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10" onClick={() => navigate('/login')}>Se connecter</Button>
+                <Button className="bg-[#d4a574] hover:bg-[#c49564] text-[#2d5a4d] font-semibold" onClick={() => navigate('/register')}>S'inscrire</Button>
+              </div>
+            )}
+
+            {/* Mobile: hamburger */}
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors" data-testid="mobile-menu-toggle">
+              {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[60] md:hidden" data-testid="mobile-menu">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute top-0 right-0 w-[85%] max-w-sm h-full bg-[#1a3a30] overflow-y-auto animate-in slide-in-from-right duration-300">
+            {/* Mobile menu header */}
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-[#d4a574] rounded-lg flex items-center justify-center">
+                  <Sprout className="w-4 h-4 text-[#2d5a4d]" />
+                </div>
+                <span className="text-white font-bold">GreenLink</span>
+              </div>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-lg hover:bg-white/10">
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            {/* User info (if logged in) */}
+            {user && (
+              <div className="p-4 bg-white/5 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#d4a574] flex items-center justify-center">
+                    <UserIcon className="w-5 h-5 text-[#2d5a4d]" />
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">{user.full_name}</p>
+                    <Badge className="bg-white/15 text-white/80 text-xs mt-0.5">{getUserTypeLabel()}</Badge>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="p-3 space-y-1">
+              {/* Marketplaces section */}
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-wider px-3 pt-3 pb-1">Marketplaces</p>
+              {marketplaceItems.map((item, i) => (
+                <button key={i} onClick={() => navTo(item.route)}
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors">
+                  <div className={`p-1.5 bg-gradient-to-br ${item.color} rounded-lg`}>
+                    <item.icon className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <span className="text-white text-sm font-medium">{item.label}</span>
+                    <p className="text-white/50 text-xs">{item.desc}</p>
+                  </div>
+                </button>
+              ))}
+
+              {/* User menu items */}
+              {user && (
+                <>
+                  <p className="text-white/40 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1">Mon espace</p>
+                  {getMenuItems().map((item, i) => (
+                    <button key={i} onClick={() => navTo(item.route)}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors">
+                      <item.icon className="w-5 h-5 text-white/60" />
+                      <span className="text-white text-sm font-medium">{item.label}</span>
+                    </button>
+                  ))}
+                  <button onClick={() => navTo('/messages')}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors">
+                    <MessageSquare className="w-5 h-5 text-white/60" />
+                    <span className="text-white text-sm font-medium">Messagerie</span>
+                  </button>
+                </>
+              )}
+
+              {/* Services link */}
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1">Infos</p>
+              <button onClick={() => navTo('/#features')} className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors">
+                <Sprout className="w-5 h-5 text-white/60" />
+                <span className="text-white text-sm font-medium">Services</span>
+              </button>
+            </div>
+
+            {/* Bottom auth section */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#1a3a30]">
+              {user ? (
+                <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 transition-colors" data-testid="mobile-logout-button">
+                  <LogOut className="w-4 h-4" />
+                  <span className="font-medium text-sm">Déconnexion</span>
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <Button className="w-full bg-[#d4a574] hover:bg-[#c49564] text-[#2d5a4d] font-semibold h-11" onClick={() => navTo('/register')}>
+                    S'inscrire gratuitement
+                  </Button>
+                  <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 h-11" onClick={() => navTo('/login')}>
+                    Se connecter
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
-    </nav>
+    </>
   );
 };
 
