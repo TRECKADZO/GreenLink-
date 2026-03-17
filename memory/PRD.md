@@ -10,63 +10,62 @@ Plateforme agritech multi-persona pour la Côte d'Ivoire. Gestion des coopérati
 - **PWA**: Service Worker + IndexedDB (mode offline)
 
 ## Personas
-1. **Super Admin** — Gestion globale, approbation crédits carbone
-2. **Coopérative** — Gestion membres, parcelles, récoltes, lots
-3. **Producteur** — Déclaration parcelles/récoltes, accès marchés
+1. **Super Admin** — Gestion globale, fixation prix carbone, approbation crédits
+2. **Coopérative** — Gestion membres, parcelles, récoltes, lots, soumission crédits carbone
+3. **Producteur** — Déclaration parcelles/récoltes, accès marchés, réception primes carbone
 4. **Acheteur** — Achat récoltes, traçabilité
 5. **Agent Terrain** — Recherche producteurs par téléphone, vérification terrain
 6. **Entreprise RSE** — Achat crédits carbone
 
 ## Fonctionnalités Implémentées
 
+### Activation & Connexion Membres/Agents (Vérifié Mars 2026)
+- Coopérative crée membres (`coop_members`) et agents (`coop_agents`)
+- Membre/Agent active son compte via numéro de téléphone (web: `/activate-member`, `/activate-agent`)
+- Mobile: `MemberActivationScreen`, `AgentActivationScreen`
+- Login par téléphone ou email sur web et mobile
+- Flux complet: Création par coop → Vérification téléphone → Activation → Login ✅
+
+### Marché Carbone avec Modèle de Prix Admin (Mars 2026)
+- **Soumission**: Coopérative soumet quantité CO2 uniquement (pas le prix)
+- **Prix**: Super Admin fixe le prix de vente par tonne
+- **Approbation**: Admin approuve avec prix → publication automatique sur le marché
+- **Modèle de répartition des revenus**:
+  - 30% frais de service
+  - 70% restants répartis:
+    - **70% agriculteurs** (prime producteur)
+    - **25% GreenLink** (revenu plateforme)
+    - **5% coopérative** (commission)
+- Endpoint simulation: `/api/carbon-listings/simulate-premium`
+- Gestion prix par défaut: `/api/carbon-listings/carbon-price`
+
+### Accès Rapide Marchés (Mars 2026)
+- Boutons Bourse des Récoltes + Marché Carbone sur dashboards coop, producteur, admin
+
+### Suppression QR Code (Mars 2026)
+- Remplacé par recherche par numéro de téléphone
+
 ### Système de Recherche Sécurisé Agent (Session précédente)
-- Recherche producteur par numéro de téléphone (remplace QR code)
+- Recherche producteur par numéro de téléphone
 - RBAC + audit logs pour conformité SSRTE/EUDR
-- Dashboard terrain mobile-first `/agent/terrain`
 
 ### PWA & Mode Offline (Session précédente)
 - Service Worker + manifest.json pour installation
 - IndexedDB pour cache données hors-ligne
-- Hook `useOfflineSync` pour synchronisation
-
-### Marché Carbone avec Workflow d'Approbation (Session actuelle - Mars 2026)
-- **Soumission**: Coopératives/producteurs soumettent crédits carbone (POST /api/carbon-listings/submit)
-- **Approbation**: Super Admin examine et approuve/rejette (PUT /api/carbon-listings/{id}/review)
-- **Publication**: Crédits approuvés apparaissent sur le Marché Carbone
-- **Page d'approbation admin**: `/admin/carbon-approvals`
-- **Formulaire soumission**: `/carbon-marketplace/create`
-- **Données démo**: Fallback avec 6 projets carbone réalistes quand la base est vide
-
-### Accès Rapide Marchés (Session actuelle)
-- Boutons Bourse des Récoltes + Marché Carbone sur dashboard coopérative
-- Boutons Bourse des Récoltes + Marché Carbone sur dashboard producteur
-- Boutons Approbation Carbone + Marché Carbone sur dashboard admin
-
-### Suppression QR Code (Session actuelle)
-- Route `/cooperative/qrcodes` supprimée
-- Backend `qrcode_generator` router retiré
-- Bouton QR Code remplacé par accès marchés sur dashboard coopérative
 
 ### Bourse des Récoltes (Sessions précédentes)
 - Publication récoltes par producteurs/coopératives
-- Formulaire 5 onglets: Produit, Qualité, Certifications, Traçabilité, Logistique
-- Marketplace avec recherche/filtres
+- Formulaire 5 onglets
 
 ## Endpoints API Clés
-- `POST /api/carbon-listings/submit` — Soumettre crédits carbone
-- `GET /api/carbon-listings/pending` — Soumissions en attente (admin)
-- `PUT /api/carbon-listings/{id}/review` — Approuver/rejeter (admin)
-- `GET /api/carbon-listings/stats` — Statistiques
-- `POST /api/agent/search` — Recherche producteur par téléphone
-- `GET/POST /api/sync/*` — Synchronisation offline
-- `POST /api/auth/login` — Connexion (identifier + password)
-- `GET /api/greenlink/carbon-credits` — Crédits carbone sur le marché
-
-## Schéma DB Clé
-- `carbon_listings`: Soumissions crédits carbone (status: pending_approval/approved/rejected)
-- `carbon_credits`: Crédits publiés sur le marché
-- `audit_logs`: Logs d'accès données agent
-- `users`: Tous les utilisateurs (admin, cooperative, producteur, etc.)
+- `POST /api/carbon-listings/submit` — Soumettre crédits (quantité uniquement)
+- `PUT /api/carbon-listings/{id}/review` — Approuver avec prix / Rejeter
+- `GET /api/carbon-listings/simulate-premium` — Simuler répartition primes
+- `GET/PUT /api/carbon-listings/carbon-price` — Prix carbone par défaut
+- `POST /api/auth/activate-member-account` — Activation compte membre
+- `POST /api/auth/activate-agent-account` — Activation compte agent
+- `GET /api/auth/check-member-phone/{phone}` — Vérifier téléphone membre
+- `GET /api/auth/check-agent-phone/{phone}` — Vérifier téléphone agent
 
 ## Comptes Test
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
@@ -85,5 +84,5 @@ Plateforme agritech multi-persona pour la Côte d'Ivoire. Gestion des coopérati
 - Langues Baoulé/Dioula mobile
 - Notifications multi-canal
 - Intégration USSD réelle
-- Refactoring cooperative.py/auth.py
+- Refactoring cooperative.py / auth.py
 - Stockage cloud S3
