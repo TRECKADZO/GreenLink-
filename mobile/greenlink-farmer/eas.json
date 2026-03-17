@@ -32,7 +32,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://coop-dashboard-6.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://secure-phone-lookup-1.preview.emergentagent.com"
       }
     }
   },

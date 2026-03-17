@@ -13,7 +13,7 @@ import requests
 import os
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://coop-dashboard-6.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://secure-phone-lookup-1.preview.emergentagent.com')
 if BASE_URL:
     BASE_URL = BASE_URL.rstrip('/')
 
