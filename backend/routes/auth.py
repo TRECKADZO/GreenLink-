@@ -14,6 +14,23 @@ router = APIRouter(prefix="/api/auth", tags=["authentication"])
 security = HTTPBearer()
 limiter = Limiter(key_func=get_remote_address)
 
+
+def normalize_phone(phone: str) -> list:
+    """Retourne toutes les variantes possibles d'un numéro de téléphone CI."""
+    import re
+    digits = re.sub(r'[^\d]', '', phone)
+    # Extraire les 10 derniers chiffres (numéro local CI)
+    if len(digits) >= 10:
+        local = digits[-10:]
+    else:
+        local = digits
+    return [
+        f"+225{local}",
+        f"+225 {local}",
+        local,
+        f"0{local}" if not local.startswith('0') else local,
+    ]
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     payload = verify_token(token)
@@ -180,12 +197,15 @@ async def login(request: Request, credentials: UserLogin):
     logger.info(f"Login attempt for: {credentials.identifier}")
     
     # Find user by phone number or email
-    user = await db.users.find_one({
-        "$or": [
-            {"phone_number": credentials.identifier},
-            {"email": credentials.identifier}
-        ]
-    })
+    phone_variants = normalize_phone(credentials.identifier) if not "@" in credentials.identifier else []
+    
+    search_conditions = [{"email": credentials.identifier}]
+    if phone_variants:
+        search_conditions.append({"phone_number": {"$in": phone_variants}})
+    else:
+        search_conditions.append({"phone_number": credentials.identifier})
+    
+    user = await db.users.find_one({"$or": search_conditions})
     
     if not user:
         logger.warning(f"User not found: {credentials.identifier}")
@@ -888,8 +908,10 @@ async def check_agent_phone(phone_number: str):
     Vérifie si un numéro de téléphone est enregistré comme agent terrain
     et s'il peut activer son compte.
     """
+    phone_variants = normalize_phone(phone_number)
+    
     # Vérifier si déjà un user
-    existing_user = await db.users.find_one({"phone_number": phone_number})
+    existing_user = await db.users.find_one({"phone_number": {"$in": phone_variants}})
     if existing_user:
         return {
             "found": True,
@@ -898,8 +920,8 @@ async def check_agent_phone(phone_number: str):
             "message": "Ce numéro a déjà un compte. Veuillez vous connecter."
         }
     
-    # Chercher dans coop_agents
-    agent = await db.coop_agents.find_one({"phone_number": phone_number})
+    # Chercher dans coop_agents avec toutes les variantes
+    agent = await db.coop_agents.find_one({"phone_number": {"$in": phone_variants}})
     if not agent:
         return {
             "found": False,
@@ -910,6 +932,9 @@ async def check_agent_phone(phone_number: str):
     
     # Récupérer le nom de la coopérative
     coop = await db.users.find_one({"_id": agent.get("coop_id")})
+    if not coop:
+        coop_id_str = str(agent.get("coop_id"))
+        coop = await db.users.find_one({"_id": ObjectId(coop_id_str)}) if ObjectId.is_valid(coop_id_str) else None
     coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
     
     return {
@@ -934,8 +959,10 @@ async def activate_agent_account(request: AgentActivationRequest):
     
     logger.info(f"[AGENT ACTIVATION] Attempting activation for phone: {request.phone_number}")
     
+    phone_variants = normalize_phone(request.phone_number)
+    
     # Vérifier si ce numéro existe déjà dans les users
-    existing_user = await db.users.find_one({"phone_number": request.phone_number})
+    existing_user = await db.users.find_one({"phone_number": {"$in": phone_variants}})
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -943,7 +970,7 @@ async def activate_agent_account(request: AgentActivationRequest):
         )
     
     # Chercher l'agent dans coop_agents
-    agent = await db.coop_agents.find_one({"phone_number": request.phone_number})
+    agent = await db.coop_agents.find_one({"phone_number": {"$in": phone_variants}})
     
     if not agent:
         raise HTTPException(
