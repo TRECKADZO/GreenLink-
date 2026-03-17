@@ -1,173 +1,165 @@
 <analysis>**original_problem_statement:**
-The user initially requested a major overhaul of the Carbon Market workflow, simplification of the farmer-facing Ma Prime Carbone calculator, and the complete removal of an old QR code system. Critically, the user was blocked by two mobile app issues: repeated rejection from the Google Play Store due to media permissions and a white screen on startup that rendered the app unusable.
-
-Subsequent requests during the session included:
-1.  Fixing the Progressive Web App (PWA) homepage, which incorrectly defaulted to an agent-specific dashboard.
-2.  Making the web application's landing page fully responsive for mobile devices.
-3.  Creating a USSD interface () to allow farmers to calculate their carbon premium via a simple 8-question text-based menu.
-4.  Adding a simulator for this new USSD flow into the existing mobile app.
-5.  The final request was a re-iteration of the most critical bug: fixing the white screen on the mobile APK, suggesting a robust solution was needed.
+The user's primary goal was to fix a critical white screen bug on the mobile app that made it unusable and was blocking Google Play Store publication. Following that, the user requested a series of significant changes to the Carbon Market feature:
+1.  Restrict access to the Carbon Marketplace to RSE (Corporate Social Responsibility) users only.
+2.  Implement and verify the full carbon credit lifecycle: A cooperative/farmer declares their carbon tonnage, which is then reviewed, priced, and approved by a Super Admin before being published on the marketplace.
+3.  Verify and enforce a specific business rule for the distribution of carbon credit revenue: 30% for operational costs, with the remaining 70% net amount being distributed as 70% to farmers, 25% to GreenLink, and 5% to the cooperative.
+4.  Update all carbon premium calculators (USSD, public homepage, internal dashboard) to use this new formula, ensuring the farmer's premium is a score-based percentage of the maximum possible share (70% of the net).
+5.  Hide all details of the underlying distribution formula from farmers and cooperatives, making them visible only to the Super Admin.
+6.  Finally, prepare the backend for future integrations with Orange Money, Orange SMS, and a real USSD gateway by creating placeholder services and configuration variables.
 
 **PRODUCT REQUIREMENTS:**
-*   A robust, admin-gated workflow for publishing carbon credits.
-*   A simplified, user-friendly carbon premium calculator for farmers (via Web, USSD, and Mobile App).
-*   A clean codebase with all obsolete QR code functionality removed.
-*   A compliant mobile app (APK/AAB) that can pass Google Play Store review without permission-related rejections.
-*   A functional mobile app that does not crash or show a white screen on startup.
+*   A functional, stable mobile app that passes Google Play Store review.
+*   A secure, role-gated Carbon Marketplace accessible only by authorized users (RSEs and Admins).
+*   A complete, auditable workflow for submitting, approving, and publishing carbon credits.
+*   All calculators must be consistent and reflect the centrally-defined business logic for carbon premium distribution, without exposing the formula to end-users.
+*   The codebase must be prepared for seamless activation of Orange payment, SMS, and USSD services once API keys are available.
 
 **User's preferred language**: French. The next agent MUST respond in French.
 
 **what currently exists?**
-The application is a full-stack platform (React/FastAPI/MongoDB). In this session, the agent successfully implemented all requested web features and made a comprehensive attempt to fix the critical mobile app issues.
-
-*   **Web Features (Completed & Tested):**
-    *   **PWA Homepage Fix:** The  and  files were corrected to ensure the PWA opens to the public landing page.
-    *   **Mobile Web Responsiveness:** The entire public-facing web app (Navbar, landing page, marketplace) was overhauled with TailwindCSS to be fully responsive and mobile-friendly.
-    *   **Marketplace Content:** The previously empty Marketplace Intrants was populated with 12 demo products, complete with AI-generated images.
-    *   **USSD Carbon Calculator:** A new stateless backend endpoint () and a corresponding web-based simulator UI () were built and tested for the  flow.
-*   **Mobile App (Partially Fixed, Still Broken):**
-    *   **USSD Simulator:** The new USSD calculator was successfully integrated as a new screen within the mobile app.
-    *   **White Screen Fix (Attempted):** The agent performed a major refactor to fix the white screen crash. This involved implementing lazy loading with  for all screens, creating a  utility to catch import errors, adding the missing  dependency, and cleaning up dead code.
-    *   **Permission Fix (Verified):** The agent successfully built a new AAB and used an APK analyzer to **confirm** that the problematic permissions (, ) have been completely removed.
+The application is a full-stack platform (React/FastAPI/MongoDB). The session focused heavily on bug fixing and implementing complex business logic.
+*   **Mobile App White Screen Fix:** A comprehensive fix was implemented. The agent identified several root causes (missing , missing  dependency, unsafe static imports). A major refactor of the app's entry point () was performed to ensure robust, dynamic loading of components. A new APK was successfully built and provided to the user for verification.
+*   **Carbon Market Access Control:** Access to the Carbon Marketplace and related features has been successfully restricted to RSE and Super Admin roles across the entire web and mobile application. All entry points for farmers and cooperatives have been removed.
+*   **Carbon Workflow Implementation:** The end-to-end workflow for carbon credit submission and approval is now fully functional and tested. This includes a new submission form for cooperatives, a My Submissions tracking page, and an approval interface in the admin dashboard.
+*   **Business Logic Unification & Security:** All carbon premium calculators have been refactored to use centralized backend APIs. This ensures they all use the correct, verified distribution formula (). Crucially, the details of this distribution logic are now completely hidden from the client-side and from any user roles other than Super Admin.
+*   **Integration Preparation (In Progress):** The agent analyzed the codebase and identified existing placeholder services for Orange integrations, noting that they are incomplete and require further work.
 
 **Last working item**:
--   **Last item agent was working**: The user's last message was a bug report re-stating that the mobile app still shows a white screen (page blanche). This came immediately after the agent implemented a major refactor intended to be a robust fix. The agent's work was focused on making the app's startup process resilient to crashes.
+-   **Last item agent was working**: Preparing the backend for future integrations with Orange Money, Orange SMS, and a real USSD gateway. The user requested that the code be made ready to connect with placeholder API keys in the  file, as the real keys are not yet available. The agent had analyzed the existing code and was about to begin implementing the necessary improvements and placeholder configurations.
 -   **Status**: 
--   **Agent Testing Done**: Y (Agent implemented a solution they believed was robust, but could not get final user validation before the session ended. All web features were validated with the testing agent.)
--   **Which testing method agent to use?**: Troubleshoot agent. The previous robust fix failed or wasn't tested by the user. A systematic approach is required, starting with ensuring the user tests the *correct* build, and if that fails, moving to remote debugging to capture live error logs.
--   **User Testing Done**: Y (User has confirmed the white screen issue persists).
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: backend testing agent (To verify that the mock services are correctly integrated and that the application doesn't crash when trying to use them).
+-   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
 -   **Issue 1: Mobile App White Screen on Startup (P0 - Critical Blocker)**
-    -   **Description**: The generated APK shows a blank white screen immediately after the splash screen, rendering the mobile app completely unusable. This is a severe, recurring regression. The user has just confirmed the issue still exists after the latest fix attempt.
-    -   **Attempted fixes**:
-        1.  (Previous sessions) Basic cleanup, adding Error Boundaries, and creating a custom Expo Config Plugin.
-        2.  (This session) A major architectural refactor: Implemented lazy-loading for all screens in  using a  utility to prevent silent crashes from broken imports. Added the missing  dependency.
-    -   **Next debug checklist**:
-        1.  **Crucial First Step:** The agent implemented the robust fix but it's unclear if the user tested an APK *containing* that fix. The absolute first step is to **build a new APK** from the current codebase and provide it to the user for testing.
-        2.  If the new build still fails, stop attempting blind fixes. Set up a development build () and use a remote debugger () to capture the JavaScript console logs from the device at startup to get the exact error message.
-        3.  Re-investigate  and other providers. An unhandled error or promise rejection during the initial authentication check can cause a silent crash that an  inside the main  component might not catch.
-    -   **Why fix this issue and what will be achieved with the fix?**: The mobile app is currently non-functional. This is the top priority.
+    -   **Description**: The mobile app was unusable due to a white screen on launch. A major, robust fix has been implemented and a new APK has been built and provided to the user.
+    -   **Attempted fixes**: A deep-dive analysis led to: creating a missing , installing the  dependency, and completely restructuring the app's entry point ( + ) for safe, dynamic loading with error boundaries.
+    -   **Next debug checklist**: The next agent's **first action** should be to ask the user for feedback on the new APK provided at the end of the last session. The user's response will determine if this critical issue is finally resolved.
     -   **Status**: 
     -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: Frontend (Mobile).
-    -   **Blocked on other issue**: This is the primary blocker for all mobile-related progress.
+    -   **Blocked on other issue**: None. This is the primary blocker.
 -   **Issue 2: Google Play Permission Rejection (P0 - Recurring Blocker)**
-    -   **Description**: Google Play repeatedly rejects the app for including  and  permissions.
-    -   **Attempted fixes**: A comprehensive fix is in place (config plugin,  blocks). The agent analyzed the latest AAB and **confirmed the permissions are gone**.
-    -   **Next debug checklist**: This issue is likely resolved, but verification is blocked. Once a working APK is produced, the user must be instructed to submit the corresponding AAB to a Google Play testing track.
-    -   **Why fix this issue and what will be achieved with the fix?**: The app cannot be published on the Google Play Store until this is resolved.
+    -   **Description**: The app was being rejected by Google Play for including media permissions. Analysis in a previous session confirmed that the build process now correctly strips these permissions.
     -   **Status**: 
-    -   **Is recurring issue?**: Y
-    -   **Blocked on other issue**: Issue 1: Mobile App White Screen on Startup.
+    -   **Blocked on other issue**: Issue 1: Mobile App White Screen on Startup. This cannot be verified until a working app is confirmed by the user and submitted to the Play Store.
 
 **In progress Task List**:
--   None.
+-   **Task 1: Prepare Orange Money, Orange SMS, and USSD Integrations (P1)**
+    -   **Where to resume**: The agent identified that placeholder services exist but need work. The next steps are:
+        1.  Add placeholder variables to  and  for all Orange and USSD gateway credentials (e.g., , , ).
+        2.  Refactor the  in  to correctly implement the required OAuth 2.0 flow for obtaining an access token.
+        3.  Create a dedicated USSD adapter in  for the Orange gateway format.
+        4.  Ensure all three services operate in a safe mock mode that logs actions instead of making real API calls when the placeholder credentials are in use.
+    -   **What will be achieved with this?**: The application will be ready for the user to activate the Orange integrations simply by filling in the API keys in the  file.
+    -   **Status**: 
+    -   **Should Test frontend/backend/both after fix?**: Backend
+    -   **Blocked on something**: No
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P1) Provide new working APK/AAB builds**: This is part of resolving the White Screen issue.
-    *   **(P2) Implement Real Payment Integration (Orange Money)**: A requirement from a previous handoff. Use .
+    *   **(P1) Get user feedback** on the new mobile APK to confirm the white screen fix.
+    *   **(P2) Guide user to submit the new AAB to Google Play Store** once the APK is confirmed to be working.
 *   **Future Tasks:**
     *   (P2) Implement Baoulé and Dioula languages in the mobile app.
-    *   (P2) Implement multi-channel notifications for Payments (Push, SMS, Email).
-    *   (P2) Implement real USSD Integration (the current version is a simulator).
+    -   (P2) Implement multi-channel notifications for Payments (Push, SMS, Email).
     *   (P2) Refactor backend to use a cloud storage solution for file uploads.
     *   (P2) Refactor the monolithic  file.
 
 **Completed work in this session**
--   **Mobile White Screen Fix (Attempted)**: Executed a major refactor of the mobile app's startup process, implementing lazy-loading for all screens with a  utility to improve robustness.
--   **Google Play Permission Fix (Verified)**: Built a new AAB and confirmed via APK analysis that all problematic media permissions have been successfully stripped.
--   **PWA Homepage Fix**: Corrected  and  to launch the correct public landing page.
--   **Full Mobile Web Responsiveness**: Overhauled the public web UI (Navbar, Hero, Marketplace, etc.) to be fully responsive.
--   **Marketplace Content Population**: Seeded the  with 12 demo products and generated unique images for each.
--   **USSD Carbon Calculator Feature**: Built and tested a complete, stateless USSD simulation flow () on both the backend and web frontend.
--   **Mobile App Feature Addition**: Integrated the new USSD calculator simulator as a screen in the React Native app.
--   **Web Bug Fixes**: Investigated and confirmed fixes for previously reported white page issues related to the parcel form and web registration.
+-   **Mobile White Screen Fix (Implemented, Pending Verification)**: Executed a deep-dive analysis and implemented a robust architectural fix for the critical white screen bug. A new APK was built and delivered to the user.
+-   **Carbon Marketplace Access Control**: Successfully restricted access to the Carbon Marketplace to RSE and Super Admin roles across the entire platform, removing all entry points for other user types.
+-   **Carbon Credit Workflow Implementation**: Built and verified the complete, end-to-end workflow for carbon credit submission (Cooperative) and approval (Admin), including new UI pages and backend logic.
+-   **RSE Dashboard Enhancement**: Added a new section to the RSE Dashboard showing a detailed visual breakdown of how carbon premium revenue is distributed, protected this data to be admin-only.
+-   **Calculator Unification and Logic Hiding**: Corrected and unified all three carbon premium calculators (USSD, homepage, ) to use a single, secure backend API, effectively hiding the complex business logic from the client-side.
+-   **Hid Business Formula Details**: Systematically removed all UI elements and API responses that exposed the  and  distribution formula details to non-admin users.
 
 **Earlier issues found/mentioned but not fixed**
--   None. All previously known issues were either addressed, fixed, or are part of the current P0 White Screen bug.
+-   None.
 
 **Known issue recurrence from previous fork**
--   **Google Play Rejections**: This is a persistent issue. The latest fix (config plugin + AAB analysis) appears definitive but awaits final confirmation from Google.
-    -   Recurrence count: 5+
-    -   Status: 
--   **Mobile App White Screen**: This has become a recurring critical blocker. The agent's latest robust fix was reported as failed by the user.
-    -   Recurrence count: 2+
-    -   Status: 
+-   **Google Play Rejections**: Status is . Believed to be fixed, but pending confirmation of a working app.
+-   **Mobile App White Screen**: Status is . A major fix was implemented to address this recurring critical issue. Awaiting user feedback.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **React Lazy Loading for Robustness**:  and  were used to dynamically import screen components in the mobile app. This prevents a crash in one non-critical screen (e.g., one using a broken native module) from taking down the entire application on startup.
--   **Stateless USSD Backend**: The USSD endpoint was built to be stateless. It parses the entire history of user inputs ( separated string) on each request to determine context, a robust pattern for telco integrations.
--   **PWA Configuration**: Key PWA behavior was fixed by modifying  () and  (caching strategy, offline page).
--   **Responsive Web Design (Mobile-First)**: Extensive use of TailwindCSS responsive prefixes (, ) to create a fluid and user-friendly experience on both mobile and desktop browsers, including a hamburger menu for mobile navigation.
+-   **Mobile App Resilience**: A radical refactor of the app's entry point using  and  to prevent silent crashes from faulty module imports during startup.
+-   **Role-Based Access Control (RBAC)**: Extensive use of frontend ( hook) and backend (FastAPI ) checks to secure features and data based on user roles (Farmer, Cooperative, RSE, Admin).
+-   **Hiding Business Logic**: A shift from client-side calculations to dedicated backend APIs to ensure business logic is secure, consistent, and hidden from end-users.
+-   **Placeholder Integrations**: Structuring code to support future 3rd-party services by using placeholder environment variables and mock service classes, enabling development and testing before contracts are signed.
 
 **key DB schema**
--    (collection in ): The schema was modified to include an  field to store URLs for product imagery.
+-   **carbon_listings**: The  field (, , ) and a  sub-document are central to the carbon credit workflow.
+-   **parcels**: The backend aggregation pipeline was made more robust to handle documents that may be missing fields like .
 
 **changes in tech stack**
--   ****: This crucial dependency was missing and has now been added to  to prevent crashes related to icon rendering.
+-   : Added as a critical dependency to the mobile app to resolve crashes related to icon rendering.
 
 **All files of reference**
--   : The root of the mobile app, heavily refactored for robust lazy-loading. This remains the primary file to investigate for the White Screen issue.
--   : The new utility created to safely lazy-load components with fallbacks.
--   : Contains the stateless backend logic for the new USSD carbon calculator.
--   : The web UI for the new USSD calculator.
--   : The main navigation component, now fully responsive.
--   The generated AAB: . This file is confirmed to be free of bad permissions and should be used for the next Google Play submission.
+-    & : The core of the mobile app white screen fix.
+-   : Contains logic for credit approval, distribution calculation, and the admin-only RSE dashboard endpoint.
+-   : Contains the updated USSD calculator logic and the new public calculator endpoint.
+-   : The new tracking page for cooperatives.
+-   : The refactored public calculator, now using a secure API.
+-   The APK with build ID .
 
 **Areas that need refactoring**:
--   The  (mobile) and  (web) components share significant logic. This could be extracted into a reusable React hook to avoid code duplication.
--   : This remains a large, monolithic file that could be broken down into smaller, more focused route files.
+-   The monolithic  file could be broken down into smaller, more focused route files.
 
 **key api endpoints**
--   : **(New)** Stateless endpoint for the 8-question USSD carbon prime calculation flow.
--   : **(New, Development Only)** Endpoint to populate the marketplace with demo data.
+-   : **(New)** Public endpoint for the homepage calculator, hiding all business logic.
+-   : **(New)** Admin-only endpoint to power the RSE dashboard's distribution section.
+-   : The core admin approval endpoint.
+-   : The cooperative submission endpoint.
+-   : The endpoint for cooperatives to track their submissions.
 
 **Critical Info for New Agent**
 -   **Répondez en français.** All user communication must be in French.
--   **The White Screen bug is the only P0 priority.** The user has just reported it again, even after your predecessor implemented a major refactor. Your **first action** must be to build a new APK from the current code and ask the user to test it. It's possible they are testing an old build. If the new build still fails, you must use a remote debugger () to get a real error message. Stop trying to fix it blindly.
--   **The Google Play Permission issue is VERIFIED as fixed.** Your predecessor analyzed the latest AAB file and confirmed the permissions are gone. Do not work on this. Once the white screen is fixed, the user can submit the new AAB.
--   **Web features are complete and tested.** The USSD simulator, responsive web UI, and populated marketplace were all validated by the testing agent. Do not modify them unless the user reports a specific new bug.
+-   **First Action: Verify Mobile Fix.** Your immediate priority is to engage the user and ask for feedback on the new mobile APK that was built to fix the White Screen bug. This is the main blocker for the project.
+-   **Continue Integration Task.** Once you've checked in with the user, resume the in-progress task of preparing the backend for Orange Money, Orange SMS, and USSD integrations using placeholder credentials.
+-   **Do Not Expose Business Logic.** A key principle established in this session is that all sensitive calculations (like the premium distribution formula) must reside in the backend and be hidden from the frontend. Adhere to this pattern for any new features.
 
 **documents and test reports created in this job**
--    (updated)
--    (Final web UI validation)
--    (USSD feature validation)
+-    (updated multiple times)
+-   The last successful APK build URL is .
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Fix the PWA homepage which shows the agent dashboard. (Status: )
-2.  **User**: Optimize the mobile web view and PWA. (Status: )
-3.  **User**: Create a USSD interface () for farmers to calculate their carbon prime in 8 questions. (Status: )
-4.  **User**: Does USSD use voice commands? (Status: , clarified it's text-based).
-5.  **User**: Acknowledged USSD is text-based. Asked if it has been added to the mobile app version. (Status: , it was added).
-6.  **User**: Why is the APK showing a white page? (Status: , this is the current P0 bug).
-7.  **User**: Delete QR code references that might be blocking the app. (Status: , investigated as part of the white screen fix).
-8.  **User**: Find another robust way to fix the APK white screen error. (Status: , this triggered the agent's major refactor).
-9.  **User**: (Implicit in last message) Confirmed the white screen issue still exists, making it the top priority for the next agent. (Status: ).
+1.  **User**: Confirmed the white screen issue was still present with the old APK. (Status: )
+2.  **User**: The Carbon Marketplace should only be for RSEs. (Status: )
+3.  **User**: Clarified the carbon credit submission/approval workflow. (Status: )
+4.  **User**: Asked to verify the 70/25/5 carbon premium distribution formula. (Status: )
+5.  **User**: The USSD calculator must be updated to use the new formula. (Status: )
+6.  **User**: All details of the distribution formula must be hidden from farmers/cooperatives. (Status: )
+7.  **User**: The homepage calculator also needs updating with the new, hidden formula. (Status: )
+8.  **User**: I need to integrate secrets for Orange Money, SMS, and USSD. (Status: )
+9.  **User**: Clarified to use Orange SMS API. (Status: )
+10. **User**: Confirmed to prepare the code with placeholders for now, as real keys are not yet available. (Status: )
 
 **Project Health Check:**
 -   **Broken**:
-    -   **Mobile Application**: Critically broken. Shows a white screen on startup, making it unusable.
+    -   **Mobile Application**: Status is . A major fix has been implemented, but it is not confirmed if the app is functional.
 -   **Mocked/Simulated**:
     -   Real USSD Gateway Integration.
     -   Real Payment Gateway (Orange Money).
+    -   Real SMS Gateway (Orange SMS).
 -   **Blocked**:
-    -   **Google Play Deployment**: Blocked by the White Screen bug.
+    -   **Google Play Deployment**: Blocked by the White Screen bug's pending validation.
 
 **3rd Party Integrations**
 -   **Expo / EAS ()**: Used for building and managing mobile app builds.
 -   **MongoDB Atlas**: Primary database.
--   **Emergent Image Generation ()**: Used to create product images for the marketplace.
+-   **Orange Money**: Integration being prepared with mock services.
+-   **Orange SMS**: Integration being prepared with mock services.
+-   **USSD Gateway**: Integration being prepared with mock services.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. Extensively used to validate all web features, including responsiveness and the new USSD simulator.
+-   **Testing agent used after significant changes**: NO (Agent used  and screenshots for iterative verification, which was effective for the tasks).
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: [ ]
--   **Known regressions**: A major, persistent regression exists in the mobile app, causing a White Screen crash on startup.
+-   **Known regressions**: The mobile White Screen was a major, persistent regression. A significant fix has been implemented and is pending user validation.
 
 **Credentials to test flow:**
 -   **Super Admin**:  / 
@@ -175,4 +167,4 @@ The application is a full-stack platform (React/FastAPI/MongoDB). In this sessio
 -   **Field Agent (Test)**:  / 
 
 **What agent forgot to execute**
--   The agent did not build and provide a new APK to the user for testing *after* implementing the major robust fix for the white screen. This led to ambiguity about whether the fix was ineffective or simply not tested by the user. The next agent must close this loop immediately.</analysis>
+-   The agent executed all user requests systematically and did not appear to forget anything. The current task is a direct continuation of the last user request.</analysis>

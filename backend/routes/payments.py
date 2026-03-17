@@ -22,9 +22,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
 # Orange Money Configuration
+ORANGE_MONEY_CLIENT_ID = os.environ.get('ORANGE_MONEY_CLIENT_ID', '')
+ORANGE_MONEY_CLIENT_SECRET = os.environ.get('ORANGE_MONEY_CLIENT_SECRET', '')
 ORANGE_MERCHANT_KEY = os.environ.get('ORANGE_MERCHANT_KEY', '')
-ORANGE_API_URL = os.environ.get('ORANGE_API_URL', 'https://api.orange.com/orange-money-webpay/businessapi/v1')
-SIMULATION_MODE = not ORANGE_MERCHANT_KEY  # Auto-enable simulation if no key
+ORANGE_API_URL = os.environ.get('ORANGE_API_URL', 'https://api.orange.com/orange-money-webpay/dev/v1')
+SIMULATION_MODE = not (ORANGE_MONEY_CLIENT_ID and ORANGE_MONEY_CLIENT_SECRET and ORANGE_MERCHANT_KEY)
 
 # ============= PYDANTIC MODELS =============
 
@@ -180,7 +182,7 @@ async def initiate_payment(
     merchant_reference = f"GL_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8].upper()}"
     
     # Get base URL from environment or request
-    base_url = os.environ.get('BASE_URL', 'https://carbon-calc-fix.preview.emergentagent.com')
+    base_url = os.environ.get('BASE_URL', 'https://premium-calc-13.preview.emergentagent.com')
     
     return_url = f"{base_url}/payment/return?ref={merchant_reference}"
     cancel_url = f"{base_url}/payment/cancel?ref={merchant_reference}"
