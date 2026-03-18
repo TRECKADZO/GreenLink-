@@ -343,7 +343,7 @@ const FieldAgentsPage = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <Button variant="ghost" size="sm" onClick={() => { setICIFarmer(f); setShowICIModal(true); }} className="text-cyan-600 hover:text-cyan-800 hover:bg-cyan-50 h-7 px-2" data-testid={`ici-btn-${f.id}`}>
-                            <FileText className="h-3 w-3 mr-1" />ICI
+                            <FileText className="h-3 w-3 mr-1" />Visite ICI
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleUnassign([f.id])} disabled={assignLoading} className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2" data-testid={`unassign-farmer-${f.id}`}>
                             <X className="h-3 w-3 mr-1" />Retirer
