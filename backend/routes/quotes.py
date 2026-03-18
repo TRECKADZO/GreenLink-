@@ -11,6 +11,10 @@ import logging
 from database import db
 from routes.auth import get_current_user
 from subscription_models import SubscriptionStatus
+from services.email_service import (
+    send_quote_approved_email, send_quote_rejected_email,
+    send_account_suspended_email, send_account_activated_email,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -256,6 +260,18 @@ async def review_quote(
         })
 
         logger.info(f"Quote {quote_id} approved for user {user_id} by admin {admin['_id']}")
+
+        # Send email notification
+        user_doc = await db.users.find_one({"_id": ObjectId(user_id)})
+        if user_doc:
+            send_quote_approved_email(
+                to_email=user_doc.get("email") or quote.get("contact_email"),
+                user_name=quote.get("user_name", ""),
+                company_name=quote.get("company_name", ""),
+                end_date=end_date.strftime("%d/%m/%Y"),
+                admin_note=action_data.admin_note,
+            )
+
         return {"success": True, "message": "Devis approuve. Le compte fournisseur est maintenant actif.", "end_date": end_date.isoformat()}
 
     elif action_data.action == "reject":
@@ -281,6 +297,17 @@ async def review_quote(
         })
 
         logger.info(f"Quote {quote_id} rejected for user {user_id}")
+
+        # Send email notification
+        user_doc = await db.users.find_one({"_id": ObjectId(user_id)})
+        if user_doc:
+            send_quote_rejected_email(
+                to_email=user_doc.get("email") or quote.get("contact_email"),
+                user_name=quote.get("user_name", ""),
+                company_name=quote.get("company_name", ""),
+                admin_note=action_data.admin_note,
+            )
+
         return {"success": True, "message": "Devis refuse. L'utilisateur a ete notifie."}
 
     raise HTTPException(status_code=400, detail="Action invalide. Utilisez 'approve' ou 'reject'.")
@@ -323,6 +350,10 @@ async def admin_account_action(
             "created_at": now,
             "is_read": False,
         })
+        send_account_activated_email(
+            to_email=user.get("email"),
+            user_name=user.get("full_name") or user.get("company_name") or "Utilisateur",
+        )
         return {"success": True, "message": "Compte active avec succes"}
 
     elif action == "suspend":
@@ -343,6 +374,11 @@ async def admin_account_action(
             "created_at": now,
             "is_read": False,
         })
+        send_account_suspended_email(
+            to_email=user.get("email"),
+            user_name=user.get("full_name") or user.get("company_name") or "Utilisateur",
+            reason=action_data.reason,
+        )
         return {"success": True, "message": "Compte suspendu"}
 
     elif action == "delete":

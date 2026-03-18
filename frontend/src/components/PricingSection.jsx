@@ -12,38 +12,40 @@ const mockPricingPlans = [
     price: 'GRATUIT',
     period: '',
     popular: false,
-    badge: 'Gratuit à vie',
+    badge: 'Gratuit a vie',
     badgeColor: 'green',
     features: [
-      'Profil producteur vérifié',
-      'Vente de récoltes illimitée',
-      'Crédits carbone illimités',
+      'Profil producteur verifie',
+      'Vente de recoltes illimitee',
+      'Credits carbone illimites',
       'Messagerie & contrats',
       'Formation gratuite',
-      'Alertes prix',
-      'Accès boutique intrants'
+      'Alertes prix en temps reel',
+      'Acces boutique intrants'
     ],
     cta: 'Inscription gratuite',
-    ctaVariant: 'outline'
+    ctaVariant: 'outline',
+    userType: 'producteur',
   },
   {
-    name: 'Coopératives',
+    name: 'Cooperatives',
     price: 'GRATUIT',
     period: '',
     popular: false,
-    badge: 'Gratuit à vie',
+    badge: 'Gratuit a vie',
     badgeColor: 'green',
     features: [
-      'Gestion complète des membres',
-      'Distribution des primes carbone',
+      'Gestion complete des membres',
+      'Attribution agents terrain',
+      'Distribution primes carbone',
       'Rapports EUDR automatiques',
-      'Génération de reçus PDF',
-      'Notifications push aux membres',
-      'Application mobile dédiée',
-      'Support prioritaire'
+      'Fiches ICI & SSRTE integrees',
+      'Suivi completion des formulaires',
+      'Application mobile dediee'
     ],
-    cta: 'Créer ma coopérative',
-    ctaVariant: 'outline'
+    cta: 'Creer ma cooperative',
+    ctaVariant: 'outline',
+    userType: 'cooperative',
   },
   {
     name: 'Acheteurs',
@@ -54,34 +56,36 @@ const mockPricingPlans = [
     popular: true,
     features: [
       '15 jours d\'essai gratuit',
-      'Accès Bourse des Récoltes',
-      'Demandes de devis illimitées',
-      'Messagerie sécurisée',
-      'Alertes nouvelles récoltes',
+      'Acces Bourse des Recoltes',
+      'Demandes de devis illimitees',
+      'Messagerie securisee',
+      'Alertes nouvelles recoltes',
       'Favoris & comparateur',
-      'Badge vérifié'
+      'Badge verifie'
     ],
     cta: 'Essai gratuit 15 jours',
-    ctaVariant: 'default'
+    ctaVariant: 'default',
+    userType: 'acheteur',
   },
   {
     name: 'Fournisseurs',
-    price: '29 000 XOF',
-    period: '/mois',
-    badge: '15 jours gratuits + 5% commission',
+    price: 'Sur devis',
+    period: '',
+    badge: '15 jours gratuits',
     badgeColor: 'blue',
     popular: false,
     features: [
-      'Boutique en ligne dédiée',
+      '15 jours d\'essai gratuit',
+      'Boutique en ligne dediee',
       'Gestion catalogue produits',
-      'Système de commandes',
-      'Paiement sécurisé',
+      'Systeme de commandes',
       'Statistiques de ventes',
-      'Notifications temps réel',
-      'Support marchand'
+      'Notifications temps reel',
+      'Support marchand dedie'
     ],
     cta: 'Essai gratuit 15 jours',
-    ctaVariant: 'outline'
+    ctaVariant: 'outline',
+    userType: 'fournisseur',
   },
   {
     name: 'Entreprises RSE',
@@ -91,16 +95,17 @@ const mockPricingPlans = [
     badgeColor: 'blue',
     popular: false,
     features: [
-      'Publication demandes illimitées',
-      'Vérification IA des crédits',
+      '15 jours d\'essai gratuit',
+      'Publication demandes illimitees',
+      'Verification IA des credits',
       'Certificats conformes',
       'Rapports ESG automatiques',
-      'Traçabilité complète',
-      'Support dédié',
-      'Accompagnement RSE'
+      'Tracabilite complete',
+      'Accompagnement RSE dedie'
     ],
     cta: 'Demander un devis',
-    ctaVariant: 'outline'
+    ctaVariant: 'outline',
+    userType: 'entreprise_rse',
   }
 ];
 
@@ -126,10 +131,10 @@ const PricingSection = () => {
             Tarifs
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Une offre adaptée à chaque profil
+            Une offre adaptee a chaque profil
           </h2>
-          <p className="text-xl text-gray-600">
-            Plans flexibles pour producteurs, acheteurs, entreprises RSE et fournisseurs
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Producteurs et cooperatives : acces gratuit a vie. Acheteurs, fournisseurs et entreprises RSE : 15 jours d'essai gratuit puis abonnement sur devis.
           </p>
         </div>
         
@@ -192,8 +197,32 @@ const PricingSection = () => {
           ))}
         </div>
         
-        <p className="text-center text-sm text-gray-600">
-          Tous les plans incluent l'accès à la plateforme mobile et le support technique de base
+        <div className="mt-10 bg-gray-50 rounded-2xl p-6 max-w-3xl mx-auto">
+          <h3 className="font-semibold text-gray-900 mb-3 text-center">Comment fonctionne l'abonnement sur devis ?</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-2">
+                <span className="text-emerald-700 font-bold text-sm">1</span>
+              </div>
+              <p className="text-sm text-gray-600">Inscrivez-vous et profitez de <strong>15 jours gratuits</strong></p>
+            </div>
+            <div className="text-center">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-2">
+                <span className="text-emerald-700 font-bold text-sm">2</span>
+              </div>
+              <p className="text-sm text-gray-600">Remplissez le <strong>formulaire de devis</strong> adapte a vos besoins</p>
+            </div>
+            <div className="text-center">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-2">
+                <span className="text-emerald-700 font-bold text-sm">3</span>
+              </div>
+              <p className="text-sm text-gray-600">Votre devis est <strong>approuve sous 48h</strong> et votre compte est active</p>
+            </div>
+          </div>
+        </div>
+        
+        <p className="text-center text-sm text-gray-600 mt-6">
+          Tous les plans incluent l'acces a la plateforme mobile et le support technique de base
         </p>
       </div>
     </section>
