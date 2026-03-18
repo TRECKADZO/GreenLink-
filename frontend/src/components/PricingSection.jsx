@@ -76,12 +76,12 @@ const mockPricingPlans = [
     popular: false,
     features: [
       '15 jours d\'essai gratuit',
+      'Commission 3 a 5% sur chaque vente',
       'Boutique en ligne dediee',
       'Gestion catalogue produits',
       'Systeme de commandes integre',
       'Statistiques de ventes',
-      'Notifications temps reel',
-      'Support marchand dedie'
+      'Montant abonnement defini sur devis'
     ],
     cta: 'Essai gratuit 15 jours',
     ctaVariant: 'outline',

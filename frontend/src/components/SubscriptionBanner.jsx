@@ -85,12 +85,53 @@ const SubscriptionBanner = ({ subscription }) => {
 
   if (!subscription) return null;
 
-  const { status, is_trial, days_remaining, requires_quote, message } = subscription;
+  const { status, is_trial, days_remaining, requires_quote, message, price_xof, commission_rate, billing_cycle, end_date } = subscription;
   const pendingQuote = myQuotes.find(q => q.status === 'pending');
   const approvedQuote = myQuotes.find(q => q.status === 'approved');
   const rejectedQuote = myQuotes.find(q => q.status === 'rejected' && !myQuotes.some(qq => qq.status === 'pending'));
 
-  // Active subscription - no banner needed
+  const cycleLabel = { monthly: 'mois', quarterly: 'trimestre', yearly: 'an' }[billing_cycle] || 'mois';
+
+  // Active subscription with pricing info - show billing card
+  if (status === 'active' && !is_trial && price_xof) {
+    const endDateStr = end_date ? new Date(end_date).toLocaleDateString('fr-FR') : '';
+    return (
+      <Card className="border-0 shadow-sm bg-emerald-50 mb-6" data-testid="active-subscription-banner">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-emerald-800">Abonnement actif</p>
+                {endDateStr && <p className="text-xs text-emerald-600">Valide jusqu'au {endDateStr}</p>}
+              </div>
+            </div>
+            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Actif</Badge>
+          </div>
+          <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="bg-white rounded-lg p-3 border border-emerald-200">
+              <p className="text-[10px] text-gray-500 uppercase font-medium">Abonnement</p>
+              <p className="text-lg font-bold text-gray-900">{price_xof.toLocaleString('fr-FR')} <span className="text-sm font-normal text-gray-500">XOF/{cycleLabel}</span></p>
+            </div>
+            {commission_rate > 0 && (
+              <div className="bg-white rounded-lg p-3 border border-emerald-200">
+                <p className="text-[10px] text-gray-500 uppercase font-medium">Commission sur ventes</p>
+                <p className="text-lg font-bold text-gray-900">{commission_rate}%</p>
+              </div>
+            )}
+            <div className="bg-white rounded-lg p-3 border border-emerald-200">
+              <p className="text-[10px] text-gray-500 uppercase font-medium">Facturation</p>
+              <p className="text-lg font-bold text-gray-900 capitalize">{cycleLabel === 'mois' ? 'Mensuelle' : cycleLabel === 'trimestre' ? 'Trimestrielle' : 'Annuelle'}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Active subscription without pricing (free or no data) - no banner needed
   if (status === 'active' && !is_trial) return null;
 
   // Trial active

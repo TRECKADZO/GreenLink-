@@ -18,7 +18,7 @@ import {
 import {
   FileText, CheckCircle2, XCircle, Clock, Users, Search,
   Eye, Shield, Ban, Trash2, Power, ChevronLeft, ChevronRight,
-  Loader2, AlertTriangle, Building2
+  Loader2, AlertTriangle, Building2, Percent, DollarSign
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -40,6 +40,8 @@ const QuotesManagement = () => {
   const [actionDialog, setActionDialog] = useState({ open: false, type: '', target: null });
   const [adminNote, setAdminNote] = useState('');
   const [customPrice, setCustomPrice] = useState('');
+  const [commissionRate, setCommissionRate] = useState('');
+  const [billingCycle, setBillingCycle] = useState('monthly');
   const [duration, setDuration] = useState('365');
   const [actionReason, setActionReason] = useState('');
   const [processing, setProcessing] = useState(false);
@@ -85,6 +87,8 @@ const QuotesManagement = () => {
         action,
         admin_note: adminNote || null,
         custom_price_xof: customPrice ? parseInt(customPrice) : null,
+        commission_rate: commissionRate ? parseFloat(commissionRate) : null,
+        billing_cycle: billingCycle || 'monthly',
         subscription_duration_days: duration ? parseInt(duration) : 365,
       };
       await axios.put(`${API_URL}/api/admin/quotes/${quoteId}`, body, { headers });
@@ -93,6 +97,8 @@ const QuotesManagement = () => {
       setActionDialog({ open: false, type: '', target: null });
       setAdminNote('');
       setCustomPrice('');
+      setCommissionRate('');
+      setBillingCycle('monthly');
       await Promise.all([fetchQuotes(), fetchAccounts()]);
     } catch (err) {
       toast({ title: 'Erreur', description: err.response?.data?.detail || 'Erreur lors du traitement', variant: 'destructive' });
@@ -357,23 +363,66 @@ const QuotesManagement = () => {
 
                 {q.status === 'pending' && (
                   <div className="border-t pt-4 space-y-3">
-                    <h4 className="font-semibold text-sm">Actions de l'administrateur</h4>
-                    <div className="grid grid-cols-2 gap-3">
+                    <h4 className="font-semibold text-sm">Tarification du devis</h4>
+
+                    {/* Montant abonnement + cycle */}
+                    <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="text-xs text-gray-500">Prix personnalise (XOF)</label>
+                        <label className="text-xs text-gray-500 font-medium">Montant abonnement (XOF) *</label>
                         <Input type="number" placeholder="Ex: 50000" value={customPrice} onChange={e => setCustomPrice(e.target.value)} data-testid="custom-price-input" />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500">Duree (jours)</label>
+                        <label className="text-xs text-gray-500 font-medium">Cycle de facturation</label>
+                        <Select value={billingCycle} onValueChange={setBillingCycle}>
+                          <SelectTrigger data-testid="billing-cycle-select"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="monthly">Mensuel</SelectItem>
+                            <SelectItem value="quarterly">Trimestriel</SelectItem>
+                            <SelectItem value="yearly">Annuel</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 font-medium">Duree (jours)</label>
                         <Input type="number" placeholder="365" value={duration} onChange={e => setDuration(e.target.value)} data-testid="duration-input" />
                       </div>
                     </div>
+
+                    {/* Commission fournisseur (affiché seulement pour fournisseur) */}
+                    {(q.user_type === 'fournisseur' || q.business_type === 'intrants' || q.business_type === 'semences' || q.business_type === 'equipements') && (
+                      <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Percent className="h-4 w-4 text-blue-600" />
+                          <label className="text-xs text-blue-700 font-semibold">Commission sur chaque vente (fournisseur)</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input type="number" step="0.5" min="0" max="100" placeholder="Ex: 5" value={commissionRate} onChange={e => setCommissionRate(e.target.value)} className="max-w-[120px]" data-testid="commission-rate-input" />
+                          <span className="text-sm text-blue-700 font-medium">%</span>
+                          <span className="text-xs text-blue-500">(recommande: 3 a 5%)</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recapitulatif */}
+                    {customPrice && (
+                      <div className="bg-emerald-50 rounded-lg p-3 text-sm">
+                        <p className="font-semibold text-emerald-800 mb-1">Recapitulatif du devis :</p>
+                        <p className="text-emerald-700">
+                          Abonnement : <strong>{parseInt(customPrice).toLocaleString('fr-FR')} XOF / {billingCycle === 'monthly' ? 'mois' : billingCycle === 'quarterly' ? 'trimestre' : 'an'}</strong>
+                        </p>
+                        {commissionRate && parseFloat(commissionRate) > 0 && (
+                          <p className="text-emerald-700">Commission sur ventes : <strong>{commissionRate}%</strong></p>
+                        )}
+                        <p className="text-emerald-700">Duree : <strong>{duration || 365} jours</strong></p>
+                      </div>
+                    )}
+
                     <div>
                       <label className="text-xs text-gray-500">Note admin</label>
                       <Textarea placeholder="Note optionnelle..." value={adminNote} onChange={e => setAdminNote(e.target.value)} rows={2} data-testid="admin-note-input" />
                     </div>
                     <div className="flex gap-2">
-                      <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" disabled={processing} onClick={() => handleQuoteAction(q.id, 'approve')} data-testid="approve-quote-btn">
+                      <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" disabled={processing || !customPrice} onClick={() => handleQuoteAction(q.id, 'approve')} data-testid="approve-quote-btn">
                         {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><CheckCircle2 className="h-4 w-4 mr-1" /> Approuver</>}
                       </Button>
                       <Button variant="outline" className="flex-1 text-red-600 border-red-200 hover:bg-red-50" disabled={processing} onClick={() => handleQuoteAction(q.id, 'reject')} data-testid="reject-quote-btn">
@@ -385,6 +434,13 @@ const QuotesManagement = () => {
                 {q.admin_note && q.status !== 'pending' && (
                   <div className="bg-blue-50 rounded-lg p-3 text-sm">
                     <span className="text-blue-700 font-medium">Note admin:</span> <span className="text-blue-800">{q.admin_note}</span>
+                  </div>
+                )}
+                {q.status === 'approved' && q.custom_price_xof && (
+                  <div className="bg-emerald-50 rounded-lg p-3 text-sm space-y-1">
+                    <p className="font-semibold text-emerald-800">Tarification approuvee :</p>
+                    <p className="text-emerald-700">Abonnement : <strong>{q.custom_price_xof.toLocaleString('fr-FR')} XOF / {q.billing_cycle === 'monthly' ? 'mois' : q.billing_cycle === 'quarterly' ? 'trimestre' : q.billing_cycle === 'yearly' ? 'an' : 'mois'}</strong></p>
+                    {q.commission_rate > 0 && <p className="text-emerald-700">Commission sur ventes : <strong>{q.commission_rate}%</strong></p>}
                   </div>
                 )}
               </div>

@@ -39,7 +39,9 @@ class QuoteSubmit(BaseModel):
 class QuoteAdminAction(BaseModel):
     action: str = Field(description="approve/reject")
     admin_note: Optional[str] = None
-    custom_price_xof: Optional[int] = None
+    custom_price_xof: Optional[int] = Field(None, description="Montant abonnement en XOF")
+    commission_rate: Optional[float] = Field(None, description="Taux de commission fournisseur (3-5%)")
+    billing_cycle: Optional[str] = Field(None, description="monthly/quarterly/yearly")
     subscription_duration_days: Optional[int] = None
 
 
@@ -136,6 +138,9 @@ async def get_my_quote(current_user: dict = Depends(get_current_user)):
             "reviewed_at": q.get("reviewed_at"),
             "admin_note": q.get("admin_note"),
             "custom_price_xof": q.get("custom_price_xof"),
+            "commission_rate": q.get("commission_rate"),
+            "billing_cycle": q.get("billing_cycle"),
+            "subscription_duration_days": q.get("subscription_duration_days"),
         })
 
     return {"quotes": formatted, "total": len(formatted)}
@@ -187,6 +192,8 @@ async def list_quotes(
             "reviewed_by": q.get("reviewed_by"),
             "admin_note": q.get("admin_note"),
             "custom_price_xof": q.get("custom_price_xof"),
+            "commission_rate": q.get("commission_rate"),
+            "billing_cycle": q.get("billing_cycle"),
         })
 
     return {"quotes": formatted, "total": total, "stats": stats}
@@ -222,10 +229,14 @@ async def review_quote(
                 "reviewed_by": str(admin["_id"]),
                 "admin_note": action_data.admin_note,
                 "custom_price_xof": action_data.custom_price_xof,
+                "commission_rate": action_data.commission_rate,
+                "billing_cycle": action_data.billing_cycle or quote.get("billing_preference", "monthly"),
                 "subscription_duration_days": duration,
                 "updated_at": now,
             }}
         )
+
+        billing_cycle = action_data.billing_cycle or quote.get("billing_preference", "monthly")
 
         # Activate subscription
         await db.subscriptions.update_one(
@@ -235,7 +246,9 @@ async def review_quote(
                 "is_trial": False,
                 "start_date": now,
                 "end_date": end_date,
-                "price_paid": action_data.custom_price_xof or 0,
+                "price_xof": action_data.custom_price_xof or 0,
+                "commission_rate": action_data.commission_rate or 0,
+                "billing_cycle": billing_cycle,
                 "activated_by_admin": str(admin["_id"]),
                 "activated_at": now,
                 "updated_at": now,
@@ -249,11 +262,19 @@ async def review_quote(
             {"$set": {"is_active": True, "subscription_status": "active", "updated_at": now}}
         )
 
+        # Build pricing message for notification
+        price_msg = ""
+        if action_data.custom_price_xof:
+            cycle_label = {"monthly": "mois", "quarterly": "trimestre", "yearly": "an"}.get(billing_cycle, "mois")
+            price_msg = f" Montant: {action_data.custom_price_xof:,} XOF/{cycle_label}."
+        if action_data.commission_rate and action_data.commission_rate > 0:
+            price_msg += f" Commission sur ventes: {action_data.commission_rate}%."
+
         # Notify user
         await db.notifications.insert_one({
             "user_id": user_id,
             "title": "Devis approuve",
-            "message": f"Votre demande de devis a ete approuvee. Votre compte est maintenant actif jusqu'au {end_date.strftime('%d/%m/%Y')}.",
+            "message": f"Votre demande de devis a ete approuvee. Votre compte est maintenant actif jusqu'au {end_date.strftime('%d/%m/%Y')}.{price_msg}",
             "type": "subscription",
             "created_at": now,
             "is_read": False,

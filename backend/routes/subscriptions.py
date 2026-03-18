@@ -96,6 +96,8 @@ async def get_my_subscription(current_user: dict = Depends(get_current_user)):
             "next_billing_date": subscription.get("next_billing_date"),
             "billing_cycle": subscription.get("billing_cycle"),
             "requires_quote": status.get("requires_quote", False),
+            "price_xof": subscription.get("price_xof"),
+            "commission_rate": subscription.get("commission_rate"),
         },
         "features": features,
         "pricing": pricing,
