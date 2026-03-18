@@ -234,6 +234,21 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  // ICI Profile
+  getICIProfile: async (farmerId) => {
+    const response = await axios.get(`${BACKEND_URL}/api/ici-data/farmers/${farmerId}/ici-profile`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  updateICIProfile: async (farmerId, profileData) => {
+    const response = await axios.post(`${BACKEND_URL}/api/ici-data/farmers/${farmerId}/ici-profile`, profileData, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Statistics
   getVillageStats: async () => {
     const response = await axios.get(`${API}/stats/villages`, {

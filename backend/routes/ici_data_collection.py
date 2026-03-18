@@ -19,11 +19,19 @@ router = APIRouter(prefix="/api/ici-data", tags=["ICI Data Collection"])
 # ============= AUTHENTICATION =============
 
 async def get_admin_or_coop_user(current_user: dict = Depends(get_current_user)):
-    if current_user.get('user_type') not in ['admin', 'super_admin', 'cooperative']:
-        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs ou coopératives")
+    if current_user.get('user_type') not in ['admin', 'super_admin', 'cooperative', 'field_agent']:
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs, coopératives ou agents terrain")
     return current_user
 
 # ============= MODÈLES DE DONNÉES ICI =============
+
+class ChildDetail(BaseModel):
+    """Détail d'un enfant du ménage"""
+    prenom: str = Field(description="Prénom de l'enfant")
+    sexe: str = Field(description="Fille ou Garcon")
+    age: int = Field(ge=0, le=17, description="Âge de l'enfant")
+    scolarise: bool = Field(default=False, description="L'enfant est-il scolarisé ?")
+    travaille_exploitation: bool = Field(default=False, description="Travaille sur l'exploitation ?")
 
 class HouseholdChildData(BaseModel):
     """Données sur les enfants du ménage pour le SSRTE"""
@@ -34,6 +42,7 @@ class HouseholdChildData(BaseModel):
     enfants_scolarises: int = Field(ge=0, default=0, description="Enfants actuellement scolarisés")
     enfants_travaillant_exploitation: int = Field(ge=0, default=0, description="Enfants travaillant sur l'exploitation")
     taches_effectuees: List[str] = Field(default=[], description="Tâches effectuées par les enfants")
+    liste_enfants: List[ChildDetail] = Field(default=[], description="Liste détaillée des enfants")
 
 class LaborForceData(BaseModel):
     """Données sur la main-d'œuvre agricole"""

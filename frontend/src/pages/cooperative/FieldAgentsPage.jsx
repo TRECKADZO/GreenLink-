@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { cooperativeApi } from '../../services/cooperativeApi';
 import { 
   Users, Plus, Search, Phone, MapPin, ChevronLeft, 
-  Shield, CheckCircle, Clock, UserCheck, Eye, UserPlus, X, Check
+  Shield, CheckCircle, Clock, UserCheck, Eye, UserPlus, X, Check, FileText
 } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -15,6 +15,7 @@ import {
 } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
+import ICIProfileModal from './ICIProfileModal';
 
 const FieldAgentsPage = () => {
   const navigate = useNavigate();
@@ -36,6 +37,10 @@ const FieldAgentsPage = () => {
   const [memberSearch, setMemberSearch] = useState('');
   const [selectedForAssign, setSelectedForAssign] = useState([]);
   const [assignLoading, setAssignLoading] = useState(false);
+
+  // ICI Profile state
+  const [showICIModal, setShowICIModal] = useState(false);
+  const [iciFarmer, setICIFarmer] = useState(null);
 
   const fetchAgents = useCallback(async () => {
     try {
@@ -336,9 +341,14 @@ const FieldAgentsPage = () => {
                           <span className="text-sm font-medium">{f.full_name}</span>
                           <span className="text-xs text-gray-500">{f.village}</span>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => handleUnassign([f.id])} disabled={assignLoading} className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2" data-testid={`unassign-farmer-${f.id}`}>
-                          <X className="h-3 w-3 mr-1" />Retirer
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => { setICIFarmer(f); setShowICIModal(true); }} className="text-cyan-600 hover:text-cyan-800 hover:bg-cyan-50 h-7 px-2" data-testid={`ici-btn-${f.id}`}>
+                            <FileText className="h-3 w-3 mr-1" />ICI
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleUnassign([f.id])} disabled={assignLoading} className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2" data-testid={`unassign-farmer-${f.id}`}>
+                            <X className="h-3 w-3 mr-1" />Retirer
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -400,6 +410,14 @@ const FieldAgentsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ICI Profile Modal */}
+      <ICIProfileModal
+        open={showICIModal}
+        onOpenChange={setShowICIModal}
+        farmer={iciFarmer}
+        onSaved={() => { fetchAgents(); }}
+      />
     </div>
   );
 };

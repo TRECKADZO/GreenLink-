@@ -57,11 +57,11 @@ const QUICK_ACTIONS = {
   field_agent: [
     { name: 'SSRTEVisitForm', icon: 'clipboard', label: 'Visite SSRTE', color: '#06b6d4' },
     { name: 'FarmerSearch', icon: 'search', label: 'Recherche Planteur', color: '#3b82f6' },
-    { name: 'GeoPhoto', icon: 'camera', label: 'Photo Géo', color: '#8b5cf6' },
-    { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#10b981' },
-    { name: 'ParcelVerification', icon: 'checkmark-circle', label: 'Vérif. Parcelle', color: '#f59e0b' },
-    { name: 'Messaging', icon: 'chatbubbles', label: 'Messagerie', color: '#ec4899' },
-    { name: 'FieldAgentDashboard', icon: 'bar-chart', label: 'Statistiques', color: '#64748b' },
+    { name: 'FarmerICIForm', icon: 'document-text', label: 'Fiche ICI', color: '#8b5cf6' },
+    { name: 'GeoPhoto', icon: 'camera', label: 'Photo Géo', color: '#10b981' },
+    { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#f59e0b' },
+    { name: 'ParcelVerification', icon: 'checkmark-circle', label: 'Vérif. Parcelle', color: '#ec4899' },
+    { name: 'Messaging', icon: 'chatbubbles', label: 'Messagerie', color: '#64748b' },
     { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
   ],
   cooperative: [

@@ -1,0 +1,71 @@
+{
+  "summary": "Iteration 33 - ICI (Indice Composite de l'Enfant) Profile Feature Testing COMPLETE. ALL 11 BACKEND TESTS PASSED. Frontend UI testing completed successfully. Full ICI profile workflow verified: GET/POST profile with children details (liste_enfants), risk score calculation, field_agent access, add/remove children, summary counts, save functionality with toast notification.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "ICIProfileModal",
+        "issues": ["Genre and Education dropdowns show 'Choisir' and 'Niveau' placeholders but no values selected even when profile exists - consider pre-selecting values if data exists"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ici_profile.py",
+    "/app/test_reports/pytest/pytest_ici_profile.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ICI Profile endpoints correctly implemented with ChildDetail model containing prenom, sexe, age, scolarise, travaille_exploitation",
+    "GET /api/ici-data/farmers/{farmer_id}/ici-profile correctly returns saved profile with liste_enfants",
+    "POST /api/ici-data/farmers/{farmer_id}/ici-profile correctly saves children data and calculates risk_score",
+    "field_agent role has proper access to ICI endpoints via get_admin_or_coop_user function (line 22 includes 'field_agent')",
+    "Risk score calculation working: working children (+30), 5-11 age range with work (+20), no safety training (+10), dangerous tasks (+15)",
+    "Frontend ICIProfileModal.jsx properly loads existing data and auto-computes totals when updating children",
+    "ICI button appears in FieldAgentsPage.jsx assign modal next to each assigned farmer",
+    "data-testid attributes properly implemented for testing (ici-profile-modal, add-child-btn, save-ici-btn, children-list, child-name-{idx})"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ici_profile.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100% (all ICI profile features verified)"
+  },
+  "test_credentials": {
+    "cooperative": {
+      "identifier": "bielaghana@gmail.com",
+      "password": "greenlink2024"
+    },
+    "field_agent": {
+      "identifier": "+2250709005301",
+      "password": "greenlink2024"
+    }
+  },
+  "seed_data_creation": "Test data created: ICI profile for farmer Balde ibo with 3 children (Aminata Fille 8, Ibrahim Garcon 13, Fatou Fille 16). During testing added TestEnfant to verify add functionality.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Iteration 33 verified the ICI Profile feature. Backend: ChildDetail model accepts prenom (string), sexe (Fille/Garcon), age (0-17 validated), scolarise (bool), travaille_exploitation (bool). API endpoint validates age max=17. Risk score calculation factors: working children, young age range working, no safety training, dangerous tasks, zone priority. Frontend: ICIProfileModal opens from assign modal via ICI button, loads existing profile, shows farmer name in title ('Fiche ICI - Balde ibo'), displays risk badge, allows add/remove children with computed summary counts (Scolarises, Travaillant, Total), save shows success toast. Two farmers now assigned to agent Kone Alphone: Balde ibo and Koffi.",
+  "features_verified": {
+    "Backend APIs": {
+      "POST /api/ici-data/farmers/{farmer_id}/ici-profile with ChildDetail": "PASS - Accepts liste_enfants with prenom, sexe, age, scolarise, travaille_exploitation",
+      "GET /api/ici-data/farmers/{farmer_id}/ici-profile": "PASS - Returns saved profile with household_children.liste_enfants",
+      "field_agent role access to ICI endpoints": "PASS - Both GET and POST work for field_agent",
+      "Risk score calculation": "PASS - Calculated based on children data (working children, age ranges, safety training)",
+      "Age validation (0-17)": "PASS - Returns 422 for age > 17"
+    },
+    "Frontend UI": {
+      "FieldAgentsPage shows ICI button for assigned farmers": "PASS - ICI button visible next to each farmer in assign modal",
+      "ICI button opens ICIProfileModal with farmer name": "PASS - Title shows 'Fiche ICI - Balde ibo'",
+      "ICIProfileModal loads existing profile data (3 children)": "PASS - Aminata (Fille, 8), Ibrahim (Garcon, 13), Fatou (Fille, 16) loaded",
+      "Add/remove children functionality": "PASS - Ajouter button adds new child row, X button removes",
+      "Summary shows correct counts": "PASS - 2 Scolarises, 1 Travaillant, 3 Total displayed",
+      "Saving shows success toast": "PASS - Toast 'Fiche ICI sauvegardee' displayed"
+    }
+  },
+  "mocked_api_note": "No APIs are mocked for ICI Profile feature. All endpoints use real MongoDB data."
+}
