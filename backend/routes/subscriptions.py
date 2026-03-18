@@ -1,7 +1,7 @@
 # Subscription Routes for GreenLink
 # Business Model:
 # - FREE: Producteurs, Coopératives
-# - PAID (15-day trial): Acheteurs (49,000 XOF), Fournisseurs (29,000 XOF), Entreprises RSE (custom)
+# - PAID (15-day trial + devis): Acheteurs, Fournisseurs, Entreprises RSE (tous sur devis)
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
@@ -386,9 +386,9 @@ def get_plan_display_name(plan: SubscriptionPlan) -> str:
 def get_plan_description(plan: SubscriptionPlan) -> str:
     """Get description for a plan"""
     descriptions = {
-        SubscriptionPlan.FREE: "Accès gratuit pour les producteurs et coopératives",
-        SubscriptionPlan.STARTER: "Plan complet pour les acheteurs avec IA et analytics",
-        SubscriptionPlan.BUSINESS: "Solution e-commerce pour les fournisseurs d'intrants",
-        SubscriptionPlan.ENTERPRISE: "Solution sur mesure pour les entreprises RSE",
+        SubscriptionPlan.FREE: "Acces gratuit pour les producteurs et cooperatives",
+        SubscriptionPlan.STARTER: "Acces bourse des recoltes et messagerie - sur devis",
+        SubscriptionPlan.BUSINESS: "Boutique en ligne et gestion de commandes - sur devis",
+        SubscriptionPlan.ENTERPRISE: "Credits carbone, rapports ESG et tracabilite - sur devis",
     }
     return descriptions.get(plan, "")

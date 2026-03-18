@@ -16,12 +16,12 @@ const mockPricingPlans = [
     badgeColor: 'green',
     features: [
       'Profil producteur verifie',
-      'Vente de recoltes illimitee',
-      'Credits carbone illimites',
-      'Messagerie & contrats',
-      'Formation gratuite',
+      'Vente de recoltes sur le marketplace',
+      'Soumission de credits carbone',
+      'Messagerie avec acheteurs',
       'Alertes prix en temps reel',
-      'Acces boutique intrants'
+      'Acces boutique intrants',
+      'Application mobile gratuite'
     ],
     cta: 'Inscription gratuite',
     ctaVariant: 'outline',
@@ -36,12 +36,12 @@ const mockPricingPlans = [
     badgeColor: 'green',
     features: [
       'Gestion complete des membres',
-      'Attribution agents terrain',
-      'Distribution primes carbone',
-      'Rapports EUDR automatiques',
+      'Attribution fermiers aux agents terrain',
       'Fiches ICI & SSRTE integrees',
       'Suivi completion des formulaires',
-      'Application mobile dediee'
+      'Distribution primes carbone',
+      'Rapports EUDR automatiques',
+      'Application mobile agents dediee'
     ],
     cta: 'Creer ma cooperative',
     ctaVariant: 'outline',
@@ -57,11 +57,11 @@ const mockPricingPlans = [
     features: [
       '15 jours d\'essai gratuit',
       'Acces Bourse des Recoltes',
-      'Demandes de devis illimitees',
-      'Messagerie securisee',
+      'Propositions d\'achat illimitees',
+      'Messagerie securisee vendeurs',
       'Alertes nouvelles recoltes',
-      'Favoris & comparateur',
-      'Badge verifie'
+      'Tableau de bord commandes',
+      'Notifications temps reel'
     ],
     cta: 'Essai gratuit 15 jours',
     ctaVariant: 'default',
@@ -78,7 +78,7 @@ const mockPricingPlans = [
       '15 jours d\'essai gratuit',
       'Boutique en ligne dediee',
       'Gestion catalogue produits',
-      'Systeme de commandes',
+      'Systeme de commandes integre',
       'Statistiques de ventes',
       'Notifications temps reel',
       'Support marchand dedie'
@@ -96,11 +96,11 @@ const mockPricingPlans = [
     popular: false,
     features: [
       '15 jours d\'essai gratuit',
-      'Publication demandes illimitees',
-      'Verification IA des credits',
-      'Certificats conformes',
+      'Achat credits carbone certifies',
+      'Certificats de conformite',
       'Rapports ESG automatiques',
-      'Tracabilite complete',
+      'Tracabilite complete parcelle',
+      'Tableau de bord impact',
       'Accompagnement RSE dedie'
     ],
     cta: 'Demander un devis',

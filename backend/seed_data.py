@@ -257,16 +257,16 @@ async def seed_database():
             "name": "Entreprises RSE",
             "price": "Sur devis",
             "period": "",
+            "badge": "15 jours gratuits",
             "popular": False,
             "features": [
-                "Publication demandes illimitées",
-                "Vérification IA des crédits",
-                "Certificats conformes",
+                "15 jours d'essai gratuit",
+                "Achat credits carbone certifies",
+                "Certificats de conformite",
                 "Rapports ESG automatiques",
-                "Traçabilité complète",
-                "API & intégrations",
-                "Support dédié",
-                "Accompagnement RSE"
+                "Tracabilite complete parcelle",
+                "Tableau de bord impact",
+                "Accompagnement RSE dedie"
             ],
             "cta": "Demander un devis",
             "ctaVariant": "outline",
@@ -274,20 +274,20 @@ async def seed_database():
         },
         {
             "name": "Fournisseurs",
-            "price": "29 000 XOF",
-            "period": "/mois",
-            "badge": "+ 5% commission/vente",
+            "price": "Sur devis",
+            "period": "",
+            "badge": "15 jours gratuits",
             "popular": False,
             "features": [
-                "Boutique en ligne dédiée",
+                "15 jours d'essai gratuit",
+                "Boutique en ligne dediee",
                 "Gestion catalogue produits",
-                "Système de commandes",
-                "Paiement sécurisé",
+                "Systeme de commandes integre",
                 "Statistiques de ventes",
-                "Notifications temps réel",
-                "Support marchand"
+                "Notifications temps reel",
+                "Support marchand dedie"
             ],
-            "cta": "Devenir fournisseur",
+            "cta": "Essai gratuit 15 jours",
             "ctaVariant": "outline",
             "order": 4
         }

@@ -29,7 +29,6 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ### Suivi Completion Formulaires (18 Mars 2026)
 - Backend: API /api/field-agent/my-farmers enrichi avec forms_status/completion
 - 5 formulaires suivis: ICI, SSRTE, Parcelles, Photos, Enregistrement
-- Web + Mobile: barres de progression + badges "Complete"
 
 ### Abonnement par DEVIS avec 15 jours gratuit (18 Mars 2026)
 - Backend: 6 endpoints devis + admin dans routes/quotes.py
@@ -38,22 +37,22 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Frontend Fournisseur: Banner abonnement (trial, devis, suspendu)
 
 ### Notifications Email Automatiques (18 Mars 2026)
-- Service email dans services/email_service.py
-- Templates HTML: devis approuve, devis refuse, compte suspendu, compte reactive
-- Mode MOCK actif (configurer SMTP_HOST, SMTP_USER, SMTP_PASSWORD pour activer)
-- Declenche sur: approbation/rejet devis, suspension/activation compte
+- Service email: services/email_service.py (MOCK si SMTP non configure)
+- Templates: devis approuve, refuse, compte suspendu, reactive
 
-### Page Accueil - Tarifs Mis a Jour (18 Mars 2026)
-- Producteurs: GRATUIT (Gratuit a vie)
-- Cooperatives: GRATUIT (Attribution agents, Fiches ICI/SSRTE, Suivi completion)
-- Acheteurs: Sur devis (15 jours gratuits)
-- Fournisseurs: Sur devis (15 jours gratuits)
-- Entreprises RSE: Sur devis (15 jours gratuits)
-- Section "Comment fonctionne l'abonnement sur devis ?" en 3 etapes
+### Page Accueil + FAQ - Tarifs Actualises (18 Mars 2026)
+- Producteurs: GRATUIT - Profil, Vente recoltes, Credits carbone, Messagerie, Alertes prix, Boutique intrants, App mobile
+- Cooperatives: GRATUIT - Gestion membres, Attribution agents terrain, Fiches ICI/SSRTE, Suivi completion, Distribution primes, Rapports EUDR, App mobile agents
+- Acheteurs: Sur devis (15j gratuits) - Bourse Recoltes, Propositions achat, Messagerie vendeurs, Alertes, Tableau de bord commandes
+- Fournisseurs: Sur devis (15j gratuits) - Boutique en ligne, Catalogue, Commandes, Statistiques, Notifications
+- Entreprises RSE: Sur devis (15j gratuits) - Credits carbone certifies, Certificats conformite, Rapports ESG, Tracabilite, Tableau de bord impact
+- Section 3 etapes: Inscription gratuite -> Formulaire devis -> Approbation sous 48h
+- FAQ mise a jour avec les nouveaux tarifs
+- Enleve: "29 000 XOF" fournisseurs, "Verification IA des credits" RSE
 
 ## Etat Actuel
 - Web: FONCTIONNEL
-- Mobile: Code complete, rebuild necessaire
+- Mobile: Code complet, rebuild necessaire
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway
@@ -67,7 +66,7 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - [ ] Configurer SMTP pour emails reels
 ### P2
 - [ ] Langues Baoule/Dioula
-- [ ] Notifications multi-canal (Push, SMS, Email)
+- [ ] Notifications multi-canal
 - [ ] Stockage cloud fichiers
 - [ ] Refactoring cooperative.py et ssrte.py
 

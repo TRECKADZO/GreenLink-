@@ -11,7 +11,7 @@ from enum import Enum
 class SubscriptionPlan(str, Enum):
     FREE = "free"
     STARTER = "starter"  # Acheteurs - 49,000 XOF/month
-    BUSINESS = "business"  # Fournisseurs - 29,000 XOF/month + 5% commission
+    BUSINESS = "business"  # Fournisseurs - Sur devis (15 jours gratuits)
     ENTERPRISE = "enterprise"  # Entreprises RSE - Custom pricing
 
 

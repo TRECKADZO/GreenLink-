@@ -96,7 +96,7 @@ const FAQPage = () => {
       id: 12,
       category: 'pricing',
       question: "Combien coûte GreenLink ?",
-      answer: "**Gratuit à vie** pour :\n• Producteurs\n• Coopératives\n\n**Plans payants** :\n• Acheteurs : Sur devis\n• Fournisseurs : 29,000 XOF/mois + 5% commission\n• Entreprises RSE : Sur devis\n\nContactez-nous pour un devis personnalisé adapté à vos besoins."
+      answer: "**Gratuit a vie** pour :\n\u2022 Producteurs (vente, credits carbone, messagerie, alertes)\n\u2022 Cooperatives (gestion membres, agents terrain, fiches ICI/SSRTE)\n\n**Sur devis (15 jours gratuits)** :\n\u2022 Acheteurs : acces bourse des recoltes, propositions d'achat\n\u2022 Fournisseurs : boutique en ligne, gestion catalogue, commandes\n\u2022 Entreprises RSE : credits carbone, rapports ESG, tracabilite\n\nApres les 15 jours d'essai, remplissez un formulaire de devis. L'administrateur l'examine et active votre compte sous 48h."
     },
     {
       id: 13,
