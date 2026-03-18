@@ -228,23 +228,41 @@ const FieldAgentDashboard = ({ navigation }) => {
           </View>
         )}
 
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('SSRTEVisitForm')}
-          >
-            <Ionicons name="add-circle" size={24} color={COLORS.white} />
-            <Text style={styles.actionText}>Nouvelle Visite</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: '#10b981' }]}
-            onPress={() => navigation.navigate('FarmerSearch')}
-          >
-            <Ionicons name="search" size={24} color={COLORS.white} />
-            <Text style={styles.actionText}>Chercher Planteur</Text>
-          </TouchableOpacity>
+        {/* Quick Actions - Full Grid */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Actions Rapides</Text>
+          <View style={styles.quickActionsGrid}>
+            <TouchableOpacity style={[styles.quickActionItem, { backgroundColor: '#06b6d420' }]}
+              onPress={() => navigation.navigate('SSRTEVisitForm')}>
+              <Ionicons name="clipboard" size={24} color="#06b6d4" />
+              <Text style={styles.quickActionLabel}>Visite SSRTE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.quickActionItem, { backgroundColor: '#8b5cf620' }]}
+              onPress={() => navigation.navigate('FarmerICIForm')}>
+              <Ionicons name="document-text" size={24} color="#8b5cf6" />
+              <Text style={styles.quickActionLabel}>Visite ICI</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.quickActionItem, { backgroundColor: '#10b98120' }]}
+              onPress={() => navigation.navigate('AddCoopMember')}>
+              <Ionicons name="person-add" size={24} color="#10b981" />
+              <Text style={styles.quickActionLabel}>Nouveau Membre</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.quickActionItem, { backgroundColor: '#f59e0b20' }]}
+              onPress={() => navigation.navigate('ParcelVerification')}>
+              <Ionicons name="map" size={24} color="#f59e0b" />
+              <Text style={styles.quickActionLabel}>Parcelles</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.quickActionItem, { backgroundColor: '#ec489920' }]}
+              onPress={() => navigation.navigate('GeoPhoto')}>
+              <Ionicons name="camera" size={24} color="#ec4899" />
+              <Text style={styles.quickActionLabel}>Photo Geo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.quickActionItem, { backgroundColor: '#3b82f620' }]}
+              onPress={() => navigation.navigate('FarmerSearch')}>
+              <Ionicons name="search" size={24} color="#3b82f6" />
+              <Text style={styles.quickActionLabel}>Recherche</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -488,6 +506,27 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 100,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 8,
+  },
+  quickActionItem: {
+    width: '30%',
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 6,
+  },
+  quickActionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#334155',
+    textAlign: 'center',
   },
 });
 

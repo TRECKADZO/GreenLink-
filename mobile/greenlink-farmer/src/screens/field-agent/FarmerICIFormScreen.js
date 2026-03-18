@@ -14,11 +14,17 @@ import { COLORS, SPACING, API_URL } from '../../config';
 const EMPTY_CHILD = { prenom: '', sexe: 'Garcon', age: 0, scolarise: false, travaille_exploitation: false };
 
 const FarmerICIFormScreen = ({ navigation, route }) => {
-  const { farmerId, farmerName } = route.params || {};
+  const { farmerId: initialFarmerId, farmerName: initialFarmerName } = route.params || {};
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+
+  // Farmer selection state (when no farmerId provided)
+  const [farmerId, setFarmerId] = useState(initialFarmerId || null);
+  const [farmerName, setFarmerName] = useState(initialFarmerName || '');
+  const [myFarmers, setMyFarmers] = useState([]);
+  const [showFarmerList, setShowFarmerList] = useState(!initialFarmerId);
 
   const [form, setForm] = useState({
     taille_menage: 1,
@@ -49,9 +55,47 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     const unsub = NetInfo.addEventListener(state => setIsOnline(state.isConnected));
-    loadProfile();
+    if (farmerId) {
+      loadProfile();
+    } else {
+      loadMyFarmers();
+    }
     return () => unsub();
-  }, []);
+  }, [farmerId]);
+
+  const loadMyFarmers = async () => {
+    try {
+      // Try online
+      const netInfo = await NetInfo.fetch();
+      if (netInfo.isConnected && token) {
+        const resp = await fetch(`${API_URL}/api/field-agent/my-farmers`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          setMyFarmers(data.farmers || []);
+        }
+      } else {
+        // Load from cache
+        const cached = await AsyncStorage.getItem('assignedFarmers');
+        if (cached) {
+          const data = JSON.parse(cached);
+          setMyFarmers(data.farmers || []);
+        }
+      }
+    } catch (e) {
+      console.error('Error loading farmers:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectFarmer = (farmer) => {
+    setFarmerId(farmer.id);
+    setFarmerName(farmer.full_name);
+    setShowFarmerList(false);
+    setLoading(true);
+  };
 
   const loadProfile = async () => {
     try {
@@ -176,13 +220,57 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
     }
   };
 
-  if (loading) {
+  if (loading && !showFarmerList) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#06b6d4" />
           <Text style={styles.loadingText}>Chargement de la fiche...</Text>
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show farmer selection list when no farmerId
+  if (showFarmerList) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>Visite ICI</Text>
+            <Text style={styles.headerSubtitle}>Selectionnez un producteur</Text>
+          </View>
+        </View>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#06b6d4" />
+          </View>
+        ) : (
+          <ScrollView style={styles.content}>
+            {myFarmers.length > 0 ? myFarmers.map(f => (
+              <TouchableOpacity key={f.id} style={styles.farmerCard} onPress={() => selectFarmer(f)}>
+                <View style={styles.farmerAvatar}>
+                  <Ionicons name="person" size={24} color="#06b6d4" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.farmerCardName}>{f.full_name}</Text>
+                  <Text style={styles.farmerCardInfo}>{f.village} {f.phone_number ? `| ${f.phone_number}` : ''}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
+              </TouchableOpacity>
+            )) : (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="people-outline" size={48} color="#cbd5e1" />
+                <Text style={styles.emptyTitle}>Aucun fermier assigne</Text>
+                <Text style={styles.emptySubtitle}>Contactez votre cooperative pour l'attribution des fermiers.</Text>
+              </View>
+            )}
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        )}
       </SafeAreaView>
     );
   }
@@ -415,6 +503,13 @@ const styles = StyleSheet.create({
   saveButton: { backgroundColor: '#06b6d4', borderRadius: 12, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   saveButtonDisabled: { opacity: 0.6 },
   saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  farmerCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, gap: 12 },
+  farmerAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#ecfdf5', alignItems: 'center', justifyContent: 'center' },
+  farmerCardName: { fontSize: 15, fontWeight: '600', color: '#1e293b' },
+  farmerCardInfo: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  emptyContainer: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 20 },
+  emptyTitle: { fontSize: 16, fontWeight: '600', color: '#64748b', marginTop: 12 },
+  emptySubtitle: { fontSize: 13, color: '#94a3b8', marginTop: 4, textAlign: 'center' },
 });
 
 export default FarmerICIFormScreen;
