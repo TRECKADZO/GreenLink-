@@ -45,6 +45,27 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Acheteurs/RSE: Sur devis - 15 jours gratuits
 - Section 3 etapes workflow devis
 
+### Dashboard RSE Enrichi + Formulaire Credit Carbone (18 Mars 2026)
+- **Nouveau endpoint**: GET /api/rse/dashboard-stats avec metriques:
+  - Conformite EUDR (deforestation-free, geolocalisation, verification terrain)
+  - Monitoring travail enfants (fiches ICI, visites SSRTE, cas risques, alertes)
+  - Tracabilite chaine approvisionnement (cooperatives, producteurs, parcelles, hectares, certifications)
+  - Marche carbone (credits disponibles, tonnes, prix moyen/min/max, types)
+  - Mon impact (tonnes compensees, investissement XOF, achats)
+  - Score ESG global (E: environnement, S: social, G: gouvernance) avec details
+- **Dashboard RSE redesigne** avec theme sombre professionnel:
+  - Score ESG avec anneau SVG anime
+  - Cartes EUDR compliance avec barres de progression
+  - Section monitoring travail enfants avec ICI/SSRTE stats
+  - Apercu marche carbone avec types et prix
+  - Tracabilite avec certifications (UTZ, Fairtrade, Bio, Rainforest Alliance)
+  - Carte interactive, evolution mensuelle, histoires d'impact
+- **Formulaire credit carbone ameliore** en 4 etapes:
+  - Etape 1: Type de projet + dates debut/fin
+  - Etape 2: Standard, organisme certificateur, quantite, methodologie
+  - Etape 3: Localisation, surface, impact social, plan MRV
+  - Etape 4: Additionnalite, permanence, fuites, co-benefices, ODD, consentement CLIP/FPIC
+
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway, Email (SMTP non configure)
 
