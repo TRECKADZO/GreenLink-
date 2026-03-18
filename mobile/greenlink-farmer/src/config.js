@@ -5,7 +5,7 @@ export const CONFIG = {
   // API Backend - Uses EXPO_PUBLIC_API_URL from EAS build or falls back to hardcoded URL
   API_URL: process.env.EXPO_PUBLIC_API_URL 
     ? `${process.env.EXPO_PUBLIC_API_URL}/api` 
-    : 'https://attribution-flow-1.preview.emergentagent.com/api',
+    : 'https://task-status-11.preview.emergentagent.com/api',
   
   // Timeouts adaptés à la faible connectivité
   REQUEST_TIMEOUT: 30000, // 30 secondes

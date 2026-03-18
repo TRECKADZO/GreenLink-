@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://attribution-flow-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://task-status-11.preview.emergentagent.com')
 
 # Test cooperative credentials
 COOP_EMAIL = "coop-gagnoa@test.com"

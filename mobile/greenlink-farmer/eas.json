@@ -21,7 +21,7 @@
       },
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://attribution-flow-1.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://task-status-11.preview.emergentagent.com"
       }
     },
     "production": {
@@ -35,7 +35,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://attribution-flow-1.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://task-status-11.preview.emergentagent.com"
       }
     }
   },

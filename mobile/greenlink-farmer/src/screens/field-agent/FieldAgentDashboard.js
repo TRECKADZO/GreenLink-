@@ -253,24 +253,32 @@ const FieldAgentDashboard = ({ navigation }) => {
             </TouchableOpacity>
           </View>
           {myFarmers.length > 0 ? (
-            myFarmers.slice(0, 5).map(f => (
+            myFarmers.slice(0, 5).map(f => {
+              const comp = f.completion || { completed: 0, total: 5, percentage: 0 };
+              const pColor = comp.percentage >= 80 ? '#059669' : comp.percentage >= 40 ? '#f59e0b' : '#cbd5e1';
+              return (
               <TouchableOpacity 
                 key={f.id} 
                 style={styles.farmerRow}
                 onPress={() => navigation.navigate('FarmerProfile', { farmer: f })}
                 activeOpacity={0.7}
               >
-                <View style={styles.farmerRowAvatar}>
-                  <Ionicons name="person" size={18} color="#059669" />
+                <View style={[styles.farmerRowAvatar, comp.percentage === 100 && { borderWidth: 2, borderColor: '#059669' }]}>
+                  <Ionicons name={comp.percentage === 100 ? 'checkmark-circle' : 'person'} size={18} color="#059669" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.farmerRowName}>{f.full_name}</Text>
-                  <Text style={styles.farmerRowInfo}>{f.village || ''} {f.phone_number ? `| ${f.phone_number}` : ''}</Text>
+                  <View style={styles.farmerProgressRow}>
+                    <View style={styles.farmerProgressBg}>
+                      <View style={[styles.farmerProgressFill, { width: `${comp.percentage}%`, backgroundColor: pColor }]} />
+                    </View>
+                    <Text style={[styles.farmerProgressText, { color: pColor }]}>{comp.completed}/{comp.total}</Text>
+                  </View>
                 </View>
-                <Text style={{ fontSize: 11, color: '#94a3b8' }}>{f.parcels_count || 0} parcelles</Text>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-            ))
+              );
+            })
           ) : (
             <Text style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, paddingVertical: 16 }}>Aucun fermier assigne</Text>
           )}
@@ -606,6 +614,28 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#64748b',
     marginTop: 1,
+  },
+  farmerProgressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  farmerProgressBg: {
+    flex: 1,
+    height: 4,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 2,
+    overflow: 'hidden',
+    maxWidth: 100,
+  },
+  farmerProgressFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  farmerProgressText: {
+    fontSize: 10,
+    fontWeight: '600',
   },
 });
 

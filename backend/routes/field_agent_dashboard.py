@@ -399,13 +399,65 @@ async def get_my_assigned_farmers(
     oid_list = [ObjectId(fid) for fid in assigned_ids if ObjectId.is_valid(str(fid))]
     members = await db.coop_members.find({"_id": {"$in": oid_list}}).to_list(500)
 
-    # Enrich with parcel data for offline use
+    # Collect all member IDs for batch queries
+    member_ids = [str(m["_id"]) for m in members]
+    user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+
+    # Batch fetch form completion data
+    ici_profiles = await db.ici_profiles.find(
+        {"farmer_id": {"$in": member_ids}}, {"farmer_id": 1}
+    ).to_list(500)
+    ici_set = {p["farmer_id"] for p in ici_profiles}
+
+    ssrte_pipeline = [
+        {"$match": {"farmer_id": {"$in": member_ids}}},
+        {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}, "last": {"$max": "$recorded_at"}}}
+    ]
+    ssrte_agg = await db.ssrte_visits.aggregate(ssrte_pipeline).to_list(500)
+    ssrte_map = {s["_id"]: {"count": s["count"], "last": s.get("last")} for s in ssrte_agg}
+
+    photo_pipeline = [
+        {"$match": {"farmer_id": {"$in": member_ids}}},
+        {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}}}
+    ]
+    photo_agg = await db.geotagged_photos.aggregate(photo_pipeline).to_list(500)
+    photo_map = {p["_id"]: p["count"] for p in photo_agg}
+
+    parcel_pipeline = [
+        {"$match": {"farmer_id": {"$in": member_ids + user_ids}}},
+        {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}}}
+    ]
+    parcel_agg = await db.parcels.aggregate(parcel_pipeline).to_list(500)
+    parcel_map = {p["_id"]: p["count"] for p in parcel_agg}
+
+    # Enrich with parcel data and form completion for offline use
     farmers = []
     for m in members:
         member_id = str(m["_id"])
         parcels = []
-        if m.get("user_id"):
-            parcels = await db.parcels.find({"farmer_id": m["user_id"]}, {"_id": 0}).to_list(50)
+        farmer_uid = m.get("user_id", "")
+        if farmer_uid:
+            parcels = await db.parcels.find({"farmer_id": farmer_uid}, {"_id": 0}).to_list(50)
+
+        parcels_count = parcel_map.get(member_id, 0) or parcel_map.get(farmer_uid, 0) or len(parcels)
+
+        # Form completion status
+        ici_done = member_id in ici_set
+        ssrte_info = ssrte_map.get(member_id, {})
+        ssrte_done = ssrte_info.get("count", 0) > 0
+        parcels_done = parcels_count > 0
+        photos_done = photo_map.get(member_id, 0) > 0
+        registered = m.get("status") == "active" or m.get("is_active", False)
+
+        forms_status = {
+            "ici": {"completed": ici_done, "label": "Visite ICI"},
+            "ssrte": {"completed": ssrte_done, "label": "Visite SSRTE", "count": ssrte_info.get("count", 0)},
+            "parcels": {"completed": parcels_done, "label": "Parcelles", "count": parcels_count},
+            "photos": {"completed": photos_done, "label": "Photos", "count": photo_map.get(member_id, 0)},
+            "register": {"completed": registered, "label": "Enregistrement"},
+        }
+        completed_count = sum(1 for f in forms_status.values() if f["completed"])
+        total_forms = len(forms_status)
 
         farmers.append({
             "id": member_id,
@@ -423,7 +475,13 @@ async def get_my_assigned_farmers(
                 "crop_type": p.get("crop_type", "cacao"),
                 "gps_coordinates": p.get("gps_coordinates"),
             } for p in parcels],
-            "parcels_count": len(parcels),
+            "parcels_count": parcels_count or len(parcels),
+            "forms_status": forms_status,
+            "completion": {
+                "completed": completed_count,
+                "total": total_forms,
+                "percentage": round(completed_count / total_forms * 100) if total_forms > 0 else 0,
+            },
         })
 
     return {

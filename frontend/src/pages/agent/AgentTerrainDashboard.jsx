@@ -4,7 +4,7 @@ import {
   Shield, Users, MapPin, Leaf, Camera, FileText, Baby,
   Award, UserPlus, Search, Phone, ClipboardCheck, Activity, 
   Target, Star, AlertTriangle, Eye, Loader2, ArrowLeft,
-  ChevronRight, User
+  ChevronRight, User, CheckCircle2, Circle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -300,11 +300,19 @@ const AgentTerrainDashboard = () => {
                   <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
                 ) : filteredFarmers.length > 0 ? (
                   <div className="grid gap-3" data-testid="farmers-list">
-                    {filteredFarmers.map(f => (
+                    {filteredFarmers.map(f => {
+                      const comp = f.completion || { completed: 0, total: 5, percentage: 0 };
+                      const progressColor = comp.percentage >= 80 ? 'bg-emerald-500' : comp.percentage >= 40 ? 'bg-amber-500' : 'bg-gray-300';
+                      return (
                       <Card key={f.id} className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer group" onClick={() => openFarmerProfile(f)} data-testid={`farmer-card-${f.id}`}>
                         <CardContent className="p-4 flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center relative">
                             <Leaf className="h-6 w-6 text-emerald-600" />
+                            {comp.percentage === 100 && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center ring-2 ring-white">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">{f.full_name}</h3>
@@ -312,14 +320,24 @@ const AgentTerrainDashboard = () => {
                               {f.phone_number && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{f.phone_number}</span>}
                               <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{f.village || 'N/A'}</span>
                             </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-[140px]">
+                                <div className={`h-full rounded-full transition-all ${progressColor}`} style={{ width: `${comp.percentage}%` }} />
+                              </div>
+                              <span className="text-[10px] font-medium text-gray-400">{comp.completed}/{comp.total}</span>
+                            </div>
                           </div>
                           <div className="text-right hidden sm:block">
                             <p className="text-sm font-medium text-gray-700">{f.parcels_count || 0} parcelle(s)</p>
+                            <p className={`text-xs font-medium mt-1 ${comp.percentage === 100 ? 'text-emerald-600' : comp.percentage > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                              {comp.percentage === 100 ? 'Complet' : comp.percentage > 0 ? `${comp.percentage}%` : 'A faire'}
+                            </p>
                           </div>
                           <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-emerald-500 transition-colors" />
                         </CardContent>
                       </Card>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <Card><CardContent className="py-12 text-center">
@@ -367,23 +385,51 @@ const AgentTerrainDashboard = () => {
                   </CardContent>
                 </Card>
 
+                {/* Overall Completion Progress */}
+                {selectedFarmer.completion && (
+                  <Card className="border-0 shadow-sm" data-testid="farmer-completion-card">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">Progression globale</span>
+                        <span className={`text-sm font-bold ${selectedFarmer.completion.percentage === 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {selectedFarmer.completion.percentage}%
+                        </span>
+                      </div>
+                      <Progress value={selectedFarmer.completion.percentage} className="h-2" />
+                      <p className="text-xs text-gray-400 mt-1">{selectedFarmer.completion.completed} / {selectedFarmer.completion.total} fiches completees</p>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* All Available Forms */}
                 <h3 className="font-semibold text-gray-700 text-sm px-1">Fiches a remplir pour {selectedFarmer.full_name}</h3>
                 <div className="grid gap-3" data-testid="farmer-forms-list">
-                  {FARMER_FORMS.map(form => (
-                    <Card key={form.id} className={`border shadow-sm hover:shadow-md transition-all cursor-pointer group ${form.color}`} onClick={() => handleFormAction(form.id)} data-testid={`form-${form.id}`}>
+                  {FARMER_FORMS.map(form => {
+                    const status = selectedFarmer.forms_status?.[form.id];
+                    const isDone = status?.completed;
+                    return (
+                    <Card key={form.id} className={`border shadow-sm hover:shadow-md transition-all cursor-pointer group ${isDone ? 'border-emerald-200 bg-emerald-50/30' : form.color}`} onClick={() => handleFormAction(form.id)} data-testid={`form-${form.id}`}>
                       <CardContent className="p-4 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/80 shadow-sm">
-                          <form.icon className="h-6 w-6" />
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${isDone ? 'bg-emerald-100' : 'bg-white/80'}`}>
+                          <form.icon className={`h-6 w-6 ${isDone ? 'text-emerald-600' : ''}`} />
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-semibold text-sm">{form.label}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-sm">{form.label}</h4>
+                            {isDone && <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] px-1.5 py-0">Complete</Badge>}
+                          </div>
                           <p className="text-xs opacity-75 mt-0.5">{form.desc}</p>
+                          {status?.count > 0 && <p className="text-[10px] text-emerald-600 font-medium mt-1">{status.count} enregistrement(s)</p>}
                         </div>
-                        <ChevronRight className="h-5 w-5 opacity-40 group-hover:opacity-100 transition-opacity" />
+                        {isDone ? (
+                          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-gray-300 group-hover:text-gray-400 transition-colors" />
+                        )}
                       </CardContent>
                     </Card>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

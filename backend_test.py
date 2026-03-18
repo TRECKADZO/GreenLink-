@@ -14,7 +14,7 @@ import sys
 from datetime import datetime, timedelta
 
 # Get backend URL from environment
-BACKEND_URL = "https://attribution-flow-1.preview.emergentagent.com"
+BACKEND_URL = "https://task-status-11.preview.emergentagent.com"
 BASE_URL = f"{BACKEND_URL}/api"
 
 class Colors:
