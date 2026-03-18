@@ -37,6 +37,7 @@ from routes import marketplace_analytics  # Advanced Marketplace Analytics
 from routes import agent_search  # Agent Terrain - Recherche sécurisée
 from routes import carbon_listings  # Carbon Credit Listings - Soumission/Approbation
 from routes import quotes  # Gestion des Devis pour abonnements fournisseurs
+from routes import rse_dashboard  # RSE Dashboard enrichi
 from services.push_notifications import router as push_notifications_router
 
 
@@ -145,6 +146,7 @@ app.include_router(marketplace_analytics.router)
 app.include_router(agent_search.router)
 app.include_router(carbon_listings.router)
 app.include_router(quotes.router)
+app.include_router(rse_dashboard.router)
 
 app.add_middleware(
     CORSMiddleware,

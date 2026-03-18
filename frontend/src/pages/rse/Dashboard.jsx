@@ -9,24 +9,50 @@ import InteractiveMap from '../../components/InteractiveMap';
 import SubscriptionBanner from '../../components/SubscriptionBanner';
 import { greenlinkApi } from '../../services/greenlinkApi';
 import axios from 'axios';
-import { 
-  Leaf, 
-  Users, 
-  TreePine, 
-  MapPin,
-  Award,
-  TrendingUp,
-  Download,
-  Heart,
-  Building2,
-  Map,
-  PieChart,
-  DollarSign,
-  ShoppingCart
+import {
+  Leaf, Users, TreePine, MapPin, Award, TrendingUp, Download,
+  Heart, Building2, Map, PieChart, DollarSign, ShoppingCart,
+  Shield, AlertTriangle, Eye, CheckCircle2, Globe, BarChart3,
+  FileCheck, Baby, Scale, Target, Layers
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+// ESG Score Ring Component
+const ScoreRing = ({ score, label, color, size = 80 }) => {
+  const radius = (size - 10) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (Math.min(score, 100) / 100) * circumference;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#1e293b" strokeWidth="6" />
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color}
+          strokeWidth="6" strokeDasharray={circumference} strokeDashoffset={offset}
+          strokeLinecap="round" className="transition-all duration-1000" />
+      </svg>
+      <span className="text-2xl font-bold text-white absolute" style={{ marginTop: size/2 - 14 }}>{Math.round(score)}</span>
+      <span className="text-xs text-slate-400 mt-1">{label}</span>
+    </div>
+  );
+};
+
+// Progress bar small component
+const MiniProgress = ({ value, max, color = 'bg-emerald-500', label }) => {
+  const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
+  return (
+    <div>
+      <div className="flex justify-between text-xs mb-1">
+        <span className="text-slate-400">{label}</span>
+        <span className="text-white font-medium">{Math.round(pct)}%</span>
+      </div>
+      <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+        <div className={`h-full ${color} rounded-full transition-all duration-700`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+};
 
 const RSEDashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -37,6 +63,7 @@ const RSEDashboard = () => {
   const [distrib, setDistrib] = useState(null);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -46,6 +73,7 @@ const RSEDashboard = () => {
     }
     fetchData();
     fetchSubscription();
+    fetchStats();
   }, [user, authLoading]);
 
   const fetchSubscription = async () => {
@@ -57,6 +85,18 @@ const RSEDashboard = () => {
       setSubscription(data.subscription);
     } catch (err) {
       console.error('Error fetching subscription:', err);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.get(`${API_URL}/api/rse/dashboard-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(data);
+    } catch (err) {
+      console.error('Error fetching RSE stats:', err);
     }
   };
 
@@ -79,342 +119,365 @@ const RSEDashboard = () => {
 
   const exportImpactReport = () => {
     if (!impact) return;
-    
-    // Generate PDF-like report
     const reportData = {
       company: user.company_name_rse || user.full_name,
       date: new Date().toLocaleDateString('fr-FR'),
       ...impact
     };
-    
     const reportText = `
 RAPPORT D'IMPACT RSE - ${reportData.company}
-Généré le ${reportData.date}
+Genere le ${reportData.date}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RÉSUMÉ EXÉCUTIF
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESUME EXECUTIF
+Offset Carbone Total: ${reportData.total_co2_offset_tonnes} tonnes CO2
+Agriculteurs Impactes: ${reportData.total_farmers_impacted} producteurs
+Femmes Beneficiaires: ${reportData.women_farmers_percentage}%
+Arbres Plantes: ${reportData.total_trees_planted.toLocaleString()}
+Regions Couvertes: ${reportData.regions_covered.join(', ')}
+${stats ? `
+SCORE ESG: ${stats.esg_score.global}/100
+- Environnemental: ${stats.esg_score.environmental}/100
+- Social: ${stats.esg_score.social}/100
+- Gouvernance: ${stats.esg_score.governance}/100
 
-Offset Carbone Total: ${reportData.total_co2_offset_tonnes} tonnes CO₂
-Agriculteurs Impactés: ${reportData.total_farmers_impacted} producteurs
-Femmes Bénéficiaires: ${reportData.women_farmers_percentage}%
-Arbres Plantés: ${reportData.total_trees_planted.toLocaleString()}
-Régions Couvertes: ${reportData.regions_covered.join(', ')}
+CONFORMITE EUDR
+- Taux de conformite: ${stats.eudr_compliance.compliance_rate}%
+- Parcelles geolocalises: ${stats.eudr_compliance.geolocated_parcels}/${stats.eudr_compliance.total_parcels}
+- Parcelles verifiees: ${stats.eudr_compliance.verified_parcels}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-IMPACT DÉTAILLÉ PAR MOIS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${reportData.monthly_breakdown.map(m => 
-  `${m.month}: ${m.co2_offset}t CO₂ | ${m.investment.toLocaleString()} XOF`
-).join('\n')}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CONFORMITÉ & CERTIFICATIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✓ Verra Verified Carbon Standard
-✓ Gold Standard
-✓ Plan Vivo
-✓ EUDR Compliant
-✓ CSRD Ready
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Rapport certifié GreenLink CI
+MONITORING TRAVAIL DES ENFANTS
+- Fiches ICI completees: ${stats.child_labor_monitoring.total_ici_forms}
+- Visites SSRTE: ${stats.child_labor_monitoring.total_ssrte_visits}
+- Enfants surveilles: ${stats.child_labor_monitoring.children_monitored}
+` : ''}
+Rapport certifie GreenLink CI
 www.greenlink-agritech.com
     `;
-    
     const blob = new Blob([reportText], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `Impact_RSE_${Date.now()}.txt`;
     a.click();
-    
-    toast({
-      title: 'Export réussi',
-      description: 'Rapport d\'impact téléchargé'
-    });
+    toast({ title: 'Export reussi', description: 'Rapport d\'impact telecharge' });
   };
 
   if (loading || !impact) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="min-h-screen bg-slate-950">
         <Navbar />
         <div className="max-w-7xl mx-auto px-6 py-12 pt-24">
           <div className="text-center py-12">
-            <Leaf className="w-12 h-12 text-green-600 animate-pulse mx-auto mb-4" />
-            <p className="text-gray-600">Chargement de votre impact...</p>
+            <Leaf className="w-12 h-12 text-emerald-500 animate-pulse mx-auto mb-4" />
+            <p className="text-slate-400">Chargement de votre impact...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  const impactCards = [
-    {
-      title: 'CO₂ Compensé',
-      value: `${impact.total_co2_offset_tonnes}`,
-      unit: 'tonnes',
-      icon: Leaf,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
-      gradient: 'from-green-500 to-emerald-600'
-    },
-    {
-      title: 'Agriculteurs Impactés',
-      value: impact.total_farmers_impacted,
-      unit: 'producteurs',
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-      gradient: 'from-blue-500 to-cyan-600'
-    },
-    {
-      title: 'Femmes Bénéficiaires',
-      value: `${impact.women_farmers_percentage}%`,
-      unit: 'parité',
-      icon: Heart,
-      color: 'text-pink-600',
-      bgColor: 'bg-pink-100',
-      gradient: 'from-pink-500 to-rose-600'
-    },
-    {
-      title: 'Arbres Plantés',
-      value: impact.total_trees_planted.toLocaleString(),
-      unit: 'arbres',
-      icon: TreePine,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-100',
-      gradient: 'from-emerald-500 to-teal-600'
-    }
-  ];
+  const esg = stats?.esg_score;
+  const eudr = stats?.eudr_compliance;
+  const childLabor = stats?.child_labor_monitoring;
+  const trace = stats?.traceability;
+  const carbonMkt = stats?.carbon_market;
+  const myImpact = stats?.my_impact;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-slate-950" data-testid="rse-dashboard">
       <Navbar />
-      
-      <div className="max-w-7xl mx-auto px-6 py-12 pt-24">
-        {/* Subscription Banner */}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pt-24">
         <SubscriptionBanner subscription={subscription} />
-        
+
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Building2 className="w-10 h-10 text-purple-600" />
-                <div>
-                  <h1 className="text-4xl font-bold text-gray-900">Impact RSE Dashboard</h1>
-                  <p className="text-gray-600">{user?.company_name_rse || user?.full_name}</p>
-                </div>
-              </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-white" />
             </div>
-            <Button 
-              onClick={exportImpactReport}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export Rapport CSRD
-            </Button>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white" data-testid="dashboard-title">
+                Impact RSE Dashboard
+              </h1>
+              <p className="text-slate-400 text-sm">{user?.company_name_rse || user?.full_name}</p>
+            </div>
           </div>
+          <Button
+            onClick={exportImpactReport}
+            data-testid="export-report-btn"
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export Rapport CSRD
+          </Button>
         </div>
 
-        {/* Impact Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {impactCards.map((card, index) => (
-            <Card key={index} className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-              <div className="p-6 relative z-10">
-                <div className={`p-3 rounded-lg ${card.bgColor} w-fit mb-4`}>
-                  <card.icon className={`w-6 h-6 ${card.color}`} />
-                </div>
-                <h3 className="text-sm text-gray-600 mb-1">{card.title}</h3>
-                <p className="text-4xl font-bold text-gray-900 mb-1">{card.value}</p>
-                <p className="text-sm text-gray-500">{card.unit}</p>
+        {/* ESG Score + Quick Stats */}
+        {esg && (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6" data-testid="esg-section">
+            {/* ESG Score Card */}
+            <Card className="bg-slate-900 border-slate-800 p-6 lg:col-span-1">
+              <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
+                <Target className="w-4 h-4" /> Score ESG Global
+              </h3>
+              <div className="flex justify-center relative" data-testid="esg-global-score">
+                <ScoreRing score={esg.global} label="" color="#10b981" size={120} />
+              </div>
+              <p className="text-center text-xs text-slate-500 mt-3">sur 100 points</p>
+              <div className="mt-4 space-y-3">
+                <MiniProgress value={esg.environmental} max={100} color="bg-emerald-500" label="Environnemental" />
+                <MiniProgress value={esg.social} max={100} color="bg-blue-500" label="Social" />
+                <MiniProgress value={esg.governance} max={100} color="bg-purple-500" label="Gouvernance" />
               </div>
             </Card>
-          ))}
-        </div>
 
-        {/* Distribution Model Section - Admin Only */}
-        {distrib && user?.user_type === 'admin' && (
-          <Card className="p-6 mb-8" data-testid="distribution-section">
-            <div className="flex items-center gap-3 mb-6">
-              <PieChart className="w-6 h-6 text-emerald-600" />
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Repartition des Primes Carbone</h2>
-                <p className="text-sm text-gray-500">Modele de distribution GreenLink - {distrib.total_projects} projets approuves</p>
-              </div>
-            </div>
-
-            {/* Totals Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-gray-50 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Revenu Total</p>
-                <p className="text-2xl font-bold text-gray-900">{(distrib.total_revenue / 1000000).toFixed(1)}M</p>
-                <p className="text-xs text-gray-500">XOF</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Tonnes CO2</p>
-                <p className="text-2xl font-bold text-gray-900">{distrib.total_tonnes_co2?.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">tonnes</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Prix Moyen</p>
-                <p className="text-2xl font-bold text-gray-900">{distrib.avg_price_per_tonne?.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">XOF/tonne</p>
-              </div>
-              <div className="bg-emerald-50 rounded-xl p-4 text-center">
-                <p className="text-xs text-emerald-600 uppercase tracking-wide">Aux Agriculteurs</p>
-                <p className="text-2xl font-bold text-emerald-700">{(distrib.distribution.farmer.amount / 1000000).toFixed(1)}M</p>
-                <p className="text-xs text-emerald-600">XOF (49% du total)</p>
-              </div>
-            </div>
-
-            {/* Visual Distribution Bar */}
-            <div className="mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-3">Etape 1: Revenu Total → 30% Couts + 70% Net</p>
-              <div className="flex h-12 rounded-xl overflow-hidden shadow-inner">
-                <div className="bg-gray-400 flex items-center justify-center" style={{width: '30%'}}>
-                  <span className="text-white text-xs font-bold">30% Couts</span>
+            {/* Impact Cards */}
+            <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Card className="bg-slate-900 border-slate-800 p-4" data-testid="stat-co2">
+                <div className="p-2 rounded-lg bg-emerald-500/10 w-fit mb-2">
+                  <Leaf className="w-5 h-5 text-emerald-400" />
                 </div>
-                <div className="bg-emerald-500 flex items-center justify-center" style={{width: '70%'}}>
-                  <span className="text-white text-xs font-bold">70% Montant Net</span>
+                <p className="text-xs text-slate-500">CO2 Compense</p>
+                <p className="text-2xl font-bold text-white">{impact.total_co2_offset_tonnes}</p>
+                <p className="text-xs text-slate-500">tonnes</p>
+              </Card>
+              <Card className="bg-slate-900 border-slate-800 p-4" data-testid="stat-farmers">
+                <div className="p-2 rounded-lg bg-blue-500/10 w-fit mb-2">
+                  <Users className="w-5 h-5 text-blue-400" />
                 </div>
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-xs text-gray-500">{(distrib.distribution.fees.amount / 1000000).toFixed(1)}M XOF</span>
-                <span className="text-xs text-emerald-600 font-medium">{(distrib.distribution.net_amount / 1000000).toFixed(1)}M XOF</span>
-              </div>
-            </div>
+                <p className="text-xs text-slate-500">Agriculteurs</p>
+                <p className="text-2xl font-bold text-white">{trace?.total_farmers || impact.total_farmers_impacted}</p>
+                <p className="text-xs text-slate-500">producteurs actifs</p>
+              </Card>
+              <Card className="bg-slate-900 border-slate-800 p-4" data-testid="stat-hectares">
+                <div className="p-2 rounded-lg bg-amber-500/10 w-fit mb-2">
+                  <Layers className="w-5 h-5 text-amber-400" />
+                </div>
+                <p className="text-xs text-slate-500">Hectares traces</p>
+                <p className="text-2xl font-bold text-white">{trace?.total_hectares?.toLocaleString() || 0}</p>
+                <p className="text-xs text-slate-500">ha</p>
+              </Card>
+              <Card className="bg-slate-900 border-slate-800 p-4" data-testid="stat-trees">
+                <div className="p-2 rounded-lg bg-teal-500/10 w-fit mb-2">
+                  <TreePine className="w-5 h-5 text-teal-400" />
+                </div>
+                <p className="text-xs text-slate-500">Arbres Plantes</p>
+                <p className="text-2xl font-bold text-white">{impact.total_trees_planted.toLocaleString()}</p>
+                <p className="text-xs text-slate-500">arbres</p>
+              </Card>
 
-            <div className="mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-3">Etape 2: Montant Net → 70% Agriculteurs + 25% GreenLink + 5% Cooperative</p>
-              <div className="flex h-12 rounded-xl overflow-hidden shadow-inner">
-                <div className="bg-emerald-600 flex items-center justify-center" style={{width: '70%'}}>
-                  <span className="text-white text-xs font-bold">70% Agriculteurs</span>
-                </div>
-                <div className="bg-blue-500 flex items-center justify-center" style={{width: '25%'}}>
-                  <span className="text-white text-xs font-bold">25% GL</span>
-                </div>
-                <div className="bg-amber-500 flex items-center justify-center" style={{width: '5%'}}>
-                </div>
-              </div>
-              <div className="flex mt-1">
-                <span className="text-xs text-emerald-600 font-medium" style={{width: '70%'}}>{(distrib.distribution.farmer.amount / 1000000).toFixed(1)}M</span>
-                <span className="text-xs text-blue-600 font-medium" style={{width: '25%'}}>{(distrib.distribution.greenlink.amount / 1000000).toFixed(1)}M</span>
-                <span className="text-xs text-amber-600 font-medium text-right" style={{width: '5%'}}></span>
-              </div>
-            </div>
+              {/* EUDR Compliance Card */}
+              {eudr && (
+                <Card className="bg-slate-900 border-slate-800 p-4 col-span-2" data-testid="eudr-compliance-card">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-sm font-medium text-white">Conformite EUDR</h3>
+                  </div>
+                  <div className="space-y-2">
+                    <MiniProgress value={eudr.compliance_rate} max={100} color="bg-emerald-500" label="Deforestation-free" />
+                    <MiniProgress value={eudr.geolocation_rate} max={100} color="bg-blue-500" label="Geolocalisation" />
+                    <MiniProgress value={eudr.verification_rate} max={100} color="bg-purple-500" label="Verification terrain" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-3 text-xs text-slate-500">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    {eudr.verified_parcels} parcelles verifiees sur {eudr.total_parcels}
+                  </div>
+                </Card>
+              )}
 
-            {/* Detailed breakdown cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="border-l-4 border-gray-400 bg-gray-50 p-3 rounded-r-lg">
-                <p className="text-xs text-gray-500">Couts & Frais</p>
-                <p className="text-lg font-bold text-gray-700">{distrib.distribution.fees.amount?.toLocaleString()} XOF</p>
-                <p className="text-xs text-gray-400">30% du revenu total</p>
-              </div>
-              <div className="border-l-4 border-emerald-500 bg-emerald-50 p-3 rounded-r-lg">
-                <p className="text-xs text-emerald-600">Agriculteurs</p>
-                <p className="text-lg font-bold text-emerald-700">{distrib.distribution.farmer.amount?.toLocaleString()} XOF</p>
-                <p className="text-xs text-emerald-500">70% du montant net</p>
-              </div>
-              <div className="border-l-4 border-blue-500 bg-blue-50 p-3 rounded-r-lg">
-                <p className="text-xs text-blue-600">GreenLink</p>
-                <p className="text-lg font-bold text-blue-700">{distrib.distribution.greenlink.amount?.toLocaleString()} XOF</p>
-                <p className="text-xs text-blue-500">25% du montant net</p>
-              </div>
-              <div className="border-l-4 border-amber-500 bg-amber-50 p-3 rounded-r-lg">
-                <p className="text-xs text-amber-600">Cooperatives</p>
-                <p className="text-lg font-bold text-amber-700">{distrib.distribution.coop.amount?.toLocaleString()} XOF</p>
-                <p className="text-xs text-amber-500">5% du montant net</p>
-              </div>
+              {/* Child Labor Monitoring */}
+              {childLabor && (
+                <Card className="bg-slate-900 border-slate-800 p-4 col-span-2" data-testid="child-labor-card">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Baby className="w-4 h-4 text-blue-400" />
+                    <h3 className="text-sm font-medium text-white">Monitoring Travail Enfants</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-slate-800 rounded-lg p-2">
+                      <p className="text-lg font-bold text-white">{childLabor.total_ici_forms}</p>
+                      <p className="text-xs text-slate-500">Fiches ICI</p>
+                    </div>
+                    <div className="bg-slate-800 rounded-lg p-2">
+                      <p className="text-lg font-bold text-white">{childLabor.total_ssrte_visits}</p>
+                      <p className="text-xs text-slate-500">Visites SSRTE</p>
+                    </div>
+                    <div className="bg-slate-800 rounded-lg p-2">
+                      <p className="text-lg font-bold text-white">{childLabor.children_monitored}</p>
+                      <p className="text-xs text-slate-500">Enfants suivis</p>
+                    </div>
+                  </div>
+                  {childLabor.total_alerts > 0 && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <MiniProgress
+                        value={childLabor.resolved_alerts}
+                        max={childLabor.total_alerts}
+                        color="bg-green-500"
+                        label={`Alertes resolues: ${childLabor.resolved_alerts}/${childLabor.total_alerts}`}
+                      />
+                    </div>
+                  )}
+                  {childLabor.high_risk_cases > 0 && (
+                    <div className="flex items-center gap-2 mt-2 text-xs">
+                      <AlertTriangle className="w-3 h-3 text-red-400" />
+                      <span className="text-red-400">{childLabor.high_risk_cases} cas a haut risque identifies</span>
+                    </div>
+                  )}
+                </Card>
+              )}
             </div>
+          </div>
+        )}
 
-            {/* By Project Type */}
-            {distrib.by_project_type?.length > 0 && (
-              <div className="mt-6">
-                <p className="text-sm font-medium text-gray-700 mb-3">Par type de projet</p>
-                <div className="space-y-2">
-                  {distrib.by_project_type.map((t, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <span className="text-sm text-gray-600 w-44 truncate">{t.type}</span>
-                      <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 flex items-center justify-end pr-2"
-                          style={{width: `${Math.min((t.tonnes / distrib.total_tonnes_co2) * 100, 100)}%`}}
-                        >
-                          <span className="text-white text-xs font-medium">{t.tonnes}t</span>
-                        </div>
+        {/* My Investment + Carbon Market */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          {/* My investment */}
+          {myImpact && (
+            <Card className="bg-slate-900 border-slate-800 p-6" data-testid="my-impact-card">
+              <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
+                <DollarSign className="w-4 h-4" /> Mon Investissement Impact
+              </h3>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-3xl font-bold text-emerald-400">{myImpact.total_tonnes_offset}</p>
+                  <p className="text-xs text-slate-500 mt-1">Tonnes CO2</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-white">{myImpact.total_investment_xof.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 mt-1">XOF investi</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-blue-400">{myImpact.purchases_count}</p>
+                  <p className="text-xs text-slate-500 mt-1">Achats</p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Carbon market summary */}
+          {carbonMkt && (
+            <Card className="bg-slate-900 border-slate-800 p-6" data-testid="carbon-market-card">
+              <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" /> Marche Carbone
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-800 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-emerald-400">{carbonMkt.available_credits}</p>
+                  <p className="text-xs text-slate-500">Credits disponibles</p>
+                </div>
+                <div className="bg-slate-800 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-white">{carbonMkt.total_tonnes_available.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500">Tonnes CO2</p>
+                </div>
+              </div>
+              {carbonMkt.credit_types?.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {carbonMkt.credit_types.map((ct, i) => (
+                    <div key={i} className="flex items-center justify-between text-sm">
+                      <span className="text-slate-400">{ct.type}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-medium">{ct.tonnes}t</span>
+                        <Badge className="bg-slate-700 text-slate-300 text-xs">{ct.count}</Badge>
                       </div>
-                      <span className="text-xs text-gray-500 w-20 text-right">{t.count} projets</span>
                     </div>
                   ))}
                 </div>
+              )}
+              {carbonMkt.avg_price_per_tonne > 0 && (
+                <p className="text-xs text-slate-500 mt-3">
+                  Prix moyen: {carbonMkt.avg_price_per_tonne.toLocaleString()} XOF/t
+                  {carbonMkt.min_price > 0 && carbonMkt.max_price > 0 && (
+                    <span> ({carbonMkt.min_price.toLocaleString()} - {carbonMkt.max_price.toLocaleString()})</span>
+                  )}
+                </p>
+              )}
+            </Card>
+          )}
+        </div>
+
+        {/* Supply Chain Traceability */}
+        {trace && (
+          <Card className="bg-slate-900 border-slate-800 p-6 mb-6" data-testid="traceability-card">
+            <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
+              <Globe className="w-4 h-4" /> Tracabilite Chaine d'Approvisionnement
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="bg-slate-800 rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-white">{trace.total_cooperatives}</p>
+                <p className="text-xs text-slate-500">Cooperatives</p>
+              </div>
+              <div className="bg-slate-800 rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-white">{trace.total_farmers.toLocaleString()}</p>
+                <p className="text-xs text-slate-500">Producteurs</p>
+              </div>
+              <div className="bg-slate-800 rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-white">{trace.total_parcels.toLocaleString()}</p>
+                <p className="text-xs text-slate-500">Parcelles</p>
+              </div>
+              <div className="bg-slate-800 rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-white">{trace.total_hectares.toLocaleString()}</p>
+                <p className="text-xs text-slate-500">Hectares</p>
+              </div>
+              <div className="bg-slate-800 rounded-xl p-3 text-center">
+                <p className="text-xl font-bold text-emerald-400">{trace.certified_parcels}</p>
+                <p className="text-xs text-slate-500">Certifiees</p>
+              </div>
+            </div>
+            {Object.keys(trace.certifications || {}).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {Object.entries(trace.certifications).map(([cert, count]) => (
+                  <Badge key={cert} className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    {cert}: {count}
+                  </Badge>
+                ))}
               </div>
             )}
           </Card>
         )}
 
         {/* Interactive Map Section */}
-        <Card className="p-6 mb-8">
+        <Card className="bg-slate-900 border-slate-800 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Map className="w-6 h-6 text-green-600" />
-              <h2 className="text-xl font-bold text-gray-900">Carte d'Impact Territorial</h2>
+              <Map className="w-5 h-5 text-emerald-400" />
+              <h2 className="text-lg font-bold text-white">Carte d'Impact Territorial</h2>
             </div>
-            <Badge className="bg-green-100 text-green-700">
-              {impact.regions_covered.length} régions actives
+            <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              {impact.regions_covered.length} regions actives
             </Badge>
           </div>
-          
-          <InteractiveMap 
+          <InteractiveMap
             activeRegions={impact.regions_covered}
             onRegionClick={(region) => {
-              toast({
-                title: `Région: ${region}`,
-                description: 'Données de la région chargées'
-              });
+              toast({ title: `Region: ${region}`, description: 'Donnees de la region chargees' });
             }}
           />
-          
-          <div className="mt-4 p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-green-800">
-              <strong>📍 Votre impact carbone</strong> couvre {impact.regions_covered.length} régions cacaoyères 
-              et anacarde en Côte d'Ivoire. Cliquez sur une région pour voir les détails des projets.
-            </p>
-          </div>
         </Card>
 
         {/* Monthly Trend */}
-        <Card className="p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Évolution Mensuelle</h2>
-          <div className="space-y-4">
+        <Card className="bg-slate-900 border-slate-800 p-6 mb-6">
+          <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-emerald-400" />
+            Evolution Mensuelle
+          </h2>
+          <div className="space-y-3">
             {impact.monthly_breakdown.map((month, index) => (
-              <div key={index} className="flex items-center gap-4">
-                <div className="w-32 text-sm text-gray-600 font-medium">
-                  {month.month}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 bg-gray-200 rounded-full h-8 overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-end pr-3"
-                        style={{ 
-                          width: `${Math.min((month.co2_offset / Math.max(...impact.monthly_breakdown.map(m => m.co2_offset))) * 100, 100)}%` 
-                        }}
-                      >
-                        <span className="text-white text-xs font-bold">{month.co2_offset}t CO₂</span>
-                      </div>
-                    </div>
-                    <div className="w-32 text-right">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {month.investment.toLocaleString()} F
-                      </p>
-                    </div>
+              <div key={index} className="flex items-center gap-3">
+                <div className="w-28 text-xs text-slate-400 font-medium truncate">{month.month}</div>
+                <div className="flex-1 bg-slate-800 rounded-full h-6 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-600 to-teal-500 flex items-center justify-end pr-2"
+                    style={{
+                      width: `${Math.min((month.co2_offset / Math.max(...impact.monthly_breakdown.map(m => m.co2_offset), 1)) * 100, 100)}%`
+                    }}
+                  >
+                    {month.co2_offset > 0 && (
+                      <span className="text-white text-xs font-bold">{month.co2_offset}t</span>
+                    )}
                   </div>
+                </div>
+                <div className="w-28 text-right">
+                  <p className="text-xs font-semibold text-slate-300">{month.investment.toLocaleString()} F</p>
                 </div>
               </div>
             ))}
@@ -422,18 +485,19 @@ www.greenlink-agritech.com
         </Card>
 
         {/* Impact Stories */}
-        <Card className="p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Histoires d'Impact</h2>
-          <div className="space-y-4">
+        <Card className="bg-slate-900 border-slate-800 p-6 mb-6">
+          <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <Heart className="w-5 h-5 text-pink-400" />
+            Histoires d'Impact
+          </h2>
+          <div className="space-y-3">
             {impact.impact_stories.map((story, index) => (
-              <div key={index} className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-l-4 border-green-500">
+              <div key={index} className="p-4 bg-slate-800 rounded-xl border-l-4 border-emerald-500">
                 <div className="flex items-start gap-3">
-                  <Award className="w-6 h-6 text-green-600 mt-1" />
+                  <Award className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-semibold text-gray-900 mb-1">
-                      {story.farmer} - {story.location}
-                    </p>
-                    <p className="text-gray-700 italic">"{story.story}"</p>
+                    <p className="font-medium text-white text-sm">{story.farmer} - {story.location}</p>
+                    <p className="text-slate-400 text-sm italic mt-1">"{story.story}"</p>
                   </div>
                 </div>
               </div>
@@ -441,47 +505,89 @@ www.greenlink-agritech.com
           </div>
         </Card>
 
-        {/* Marketplace Crédits Carbone */}
-        <Card className="p-6">
+        {/* Distribution Model - Admin Only */}
+        {distrib && user?.user_type === 'admin' && (
+          <Card className="bg-slate-900 border-slate-800 p-6 mb-6" data-testid="distribution-section">
+            <div className="flex items-center gap-3 mb-6">
+              <PieChart className="w-5 h-5 text-emerald-400" />
+              <div>
+                <h2 className="text-lg font-bold text-white">Repartition des Primes Carbone</h2>
+                <p className="text-xs text-slate-500">{distrib.total_projects} projets approuves</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+              <div className="bg-slate-800 rounded-xl p-3 text-center">
+                <p className="text-xs text-slate-500">Revenu Total</p>
+                <p className="text-xl font-bold text-white">{(distrib.total_revenue / 1000000).toFixed(1)}M</p>
+                <p className="text-xs text-slate-500">XOF</p>
+              </div>
+              <div className="bg-slate-800 rounded-xl p-3 text-center">
+                <p className="text-xs text-slate-500">Tonnes CO2</p>
+                <p className="text-xl font-bold text-white">{distrib.total_tonnes_co2?.toLocaleString()}</p>
+              </div>
+              <div className="bg-slate-800 rounded-xl p-3 text-center">
+                <p className="text-xs text-slate-500">Prix Moyen</p>
+                <p className="text-xl font-bold text-white">{distrib.avg_price_per_tonne?.toLocaleString()}</p>
+                <p className="text-xs text-slate-500">XOF/tonne</p>
+              </div>
+              <div className="bg-emerald-500/10 rounded-xl p-3 text-center border border-emerald-500/20">
+                <p className="text-xs text-emerald-400">Aux Agriculteurs</p>
+                <p className="text-xl font-bold text-emerald-400">{(distrib.distribution.farmer.amount / 1000000).toFixed(1)}M</p>
+                <p className="text-xs text-emerald-400">XOF (49% du total)</p>
+              </div>
+            </div>
+            <div className="flex h-8 rounded-full overflow-hidden mb-4">
+              <div className="bg-slate-600 flex items-center justify-center" style={{width: '30%'}}>
+                <span className="text-white text-xs font-bold">30%</span>
+              </div>
+              <div className="bg-emerald-600 flex items-center justify-center" style={{width: '49%'}}>
+                <span className="text-white text-xs font-bold">70% Agri</span>
+              </div>
+              <div className="bg-blue-500 flex items-center justify-center" style={{width: '17.5%'}}>
+                <span className="text-white text-xs">GL</span>
+              </div>
+              <div className="bg-amber-500 flex items-center justify-center" style={{width: '3.5%'}} />
+            </div>
+          </Card>
+        )}
+
+        {/* Marketplace Credits Carbone */}
+        <Card className="bg-slate-900 border-slate-800 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Marketplace Crédits Carbone</h2>
-            <Button 
+            <h2 className="text-lg font-bold text-white">Marketplace Credits Carbone</h2>
+            <Button
               variant="outline"
               onClick={() => navigate('/rse/carbon-marketplace')}
-              className="text-green-600 border-green-600 hover:bg-green-50"
+              className="text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+              data-testid="view-marketplace-btn"
             >
-              Voir Tous les Crédits
+              Voir Tous les Credits
             </Button>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-4">
             {credits.slice(0, 3).map((credit) => (
-              <Card key={credit._id} className="p-5 hover:shadow-lg transition-shadow border-2 border-gray-100">
-                <Badge className="mb-3 bg-purple-100 text-purple-700">
+              <Card key={credit._id} className="bg-slate-800 border-slate-700 p-4 hover:border-emerald-500/30 transition-all">
+                <Badge className="mb-2 bg-purple-500/10 text-purple-400 border border-purple-500/20">
                   {credit.verification_standard}
                 </Badge>
-                <h3 className="font-bold text-gray-900 mb-2">{credit.credit_type}</h3>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                  {credit.project_description}
-                </p>
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Quantité:</span>
-                    <span className="font-semibold">{credit.quantity_tonnes_co2}t CO₂</span>
+                <h3 className="font-bold text-white text-sm mb-1">{credit.credit_type}</h3>
+                <p className="text-xs text-slate-400 mb-3 line-clamp-2">{credit.project_description}</p>
+                <div className="space-y-1 mb-3">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Quantite:</span>
+                    <span className="text-white font-medium">{credit.quantity_tonnes_co2}t CO2</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Prix/tonne:</span>
-                    <span className="font-semibold text-green-600">
-                      {credit.price_per_tonne.toLocaleString()} F
-                    </span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Prix/tonne:</span>
+                    <span className="text-emerald-400 font-medium">{credit.price_per_tonne.toLocaleString()} F</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Vintage:</span>
-                    <span className="font-semibold">{credit.vintage_year}</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Vintage:</span>
+                    <span className="text-white font-medium">{credit.vintage_year}</span>
                   </div>
                 </div>
-                <Button 
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                <Button
+                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm"
                   onClick={() => navigate(`/rse/purchase/${credit._id}`)}
                 >
                   Acheter

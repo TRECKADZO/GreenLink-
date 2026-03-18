@@ -63,6 +63,17 @@ class CarbonListingCreate(BaseModel):
     social_impact: Optional[str] = Field(None)
     monitoring_plan: Optional[str] = Field(None, description="Plan de suivi MRV")
     documentation_urls: List[str] = Field(default=[])
+    # New EUDR/ESG fields
+    project_start_date: Optional[str] = Field(None, description="Date de début du projet")
+    project_end_date: Optional[str] = Field(None, description="Date de fin prévue du projet")
+    baseline_scenario: Optional[str] = Field(None, description="Scénario de référence sans le projet")
+    additionality_justification: Optional[str] = Field(None, description="Justification de l'additionnalité")
+    permanence_plan: Optional[str] = Field(None, description="Plan de permanence de la séquestration")
+    leakage_assessment: Optional[str] = Field(None, description="Évaluation des fuites de carbone")
+    co_benefits: Optional[List[str]] = Field(default=[], description="Co-bénéfices: biodiversité, eau, sol, communauté")
+    sdg_alignment: Optional[List[int]] = Field(default=[], description="ODD alignés (1-17)")
+    community_consent: Optional[bool] = Field(None, description="Consentement communautaire (CLIP/FPIC)")
+    certification_body: Optional[str] = Field(None, description="Organisme certificateur")
 
 
 class AdminAction(BaseModel):
