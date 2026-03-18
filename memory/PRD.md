@@ -10,48 +10,53 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 
 ## Fonctionnalites Implementees
 
-### Carbon Market V2 - Workflow Complet
+### Carbon Market V2
 - Soumission, Approbation, Marketplace RSE
 
 ### Modele de Repartition (CONFIDENTIEL - Admin uniquement)
-- 30% couts et frais, 70% net: 70% agriculteurs + 25% GreenLink + 5% cooperative
+- 30% couts, 70% net: 70% agriculteurs + 25% GreenLink + 5% cooperative
 
-### Integrations Orange (Preparees - MOCK)
+### Integrations Orange (MOCK)
 - Orange Money, Orange SMS, USSD Gateway
 
-### Dashboard Cooperative & Agent Terrain
-- Dashboard cooperative avec stats corrigees
-- Dashboard agent terrain avec KPIs et quick actions
-
-### Attribution Fermier-Agent Terrain (17 Mars 2026)
-- Backend: 5 endpoints API (assign, unassign, list, agents enrichis, my-farmers offline)
-- Frontend: Modale attribution dans /cooperative/agents
-- Mobile: Pre-chargement offline dans sync.js
-- Tests: 13/13 backend, 100% frontend (iteration 32)
-
-### Interface Agent Terrain Mobile (17 Mars 2026)
-- BottomTabBar: Config field_agent (Accueil, Fermiers, Plus, Visites, Profil)
-- Actions Rapides: Visite SSRTE, Recherche, Fiche ICI, Photo Geo, Nouveau Membre
-- ProfileScreen: "Agent Terrain", champs Zone et Cooperative
-- FieldAgentDashboard: MainLayout avec barre onglets agent
+### Attribution Fermier-Agent (17 Mars 2026)
+- 5 endpoints API, modale attribution web, offline mobile
+- Tests: 13/13 backend (iteration 32)
 
 ### Fiche ICI (18 Mars 2026)
-- Backend: ChildDetail (prenom, sexe, age, scolarise, travaille), calcul risque
-- Frontend Web: ICIProfileModal dans attribution
-- Mobile: FarmerICIFormScreen avec support offline
-- Tests: 11/11 backend, 100% frontend (iteration 33)
+- ChildDetail: prenom, sexe (Fille/Garcon), age, scolarise, travaille
+- Web: ICIProfileModal dans attribution + dashboard agent
+- Mobile: FarmerICIFormScreen avec offline
+- Tests: 11/11 backend (iteration 33)
+
+### Dashboard Agent Terrain Web - Menu Complet (18 Mars 2026)
+- **8 sections dans le menu lateral:**
+  1. Tableau de bord (KPIs, performance, risques, badges, activites)
+  2. Visites SSRTE (stats + liste fermiers)
+  3. Visite ICI (fiche producteur ICI avec enfants)
+  4. Enregistrement membres (stats + liste)
+  5. Declaration parcelles (stats + details parcelles par fermier)
+  6. Photos geolocalisees (stats + objectifs)
+  7. Suivi travail enfants (stats enfants + liens fiches ICI)
+  8. Recherche planteur (recherche par telephone)
+- Header: nom agent, cooperative, badge niveau, score performance
+- "ICI" renomme "Visite ICI" partout (web)
+- Tests: 100% frontend (iteration 34)
+
+### Interface Agent Terrain Mobile (17 Mars 2026)
+- BottomTabBar field_agent, Actions Rapides, ProfileScreen "Agent Terrain"
+- FieldAgentDashboard dans MainLayout
 
 ### Fix Normalisation Telephone Membre (18 Mars 2026)
-- check-member-phone: ajout normalize_phone()
-- activate-member-account: ajout normalize_phone() + coop_id ObjectId fix
+- check-member-phone + activate-member-account: normalize_phone()
 
-### Builds Mobile v1.28.0 (18 Mars 2026)
-- APK: https://expo.dev/artifacts/eas/tK8crCWFjZ1QHTyhc1E3Jj.apk
-- AAB: https://expo.dev/artifacts/eas/kVdYqUSAoHcsaGXaqvXaj4.aab
+### Builds Mobile
+- v1.28.0 APK: https://expo.dev/artifacts/eas/tK8crCWFjZ1QHTyhc1E3Jj.apk
+- v1.28.0 AAB: https://expo.dev/artifacts/eas/kVdYqUSAoHcsaGXaqvXaj4.aab
 
 ## Etat Actuel
-- Web: FONCTIONNEL
-- Mobile: v1.28.0 (APK + AAB prets)
+- Web: FONCTIONNEL (dashboard agent complet)
+- Mobile: v1.28.0 (APK + AAB)
 - Integrations Orange: MOCK
 
 ## Backlog
