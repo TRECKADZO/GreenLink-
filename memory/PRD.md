@@ -15,48 +15,41 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 
 ### Fiche ICI (18 Mars 2026)
 - ChildDetail (prenom, sexe, age, scolarise, travaille)
-- Web: ICIProfileModal, Mobile: FarmerICIFormScreen
 
-### Approche "Selection Fermier -> Toutes les Fiches" (18 Mars 2026)
-- Web + Mobile: workflow farmer-centric pour agents terrain
-
-### Interface Agent Terrain Mobile (18 Mars 2026)
-- BottomTabBar, Quick Actions, Dashboard, FarmerProfileScreen
-
-### Fix Normalisation Telephone Membre (18 Mars 2026)
-- check-member-phone + activate-member-account: normalize_phone()
+### Approche Farmer-Centric (18 Mars 2026)
+- Web + Mobile: workflow selection fermier -> toutes les fiches
 
 ### Suivi Completion Formulaires (18 Mars 2026)
-- Backend: API /api/field-agent/my-farmers enrichi avec forms_status/completion
 - 5 formulaires suivis: ICI, SSRTE, Parcelles, Photos, Enregistrement
+- Web + Mobile: barres de progression + badges "Complete"
 
-### Abonnement par DEVIS avec 15 jours gratuit (18 Mars 2026)
-- Backend: 6 endpoints devis + admin dans routes/quotes.py
-- Statuts: PENDING_QUOTE, SUSPENDED, ACTIVE, TRIAL, EXPIRED
-- Frontend Admin: Page /admin/quotes (KPIs + gestion devis + gestion comptes)
-- Frontend Fournisseur: Banner abonnement (trial, devis, suspendu)
+### Abonnement par DEVIS (18 Mars 2026)
+- 15 jours gratuits pour fournisseurs/acheteurs/entreprises RSE
+- Workflow: inscription -> trial 15j -> formulaire devis -> approbation admin
+- Admin: approuver/rejeter devis + activer/suspendre/supprimer comptes
+- **Tarification personnalisee par utilisateur:**
+  - Admin fixe le montant d'abonnement (XOF) individuellement
+  - Cycle: mensuel/trimestriel/annuel
+  - Fournisseurs intrants: commission 3-5% sur chaque vente + abonnement
+  - Montant affiche dans le dashboard de l'utilisateur
+- Backend: routes/quotes.py (6 endpoints) + subscription_models.py (PENDING_QUOTE, SUSPENDED)
+- Frontend Admin: /admin/quotes (KPIs, detail devis avec commission/cycle/montant, gestion comptes)
+- Frontend User: SubscriptionBanner.jsx (trial, devis, tarification active avec montant/commission/cycle)
 
-### Notifications Email Automatiques (18 Mars 2026)
-- Service email: services/email_service.py (MOCK si SMTP non configure)
+### Notifications Email (18 Mars 2026)
+- services/email_service.py (MOCK si SMTP non configure)
 - Templates: devis approuve, refuse, compte suspendu, reactive
 
-### Page Accueil + FAQ - Tarifs Actualises (18 Mars 2026)
-- Producteurs: GRATUIT - Profil, Vente recoltes, Credits carbone, Messagerie, Alertes prix, Boutique intrants, App mobile
-- Cooperatives: GRATUIT - Gestion membres, Attribution agents terrain, Fiches ICI/SSRTE, Suivi completion, Distribution primes, Rapports EUDR, App mobile agents
-- Acheteurs: Sur devis (15j gratuits) - Bourse Recoltes, Propositions achat, Messagerie vendeurs, Alertes, Tableau de bord commandes
-- Fournisseurs: Sur devis (15j gratuits) - Boutique en ligne, Catalogue, Commandes, Statistiques, Notifications
-- Entreprises RSE: Sur devis (15j gratuits) - Credits carbone certifies, Certificats conformite, Rapports ESG, Tracabilite, Tableau de bord impact
-- Section 3 etapes: Inscription gratuite -> Formulaire devis -> Approbation sous 48h
-- FAQ mise a jour avec les nouveaux tarifs
-- Enleve: "29 000 XOF" fournisseurs, "Verification IA des credits" RSE
-
-## Etat Actuel
-- Web: FONCTIONNEL
-- Mobile: Code complet, rebuild necessaire
+### Tarifs Page Accueil + FAQ (18 Mars 2026)
+- Producteurs: GRATUIT - Profil, Vente recoltes, Credits carbone, Messagerie, Alertes, Boutique, App mobile
+- Cooperatives: GRATUIT - Gestion membres, Attribution agents, Fiches ICI/SSRTE, Suivi completion, Primes carbone, Rapports EUDR, App mobile agents
+- Acheteurs: Sur devis (15j gratuits) - Bourse Recoltes, Propositions achat, Messagerie, Alertes, Commandes
+- Fournisseurs: Sur devis (15j gratuits) - Commission 3-5% + abonnement, Boutique, Catalogue, Commandes, Stats
+- Entreprises RSE: Sur devis (15j gratuits) - Credits carbone certifies, Certificats, Rapports ESG, Tracabilite
+- Section 3 etapes expliquant le workflow devis
 
 ## Services MOCK
-- Orange Money, Orange SMS, USSD Gateway
-- Email Service (SMTP non configure)
+- Orange Money, Orange SMS, USSD Gateway, Email (SMTP non configure)
 
 ## Backlog
 ### P0
@@ -74,3 +67,4 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Coop Bielaghana: bielaghana@gmail.com / greenlink2024
 - Agent Kone: +2250709005301 / greenlink2024
+- Fournisseur Test: intrants-ci@test.com / test1234 (35000 XOF/mois, 5% commission)
