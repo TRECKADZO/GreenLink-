@@ -121,6 +121,7 @@ const QuotesManagement = () => {
       pending: { color: 'bg-amber-100 text-amber-700 border-amber-200', label: 'En attente', icon: Clock },
       approved: { color: 'bg-emerald-100 text-emerald-700 border-emerald-200', label: 'Approuve', icon: CheckCircle2 },
       rejected: { color: 'bg-red-100 text-red-700 border-red-200', label: 'Refuse', icon: XCircle },
+      cancelled: { color: 'bg-gray-100 text-gray-500 border-gray-200', label: 'Annule', icon: XCircle },
     };
     const cfg = map[s] || map.pending;
     const Icon = cfg.icon;
