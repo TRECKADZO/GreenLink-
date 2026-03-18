@@ -8,32 +8,32 @@ import { Separator } from './ui/separator';
 const Footer = () => {
   return (
     <footer className="bg-gradient-to-b from-white to-gray-50">
-      {/* SMS & Data Mode Section */}
+      {/* Data Mode Section */}
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="p-6 border-2 border-gray-200 hover:shadow-lg transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="flex items-start gap-4">
-                <MessageSquare className="w-6 h-6 text-blue-600 mt-1" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Commandes SMS</h3>
-                  <p className="text-sm text-gray-600">Utilisez GreenLink sans internet</p>
-                </div>
-              </div>
-            </div>
-          </Card>
-          
-          <Card className="p-6 border-2 border-gray-200 hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div className="flex items-start gap-4">
                 <Zap className="w-6 h-6 text-amber-600 mt-1" />
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Mode économie de données</h3>
-                  <p className="text-sm text-gray-600">Expérience complète activée</p>
-                  <p className="text-xs text-gray-500 mt-1">Connexion détectée: 4G</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">Mode economie de donnees</h3>
+                  <p className="text-sm text-gray-600">Experience complete activee</p>
+                  <p className="text-xs text-gray-500 mt-1">Connexion detectee: 4G</p>
                 </div>
               </div>
               <Switch defaultChecked />
+            </div>
+          </Card>
+
+          <Card className="p-6 border-2 border-gray-200 hover:shadow-lg transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-start gap-4">
+                <MessageSquare className="w-6 h-6 text-emerald-600 mt-1" />
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Support dedicace</h3>
+                  <p className="text-sm text-gray-600">Assistance technique disponible</p>
+                </div>
+              </div>
             </div>
           </Card>
         </div>

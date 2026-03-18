@@ -22,9 +22,9 @@ const mockFeatures = [
   },
   {
     icon: 'Smartphone',
-    title: 'Accès USSD/SMS',
-    description: 'Consultez vos parcelles, primes et paiements sans internet via *123*45# ou SMS au 1234. Disponible en français, baoulé et dioula',
-    badge: 'Offline',
+    title: 'Application Mobile',
+    description: 'Application mobile dediee pour les agents terrain et cooperatives. Collecte de donnees hors-ligne, synchronisation automatique',
+    badge: 'Mobile',
     badgeColor: 'bg-orange-100 text-orange-700'
   },
   {
