@@ -21,6 +21,8 @@ class SubscriptionStatus(str, Enum):
     EXPIRED = "expired"
     CANCELLED = "cancelled"
     PENDING_PAYMENT = "pending_payment"
+    PENDING_QUOTE = "pending_quote"  # Devis soumis, en attente d'approbation admin
+    SUSPENDED = "suspended"  # Suspendu par l'admin
 
 
 # Plan pricing in XOF
@@ -250,6 +252,27 @@ def get_subscription_status(subscription: dict) -> dict:
     status = subscription.get("status")
     plan = subscription.get("plan")
     
+    # Suspended accounts
+    if status == SubscriptionStatus.SUSPENDED.value:
+        return {
+            "is_active": False,
+            "is_trial": False,
+            "days_remaining": 0,
+            "status": SubscriptionStatus.SUSPENDED.value,
+            "message": "Votre compte a ete suspendu par l'administrateur.",
+        }
+
+    # Pending quote
+    if status == SubscriptionStatus.PENDING_QUOTE.value:
+        return {
+            "is_active": False,
+            "is_trial": False,
+            "days_remaining": 0,
+            "status": SubscriptionStatus.PENDING_QUOTE.value,
+            "message": "Votre devis est en cours d'examen par l'administrateur.",
+            "requires_quote": False,
+        }
+
     # Free plans are always active
     if plan == SubscriptionPlan.FREE.value:
         return {
@@ -281,7 +304,8 @@ def get_subscription_status(subscription: dict) -> dict:
                     "is_trial": False,
                     "days_remaining": 0,
                     "status": SubscriptionStatus.EXPIRED.value,
-                    "message": "Période d'essai terminée. Veuillez souscrire pour continuer.",
+                    "message": "Periode d'essai terminee. Veuillez soumettre un devis pour continuer.",
+                    "requires_quote": True,
                 }
     
     # Check paid subscription

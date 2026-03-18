@@ -365,6 +365,14 @@ const AdminDashboard = () => {
                 <FileText className="w-5 h-5 text-pink-600 group-hover:text-pink-700" />
                 <span className="text-xs text-gray-600 group-hover:text-pink-700">Contenu</span>
               </button>
+              <button
+                onClick={() => navigate('/admin/quotes')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-amber-50 rounded-lg transition group"
+                data-testid="quotes-management-btn"
+              >
+                <FileText className="w-5 h-5 text-amber-600 group-hover:text-amber-700" />
+                <span className="text-xs text-gray-600 group-hover:text-amber-700">Devis</span>
+              </button>
             </div>
           </div>
 

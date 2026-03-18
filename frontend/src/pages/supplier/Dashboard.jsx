@@ -5,7 +5,9 @@ import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import Navbar from '../../components/Navbar';
 import SupplierSidebar from '../../components/SupplierSidebar';
+import SubscriptionBanner from '../../components/SubscriptionBanner';
 import { marketplaceApi } from '../../services/marketplaceApi';
+import axios from 'axios';
 import {
   Package,
   ShoppingCart,
@@ -18,19 +20,22 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 const SupplierDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
       toast({
-        title: 'Accès refusé',
-        description: 'Cette page est réservée aux fournisseurs',
+        title: 'Acces refuse',
+        description: 'Cette page est reservee aux fournisseurs',
         variant: 'destructive'
       });
       navigate('/');
@@ -38,7 +43,20 @@ const SupplierDashboard = () => {
     }
 
     fetchDashboardStats();
+    fetchSubscription();
   }, [user, authLoading]);
+
+  const fetchSubscription = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSubscription(data.subscription);
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+    }
+  };
 
   const fetchDashboardStats = async () => {
     try {
@@ -142,6 +160,9 @@ const SupplierDashboard = () => {
       />
       
       <div className="ml-64 pt-20 p-8">
+        {/* Subscription Banner */}
+        <SubscriptionBanner subscription={subscription} />
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Tableau de Bord</h1>
