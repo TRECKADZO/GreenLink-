@@ -154,27 +154,11 @@ const FarmerSearchScreen = ({ navigation }) => {
     setSearching(false);
   };
 
-  // Actions post-recherche
+  // Actions post-recherche - Toujours passer par le profil farmer-centric
   const navigateToAction = (action) => {
     if (!farmer) return;
-    switch (action) {
-      case 'profile':
-        navigation.navigate('CoopMemberDetail', { memberId: farmer.id, memberData: farmer });
-        break;
-      case 'parcel':
-        navigation.navigate('AddMemberParcel', { memberId: farmer.id, memberName: farmer.full_name });
-        break;
-      case 'ssrte':
-        navigation.navigate('SSRTEVisitForm', { farmerId: farmer.id, farmerName: farmer.full_name, farmerPhone: farmer.phone_number });
-        break;
-      case 'verification':
-        if (farmer.parcels && farmer.parcels.length > 0) {
-          navigation.navigate('ParcelVerification', { parcelId: farmer.parcels[0].id, farmerId: farmer.id });
-        } else {
-          Alert.alert('Info', 'Ce planteur n\'a pas de parcelle enregistrée.');
-        }
-        break;
-    }
+    // Workflow farmer-centric: toujours ouvrir le profil avec ses fiches
+    navigation.navigate('FarmerProfile', { farmer });
   };
 
   const getStatusColor = (status) => {
@@ -366,34 +350,21 @@ const FarmerSearchScreen = ({ navigation }) => {
               </View>
             )}
 
-            {/* Action Buttons */}
+            {/* Action Button - Go to farmer profile */}
             <Text style={styles.actionsTitle}>Actions</Text>
-            <View style={styles.actionsGrid}>
-              <ActionBtn
-                icon="person-circle"
-                label="Voir profil"
-                color="#3b82f6"
-                onPress={() => navigateToAction('profile')}
-              />
-              <ActionBtn
-                icon="add-circle"
-                label="Ajouter parcelle"
-                color="#22c55e"
-                onPress={() => navigateToAction('parcel')}
-              />
-              <ActionBtn
-                icon="clipboard"
-                label="Visite SSRTE"
-                color="#8b5cf6"
-                onPress={() => navigateToAction('ssrte')}
-              />
-              <ActionBtn
-                icon="checkmark-done-circle"
-                label="Vérifier parcelle"
-                color="#f59e0b"
-                onPress={() => navigateToAction('verification')}
-              />
-            </View>
+            <TouchableOpacity
+              style={styles.openProfileAction}
+              onPress={() => navigateToAction('profile')}
+            >
+              <Ionicons name="folder-open" size={28} color="#059669" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.openProfileLabel}>Ouvrir les fiches</Text>
+                <Text style={styles.openProfileDesc}>
+                  Acceder a ICI, SSRTE, Parcelles, Photos...
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="#059669" />
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
@@ -401,7 +372,6 @@ const FarmerSearchScreen = ({ navigation }) => {
   );
 };
 
-// Composants réutilisables
 const InfoItem = ({ icon, label, value }) => (
   <View style={styles.infoItem}>
     <Ionicons name={icon} size={16} color={COLORS.textSecondary} />
@@ -412,12 +382,6 @@ const InfoItem = ({ icon, label, value }) => (
   </View>
 );
 
-const ActionBtn = ({ icon, label, color, onPress }) => (
-  <TouchableOpacity style={[styles.actionBtn, { borderColor: color + '40' }]} onPress={onPress}>
-    <Ionicons name={icon} size={28} color={color} />
-    <Text style={[styles.actionLabel, { color }]}>{label}</Text>
-  </TouchableOpacity>
-);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
@@ -527,12 +491,13 @@ const styles = StyleSheet.create({
   verifText: { fontSize: 10, fontWeight: '600' },
 
   actionsTitle: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 8, marginTop: 4 },
-  actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  actionBtn: {
-    width: '47%', alignItems: 'center', paddingVertical: 14, borderRadius: 10,
-    backgroundColor: '#fff', borderWidth: 1.5, gap: 6,
+  openProfileAction: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#ecfdf5', borderRadius: 14, padding: 16,
+    borderWidth: 1.5, borderColor: '#a7f3d0',
   },
-  actionLabel: { fontSize: 12, fontWeight: '600' },
+  openProfileLabel: { fontSize: 15, fontWeight: '700', color: '#065f46' },
+  openProfileDesc: { fontSize: 12, color: '#047857', marginTop: 2 },
 });
 
 export default FarmerSearchScreen;
