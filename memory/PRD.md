@@ -21,32 +21,29 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 
 ### Suivi Completion Formulaires (18 Mars 2026)
 - 5 formulaires suivis: ICI, SSRTE, Parcelles, Photos, Enregistrement
-- Web + Mobile: barres de progression + badges "Complete"
 
 ### Abonnement par DEVIS (18 Mars 2026)
 - 15 jours gratuits pour fournisseurs/acheteurs/entreprises RSE
 - Workflow: inscription -> trial 15j -> formulaire devis -> approbation admin
+- **Tarification personnalisee par le Super Admin:**
+  - Montant abonnement XOF fixe individuellement par devis
+  - Cycle facturation: mensuel/trimestriel/annuel
+  - Fournisseurs: commission 3-5% sur chaque vente + abonnement
+  - Acheteurs: montant mensuel/annuel uniquement (pas de commission)
+  - Entreprises RSE: montant mensuel/annuel uniquement (pas de commission)
+  - Montant affiche dans le dashboard de CHAQUE utilisateur
+- **Dashboards avec tarification:**
+  - Fournisseur: abonnement + commission + facturation
+  - Acheteur: abonnement + facturation (sans commission)
+  - Entreprise RSE: abonnement + facturation (sans commission)
 - Admin: approuver/rejeter devis + activer/suspendre/supprimer comptes
-- **Tarification personnalisee par utilisateur:**
-  - Admin fixe le montant d'abonnement (XOF) individuellement
-  - Cycle: mensuel/trimestriel/annuel
-  - Fournisseurs intrants: commission 3-5% sur chaque vente + abonnement
-  - Montant affiche dans le dashboard de l'utilisateur
-- Backend: routes/quotes.py (6 endpoints) + subscription_models.py (PENDING_QUOTE, SUSPENDED)
-- Frontend Admin: /admin/quotes (KPIs, detail devis avec commission/cycle/montant, gestion comptes)
-- Frontend User: SubscriptionBanner.jsx (trial, devis, tarification active avec montant/commission/cycle)
-
-### Notifications Email (18 Mars 2026)
-- services/email_service.py (MOCK si SMTP non configure)
-- Templates: devis approuve, refuse, compte suspendu, reactive
+- Notifications email automatiques (MOCK si SMTP non configure)
 
 ### Tarifs Page Accueil + FAQ (18 Mars 2026)
-- Producteurs: GRATUIT - Profil, Vente recoltes, Credits carbone, Messagerie, Alertes, Boutique, App mobile
-- Cooperatives: GRATUIT - Gestion membres, Attribution agents, Fiches ICI/SSRTE, Suivi completion, Primes carbone, Rapports EUDR, App mobile agents
-- Acheteurs: Sur devis (15j gratuits) - Bourse Recoltes, Propositions achat, Messagerie, Alertes, Commandes
-- Fournisseurs: Sur devis (15j gratuits) - Commission 3-5% + abonnement, Boutique, Catalogue, Commandes, Stats
-- Entreprises RSE: Sur devis (15j gratuits) - Credits carbone certifies, Certificats, Rapports ESG, Tracabilite
-- Section 3 etapes expliquant le workflow devis
+- Producteurs/Cooperatives: GRATUIT
+- Fournisseurs: Sur devis - Commission 3-5% + abonnement sur devis
+- Acheteurs/RSE: Sur devis - 15 jours gratuits
+- Section 3 etapes workflow devis
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway, Email (SMTP non configure)
@@ -65,6 +62,8 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
-- Coop Bielaghana: bielaghana@gmail.com / greenlink2024
-- Agent Kone: +2250709005301 / greenlink2024
-- Fournisseur Test: intrants-ci@test.com / test1234 (35000 XOF/mois, 5% commission)
+- Coop: bielaghana@gmail.com / greenlink2024
+- Agent: +2250709005301 / greenlink2024
+- Fournisseur: intrants-ci@test.com / test1234 (35000/mois, 5%)
+- Acheteur: acheteur-devis@test.com / test1234 (500000/an)
+- RSE: rse-devis@test.com / test1234 (150000/trimestre)

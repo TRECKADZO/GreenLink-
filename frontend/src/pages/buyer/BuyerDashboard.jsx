@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Checkbox } from '../../components/ui/checkbox';
 import { toast } from 'sonner';
+import SubscriptionBanner from '../../components/SubscriptionBanner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -47,6 +48,7 @@ const BuyerDashboard = () => {
   const [showAlertDialog, setShowAlertDialog] = useState(false);
   const [trialStatus, setTrialStatus] = useState(null);
   const [activatingTrial, setActivatingTrial] = useState(false);
+  const [subscription, setSubscription] = useState(null);
   const [alertForm, setAlertForm] = useState({
     name: '',
     crop_types: [],
@@ -64,7 +66,17 @@ const BuyerDashboard = () => {
   useEffect(() => {
     fetchDashboard();
     fetchTrialStatus();
+    fetchSubscription();
   }, []);
+
+  const fetchSubscription = async () => {
+    try {
+      const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, getAuthHeaders());
+      setSubscription(data.subscription);
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+    }
+  };
 
   const fetchTrialStatus = async () => {
     try {
@@ -334,6 +346,13 @@ const BuyerDashboard = () => {
               </CardContent>
             </Card>
           )}
+        </div>
+      )}
+
+      {/* Subscription Pricing Banner */}
+      {subscription && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+          <SubscriptionBanner subscription={subscription} />
         </div>
       )}
 

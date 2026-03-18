@@ -5,7 +5,9 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import Navbar from '../../components/Navbar';
+import SubscriptionBanner from '../../components/SubscriptionBanner';
 import { greenlinkApi } from '../../services/greenlinkApi';
+import axios from 'axios';
 import { 
   ShoppingCart, 
   Leaf, 
@@ -16,6 +18,8 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 const BuyerDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -23,6 +27,7 @@ const BuyerDashboard = () => {
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -31,7 +36,20 @@ const BuyerDashboard = () => {
       return;
     }
     fetchData();
+    fetchSubscription();
   }, [user, authLoading]);
+
+  const fetchSubscription = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSubscription(data.subscription);
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -152,6 +170,9 @@ const BuyerDashboard = () => {
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-6 py-12 pt-24">
+        {/* Subscription Banner */}
+        <SubscriptionBanner subscription={subscription} />
+
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Tableau de Bord Acheteur</h1>
           <p className="text-gray-600">Traçabilité & Conformité EUDR</p>

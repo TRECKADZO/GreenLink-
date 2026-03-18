@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import Navbar from '../../components/Navbar';
 import InteractiveMap from '../../components/InteractiveMap';
+import SubscriptionBanner from '../../components/SubscriptionBanner';
 import { greenlinkApi } from '../../services/greenlinkApi';
 import axios from 'axios';
 import { 
@@ -35,6 +36,7 @@ const RSEDashboard = () => {
   const [credits, setCredits] = useState([]);
   const [distrib, setDistrib] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -43,7 +45,20 @@ const RSEDashboard = () => {
       return;
     }
     fetchData();
+    fetchSubscription();
   }, [user, authLoading]);
+
+  const fetchSubscription = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSubscription(data.subscription);
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -181,6 +196,9 @@ www.greenlink-agritech.com
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-6 py-12 pt-24">
+        {/* Subscription Banner */}
+        <SubscriptionBanner subscription={subscription} />
+        
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
