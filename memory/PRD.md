@@ -28,15 +28,16 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ### Dashboard RSE Enrichi + Formulaire Credit Carbone (18 Mars 2026)
 - Score ESG, conformite EUDR, monitoring travail enfants, tracabilite
 
-### Portail Agent Terrain Mobile Restructure (18 Mars 2026)
-- 3 onglets (Dashboard/Agriculteurs/Recherche) comme la version web
-- Profil fermier enrichi avec progression et validation
-- Workflow farmer-centric: selectionner fermier -> fiches
+### Portail Agent Terrain Mobile (18 Mars 2026)
+- v1.30: 3 onglets internes (Dashboard/Agriculteurs/Recherche), profil fermier enrichi
+- v1.31: Suppression "Actions Rapides" redondantes, barre navigation simplifiee:
+  - Accueil (dashboard avec onglets) | Visites (SSRTE stats) | Alertes | Profil
+  - Bug ParcelVerificationScreen corrige
+  - Workflow farmer-centric: selectionner fermier -> voir/remplir fiches -> validation
 
-### Build Mobile v1.30.0 (18 Mars 2026)
-- APK: https://expo.dev/artifacts/eas/k1rPVNVKurzh7agNbFqkPQ.apk
-- AAB: https://expo.dev/artifacts/eas/aeFsvwfuTqMwXLJ5Y1QADq.aab
-- Version code APK: 29, AAB: 30
+### Build Mobile v1.31.0 (18 Mars 2026)
+- APK: https://expo.dev/artifacts/eas/nnqCHVA2EhctFUVGCtHT4Q.apk
+- AAB: https://expo.dev/artifacts/eas/4ZotmyDhBHj2CrDs9ybyug.aab
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway, Email
@@ -54,6 +55,3 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Coop: bielaghana@gmail.com / greenlink2024
 - Agent: +2250709005301 / greenlink2024
-- Fournisseur: intrants-ci@test.com / test1234
-- Acheteur: acheteur-devis@test.com / test1234
-- RSE: rse-devis@test.com / test1234

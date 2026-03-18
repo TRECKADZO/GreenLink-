@@ -28,9 +28,8 @@ const TAB_CONFIG = {
   ],
   field_agent: [
     { name: 'FieldAgentDashboard', icon: 'shield-checkmark', iconOutline: 'shield-checkmark-outline', label: 'Accueil', hasBadge: true },
-    { name: 'FarmerSearch', icon: 'people', iconOutline: 'people-outline', label: 'Fermiers' },
-    { name: 'QuickActions', icon: 'add-circle', iconOutline: 'add-circle-outline', label: 'Plus', isMain: true },
-    { name: 'SSRTEVisitForm', icon: 'clipboard', iconOutline: 'clipboard-outline', label: 'Visites' },
+    { name: 'SSRTEAgentDashboard', icon: 'clipboard', iconOutline: 'clipboard-outline', label: 'Visites' },
+    { name: 'Notifications', icon: 'notifications', iconOutline: 'notifications-outline', label: 'Alertes', hasBadge: true },
     { name: 'Profile', icon: 'person', iconOutline: 'person-outline', label: 'Profil' },
   ],
   cooperative: [
@@ -54,16 +53,7 @@ const QUICK_ACTIONS = {
     { name: 'USSDCarbon', icon: 'call', label: '*144*88# Prime', color: '#f97316' },
     { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
   ],
-  field_agent: [
-    { name: 'SSRTEVisitForm', icon: 'clipboard', label: 'Visite SSRTE', color: '#06b6d4' },
-    { name: 'FarmerSearch', icon: 'search', label: 'Recherche Planteur', color: '#3b82f6' },
-    { name: 'FarmerICIForm', icon: 'document-text', label: 'Fiche ICI', color: '#8b5cf6' },
-    { name: 'GeoPhoto', icon: 'camera', label: 'Photo Géo', color: '#10b981' },
-    { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#f59e0b' },
-    { name: 'ParcelVerification', icon: 'checkmark-circle', label: 'Vérif. Parcelle', color: '#ec4899' },
-    { name: 'Messaging', icon: 'chatbubbles', label: 'Messagerie', color: '#64748b' },
-    { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
-  ],
+  field_agent: [],
   cooperative: [
     { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#10b981' },
     { name: 'Messaging', icon: 'chatbubbles', label: 'Messagerie', color: '#8b5cf6' },
@@ -393,9 +383,9 @@ const BottomTabBar = ({ userType = 'farmer', notifications = {} }) => {
       CoopMembers: ['CoopMembers', 'CoopMemberDetail', 'AddMemberParcel'],
       AddCoopMember: ['AddCoopMember'],
       CoopReports: ['CoopReports'],
-      FieldAgentDashboard: ['FieldAgentDashboard'],
-      FarmerSearch: ['FarmerSearch'],
-      SSRTEVisitForm: ['SSRTEVisitForm', 'SSRTEAgentDashboard'],
+      FieldAgentDashboard: ['FieldAgentDashboard', 'FarmerProfile', 'FarmerSearch'],
+      SSRTEAgentDashboard: ['SSRTEAgentDashboard', 'SSRTEVisitForm'],
+      Notifications: ['Notifications'],
     };
     
     return relatedScreens[tabName]?.includes(currentRoute) || false;
