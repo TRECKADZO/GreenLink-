@@ -758,16 +758,18 @@ async def activate_member_account(request: MemberActivationRequest):
     
     logger.info(f"[MEMBER ACTIVATION] Attempting activation for phone: {request.phone_number}")
     
+    phone_variants = normalize_phone(request.phone_number)
+    
     # Vérifier si ce numéro existe déjà dans les users
-    existing_user = await db.users.find_one({"phone_number": request.phone_number})
+    existing_user = await db.users.find_one({"phone_number": {"$in": phone_variants}})
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Ce numéro de téléphone a déjà un compte actif. Veuillez vous connecter."
         )
     
-    # Chercher le membre dans coop_members
-    member = await db.coop_members.find_one({"phone_number": request.phone_number})
+    # Chercher le membre dans coop_members avec normalisation
+    member = await db.coop_members.find_one({"phone_number": {"$in": phone_variants}})
     
     if not member:
         raise HTTPException(
@@ -775,15 +777,21 @@ async def activate_member_account(request: MemberActivationRequest):
             detail="Aucun profil membre trouvé avec ce numéro. Contactez votre coopérative."
         )
     
+    # Utiliser le numéro tel que stocké dans le membre
+    stored_phone = member.get("phone_number", request.phone_number)
+    
     # Récupérer les infos de la coopérative
     coop = await db.users.find_one({"_id": ObjectId(member.get("coop_id"))})
+    if not coop:
+        coop_id_str = str(member.get("coop_id"))
+        coop = await db.users.find_one({"_id": ObjectId(coop_id_str)}) if ObjectId.is_valid(coop_id_str) else None
     coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
     
     # Créer le compte utilisateur
     hashed_password = get_password_hash(request.password)
     
     user_dict = {
-        "phone_number": request.phone_number,
+        "phone_number": stored_phone,
         "email": member.get("email"),
         "full_name": member.get("full_name") or member.get("name"),
         "hashed_password": hashed_password,
@@ -860,8 +868,10 @@ async def check_member_phone(phone_number: str):
     Vérifie si un numéro de téléphone est enregistré comme membre de coopérative
     et s'il peut activer son compte.
     """
+    phone_variants = normalize_phone(phone_number)
+    
     # Vérifier si déjà un user
-    existing_user = await db.users.find_one({"phone_number": phone_number})
+    existing_user = await db.users.find_one({"phone_number": {"$in": phone_variants}})
     if existing_user:
         return {
             "found": True,
@@ -870,8 +880,8 @@ async def check_member_phone(phone_number: str):
             "message": "Ce numéro a déjà un compte. Veuillez vous connecter."
         }
     
-    # Chercher dans coop_members
-    member = await db.coop_members.find_one({"phone_number": phone_number})
+    # Chercher dans coop_members avec toutes les variantes
+    member = await db.coop_members.find_one({"phone_number": {"$in": phone_variants}})
     if not member:
         return {
             "found": False,
@@ -882,6 +892,9 @@ async def check_member_phone(phone_number: str):
     
     # Récupérer le nom de la coopérative
     coop = await db.users.find_one({"_id": ObjectId(member.get("coop_id"))})
+    if not coop:
+        coop_id_str = str(member.get("coop_id"))
+        coop = await db.users.find_one({"_id": ObjectId(coop_id_str)}) if ObjectId.is_valid(coop_id_str) else None
     coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
     
     return {
