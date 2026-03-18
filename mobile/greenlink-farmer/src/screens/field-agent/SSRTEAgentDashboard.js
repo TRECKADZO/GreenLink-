@@ -231,48 +231,39 @@ const SSRTEAgentDashboard = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Quick Actions */}
+        {/* CTA Farmer-Centric */}
         <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>Actions Rapides</Text>
-          <View style={styles.actionsGrid}>
+          <TouchableOpacity 
+            style={styles.ctaCard}
+            onPress={() => navigation.navigate('FieldAgentDashboard')}
+          >
+            <View style={styles.ctaIconWrap}>
+              <Ionicons name="person-add" size={28} color="#059669" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ctaTitle}>Selectionner un agriculteur</Text>
+              <Text style={styles.ctaDesc}>
+                Choisissez un fermier pour remplir ses fiches (SSRTE, ICI, Parcelles, Photos...)
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color="#059669" />
+          </TouchableOpacity>
+
+          <View style={styles.miniActionsRow}>
             <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('SSRTEVisitForm')}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: '#06b6d4' }]}>
-                <Ionicons name="add-circle" size={24} color="#fff" />
-              </View>
-              <Text style={styles.actionText}>Nouvelle Visite</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.actionButton}
+              style={styles.miniAction}
               onPress={() => navigation.navigate('FarmerSearch')}
             >
-              <View style={[styles.actionIcon, { backgroundColor: '#8b5cf6' }]}>
-                <Ionicons name="search" size={24} color="#fff" />
-              </View>
-              <Text style={styles.actionText}>Chercher Planteur</Text>
+              <Ionicons name="search" size={20} color="#8b5cf6" />
+              <Text style={styles.miniActionText}>Chercher Planteur</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('GeoPhoto')}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: '#10b981' }]}>
-                <Ionicons name="camera" size={24} color="#fff" />
-              </View>
-              <Text style={styles.actionText}>Photo Géolocalisée</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.actionButton}
+              style={styles.miniAction}
               onPress={() => Alert.alert('Export', 'Export disponible en ligne')}
             >
-              <View style={[styles.actionIcon, { backgroundColor: '#f59e0b' }]}>
-                <Ionicons name="download" size={24} color="#fff" />
-              </View>
-              <Text style={styles.actionText}>Exporter Rapport</Text>
+              <Ionicons name="download" size={20} color="#f59e0b" />
+              <Text style={styles.miniActionText}>Exporter Rapport</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -507,6 +498,58 @@ const styles = StyleSheet.create({
   },
   actionsSection: {
     marginBottom: 20,
+  },
+  ctaCard: {
+    backgroundColor: 'rgba(5,150,105,0.12)',
+    borderRadius: 14,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(5,150,105,0.3)',
+    borderStyle: 'dashed',
+    marginBottom: 12,
+  },
+  ctaIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: 'rgba(5,150,105,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ctaTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#a7f3d0',
+  },
+  ctaDesc: {
+    fontSize: 12,
+    color: '#6ee7b7',
+    marginTop: 3,
+    lineHeight: 17,
+  },
+  miniActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  miniAction: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  miniActionText: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: '600',
   },
   sectionTitle: {
     color: '#fff',
