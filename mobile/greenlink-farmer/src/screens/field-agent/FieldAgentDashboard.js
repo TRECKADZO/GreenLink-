@@ -23,6 +23,7 @@ const FieldAgentDashboard = ({ navigation }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [myFarmers, setMyFarmers] = useState([]);
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -54,9 +55,24 @@ const FieldAgentDashboard = ({ navigation }) => {
     }
   }, [token, isOnline]);
 
+  const fetchMyFarmers = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/field-agent/my-farmers`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setMyFarmers(result.farmers || []);
+      }
+    } catch (error) {
+      console.error('Error fetching farmers:', error);
+    }
+  }, [token]);
+
   useEffect(() => {
     fetchDashboard();
-  }, [fetchDashboard]);
+    fetchMyFarmers();
+  }, [fetchDashboard, fetchMyFarmers]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -227,6 +243,43 @@ const FieldAgentDashboard = ({ navigation }) => {
             </ScrollView>
           </View>
         )}
+
+        {/* Mes Agriculteurs */}
+        <View style={styles.card}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={styles.cardTitle}>Mes Agriculteurs ({myFarmers.length})</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('FarmerSearch')}>
+              <Text style={{ color: '#06b6d4', fontSize: 13, fontWeight: '600' }}>Voir tout</Text>
+            </TouchableOpacity>
+          </View>
+          {myFarmers.length > 0 ? (
+            myFarmers.slice(0, 5).map(f => (
+              <TouchableOpacity 
+                key={f.id} 
+                style={styles.farmerRow}
+                onPress={() => navigation.navigate('FarmerProfile', { farmer: f })}
+                activeOpacity={0.7}
+              >
+                <View style={styles.farmerRowAvatar}>
+                  <Ionicons name="person" size={18} color="#059669" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.farmerRowName}>{f.full_name}</Text>
+                  <Text style={styles.farmerRowInfo}>{f.village || ''} {f.phone_number ? `| ${f.phone_number}` : ''}</Text>
+                </View>
+                <Text style={{ fontSize: 11, color: '#94a3b8' }}>{f.parcels_count || 0} parcelles</Text>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, paddingVertical: 16 }}>Aucun fermier assigne</Text>
+          )}
+          {myFarmers.length > 5 && (
+            <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 8 }} onPress={() => navigation.navigate('FarmerSearch')}>
+              <Text style={{ color: '#06b6d4', fontSize: 13 }}>+ {myFarmers.length - 5} autres agriculteurs</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* Quick Actions - Full Grid */}
         <View style={styles.card}>
@@ -527,6 +580,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#334155',
     textAlign: 'center',
+  },
+  farmerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    gap: 10,
+  },
+  farmerRowAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#ecfdf5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  farmerRowName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  farmerRowInfo: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 1,
   },
 });
 

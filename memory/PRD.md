@@ -12,37 +12,34 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 
 ### Attribution Fermier-Agent (17 Mars 2026)
 - 5 endpoints API, modale attribution web, offline mobile
-- Tests: 13/13 backend (iteration 32)
 
 ### Fiche ICI (18 Mars 2026)
-- ChildDetail (prenom, sexe, age, scolarise, travaille), calcul risque
-- Web: ICIProfileModal, Mobile: FarmerICIFormScreen avec offline
-- Tests: 11/11 backend (iteration 33)
+- ChildDetail (prenom, sexe, age, scolarise, travaille)
+- Web: ICIProfileModal, Mobile: FarmerICIFormScreen
 
-### Dashboard Agent Terrain Web Complet (18 Mars 2026)
-- 8 sections menu lateral: Dashboard, SSRTE, ICI, Membres, Parcelles, Photos, Enfants, Recherche
-- Tests: 100% frontend (iteration 34)
+### Approche "Selection Fermier → Toutes les Fiches" (18 Mars 2026)
+- **Web**: Menu simplifie (Dashboard, Mes Agriculteurs, Recherche)
+  - Clic sur fermier → page profil avec 6 fiches: ICI, SSRTE, Enfants, Parcelles, Photos, Enregistrement
+- **Mobile**: FarmerProfileScreen cree
+  - Dashboard affiche "Mes Agriculteurs" avec navigation vers profil
+  - Profil fermier = 5 fiches a remplir (ICI, SSRTE, Parcelles, Photos, Enregistrement)
+  - FarmerICIForm: liste fermiers si pas de farmerId
 
-### Interface Agent Terrain Mobile Complete (18 Mars 2026)
-- **BottomTabBar**: 5 onglets (Accueil, Fermiers, Plus, Visites, Profil)
-- **Quick Actions**: 8 items (SSRTE, Recherche, Fiche ICI, Photo Geo, Nouveau Membre, Verif Parcelle, Messagerie, Notifications)
-- **Dashboard**: 6 actions rapides en grille (SSRTE, Visite ICI, Nouveau Membre, Parcelles, Photo Geo, Recherche)
-- **FarmerICIForm**: Affiche liste fermiers assignes si ouvert sans parametre
-- **ProfileScreen**: "Agent Terrain" avec Zone et Cooperative
-- **FieldAgentDashboard**: Dans MainLayout avec barre onglets agent
-- **Tous les ecrans registres dans AppContent.js**
+### Interface Agent Terrain Mobile
+- BottomTabBar field_agent, Quick Actions 8 items, Dashboard 6 actions grille
+- Section "Mes Agriculteurs" dans dashboard avec navigation vers profils
+- ProfileScreen "Agent Terrain", MainLayout
 
 ### Fix Normalisation Telephone Membre (18 Mars 2026)
 - check-member-phone + activate-member-account: normalize_phone()
 
 ### Builds Mobile
-- v1.28.0 APK: https://expo.dev/artifacts/eas/tK8crCWFjZ1QHTyhc1E3Jj.apk
-- v1.28.0 AAB: https://expo.dev/artifacts/eas/kVdYqUSAoHcsaGXaqvXaj4.aab
-- Note: v1.28.0 ne contient PAS les derniers changements (grille actions, selection fermier ICI). Rebuild necessaire.
+- v1.28.0 APK/AAB (precedent, pas a jour)
+- Rebuild necessaire v1.29.0
 
 ## Etat Actuel
-- Web: FONCTIONNEL (dashboard agent complet)
-- Mobile: Code complet, rebuild necessaire pour integrer les derniers changements
+- Web: FONCTIONNEL
+- Mobile: Code complet, rebuild necessaire
 
 ## Backlog
 ### P0
@@ -59,6 +56,4 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Coop Bielaghana: bielaghana@gmail.com / greenlink2024
-- Coop Cacao: coopcacao@greenlink.ci / greenlink2024
 - Agent Kone: +2250709005301 / greenlink2024
-- Agent Cacao: +2250709005310 / greenlink2024

@@ -92,6 +92,7 @@ const ParcelVerificationScreen = safeRequire(() => require('./screens/field-agen
 const GeoPhotoScreen = safeRequire(() => require('./screens/field-agent/GeoPhotoScreen'), 'GeoPhotoScreen');
 const SSRTEVisitFormScreen = safeRequire(() => require('./screens/field-agent/SSRTEVisitFormScreen'), 'SSRTEVisitFormScreen');
 const FarmerICIFormScreen = safeRequire(() => require('./screens/field-agent/FarmerICIFormScreen'), 'FarmerICIFormScreen');
+const FarmerProfileScreen = safeRequire(() => require('./screens/field-agent/FarmerProfileScreen'), 'FarmerProfileScreen');
 
 // Auditor
 const AuditorDashboardScreen = safeRequire(() => require('./screens/auditor/AuditorDashboardScreen'), 'AuditorDashboardScreen');
@@ -177,6 +178,7 @@ function AppNavigator() {
       <Stack.Screen name="GeoPhoto" component={GeoPhotoScreen} />
       <Stack.Screen name="SSRTEVisitForm" component={SSRTEVisitFormScreen} />
       <Stack.Screen name="FarmerICIForm" component={FarmerICIFormScreen} />
+      <Stack.Screen name="FarmerProfile" component={FarmerProfileScreen} />
       <Stack.Screen name="VisitsHistory" component={CoopReportsScreen} />
       
       <Stack.Screen name="AuditorDashboard" component={AuditorDashboardScreen} />
