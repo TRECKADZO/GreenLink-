@@ -32,40 +32,42 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Web + Mobile: barres de progression + badges "Complete"
 
 ### Abonnement par DEVIS avec 15 jours gratuit (18 Mars 2026)
-- **Backend** (routes/quotes.py):
-  - POST /api/subscriptions/quote/submit - soumettre un devis
-  - GET /api/subscriptions/quote/my-quote - voir statut de son devis
-  - GET /api/admin/quotes - lister tous les devis (admin)
-  - PUT /api/admin/quotes/{id} - approuver/rejeter un devis (admin)
-  - PUT /api/admin/accounts/{id}/action - activer/suspendre/supprimer (admin)
-  - GET /api/admin/devis-accounts - lister comptes sur devis (admin)
-- **Subscription Model**: 
-  - Nouveaux statuts: PENDING_QUOTE, SUSPENDED
-  - Trial 15 jours pour fournisseurs/acheteurs/entreprises RSE
-  - Apres trial: formulaire devis -> approbation admin -> compte actif
-- **Frontend Admin** (pages/admin/QuotesManagement.jsx):
-  - Page /admin/quotes avec KPIs (en attente, approuves, refuses)
-  - Onglet "Devis" avec liste et detail + actions approuver/rejeter
-  - Onglet "Comptes sur devis" avec boutons Activer/Suspendre/Supprimer
-- **Frontend Fournisseur** (components/SubscriptionBanner.jsx):
-  - Banner trial avec jours restants
-  - Banner devis en attente
-  - Formulaire de devis apres expiration du trial
-  - Banner pour compte suspendu
-- **Tests**: 15/15 backend, 100% frontend (iteration 36)
+- Backend: 6 endpoints devis + admin dans routes/quotes.py
+- Statuts: PENDING_QUOTE, SUSPENDED, ACTIVE, TRIAL, EXPIRED
+- Frontend Admin: Page /admin/quotes (KPIs + gestion devis + gestion comptes)
+- Frontend Fournisseur: Banner abonnement (trial, devis, suspendu)
+
+### Notifications Email Automatiques (18 Mars 2026)
+- Service email dans services/email_service.py
+- Templates HTML: devis approuve, devis refuse, compte suspendu, compte reactive
+- Mode MOCK actif (configurer SMTP_HOST, SMTP_USER, SMTP_PASSWORD pour activer)
+- Declenche sur: approbation/rejet devis, suspension/activation compte
+
+### Page Accueil - Tarifs Mis a Jour (18 Mars 2026)
+- Producteurs: GRATUIT (Gratuit a vie)
+- Cooperatives: GRATUIT (Attribution agents, Fiches ICI/SSRTE, Suivi completion)
+- Acheteurs: Sur devis (15 jours gratuits)
+- Fournisseurs: Sur devis (15 jours gratuits)
+- Entreprises RSE: Sur devis (15 jours gratuits)
+- Section "Comment fonctionne l'abonnement sur devis ?" en 3 etapes
 
 ## Etat Actuel
 - Web: FONCTIONNEL
 - Mobile: Code complete, rebuild necessaire
+
+## Services MOCK
+- Orange Money, Orange SMS, USSD Gateway
+- Email Service (SMTP non configure)
 
 ## Backlog
 ### P0
 - [ ] Rebuild APK/AAB v1.29.0
 ### P1
 - [ ] Soumission AAB Google Play
+- [ ] Configurer SMTP pour emails reels
 ### P2
 - [ ] Langues Baoule/Dioula
-- [ ] Notifications multi-canal
+- [ ] Notifications multi-canal (Push, SMS, Email)
 - [ ] Stockage cloud fichiers
 - [ ] Refactoring cooperative.py et ssrte.py
 
@@ -73,4 +75,3 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Coop Bielaghana: bielaghana@gmail.com / greenlink2024
 - Agent Kone: +2250709005301 / greenlink2024
-- Fournisseur Test: testfournisseur@test.com / test1234
