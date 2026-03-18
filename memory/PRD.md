@@ -29,47 +29,32 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Mobile: Pre-chargement offline dans sync.js
 - Tests: 13/13 backend, 100% frontend (iteration 32)
 
-### Interface Agent Terrain Mobile Specifique (17 Mars 2026)
+### Interface Agent Terrain Mobile (17 Mars 2026)
 - BottomTabBar: Config field_agent (Accueil, Fermiers, Plus, Visites, Profil)
-- Actions Rapides Agent: Visite SSRTE, Recherche, Fiche ICI, Photo Geo, Nouveau Membre, Verif Parcelle
-- ProfileScreen: Affiche "Agent Terrain", champs Zone et Cooperative
+- Actions Rapides: Visite SSRTE, Recherche, Fiche ICI, Photo Geo, Nouveau Membre
+- ProfileScreen: "Agent Terrain", champs Zone et Cooperative
 - FieldAgentDashboard: MainLayout avec barre onglets agent
 
-### Fiche ICI (Indice Composite de l'Enfant) (18 Mars 2026)
-- **Backend** - Modele enrichi:
-  - ChildDetail: prenom, sexe (Fille/Garcon), age (0-17), scolarise, travaille_exploitation
-  - HouseholdChildData: liste_enfants (liste detaillee), totaux auto-calcules
-  - Acces ouvert aux field_agent (pas seulement admin/cooperative)
-  - Calcul automatique du score de risque travail enfants
-  - Alertes generees si risque ELEVE
-- **Frontend Web** - ICIProfileModal.jsx:
-  - Accessible depuis le bouton "ICI" dans la modale d'attribution (fermiers assignes)
-  - Infos producteur: genre, education, taille menage, alphabetisation
-  - Enfants: ajout individuel avec prenom, sexe, age, scolarise, travaille
-  - Resume automatique: scolarises, travaillant, total
-  - Pratiques: pesticides, formation securite, epargne, main-d'oeuvre
-  - Badge risque avec score
-- **Mobile** - FarmerICIFormScreen.js:
-  - Ecran complet pour agents terrain
-  - Support offline (cache AsyncStorage + pendingActions)
-  - Navigation depuis Quick Actions (Fiche ICI) et liste fermiers
-  - Memes champs que version web
-- **Tests**: 11/11 backend, 100% frontend (iteration 33)
+### Fiche ICI (18 Mars 2026)
+- Backend: ChildDetail (prenom, sexe, age, scolarise, travaille), calcul risque
+- Frontend Web: ICIProfileModal dans attribution
+- Mobile: FarmerICIFormScreen avec support offline
+- Tests: 11/11 backend, 100% frontend (iteration 33)
 
-### Builds Mobile
-- v1.27.1 APK: https://expo.dev/artifacts/eas/sTauSngohed1JrxTesFirG.apk
-- v1.27.1 AAB: https://expo.dev/artifacts/eas/s7qaLmsDR4G6Zz2tfbEixs.aab
+### Fix Normalisation Telephone Membre (18 Mars 2026)
+- check-member-phone: ajout normalize_phone()
+- activate-member-account: ajout normalize_phone() + coop_id ObjectId fix
+
+### Builds Mobile v1.28.0 (18 Mars 2026)
+- APK: https://expo.dev/artifacts/eas/tK8crCWFjZ1QHTyhc1E3Jj.apk
+- AAB: https://expo.dev/artifacts/eas/kVdYqUSAoHcsaGXaqvXaj4.aab
 
 ## Etat Actuel
 - Web: FONCTIONNEL
-- Mobile: v1.27.1 (APK + AAB prets)
+- Mobile: v1.28.0 (APK + AAB prets)
 - Integrations Orange: MOCK
-- Attribution fermier-agent: FONCTIONNEL
-- Fiche ICI: FONCTIONNEL (web + backend, mobile a rebuilder)
 
 ## Backlog
-### P0
-- [ ] Rebuild APK/AAB avec Fiche ICI mobile + interface agent
 ### P1
 - [ ] Soumission AAB Google Play
 - [ ] Bug pages blanches mobile (Nouvelle Parcelle, inscription)
