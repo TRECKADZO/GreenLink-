@@ -25,55 +25,28 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ### Abonnement par DEVIS (18 Mars 2026)
 - 15 jours gratuits pour fournisseurs/acheteurs/entreprises RSE
 - Workflow: inscription -> trial 15j -> formulaire devis -> approbation admin
-- **Tarification personnalisee par le Super Admin:**
-  - Montant abonnement XOF fixe individuellement par devis
-  - Cycle facturation: mensuel/trimestriel/annuel
-  - Fournisseurs: commission 3-5% sur chaque vente + abonnement
-  - Acheteurs: montant mensuel/annuel uniquement (pas de commission)
-  - Entreprises RSE: montant mensuel/annuel uniquement (pas de commission)
-  - Montant affiche dans le dashboard de CHAQUE utilisateur
-- **Dashboards avec tarification:**
-  - Fournisseur: abonnement + commission + facturation
-  - Acheteur: abonnement + facturation (sans commission)
-  - Entreprise RSE: abonnement + facturation (sans commission)
+- Tarification personnalisee par le Super Admin
 - Admin: approuver/rejeter devis + activer/suspendre/supprimer comptes
 - Notifications email automatiques (MOCK si SMTP non configure)
 
-### Tarifs Page Accueil + FAQ (18 Mars 2026)
-- Producteurs/Cooperatives: GRATUIT
-- Fournisseurs: Sur devis - Commission 3-5% + abonnement sur devis
-- Acheteurs/RSE: Sur devis - 15 jours gratuits
-- Section 3 etapes workflow devis
-
 ### Dashboard RSE Enrichi + Formulaire Credit Carbone (18 Mars 2026)
-- **Nouveau endpoint**: GET /api/rse/dashboard-stats avec metriques:
-  - Conformite EUDR (deforestation-free, geolocalisation, verification terrain)
-  - Monitoring travail enfants (fiches ICI, visites SSRTE, cas risques, alertes)
-  - Tracabilite chaine approvisionnement (cooperatives, producteurs, parcelles, hectares, certifications)
-  - Marche carbone (credits disponibles, tonnes, prix moyen/min/max, types)
-  - Mon impact (tonnes compensees, investissement XOF, achats)
-  - Score ESG global (E: environnement, S: social, G: gouvernance) avec details
-- **Dashboard RSE redesigne** avec theme sombre professionnel:
-  - Score ESG avec anneau SVG anime
-  - Cartes EUDR compliance avec barres de progression
-  - Section monitoring travail enfants avec ICI/SSRTE stats
-  - Apercu marche carbone avec types et prix
-  - Tracabilite avec certifications (UTZ, Fairtrade, Bio, Rainforest Alliance)
-  - Carte interactive, evolution mensuelle, histoires d'impact
-- **Formulaire credit carbone ameliore** en 4 etapes:
-  - Etape 1: Type de projet + dates debut/fin
-  - Etape 2: Standard, organisme certificateur, quantite, methodologie
-  - Etape 3: Localisation, surface, impact social, plan MRV
-  - Etape 4: Additionnalite, permanence, fuites, co-benefices, ODD, consentement CLIP/FPIC
+- Nouveau endpoint GET /api/rse/dashboard-stats
+- Score ESG (E/S/G), conformite EUDR, monitoring travail enfants
+- Tracabilite chaine approvisionnement, marche carbone
+- Formulaire credit carbone en 4 etapes avec champs ESG
+
+### Build Mobile v1.29.0 (18 Mars 2026)
+- APK (preview): https://expo.dev/artifacts/eas/upC9yPPseDnn2nAnLQ3iDj.apk
+- AAB (production): https://expo.dev/artifacts/eas/ih1ynZ2bAEhV7BMJySssJS.aab
+- Version code APK: 28, AAB: 29
+- Expo SDK 53, Runtime 1.29.0
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway, Email (SMTP non configure)
 
 ## Backlog
-### P0
-- [ ] Rebuild APK/AAB v1.29.0
 ### P1
-- [ ] Soumission AAB Google Play
+- [ ] Soumission AAB Google Play Store
 - [ ] Configurer SMTP pour emails reels
 ### P2
 - [ ] Langues Baoule/Dioula
