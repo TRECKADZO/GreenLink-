@@ -783,6 +783,28 @@ async def admin_assign_farmers_to_agent(body: AdminAssignFarmersRequest, admin: 
     
     updated = await db.coop_agents.find_one({"_id": ObjectId(body.agent_id)})
     
+    # Envoyer email notification a l'agent
+    try:
+        import asyncio as _asyncio
+        from services.notification_email_helper import send_notification_email_async
+        # Recuperer les noms des agriculteurs assignes
+        farmer_names = []
+        for fid in verified:
+            m = await db.coop_members.find_one({"_id": ObjectId(fid)})
+            if not m:
+                m = await db.users.find_one({"_id": ObjectId(fid)})
+            if m:
+                farmer_names.append(m.get("full_name") or m.get("name") or "Agriculteur")
+        agent_user_id = updated.get("user_id")
+        _asyncio.create_task(send_notification_email_async(db, "farmer_assigned",
+            agent_id=agent_user_id or str(updated.get("_id")),
+            farmer_names=farmer_names,
+            assigned_by=admin.get("full_name", "Administrateur")
+        ))
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Assignment email notification failed: {e}")
+    
     return {
         "message": f"{len(verified)} agriculteur(s) assigne(s) a {agent.get('full_name', 'agent')}",
         "assigned_count": len(updated.get("assigned_farmers", [])),

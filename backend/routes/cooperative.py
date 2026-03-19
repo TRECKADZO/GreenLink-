@@ -763,6 +763,21 @@ async def verify_parcel(
     # Get farmer info for notification
     member = await db.coop_members.find_one({"_id": parcel.get("member_id")})
     
+    # Envoyer email notification a l'agriculteur
+    try:
+        import asyncio as _asyncio
+        from services.notification_email_helper import send_notification_email_async
+        farmer_id = parcel.get("farmer_id") or str(parcel.get("member_id", ""))
+        _asyncio.create_task(send_notification_email_async(db, "parcel_verified",
+            farmer_id=farmer_id,
+            parcel_location=parcel.get("location") or parcel.get("village", ""),
+            status=verification.verification_status,
+            carbon_score=parcel.get("carbon_score"),
+            notes=verification.verification_notes
+        ))
+    except Exception as e:
+        logger.error(f"Parcel verification email notification failed: {e}")
+    
     return {
         "message": f"Parcelle {'vérifiée' if verification.verification_status == 'verified' else 'mise à jour'}",
         "parcel_id": parcel_id,

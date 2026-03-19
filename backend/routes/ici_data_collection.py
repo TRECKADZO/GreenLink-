@@ -309,6 +309,22 @@ async def record_ssrte_visit(
             }
         )
     
+    # Envoyer email notification a la cooperative
+    try:
+        import asyncio as _asyncio
+        from services.notification_email_helper import send_notification_email_async
+        coop_id = visit_dict.get("cooperative_id") or current_user.get("cooperative_id")
+        _asyncio.create_task(send_notification_email_async(db, "ssrte_visit",
+            coop_id=coop_id,
+            agent_name=visit_dict.get("agent_name", "Agent"),
+            farmer_name=visit_dict.get("farmer_name", "Producteur"),
+            risk_level=visit.niveau_risque,
+            children_working=visit.enfants_observes_travaillant
+        ))
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"SSRTE email notification failed: {e}")
+    
     return {
         "message": "Visite SSRTE enregistrée",
         "visit_id": str(result.inserted_id),

@@ -161,6 +161,21 @@ async def declare_harvest(
     except Exception as e:
         logger.error(f"Harvest push notification failed: {e}")
     
+    # Envoyer email notification a la cooperative
+    try:
+        import asyncio as _asyncio
+        from services.notification_email_helper import send_notification_email_async
+        coop_id = current_user.get("cooperative_id")
+        _asyncio.create_task(send_notification_email_async(db, "harvest_declared",
+            coop_id=coop_id,
+            farmer_name=current_user.get("full_name", "Producteur"),
+            quantity_kg=harvest.quantity_kg,
+            crop_type=parcel.get("crop_type", "cacao"),
+            carbon_premium=harvest_dict.get("carbon_premium", 0)
+        ))
+    except Exception as e:
+        logger.error(f"Harvest email notification failed: {e}")
+    
     return harvest_dict
 
 @router.post("/payments/request")

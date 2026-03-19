@@ -862,6 +862,21 @@ async def activate_member_account(request: MemberActivationRequest):
     except Exception as e:
         logger.error(f"[MEMBER ACTIVATION] Failed to send welcome notification: {e}")
     
+    # Envoyer notifications email (bienvenue membre + alerte cooperative)
+    try:
+        import asyncio
+        from services.notification_email_helper import send_notification_email_async
+        asyncio.create_task(send_notification_email_async(db, "member_activated",
+            coop_id=member.get("coop_id"),
+            member_email=user_dict.get("email"),
+            member_name=user_dict.get("full_name", "Membre"),
+            member_phone=user_dict.get("phone_number", ""),
+            village=user_dict.get("village"),
+            user_type="producteur"
+        ))
+    except Exception as e:
+        logger.error(f"[MEMBER ACTIVATION] Email notification error: {e}")
+    
     # Créer le token d'accès
     access_token = create_access_token(data={"sub": user_id})
     
@@ -1081,6 +1096,20 @@ async def activate_agent_account(request: AgentActivationRequest):
         })
     except Exception as e:
         logger.error(f"[AGENT ACTIVATION] Failed to send welcome notification: {e}")
+    
+    # Envoyer email de bienvenue a l'agent
+    try:
+        import asyncio
+        from services.notification_email_helper import send_notification_email_async
+        asyncio.create_task(send_notification_email_async(db, "member_activated",
+            coop_id=coop_id_raw,
+            member_email=user_dict.get("email"),
+            member_name=user_dict.get("full_name", "Agent"),
+            member_phone=user_dict.get("phone_number", ""),
+            user_type="field_agent"
+        ))
+    except Exception as e:
+        logger.error(f"[AGENT ACTIVATION] Email notification error: {e}")
     
     user_dict["_id"] = user_id
     user_dict.pop("hashed_password", None)

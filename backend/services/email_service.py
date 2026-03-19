@@ -220,3 +220,126 @@ def send_welcome_email(to_email, user_name, user_type):
         </div>
     """
     return send_email(to_email, subject, _wrap_template(body))
+
+
+def send_new_member_activated_email(to_coop_email, coop_name, member_name, member_phone, village=None):
+    subject = f"GreenLink - Nouveau membre active: {member_name}"
+    body = f"""
+        <h2 style="color:#059669;margin:0 0 16px;">Nouveau membre active</h2>
+        <p style="color:#374151;line-height:1.6;">Bonjour <strong>{coop_name}</strong>,</p>
+        <p style="color:#374151;line-height:1.6;">
+          Un nouveau membre vient d'activer son compte sur GreenLink.
+        </p>
+        <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin:16px 0;border-left:4px solid #059669;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Nom:</td><td style="color:#065f46;padding:4px 8px;">{member_name}</td></tr>
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Telephone:</td><td style="color:#065f46;padding:4px 8px;">{member_phone}</td></tr>
+            {f'<tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Village:</td><td style="color:#065f46;padding:4px 8px;">{village}</td></tr>' if village else ''}
+          </table>
+        </div>
+        <p style="color:#6b7280;font-size:14px;">
+          Ce membre peut maintenant declarer des parcelles et enregistrer des recoltes.
+        </p>
+    """
+    return send_email(to_coop_email, subject, _wrap_template(body))
+
+
+def send_harvest_notification_email(to_coop_email, coop_name, farmer_name, quantity_kg, crop_type="cacao", carbon_premium=0):
+    subject = f"GreenLink - Nouvelle recolte: {farmer_name} ({quantity_kg} kg)"
+    premium_html = ""
+    if carbon_premium > 0:
+        premium_html = f"""
+        <div style="background:#fef3c7;border-radius:8px;padding:12px;margin:8px 0;border-left:4px solid #f59e0b;">
+          <p style="margin:0;color:#92400e;font-size:14px;">Prime carbone: <strong>{carbon_premium:,.0f} XOF</strong></p>
+        </div>"""
+    body = f"""
+        <h2 style="color:#059669;margin:0 0 16px;">Nouvelle recolte enregistree</h2>
+        <p style="color:#374151;line-height:1.6;">Bonjour <strong>{coop_name}</strong>,</p>
+        <p style="color:#374151;line-height:1.6;">
+          Une nouvelle recolte a ete declaree par un membre de votre cooperative.
+        </p>
+        <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin:16px 0;border-left:4px solid #059669;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Producteur:</td><td style="color:#065f46;padding:4px 8px;">{farmer_name}</td></tr>
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Quantite:</td><td style="color:#065f46;padding:4px 8px;">{quantity_kg} kg de {crop_type}</td></tr>
+          </table>
+        </div>
+        {premium_html}
+    """
+    return send_email(to_coop_email, subject, _wrap_template(body))
+
+
+def send_ssrte_visit_notification_email(to_coop_email, coop_name, agent_name, farmer_name, risk_level, children_working=0):
+    subject = f"GreenLink - Visite SSRTE: {farmer_name} (risque {risk_level})"
+    risk_colors = {"faible": "#059669", "moyen": "#f59e0b", "eleve": "#dc2626", "critique": "#7f1d1d"}
+    risk_color = risk_colors.get(risk_level, "#6b7280")
+    alert_html = ""
+    if risk_level in ["eleve", "critique"] or children_working > 0:
+        alert_html = f"""
+        <div style="background:#fef2f2;border-radius:8px;padding:12px;margin:8px 0;border-left:4px solid #dc2626;">
+          <p style="margin:0;color:#991b1b;font-size:14px;font-weight:bold;">ALERTE: {children_working} enfant(s) observe(s) en situation de travail</p>
+        </div>"""
+    body = f"""
+        <h2 style="color:#059669;margin:0 0 16px;">Visite SSRTE effectuee</h2>
+        <p style="color:#374151;line-height:1.6;">Bonjour <strong>{coop_name}</strong>,</p>
+        <p style="color:#374151;line-height:1.6;">
+          Un agent terrain a effectue une visite SSRTE chez un producteur.
+        </p>
+        <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin:16px 0;border-left:4px solid #059669;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Agent:</td><td style="color:#065f46;padding:4px 8px;">{agent_name}</td></tr>
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Producteur:</td><td style="color:#065f46;padding:4px 8px;">{farmer_name}</td></tr>
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Risque:</td><td style="padding:4px 8px;"><span style="color:{risk_color};font-weight:bold;text-transform:uppercase;">{risk_level}</span></td></tr>
+          </table>
+        </div>
+        {alert_html}
+    """
+    return send_email(to_coop_email, subject, _wrap_template(body))
+
+
+def send_farmer_assigned_notification_email(to_agent_email, agent_name, farmer_names, assigned_by="Administrateur"):
+    count = len(farmer_names) if isinstance(farmer_names, list) else 1
+    names_list = ", ".join(farmer_names[:5]) if isinstance(farmer_names, list) else farmer_names
+    if isinstance(farmer_names, list) and len(farmer_names) > 5:
+        names_list += f" (+{len(farmer_names) - 5} autres)"
+    subject = f"GreenLink - {count} agriculteur(s) assigne(s)"
+    body = f"""
+        <h2 style="color:#059669;margin:0 0 16px;">Nouveaux agriculteurs assignes</h2>
+        <p style="color:#374151;line-height:1.6;">Bonjour <strong>{agent_name}</strong>,</p>
+        <p style="color:#374151;line-height:1.6;">
+          <strong>{assigned_by}</strong> vous a assigne <strong>{count} agriculteur(s)</strong> :
+        </p>
+        <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin:16px 0;border-left:4px solid #059669;">
+          <p style="margin:0;color:#065f46;font-size:14px;">{names_list}</p>
+        </div>
+        <p style="color:#374151;line-height:1.6;">
+          Vous pouvez maintenant effectuer des visites SSRTE et declarer des parcelles pour ces agriculteurs.
+        </p>
+    """
+    return send_email(to_agent_email, subject, _wrap_template(body))
+
+
+def send_parcel_verified_notification_email(to_farmer_email, farmer_name, parcel_location, status, carbon_score=None, notes=None):
+    status_labels = {"verified": "verifiee", "rejected": "rejetee", "needs_correction": "a corriger"}
+    status_colors = {"verified": "#059669", "rejected": "#dc2626", "needs_correction": "#f59e0b"}
+    label = status_labels.get(status, status)
+    color = status_colors.get(status, "#6b7280")
+    subject = f"GreenLink - Parcelle {label}"
+    score_html = ""
+    if carbon_score and status == "verified":
+        score_html = f"""
+        <div style="background:#f0fdf4;border-radius:8px;padding:12px;margin:8px 0;border-left:4px solid #059669;">
+          <p style="margin:0;color:#065f46;font-size:14px;">Score carbone: <strong>{carbon_score}/10</strong></p>
+        </div>"""
+    notes_html = f'<p style="color:#6b7280;font-size:14px;"><em>Remarque: {notes}</em></p>' if notes else ""
+    body = f"""
+        <h2 style="color:{color};margin:0 0 16px;">Parcelle {label}</h2>
+        <p style="color:#374151;line-height:1.6;">Bonjour <strong>{farmer_name}</strong>,</p>
+        <p style="color:#374151;line-height:1.6;">
+          Votre parcelle a <strong>{parcel_location or 'localisation non precisee'}</strong> a ete
+          <strong style="color:{color};">{label}</strong> par un agent terrain.
+        </p>
+        {score_html}
+        {notes_html}
+    """
+    return send_email(to_farmer_email, subject, _wrap_template(body))
