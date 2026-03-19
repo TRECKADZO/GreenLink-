@@ -21,6 +21,10 @@ export const CONFIG = {
   PAGE_SIZE: 10,
 };
 
+// Named export for backward compatibility with screens importing { API_URL }
+export const API_URL = CONFIG.API_URL;
+
+
 export const COLORS = {
   primary: '#2d5a4d',
   primaryDark: '#1a4038',

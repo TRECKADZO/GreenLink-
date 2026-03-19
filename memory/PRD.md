@@ -30,6 +30,12 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - api.js: baseURL = CONFIG.API_URL + '/api'
 - Tous les ecrans utilisent ${API_URL}/api/... de maniere coherente
 
+### Fix API_URL Export Mobile - Root Cause (19 Mars 2026)
+- Bug CRITIQUE: config.js n'exportait pas API_URL comme export nomme
+- 11 ecrans importaient { API_URL } et recevaient undefined
+- Impact: TOUTES les requetes fetch directes echouaient (ICI save, refresh profile, etc.)
+- Fix: Ajoute export const API_URL = CONFIG.API_URL dans config.js
+
 ### Fix Navigation SSRTE Mobile (19 Mars 2026)
 - Bug: "Visite SSRTE" depuis FarmerProfile ne passait pas farmerData au formulaire
 - Fix FarmerProfileScreen.js: handleOpenForm passe maintenant farmerData: f en plus de farmerId et farmerName
