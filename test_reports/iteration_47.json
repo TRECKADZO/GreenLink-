@@ -1,0 +1,90 @@
+{
+  "summary": "Iteration 47 - Tested SSRTE standalone removal from cooperative dashboard and new SSRTE analytics endpoints. SSRTE button successfully removed from cooperative header. Route /cooperative/ssrte does NOT exist in App.js. Admin SSRTE Analytics page loads with KPIs, risk distribution, conditions sections. CRITICAL BUG FOUND: ssrte_analytics.py route takes precedence over ssrte.py - the new admin-only dashboard code is never executed.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/ssrte/dashboard",
+        "issue": "Route conflict: ssrte_analytics.py (line 24) defines /dashboard BEFORE ssrte.py (line 696). The new admin-only endpoint in ssrte.py is NEVER reached. ssrte_analytics.py allows cooperative access.",
+        "priority": "CRITICAL",
+        "root_cause": "In server.py line 136-137, ssrte_analytics router is included BEFORE ssrte router. First matching route wins.",
+        "solution": "Either: 1) Remove duplicate /dashboard from ssrte_analytics.py, 2) Change route order in server.py, or 3) Merge the endpoints into one file"
+      },
+      {
+        "endpoint": "/api/ssrte/dashboard - missing living_conditions",
+        "issue": "Frontend SSRTEAnalytics.jsx expects living_conditions data (conditions_distribution, eau_courante_percent, etc.) but the active ssrte_analytics.py route does NOT return it. Frontend shows 0% for all living_conditions.",
+        "priority": "HIGH",
+        "solution": "Update ssrte_analytics.py to include living_conditions data OR fix route order to use ssrte.py version"
+      },
+      {
+        "endpoint": "/api/ssrte/leaderboard",
+        "issue": "Same issue - ssrte_analytics.py defines /leaderboard with cooperative access allowed. New admin-only code in ssrte.py is never reached.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "SSRTE Analytics living_conditions display",
+        "issue": "All living_conditions values show 0% because backend does not return this data (route conflict issue)",
+        "affected_selectors": ["[data-testid='ssrte-conditions']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ssrte_analytics_iteration47.py",
+    "/app/test_reports/pytest/pytest_ssrte_analytics_iteration47.xml"
+  ],
+  "action_items": [
+    "CRITICAL: Fix route conflict in server.py - ssrte_analytics.py is loaded before ssrte.py causing /api/ssrte/dashboard endpoint in ssrte.py to be unreachable",
+    "Update ssrte_analytics.py to match the new admin-only access requirement OR delete duplicate endpoints from ssrte_analytics.py",
+    "Ensure /api/ssrte/dashboard returns living_conditions data for the frontend to display properly"
+  ],
+  "critical_code_review_comments": [
+    "BUG: server.py line 136-137 includes ssrte_analytics.router BEFORE ssrte.router - first route match wins, so ssrte.py endpoints are shadowed",
+    "VERIFIED: Cooperative dashboard (Dashboard.jsx) has SSRTE button REMOVED from header - only Accueil, Profil, Ajouter Membre visible",
+    "VERIFIED: Route /cooperative/ssrte does NOT exist in App.js - requirement met",
+    "VERIFIED: Admin SSRTE Analytics page /admin/ssrte-analytics loads correctly with all sections",
+    "VERIFIED: Frontend gracefully handles missing living_conditions data by showing 0%",
+    "ssrte_analytics.py line 18-21 allows cooperative/field_agent access to /dashboard endpoint - should be admin-only per requirements"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ssrte_analytics_iteration47.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed - including bug verification tests)",
+    "frontend": "90% (Cooperative dashboard correct, Admin page loads but missing data due to backend bug)"
+  },
+  "test_credentials": {
+    "admin": {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"},
+    "cooperative": {"identifier": "traore_eric@yahoo.fr", "password": "greenlink2024"}
+  },
+  "seed_data_creation": "None - used existing 32 SSRTE visits in database",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CRITICAL: There's a route conflict between ssrte_analytics.py and ssrte.py. Both define /api/ssrte/dashboard but ssrte_analytics.py is loaded first and takes precedence. The new admin-only code in ssrte.py (line 696-868) with living_conditions data is NEVER executed. Frontend shows SSRTE Analytics page correctly but living_conditions shows 0% because backend doesn't return it. Cooperative dashboard SSRTE button removal is verified working.",
+  "mocked_api_note": {"Orange SMS": "FULLY MOCKED"},
+  "bugs_found": {
+    "route_conflict": {
+      "description": "ssrte_analytics.py and ssrte.py both define /api/ssrte/dashboard and /api/ssrte/leaderboard endpoints",
+      "server_py_order": "Line 136: app.include_router(ssrte_analytics.router), Line 137: app.include_router(ssrte.router)",
+      "impact": "New admin-only code with living_conditions data in ssrte.py is never reached",
+      "ssrte_analytics_access": "get_admin_or_coop_user allows cooperative/field_agent access",
+      "ssrte_access": "Admin/super_admin only (never reached)"
+    }
+  },
+  "features_verified": {
+    "cooperative_dashboard_ssrte_button_removed": "PASS - Header only shows Accueil, Profil, Ajouter Membre",
+    "route_cooperative_ssrte_removed": "PASS - Route does not exist in App.js",
+    "admin_ssrte_analytics_page_loads": "PASS - KPIs, risk distribution, conditions sections render",
+    "backend_dashboard_returns_kpis": "PASS",
+    "backend_dashboard_returns_risk_distribution": "PASS",
+    "backend_dashboard_returns_living_conditions": "FAIL - Not returned due to route conflict",
+    "backend_dashboard_admin_only_access": "FAIL - Cooperative can access due to route conflict",
+    "backend_leaderboard_returns_data": "PASS",
+    "backend_leaderboard_admin_only_access": "FAIL - Cooperative can access due to route conflict"
+  }
+}

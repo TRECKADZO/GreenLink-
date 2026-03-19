@@ -74,7 +74,6 @@ import CooperativeDistributionsPage from "./pages/cooperative/DistributionsPage"
 import CooperativeReportsPage from "./pages/cooperative/ReportsPage";
 import MemberParcelsPage from "./pages/cooperative/MemberParcelsPage";
 import ImportMembersPage from "./pages/cooperative/ImportMembersPage";
-import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 import QRCodeGenerator from "./pages/cooperative/QRCodeGenerator";
 import AdminCarbonApprovals from "./pages/admin/AdminCarbonApprovals";
 import QuotesManagement from "./pages/admin/QuotesManagement";
@@ -212,7 +211,6 @@ function App() {
               <Route path="/cooperative/lots/new" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />
               <Route path="/cooperative/reports" element={<CooperativeReportsPage />} />
-              <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
               <Route path="/cooperative/carbon-premiums" element={<CarbonPremiumsPage />} />
               <Route path="/cooperative/carbon-submissions" element={<CarbonSubmissionsPage />} />
               <Route path="/cooperative/carbon-submit" element={<CreateCarbonListing />} />

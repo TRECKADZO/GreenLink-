@@ -6,7 +6,7 @@ import {
   Users, MapPin, Leaf, DollarSign, Package, 
   TrendingUp, FileText, Plus, ChevronRight,
   CheckCircle, Clock, AlertTriangle, Building2,
-  ClipboardCheck, Shield, Store, Home, UserCircle,
+  Shield, Store, Home, UserCircle,
   TreePine, Pencil, Save, X, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
@@ -235,14 +235,6 @@ const Dashboard = () => {
               >
                 <UserCircle className="h-4 w-4 mr-2" />
                 Profil
-              </Button>
-              <Button 
-                onClick={() => navigate('/cooperative/ssrte')}
-                className="bg-amber-500 text-white hover:bg-amber-600"
-                data-testid="ssrte-btn"
-              >
-                <ClipboardCheck className="h-4 w-4 mr-2" />
-                Suivi SSRTE
               </Button>
               <Button 
                 onClick={() => navigate('/cooperative/members/new')}

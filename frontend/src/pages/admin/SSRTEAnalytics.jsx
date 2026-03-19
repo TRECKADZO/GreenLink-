@@ -27,7 +27,7 @@ const SSRTEAnalytics = () => {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || !['admin', 'super_admin', 'cooperative'].includes(user.user_type)) {
+    if (!user || !['admin', 'super_admin'].includes(user.user_type)) {
       toast.error('Accès non autorisé');
       navigate('/');
       return;
@@ -118,6 +118,7 @@ const SSRTEAnalytics = () => {
   const trends = dashboardData?.trends || [];
   const dangerousTasks = dashboardData?.dangerous_tasks || [];
   const supportProvided = dashboardData?.support_provided || [];
+  const livingConditions = dashboardData?.living_conditions || {};
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -141,7 +142,7 @@ const SSRTEAnalytics = () => {
                 <h1 className="text-2xl font-bold">Analytics SSRTE</h1>
               </div>
               <p className="text-slate-400">
-                Système de Suivi et Remédiation du Travail des Enfants
+                Systeme de Suivi et Remediation du Travail des Enfants
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -168,7 +169,7 @@ const SSRTEAnalytics = () => {
           </div>
 
           {/* KPIs Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" data-testid="ssrte-kpis">
             <Card className="bg-gradient-to-br from-purple-900/50 to-purple-950/50 border-purple-500/30">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -187,11 +188,9 @@ const SSRTEAnalytics = () => {
 
             <Card className="bg-gradient-to-br from-blue-900/50 to-blue-950/50 border-blue-500/30">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Users className="w-5 h-5 text-blue-400" />
-                </div>
+                <Users className="w-5 h-5 text-blue-400 mb-2" />
                 <p className="text-3xl font-bold text-blue-400">{kpis.unique_farmers_visited || 0}</p>
-                <p className="text-xs text-slate-400">Producteurs visités</p>
+                <p className="text-xs text-slate-400">Producteurs visites</p>
                 <p className="text-xs text-blue-400/70 mt-1">{kpis.coverage_rate}% couverture</p>
               </CardContent>
             </Card>
@@ -208,19 +207,131 @@ const SSRTEAnalytics = () => {
                   )}
                 </div>
                 <p className="text-3xl font-bold text-red-400">{kpis.total_children_identified || 0}</p>
-                <p className="text-xs text-slate-400">Enfants identifiés</p>
+                <p className="text-xs text-slate-400">Enfants identifies</p>
                 <p className="text-xs text-red-400/70 mt-1">{kpis.visits_with_children_percent}% des visites</p>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-br from-emerald-900/50 to-emerald-950/50 border-emerald-500/30">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Shield className="w-5 h-5 text-emerald-400" />
-                </div>
+                <Shield className="w-5 h-5 text-emerald-400 mb-2" />
                 <p className="text-3xl font-bold text-emerald-400">{kpis.coverage_rate || 0}%</p>
                 <p className="text-xs text-slate-400">Taux de couverture</p>
                 <p className="text-xs text-emerald-400/70 mt-1">{kpis.unique_farmers_visited}/{kpis.total_farmers}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-cyan-900/50 to-cyan-950/50 border-cyan-500/30">
+              <CardContent className="p-4">
+                <Award className="w-5 h-5 text-cyan-400 mb-2" />
+                <p className="text-3xl font-bold text-cyan-400">{livingConditions.scolarisation_rate || 0}%</p>
+                <p className="text-xs text-slate-400">Taux scolarisation</p>
+                <p className="text-xs text-cyan-400/70 mt-1">{livingConditions.children_scolarise || 0}/{livingConditions.total_children_registered || 0}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-amber-900/50 to-amber-950/50 border-amber-500/30">
+              <CardContent className="p-4">
+                <Activity className="w-5 h-5 text-amber-400 mb-2" />
+                <p className="text-3xl font-bold text-amber-400">{livingConditions.avg_household_size || 0}</p>
+                <p className="text-xs text-slate-400">Taille moy. menage</p>
+                <p className="text-xs text-amber-400/70 mt-1">{livingConditions.avg_distance_ecole_km || 0} km ecole</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Living Conditions Analysis */}
+          <div className="grid md:grid-cols-3 gap-6" data-testid="ssrte-conditions">
+            <Card className="bg-slate-900 border-slate-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-white text-base flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-teal-400" />
+                  Conditions de vie
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[
+                  { key: 'precaires', label: 'Precaires', color: 'red' },
+                  { key: 'moyennes', label: 'Moyennes', color: 'yellow' },
+                  { key: 'bonnes', label: 'Bonnes', color: 'green' },
+                  { key: 'tres_bonnes', label: 'Tres bonnes', color: 'emerald' }
+                ].map(({ key, label, color }) => {
+                  const count = livingConditions.conditions_distribution?.[key] || 0;
+                  const total = Object.values(livingConditions.conditions_distribution || {}).reduce((a, b) => a + b, 0) || 1;
+                  const pct = Math.round((count / total) * 100);
+                  return (
+                    <div key={key}>
+                      <div className="flex justify-between mb-1 text-sm">
+                        <span className={`text-${color}-400`}>{label}</span>
+                        <span className="text-white font-medium">{count} ({pct}%)</span>
+                      </div>
+                      <Progress value={pct} className={`h-1.5 bg-slate-800 [&>div]:bg-${color}-500`} />
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-900 border-slate-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-white text-base flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-blue-400" />
+                  Acces services
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-1 text-sm">
+                    <span className="text-slate-300">Eau courante</span>
+                    <span className="text-blue-400 font-bold">{livingConditions.eau_courante_percent || 0}%</span>
+                  </div>
+                  <Progress value={livingConditions.eau_courante_percent || 0} className="h-2 bg-slate-800 [&>div]:bg-blue-500" />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1 text-sm">
+                    <span className="text-slate-300">Electricite</span>
+                    <span className="text-yellow-400 font-bold">{livingConditions.electricite_percent || 0}%</span>
+                  </div>
+                  <Progress value={livingConditions.electricite_percent || 0} className="h-2 bg-slate-800 [&>div]:bg-yellow-500" />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1 text-sm">
+                    <span className="text-slate-300">Scolarisation enfants</span>
+                    <span className="text-emerald-400 font-bold">{livingConditions.scolarisation_rate || 0}%</span>
+                  </div>
+                  <Progress value={livingConditions.scolarisation_rate || 0} className="h-2 bg-slate-800 [&>div]:bg-emerald-500" />
+                </div>
+                <div className="pt-2 border-t border-slate-800 flex justify-between text-xs text-slate-400">
+                  <span>Distance moy. ecole</span>
+                  <span className="text-white font-medium">{livingConditions.avg_distance_ecole_km || 0} km</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-900 border-slate-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-white text-base flex items-center gap-2">
+                  <Baby className="w-4 h-4 text-rose-400" />
+                  Enfants enregistres
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="p-3 rounded-lg bg-slate-800/50 text-center">
+                    <p className="text-3xl font-bold text-white">{livingConditions.total_children_registered || 0}</p>
+                    <p className="text-xs text-slate-400 mt-1">Total enfants documentes</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2 rounded-lg bg-emerald-900/30 border border-emerald-700/30 text-center">
+                      <p className="text-lg font-bold text-emerald-400">{livingConditions.children_scolarise || 0}</p>
+                      <p className="text-xs text-slate-400">Scolarises</p>
+                    </div>
+                    <div className="p-2 rounded-lg bg-red-900/30 border border-red-700/30 text-center">
+                      <p className="text-lg font-bold text-red-400">{livingConditions.children_travaillant || 0}</p>
+                      <p className="text-xs text-slate-400">Travaillant</p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

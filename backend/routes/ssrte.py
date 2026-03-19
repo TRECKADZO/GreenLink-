@@ -693,6 +693,246 @@ async def list_remediations(
 
 # ============== STATISTICS & ANALYTICS ==============
 
+@router.get("/dashboard")
+async def get_ssrte_dashboard(
+    period: str = "30d",
+    current_user: dict = Depends(get_current_user)
+):
+    """Dashboard SSRTE analytique pour super-admin"""
+    if current_user.get('user_type') not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Acces reserve au super-admin")
+
+    # Calculate date filter
+    now = datetime.now(timezone.utc)
+    period_map = {"7d": 7, "30d": 30, "90d": 90, "1y": 365, "all": 3650}
+    days = period_map.get(period, 30)
+    start_date = now - timedelta(days=days)
+    prev_start = start_date - timedelta(days=days)
+
+    date_filter = {"$gte": start_date} if period != "all" else {"$gte": now - timedelta(days=3650)}
+
+    # Aggregate from both ssrte_visits and ici_data_collection
+    ssrte_visits = await db.ssrte_visits.find(
+        {"$or": [{"visit_date": date_filter}, {"date_visite": date_filter}, {"created_at": date_filter}]}
+    ).to_list(None)
+
+    prev_visits = await db.ssrte_visits.find(
+        {"$or": [
+            {"visit_date": {"$gte": prev_start, "$lt": start_date}},
+            {"date_visite": {"$gte": prev_start, "$lt": start_date}},
+            {"created_at": {"$gte": prev_start, "$lt": start_date}}
+        ]}
+    ).to_list(None)
+
+    total_farmers = await db.coop_members.count_documents({})
+
+    # KPI calculations
+    total_visits = len(ssrte_visits)
+    prev_total = len(prev_visits)
+    visits_change = round(((total_visits - prev_total) / max(prev_total, 1)) * 100) if prev_total else 0
+
+    # Children identified
+    total_children = sum(v.get("enfants_observes_travaillant", 0) + v.get("children_at_risk", 0) for v in ssrte_visits)
+    prev_children = sum(v.get("enfants_observes_travaillant", 0) + v.get("children_at_risk", 0) for v in prev_visits)
+    children_change = round(((total_children - prev_children) / max(prev_children, 1)) * 100) if prev_children else 0
+
+    # Unique farmers visited
+    farmer_ids = set()
+    for v in ssrte_visits:
+        fid = v.get("farmer_id") or v.get("member_id")
+        if fid:
+            farmer_ids.add(str(fid))
+    unique_farmers = len(farmer_ids)
+    coverage_rate = round((unique_farmers / max(total_farmers, 1)) * 100, 1)
+
+    visits_with_children = sum(1 for v in ssrte_visits if (v.get("enfants_observes_travaillant", 0) + v.get("children_at_risk", 0)) > 0)
+
+    # Risk distribution
+    risk_dist = {"critique": 0, "eleve": 0, "modere": 0, "faible": 0}
+    for v in ssrte_visits:
+        risk = v.get("niveau_risque") or v.get("risk_level", "faible")
+        mapping = {"high": "eleve", "critical": "critique", "moderate": "modere", "low": "faible"}
+        risk = mapping.get(risk, risk)
+        if risk in risk_dist:
+            risk_dist[risk] += 1
+
+    # Living conditions analysis
+    conditions_dist = {"precaires": 0, "moyennes": 0, "bonnes": 0, "tres_bonnes": 0}
+    eau_count = 0
+    electricite_count = 0
+    total_household_size = 0
+    total_children_listed = 0
+    total_scolarise = 0
+    total_travaille = 0
+    distance_values = []
+
+    for v in ssrte_visits:
+        cond = v.get("conditions_vie") or v.get("living_conditions")
+        if cond:
+            mapped = {"good": "bonnes", "average": "moyennes", "poor": "precaires"}.get(cond, cond)
+            if mapped in conditions_dist:
+                conditions_dist[mapped] += 1
+        if v.get("eau_courante") or v.get("has_piped_water"):
+            eau_count += 1
+        if v.get("electricite") or v.get("has_electricity"):
+            electricite_count += 1
+        total_household_size += v.get("taille_menage") or v.get("household_size") or 0
+        dist = v.get("distance_ecole_km") or v.get("distance_to_school_km")
+        if dist and isinstance(dist, (int, float)):
+            distance_values.append(dist)
+        children_list = v.get("liste_enfants") or v.get("children_details") or []
+        for child in children_list:
+            total_children_listed += 1
+            if child.get("scolarise") or child.get("in_school"):
+                total_scolarise += 1
+            if child.get("travaille_exploitation") or child.get("works_on_farm"):
+                total_travaille += 1
+
+    avg_household = round(total_household_size / max(total_visits, 1), 1)
+    avg_distance = round(sum(distance_values) / max(len(distance_values), 1), 1) if distance_values else 0
+    scolarisation_rate = round((total_scolarise / max(total_children_listed, 1)) * 100, 1)
+
+    # Trends by date
+    from collections import defaultdict
+    trend_data = defaultdict(lambda: {"visits": 0, "children": 0, "critical": 0})
+    for v in ssrte_visits:
+        dt = v.get("date_visite") or v.get("visit_date") or v.get("created_at")
+        if dt:
+            if isinstance(dt, str):
+                try:
+                    dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+                except Exception:
+                    continue
+            key = dt.strftime("%Y-%m-%d")
+            trend_data[key]["visits"] += 1
+            trend_data[key]["children"] += v.get("enfants_observes_travaillant", 0) + v.get("children_at_risk", 0)
+            risk = v.get("niveau_risque") or v.get("risk_level", "")
+            if risk in ("critique", "eleve", "high", "critical"):
+                trend_data[key]["critical"] += 1
+    trends = [{"date": k, **v} for k, v in sorted(trend_data.items())]
+
+    # Dangerous tasks frequency
+    task_freq = defaultdict(int)
+    for v in ssrte_visits:
+        for t in (v.get("taches_dangereuses_observees") or v.get("activities_observed") or []):
+            task_freq[t] += 1
+    dangerous_tasks = [{"code": k, "count": v} for k, v in sorted(task_freq.items(), key=lambda x: -x[1])][:10]
+
+    # Support provided frequency
+    support_freq = defaultdict(int)
+    for v in ssrte_visits:
+        for s in (v.get("support_fourni") or []):
+            support_freq[s] += 1
+    support_provided = [{"type": k, "count": v} for k, v in sorted(support_freq.items(), key=lambda x: -x[1])][:10]
+
+    # Recent critical visits
+    critical_visits = [v for v in ssrte_visits if (v.get("niveau_risque") or v.get("risk_level", "")) in ("critique", "eleve", "high", "critical")]
+    critical_visits.sort(key=lambda v: v.get("date_visite") or v.get("visit_date") or v.get("created_at") or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    recent_critical = []
+    for v in critical_visits[:10]:
+        recent_critical.append({
+            "farmer_name": v.get("farmer_name") or v.get("member_name") or "Producteur",
+            "children_count": v.get("enfants_observes_travaillant", 0) + v.get("children_at_risk", 0),
+            "dangerous_tasks": v.get("taches_dangereuses_observees") or v.get("activities_observed") or [],
+            "risk_level": v.get("niveau_risque") or v.get("risk_level", "eleve"),
+            "date": str(v.get("date_visite") or v.get("visit_date") or v.get("created_at") or "")
+        })
+
+    return {
+        "kpis": {
+            "total_visits": total_visits,
+            "visits_change_percent": visits_change,
+            "unique_farmers_visited": unique_farmers,
+            "total_farmers": total_farmers,
+            "coverage_rate": coverage_rate,
+            "total_children_identified": total_children,
+            "children_change_percent": children_change,
+            "visits_with_children_percent": round((visits_with_children / max(total_visits, 1)) * 100, 1)
+        },
+        "risk_distribution": risk_dist,
+        "living_conditions": {
+            "conditions_distribution": conditions_dist,
+            "eau_courante_percent": round((eau_count / max(total_visits, 1)) * 100, 1),
+            "electricite_percent": round((electricite_count / max(total_visits, 1)) * 100, 1),
+            "avg_household_size": avg_household,
+            "avg_distance_ecole_km": avg_distance,
+            "scolarisation_rate": scolarisation_rate,
+            "total_children_registered": total_children_listed,
+            "children_scolarise": total_scolarise,
+            "children_travaillant": total_travaille
+        },
+        "trends": trends[-30:],
+        "dangerous_tasks": dangerous_tasks,
+        "support_provided": support_provided,
+        "recent_critical_visits": recent_critical
+    }
+
+
+@router.get("/leaderboard")
+async def get_ssrte_leaderboard(
+    period: str = "30d",
+    current_user: dict = Depends(get_current_user)
+):
+    """Leaderboard SSRTE agents et cooperatives"""
+    if current_user.get('user_type') not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Acces reserve au super-admin")
+
+    now = datetime.now(timezone.utc)
+    period_map = {"7d": 7, "30d": 30, "90d": 90, "1y": 365, "all": 3650}
+    days = period_map.get(period, 30)
+    start_date = now - timedelta(days=days)
+    date_filter = {"$gte": start_date}
+
+    visits = await db.ssrte_visits.find(
+        {"$or": [{"visit_date": date_filter}, {"date_visite": date_filter}, {"created_at": date_filter}]}
+    ).to_list(None)
+
+    # Agent leaderboard
+    from collections import defaultdict
+    agent_stats = defaultdict(lambda: {"visits": 0, "children_identified": 0, "agent_name": ""})
+    coop_stats = defaultdict(lambda: {"visits": 0, "farmers_visited": set(), "cooperative_name": ""})
+
+    for v in visits:
+        agent_id = v.get("agent_id")
+        agent_name = v.get("agent_name") or "Agent"
+        if agent_id:
+            agent_stats[agent_id]["visits"] += 1
+            agent_stats[agent_id]["children_identified"] += v.get("enfants_observes_travaillant", 0) + v.get("children_at_risk", 0)
+            agent_stats[agent_id]["agent_name"] = agent_name
+
+        coop_id = v.get("cooperative_id") or v.get("coop_id")
+        if coop_id:
+            coop_stats[coop_id]["visits"] += 1
+            farmer_id = v.get("farmer_id") or v.get("member_id")
+            if farmer_id:
+                coop_stats[coop_id]["farmers_visited"].add(str(farmer_id))
+
+    # Get cooperative names
+    coop_ids_to_lookup = list(coop_stats.keys())
+    for cid in coop_ids_to_lookup:
+        try:
+            coop = await db.users.find_one({"_id": ObjectId(cid)})
+            if coop:
+                coop_stats[cid]["cooperative_name"] = coop.get("full_name") or coop.get("coop_name") or "Cooperative"
+        except Exception:
+            coop_stats[cid]["cooperative_name"] = "Cooperative"
+
+    top_agents = sorted(
+        [{"agent_id": k, **{kk: vv for kk, vv in v.items()}} for k, v in agent_stats.items()],
+        key=lambda x: -x["visits"]
+    )[:10]
+
+    top_cooperatives = sorted(
+        [{"cooperative_id": k, "visits": v["visits"], "farmers_visited": len(v["farmers_visited"]), "cooperative_name": v["cooperative_name"]} for k, v in coop_stats.items()],
+        key=lambda x: -x["visits"]
+    )[:10]
+
+    return {
+        "top_agents": top_agents,
+        "top_cooperatives": top_cooperatives
+    }
+
+
 @router.get("/stats/overview")
 async def get_ssrte_overview(
     cooperative_id: Optional[str] = None,
