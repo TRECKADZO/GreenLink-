@@ -8,17 +8,35 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - **Backend**: FastAPI + MongoDB Atlas
 - **Mobile**: Expo SDK 53 + React Native
 
-## Build Mobile v1.33.0 (19 Mars 2026)
+## Fonctionnalites Implementees
+
+### Recuperation mot de passe telephone (19 Mars 2026)
+- Backend: /api/auth/forgot-password retourne TOUJOURS simulation_code (SMS mocks)
+- Web: page ForgotPassword affiche le code dans boite "Mode Simulation"
+- Mobile: ecran ForgotPasswordScreen affiche le code, flow complet (forgot -> verify -> reset)
+
+### Attribution Admin Globale Agriculteurs-Agents (19 Mars 2026)
+- Backend: GET /api/admin/agents - liste tous les agents (8) avec cooperative
+- Backend: GET /api/admin/all-farmers - liste TOUS agriculteurs (43) membres + non-membres
+- Backend: POST /api/admin/assign-farmers-to-agent - attribution sans restriction cooperative
+- Frontend: nouvelle page /admin/farmer-assignment avec recherche + selection
+- Frontend: bouton "Attribution" ajoute au dashboard admin
+
+### Inscription Web: Agent Terrain supprime (19 Mars 2026)
+- Option "Agent Terrain" retiree de Register.jsx (crees uniquement par cooperatives/admin)
+
+### Fix double /api mobile (19 Mars 2026)
+- config.js: API_URL ne contient plus /api (base URL seulement)
+- api.js: baseURL = CONFIG.API_URL + '/api'
+- Tous les ecrans utilisent ${API_URL}/api/... de maniere coherente
+
+### Build Mobile v1.33.0 (19 Mars 2026)
 - APK: https://expo.dev/artifacts/eas/49BprsiA4wLbLNAaLt53X1.apk
 - AAB: https://expo.dev/artifacts/eas/fdeQ3vTafF5mU721kU6yVD.aab
-- Fix: double /api dans config.js (causait 404 activation agent/membre)
-- Fix: suppression Actions Rapides redondantes du SSRTEAgentDashboard
-- Fix: option "Agent Terrain" retiree de l'inscription web
 
-## Corrections v1.33.0
-- Bug double /api corrige: config.js API_URL ne contient plus le suffixe /api
-- Activation agent terrain et membre cooperative fonctionne correctement
-- Page inscription web: Agent Terrain supprime (crees uniquement par cooperatives/admin)
+## Services MOCK
+- Orange Money, Orange SMS, USSD Gateway, Email
+- simulation_code toujours retourne dans forgot-password
 
 ## Backlog
 ### P1
