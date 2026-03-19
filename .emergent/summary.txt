@@ -1,179 +1,171 @@
 <analysis>**original_problem_statement:**
-The user's primary goal was to fix a critical white screen bug on the mobile app. Following that, they requested a series of significant changes:
-1.  Restrict Carbon Marketplace access to RSE users.
-2.  Implement the full carbon credit lifecycle (submission, approval, publishing).
-3.  Enforce a specific revenue distribution formula (30% ops, 70% net, then 70/25/5 split) and hide it from non-admins.
-4.  Update all carbon calculators to use the new formula via secure backend APIs.
-5.  Prepare the backend for future Orange Money, Orange SMS, and USSD integrations with placeholders.
-6.  **New in this session:** Address multiple user login failures by creating accounts and fixing underlying authentication bugs.
-7.  **New in this session:** Overhaul the Cooperative and Field Agent dashboards to fix bugs and add requested features (KPIs, navigation).
-8.  **New in this session:** Implement a robust auto-login and redirection flow for agents after they activate their accounts.
-9.  **New in this session:** Implement a farmer-to-agent attribution system, including a web UI for assignment and offline data pre-loading on the mobile app.
+The user's initial goal was to fix critical mobile app bugs and introduce major features. The scope has expanded to include:
+1.  **Bug Fixing**: Address critical mobile/web bugs, including login, activation, and recurring APK installation failures.
+2.  **Feature Implementation**:
+    *   Implement a real email service (Resend) and prepare for an SMS gateway.
+    *   Fix all PDF/CSV export functionalities across the application, which were reported as failing.
+    *   Enrich the EUDR (EU Deforestation-Free Regulation) reports and dashboards for both cooperative and super-admin users to meet compliance standards.
+    *   Enrich the SSRTE (Child Labor Monitoring) form on both web and mobile to include missing fields identified by the user.
+3.  **UI/UX Cleanup**: Remove a duplicate Visite SSRTE menu item from the agent's web dashboard.
 
 **PRODUCT REQUIREMENTS:**
-*   A functional, stable mobile app that passes Google Play Store review.
-*   A secure, role-gated platform with correct data visibility for each user type (Admin, RSE, Cooperative, Field Agent).
-*   All calculators and dashboards must reflect correct, centrally-defined business logic.
-*   The codebase must be ready for seamless activation of Orange services.
-*   A clear system for cooperatives to assign farmers to their field agents.
-*   The mobile app must support key offline workflows for field agents.
+*   A stable platform with fixed login and account activation flows.
+*   A fully functional email notification system for all key events.
+*   Reliable PDF and CSV exporting capabilities for all reports.
+*   A comprehensive and compliant EUDR reporting dashboard.
+*   A complete and consistent SSRTE data collection form on both web and mobile platforms.
+*   A clean user interface without redundant or confusing navigation elements.
 
 **User's preferred language**: French. The next agent MUST respond in French.
 
 **what currently exists?**
-The application is a full-stack platform (React/FastAPI/MongoDB).
-*   **Authentication & User Management:** A critical fix was implemented to normalize phone numbers (handling , , and spaces) across login, activation, and lookup endpoints, resolving major login failures. New accounts for agents and cooperatives were created as requested.
-*   **Integration Preparation:** Mock services for Orange Money, Orange SMS, and a USSD gateway are fully implemented with placeholder environment variables and a dedicated admin status-check endpoint.
-*   **Cooperative Dashboard:** This dashboard was repaired. It now correctly counts associated field agents and members (fixing an  vs.  mismatch bug) and displays all required navigation buttons (Naturalisation, Accueil, Profil).
-*   **Field Agent Dashboard:** A comprehensive, data-rich dashboard was implemented from scratch for field agents, displaying performance KPIs, quick actions, and a performance score. The UI was refined by removing obsolete elements and adding Back buttons.
-*   **Agent Data Access:** Critical bugs preventing agents from viewing SSRTE visit data and cooperative member lists have been fixed by updating backend permission checks to grant  the necessary read access, filtered by their cooperative.
-*   **Agent Activation Flow:** The process is now seamless. After creating a password, agents are automatically logged in and redirected to their specific dashboard () on both the web and mobile platforms.
-*   **Mobile Builds:** New APK and AAB builds (v1.26.0) have been successfully generated, incorporating all recent fixes, including the agent activation flow and dashboard redirection logic.
+The application is a full-stack platform (React/FastAPI/MongoDB). In this session, several critical issues and features were completed:
+*   **Critical Bugs Fixed**:
+    *   A Pydantic validation error causing login failures for phone-based accounts was fixed by adding a pre-validator to . The activation flow was also hardened.
+    *   A  () in  causing EUDR PDF export failures was fixed.
+    *   A  in  was fixed by sanitizing text for the fpdf library.
+    *   An  and  in  and  preventing SSRTE PDF generation were fixed.
+    *   The missing  router was added to , fixing 404 errors.
+*   **New Features & Integrations**:
+    *   **Resend Email Integration**: The mock email service was replaced with a full Resend integration in . The user's domain () was configured and verified, enabling production email sending.
+    *   **Automated Notifications**: Eight new automated email notifications were hooked into key backend events (new member, new harvest, SSRTE visit, agent assignment, parcel verification, etc.).
+    *   **EUDR Dashboard Enrichment**: The cooperative and super-admin dashboards were significantly enhanced with detailed EUDR compliance metrics, risk analysis, and traceability data, both on the backend () and frontend (, ).
 
 **Last working item**:
--   **Last item agent was working**: Implementing a system for assigning farmers to field agents, with a specific request for an offline component. The agent completed a code audit and was about to begin the backend implementation.
--   **Status**: 
--   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both. Use the backend testing agent for the new API endpoints (assign, unassign, list assigned) and the frontend testing agent to validate the new web UI for cooperatives and verify the offline data pre-loading on the mobile app.
--   **User Testing Done**: N
+*   **Last item agent was working**: The user requested to enrich the SSRTE form (web and mobile) based on a screenshot and to remove a redundant menu item on the agent's web dashboard. The agent analyzed the request, identified the missing fields (household size, children details, living conditions), and was about to begin implementation.
+*   **Status**: 
+*   **Agent Testing Done**: N
+*   **Which testing method agent to use?**: both. The backend changes to the  model in  should be tested with . The UI changes to  (web) and  (mobile) should be verified with the .
+*   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Google Play Permission Rejection (P0 - Recurring Blocker)**
-    -   **Description**: The app was previously rejected by Google Play for including media permissions. This is believed to be fixed in the build configuration.
-    -   **Status**: 
-    -   **Blocked on other issue**: This is blocked on the user submitting the latest AAB (v1.26.0) to the Google Play Store for review.
+*   **Issue 1: Enrich SSRTE Forms and Clean Up UI (P0 - BLOCKER)**
+    *   **Description**: The SSRTE data collection forms are incomplete. The user wants to add several missing fields to align the web and mobile versions with a more detailed master form. Additionally, a duplicate menu item for Visite SSRTE needs to be removed from the agent's web dashboard.
+    *   **Status**: 
+    *   **Is recurring issue?**: N
+    *   **Next debug checklist**:
+        1.  **Backend**: Modify the  Pydantic model in  to include the new fields: , ,  (a list of objects), , , , and .
+        2.  **Web (Modal)**: Update  to include form inputs for all the new fields.
+        3.  **Mobile**: Update  to include the same new form inputs.
+        4.  **Web (UI Cleanup)**: Modify  to remove the Visite SSRTE link from the main menu, as it's now accessible within each farmer's profile.
+    *   **Why fix this issue and what will be achieved with the fix?**: This will standardize data collection for child labor monitoring and improve the agent's user experience.
+    *   **Should Test frontend/backend/both after fix?**: Both.
 
 **In progress Task List**:
--   **Task 1: Implement Farmer to Field Agent Attribution (P0 - HIGH)**
-    -   **Where to resume**: The agent had completed the initial audit. The next steps are:
-        1.  **Backend:** Create new API endpoints in a relevant route file (e.g., ) to allow a cooperative to:
-            *   Assign one or more farmers to a specific field agent.
-            *   Unassign farmers from an agent.
-            *   List all farmers assigned to an agent.
-            *   Modify the agent's user document schema to store an array of assigned farmer IDs.
-        2.  **Frontend (Web):** Create a new UI page or modal, likely accessible from the cooperative's agent management page (), to perform the assignments.
-        3.  **Frontend (Mobile):** Modify the mobile app's synchronization logic () to pre-fetch and cache the data of all farmers assigned to the logged-in agent for offline use.
-    -   **What will be achieved with this?**: Cooperatives will have direct control over agent workloads, and agents will be able to work offline with the data of the specific farmers they need to visit.
-    -   **Status**: 
-    -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on something**: No
+*   **Task 1: EUDR Dashboard Enrichment (P1)**
+    *   **Where to resume**: The backend (, ) and frontend (, ) have been significantly enriched. The work was interrupted by the user's SSRTE request.
+    *   **What will be achieved with this?**: Provide a comprehensive, compliant EUDR reporting tool for both cooperatives and super-admins.
+    *   **Status**: 
+    *   **Should Test frontend/backend/both after fix?**: Both. Needs frontend verification via screenshots for both cooperative and admin dashboards to confirm the new data is displayed correctly.
+    *   **Blocked on something**: Blocked by the higher-priority SSRTE task.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P1) Guide user to submit the new AAB (v1.26.0) to Google Play Store.
+    *   (P0) Build and provide a new mobile build (v1.36.0 APK/AAB) that includes the critical login, activation, PDF, EUDR, and upcoming SSRTE fixes.
+    *   (P1) Guide the user to submit the latest functional AAB to the Google Play Store to resolve the long-standing permission rejection blocker.
 *   **Future Tasks:**
+    *   (P1) Configure a real SMS gateway to replace the mock service for phone-based notifications.
     *   (P2) Implement Baoulé and Dioula languages in the mobile app.
-    *   (P2) Implement multi-channel notifications for Payments (Push, SMS, Email).
-    *   (P2) Refactor backend to use a cloud storage solution for file uploads.
-    *   (P2) Refactor the monolithic  and  files.
+    *   (P2) Refactor the backend to use a cloud storage solution (e.g., S3) for file uploads.
+    *   (P2) Refactor monolithic backend route files like  and .
 
 **Completed work in this session**
--   **Orange & USSD Mock Integrations**: Implemented placeholder services for Orange Money, Orange SMS, and a USSD gateway, with a new admin status endpoint.
--   **Cooperative Dashboard Fixed**: Corrected agent/member counts ( bug) and added missing navigation UI elements.
--   **Field Agent Dashboard Implemented**: Created a new performance-oriented dashboard for field agents with KPIs and quick actions.
--   **Agent SSRTE Access Fixed**: Resolved critical 403 Forbidden errors by updating backend permissions, allowing agents to access necessary data.
--   **Authentication System Hardened**: Implemented robust phone number normalization across the backend, fixing widespread login issues.
--   **Agent Activation Flow Perfected**: Ensured agents are automatically logged in and redirected to their dashboard after creating a password.
--   **Mobile App Stability Confirmed**: The original White Screen bug is considered resolved, as subsequent feature development and builds have proceeded without the user reporting its recurrence. New APK/AAB (v1.26.0) were delivered.
--   **Production Connectivity Diagnosed**: Confirmed that the production backend API is online and accessible, ruling out server-side code issues for login problems.
+-   Phone-Based Account Login Bug (P0) (FIXED)
+-   Account Activation Flow Hardening (P1) (FIXED)
+-   Resend Email Integration & Domain Verification (DONE)
+-   Automated Email Notifications (8 new events) (DONE)
+-   All PDF/CSV Export Critical Bugs (EUDR, ICI, SSRTE, etc.) (FIXED)
+-   EUDR Report and Dashboard Enrichment (Web & Admin) (IN PROGRESS)
+-   Reset cooperative account password for testing access.
 
 **Earlier issues found/mentioned but not fixed**
--   None. All identified issues were addressed.
+-   None.
 
 **Known issue recurrence from previous fork**
--   **Mobile App White Screen**: Status is . A major architectural fix was implemented in the previous session. The user has since received multiple new builds (v1.25.0, v1.26.0) and has not reported the issue again, instead focusing on new features. Awaiting final user confirmation on the latest build.
+-   **Google Play Permission Rejection (P1 - Recurring Blocker)**: The app was previously rejected by Google Play. This is believed to be fixed, but the status is  pending user submission of a new AAB build.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Phone Number Normalization**: A critical backend utility to standardize phone numbers from various user inputs (, , ) into a single format for reliable database lookups.
--   **Role-Based Access Control (RBAC)**: Fine-tuned backend dependencies () and frontend hooks to correctly scope data visibility for the new  role.
--   **State Management (ObjectId vs. String)**: Resolved a recurring bug class by ensuring backend queries correctly handle the conversion between string representations of IDs from API requests and the BSON  format used in MongoDB.
--   **Placeholder Integrations**: Code is structured with mock services and environment flags to allow for development and testing of features (payments, SMS) before final API keys are available.
+-   **Email Integration (Resend)**: Replaced a mock SMTP service with the Resend API, configured a verified sending domain (), and updated the UI/backend to handle real email flows.
+-   **Pydantic Pre-validation**: Used a  to sanitize data ( to ) before it hits the main validation logic, fixing the core login bug.
+-   **PDF Library Quirks**: Dealt with two types of PDF generation issues: Unicode incompatibility in  (requiring manual text sanitization) and missing methods/imports when using .
+-   **Systematic Debugging**: Used a combination of , , log analysis, and database queries to trace bugs from frontend user reports down to specific backend code lines.
+-   **Fire-and-Forget Notifications**: Implemented background email notifications within API endpoints using  blocks to ensure they don't block the main request-response cycle.
 
 **key DB schema**
--   **users**:
-    -   : 'field_agent' is now a fully integrated role.
-    -   : Now serves as the primary, normalized identifier for agent login.
-    -   : Used to link agents and members to their cooperative.
-    -   **Proposed Change**: Add an  array to  documents to manage assignments.
--   **ssrte_visits**, **parcels**, **members**: Backend queries were updated to correctly filter these collections by  when accessed by a .
+-   **users**: The logic for handling the  field was hardened to accommodate  or  values. The  field was also handled more robustly to prevent  when it is .
+-   **coop_agents/coop_members**: The  is a , which requires explicit conversion to  in some backend lookups.
 
 **changes in tech stack**
--   None.
+-   Added  (v2.25.0) to backend dependencies.
 
 **All files of reference**
--   : Core logic for the phone number normalization fix.
--   : The new field agent dashboard UI.
--   : Location of the cooperative dashboard fixes.
--    & : Key files where agent permissions were fixed.
--   : Contains the logic for redirecting logged-in agents.
--   : Mobile UI for agent activation and permissions.
--   The latest build URLs (v1.26.0) were provided to the user.
+*   : Target for SSRTE model enrichment.
+*   : Target for web SSRTE form enrichment.
+*   : Target for mobile SSRTE form enrichment.
+*   : Target for UI cleanup (menu removal).
+*   : Contains the new Resend integration logic.
+*   , : Contain the new enriched EUDR logic.
+*   , : Contain the new EUDR UI.
 
 **Areas that need refactoring**:
--   The monolithic  and  files have grown even more complex and are prime candidates for being broken down into smaller, more focused route files.
+-   The monolithic nature of  and  remains a long-term technical debt.
 
 **key api endpoints**
--   : Modified to use phone number normalization.
--   : Modified for auto-login and redirection.
--   : Modified to correctly count agents and members.
--    & : Permissions updated to allow  access.
--   : **(New)** Admin-only endpoint to check mock service status.
+*   **Fixed**:
+    *   : Now works for both email and phone-based users.
+    *   , : Hardened and tested.
+    *   : Now sends real emails via Resend.
+    *   , , ,  and all other PDF/CSV endpoints are now functional.
+*   **Enriched**:
+    *   : Returns significantly more detailed data for EUDR compliance.
+    *   : Returns enriched EUDR metrics for the super-admin view.
+*   **To be Modified**:
+    *   : The request body for this endpoint will be expanded with new SSRTE fields.
 
 **Critical Info for New Agent**
--   **Répondez en français.** All user communication must be in French.
--   **Priority Task:** Your immediate priority is to implement the farmer-to-agent attribution system as detailed in the In progress Task List. Start with the backend endpoints.
--   **Offline Component is Key:** The user explicitly requested offline capabilities for the attribution feature. Ensure the mobile app pre-loads and caches assigned farmer data.
--   **Production Deployments:** The agent does not have access to deploy to production (Vercel). Your role is to provide correct code and build artifacts (AABs). The user handles the final deployment.
--   **Latest Mobile Version:** The latest mobile version with all recent fixes is .
+-   **Répondez en français.** All communication with the user must be in French.
+-   **Immediate Priority (P0 - SSRTE)**: Your first task is to complete the SSRTE form enrichment on both web and mobile, and remove the redundant menu item from the agent web dashboard as requested.
+-   **Next Steps**: After completing the SSRTE task, verify the EUDR dashboard enhancements with screenshots. Then, create and provide the user with a new mobile build (v1.36.0) containing all the recent fixes.
+-   **Email is Live**: The Resend integration is fully operational with a verified domain. All emails sent from  should reach their destination.
 
 **documents and test reports created in this job**
--    (updated)
--   Multiple test reports from the testing agent are available at .
+-    (updated multiple times)
+-    (Login/Activation Fix)
+-    (Resend Integration)
+-    (Email Notifications)
+-    (PDF/CSV Export Fixes)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Requested to implement farmer-to-agent attribution, both a web UI and offline mobile support. (Status: )
-2.  **User**: Confirmed the production deployment is on Vercel. (Status: )
-3.  **User**: Pointed out login failures on the production website. (Status: , diagnosed as a temporary server issue).
-4.  **User**: Reported that an agent account activation did not lead to an automatic login. (Status: )
-5.  **User**: Asked for the Vos permissions text to be updated during agent activation. (Status: )
-6.  **User**: Reported that a newly activated agent could not log in. (Status: , confirmed accounts exist in DB and login API works).
-7.  **User**: Provided an image showing another agent unable to activate their account. (Status: , led to phone normalization fix).
-8.  **User**: Requested that the app and web connect to the production database . (Status: , configuration verified).
-9.  **User**: Asked to rebuild APK/AAB with all the latest mobile changes. (Status: , v1.26.0 delivered).
-10. **User**: Reported that data was not loading correctly on the field agent pages. (Status: , fixed backend permissions).
+1.  **User**: Asks to enrich the EUDR reports. **Status**: .
+2.  **User**: Provides an image and asks to enrich the SSRTE form on web/mobile with missing fields, and to remove a duplicate menu item. **Status**:  (Current Task).
+3.  **User**: Says Continue to the PDF/CSV test report and initiates the EUDR enrichment request. **Status**: .
+4.  **User**: Confirms they have verified the domain on Resend. **Status**: .
+5.  **User**: Provides the domain name . **Status**: .
+6.  **User**: Says Oui to the suggestion of adding more automated email notifications. **Status**: .
+7.  **User**: Provides Resend API key. **Status**: .
+8.  **User**: Selects Resend for email, states Orange SMS APIs are not ready, and confirms the plan. **Status**: .
+9.  **User**: Asks to configure a real SMTP/SMS gateway. **Status**: .
+10. **User**: Reports an error downloading a PDF from the cooperative dashboard and asks to verify all PDF/Excel exports. **Status**: .
 
 **Project Health Check:**
--   **Broken**: None.
--   **Mocked/Simulated**:
-    -   Orange Money Integration.
-    -   Orange SMS Integration.
-    -   USSD Gateway Integration.
--   **Blocked**:
-    -   **Google Play Deployment**: Pending user submission of the latest AAB (v1.26.0).
+*   **Broken**: No core services are broken.
+*   **Mocked**: The Orange SMS gateway is still mocked. The user confirmed the APIs are not ready yet.
 
 **3rd Party Integrations**
--   **Expo / EAS ()**: Used for building and managing mobile app builds.
--   **MongoDB Atlas**: Primary database.
--   **Orange Money**: Integration prepared with mock services.
--   **Orange SMS**: Integration prepared with mock services.
--   **USSD Gateway**: Integration prepared with mock services.
--   **Vercel**: User's frontend deployment platform.
+*   **Resend**: Used for sending all transactional emails. Configured with a user-provided API key and a verified domain (). The playbook from  was followed.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. The testing agent was used multiple times to validate the cooperative dashboard, agent dashboard, and authentication fixes.
--   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: [ ]
--   **Known regressions**: None in this session. The major white screen regression from the previous session is considered resolved.
+-   **Testing agent used after significant changes**: YES. The testing agent was used successfully to validate the login/activation fixes, the Resend integration, and the comprehensive PDF/CSV export fixes. The last report is .
+-   **Troubleshoot agent used after agent stuck in loop**: NO.
+-   **Test files created**: None.
+-   **Known regressions**: None. All fixes were tested for regressions.
 
 **Credentials to test flow:**
--   **Super Admin**:  / 
--   **Cooperative (Bielaghana)**:  / 
--   **Cooperative (Cacao)**:  / 
--   **Field Agent (Kone Alphone)**:  / 
--   **Field Agent (Coop Cacao)**:  / 
+*   **Cooperative Account**: The user  was configured as a cooperative and its password was reset to . This is the primary account for testing cooperative-level features.
+*   **Admin Account**:  / .
 
 **What agent forgot to execute**
--   The agent was systematic and addressed all user requests and emergent issues. The current primary task is a direct continuation of the last user request.</analysis>
+The agent did not forget to execute anything but was in the middle of a multi-step task when the session was forked. The next step is to start implementing the code changes for the SSRTE form enrichment, which has already been planned.</analysis>

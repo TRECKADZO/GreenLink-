@@ -75,6 +75,13 @@ const CooperativeSSRTEDashboard = () => {
 
   // Form state for new SSRTE visit
   const [visitForm, setVisitForm] = useState({
+    taille_menage: 0,
+    nombre_enfants: 0,
+    liste_enfants: [],
+    conditions_vie: 'moyennes',
+    eau_courante: false,
+    electricite: false,
+    distance_ecole_km: '',
     enfants_observes_travaillant: 0,
     taches_dangereuses_observees: [],
     support_fourni: [],
@@ -83,8 +90,30 @@ const CooperativeSSRTEDashboard = () => {
     niveau_risque: 'faible',
     recommandations: '',
     visite_suivi_requise: false,
-    notes: ''
+    observations: ''
   });
+
+  const addChildToForm = () => {
+    setVisitForm(prev => ({
+      ...prev,
+      liste_enfants: [...prev.liste_enfants, { prenom: '', sexe: 'Garcon', age: 0, scolarise: false, travaille_exploitation: false }]
+    }));
+  };
+
+  const updateChildInForm = (index, field, value) => {
+    setVisitForm(prev => {
+      const updated = [...prev.liste_enfants];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, liste_enfants: updated };
+    });
+  };
+
+  const removeChildFromForm = (index) => {
+    setVisitForm(prev => ({
+      ...prev,
+      liste_enfants: prev.liste_enfants.filter((_, i) => i !== index)
+    }));
+  };
 
   // Monitor online status
   useEffect(() => {
@@ -164,11 +193,23 @@ const CooperativeSSRTEDashboard = () => {
       return;
     }
 
+    if (!visitForm.taille_menage || parseInt(visitForm.taille_menage) < 1) {
+      toast.error('Veuillez renseigner la taille du menage');
+      return;
+    }
+
     setSubmitting(true);
     
     const visitData = {
       farmer_id: selectedMember._id || selectedMember.id,
       date_visite: new Date().toISOString(),
+      taille_menage: parseInt(visitForm.taille_menage) || 0,
+      nombre_enfants: parseInt(visitForm.nombre_enfants) || 0,
+      liste_enfants: visitForm.liste_enfants,
+      conditions_vie: visitForm.conditions_vie,
+      eau_courante: visitForm.eau_courante,
+      electricite: visitForm.electricite,
+      distance_ecole_km: visitForm.distance_ecole_km ? parseFloat(visitForm.distance_ecole_km) : null,
       enfants_observes_travaillant: parseInt(visitForm.enfants_observes_travaillant) || 0,
       taches_dangereuses_observees: visitForm.taches_dangereuses_observees,
       support_fourni: visitForm.support_fourni,
@@ -177,6 +218,7 @@ const CooperativeSSRTEDashboard = () => {
       niveau_risque: visitForm.niveau_risque,
       recommandations: visitForm.recommandations.split('\n').filter(r => r.trim()),
       visite_suivi_requise: visitForm.visite_suivi_requise,
+      observations: visitForm.observations || null,
       offline_id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       offline_recorded_at: new Date().toISOString()
     };
@@ -233,6 +275,13 @@ const CooperativeSSRTEDashboard = () => {
 
   const resetForm = () => {
     setVisitForm({
+      taille_menage: 0,
+      nombre_enfants: 0,
+      liste_enfants: [],
+      conditions_vie: 'moyennes',
+      eau_courante: false,
+      electricite: false,
+      distance_ecole_km: '',
       enfants_observes_travaillant: 0,
       taches_dangereuses_observees: [],
       support_fourni: [],
@@ -241,7 +290,7 @@ const CooperativeSSRTEDashboard = () => {
       niveau_risque: 'faible',
       recommandations: '',
       visite_suivi_requise: false,
-      notes: ''
+      observations: ''
     });
     setSelectedMember(null);
   };
@@ -545,7 +594,109 @@ const CooperativeSSRTEDashboard = () => {
                       2. Remplir le rapport de visite
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    {/* Informations du menage */}
+                    <div className="p-3 bg-slate-800/50 rounded-lg space-y-3">
+                      <p className="text-sm font-semibold text-blue-400 flex items-center gap-2">
+                        <Users className="w-4 h-4" /> Informations du menage
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-slate-400 text-xs">Taille du menage *</Label>
+                          <Input type="number" min="1" placeholder="Ex: 6"
+                            value={visitForm.taille_menage || ''}
+                            onChange={(e) => setVisitForm({...visitForm, taille_menage: e.target.value})}
+                            className="mt-1 bg-slate-800 border-slate-700 text-white" data-testid="ssrte-dash-taille" />
+                        </div>
+                        <div>
+                          <Label className="text-slate-400 text-xs">Nombre d'enfants</Label>
+                          <Input type="number" min="0" placeholder="Ex: 3"
+                            value={visitForm.nombre_enfants || ''}
+                            onChange={(e) => setVisitForm({...visitForm, nombre_enfants: e.target.value})}
+                            className="mt-1 bg-slate-800 border-slate-700 text-white" data-testid="ssrte-dash-enfants" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Details des enfants */}
+                    <div className="p-3 bg-slate-800/50 rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-violet-400">Details des enfants</p>
+                        <Button variant="outline" size="sm" onClick={addChildToForm}
+                          className="border-slate-600 text-slate-300 hover:bg-slate-700 h-7 text-xs" data-testid="ssrte-dash-add-child">
+                          <Plus className="w-3 h-3 mr-1" /> Ajouter
+                        </Button>
+                      </div>
+                      {visitForm.liste_enfants.length === 0 && (
+                        <p className="text-xs text-slate-500 text-center py-2">Cliquez "Ajouter" pour enregistrer les enfants</p>
+                      )}
+                      {visitForm.liste_enfants.map((child, i) => (
+                        <div key={i} className="p-2 bg-slate-900 rounded-lg space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-slate-400 font-medium">Enfant {i + 1}</span>
+                            <button onClick={() => removeChildFromForm(i)} className="text-red-400 hover:text-red-300">
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <Input placeholder="Prenom" value={child.prenom}
+                              onChange={(e) => updateChildInForm(i, 'prenom', e.target.value)}
+                              className="bg-slate-800 border-slate-700 text-white text-xs h-8" />
+                            <Input type="number" min="0" max="17" placeholder="Age" value={child.age || ''}
+                              onChange={(e) => updateChildInForm(i, 'age', parseInt(e.target.value) || 0)}
+                              className="bg-slate-800 border-slate-700 text-white text-xs h-8" />
+                            <select value={child.sexe} onChange={(e) => updateChildInForm(i, 'sexe', e.target.value)}
+                              className="bg-slate-800 border border-slate-700 rounded-md text-white text-xs h-8 px-2">
+                              <option value="Garcon">Garcon</option>
+                              <option value="Fille">Fille</option>
+                            </select>
+                          </div>
+                          <div className="flex gap-4">
+                            <div className="flex items-center gap-1.5">
+                              <Checkbox checked={child.scolarise} onCheckedChange={(v) => updateChildInForm(i, 'scolarise', v)} className="border-slate-600" />
+                              <Label className="text-xs text-slate-300">Scolarise</Label>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Checkbox checked={child.travaille_exploitation} onCheckedChange={(v) => updateChildInForm(i, 'travaille_exploitation', v)} className="border-red-600" />
+                              <Label className="text-xs text-red-400">Travaille</Label>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Conditions de vie */}
+                    <div className="p-3 bg-slate-800/50 rounded-lg space-y-3">
+                      <p className="text-sm font-semibold text-teal-400">Conditions de vie</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[{v:'precaires',l:'Precaires'},{v:'moyennes',l:'Moyennes'},{v:'bonnes',l:'Bonnes'},{v:'tres_bonnes',l:'Tres bonnes'}].map(c => (
+                          <button key={c.v} onClick={() => setVisitForm({...visitForm, conditions_vie: c.v})}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                              visitForm.conditions_vie === c.v
+                                ? 'bg-teal-500/20 border border-teal-500/50 text-teal-300'
+                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                            }`}>{c.l}</button>
+                        ))}
+                      </div>
+                      <div className="flex gap-4">
+                        <div className="flex items-center gap-2">
+                          <Checkbox checked={visitForm.eau_courante} onCheckedChange={(v) => setVisitForm({...visitForm, eau_courante: v})} className="border-slate-600" />
+                          <Label className="text-xs text-slate-300">Eau courante</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox checked={visitForm.electricite} onCheckedChange={(v) => setVisitForm({...visitForm, electricite: v})} className="border-slate-600" />
+                          <Label className="text-xs text-slate-300">Electricite</Label>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-slate-400 text-xs">Distance ecole (km)</Label>
+                        <Input type="number" step="0.1" min="0" placeholder="Ex: 2.5"
+                          value={visitForm.distance_ecole_km}
+                          onChange={(e) => setVisitForm({...visitForm, distance_ecole_km: e.target.value})}
+                          className="mt-1 bg-slate-800 border-slate-700 text-white max-w-[180px]" data-testid="ssrte-dash-distance" />
+                      </div>
+                    </div>
+
                     {/* Enfants observés */}
                     <div>
                       <Label className="text-slate-300 flex items-center gap-2">
@@ -640,6 +791,18 @@ const CooperativeSSRTEDashboard = () => {
                         onChange={(e) => setVisitForm({...visitForm, recommandations: e.target.value})}
                         placeholder="Inscrire les enfants à l'école&#10;Fournir équipement de protection&#10;..."
                         className="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded-md text-white text-sm h-20 resize-none"
+                      />
+                    </div>
+
+                    {/* Observations */}
+                    <div>
+                      <Label className="text-slate-300">Observations</Label>
+                      <textarea
+                        value={visitForm.observations}
+                        onChange={(e) => setVisitForm({...visitForm, observations: e.target.value})}
+                        placeholder="Notes et observations generales..."
+                        className="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded-md text-white text-sm h-16 resize-none"
+                        data-testid="ssrte-dash-observations"
                       />
                     </div>
 

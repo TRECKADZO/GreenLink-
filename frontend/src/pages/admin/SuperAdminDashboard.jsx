@@ -640,62 +640,219 @@ const ProductionTab = ({ data }) => (
   </div>
 );
 
-const CarbonTab = ({ sustainability, eudr }) => (
+const CarbonTab = ({ sustainability, eudr }) => {
+  const riskColor = (level) => {
+    const colors = { faible: 'text-emerald-400', moyen: 'text-amber-400', eleve: 'text-red-400' };
+    return colors[level] || 'text-slate-400';
+  };
+  const riskBg = (level) => {
+    const colors = { faible: 'bg-emerald-500/20 border-emerald-500/30', moyen: 'bg-amber-500/20 border-amber-500/30', eleve: 'bg-red-500/20 border-red-500/30' };
+    return colors[level] || 'bg-slate-500/20';
+  };
+  const scoreColor = (score) => score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+
+  return (
   <div className="space-y-6">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Leaf className="h-5 w-5 text-emerald-500" />
-            Marché Carbone
+    {/* Row 1: Score Global + Carbone */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card className="bg-gradient-to-br from-emerald-900/40 to-slate-800 border-emerald-700/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <Shield className="h-5 w-5 text-emerald-400" />
+            Score EUDR Global
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-emerald-900/20 border border-emerald-700/30">
-              <p className="text-emerald-400 text-sm">Revenus Carbone Totaux</p>
-              <p className="text-3xl font-bold text-white">
-                {formatCurrency(sustainability?.carbon_revenue_xof || 0)}
-              </p>
-              <p className="text-slate-400 text-sm mt-1">
-                ≈ ${sustainability?.carbon_revenue_usd || 0} USD
-              </p>
+          <div className="text-center py-2">
+            <p className="text-5xl font-bold" style={{ color: scoreColor(eudr?.eudr_compliance_rate || 0) }}>
+              {eudr?.eudr_compliance_rate || 0}%
+            </p>
+            <p className={`text-sm font-semibold mt-2 ${riskColor(eudr?.risk_level)}`}>
+              Risque {eudr?.risk_level?.toUpperCase() || 'N/A'}
+            </p>
+            <p className="text-slate-500 text-xs mt-1">Reglement (UE) 2023/1115</p>
+          </div>
+          {/* ESG Mini Summary */}
+          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-700">
+            <div className="text-center">
+              <p className="text-xs text-slate-400">Env.</p>
+              <p className="text-sm font-bold text-emerald-400">{Math.round(eudr?.esg_summary?.environmental_score || 0)}%</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-lg bg-slate-700/50">
-                <p className="text-slate-400 text-xs">Crédits Générés</p>
-                <p className="text-xl font-bold text-white">{sustainability?.carbon_credits_generated || 0}</p>
-              </div>
-              <div className="p-3 rounded-lg bg-slate-700/50">
-                <p className="text-slate-400 text-xs">Crédits Vendus</p>
-                <p className="text-xl font-bold text-emerald-400">{sustainability?.carbon_credits_sold || 0}</p>
-              </div>
+            <div className="text-center">
+              <p className="text-xs text-slate-400">Social</p>
+              <p className="text-sm font-bold text-blue-400">{Math.round(eudr?.esg_summary?.social_score || 0)}%</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-slate-400">Gouv.</p>
+              <p className="text-sm font-bold text-violet-400">{Math.round(eudr?.esg_summary?.governance_score || 0)}%</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Shield className="h-5 w-5 text-amber-500" />
-            Certifications EUDR
+        <CardHeader className="pb-2">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <Leaf className="h-5 w-5 text-emerald-500" />
+            Marche Carbone
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {Object.entries(eudr?.certification_coverage || {}).map(([cert, count]) => (
-              <div key={cert} className="flex items-center justify-between p-3 rounded-lg bg-slate-700/30">
-                <span className="text-slate-300 capitalize">{cert.replace('_', ' ')}</span>
-                <Badge className="bg-emerald-600/20 text-emerald-400">{count} parcelles</Badge>
+          <div className="p-3 rounded-lg bg-emerald-900/20 border border-emerald-700/30 mb-3">
+            <p className="text-emerald-400 text-xs">Revenus Carbone Totaux</p>
+            <p className="text-2xl font-bold text-white">{formatCurrency(sustainability?.carbon_revenue_xof || 0)}</p>
+            <p className="text-slate-400 text-xs mt-1">{sustainability?.carbon_revenue_usd || 0} USD</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="p-2 rounded-lg bg-slate-700/50">
+              <p className="text-slate-400 text-xs">Generes</p>
+              <p className="text-lg font-bold text-white">{sustainability?.carbon_credits_generated || 0}</p>
+            </div>
+            <div className="p-2 rounded-lg bg-slate-700/50">
+              <p className="text-slate-400 text-xs">Vendus</p>
+              <p className="text-lg font-bold text-emerald-400">{sustainability?.carbon_credits_sold || 0}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-blue-500" />
+            Geolocalisation
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center mb-3">
+            <p className="text-3xl font-bold" style={{ color: scoreColor(eudr?.geolocation_rate || 0) }}>
+              {eudr?.geolocation_rate || 0}%
+            </p>
+            <p className="text-slate-400 text-xs">{eudr?.geolocated_parcels || 0} / {eudr?.total_parcels || 0} parcelles</p>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center px-2 py-1 rounded bg-emerald-900/20">
+              <span className="text-xs text-emerald-300">Polygones GPS</span>
+              <span className="text-sm font-bold text-emerald-400">{eudr?.geo_polygon_count || 0}</span>
+            </div>
+            <div className="flex justify-between items-center px-2 py-1 rounded bg-blue-900/20">
+              <span className="text-xs text-blue-300">Points GPS</span>
+              <span className="text-sm font-bold text-blue-400">{eudr?.geo_point_count || 0}</span>
+            </div>
+            <div className="flex justify-between items-center px-2 py-1 rounded bg-red-900/20">
+              <span className="text-xs text-red-300">Sans GPS</span>
+              <span className="text-sm font-bold text-red-400">{eudr?.geo_none_count || 0}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    {/* Row 2: Risk Matrix */}
+    <Card className="bg-slate-800 border-slate-700">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-white text-sm flex items-center gap-2">
+          <BarChart3 className="h-5 w-5 text-amber-500" />
+          Matrice d'Evaluation des Risques EUDR
+        </CardTitle>
+        <p className="text-slate-400 text-xs mt-1">Evaluation multi-dimensionnelle ponderee - Article 10</p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {(eudr?.risk_dimensions || []).map((dim, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <span className="text-xs text-slate-400 w-32 flex-shrink-0">{dim.name}</span>
+              <div className="flex-1 bg-slate-700 rounded-full h-3 overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${dim.score}%`, backgroundColor: scoreColor(dim.score) }} />
+              </div>
+              <span className="text-xs text-slate-500 w-12">({dim.weight}%)</span>
+              <span className="text-sm font-bold w-12 text-right" style={{ color: scoreColor(dim.score) }}>
+                {Math.round(dim.score)}%
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-4 mt-4 pt-3 border-t border-slate-700">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400">SSRTE:</span>
+            <span className="text-sm font-bold text-white">{eudr?.ssrte_visits_total || 0} visites</span>
+            {eudr?.ssrte_high_risk > 0 && (
+              <Badge className="bg-red-500/20 text-red-400 text-xs">{eudr?.ssrte_high_risk} a risque</Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400">ICI:</span>
+            <span className="text-sm font-bold text-white">{eudr?.ici_profiles_total || 0} profils</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400">Verification:</span>
+            <span className="text-sm font-bold text-white">{eudr?.verified_parcels || 0} verifiees</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Row 3: Per-Cooperative + Certifications */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-blue-500" />
+            Conformite par Cooperative
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {(eudr?.per_cooperative || []).map((coop, i) => (
+              <div key={i} className={`p-3 rounded-lg border ${riskBg(coop.risk)}`}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-semibold text-white">{coop.name}</span>
+                  <span className={`text-xs font-bold uppercase ${riskColor(coop.risk)}`}>{coop.risk}</span>
+                </div>
+                <div className="flex gap-3 text-xs text-slate-400">
+                  <span>{coop.members} membres</span>
+                  <span>{coop.parcels} parcelles</span>
+                  <span>GPS: {coop.geo_rate}%</span>
+                  <span>SSRTE: {coop.child_labor_free}%</span>
+                </div>
               </div>
             ))}
+            {(!eudr?.per_cooperative || eudr.per_cooperative.length === 0) && (
+              <p className="text-slate-500 text-sm text-center py-4">Aucune donnee cooperative</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <Award className="h-5 w-5 text-amber-500" />
+            Certifications & Export
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 mb-4">
+            {Object.entries(eudr?.certification_coverage || {}).map(([cert, count]) => (
+              <div key={cert} className="flex items-center justify-between p-2 rounded-lg bg-slate-700/30">
+                <span className="text-slate-300 text-sm capitalize">{cert.replace(/_/g, ' ')}</span>
+                <Badge className="bg-emerald-600/20 text-emerald-400 text-xs">{count} parcelles</Badge>
+              </div>
+            ))}
+          </div>
+          <div className="p-3 rounded-lg bg-amber-900/20 border border-amber-700/30">
+            <div className="flex justify-between items-center">
+              <span className="text-amber-300 text-sm">Pret pour export UE</span>
+              <span className="text-xl font-bold text-amber-400">{eudr?.export_ready_percentage || 0}%</span>
+            </div>
           </div>
         </CardContent>
       </Card>
     </div>
   </div>
-);
+  );
+};
 
 const SocialTab = ({ data, cooperatives }) => (
   <div className="space-y-6">

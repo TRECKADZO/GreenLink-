@@ -50,6 +50,13 @@ const RISK_LEVELS = [
   { value: 'critique', label: 'Critique', color: '#ef4444' },
 ];
 
+const CONDITIONS_VIE = [
+  { value: 'precaires', label: 'Precaires' },
+  { value: 'moyennes', label: 'Moyennes' },
+  { value: 'bonnes', label: 'Bonnes' },
+  { value: 'tres_bonnes', label: 'Tres bonnes' },
+];
+
 const SSRTEVisitFormScreen = ({ navigation, route }) => {
   const { farmerId: paramFarmerId, farmerData: paramFarmerData, farmerName: paramFarmerName } = route.params || {};
   const { user, token } = useAuth();
@@ -60,6 +67,17 @@ const SSRTEVisitFormScreen = ({ navigation, route }) => {
   const [selectedFarmer, setSelectedFarmer] = useState(paramFarmerId || '');
   const [farmerName, setFarmerName] = useState(paramFarmerData?.full_name || paramFarmerData?.name || paramFarmerName || '');
   
+  // Menage fields
+  const [tailleMenage, setTailleMenage] = useState(0);
+  const [nombreEnfants, setNombreEnfants] = useState(0);
+  const [listeEnfants, setListeEnfants] = useState([]);
+  
+  // Conditions de vie
+  const [conditionsVie, setConditionsVie] = useState('moyennes');
+  const [eauCourante, setEauCourante] = useState(false);
+  const [electricite, setElectricite] = useState(false);
+  const [distanceEcole, setDistanceEcole] = useState('');
+  
   // Form fields
   const [enfantsObserves, setEnfantsObserves] = useState(0);
   const [selectedTasks, setSelectedTasks] = useState([]);
@@ -68,6 +86,20 @@ const SSRTEVisitFormScreen = ({ navigation, route }) => {
   const [recommendations, setRecommendations] = useState('');
   const [followUpRequired, setFollowUpRequired] = useState(false);
   const [notes, setNotes] = useState('');
+
+  const addChild = () => {
+    setListeEnfants([...listeEnfants, { prenom: '', sexe: 'Garcon', age: 0, scolarise: false, travaille_exploitation: false }]);
+  };
+
+  const updateChild = (index, field, value) => {
+    const updated = [...listeEnfants];
+    updated[index] = { ...updated[index], [field]: value };
+    setListeEnfants(updated);
+  };
+
+  const removeChild = (index) => {
+    setListeEnfants(listeEnfants.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -149,19 +181,35 @@ const SSRTEVisitFormScreen = ({ navigation, route }) => {
 
     setLoading(true);
     
+    if (!tailleMenage) {
+      Alert.alert('Erreur', 'Veuillez renseigner la taille du menage');
+      setLoading(false);
+      return;
+    }
+
     const visitData = {
       farmer_id: selectedFarmer,
       farmer_name: farmerName || members.find(m => m._id === selectedFarmer)?.full_name,
       date_visite: new Date().toISOString(),
       agent_id: user?._id,
       agent_name: user?.full_name,
+      // Menage
+      taille_menage: tailleMenage,
+      nombre_enfants: nombreEnfants,
+      liste_enfants: listeEnfants,
+      // Conditions de vie
+      conditions_vie: conditionsVie,
+      eau_courante: eauCourante,
+      electricite: electricite,
+      distance_ecole_km: distanceEcole ? parseFloat(distanceEcole) : null,
+      // Observations
       enfants_observes_travaillant: enfantsObserves,
       taches_dangereuses_observees: selectedTasks,
       support_fourni: selectedSupport,
       niveau_risque: riskLevel,
       recommandations: recommendations.split('\n').filter(r => r.trim()),
       visite_suivi_requise: followUpRequired,
-      notes: notes,
+      observations: notes || null,
       offline_id: `visit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       offline_recorded_at: new Date().toISOString(),
     };
@@ -218,6 +266,13 @@ const SSRTEVisitFormScreen = ({ navigation, route }) => {
   const resetForm = () => {
     setSelectedFarmer('');
     setFarmerName('');
+    setTailleMenage(0);
+    setNombreEnfants(0);
+    setListeEnfants([]);
+    setConditionsVie('moyennes');
+    setEauCourante(false);
+    setElectricite(false);
+    setDistanceEcole('');
     setEnfantsObserves(0);
     setSelectedTasks([]);
     setSelectedSupport([]);
@@ -284,6 +339,164 @@ const SSRTEVisitFormScreen = ({ navigation, route }) => {
               </Picker>
             </View>
           )}
+        </View>
+
+        {/* Taille du menage */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informations du menage</Text>
+          <View style={styles.rowFields}>
+            <View style={styles.halfField}>
+              <Text style={styles.fieldLabel}>Taille du menage *</Text>
+              <TextInput
+                style={styles.inputField}
+                placeholder="Ex: 6"
+                placeholderTextColor="#64748b"
+                keyboardType="numeric"
+                value={tailleMenage ? String(tailleMenage) : ''}
+                onChangeText={v => setTailleMenage(parseInt(v) || 0)}
+              />
+            </View>
+            <View style={styles.halfField}>
+              <Text style={styles.fieldLabel}>Nombre d'enfants</Text>
+              <TextInput
+                style={styles.inputField}
+                placeholder="Ex: 3"
+                placeholderTextColor="#64748b"
+                keyboardType="numeric"
+                value={nombreEnfants ? String(nombreEnfants) : ''}
+                onChangeText={v => setNombreEnfants(parseInt(v) || 0)}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Details des enfants */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Details des enfants</Text>
+            <TouchableOpacity style={styles.addChildButton} onPress={addChild}>
+              <Ionicons name="add-circle" size={20} color="#10b981" />
+              <Text style={styles.addChildText}>Ajouter</Text>
+            </TouchableOpacity>
+          </View>
+          {listeEnfants.length === 0 && (
+            <Text style={styles.emptyHint}>Appuyez "Ajouter" pour enregistrer les enfants du menage</Text>
+          )}
+          {listeEnfants.map((child, i) => (
+            <View key={i} style={styles.childCard}>
+              <View style={styles.childCardHeader}>
+                <Text style={styles.childCardTitle}>Enfant {i + 1}</Text>
+                <TouchableOpacity onPress={() => removeChild(i)}>
+                  <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.rowFields}>
+                <View style={styles.halfField}>
+                  <Text style={styles.fieldLabel}>Prenom</Text>
+                  <TextInput
+                    style={styles.inputField}
+                    placeholder="Prenom"
+                    placeholderTextColor="#64748b"
+                    value={child.prenom}
+                    onChangeText={v => updateChild(i, 'prenom', v)}
+                  />
+                </View>
+                <View style={styles.quarterField}>
+                  <Text style={styles.fieldLabel}>Age</Text>
+                  <TextInput
+                    style={styles.inputField}
+                    placeholder="0"
+                    placeholderTextColor="#64748b"
+                    keyboardType="numeric"
+                    value={child.age ? String(child.age) : ''}
+                    onChangeText={v => updateChild(i, 'age', parseInt(v) || 0)}
+                  />
+                </View>
+              </View>
+              <View style={styles.rowFields}>
+                <View style={styles.halfField}>
+                  <Text style={styles.fieldLabel}>Sexe</Text>
+                  <View style={styles.sexeRow}>
+                    <TouchableOpacity
+                      style={[styles.sexeBtn, child.sexe === 'Garcon' && styles.sexeBtnActive]}
+                      onPress={() => updateChild(i, 'sexe', 'Garcon')}
+                    >
+                      <Text style={[styles.sexeBtnText, child.sexe === 'Garcon' && styles.sexeBtnTextActive]}>Garcon</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.sexeBtn, child.sexe === 'Fille' && styles.sexeBtnActive]}
+                      onPress={() => updateChild(i, 'sexe', 'Fille')}
+                    >
+                      <Text style={[styles.sexeBtnText, child.sexe === 'Fille' && styles.sexeBtnTextActive]}>Fille</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.childSwitchRow}>
+                <View style={styles.childSwitchItem}>
+                  <Text style={styles.childSwitchLabel}>Scolarise</Text>
+                  <Switch
+                    value={child.scolarise}
+                    onValueChange={v => updateChild(i, 'scolarise', v)}
+                    trackColor={{ false: '#334155', true: '#10b981' }}
+                    thumbColor={child.scolarise ? '#fff' : '#94a3b8'}
+                  />
+                </View>
+                <View style={styles.childSwitchItem}>
+                  <Text style={[styles.childSwitchLabel, { color: child.travaille_exploitation ? '#ef4444' : '#94a3b8' }]}>Travaille</Text>
+                  <Switch
+                    value={child.travaille_exploitation}
+                    onValueChange={v => updateChild(i, 'travaille_exploitation', v)}
+                    trackColor={{ false: '#334155', true: '#ef4444' }}
+                    thumbColor={child.travaille_exploitation ? '#fff' : '#94a3b8'}
+                  />
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Conditions de vie */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Conditions de vie</Text>
+          <View style={styles.conditionsRow}>
+            {CONDITIONS_VIE.map(c => (
+              <TouchableOpacity
+                key={c.value}
+                style={[styles.conditionBtn, conditionsVie === c.value && styles.conditionBtnActive]}
+                onPress={() => setConditionsVie(c.value)}
+              >
+                <Text style={[styles.conditionBtnText, conditionsVie === c.value && styles.conditionBtnTextActive]}>{c.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Eau courante</Text>
+            <Switch
+              value={eauCourante}
+              onValueChange={setEauCourante}
+              trackColor={{ false: '#334155', true: '#10b981' }}
+              thumbColor={eauCourante ? '#fff' : '#94a3b8'}
+            />
+          </View>
+          <View style={[styles.switchRow, { marginBottom: 10 }]}>
+            <Text style={styles.switchLabel}>Electricite</Text>
+            <Switch
+              value={electricite}
+              onValueChange={setElectricite}
+              trackColor={{ false: '#334155', true: '#10b981' }}
+              thumbColor={electricite ? '#fff' : '#94a3b8'}
+            />
+          </View>
+          <Text style={styles.fieldLabel}>Distance a l'ecole (km)</Text>
+          <TextInput
+            style={[styles.inputField, { maxWidth: 200 }]}
+            placeholder="Ex: 2.5"
+            placeholderTextColor="#64748b"
+            keyboardType="decimal-pad"
+            value={distanceEcole}
+            onChangeText={setDistanceEcole}
+          />
         </View>
 
         {/* Enfants observés */}
@@ -668,6 +881,131 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     minHeight: 100,
     fontSize: 14,
+  },
+  rowFields: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 8,
+  },
+  halfField: {
+    flex: 1,
+  },
+  quarterField: {
+    flex: 0.4,
+  },
+  fieldLabel: {
+    color: '#94a3b8',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  inputField: {
+    backgroundColor: '#1e293b',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    fontSize: 14,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  addChildButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  addChildText: {
+    color: '#10b981',
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  emptyHint: {
+    color: '#64748b',
+    fontSize: 12,
+    textAlign: 'center',
+    paddingVertical: 15,
+  },
+  childCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+  },
+  childCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  childCardTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  sexeRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  sexeBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#334155',
+    alignItems: 'center',
+  },
+  sexeBtnActive: {
+    backgroundColor: '#10b981',
+  },
+  sexeBtnText: {
+    color: '#94a3b8',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  sexeBtnTextActive: {
+    color: '#fff',
+  },
+  childSwitchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  childSwitchItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  childSwitchLabel: {
+    color: '#94a3b8',
+    fontSize: 13,
+  },
+  conditionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  conditionBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    backgroundColor: '#1e293b',
+  },
+  conditionBtnActive: {
+    backgroundColor: '#10b981',
+  },
+  conditionBtnText: {
+    color: '#94a3b8',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  conditionBtnTextActive: {
+    color: '#fff',
   },
   switchRow: {
     flexDirection: 'row',

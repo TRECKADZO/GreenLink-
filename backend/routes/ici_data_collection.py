@@ -83,6 +83,17 @@ class SSRTEVisitReport(BaseModel):
     date_visite: datetime = Field(default_factory=datetime.utcnow)
     agent_id: Optional[str] = None
     
+    # Donnees menage
+    taille_menage: int = Field(default=0, ge=0, description="Taille du menage")
+    nombre_enfants: int = Field(default=0, ge=0, description="Nombre total d'enfants")
+    liste_enfants: List[ChildDetail] = Field(default=[], description="Details des enfants")
+    
+    # Conditions de vie
+    conditions_vie: str = Field(default="moyennes", description="precaires/moyennes/bonnes/tres_bonnes")
+    eau_courante: bool = False
+    electricite: bool = False
+    distance_ecole_km: Optional[float] = Field(default=None, ge=0, description="Distance a l'ecole en km")
+    
     # Observations enfants
     enfants_observes_travaillant: int = Field(ge=0, default=0)
     taches_dangereuses_observees: List[str] = Field(default=[])
@@ -92,10 +103,13 @@ class SSRTEVisitReport(BaseModel):
     kit_scolaire_distribue: bool = False
     certificat_naissance_aide: bool = False
     
-    # Évaluation
+    # Evaluation
     niveau_risque: str = Field(default="faible", description="faible/modere/eleve/critique")
     recommandations: List[str] = Field(default=[])
     visite_suivi_requise: bool = False
+    
+    # Observations generales
+    observations: Optional[str] = Field(default=None, description="Notes et observations")
 
 # ============= DÉFINITION DES TÂCHES DANGEREUSES (Convention OIT 182) =============
 

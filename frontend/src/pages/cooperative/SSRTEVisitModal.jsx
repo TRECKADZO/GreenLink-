@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
-  ClipboardCheck, Save, Loader2, AlertTriangle, ShieldCheck, Heart
+  ClipboardCheck, Save, Loader2, AlertTriangle, ShieldCheck, Heart,
+  Home, Users, Plus, Trash2
 } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -15,6 +16,7 @@ import {
 } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
 import { Textarea } from '../../components/ui/textarea';
+import { Checkbox } from '../../components/ui/checkbox';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -48,56 +50,89 @@ const RISK_LEVELS = [
   { value: 'critique', label: 'Critique', color: 'bg-red-100 text-red-700' },
 ];
 
+const CONDITIONS_VIE = [
+  { value: 'precaires', label: 'Precaires' },
+  { value: 'moyennes', label: 'Moyennes' },
+  { value: 'bonnes', label: 'Bonnes' },
+  { value: 'tres_bonnes', label: 'Tres bonnes' },
+];
+
 const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
   const [saving, setSaving] = useState(false);
+  // Menage
+  const [tailleMenage, setTailleMenage] = useState(0);
+  const [nombreEnfants, setNombreEnfants] = useState(0);
+  const [listeEnfants, setListeEnfants] = useState([]);
+  // Conditions de vie
+  const [conditionsVie, setConditionsVie] = useState('moyennes');
+  const [eauCourante, setEauCourante] = useState(false);
+  const [electricite, setElectricite] = useState(false);
+  const [distanceEcole, setDistanceEcole] = useState('');
+  // Observation
   const [enfantsObserves, setEnfantsObserves] = useState(0);
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [selectedSupport, setSelectedSupport] = useState([]);
   const [riskLevel, setRiskLevel] = useState('faible');
   const [recommendations, setRecommendations] = useState('');
   const [followUpRequired, setFollowUpRequired] = useState(false);
-  const [notes, setNotes] = useState('');
+  const [observations, setObservations] = useState('');
+
+  const addChild = () => {
+    setListeEnfants([...listeEnfants, { prenom: '', sexe: 'Garcon', age: 0, scolarise: false, travaille_exploitation: false }]);
+  };
+
+  const updateChild = (index, field, value) => {
+    const updated = [...listeEnfants];
+    updated[index] = { ...updated[index], [field]: value };
+    setListeEnfants(updated);
+  };
+
+  const removeChild = (index) => {
+    setListeEnfants(listeEnfants.filter((_, i) => i !== index));
+  };
 
   const toggleTask = (code) => {
     setSelectedTasks(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]);
   };
-
   const toggleSupport = (s) => {
     setSelectedSupport(prev => prev.includes(s) ? prev.filter(c => c !== s) : [...prev, s]);
   };
 
   const resetForm = () => {
-    setEnfantsObserves(0);
-    setSelectedTasks([]);
-    setSelectedSupport([]);
-    setRiskLevel('faible');
-    setRecommendations('');
-    setFollowUpRequired(false);
-    setNotes('');
+    setTailleMenage(0); setNombreEnfants(0); setListeEnfants([]);
+    setConditionsVie('moyennes'); setEauCourante(false); setElectricite(false); setDistanceEcole('');
+    setEnfantsObserves(0); setSelectedTasks([]); setSelectedSupport([]);
+    setRiskLevel('faible'); setRecommendations(''); setFollowUpRequired(false); setObservations('');
   };
 
   const handleSave = async () => {
     if (!farmer?.id) return;
+    if (!tailleMenage) { toast.error('Veuillez renseigner la taille du menage'); return; }
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
       const visitData = {
         farmer_id: farmer.id,
         date_visite: new Date().toISOString(),
+        taille_menage: tailleMenage,
+        nombre_enfants: nombreEnfants,
+        liste_enfants: listeEnfants,
+        conditions_vie: conditionsVie,
+        eau_courante: eauCourante,
+        electricite: electricite,
+        distance_ecole_km: distanceEcole ? parseFloat(distanceEcole) : null,
         enfants_observes_travaillant: enfantsObserves,
         taches_dangereuses_observees: selectedTasks,
         support_fourni: selectedSupport,
         niveau_risque: riskLevel,
         recommandations: recommendations.split('\n').filter(r => r.trim()),
         visite_suivi_requise: followUpRequired,
+        observations: observations || null,
       };
 
       const res = await fetch(`${API_URL}/api/ici-data/ssrte/visit`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(visitData),
       });
 
@@ -134,40 +169,144 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-          {/* Enfants observes */}
+
+          {/* Section 1: Menage */}
           <Card>
             <CardContent className="p-4 space-y-3">
               <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />Observation terrain
+                <Home className="h-4 w-4 text-blue-500" /> Informations du menage
               </h4>
-              <div>
-                <Label className="text-xs">Nombre d'enfants observes travaillant</Label>
-                <Input
-                  type="number" min={0} value={enfantsObserves}
-                  onChange={e => setEnfantsObserves(parseInt(e.target.value) || 0)}
-                  data-testid="ssrte-enfants-count"
-                  className="max-w-[200px]"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Taille du menage *</Label>
+                  <Input type="number" min={1} value={tailleMenage || ''} placeholder="Ex: 6"
+                    onChange={e => setTailleMenage(parseInt(e.target.value) || 0)}
+                    data-testid="ssrte-taille-menage" />
+                </div>
+                <div>
+                  <Label className="text-xs">Nombre d'enfants *</Label>
+                  <Input type="number" min={0} value={nombreEnfants || ''} placeholder="Ex: 3"
+                    onChange={e => setNombreEnfants(parseInt(e.target.value) || 0)}
+                    data-testid="ssrte-nombre-enfants" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Taches dangereuses */}
+          {/* Section 2: Details enfants */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-violet-500" /> Details des enfants
+                </h4>
+                <Button variant="outline" size="sm" onClick={addChild} data-testid="add-child-btn">
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Ajouter
+                </Button>
+              </div>
+              {listeEnfants.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-2">Cliquez "Ajouter" pour enregistrer les enfants du menage</p>
+              )}
+              {listeEnfants.map((child, i) => (
+                <div key={i} className="grid grid-cols-12 gap-2 items-end p-2 bg-gray-50 rounded-lg">
+                  <div className="col-span-3">
+                    <Label className="text-[10px]">Prenom</Label>
+                    <Input value={child.prenom} placeholder="Prenom"
+                      onChange={e => updateChild(i, 'prenom', e.target.value)} className="h-8 text-sm" />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-[10px]">Age</Label>
+                    <Input type="number" min={0} max={17} value={child.age || ''}
+                      onChange={e => updateChild(i, 'age', parseInt(e.target.value) || 0)} className="h-8 text-sm" />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-[10px]">Sexe</Label>
+                    <Select value={child.sexe} onValueChange={v => updateChild(i, 'sexe', v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Garcon">Garcon</SelectItem>
+                        <SelectItem value="Fille">Fille</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-2 flex items-center gap-1 pt-4">
+                    <Checkbox checked={child.scolarise} onCheckedChange={v => updateChild(i, 'scolarise', v)} />
+                    <Label className="text-[10px]">Scolarise</Label>
+                  </div>
+                  <div className="col-span-2 flex items-center gap-1 pt-4">
+                    <Checkbox checked={child.travaille_exploitation} onCheckedChange={v => updateChild(i, 'travaille_exploitation', v)} />
+                    <Label className="text-[10px] text-red-600">Travaille</Label>
+                  </div>
+                  <div className="col-span-1">
+                    <Button variant="ghost" size="sm" onClick={() => removeChild(i)} className="h-8 w-8 p-0 text-red-400">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Section 3: Conditions de vie */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                <Home className="h-4 w-4 text-teal-500" /> Conditions de vie
+              </h4>
+              <Select value={conditionsVie} onValueChange={setConditionsVie}>
+                <SelectTrigger data-testid="ssrte-conditions-vie"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CONDITIONS_VIE.map(c => (
+                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={eauCourante} onCheckedChange={setEauCourante} data-testid="ssrte-eau" />
+                  <Label className="text-sm">Eau courante</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={electricite} onCheckedChange={setElectricite} data-testid="ssrte-elec" />
+                  <Label className="text-sm">Electricite</Label>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Distance a l'ecole (km)</Label>
+                <Input type="number" step="0.1" min={0} value={distanceEcole} placeholder="Ex: 2.5"
+                  onChange={e => setDistanceEcole(e.target.value)}
+                  data-testid="ssrte-distance-ecole" className="max-w-[200px]" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 4: Observation terrain */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" /> Observation terrain
+              </h4>
+              <div>
+                <Label className="text-xs">Nombre d'enfants observes travaillant</Label>
+                <Input type="number" min={0} value={enfantsObserves}
+                  onChange={e => setEnfantsObserves(parseInt(e.target.value) || 0)}
+                  data-testid="ssrte-enfants-count" className="max-w-[200px]" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 5: Taches dangereuses */}
           <Card>
             <CardContent className="p-4 space-y-3">
               <h4 className="font-semibold text-sm text-gray-700">Taches dangereuses observees</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="ssrte-tasks-list">
                 {DANGEROUS_TASKS.map(task => (
-                  <button
-                    key={task.code}
-                    onClick={() => toggleTask(task.code)}
+                  <button key={task.code} onClick={() => toggleTask(task.code)}
                     className={`text-left px-3 py-2 rounded-lg border text-sm transition-all ${
                       selectedTasks.includes(task.code)
                         ? severityColor(task.severity) + ' ring-1 ring-offset-1 font-medium'
                         : 'border-gray-200 hover:border-gray-300 bg-white'
-                    }`}
-                    data-testid={`task-${task.code}`}
-                  >
+                    }`} data-testid={`task-${task.code}`}>
                     <span className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${
                         task.severity === 'critique' ? 'bg-red-500' : task.severity === 'elevee' ? 'bg-orange-500' : 'bg-amber-500'
@@ -177,28 +316,20 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
                   </button>
                 ))}
               </div>
-              {selectedTasks.length > 0 && (
-                <p className="text-xs text-amber-600 font-medium">{selectedTasks.length} tache(s) selectionnee(s)</p>
-              )}
             </CardContent>
           </Card>
 
-          {/* Niveau de risque */}
+          {/* Section 6: Niveau de risque */}
           <Card>
             <CardContent className="p-4 space-y-3">
               <h4 className="font-semibold text-sm text-gray-700">Niveau de risque</h4>
               <div className="flex gap-2 flex-wrap" data-testid="ssrte-risk-levels">
                 {RISK_LEVELS.map(level => (
-                  <button
-                    key={level.value}
-                    onClick={() => setRiskLevel(level.value)}
+                  <button key={level.value} onClick={() => setRiskLevel(level.value)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
-                      riskLevel === level.value
-                        ? level.color + ' ring-2 ring-offset-1'
+                      riskLevel === level.value ? level.color + ' ring-2 ring-offset-1'
                         : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
-                    data-testid={`risk-${level.value}`}
-                  >
+                    }`} data-testid={`risk-${level.value}`}>
                     {level.label}
                   </button>
                 ))}
@@ -206,24 +337,20 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
             </CardContent>
           </Card>
 
-          {/* Support fourni */}
+          {/* Section 7: Support fourni */}
           <Card>
             <CardContent className="p-4 space-y-3">
               <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
-                <Heart className="h-4 w-4 text-pink-500" />Support fourni
+                <Heart className="h-4 w-4 text-pink-500" /> Support fourni
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="ssrte-support-list">
                 {SUPPORT_TYPES.map(s => (
-                  <button
-                    key={s}
-                    onClick={() => toggleSupport(s)}
+                  <button key={s} onClick={() => toggleSupport(s)}
                     className={`text-left px-3 py-2 rounded-lg border text-sm transition-all ${
                       selectedSupport.includes(s)
                         ? 'border-emerald-300 bg-emerald-50 ring-1 ring-offset-1 ring-emerald-300 font-medium'
                         : 'border-gray-200 hover:border-gray-300 bg-white'
-                    }`}
-                    data-testid={`support-${s.substring(0, 10)}`}
-                  >
+                    }`}>
                     <span className="flex items-center gap-2">
                       <ShieldCheck className={`h-3.5 w-3.5 ${selectedSupport.includes(s) ? 'text-emerald-600' : 'text-gray-300'}`} />
                       {s}
@@ -234,29 +361,19 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
             </CardContent>
           </Card>
 
-          {/* Recommandations & Notes */}
+          {/* Section 8: Observations & Recommandations */}
           <Card>
             <CardContent className="p-4 space-y-3">
-              <h4 className="font-semibold text-sm text-gray-700">Recommandations & Notes</h4>
+              <h4 className="font-semibold text-sm text-gray-700">Observations & Recommandations</h4>
               <div>
-                <Label className="text-xs">Recommandations (une par ligne)</Label>
-                <Textarea
-                  value={recommendations}
-                  onChange={e => setRecommendations(e.target.value)}
-                  placeholder="Ex: Inscrire les enfants a l'ecole..."
-                  rows={3}
-                  data-testid="ssrte-recommendations"
-                />
+                <Label className="text-xs">Observations</Label>
+                <Textarea value={observations} onChange={e => setObservations(e.target.value)}
+                  placeholder="Notes et observations..." rows={3} data-testid="ssrte-observations" />
               </div>
               <div>
-                <Label className="text-xs">Notes supplementaires</Label>
-                <Textarea
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  placeholder="Observations complementaires..."
-                  rows={2}
-                  data-testid="ssrte-notes"
-                />
+                <Label className="text-xs">Recommandations (une par ligne)</Label>
+                <Textarea value={recommendations} onChange={e => setRecommendations(e.target.value)}
+                  placeholder="Ex: Inscrire les enfants a l'ecole..." rows={3} data-testid="ssrte-recommendations" />
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <Switch checked={followUpRequired} onCheckedChange={setFollowUpRequired} />
