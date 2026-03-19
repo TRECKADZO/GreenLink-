@@ -58,7 +58,7 @@ const FarmerSearchScreen = ({ navigation }) => {
     }
     setSyncing(true);
     try {
-      const res = await fetch(`${API_URL}/agent/sync/download`, {
+      const res = await fetch(`${API_URL}/api/agent/sync/download`, {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 30000,
       });
@@ -113,7 +113,7 @@ const FarmerSearchScreen = ({ navigation }) => {
       // Recherche en ligne
       try {
         const res = await fetch(
-          `${API_URL}/agent/search?phone=${encodeURIComponent(phone.trim())}`,
+          `${API_URL}/api/agent/search?phone=${encodeURIComponent(phone.trim())}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.status === 403) {

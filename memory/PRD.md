@@ -8,19 +8,17 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - **Backend**: FastAPI + MongoDB Atlas
 - **Mobile**: Expo SDK 53 + React Native
 
-## Fonctionnalites Implementees
+## Build Mobile v1.33.0 (19 Mars 2026)
+- APK: https://expo.dev/artifacts/eas/49BprsiA4wLbLNAaLt53X1.apk
+- AAB: https://expo.dev/artifacts/eas/fdeQ3vTafF5mU721kU6yVD.aab
+- Fix: double /api dans config.js (causait 404 activation agent/membre)
+- Fix: suppression Actions Rapides redondantes du SSRTEAgentDashboard
+- Fix: option "Agent Terrain" retiree de l'inscription web
 
-### Portail Agent Terrain Mobile - Restructuration Complete (18 Mars 2026)
-- v1.30: 3 onglets internes (Dashboard/Agriculteurs/Recherche), profil fermier enrichi
-- v1.31: Suppression "Actions Rapides" de la barre navigation, navigation simplifiee
-- v1.32: Suppression "Nouvelle Visite" et "Photo Geo" du SSRTEAgentDashboard
-  - Remplacees par CTA farmer-centric "Selectionner un agriculteur"
-  - Seuls "Chercher Planteur" et "Exporter Rapport" restent comme raccourcis utiles
-  - Workflow coherent: toujours selectionner fermier -> acceder aux fiches
-
-### Build Mobile v1.32.0 (18 Mars 2026)
-- APK: https://expo.dev/artifacts/eas/pHAhcJjTcZeTsvnv36L8RP.apk
-- AAB: https://expo.dev/artifacts/eas/trmsCU7XA2aLPpdFx445Bt.aab
+## Corrections v1.33.0
+- Bug double /api corrige: config.js API_URL ne contient plus le suffixe /api
+- Activation agent terrain et membre cooperative fonctionne correctement
+- Page inscription web: Agent Terrain supprime (crees uniquement par cooperatives/admin)
 
 ## Backlog
 ### P1
