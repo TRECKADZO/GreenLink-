@@ -89,16 +89,17 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Templates: password_reset, quote_approved, quote_rejected, account_suspended, account_activated, welcome
 - forgot-password: envoie un vrai email quand l'utilisateur a un email, sinon simulation_code pour telephone
 - Frontend web + mobile mis a jour: affiche "Email envoye" ou "Mode Simulation SMS" selon le cas
-- NOTE: Resend en mode test - emails uniquement vers traore_eric@yahoo.fr. Verifier un domaine pour debloquer
+- Domaine greenlink-agritech.com verifie - envoi vers tous destinataires OK
+- SENDER_EMAIL: noreply@greenlink-agritech.com
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway
 - simulation_code retourne uniquement pour comptes telephone (forgot-password)
-- Resend en mode test (emails vers traore_eric@yahoo.fr uniquement)
+- Resend email operationnel (domaine greenlink-agritech.com verifie)
 
 ## Backlog
 ### P1
-- [ ] Verifier domaine Resend pour debloquer envoi vers tous destinataires
+- [x] Verifier domaine Resend pour debloquer envoi vers tous destinataires (FAIT)
 - [ ] Soumission AAB Google Play Store
 ### P1.5
 - [ ] Configurer Orange SMS API (en attente des cles)

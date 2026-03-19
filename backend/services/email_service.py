@@ -131,7 +131,7 @@ def send_quote_approved_email(to_email, user_name, company_name, end_date, admin
           Vous pouvez desormais acceder a toutes les fonctionnalites de votre abonnement.
         </p>
         <div style="text-align:center;margin:24px 0;">
-          <a href="https://greenlink.ci/login" style="background:#059669;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
+          <a href="https://greenlink-agritech.com/login" style="background:#059669;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
             Se connecter
           </a>
         </div>
@@ -182,7 +182,7 @@ def send_account_activated_email(to_email, user_name):
           Vous pouvez vous reconnecter et utiliser toutes les fonctionnalites.
         </p>
         <div style="text-align:center;margin:24px 0;">
-          <a href="https://greenlink.ci/login" style="background:#059669;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
+          <a href="https://greenlink-agritech.com/login" style="background:#059669;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
             Se connecter
           </a>
         </div>
@@ -214,7 +214,7 @@ def send_welcome_email(to_email, user_name, user_type):
           </p>
         </div>
         <div style="text-align:center;margin:24px 0;">
-          <a href="https://greenlink.ci/login" style="background:#059669;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
+          <a href="https://greenlink-agritech.com/login" style="background:#059669;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
             Commencer
           </a>
         </div>
