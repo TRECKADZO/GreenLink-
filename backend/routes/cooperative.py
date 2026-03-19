@@ -169,7 +169,7 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
         "coop_info": {
             "name": current_user.get("coop_name", ""),
             "code": current_user.get("coop_code", ""),
-            "certifications": current_user.get("certifications", []),
+            "certifications": current_user.get("certifications") or [],
             "commission_rate": current_user.get("commission_rate", 0.10)
         },
         "members": {
@@ -1427,7 +1427,7 @@ async def generate_eudr_report(current_user: dict = Depends(get_current_user)):
         "cooperative": {
             "name": current_user.get("coop_name", ""),
             "code": current_user.get("coop_code", ""),
-            "certifications": current_user.get("certifications", [])
+            "certifications": current_user.get("certifications") or []
         },
         "compliance": {
             "total_parcels": len(parcels),
@@ -1521,7 +1521,7 @@ async def generate_eudr_pdf_report(
     coop_info = {
         "name": current_user.get("coop_name", ""),
         "code": current_user.get("coop_code", ""),
-        "certifications": current_user.get("certifications", [])
+        "certifications": current_user.get("certifications") or []
     }
     
     # Get members and parcels

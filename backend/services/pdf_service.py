@@ -87,7 +87,7 @@ class PDFReportGenerator:
         coop_data = [
             ['Nom:', coop.get('name', 'N/A')],
             ['Code:', coop.get('code', 'N/A')],
-            ['Certifications:', ', '.join(coop.get('certifications', []))],
+            ['Certifications:', ', '.join(coop.get('certifications') or [])],
             ['Date du rapport:', datetime.now().strftime('%d/%m/%Y à %H:%M')]
         ]
         
@@ -905,6 +905,89 @@ class PDFReportGenerator:
             "Ce document récapitule les paiements de primes carbone effectués aux producteurs membres.",
             self.styles['SmallText']
         ))
+        
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+
+    def generate_ssrte_report(self, data: dict) -> bytes:
+        """Generate SSRTE (Child Labor Monitoring) report PDF"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
+        story = []
+        
+        # Title
+        story.append(Paragraph("RAPPORT SSRTE", self.styles['ReportTitle']))
+        story.append(Paragraph("Systeme de Suivi et Remediation du Travail des Enfants", self.styles['SubTitle']))
+        story.append(Spacer(1, 12))
+        
+        # Cooperative info
+        story.append(Paragraph("Cooperative", self.styles['SectionTitle']))
+        coop_data = [
+            ['Cooperative:', data.get('cooperative_name', 'N/A')],
+            ['Date du rapport:', data.get('report_date', 'N/A')],
+            ['Nombre total de cas:', str(data.get('cases_count', 0))]
+        ]
+        coop_table = Table(coop_data, colWidths=[150, 300])
+        coop_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f9ff')),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+            ('PADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(coop_table)
+        story.append(Spacer(1, 12))
+        
+        # Statistics
+        stats = data.get('stats', {})
+        story.append(Paragraph("Statistiques", self.styles['SectionTitle']))
+        stats_data = [
+            ['Indicateur', 'Valeur'],
+            ['Total cas identifies', str(stats.get('total_cases', 0))],
+            ['Cas actifs', str(stats.get('active_cases', 0))],
+            ['Cas resolus', str(stats.get('resolved_cases', 0))],
+            ['Enfants en remediation', str(stats.get('children_in_remediation', 0))],
+            ['Visites SSRTE effectuees', str(stats.get('total_visits', 0))],
+        ]
+        stats_table = Table(stats_data, colWidths=[250, 200])
+        stats_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+            ('PADDING', (0, 0), (-1, -1), 8),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
+        ]))
+        story.append(stats_table)
+        story.append(Spacer(1, 12))
+        
+        # Cases list
+        cases = data.get('cases', [])
+        if cases:
+            story.append(Paragraph(f"Cas recents ({min(len(cases), 20)} sur {data.get('cases_count', 0)})", self.styles['SectionTitle']))
+            cases_header = ['Enfant', 'Age', 'Type', 'Gravite', 'Statut']
+            cases_rows = [cases_header]
+            for case in cases[:20]:
+                cases_rows.append([
+                    str(case.get('child_name', 'N/A'))[:20],
+                    str(case.get('child_age', 'N/A')),
+                    str(case.get('labor_type', 'N/A'))[:15],
+                    str(case.get('severity_score', 'N/A')),
+                    str(case.get('status', 'N/A'))
+                ])
+            cases_table = Table(cases_rows, colWidths=[120, 40, 100, 60, 80])
+            cases_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+                ('PADDING', (0, 0), (-1, -1), 6),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
+            ]))
+            story.append(cases_table)
         
         doc.build(story)
         buffer.seek(0)

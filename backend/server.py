@@ -21,6 +21,7 @@ from routes import tracking, analytics_advanced, notifications, subscriptions, c
 from routes import premium_analytics, ici_analytics, ici_data_collection, ici_export
 from routes import pdf_reports, websocket_routes
 from routes import farmer_cards_pdf
+from routes import ici_pdf_reports
 from routes import photo_storage
 from routes import ssrte_analytics
 from routes import ssrte  # SSRTE Agent dedicated routes
@@ -130,6 +131,7 @@ app.include_router(pdf_reports.router)
 app.include_router(websocket_routes.router)
 app.include_router(push_notifications_router)
 app.include_router(farmer_cards_pdf.router)
+app.include_router(ici_pdf_reports.router)
 app.include_router(photo_storage.router)
 app.include_router(ssrte_analytics.router)
 app.include_router(ssrte.router)  # SSRTE Agent dedicated routes

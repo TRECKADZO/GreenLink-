@@ -18,6 +18,31 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ici-pdf", tags=["ICI PDF Reports"])
 
+
+def sanitize_text(text):
+    """Remove or replace Unicode chars not supported by Helvetica in fpdf."""
+    if not isinstance(text, str):
+        return str(text) if text is not None else ""
+    replacements = {
+        "•": "-", "→": "->", "✓": "OK", "✗": "X", "⚠": "!", "⏳": "...",
+        "é": "e", "è": "e", "ê": "e", "ë": "e",
+        "à": "a", "â": "a", "ä": "a",
+        "ù": "u", "û": "u", "ü": "u",
+        "ô": "o", "ö": "o",
+        "î": "i", "ï": "i",
+        "ç": "c",
+        "É": "E", "È": "E", "Ê": "E",
+        "À": "A", "Â": "A",
+        "Ù": "U", "Û": "U",
+        "Ô": "O", "Î": "I", "Ç": "C",
+        "°": "deg", "²": "2", "³": "3",
+        "\u2019": "'", "\u2018": "'", "\u201c": '"', "\u201d": '"',
+        "\u2013": "-", "\u2014": "--", "\u2026": "...",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    return text
+
 # ============= AUTHENTICATION =============
 
 async def get_admin_or_coop_user(current_user: dict = Depends(get_current_user)):
@@ -31,6 +56,12 @@ class ICIReport(FPDF):
     def __init__(self):
         super().__init__()
         self.set_auto_page_break(auto=True, margin=15)
+    
+    def cell(self, w=0, h=0, text="", *args, **kwargs):
+        return super().cell(w, h, sanitize_text(text), *args, **kwargs)
+    
+    def multi_cell(self, w, h=0, text="", *args, **kwargs):
+        return super().multi_cell(w, h, sanitize_text(text), *args, **kwargs)
         
     def header(self):
         # Logo placeholder
@@ -200,11 +231,11 @@ async def generate_summary_report(
     pdf.set_text_color(50, 50, 50)
     
     recommendations = [
-        f"• Poursuivre le profilage ICI des {max(0, 100 - total_profiles)} producteurs restants",
-        f"• Traiter les {alerts_active} alertes actives en priorité",
-        "• Intensifier les visites SSRTE dans les zones à risque élevé",
-        "• Former les coopératives à l'utilisation du système de suivi",
-        "• Planifier des sessions de sensibilisation communautaire"
+        f"- Poursuivre le profilage ICI des {max(0, 100 - total_profiles)} producteurs restants",
+        f"- Traiter les {alerts_active} alertes actives en priorite",
+        "- Intensifier les visites SSRTE dans les zones a risque eleve",
+        "- Former les cooperatives a l'utilisation du systeme de suivi",
+        "- Planifier des sessions de sensibilisation communautaire"
     ]
     
     for rec in recommendations:
