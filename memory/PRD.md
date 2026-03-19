@@ -72,6 +72,17 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Aussi corrige: lookups ObjectId inconsistants dans check-agent-phone et activate-agent-account
 - Teste: login telephone OK, login email OK (regression), activation membre OK
 
+### Notifications Email Automatiques (19 Mars 2026)
+- 6 hooks de notification ajoutes (fire-and-forget via asyncio.create_task):
+  1. Activation membre -> email bienvenue au membre + alerte cooperative
+  2. Activation agent -> email bienvenue a l'agent + alerte cooperative
+  3. Recolte declaree -> notification a la cooperative (quantite, prime carbone)
+  4. Visite SSRTE effectuee -> notification a la cooperative (risque, enfants)
+  5. Agriculteur assigne a agent -> notification a l'agent (noms agriculteurs)
+  6. Parcelle verifiee -> notification a l'agriculteur (statut, score carbone)
+- Nouveau fichier: services/notification_email_helper.py (dispatcher + helpers DB lookup)
+- Teste: 13/13 backend tests OK, notifications fire-and-forget ne bloquent pas les endpoints
+
 ### Integration Resend Email (19 Mars 2026)
 - Service email reel configure avec Resend API (cle: re_MfK...)
 - email_service.py reecrit: send_email() synchrone + send_email_async() non-bloquant
