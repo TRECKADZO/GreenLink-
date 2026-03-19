@@ -639,3 +639,152 @@ async def process_ussd_request(
         raise HTTPException(status_code=404, detail="Requête non trouvée")
     
     return {"message": f"Requête {new_status}", "request_id": request_id}
+
+
+# ============= ADMIN: FARMER-AGENT ASSIGNMENT =============
+
+class AdminAssignFarmersRequest(BaseModel):
+    agent_id: str
+    farmer_ids: list[str]
+
+@router.get("/admin/agents")
+async def admin_list_agents(admin: dict = Depends(get_admin_user)):
+    """Liste tous les agents terrain (toutes cooperatives)"""
+    agents = await db.coop_agents.find(
+        {}, {"_id": 1, "full_name": 1, "phone_number": 1, "zone": 1, "coop_id": 1, "assigned_farmers": 1, "is_active": 1}
+    ).to_list(500)
+    result = []
+    for a in agents:
+        coop_name = "N/A"
+        raw_coop_id = a.get("coop_id")
+        if raw_coop_id:
+            clean_id = str(raw_coop_id).strip("'\"")
+            if ObjectId.is_valid(clean_id):
+                coop = await db.users.find_one({"_id": ObjectId(clean_id)}, {"_id": 0, "cooperative_name": 1, "full_name": 1})
+                if coop:
+                    coop_name = coop.get("cooperative_name") or coop.get("full_name", "N/A")
+        result.append({
+            "id": str(a["_id"]),
+            "full_name": a.get("full_name", "").strip("'\""),
+            "phone_number": a.get("phone_number", "").strip("'\"") if a.get("phone_number") else "",
+            "zone": a.get("zone", "").strip("'\"") if a.get("zone") else "",
+            "is_active": a.get("is_active", True),
+            "cooperative_name": coop_name,
+            "assigned_farmers_count": len(a.get("assigned_farmers", [])),
+        })
+    return {"agents": result}
+
+@router.get("/admin/all-farmers")
+async def admin_list_all_farmers(admin: dict = Depends(get_admin_user), search: str = ""):
+    """Liste tous les agriculteurs inscrits (membres + non-membres)"""
+    query = {}
+    if search:
+        query["$or"] = [
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"phone_number": {"$regex": search, "$options": "i"}},
+            {"village": {"$regex": search, "$options": "i"}},
+        ]
+    
+    # Fetch from coop_members (registered farmers)
+    members = await db.coop_members.find(query, {
+        "_id": 1, "full_name": 1, "phone_number": 1, "village": 1, "zone": 1, "coop_id": 1, "is_active": 1
+    }).to_list(500)
+    
+    # Also fetch from users with type producteur
+    user_query = {"user_type": "producteur"}
+    if search:
+        user_query["$or"] = [
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"phone_number": {"$regex": search, "$options": "i"}},
+        ]
+    producers = await db.users.find(user_query, {
+        "_id": 1, "full_name": 1, "phone_number": 1
+    }).to_list(200)
+    
+    # Build results with dedup by phone
+    seen_phones = set()
+    result = []
+    
+    for m in members:
+        phone = m.get("phone_number", "")
+        if phone:
+            seen_phones.add(phone)
+        coop = None
+        if m.get("coop_id"):
+            coop = await db.users.find_one({"_id": ObjectId(m["coop_id"]) if ObjectId.is_valid(str(m["coop_id"])) else m["coop_id"]}, {"_id": 0, "cooperative_name": 1})
+        result.append({
+            "id": str(m["_id"]),
+            "full_name": m.get("full_name", ""),
+            "phone_number": phone,
+            "village": m.get("village", ""),
+            "zone": m.get("zone", ""),
+            "source": "coop_member",
+            "cooperative_name": coop.get("cooperative_name", "N/A") if coop else "Non-membre",
+            "is_active": m.get("is_active", True),
+        })
+    
+    for p in producers:
+        phone = p.get("phone_number", "")
+        if phone and phone in seen_phones:
+            continue
+        result.append({
+            "id": str(p["_id"]),
+            "full_name": p.get("full_name", ""),
+            "phone_number": phone,
+            "village": "",
+            "zone": "",
+            "source": "user_producteur",
+            "cooperative_name": "Non-membre",
+            "is_active": True,
+        })
+    
+    return {"farmers": result, "total": len(result)}
+
+@router.post("/admin/assign-farmers-to-agent")
+async def admin_assign_farmers_to_agent(body: AdminAssignFarmersRequest, admin: dict = Depends(get_admin_user)):
+    """Super Admin: assigner n'importe quel agriculteur a n'importe quel agent (sans restriction cooperative)"""
+    if not ObjectId.is_valid(body.agent_id):
+        raise HTTPException(status_code=400, detail="ID agent invalide")
+    
+    agent = await db.coop_agents.find_one({"_id": ObjectId(body.agent_id)})
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouve")
+    
+    if not body.farmer_ids:
+        raise HTTPException(status_code=400, detail="Liste de fermiers vide")
+    
+    valid_ids = [fid for fid in body.farmer_ids if ObjectId.is_valid(fid)]
+    if not valid_ids:
+        raise HTTPException(status_code=400, detail="Aucun ID fermier valide")
+    
+    # Verify farmers exist (in coop_members OR users)
+    verified = []
+    for fid in valid_ids:
+        member = await db.coop_members.find_one({"_id": ObjectId(fid)})
+        if not member:
+            member = await db.users.find_one({"_id": ObjectId(fid), "user_type": "producteur"})
+        if member:
+            verified.append(fid)
+    
+    if not verified:
+        raise HTTPException(status_code=400, detail="Aucun agriculteur valide trouve")
+    
+    # Unassign from any other agent first
+    await db.coop_agents.update_many(
+        {},
+        {"$pull": {"assigned_farmers": {"$in": verified}}}
+    )
+    
+    # Assign to this agent
+    await db.coop_agents.update_one(
+        {"_id": ObjectId(body.agent_id)},
+        {"$addToSet": {"assigned_farmers": {"$each": verified}}}
+    )
+    
+    updated = await db.coop_agents.find_one({"_id": ObjectId(body.agent_id)})
+    
+    return {
+        "message": f"{len(verified)} agriculteur(s) assigne(s) a {agent.get('full_name', 'agent')}",
+        "assigned_count": len(updated.get("assigned_farmers", [])),
+        "assigned_ids": verified
+    }

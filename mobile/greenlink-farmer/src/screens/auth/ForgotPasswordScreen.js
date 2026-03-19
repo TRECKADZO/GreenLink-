@@ -33,8 +33,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
     setLoading(true);
     try {
-      console.log('[ForgotPassword] Sending request to:', CONFIG.API_URL + '/auth/forgot-password');
-      console.log('[ForgotPassword] Identifier:', identifier.trim());
+      console.log('[ForgotPassword] Sending reset request for:', identifier.trim());
       
       const response = await api.post('/auth/forgot-password', {
         identifier: identifier.trim()

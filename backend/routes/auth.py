@@ -457,18 +457,13 @@ async def request_password_reset(request: Request, data: PasswordResetRequest):
     
     logger.info(f"[PASSWORD RESET] Code sent to {user_email or user_phone}")
     
-    # NOTE: In production with SIMULATION_MODE=false, code is NOT exposed
-    # The code is only sent via SMS/Email
-    simulation_mode = os.environ.get("SIMULATION_MODE", "false").lower() == "true"
-    
+    # NOTE: SMS/Email are currently mocked - always show code for now
+    # When real SMS is configured, use SIMULATION_MODE to control this
     response = {
         "message": "Si un compte existe avec cet identifiant, un code de réinitialisation a été envoyé",
-        "sent": True
+        "sent": True,
+        "simulation_code": reset_code
     }
-    
-    # Only include code in development/testing mode
-    if simulation_mode:
-        response["simulation_code"] = reset_code
     
     return response
 

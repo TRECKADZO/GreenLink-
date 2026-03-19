@@ -373,6 +373,14 @@ const AdminDashboard = () => {
                 <FileText className="w-5 h-5 text-amber-600 group-hover:text-amber-700" />
                 <span className="text-xs text-gray-600 group-hover:text-amber-700">Devis</span>
               </button>
+              <button
+                onClick={() => navigate('/admin/farmer-assignment')}
+                className="flex flex-col items-center gap-1 p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition group"
+                data-testid="farmer-assignment-btn"
+              >
+                <Users className="w-5 h-5 text-blue-600 group-hover:text-blue-700" />
+                <span className="text-xs text-gray-600 group-hover:text-blue-700">Attribution</span>
+              </button>
             </div>
           </div>
 

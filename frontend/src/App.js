@@ -78,6 +78,7 @@ import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 import QRCodeGenerator from "./pages/cooperative/QRCodeGenerator";
 import AdminCarbonApprovals from "./pages/admin/AdminCarbonApprovals";
 import QuotesManagement from "./pages/admin/QuotesManagement";
+import AdminFarmerAssignment from "./pages/admin/AdminFarmerAssignment";
 import CreateCarbonListing from "./pages/rse/CreateCarbonListing";
 import CooperativeNotifications from "./pages/cooperative/Notifications";
 import FieldAgentsPage from "./pages/cooperative/FieldAgentsPage";
@@ -188,6 +189,7 @@ function App() {
               <Route path="/admin/content" element={<ContentManagement />} />
               <Route path="/admin/carbon-approvals" element={<AdminCarbonApprovals />} />
               <Route path="/admin/quotes" element={<QuotesManagement />} />
+              <Route path="/admin/farmer-assignment" element={<AdminFarmerAssignment />} />
 
               {/* Carbon Auditor Routes */}
               <Route path="/auditor/dashboard" element={<AuditorDashboard />} />

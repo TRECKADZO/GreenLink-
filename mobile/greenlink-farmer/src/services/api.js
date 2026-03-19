@@ -3,7 +3,7 @@ import { CONFIG } from '../config';
 
 // Instance axios avec configuration pour faible connectivité
 const axiosInstance = axios.create({
-  baseURL: CONFIG.API_URL,
+  baseURL: CONFIG.API_URL + '/api',
   timeout: CONFIG.REQUEST_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
