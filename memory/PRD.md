@@ -72,14 +72,25 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Aussi corrige: lookups ObjectId inconsistants dans check-agent-phone et activate-agent-account
 - Teste: login telephone OK, login email OK (regression), activation membre OK
 
+### Integration Resend Email (19 Mars 2026)
+- Service email reel configure avec Resend API (cle: re_MfK...)
+- email_service.py reecrit: send_email() synchrone + send_email_async() non-bloquant
+- Templates: password_reset, quote_approved, quote_rejected, account_suspended, account_activated, welcome
+- forgot-password: envoie un vrai email quand l'utilisateur a un email, sinon simulation_code pour telephone
+- Frontend web + mobile mis a jour: affiche "Email envoye" ou "Mode Simulation SMS" selon le cas
+- NOTE: Resend en mode test - emails uniquement vers traore_eric@yahoo.fr. Verifier un domaine pour debloquer
+
 ## Services MOCK
-- Orange Money, Orange SMS, USSD Gateway, Email
-- simulation_code toujours retourne dans forgot-password
+- Orange Money, Orange SMS, USSD Gateway
+- simulation_code retourne uniquement pour comptes telephone (forgot-password)
+- Resend en mode test (emails vers traore_eric@yahoo.fr uniquement)
 
 ## Backlog
 ### P1
+- [ ] Verifier domaine Resend pour debloquer envoi vers tous destinataires
 - [ ] Soumission AAB Google Play Store
-- [ ] Configurer SMTP pour emails reels
+### P1.5
+- [ ] Configurer Orange SMS API (en attente des cles)
 ### P2
 - [ ] Langues Baoule/Dioula
 - [ ] Stockage cloud fichiers
