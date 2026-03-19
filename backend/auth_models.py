@@ -27,6 +27,13 @@ class UserBase(BaseModel):
             raise ValueError('Numéro de téléphone invalide. Format attendu: +225XXXXXXXXXX ou XXXXXXXXXX')
         return v
     
+    @validator('email', pre=True)
+    def clean_empty_email(cls, v):
+        # Convert empty string to None so EmailStr validation passes
+        if isinstance(v, str) and v.strip() == '':
+            return None
+        return v
+    
     @validator('email')
     def validate_contact(cls, v, values):
         # At least one of phone_number or email must be provided

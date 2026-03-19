@@ -886,11 +886,14 @@ async def check_member_phone(phone_number: str):
         }
     
     # Récupérer le nom de la coopérative
-    coop = await db.users.find_one({"_id": ObjectId(member.get("coop_id"))})
-    if not coop:
-        coop_id_str = str(member.get("coop_id"))
-        coop = await db.users.find_one({"_id": ObjectId(coop_id_str)}) if ObjectId.is_valid(coop_id_str) else None
-    coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
+    coop_id_raw = member.get("coop_id")
+    coop = None
+    if coop_id_raw:
+        if isinstance(coop_id_raw, ObjectId):
+            coop = await db.users.find_one({"_id": coop_id_raw})
+        elif ObjectId.is_valid(str(coop_id_raw)):
+            coop = await db.users.find_one({"_id": ObjectId(str(coop_id_raw))})
+    coop_name = (coop.get("coop_name") or coop.get("full_name")) if coop else "Coopérative"
     
     return {
         "found": True,
@@ -939,11 +942,14 @@ async def check_agent_phone(phone_number: str):
         }
     
     # Récupérer le nom de la coopérative
-    coop = await db.users.find_one({"_id": agent.get("coop_id")})
-    if not coop:
-        coop_id_str = str(agent.get("coop_id"))
-        coop = await db.users.find_one({"_id": ObjectId(coop_id_str)}) if ObjectId.is_valid(coop_id_str) else None
-    coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
+    coop_id_raw = agent.get("coop_id")
+    coop = None
+    if coop_id_raw:
+        if isinstance(coop_id_raw, ObjectId):
+            coop = await db.users.find_one({"_id": coop_id_raw})
+        elif ObjectId.is_valid(str(coop_id_raw)):
+            coop = await db.users.find_one({"_id": ObjectId(str(coop_id_raw))})
+    coop_name = (coop.get("coop_name") or coop.get("full_name")) if coop else "Coopérative"
     
     return {
         "found": True,
@@ -987,9 +993,15 @@ async def activate_agent_account(request: AgentActivationRequest):
         )
     
     # Récupérer les infos de la coopérative
-    coop = await db.users.find_one({"_id": agent.get("coop_id")})
-    coop_name = coop.get("coop_name") or coop.get("full_name") if coop else "Coopérative"
-    coop_id = str(agent.get("coop_id"))
+    coop_id_raw = agent.get("coop_id")
+    coop = None
+    if coop_id_raw:
+        if isinstance(coop_id_raw, ObjectId):
+            coop = await db.users.find_one({"_id": coop_id_raw})
+        elif ObjectId.is_valid(str(coop_id_raw)):
+            coop = await db.users.find_one({"_id": ObjectId(str(coop_id_raw))})
+    coop_name = (coop.get("coop_name") or coop.get("full_name")) if coop else "Coopérative"
+    coop_id = str(coop_id_raw) if coop_id_raw else ""
     
     # Créer le compte utilisateur
     hashed_password = get_password_hash(request.password)
