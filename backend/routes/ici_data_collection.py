@@ -335,6 +335,19 @@ async def record_ssrte_visit(
             risk_level=visit.niveau_risque,
             children_working=visit.enfants_observes_travaillant
         ))
+        # Alerte urgente pour visites critique/elevee
+        if visit.niveau_risque in ["eleve", "critique"]:
+            _asyncio.create_task(send_notification_email_async(db, "ssrte_critical_alert",
+                coop_id=coop_id,
+                agent_name=visit_dict.get("agent_name", "Agent"),
+                farmer_name=visit_dict.get("farmer_name", "Producteur"),
+                risk_level=visit.niveau_risque,
+                children_working=visit.enfants_observes_travaillant,
+                dangerous_tasks=visit.taches_dangereuses_observees or [],
+                children_details=[c.dict() if hasattr(c, 'dict') else c for c in (visit.liste_enfants or [])],
+                conditions_vie=getattr(visit, 'conditions_vie', None),
+                observations=getattr(visit, 'observations', None)
+            ))
     except Exception as e:
         import logging
         logging.getLogger(__name__).error(f"SSRTE email notification failed: {e}")

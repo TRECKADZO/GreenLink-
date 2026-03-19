@@ -343,3 +343,154 @@ def send_parcel_verified_notification_email(to_farmer_email, farmer_name, parcel
         {notes_html}
     """
     return send_email(to_farmer_email, subject, _wrap_template(body))
+
+
+def send_ssrte_critical_alert_email(to_email, coop_name, agent_name, farmer_name, risk_level, children_working=0, dangerous_tasks=None, children_details=None, conditions_vie=None, observations=None):
+    """Alerte urgente SSRTE pour visites classees critique ou elevee."""
+    is_critique = risk_level == "critique"
+    severity_label = "CRITIQUE" if is_critique else "ELEVEE"
+    severity_color = "#7f1d1d" if is_critique else "#dc2626"
+    bg_color = "#450a0a" if is_critique else "#7f1d1d"
+
+    subject = f"ALERTE URGENTE SSRTE - Risque {severity_label}: {farmer_name}"
+
+    # Dangerous tasks section
+    tasks_html = ""
+    if dangerous_tasks and len(dangerous_tasks) > 0:
+        task_codes = {
+            "TD1": "Defrichage/abattage d'arbres",
+            "TD2": "Brulis",
+            "TD3": "Application de pesticides/herbicides",
+            "TD4": "Transport de charges lourdes",
+            "TD5": "Utilisation de machette/outils tranchants",
+            "TD6": "Travail en hauteur",
+            "TD7": "Travail de nuit",
+            "TD8": "Exposition produits chimiques",
+            "TD9": "Travaux penibles prolonges",
+        }
+        tasks_list = "".join([f"<li style='color:#991b1b;padding:2px 0;'>{task_codes.get(t, t)}</li>" for t in dangerous_tasks])
+        tasks_html = f"""
+        <div style="background:#fef2f2;border-radius:8px;padding:12px 16px;margin:12px 0;border-left:4px solid #dc2626;">
+          <p style="margin:0 0 6px;color:#991b1b;font-weight:bold;font-size:13px;">Taches dangereuses observees:</p>
+          <ul style="margin:0;padding-left:20px;font-size:13px;">{tasks_list}</ul>
+        </div>"""
+
+    # Children details section
+    children_html = ""
+    if children_details and len(children_details) > 0:
+        rows = ""
+        for child in children_details:
+            scol = "Oui" if child.get("scolarise") else "Non"
+            trav = "OUI" if child.get("travaille_exploitation") else "Non"
+            trav_style = "color:#dc2626;font-weight:bold;" if child.get("travaille_exploitation") else "color:#065f46;"
+            rows += f"""<tr>
+              <td style="padding:4px 8px;border-bottom:1px solid #fecaca;">{child.get('prenom', '-')}</td>
+              <td style="padding:4px 8px;border-bottom:1px solid #fecaca;text-align:center;">{child.get('age', '-')}</td>
+              <td style="padding:4px 8px;border-bottom:1px solid #fecaca;text-align:center;">{child.get('sexe', '-')}</td>
+              <td style="padding:4px 8px;border-bottom:1px solid #fecaca;text-align:center;">{scol}</td>
+              <td style="padding:4px 8px;border-bottom:1px solid #fecaca;text-align:center;{trav_style}">{trav}</td>
+            </tr>"""
+        children_html = f"""
+        <div style="margin:12px 0;">
+          <p style="margin:0 0 6px;color:#991b1b;font-weight:bold;font-size:13px;">Detail des enfants du menage:</p>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:4px;overflow:hidden;">
+            <tr style="background:#fecaca;">
+              <th style="padding:6px 8px;text-align:left;color:#7f1d1d;">Prenom</th>
+              <th style="padding:6px 8px;text-align:center;color:#7f1d1d;">Age</th>
+              <th style="padding:6px 8px;text-align:center;color:#7f1d1d;">Sexe</th>
+              <th style="padding:6px 8px;text-align:center;color:#7f1d1d;">Ecole</th>
+              <th style="padding:6px 8px;text-align:center;color:#7f1d1d;">Travail</th>
+            </tr>
+            {rows}
+          </table>
+        </div>"""
+
+    # Conditions de vie
+    conditions_html = ""
+    if conditions_vie:
+        conditions_html = f"""
+        <div style="background:#fef3c7;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;color:#92400e;">
+          Conditions de vie: <strong>{conditions_vie}</strong>
+        </div>"""
+
+    # Observations
+    obs_html = ""
+    if observations:
+        obs_html = f"""
+        <div style="background:#f8fafc;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;color:#475569;">
+          <strong>Observations:</strong> {observations}
+        </div>"""
+
+    body = f"""
+        <div style="background:{bg_color};border-radius:8px;padding:16px;margin:0 0 16px;text-align:center;">
+          <p style="color:#fecaca;font-size:12px;margin:0 0 4px;text-transform:uppercase;letter-spacing:2px;">Alerte Travail des Enfants</p>
+          <h2 style="color:#fff;margin:0;font-size:22px;">SITUATION {severity_label}</h2>
+          <p style="color:#fca5a5;font-size:14px;margin:8px 0 0;">{children_working} enfant(s) en situation de travail</p>
+        </div>
+
+        <p style="color:#374151;line-height:1.6;">Bonjour <strong>{coop_name}</strong>,</p>
+        <p style="color:#374151;line-height:1.6;">
+          Une visite SSRTE vient d'etre classee <strong style="color:{severity_color};">{severity_label}</strong>.
+          Une action immediate est requise pour garantir la protection des enfants.
+        </p>
+
+        <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin:16px 0;border-left:4px solid #059669;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;width:120px;">Agent:</td><td style="color:#065f46;padding:4px 8px;">{agent_name}</td></tr>
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Producteur:</td><td style="color:#065f46;padding:4px 8px;">{farmer_name}</td></tr>
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Risque:</td><td style="padding:4px 8px;"><span style="color:{severity_color};font-weight:bold;text-transform:uppercase;background:#fef2f2;padding:2px 8px;border-radius:4px;">{severity_label}</span></td></tr>
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Enfants:</td><td style="color:#dc2626;padding:4px 8px;font-weight:bold;">{children_working} en situation de travail</td></tr>
+          </table>
+        </div>
+
+        {tasks_html}
+        {children_html}
+        {conditions_html}
+        {obs_html}
+
+        <div style="background:#fef2f2;border-radius:8px;padding:16px;margin:16px 0;border:2px solid #dc2626;">
+          <p style="margin:0;color:#991b1b;font-weight:bold;font-size:14px;">Actions recommandees:</p>
+          <ol style="color:#991b1b;font-size:13px;padding-left:20px;margin:8px 0 0;">
+            <li>Planifier une visite de suivi dans les 48h</li>
+            <li>Evaluer les mesures de remediation necessaires</li>
+            <li>Contacter la famille pour sensibilisation</li>
+            <li>Documenter le plan d'action dans le systeme</li>
+          </ol>
+        </div>
+
+        <div style="text-align:center;margin:24px 0;">
+          <a href="https://greenlink-agritech.com/login" style="background:#dc2626;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
+            Acceder au tableau de bord
+          </a>
+        </div>
+
+        <p style="color:#6b7280;font-size:11px;text-align:center;">
+          Cet email est genere automatiquement par le systeme SSRTE de GreenLink.
+          Ne pas repondre a cet email.
+        </p>
+    """
+
+    alert_header = f"""
+    <div style="background:#dc2626;padding:24px;text-align:center;">
+      <h1 style="color:#fff;margin:0;font-size:24px;">GreenLink - ALERTE SSRTE</h1>
+      <p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:14px;">Systeme de Suivi et Remediation du Travail des Enfants</p>
+    </div>
+    """
+
+    alert_footer = f"""
+    <div style="background:#fef2f2;padding:16px 24px;text-align:center;border-top:1px solid #fecaca;">
+      <p style="color:#991b1b;font-size:12px;margin:0;font-weight:bold;">GreenLink - Protection de l'enfance dans l'agriculture</p>
+    </div>
+    """
+
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:2px solid #dc2626;">
+      {alert_header}
+      <div style="padding:32px 24px;">
+        {body}
+      </div>
+      {alert_footer}
+    </div>
+    """
+
+    return send_email(to_email, subject, html)

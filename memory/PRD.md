@@ -11,7 +11,7 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ## Fonctionnalites Implementees
 
 ### Recuperation mot de passe telephone (19 Mars 2026)
-- Backend: /api/auth/forgot-password retourne TOUJOURS simulation_code (SMS mocks)
+- Backend: /api/auth/forgot-password retourne simulation_code (SMS mocks)
 - Web + Mobile: affichage code en mode simulation
 
 ### Attribution Admin Globale Agriculteurs-Agents (19 Mars 2026)
@@ -21,13 +21,14 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ### Fix Login Comptes Telephone - EmailStr Vide (19 Mars 2026)
 - Pre-validateur clean_empty_email dans UserBase convertit "" en None
 
-### Notifications Email Automatiques (19 Mars 2026)
-- 8 hooks de notification fire-and-forget via Resend
-- Domaine greenlink-agritech.com verifie
-
 ### Integration Resend Email (19 Mars 2026)
-- email_service.py: send_email() + send_email_async()
+- email_service.py: send_email() + send_email_async() via Resend API
+- Domaine greenlink-agritech.com verifie
 - SENDER_EMAIL: noreply@greenlink-agritech.com
+
+### Notifications Email Automatiques (19 Mars 2026)
+- 8 hooks de notification fire-and-forget
+- notification_email_helper.py: dispatcher centralisé
 
 ### Enrichissement EUDR Dashboard (19 Mars 2026)
 - Cooperative: ReportsPage.jsx - Diligence Raisonnee, Tracabilite, Matrice Risques
@@ -43,12 +44,17 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ### Suppression SSRTE Standalone + Analytics Super Admin (19 Mars 2026)
 - Supprime bouton "Suivi SSRTE" du dashboard cooperative
 - Supprime route /cooperative/ssrte de App.js
-- Logique: SSRTE accessible uniquement via profil agriculteur
-- Nouveau endpoint GET /api/ssrte/dashboard avec living_conditions enrichies (admin-only)
-- Nouveau endpoint GET /api/ssrte/leaderboard (admin-only)
+- SSRTE accessible uniquement via profil agriculteur
+- Nouveaux endpoints admin-only: GET /api/ssrte/dashboard, GET /api/ssrte/leaderboard
 - SSRTEAnalytics.jsx enrichi: KPIs, conditions de vie, acces services, enfants, risques, tendances
-- Conflit de routes corrige (ssrte_analytics.py vs ssrte.py)
-- Tests: Backend OK, Frontend avec donnees reelles
+
+### Alertes Automatiques SSRTE Critiques (19 Mars 2026)
+- Email alerte urgente envoyee automatiquement a la cooperative quand visite classee "critique" ou "elevee"
+- Email contient: header rouge urgent, details enfants (prenom/age/sexe/ecole/travail), taches dangereuses, conditions de vie, observations, actions recommandees
+- Fonction: send_ssrte_critical_alert_email() dans email_service.py
+- Type notification: "ssrte_critical_alert" dans notification_email_helper.py
+- Hook dans ici_data_collection.py: fire-and-forget via asyncio.create_task
+- Teste: critique=alerte envoyee, eleve=alerte envoyee, modere/faible=pas d'alerte
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway

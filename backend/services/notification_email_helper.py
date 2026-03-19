@@ -80,6 +80,7 @@ async def send_notification_email_async(db, notification_type, **kwargs):
         send_new_member_activated_email,
         send_harvest_notification_email,
         send_ssrte_visit_notification_email,
+        send_ssrte_critical_alert_email,
         send_farmer_assigned_notification_email,
         send_parcel_verified_notification_email,
     )
@@ -126,6 +127,23 @@ async def send_notification_email_async(db, notification_type, **kwargs):
                     kwargs.get("children_working", 0)
                 )
                 logger.info(f"[NOTIF] Email visite SSRTE envoye a coop {coop_email}")
+
+        elif notification_type == "ssrte_critical_alert":
+            coop_email, coop_name = await get_coop_email(db, kwargs.get("coop_id"))
+            if coop_email:
+                await asyncio.to_thread(
+                    send_ssrte_critical_alert_email,
+                    coop_email, coop_name,
+                    kwargs.get("agent_name", "Agent"),
+                    kwargs.get("farmer_name", "Producteur"),
+                    kwargs.get("risk_level", "eleve"),
+                    kwargs.get("children_working", 0),
+                    kwargs.get("dangerous_tasks", []),
+                    kwargs.get("children_details", []),
+                    kwargs.get("conditions_vie"),
+                    kwargs.get("observations")
+                )
+                logger.info(f"[NOTIF] ALERTE CRITIQUE SSRTE envoyee a coop {coop_email}")
 
         elif notification_type == "farmer_assigned":
             agent_email, agent_name = await get_agent_email(db, kwargs.get("agent_id"))
