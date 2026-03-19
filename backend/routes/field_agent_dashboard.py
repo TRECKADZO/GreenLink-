@@ -523,3 +523,66 @@ async def log_agent_activity(
         })
     
     return {"success": True, "message": "Activité enregistrée"}
+
+
+@router.post("/geotagged-photos")
+async def save_geotagged_photo(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Enregistrer une photo geolocalisee"""
+    user_id = str(current_user["_id"])
+    
+    photo_doc = {
+        "farmer_id": data.get("farmer_id"),
+        "farmer_name": data.get("farmer_name", ""),
+        "photo_type": data.get("type", "parcelle"),
+        "notes": data.get("notes", ""),
+        "location": data.get("location"),
+        "recorded_by": user_id,
+        "agent_name": current_user.get("full_name", ""),
+        "recorded_at": datetime.utcnow(),
+        "synced": True,
+    }
+    
+    result = await db.geotagged_photos.insert_one(photo_doc)
+    return {
+        "message": "Photo enregistree",
+        "photo_id": str(result.inserted_id),
+    }
+
+
+@router.get("/farmer-parcels/{farmer_id}")
+async def get_farmer_parcels_agent(
+    farmer_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Recuperer les parcelles d'un agriculteur (pour agents terrain)"""
+    parcels = await db.parcels.find(
+        {"$or": [{"member_id": farmer_id}, {"farmer_id": farmer_id}]}, {"_id": 0}
+    ).to_list(100)
+    return {"parcels": parcels}
+
+
+@router.post("/farmer-parcels/{farmer_id}")
+async def add_farmer_parcel_agent(
+    farmer_id: str,
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Declarer une parcelle pour un agriculteur (pour agents terrain)"""
+    parcel_doc = {
+        "member_id": farmer_id,
+        "farmer_id": farmer_id,
+        "village": data.get("village", ""),
+        "area_hectares": data.get("area_hectares", 0),
+        "crop_type": data.get("crop_type", "cacao"),
+        "notes": data.get("notes", ""),
+        "gps_coordinates": data.get("gps_coordinates"),
+        "declared_by": str(current_user["_id"]),
+        "agent_name": current_user.get("full_name", ""),
+        "status": "pending",
+        "created_at": datetime.utcnow(),
+    }
+    result = await db.parcels.insert_one(parcel_doc)
+    return {"message": "Parcelle declaree", "parcel_id": str(result.inserted_id)}

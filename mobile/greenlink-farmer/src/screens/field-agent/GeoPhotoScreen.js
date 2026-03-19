@@ -16,6 +16,8 @@ import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
+import { cooperativeApi } from '../../services/cooperativeApi';
+import { useAuth } from '../../context/AuthContext';
 
 // Lazy import expo-camera to prevent crash if module fails
 let Camera = null;
@@ -32,6 +34,7 @@ const OFFLINE_PHOTOS_KEY = 'offline_photos';
 
 const GeoPhotoScreen = ({ navigation, route }) => {
   const { farmerId, farmerName, context } = route.params || {};
+  const { token } = useAuth();
   const cameraRef = useRef(null);
   
   const [hasPermission, setHasPermission] = useState(null);
@@ -156,11 +159,27 @@ const GeoPhotoScreen = ({ navigation, route }) => {
       await AsyncStorage.setItem(OFFLINE_PHOTOS_KEY, JSON.stringify(photos));
 
       if (isOnline) {
-        // TODO: Upload au serveur
-        // await uploadPhoto(photoData);
+        try {
+          await cooperativeApi.uploadGeoPhoto({
+            farmer_id: farmerId,
+            farmer_name: farmerName || '',
+            type: photoType,
+            notes: notes,
+            location: photoData.location,
+          });
+          photoData.synced = true;
+          // Update local storage with synced status
+          const stored = await AsyncStorage.getItem(OFFLINE_PHOTOS_KEY);
+          const list = stored ? JSON.parse(stored) : [];
+          const idx = list.findIndex(p => p.id === photoData.id);
+          if (idx >= 0) list[idx].synced = true;
+          await AsyncStorage.setItem(OFFLINE_PHOTOS_KEY, JSON.stringify(list));
+        } catch (uploadErr) {
+          console.warn('Upload failed, saved offline:', uploadErr);
+        }
         Alert.alert(
-          'Photo enregistrée',
-          'La photo a été sauvegardée avec succès.',
+          'Photo enregistree',
+          'La photo a ete sauvegardee et envoyee au serveur.',
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
       } else {

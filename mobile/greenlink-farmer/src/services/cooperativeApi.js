@@ -315,7 +315,36 @@ export const cooperativeApi = {
       console.error('Error downloading distribution PDF:', error);
       throw error;
     }
-  }
+  },
+
+  // ============= PARCELS =============
+
+  getParcelDetails: async (token, parcelId) => {
+    const response = await api.get(`/cooperative/parcels/${parcelId}/details`);
+    return response.data;
+  },
+
+  verifyParcel: async (token, parcelId, data) => {
+    const response = await api.put(`/cooperative/parcels/${parcelId}/verify`, data);
+    return response.data;
+  },
+
+  getMemberParcels: async (memberId) => {
+    const response = await api.get(`/cooperative/members/${memberId}/parcels`);
+    return response.data;
+  },
+
+  addMemberParcel: async (memberId, data) => {
+    const response = await api.post(`/cooperative/members/${memberId}/parcels`, data);
+    return response.data;
+  },
+
+  // ============= GEOTAGGED PHOTOS =============
+
+  uploadGeoPhoto: async (photoData) => {
+    const response = await api.post('/field-agent/geotagged-photos', photoData);
+    return response.data;
+  },
 };
 
 export default cooperativeApi;

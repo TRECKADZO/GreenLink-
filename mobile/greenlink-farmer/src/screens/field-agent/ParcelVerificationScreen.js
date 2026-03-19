@@ -1,561 +1,303 @@
-// Écran de vérification des parcelles pour agents terrain
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  ActivityIndicator,
-  RefreshControl,
-  Image,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  TextInput, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
-import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
-import { cooperativeApi } from '../../services/cooperativeApi';
-import { COLORS, FONTS, SPACING } from '../../config';
+import { API_URL } from '../../config';
 
-const STATUS_CONFIG = {
-  pending: { label: 'En attente', color: '#f59e0b', icon: 'time-outline' },
-  verified: { label: 'Vérifié', color: '#10b981', icon: 'checkmark-circle-outline' },
-  rejected: { label: 'Rejeté', color: '#ef4444', icon: 'close-circle-outline' },
-  needs_correction: { label: 'À corriger', color: '#f97316', icon: 'alert-circle-outline' },
-};
+let Location = null;
+try { Location = require('expo-location'); } catch (e) {}
+
+const CROP_TYPES = [
+  { id: 'cacao', label: 'Cacao', icon: 'leaf' },
+  { id: 'cafe', label: 'Cafe', icon: 'cafe' },
+  { id: 'palmier', label: 'Palmier a huile', icon: 'flower' },
+  { id: 'hevea', label: 'Hevea', icon: 'water' },
+  { id: 'maraichage', label: 'Maraichage', icon: 'nutrition' },
+  { id: 'autre', label: 'Autre', icon: 'apps' },
+];
 
 const ParcelVerificationScreen = ({ navigation, route }) => {
-  const { parcelId, parcelData } = route?.params || {};
-  const { user, token } = useAuth();
-  
+  const { farmerId, farmerName, farmerData } = route?.params || {};
+  const { token } = useAuth();
+
   const [loading, setLoading] = useState(true);
+  const [parcels, setParcels] = useState([]);
+  const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [parcel, setParcel] = useState(parcelData || null);
-  const [currentLocation, setCurrentLocation] = useState(null);
-  const [photos, setPhotos] = useState([]);
+  const [location, setLocation] = useState(null);
+
+  // New parcel form
+  const [village, setVillage] = useState('');
+  const [area, setArea] = useState('');
+  const [cropType, setCropType] = useState('cacao');
   const [notes, setNotes] = useState('');
-  const [correctedArea, setCorrectedArea] = useState('');
 
   useEffect(() => {
-    if (parcelId) {
-      fetchParcelDetails();
-    }
-    getCurrentLocation();
-  }, [parcelId]);
+    loadParcels();
+    getLocation();
+  }, []);
 
-  const fetchParcelDetails = async () => {
+  const getLocation = async () => {
+    if (!Location) return;
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        setLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+      }
+    } catch {}
+  };
+
+  const loadParcels = async () => {
     try {
       setLoading(true);
-      const response = await cooperativeApi.getParcelDetails(token, parcelId);
-      if (response.data) {
-        setParcel(response.data);
+      const res = await fetch(`${API_URL}/api/field-agent/farmer-parcels/${farmerId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setParcels(data.parcels || data || []);
       }
-    } catch (error) {
-      console.error('Error fetching parcel:', error);
-      Alert.alert('Erreur', 'Impossible de charger les détails de la parcelle');
+    } catch (e) {
+      console.warn('Load parcels error:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const getCurrentLocation = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission requise', 'Activez la localisation pour vérifier la parcelle');
-        return;
-      }
-      
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High
-      });
-      
-      setCurrentLocation({
-        lat: location.coords.latitude,
-        lng: location.coords.longitude
-      });
-    } catch (error) {
-      console.error('Error getting location:', error);
+  const handleSubmit = async () => {
+    if (!village.trim()) {
+      Alert.alert('Erreur', 'Indiquez le village/lieu de la parcelle');
+      return;
     }
-  };
-
-  const takePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission requise', 'Activez la caméra pour prendre des photos');
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        quality: 0.7,
-        allowsEditing: false,
-        exif: true,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setPhotos([...photos, result.assets[0].uri]);
-      }
-    } catch (error) {
-      console.error('Error taking photo:', error);
-    }
-  };
-
-  const submitVerification = async (status) => {
-    if (!currentLocation) {
-      Alert.alert('GPS requis', 'Veuillez activer votre GPS pour vérifier la parcelle');
+    if (!area || parseFloat(area) <= 0) {
+      Alert.alert('Erreur', 'Indiquez la superficie en hectares');
       return;
     }
 
-    if (status === 'rejected' && !notes) {
-      Alert.alert('Notes requises', 'Veuillez expliquer pourquoi la parcelle est rejetée');
-      return;
-    }
-
+    setSubmitting(true);
     try {
-      setSubmitting(true);
-      
-      const verificationData = {
-        verification_status: status,
-        verification_notes: notes,
-        verified_gps_lat: currentLocation.lat,
-        verified_gps_lng: currentLocation.lng,
-        verification_photos: photos,
-        corrected_area_hectares: correctedArea ? parseFloat(correctedArea) : null
+      const parcelData = {
+        village: village.trim(),
+        area_hectares: parseFloat(area),
+        crop_type: cropType,
+        notes: notes.trim(),
+        gps_coordinates: location || null,
       };
 
-      await cooperativeApi.verifyParcel(token, parcel.id, verificationData);
-      
-      Alert.alert(
-        'Succès',
-        status === 'verified' 
-          ? 'Parcelle vérifiée avec succès!' 
-          : 'Statut de la parcelle mis à jour',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
-    } catch (error) {
-      console.error('Error submitting verification:', error);
-      Alert.alert('Erreur', 'Impossible de soumettre la vérification');
+      const res = await fetch(`${API_URL}/api/field-agent/farmer-parcels/${farmerId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(parcelData),
+      });
+
+      if (res.ok) {
+        Alert.alert('Parcelle declaree', 'La parcelle a ete enregistree avec succes.', [
+          { text: 'OK', onPress: () => { setShowForm(false); resetForm(); loadParcels(); } }
+        ]);
+      } else {
+        const d = await res.json().catch(() => ({}));
+        Alert.alert('Erreur', d.detail || 'Impossible de sauvegarder la parcelle');
+      }
+    } catch {
+      Alert.alert('Erreur', 'Erreur reseau');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const confirmVerification = (status) => {
-    const statusLabel = STATUS_CONFIG[status]?.label || status;
-    Alert.alert(
-      'Confirmer',
-      `Voulez-vous marquer cette parcelle comme "${statusLabel}" ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Confirmer', onPress: () => submitVerification(status) }
-      ]
-    );
+  const resetForm = () => {
+    setVillage('');
+    setArea('');
+    setCropType('cacao');
+    setNotes('');
   };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Chargement...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!parcel) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color={COLORS.danger} />
-          <Text style={styles.errorText}>Parcelle non trouvée</Text>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backButtonText}>Retour</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  const statusConfig = STATUS_CONFIG[parcel.verification_status] || STATUS_CONFIG.pending;
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={22} color="#1e293b" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Vérification Parcelle</Text>
-        <View style={[styles.statusBadge, { backgroundColor: statusConfig.color + '20' }]}>
-          <Ionicons name={statusConfig.icon} size={16} color={statusConfig.color} />
-          <Text style={[styles.statusText, { color: statusConfig.color }]}>
-            {statusConfig.label}
-          </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>Declaration parcelles</Text>
+          <Text style={styles.headerSubtitle}>{farmerName || 'Agriculteur'}</Text>
         </View>
+        {!showForm && (
+          <TouchableOpacity style={styles.addBtn} onPress={() => setShowForm(true)}>
+            <Ionicons name="add" size={20} color="#fff" />
+            <Text style={styles.addBtnText}>Ajouter</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Farmer Info */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Producteur</Text>
-          <View style={styles.infoRow}>
-            <Ionicons name="person-outline" size={20} color={COLORS.textLight} />
-            <Text style={styles.infoText}>{parcel.farmer?.name || 'Inconnu'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="call-outline" size={20} color={COLORS.textLight} />
-            <Text style={styles.infoText}>{parcel.farmer?.phone || '-'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="location-outline" size={20} color={COLORS.textLight} />
-            <Text style={styles.infoText}>{parcel.farmer?.village || parcel.village || '-'}</Text>
-          </View>
-        </View>
-
-        {/* Parcel Info */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Informations Parcelle</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{parcel.area_hectares} ha</Text>
-              <Text style={styles.statLabel}>Superficie</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{parcel.crop_type}</Text>
-              <Text style={styles.statLabel}>Culture</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{parcel.carbon_score}/10</Text>
-              <Text style={styles.statLabel}>Score Carbone</Text>
-            </View>
-          </View>
-          
-          {parcel.gps_coordinates && (
-            <View style={styles.gpsInfo}>
-              <Ionicons name="navigate-outline" size={16} color={COLORS.primary} />
-              <Text style={styles.gpsText}>
-                GPS déclaré: {parcel.gps_coordinates.lat?.toFixed(5)}, {parcel.gps_coordinates.lng?.toFixed(5)}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Current Location */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Votre position actuelle</Text>
-          {currentLocation ? (
-            <View style={styles.gpsInfo}>
-              <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
-              <Text style={styles.gpsText}>
-                {currentLocation.lat.toFixed(5)}, {currentLocation.lng.toFixed(5)}
-              </Text>
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.gpsButton} onPress={getCurrentLocation}>
-              <Ionicons name="locate-outline" size={20} color={COLORS.primary} />
-              <Text style={styles.gpsButtonText}>Obtenir ma position GPS</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Photos */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Photos de vérification</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity style={styles.addPhotoButton} onPress={takePhoto}>
-              <Ionicons name="camera-outline" size={32} color={COLORS.primary} />
-              <Text style={styles.addPhotoText}>Prendre photo</Text>
-            </TouchableOpacity>
-            {photos.map((photo, index) => (
-              <Image key={index} source={{ uri: photo }} style={styles.photoPreview} />
-            ))}
-          </ScrollView>
-          <Text style={styles.photoCount}>{photos.length} photo(s) ajoutée(s)</Text>
-        </View>
-
-        {/* Correction Area */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Correction superficie (optionnel)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Nouvelle superficie en hectares"
-            placeholderTextColor={COLORS.textLight}
-            value={correctedArea}
-            onChangeText={setCorrectedArea}
-            keyboardType="decimal-pad"
-          />
-          <Text style={styles.inputHint}>
-            Laisser vide si la superficie déclarée ({parcel.area_hectares} ha) est correcte
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 40 }}>
+        {/* GPS Info */}
+        <View style={styles.gpsCard}>
+          <Ionicons name="location" size={16} color={location ? '#059669' : '#94a3b8'} />
+          <Text style={[styles.gpsText, { color: location ? '#059669' : '#94a3b8' }]}>
+            {location ? `GPS: ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}` : 'Localisation en cours...'}
           </Text>
         </View>
 
-        {/* Notes */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Notes de vérification</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Observations, remarques..."
-            placeholderTextColor={COLORS.textLight}
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={4}
-          />
-        </View>
+        {/* New Parcel Form */}
+        {showForm && (
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Nouvelle parcelle</Text>
 
-        {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.verifyButton]}
-            onPress={() => confirmVerification('verified')}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="checkmark-circle" size={24} color="#fff" />
-                <Text style={styles.actionButtonText}>Valider la parcelle</Text>
-              </>
-            )}
-          </TouchableOpacity>
+            <Text style={styles.label}>Village / Lieu</Text>
+            <TextInput
+              style={styles.input}
+              value={village}
+              onChangeText={setVillage}
+              placeholder="Ex: Bouafle, Zone Nord"
+              placeholderTextColor="#94a3b8"
+            />
 
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.correctionButton]}
-            onPress={() => confirmVerification('needs_correction')}
-            disabled={submitting}
-          >
-            <Ionicons name="alert-circle" size={24} color="#fff" />
-            <Text style={styles.actionButtonText}>Demander correction</Text>
-          </TouchableOpacity>
+            <Text style={styles.label}>Superficie (hectares)</Text>
+            <TextInput
+              style={styles.input}
+              value={area}
+              onChangeText={setArea}
+              placeholder="Ex: 2.5"
+              keyboardType="decimal-pad"
+              placeholderTextColor="#94a3b8"
+            />
 
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.rejectButton]}
-            onPress={() => confirmVerification('rejected')}
-            disabled={submitting}
-          >
-            <Ionicons name="close-circle" size={24} color="#fff" />
-            <Text style={styles.actionButtonText}>Rejeter</Text>
-          </TouchableOpacity>
-        </View>
+            <Text style={styles.label}>Type de culture</Text>
+            <View style={styles.cropGrid}>
+              {CROP_TYPES.map(c => (
+                <TouchableOpacity
+                  key={c.id}
+                  style={[styles.cropBtn, cropType === c.id && styles.cropBtnActive]}
+                  onPress={() => setCropType(c.id)}
+                >
+                  <Ionicons name={c.icon} size={18} color={cropType === c.id ? '#059669' : '#94a3b8'} />
+                  <Text style={[styles.cropText, cropType === c.id && styles.cropTextActive]}>{c.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-        <View style={{ height: 40 }} />
+            <Text style={styles.label}>Notes</Text>
+            <TextInput
+              style={[styles.input, { height: 60, textAlignVertical: 'top' }]}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Observations..."
+              placeholderTextColor="#94a3b8"
+              multiline
+            />
+
+            <View style={styles.formActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => { setShowForm(false); resetForm(); }}>
+                <Text style={styles.cancelBtnText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={submitting}>
+                {submitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="save" size={18} color="#fff" />
+                    <Text style={styles.submitBtnText}>Enregistrer</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Existing Parcels */}
+        <Text style={styles.sectionTitle}>
+          Parcelles enregistrees ({parcels.length})
+        </Text>
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#059669" style={{ marginTop: 30 }} />
+        ) : parcels.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="map-outline" size={48} color="#cbd5e1" />
+            <Text style={styles.emptyText}>Aucune parcelle declaree</Text>
+            <TouchableOpacity style={styles.emptyCta} onPress={() => setShowForm(true)}>
+              <Text style={styles.emptyCtaText}>Declarer une parcelle</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          parcels.map((p, i) => (
+            <View key={p._id || p.id || i} style={styles.parcelCard}>
+              <View style={styles.parcelHeader}>
+                <Ionicons name="leaf" size={18} color="#059669" />
+                <Text style={styles.parcelVillage}>{p.village || p.location || `Parcelle ${i + 1}`}</Text>
+                <View style={styles.areaBadge}>
+                  <Text style={styles.areaText}>{p.area_hectares || p.area || '?'} ha</Text>
+                </View>
+              </View>
+              <View style={styles.parcelDetails}>
+                <Text style={styles.parcelInfo}>Culture: {p.crop_type || 'cacao'}</Text>
+                {p.gps_coordinates && (
+                  <Text style={styles.parcelGps}>
+                    GPS: {p.gps_coordinates.lat?.toFixed(4)}, {p.gps_coordinates.lng?.toFixed(4)}
+                  </Text>
+                )}
+                {p.carbon_score > 0 && (
+                  <View style={styles.carbonBadge}>
+                    <Ionicons name="leaf" size={12} color="#059669" />
+                    <Text style={styles.carbonText}>Score carbone: {p.carbon_score}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: SPACING.md,
-    color: COLORS.textLight,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SPACING.xl,
-  },
-  errorText: {
-    marginTop: SPACING.md,
-    fontSize: FONTS.sizes.lg,
-    color: COLORS.danger,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerTitle: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.text,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    marginLeft: 4,
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.medium,
-  },
-  content: {
-    flex: 1,
-    padding: SPACING.md,
-  },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  cardTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.text,
-    marginBottom: SPACING.sm,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 4,
-  },
-  infoText: {
-    marginLeft: SPACING.sm,
-    fontSize: FONTS.sizes.md,
-    color: COLORS.text,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: SPACING.sm,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: FONTS.sizes.xl,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.primary,
-  },
-  statLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textLight,
-  },
-  gpsInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: SPACING.sm,
-    padding: SPACING.sm,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 8,
-  },
-  gpsText: {
-    marginLeft: SPACING.sm,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.primary,
-  },
-  gpsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: 8,
-    borderStyle: 'dashed',
-  },
-  gpsButtonText: {
-    marginLeft: SPACING.sm,
-    color: COLORS.primary,
-    fontWeight: FONTS.weights.medium,
-  },
-  addPhotoButton: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: SPACING.sm,
-  },
-  addPhotoText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.primary,
-    marginTop: 4,
-  },
-  photoPreview: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginRight: SPACING.sm,
-  },
-  photoCount: {
-    marginTop: SPACING.sm,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textLight,
-  },
-  input: {
-    backgroundColor: COLORS.background,
-    borderRadius: 8,
-    padding: SPACING.md,
-    fontSize: FONTS.sizes.md,
-    color: COLORS.text,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  inputHint: {
-    marginTop: SPACING.xs,
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textLight,
-  },
-  actionsContainer: {
-    marginTop: SPACING.md,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.md,
-    borderRadius: 12,
-    marginBottom: SPACING.sm,
-  },
-  actionButtonText: {
-    marginLeft: SPACING.sm,
-    color: '#fff',
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-  },
-  verifyButton: {
-    backgroundColor: COLORS.success,
-  },
-  correctionButton: {
-    backgroundColor: '#f97316',
-  },
-  rejectButton: {
-    backgroundColor: COLORS.danger,
-  },
-  backButton: {
-    marginTop: SPACING.lg,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    backgroundColor: COLORS.primary,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontWeight: FONTS.weights.bold,
-  },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  backBtn: { padding: 4 },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1e293b' },
+  headerSubtitle: { fontSize: 12, color: '#64748b' },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#059669', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  addBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  content: { flex: 1, padding: 16 },
+  gpsCard: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, backgroundColor: '#fff', borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+  gpsText: { fontSize: 12, fontWeight: '500' },
+  formCard: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#d1fae5' },
+  formTitle: { fontSize: 16, fontWeight: '700', color: '#1e293b', marginBottom: 12 },
+  label: { fontSize: 12, fontWeight: '600', color: '#475569', marginBottom: 4, marginTop: 10 },
+  input: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 10, fontSize: 14, color: '#1e293b', backgroundColor: '#f8fafc' },
+  cropGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  cropBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#fff' },
+  cropBtnActive: { borderColor: '#059669', backgroundColor: '#ecfdf5' },
+  cropText: { fontSize: 12, color: '#64748b' },
+  cropTextActive: { color: '#059669', fontWeight: '600' },
+  formActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  cancelBtn: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' },
+  cancelBtnText: { color: '#64748b', fontWeight: '600' },
+  submitBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 8, backgroundColor: '#059669' },
+  submitBtnText: { color: '#fff', fontWeight: '700' },
+  sectionTitle: { fontSize: 14, fontWeight: '700', color: '#475569', marginBottom: 10 },
+  emptyState: { alignItems: 'center', paddingVertical: 40 },
+  emptyText: { fontSize: 14, color: '#94a3b8', marginTop: 8 },
+  emptyCta: { marginTop: 12, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#059669', borderRadius: 8 },
+  emptyCtaText: { color: '#fff', fontWeight: '600', fontSize: 13 },
+  parcelCard: { backgroundColor: '#fff', borderRadius: 10, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: '#e2e8f0' },
+  parcelHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  parcelVillage: { flex: 1, fontSize: 14, fontWeight: '600', color: '#1e293b' },
+  areaBadge: { backgroundColor: '#ecfdf5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  areaText: { fontSize: 12, color: '#059669', fontWeight: '600' },
+  parcelDetails: { marginTop: 8, gap: 4 },
+  parcelInfo: { fontSize: 12, color: '#64748b' },
+  parcelGps: { fontSize: 11, color: '#94a3b8' },
+  carbonBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  carbonText: { fontSize: 11, color: '#059669', fontWeight: '500' },
 });
 
 export default ParcelVerificationScreen;
