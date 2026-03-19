@@ -102,12 +102,8 @@ const Navbar = () => {
         { icon: User, label: 'Membres', route: '/cooperative/members' },
         { icon: Package, label: 'Ventes Groupées', route: '/cooperative/lots' },
       ],
-      field_agent: [
-        { icon: Recycle, label: 'Visite SSRTE', route: '/agent/ssrte' },
-      ],
-      agent_terrain: [
-        { icon: Recycle, label: 'Visite SSRTE', route: '/agent/ssrte' },
-      ],
+      field_agent: [],
+      agent_terrain: [],
     };
     return [...common, ...(extras[user.user_type] || [])];
   };
