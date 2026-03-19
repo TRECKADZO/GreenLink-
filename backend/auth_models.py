@@ -3,6 +3,9 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 import re
 
+# NOTE: clean_empty_email pre-validator in UserBase converts empty string emails to None
+# before EmailStr validation. This fixes login for phone-only accounts (P0 bug fix 2026-03-19).
+
 class LegalAcceptance(BaseModel):
     acceptedConditions: bool = False
     acceptedPrivacy: bool = False

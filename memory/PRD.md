@@ -65,6 +65,13 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - APK: https://expo.dev/artifacts/eas/49BprsiA4wLbLNAaLt53X1.apk
 - AAB: https://expo.dev/artifacts/eas/fdeQ3vTafF5mU721kU6yVD.aab
 
+### Fix Login Comptes Telephone - EmailStr Vide (19 Mars 2026)
+- Bug CRITIQUE P0: les comptes crees avec telephone uniquement avaient email="" en base
+- Pydantic EmailStr rejetait la chaine vide -> erreur 500 sur POST /api/auth/login
+- Fix: pre-validateur clean_empty_email dans UserBase convertit "" en None avant validation
+- Aussi corrige: lookups ObjectId inconsistants dans check-agent-phone et activate-agent-account
+- Teste: login telephone OK, login email OK (regression), activation membre OK
+
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway, Email
 - simulation_code toujours retourne dans forgot-password
