@@ -18,14 +18,29 @@ const FarmerProfileScreen = ({ navigation, route }) => {
   const { token } = useAuth();
   const [farmerData, setFarmerData] = useState(farmer);
   const [refreshing, setRefreshing] = useState(false);
+  const [history, setHistory] = useState(null);
+  const [historyTab, setHistoryTab] = useState('ssrte');
+  const [expandedVisit, setExpandedVisit] = useState(null);
 
   // Refresh farmer data on focus
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      if (farmer?.id) refreshFarmerData();
+      if (farmer?.id) {
+        refreshFarmerData();
+        loadHistory();
+      }
     });
     return unsubscribe;
   }, [navigation, farmer]);
+
+  const loadHistory = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/ici-data/farmers/${farmer?.id}/history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setHistory(await res.json());
+    } catch {}
+  };
 
   const refreshFarmerData = async () => {
     try {
@@ -231,6 +246,174 @@ const FarmerProfileScreen = ({ navigation, route }) => {
           </View>
         )}
 
+        {/* ===== HISTORIQUE ICI + SSRTE ===== */}
+        <View style={styles.historySection}>
+          <View style={styles.historyHeader}>
+            <Ionicons name="time" size={18} color="#64748b" />
+            <Text style={styles.historyTitle}>Historique</Text>
+            {history?.ssrte_total > 0 && (
+              <View style={styles.historyBadge}>
+                <Ionicons
+                  name={history.risk_evolution === 'amelioration' ? 'trending-down' : history.risk_evolution === 'degradation' ? 'trending-up' : 'remove'}
+                  size={14}
+                  color={history.risk_evolution === 'amelioration' ? '#059669' : history.risk_evolution === 'degradation' ? '#ef4444' : '#94a3b8'}
+                />
+                <Text style={[styles.historyBadgeText, {
+                  color: history.risk_evolution === 'amelioration' ? '#059669' : history.risk_evolution === 'degradation' ? '#ef4444' : '#94a3b8'
+                }]}>
+                  {history.ssrte_total} visite(s)
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Tabs */}
+          <View style={styles.historyTabs}>
+            <TouchableOpacity
+              style={[styles.historyTab, historyTab === 'ssrte' && styles.historyTabActive]}
+              onPress={() => setHistoryTab('ssrte')}
+            >
+              <Ionicons name="clipboard" size={14} color={historyTab === 'ssrte' ? '#0891b2' : '#94a3b8'} />
+              <Text style={[styles.historyTabText, historyTab === 'ssrte' && { color: '#0891b2' }]}>Visites SSRTE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.historyTab, historyTab === 'ici' && styles.historyTabActive]}
+              onPress={() => setHistoryTab('ici')}
+            >
+              <Ionicons name="document-text" size={14} color={historyTab === 'ici' ? '#7c3aed' : '#94a3b8'} />
+              <Text style={[styles.historyTabText, historyTab === 'ici' && { color: '#7c3aed' }]}>Profil ICI</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* SSRTE Tab */}
+          {historyTab === 'ssrte' && (
+            <View>
+              {history?.ssrte_visits?.length > 0 ? history.ssrte_visits.map(v => {
+                const riskColors = { faible: '#059669', modere: '#f59e0b', eleve: '#f97316', critique: '#ef4444' };
+                const riskLabels = { faible: 'Faible', modere: 'Modere', eleve: 'Eleve', critique: 'Critique' };
+                const isExpanded = expandedVisit === v.id;
+                const taskNames = { TD1: 'Charges lourdes', TD2: 'Outils tranchants', TD3: 'Pesticides', TD4: 'Longues heures', TD5: 'Nuit', TD6: 'Brulage', TD7: 'Grimpee', TD8: 'Transport' };
+                return (
+                  <TouchableOpacity key={v.id} style={styles.visitCard} onPress={() => setExpandedVisit(isExpanded ? null : v.id)} activeOpacity={0.7}>
+                    <View style={styles.visitHeader}>
+                      <View style={[styles.riskDot, { backgroundColor: riskColors[v.niveau_risque] || '#94a3b8' }]} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.visitDate}>{v.date_visite ? new Date(v.date_visite).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</Text>
+                        <Text style={styles.visitAgent}>{v.agent_name || 'Agent'}</Text>
+                      </View>
+                      {v.enfants_observes_travaillant > 0 && (
+                        <View style={styles.childBadge}>
+                          <Ionicons name="people" size={12} color="#ef4444" />
+                          <Text style={styles.childBadgeText}>{v.enfants_observes_travaillant}</Text>
+                        </View>
+                      )}
+                      <View style={[styles.riskBadge, { backgroundColor: (riskColors[v.niveau_risque] || '#94a3b8') + '20', borderColor: (riskColors[v.niveau_risque] || '#94a3b8') + '40' }]}>
+                        <Text style={[styles.riskBadgeText, { color: riskColors[v.niveau_risque] || '#94a3b8' }]}>{riskLabels[v.niveau_risque] || v.niveau_risque}</Text>
+                      </View>
+                      <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#94a3b8" />
+                    </View>
+                    {isExpanded && (
+                      <View style={styles.visitDetails}>
+                        {v.taches_dangereuses_observees?.length > 0 && (
+                          <View style={styles.detailBlock}>
+                            <Text style={styles.detailLabel}>Taches dangereuses</Text>
+                            <View style={styles.tagRow}>
+                              {v.taches_dangereuses_observees.map(t => (
+                                <View key={t} style={styles.tagOrange}><Text style={styles.tagOrangeText}>{taskNames[t] || t}</Text></View>
+                              ))}
+                            </View>
+                          </View>
+                        )}
+                        {v.support_fourni?.length > 0 && (
+                          <View style={styles.detailBlock}>
+                            <Text style={styles.detailLabel}>Support fourni</Text>
+                            <View style={styles.tagRow}>
+                              {v.support_fourni.map(s => (
+                                <View key={s} style={styles.tagGreen}><Text style={styles.tagGreenText}>{s}</Text></View>
+                              ))}
+                            </View>
+                          </View>
+                        )}
+                        {v.recommandations?.length > 0 && (
+                          <View style={styles.detailBlock}>
+                            <Text style={styles.detailLabel}>Recommandations</Text>
+                            {v.recommandations.map((r, i) => (
+                              <Text key={i} style={styles.recoText}>• {r}</Text>
+                            ))}
+                          </View>
+                        )}
+                        {v.visite_suivi_requise && (
+                          <View style={styles.followUpBadge}>
+                            <Ionicons name="alert-circle" size={14} color="#f59e0b" />
+                            <Text style={styles.followUpText}>Suivi requis</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              }) : (
+                <Text style={styles.emptyText}>Aucune visite SSRTE enregistree</Text>
+              )}
+            </View>
+          )}
+
+          {/* ICI Tab */}
+          {historyTab === 'ici' && (
+            <View>
+              {history?.ici_profile ? (
+                <View style={styles.iciCard}>
+                  <View style={styles.iciGrid}>
+                    <View style={[styles.iciStat, { backgroundColor: '#ede9fe' }]}>
+                      <Text style={[styles.iciStatVal, { color: '#7c3aed' }]}>{history.ici_profile.taille_menage || '-'}</Text>
+                      <Text style={styles.iciStatLabel}>Menage</Text>
+                    </View>
+                    <View style={[styles.iciStat, { backgroundColor: '#dbeafe' }]}>
+                      <Text style={[styles.iciStatVal, { color: '#2563eb' }]}>{history.ici_profile.household_children?.total_enfants || 0}</Text>
+                      <Text style={styles.iciStatLabel}>Enfants</Text>
+                    </View>
+                    <View style={[styles.iciStat, { backgroundColor: '#dcfce7' }]}>
+                      <Text style={[styles.iciStatVal, { color: '#16a34a' }]}>{history.ici_profile.household_children?.enfants_scolarises || 0}</Text>
+                      <Text style={styles.iciStatLabel}>Scolarises</Text>
+                    </View>
+                    <View style={[styles.iciStat, {
+                      backgroundColor: (history.ici_profile.household_children?.enfants_travaillant_exploitation || 0) > 0 ? '#fef2f2' : '#ecfdf5'
+                    }]}>
+                      <Text style={[styles.iciStatVal, {
+                        color: (history.ici_profile.household_children?.enfants_travaillant_exploitation || 0) > 0 ? '#ef4444' : '#059669'
+                      }]}>{history.ici_profile.household_children?.enfants_travaillant_exploitation || 0}</Text>
+                      <Text style={styles.iciStatLabel}>Travaillant</Text>
+                    </View>
+                  </View>
+                  {history.ici_profile.household_children?.liste_enfants?.length > 0 && (
+                    <View style={styles.childrenList}>
+                      <Text style={styles.detailLabel}>Enfants enregistres</Text>
+                      {history.ici_profile.household_children.liste_enfants.map((e, i) => (
+                        <View key={i} style={styles.childRow}>
+                          <Text style={styles.childName}>{e.prenom}</Text>
+                          <Text style={styles.childInfo}>{e.sexe} • {e.age} ans</Text>
+                          {e.scolarise && <View style={styles.tagGreenSmall}><Text style={styles.tagGreenSmallText}>Scolarise</Text></View>}
+                          {e.travaille_exploitation && <View style={styles.tagRedSmall}><Text style={styles.tagRedSmallText}>Travaille</Text></View>}
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  <View style={styles.iciInfoRow}>
+                    <Ionicons name={history.ici_profile.formation_securite_recue ? 'shield-checkmark' : 'shield'} size={14} color={history.ici_profile.formation_securite_recue ? '#059669' : '#94a3b8'} />
+                    <Text style={styles.iciInfoText}>Formation securite: {history.ici_profile.formation_securite_recue ? 'Oui' : 'Non'}</Text>
+                  </View>
+                  <View style={styles.iciInfoRow}>
+                    <Ionicons name={history.ici_profile.peut_lire_ecrire ? 'book' : 'book-outline'} size={14} color={history.ici_profile.peut_lire_ecrire ? '#059669' : '#94a3b8'} />
+                    <Text style={styles.iciInfoText}>Alphabetise: {history.ici_profile.peut_lire_ecrire ? 'Oui' : 'Non'}</Text>
+                  </View>
+                </View>
+              ) : (
+                <Text style={styles.emptyText}>Aucun profil ICI enregistre</Text>
+              )}
+            </View>
+          )}
+        </View>
+
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -333,6 +516,70 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16, color: '#64748b', marginTop: 12 },
   backBtn: { marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: '#059669', borderRadius: 8 },
   backBtnText: { color: '#fff', fontWeight: '600' },
+
+  // History Section
+  historySection: {
+    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginTop: 12,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 2,
+  },
+  historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  historyTitle: { fontSize: 15, fontWeight: '700', color: '#1e293b', flex: 1 },
+  historyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  historyBadgeText: { fontSize: 11, fontWeight: '600' },
+  historyTabs: {
+    flexDirection: 'row', backgroundColor: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 12,
+  },
+  historyTab: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 8, borderRadius: 8,
+  },
+  historyTabActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
+  historyTabText: { fontSize: 12, fontWeight: '600', color: '#94a3b8' },
+
+  // SSRTE Visit Cards
+  visitCard: {
+    borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, marginBottom: 8, overflow: 'hidden',
+  },
+  visitHeader: { flexDirection: 'row', alignItems: 'center', padding: 12, gap: 8 },
+  riskDot: { width: 8, height: 8, borderRadius: 4 },
+  visitDate: { fontSize: 13, fontWeight: '600', color: '#1e293b' },
+  visitAgent: { fontSize: 11, color: '#94a3b8' },
+  childBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    borderWidth: 1, borderColor: '#fecaca', backgroundColor: '#fef2f2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
+  },
+  childBadgeText: { fontSize: 10, color: '#ef4444', fontWeight: '600' },
+  riskBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  riskBadgeText: { fontSize: 10, fontWeight: '600' },
+  visitDetails: { paddingHorizontal: 12, paddingBottom: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9', backgroundColor: '#fafafa' },
+  detailBlock: { marginTop: 8 },
+  detailLabel: { fontSize: 10, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  tagOrange: { backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  tagOrangeText: { fontSize: 10, color: '#ea580c' },
+  tagGreen: { backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  tagGreenText: { fontSize: 10, color: '#059669' },
+  recoText: { fontSize: 12, color: '#475569', marginBottom: 2 },
+  followUpBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
+  followUpText: { fontSize: 11, color: '#f59e0b', fontWeight: '600' },
+  emptyText: { textAlign: 'center', color: '#94a3b8', fontSize: 13, paddingVertical: 20, fontStyle: 'italic' },
+
+  // ICI Card
+  iciCard: { gap: 10 },
+  iciGrid: { flexDirection: 'row', gap: 8 },
+  iciStat: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 10 },
+  iciStatVal: { fontSize: 20, fontWeight: '800' },
+  iciStatLabel: { fontSize: 9, color: '#64748b', marginTop: 2 },
+  childrenList: { marginTop: 4 },
+  childRow: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fff', padding: 8, borderRadius: 6, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 4 },
+  childName: { fontSize: 12, fontWeight: '600', color: '#1e293b' },
+  childInfo: { fontSize: 11, color: '#64748b' },
+  tagGreenSmall: { backgroundColor: '#ecfdf5', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 },
+  tagGreenSmallText: { fontSize: 9, color: '#059669', fontWeight: '600' },
+  tagRedSmall: { backgroundColor: '#fef2f2', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 },
+  tagRedSmallText: { fontSize: 9, color: '#ef4444', fontWeight: '600' },
+  iciInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  iciInfoText: { fontSize: 12, color: '#475569' },
 });
 
 export default FarmerProfileScreen;

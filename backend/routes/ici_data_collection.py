@@ -336,6 +336,58 @@ async def get_farmer_ici_profile(
     profile["_id"] = str(profile["_id"])
     return profile
 
+
+@router.get("/farmers/{farmer_id}/history")
+async def get_farmer_history(
+    farmer_id: str,
+    current_user: dict = Depends(get_admin_or_coop_user)
+):
+    """Historique complet ICI + SSRTE d'un agriculteur"""
+    
+    ici_profile = await db.ici_profiles.find_one(
+        {"farmer_id": farmer_id}, {"_id": 0}
+    )
+    
+    ssrte_visits = await db.ssrte_visits.find(
+        {"farmer_id": farmer_id}
+    ).sort("date_visite", -1).to_list(100)
+    
+    visits_list = []
+    for v in ssrte_visits:
+        visits_list.append({
+            "id": str(v["_id"]),
+            "date_visite": v.get("date_visite"),
+            "recorded_at": v.get("recorded_at"),
+            "agent_name": v.get("agent_name", ""),
+            "niveau_risque": v.get("niveau_risque", "faible"),
+            "enfants_observes_travaillant": v.get("enfants_observes_travaillant", 0),
+            "taches_dangereuses_observees": v.get("taches_dangereuses_observees", []),
+            "taches_dangereuses_count": v.get("taches_dangereuses_count", 0),
+            "support_fourni": v.get("support_fourni", []),
+            "recommandations": v.get("recommandations", []),
+            "visite_suivi_requise": v.get("visite_suivi_requise", False),
+            "notes": v.get("notes", ""),
+        })
+    
+    risk_order = {"faible": 0, "modere": 1, "eleve": 2, "critique": 3}
+    risk_evolution = "stable"
+    if len(visits_list) >= 2:
+        latest = risk_order.get(visits_list[0].get("niveau_risque", "faible"), 0)
+        previous = risk_order.get(visits_list[1].get("niveau_risque", "faible"), 0)
+        if latest < previous:
+            risk_evolution = "amelioration"
+        elif latest > previous:
+            risk_evolution = "degradation"
+    
+    return {
+        "farmer_id": farmer_id,
+        "ici_profile": ici_profile,
+        "ssrte_visits": visits_list,
+        "ssrte_total": len(visits_list),
+        "risk_evolution": risk_evolution,
+    }
+
+
 @router.get("/ssrte/visits")
 async def get_ssrte_visits(
     farmer_id: Optional[str] = None,

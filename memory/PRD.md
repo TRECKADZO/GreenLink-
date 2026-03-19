@@ -30,6 +30,12 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - api.js: baseURL = CONFIG.API_URL + '/api'
 - Tous les ecrans utilisent ${API_URL}/api/... de maniere coherente
 
+### Historique ICI + SSRTE dans profil agriculteur (19 Mars 2026)
+- Backend: nouvel endpoint GET /api/ici-data/farmers/{id}/history (ICI profile + SSRTE visits + risk evolution)
+- Web: composant FarmerHistorySection avec onglets SSRTE/ICI, visites expandables, evolution risque
+- Mobile: section historique ajoutee dans FarmerProfileScreen avec memes fonctionnalites
+- Indicateur evolution risque: amelioration/degradation/stable
+
 ### Fix Visite SSRTE ouvre modal specifique (19 Mars 2026)
 - Web: "Visite SSRTE" naviguait vers /agent/ssrte (dashboard generique) au lieu du formulaire
 - Cree SSRTEVisitModal.jsx: modal avec champs observation, taches dangereuses, risque, support, recommandations

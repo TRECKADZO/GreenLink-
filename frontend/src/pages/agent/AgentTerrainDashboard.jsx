@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import Navbar from '../../components/Navbar';
 import ICIProfileModal from '../cooperative/ICIProfileModal';
 import SSRTEVisitModal from '../cooperative/SSRTEVisitModal';
+import FarmerHistorySection from './FarmerHistorySection';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getAuthHeader = () => {
@@ -433,6 +434,9 @@ const AgentTerrainDashboard = () => {
                     );
                   })}
                 </div>
+
+                {/* Historique ICI + SSRTE */}
+                <FarmerHistorySection farmer={selectedFarmer} />
               </div>
             )}
 
