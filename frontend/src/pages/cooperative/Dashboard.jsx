@@ -601,8 +601,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Commission Info - Editable */}
-          <CommissionCard coop_info={coop_info} onUpdated={loadDashboard} />
+          {/* Commission masquee */}
         </div>
 
         {/* Alerts Section */}
