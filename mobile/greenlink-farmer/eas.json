@@ -37,6 +37,17 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://impact-metrics-stage.preview.emergentagent.com"
       }
+    },
+    "production-apk": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "credentialsSource": "remote"
+      },
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://impact-metrics-stage.preview.emergentagent.com"
+      }
     }
   },
   "submit": {
