@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Shield, Users, MapPin, Leaf, Camera, FileText, Baby,
+  Shield, Users, MapPin, Leaf, Camera, FileText,
   Award, UserPlus, Search, Phone, ClipboardCheck, Activity, 
   Target, Star, AlertTriangle, Eye, Loader2, ArrowLeft,
   ChevronRight, User, CheckCircle2, Circle
@@ -28,9 +28,8 @@ const MENU_ITEMS = [
 ];
 
 const FARMER_FORMS = [
-  { id: 'ici', label: 'Visite ICI', desc: 'Fiche famille, enfants, education, pratiques', icon: FileText, color: 'bg-violet-50 text-violet-700 border-violet-200' },
-  { id: 'ssrte', label: 'Visite SSRTE', desc: 'Suivi et remediation travail des enfants', icon: ClipboardCheck, color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
-  { id: 'children', label: 'Suivi travail enfants', desc: 'Documentation des cas identifies', icon: Baby, color: 'bg-red-50 text-red-700 border-red-200' },
+  { id: 'ici', label: 'Fiche ICI', desc: 'Evaluation initiale: famille, enfants, education, pratiques', icon: FileText, color: 'bg-violet-50 text-violet-700 border-violet-200' },
+  { id: 'ssrte', label: 'Visite SSRTE', desc: 'Visite terrain: observation travail enfants, risques, remediation', icon: ClipboardCheck, color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
   { id: 'parcels', label: 'Declaration parcelles', desc: 'GPS, superficie, type de culture', icon: MapPin, color: 'bg-amber-50 text-amber-700 border-amber-200' },
   { id: 'photos', label: 'Photos geolocalisees', desc: 'Photos terrain avec position GPS', icon: Camera, color: 'bg-purple-50 text-purple-700 border-purple-200' },
   { id: 'register', label: 'Enregistrement membre', desc: 'Inscrire ce producteur comme membre', icon: UserPlus, color: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -83,7 +82,7 @@ const AgentTerrainDashboard = () => {
 
   const handleFormAction = (formId) => {
     if (!selectedFarmer) return;
-    if (formId === 'ici' || formId === 'children') {
+    if (formId === 'ici') {
       setShowICIModal(true);
     } else if (formId === 'ssrte') {
       navigate('/agent/ssrte');

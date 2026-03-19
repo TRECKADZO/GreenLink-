@@ -30,6 +30,13 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - api.js: baseURL = CONFIG.API_URL + '/api'
 - Tous les ecrans utilisent ${API_URL}/api/... de maniere coherente
 
+### Suppression doublon "Suivi travail enfants" (19 Mars 2026)
+- Web: Supprime la fiche "Suivi travail enfants" (id=children) qui etait un doublon de Fiche ICI
+- Le handleFormAction ouvrait le meme modal ICI pour les deux
+- Maintenant 5 fiches uniquement: ICI, SSRTE, Parcelles, Photos, Enregistrement
+- Descriptions clarifiees pour distinguer ICI (evaluation initiale) et SSRTE (visite terrain)
+- Mobile: Descriptions aussi mises a jour dans FarmerProfileScreen
+
 ### Fix API_URL Export Mobile - Root Cause (19 Mars 2026)
 - Bug CRITIQUE: config.js n'exportait pas API_URL comme export nomme
 - 11 ecrans importaient { API_URL } et recevaient undefined
