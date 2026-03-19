@@ -21,8 +21,10 @@ async def get_admin_or_coop_user(current_user: dict = Depends(get_current_user))
     return current_user
 
 
-@router.get("/dashboard")
-async def get_ssrte_dashboard(
+# Dashboard endpoint moved to ssrte.py (admin-only with enriched living_conditions data)
+# Kept for backward compatibility with cooperative-level access
+@router.get("/dashboard/cooperative")
+async def get_ssrte_dashboard_coop(
     period: str = Query(default="30d", description="Période: 7d, 30d, 90d, 1y, all"),
     cooperative_id: Optional[str] = None,
     current_user: dict = Depends(get_admin_or_coop_user)
@@ -438,8 +440,9 @@ async def get_farmer_visit_history(
     }
 
 
-@router.get("/leaderboard")
-async def get_ssrte_leaderboard(
+# Leaderboard endpoint moved to ssrte.py (admin-only)
+@router.get("/leaderboard/cooperative")
+async def get_ssrte_leaderboard_coop(
     period: str = "30d",
     current_user: dict = Depends(get_admin_or_coop_user)
 ):
