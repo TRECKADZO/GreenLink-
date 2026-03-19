@@ -30,6 +30,12 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - api.js: baseURL = CONFIG.API_URL + '/api'
 - Tous les ecrans utilisent ${API_URL}/api/... de maniere coherente
 
+### Fix Navigation SSRTE Mobile (19 Mars 2026)
+- Bug: "Visite SSRTE" depuis FarmerProfile ne passait pas farmerData au formulaire
+- Fix FarmerProfileScreen.js: handleOpenForm passe maintenant farmerData: f en plus de farmerId et farmerName
+- Fix SSRTEVisitFormScreen.js: destructure farmerName depuis route.params comme fallback
+- Backend: endpoint POST /api/ici-data/ssrte/visit valide et fonctionnel pour field_agent
+
 ### Build Mobile v1.33.0 (19 Mars 2026)
 - APK: https://expo.dev/artifacts/eas/49BprsiA4wLbLNAaLt53X1.apk
 - AAB: https://expo.dev/artifacts/eas/fdeQ3vTafF5mU721kU6yVD.aab

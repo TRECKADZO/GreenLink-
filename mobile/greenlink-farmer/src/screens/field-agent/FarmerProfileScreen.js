@@ -66,7 +66,7 @@ const FarmerProfileScreen = ({ navigation, route }) => {
   const pctColor = isComplete ? '#059669' : completion.percentage >= 40 ? '#f59e0b' : '#94a3b8';
 
   const handleOpenForm = (form) => {
-    navigation.navigate(form.screen, { farmerId: f.id, farmerName: f.full_name });
+    navigation.navigate(form.screen, { farmerId: f.id, farmerName: f.full_name, farmerData: f });
   };
 
   const completedCount = FORMS.filter(form => formsStatus[form.id]?.completed).length;

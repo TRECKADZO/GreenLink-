@@ -51,14 +51,14 @@ const RISK_LEVELS = [
 ];
 
 const SSRTEVisitFormScreen = ({ navigation, route }) => {
-  const { farmerId: paramFarmerId, farmerData: paramFarmerData } = route.params || {};
+  const { farmerId: paramFarmerId, farmerData: paramFarmerData, farmerName: paramFarmerName } = route.params || {};
   const { user, token } = useAuth();
   
   const [loading, setLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [members, setMembers] = useState([]);
   const [selectedFarmer, setSelectedFarmer] = useState(paramFarmerId || '');
-  const [farmerName, setFarmerName] = useState(paramFarmerData?.full_name || paramFarmerData?.name || '');
+  const [farmerName, setFarmerName] = useState(paramFarmerData?.full_name || paramFarmerData?.name || paramFarmerName || '');
   
   // Form fields
   const [enfantsObserves, setEnfantsObserves] = useState(0);
