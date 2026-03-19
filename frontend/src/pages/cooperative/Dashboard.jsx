@@ -7,12 +7,100 @@ import {
   TrendingUp, FileText, Plus, ChevronRight,
   CheckCircle, Clock, AlertTriangle, Building2,
   ClipboardCheck, Shield, Store, Home, UserCircle,
-  TreePine
+  TreePine, Pencil, Save, X, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+const CommissionCard = ({ coop_info, onUpdated }) => {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [ratePercent, setRatePercent] = useState(((coop_info?.commission_rate || 0.10) * 100).toFixed(0));
+
+  const handleSave = async () => {
+    const val = parseFloat(ratePercent);
+    if (isNaN(val) || val < 0 || val > 100) {
+      toast.error('Le taux doit etre entre 0% et 100%');
+      return;
+    }
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/cooperative/settings/commission-rate`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ commission_rate: val / 100 }),
+      });
+      if (res.ok) {
+        toast.success('Taux de commission mis a jour');
+        setEditing(false);
+        onUpdated?.();
+      } else {
+        const d = await res.json();
+        toast.error(d.detail || 'Erreur');
+      }
+    } catch {
+      toast.error('Erreur reseau');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">Commission</CardTitle>
+          {!editing && (
+            <Button variant="ghost" size="sm" onClick={() => setEditing(true)} data-testid="edit-commission-btn">
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {editing ? (
+          <div className="space-y-3" data-testid="commission-edit-form">
+            <div className="flex items-center justify-center gap-2">
+              <input
+                type="number" min="0" max="100" step="1" value={ratePercent}
+                onChange={e => setRatePercent(e.target.value)}
+                className="w-24 text-3xl font-bold text-center border-b-2 border-green-500 bg-transparent outline-none"
+                data-testid="commission-rate-input"
+              />
+              <span className="text-2xl font-bold text-gray-400">%</span>
+            </div>
+            <div className="flex justify-center gap-2 pt-2">
+              <Button size="sm" variant="outline" onClick={() => { setEditing(false); setRatePercent(((coop_info?.commission_rate || 0.10) * 100).toFixed(0)); }}>
+                <X className="h-3.5 w-3.5 mr-1" />Annuler
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="bg-green-600 hover:bg-green-700" data-testid="save-commission-btn">
+                {saving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center">
+            <p className="text-4xl font-bold text-green-600" data-testid="commission-rate-display">
+              {((coop_info?.commission_rate || 0.10) * 100).toFixed(0)}%
+            </p>
+            <p className="text-sm text-gray-500 mt-1">Taux de commission</p>
+          </div>
+        )}
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <p className="text-xs text-gray-600">
+            Cette commission est prelevee sur les primes carbone avant redistribution aux membres.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -20,20 +108,20 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const data = await cooperativeApi.getDashboard();
-        setDashboardData(data);
-      } catch (error) {
-        console.error('Error fetching dashboard:', error);
-        toast.error('Erreur lors du chargement du dashboard');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadDashboard = async () => {
+    try {
+      const data = await cooperativeApi.getDashboard();
+      setDashboardData(data);
+    } catch (error) {
+      console.error('Error fetching dashboard:', error);
+      toast.error('Erreur lors du chargement du dashboard');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchDashboard();
+  useEffect(() => {
+    loadDashboard();
   }, []);
 
   if (loading) {
@@ -513,25 +601,8 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Commission Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Commission</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <p className="text-4xl font-bold text-green-600">
-                  {((coop_info?.commission_rate || 0.10) * 100).toFixed(0)}%
-                </p>
-                <p className="text-sm text-gray-500 mt-1">Taux de commission</p>
-              </div>
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-600">
-                  Cette commission est prélevée sur les primes carbone avant redistribution aux membres.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Commission Info - Editable */}
+          <CommissionCard coop_info={coop_info} onUpdated={loadDashboard} />
         </div>
 
         {/* Alerts Section */}

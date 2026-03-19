@@ -80,6 +80,26 @@ def coop_id_query(coop_id) -> dict:
         {"cooperative_id": coop_str}
     ]}
 
+
+@router.put("/settings/commission-rate")
+async def update_commission_rate(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mettre a jour le taux de commission de la cooperative"""
+    verify_cooperative(current_user)
+    rate = data.get("commission_rate")
+    if rate is None or not isinstance(rate, (int, float)) or rate < 0 or rate > 1:
+        raise HTTPException(status_code=400, detail="Taux invalide (entre 0 et 1)")
+    
+    coop_id = current_user["_id"]
+    await db.users.update_one(
+        {"_id": ObjectId(coop_id)},
+        {"$set": {"commission_rate": round(float(rate), 4)}}
+    )
+    return {"message": "Taux de commission mis a jour", "commission_rate": round(float(rate), 4)}
+
+
 # ============= DASHBOARD ENDPOINTS =============
 
 @router.get("/dashboard")
