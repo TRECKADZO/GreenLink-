@@ -19,6 +19,7 @@ const ForgotPassword = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [simulationCode, setSimulationCode] = useState(null);
+  const [emailSent, setEmailSent] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -36,7 +37,11 @@ const ForgotPassword = () => {
         identifier: identifier.trim()
       });
       
-      // In simulation mode, show the code for testing
+      // If real email was sent, show confirmation
+      if (response.data.email_sent) {
+        setEmailSent(true);
+      }
+      // In simulation mode (phone users), show the code for testing
       if (response.data.simulation_code) {
         setSimulationCode(response.data.simulation_code);
       }
@@ -173,18 +178,33 @@ const ForgotPassword = () => {
         {/* Step 2: Verify Code */}
         {step === 2 && (
           <form onSubmit={handleVerifyCode} className="space-y-6">
-            {/* Simulation Mode Notice */}
+            {/* Email Sent Confirmation */}
+            {emailSent && !simulationCode && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-green-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-green-800">Email envoye</p>
+                    <p className="text-sm text-green-700 mt-1">
+                      Un code de verification a ete envoye a votre adresse email. Verifiez votre boite de reception.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Simulation Mode Notice (phone users or email failure) */}
             {simulationCode && (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-amber-800">Mode Simulation</p>
+                    <p className="text-sm font-medium text-amber-800">Mode Simulation SMS</p>
                     <p className="text-sm text-amber-700 mt-1">
-                      Votre code de vérification est: <span className="font-bold">{simulationCode}</span>
+                      Votre code de verification est: <span className="font-bold">{simulationCode}</span>
                     </p>
                     <p className="text-xs text-amber-600 mt-1">
-                      En production, ce code sera envoyé par SMS/Email
+                      Les SMS seront actifs quand Orange API sera configuree
                     </p>
                   </div>
                 </div>

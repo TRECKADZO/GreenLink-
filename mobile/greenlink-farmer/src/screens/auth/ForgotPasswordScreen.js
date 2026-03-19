@@ -41,12 +41,15 @@ export default function ForgotPasswordScreen({ navigation }) {
       
       console.log('[ForgotPassword] Response:', response.data);
       
-      // In simulation mode, show the code for testing
+      // If real email was sent
+      if (response.data.email_sent) {
+        Alert.alert('Succes', 'Un code a ete envoye a votre adresse email');
+      }
+      // In simulation mode (phone users), show the code for testing
       if (response.data.simulation_code) {
         setSimulationCode(response.data.simulation_code);
       }
       
-      Alert.alert('Succès', 'Code de réinitialisation envoyé');
       setStep(2);
     } catch (error) {
       console.log('[ForgotPassword] Error:', error);
@@ -198,17 +201,17 @@ export default function ForgotPasswordScreen({ navigation }) {
           {/* Step 2: Verify Code */}
           {step === 2 && (
             <View style={styles.stepContainer}>
-              {/* Simulation Notice */}
+              {/* Simulation Notice (phone users - SMS not yet configured) */}
               {simulationCode && (
                 <View style={styles.simulationBox}>
                   <Ionicons name="information-circle" size={20} color="#FF9800" />
                   <View style={styles.simulationContent}>
-                    <Text style={styles.simulationTitle}>Mode Simulation</Text>
+                    <Text style={styles.simulationTitle}>Mode Simulation SMS</Text>
                     <Text style={styles.simulationText}>
                       Votre code: <Text style={styles.simulationCode}>{simulationCode}</Text>
                     </Text>
                     <Text style={styles.simulationNote}>
-                      En production, envoyé par SMS/Email
+                      Les SMS seront actifs quand Orange API sera configuree
                     </Text>
                   </View>
                 </View>

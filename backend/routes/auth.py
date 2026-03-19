@@ -454,16 +454,38 @@ async def request_password_reset(request: Request, data: PasswordResetRequest):
     # In production: Send SMS or Email
     user_email = user.get("email", "")
     user_phone = user.get("phone_number", "")
+    user_name = user.get("full_name", "Utilisateur")
     
-    logger.info(f"[PASSWORD RESET] Code sent to {user_email or user_phone}")
+    email_sent = False
+    sms_sent = False
     
-    # NOTE: SMS/Email are currently mocked - always show code for now
-    # When real SMS is configured, use SIMULATION_MODE to control this
+    # Send real email if user has an email address
+    if user_email and user_email.strip():
+        try:
+            from services.email_service import send_password_reset_email
+            email_sent = send_password_reset_email(user_email, user_name, reset_code)
+            if email_sent:
+                logger.info(f"[PASSWORD RESET] Email envoye a {user_email}")
+            else:
+                logger.warning(f"[PASSWORD RESET] Echec envoi email a {user_email}")
+        except Exception as e:
+            logger.error(f"[PASSWORD RESET] Erreur envoi email: {e}")
+    
+    # SMS: still mocked (Orange API keys not configured)
+    if user_phone:
+        logger.info(f"[PASSWORD RESET] SMS simule vers {user_phone}")
+    
+    logger.info(f"[PASSWORD RESET] Code genere pour {user_email or user_phone}")
+    
     response = {
         "message": "Si un compte existe avec cet identifiant, un code de réinitialisation a été envoyé",
         "sent": True,
-        "simulation_code": reset_code
+        "email_sent": email_sent,
     }
+    
+    # Include simulation_code only if email was NOT sent (phone-only users or email failure)
+    if not email_sent:
+        response["simulation_code"] = reset_code
     
     return response
 
