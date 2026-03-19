@@ -4,7 +4,7 @@
 export const CONFIG = {
   // API Backend - Uses EXPO_PUBLIC_API_URL from EAS build or falls back to hardcoded URL
   API_URL: process.env.EXPO_PUBLIC_API_URL 
-    || 'https://mobile-bug-sprint.preview.emergentagent.com',
+    || 'https://activation-flow-6.preview.emergentagent.com',
   
   // Timeouts adaptés à la faible connectivité
   REQUEST_TIMEOUT: 30000, // 30 secondes
