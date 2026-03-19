@@ -14,6 +14,7 @@ import { Progress } from '../../components/ui/progress';
 import { toast } from 'sonner';
 import Navbar from '../../components/Navbar';
 import ICIProfileModal from '../cooperative/ICIProfileModal';
+import SSRTEVisitModal from '../cooperative/SSRTEVisitModal';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getAuthHeader = () => {
@@ -54,6 +55,8 @@ const AgentTerrainDashboard = () => {
 
   // ICI Modal
   const [showICIModal, setShowICIModal] = useState(false);
+  // SSRTE Modal
+  const [showSSRTEModal, setShowSSRTEModal] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -85,7 +88,7 @@ const AgentTerrainDashboard = () => {
     if (formId === 'ici') {
       setShowICIModal(true);
     } else if (formId === 'ssrte') {
-      navigate('/agent/ssrte');
+      setShowSSRTEModal(true);
     } else {
       toast.info(`${formId} - Fonctionnalite disponible sur l'application mobile`);
     }
@@ -474,6 +477,8 @@ const AgentTerrainDashboard = () => {
 
       {/* ICI Modal */}
       <ICIProfileModal open={showICIModal} onOpenChange={setShowICIModal} farmer={selectedFarmer} onSaved={() => loadMyFarmers()} />
+      {/* SSRTE Visit Modal */}
+      <SSRTEVisitModal open={showSSRTEModal} onOpenChange={setShowSSRTEModal} farmer={selectedFarmer} onSaved={() => loadMyFarmers()} />
     </div>
   );
 };

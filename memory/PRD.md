@@ -30,6 +30,12 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - api.js: baseURL = CONFIG.API_URL + '/api'
 - Tous les ecrans utilisent ${API_URL}/api/... de maniere coherente
 
+### Fix Visite SSRTE ouvre modal specifique (19 Mars 2026)
+- Web: "Visite SSRTE" naviguait vers /agent/ssrte (dashboard generique) au lieu du formulaire
+- Cree SSRTEVisitModal.jsx: modal avec champs observation, taches dangereuses, risque, support, recommandations
+- Integre dans AgentTerrainDashboard: ouvre le modal pour l'agriculteur selectionne
+- Teste: soumission reussie avec toast "Visite SSRTE enregistree"
+
 ### Suppression doublon "Suivi travail enfants" (19 Mars 2026)
 - Web: Supprime la fiche "Suivi travail enfants" (id=children) qui etait un doublon de Fiche ICI
 - Le handleFormAction ouvrait le meme modal ICI pour les deux
