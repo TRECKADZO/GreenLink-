@@ -28,7 +28,6 @@ import {
   RefreshCcw
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-import FarmerQRCode from '../components/FarmerQRCode';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -566,15 +565,7 @@ const Profile = () => {
                   </div>
                 )}
 
-                {/* QR Code Section for Farmer */}
-                <div className="mt-8 pt-6 border-t border-emerald-200">
-                  <FarmerQRCode 
-                    farmerId={user._id} 
-                    farmerName={user.full_name}
-                    showActions={true}
-                    size={180}
-                  />
-                </div>
+                {/* Informations du compte */}
               </>
             )}
 

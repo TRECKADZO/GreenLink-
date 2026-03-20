@@ -97,11 +97,6 @@ async def get_agent_dashboard(
         "declared_by": user_id
     })
     
-    # QR codes scannés (logs de scans)
-    qr_scans = await db.qr_scan_logs.count_documents({
-        "scanned_by": user_id
-    })
-    
     # Objectifs mensuels (configurable)
     monthly_targets = {
         "visits": 20,
@@ -171,7 +166,6 @@ async def get_agent_dashboard(
                 "target": monthly_targets["photos"],
                 "progress": progress["photos"]
             },
-            "qr_scans": qr_scans,
             "children_identified": children_identified
         },
         "risk_distribution": risk_distribution,
@@ -498,7 +492,7 @@ async def log_agent_activity(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Enregistre une activité de l'agent (scan QR, photo, etc.)
+    Enregistre une activite de l'agent (photo, visite, etc.)
     """
     verify_field_agent(current_user)
     user_id = str(current_user.get('_id'))
@@ -513,14 +507,6 @@ async def log_agent_activity(
     }
     
     await db.agent_activities.insert_one(activity)
-    
-    # Mettre à jour les compteurs si nécessaire
-    if activity_type == "qr_scan":
-        await db.qr_scan_logs.insert_one({
-            "scanned_by": user_id,
-            "scanned_at": datetime.utcnow(),
-            **details
-        })
     
     return {"success": True, "message": "Activité enregistrée"}
 

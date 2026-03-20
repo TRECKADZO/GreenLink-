@@ -1,6 +1,6 @@
 /**
  * FarmerSearchScreen - Recherche de planteur par numéro de téléphone
- * Remplace le QR code comme méthode principale d'identification
+ * Recherche et identification des producteurs
  * Mode offline-first: recherche locale si pas de réseau
  */
 import React, { useState, useEffect, useCallback } from 'react';
