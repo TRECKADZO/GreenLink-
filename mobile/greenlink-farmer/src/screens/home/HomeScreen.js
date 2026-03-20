@@ -186,15 +186,6 @@ const HomeScreen = ({ navigation }) => {
         
         <MenuItem
           number="8"
-          title="Accès USSD/SMS"
-          subtitle="Sans internet *123*45#"
-          icon="📱"
-          onPress={() => navigation.navigate('USSDSimulator')}
-          highlight={true}
-        />
-        
-        <MenuItem
-          number="9"
           title="*144*88# Prime Carbone"
           subtitle="Calculez votre prime en 60s"
           icon="📞"
