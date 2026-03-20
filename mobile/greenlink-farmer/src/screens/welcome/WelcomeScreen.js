@@ -33,51 +33,6 @@ const WelcomeScreen = ({ navigation }) => {
     ]).start();
   }, []);
 
-  const features = [
-    {
-      icon: '🌱',
-      title: 'Audits Carbone Certifiés',
-      description: 'Auditeurs indépendants évaluent vos parcelles pour la certification carbone',
-      badge: 'GreenLink',
-      badgeColor: '#10b981',
-    },
-    {
-      icon: '💰',
-      title: 'Primes Carbone',
-      description: 'Recevez jusqu\'à 60 000 XOF/ha sur Orange Money pour vos bonnes pratiques',
-      badge: 'Nouveau',
-      badgeColor: '#f59e0b',
-    },
-    {
-      icon: '📱',
-      title: 'Accès USSD/SMS',
-      description: 'Consultez vos parcelles et primes sans internet via *144*88#',
-      badge: 'Offline',
-      badgeColor: '#f97316',
-    },
-    {
-      icon: '🛡️',
-      title: 'Conformité SSRTE/ICI',
-      description: 'Outils de monitoring du travail des enfants selon les standards ICI',
-      badge: 'ICI',
-      badgeColor: '#3b82f6',
-    },
-    {
-      icon: '🏆',
-      title: 'Badges Auditeurs',
-      description: 'Gamification pour récompenser les auditeurs : Bronze, Argent, Or',
-      badge: 'Gamification',
-      badgeColor: '#8b5cf6',
-    },
-    {
-      icon: '📊',
-      title: 'Gestion Coopérative',
-      description: 'Dashboard complet: membres, parcelles, primes et rapports EUDR',
-      badge: 'Pro',
-      badgeColor: '#64748b',
-    },
-  ];
-
   const quickStats = [
     { icon: '🛡️', label: 'Conforme EUDR', color: '#3b82f6' },
     { icon: '🌿', label: 'Traçabilité Carbone', color: '#10b981' },
@@ -167,33 +122,6 @@ const WelcomeScreen = ({ navigation }) => {
             >
               <Text style={styles.secondaryButtonText}>J'ai déjà un compte</Text>
             </TouchableOpacity>
-          </View>
-
-          {/* Features Section - Style Web Cards */}
-          <View style={styles.featuresContainer}>
-            <Text style={styles.sectionTitle}>Une plateforme tout-en-un</Text>
-            <Text style={styles.sectionSubtitle}>
-              IA, analytics, vérification carbone et outils professionnels
-            </Text>
-            
-            <View style={styles.featuresGrid}>
-              {features.map((feature, index) => (
-                <View key={index} style={styles.featureCard}>
-                  <View style={styles.featureHeader}>
-                    <View style={styles.featureIconContainer}>
-                      <Text style={styles.featureIcon}>{feature.icon}</Text>
-                    </View>
-                    <View style={[styles.featureBadge, { backgroundColor: feature.badgeColor + '30' }]}>
-                      <Text style={[styles.featureBadgeText, { color: feature.badgeColor }]}>
-                        {feature.badge}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.featureTitle}>{feature.title}</Text>
-                  <Text style={styles.featureDescription}>{feature.description}</Text>
-                </View>
-              ))}
-            </View>
           </View>
 
           {/* User Type Selection */}
