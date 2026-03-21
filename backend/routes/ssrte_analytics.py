@@ -309,7 +309,7 @@ async def get_ssrte_visits(
     
     # Exécuter la requête
     total = await db.ssrte_visits.count_documents(query)
-    visits = await db.ssrte_visits.find(query).sort("date_visite", -1).skip(skip).limit(limit).to_list(limit)
+    visits = await db.ssrte_visits.find(query).sort("recorded_at", -1).skip(skip).limit(limit).to_list(limit)
     
     return {
         "total": total,
@@ -320,15 +320,22 @@ async def get_ssrte_visits(
                 "id": str(v.get("_id")),
                 "farmer_id": v.get("farmer_id"),
                 "farmer_name": v.get("farmer_name"),
+                "member_name": v.get("member_name") or v.get("farmer_name"),
                 "cooperative_id": v.get("cooperative_id"),
-                "date_visite": v.get("date_visite").isoformat() if v.get("date_visite") else None,
+                "date_visite": v.get("date_visite").isoformat() if v.get("date_visite") else (v.get("recorded_at").isoformat() if v.get("recorded_at") else None),
+                "visit_date": v.get("recorded_at") or v.get("date_visite") or v.get("visit_date"),
                 "agent_name": v.get("agent_name"),
                 "niveau_risque": v.get("niveau_risque"),
+                "risk_level": v.get("niveau_risque") or v.get("risk_level", "faible"),
                 "enfants_observes_travaillant": v.get("enfants_observes_travaillant", 0),
+                "children_count": v.get("children_count") or v.get("enfants_observes_travaillant", 0),
+                "children_at_risk": v.get("children_at_risk") or v.get("enfants_observes_travaillant", 0),
+                "household_size": v.get("household_size") or v.get("taille_menage", 0),
                 "taches_dangereuses_observees": v.get("taches_dangereuses_observees", []),
                 "support_fourni": v.get("support_fourni", []),
                 "recommandations": v.get("recommandations", []),
                 "visite_suivi_requise": v.get("visite_suivi_requise", False),
+                "has_cases": v.get("has_cases", v.get("enfants_observes_travaillant", 0) > 0),
                 "notes": v.get("notes"),
                 "photos": v.get("photos", [])
             }
