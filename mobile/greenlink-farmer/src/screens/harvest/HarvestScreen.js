@@ -158,30 +158,34 @@ const HarvestScreen = ({ navigation }) => {
             </View>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {parcels.map((parcel) => (
+              {parcels.map((parcel) => {
+                const parcelId = parcel.id || parcel._id;
+                const isSelected = formData.parcel_id === parcelId;
+                return (
                 <TouchableOpacity
-                  key={parcel._id}
+                  key={parcelId}
                   style={[
                     styles.parcelChip,
-                    formData.parcel_id === parcel._id && styles.parcelChipSelected,
+                    isSelected && styles.parcelChipSelected,
                   ]}
-                  onPress={() => setFormData({ ...formData, parcel_id: parcel._id })}
+                  onPress={() => setFormData({ ...formData, parcel_id: parcelId })}
                 >
                   <Text style={styles.parcelIcon}>🌳</Text>
                   <Text style={[
                     styles.parcelName,
-                    formData.parcel_id === parcel._id && styles.parcelNameSelected,
+                    isSelected && styles.parcelNameSelected,
                   ]}>
-                    {parcel.localisation || parcel.nom || parcel.location}
+                    {parcel.localisation || parcel.village || parcel.nom || parcel.location || 'Parcelle'}
                   </Text>
                   <Text style={[
                     styles.parcelSize,
-                    formData.parcel_id === parcel._id && styles.parcelSizeSelected,
+                    isSelected && styles.parcelSizeSelected,
                   ]}>
                     {parcel.superficie || parcel.area_hectares || parcel.size || 0} ha
                   </Text>
                 </TouchableOpacity>
-              ))}
+                );
+              })}
             </ScrollView>
           )}
         </View>
