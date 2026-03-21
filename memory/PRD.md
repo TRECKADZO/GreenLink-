@@ -22,44 +22,39 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 
 ## Fonctionnalites Implementees
 
-### Session Precedente (19 Mars 2026)
+### Sessions Precedentes
 - Fix login, Integration Resend Email, 8 notifications email
 - Enrichissement EUDR Dashboard + SSRTE
 - Suppression QR Code, Alertes SSRTE critiques
+- Build Mobile v1.36.0 - v1.37.1, Nouvelle icone
+- Fix 5 bugs ICI/SSRTE (genre, taille_menage, sync, compteur, auto-update)
+- Dashboard Progression Agents + page web
+- Refactoring farmer_id / member_id en String
+- Fix Email SSRTE enfants_observes
+- Fix Crash Parcelle mobile + Visibilite my-parcels
+- Fix Dashboard Agent SSRTE Stats auto-update
+- Audit Complet Dashboards (27/27 endpoints)
+- Refactoring cooperative.py en 7 modules
 
-### Build Mobile v1.36.0 - v1.37.1 (20-21 Mars 2026)
-- Nouvelle icone app, builds APK + AAB
+### Verification Parcelles Terrain (21 Mars 2026 - Session actuelle)
+- GET /api/field-agent/parcels-to-verify: Liste des parcelles a verifier par agent
+  - Filtre par fermiers assignes + zone/village de l'agent
+  - Support status_filter (pending, needs_correction, verified, all)
+- PUT /api/field-agent/parcels/{id}/verify: Verification terrain par agent
+  - GPS verifie, notes, photos, surface corrigee
+  - Statuts: verified, rejected, needs_correction
+- Mobile: ParcelVerifyListScreen.js - Liste parcelles a verifier avec onglets statut
+- Mobile: ParcelVerifyFormScreen.js - Formulaire verification (GPS, photos, notes, decision)
+- Navigation: Bouton sur FieldAgentDashboard vers ParcelVerifyList
+- Tests: 16/16 endpoints passes a 100% (iteration 51)
 
-### Correction Bugs ICI/SSRTE (21 Mars 2026)
-- Genre picker, taille_menage, sync croisee, compteur completion, auto-update 5/5
-
-### Dashboard Progression Agents (21 Mars 2026)
-- GET /api/cooperative/agents-progress + page web
-
-### Refactoring farmer_id / member_id (21 Mars 2026)
-- Migration DB, requetes uniformisees
-
-### Fix Email SSRTE enfants_observes (21 Mars 2026)
-- Corrige donnees + auto-sync + validation
-
-### Fix Crash Parcelle + Visibilite (21 Mars 2026)
-- ParcelCreate model elargi pour format mobile
-- my-parcels: recherche via phone_number -> coop_members
-
-### Fix Dashboard Agent SSRTE - Stats auto-update (21 Mars 2026)
-- ssrte.py stats/overview: filtre recorded_by pour agents
-- ssrte_analytics.py visits: filtre $or recorded_by/agent_id
-
-### Audit Complet Dashboards (21 Mars 2026)
-- 27/27 endpoints testes a 100%
-- Fix parcelles membres: requete par member_id + farmer_id
-- Fix carbon-premiums: coop_id_query() pour coherence
-- Bugs corriges: KeyError trees_count, TypeError round(None), KeyError total_producteurs
-
-### Refactoring cooperative.py (21 Mars 2026)
-- Decoupe de 2706 lignes en 7 modules specialises
-- 17/17 endpoints testes OK apres refactoring
-- Aucun changement d'URL, retrocompatibilite totale
+## Flux de Verification Parcelles
+1. Agriculteur ou cooperative declare une parcelle -> status: "pending"
+2. Agent terrain voit la parcelle dans sa liste (filtree par fermiers assignes/zone)
+3. Agent se deplace sur le terrain, ouvre le formulaire de verification
+4. Agent prend le GPS, photos, verifie surface, ajoute notes
+5. Agent decide: Conforme (verified) / A corriger (needs_correction) / Non conforme (rejected)
+6. La parcelle mise a jour est visible dans le dashboard cooperative
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway
