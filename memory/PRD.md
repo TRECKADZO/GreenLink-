@@ -21,36 +21,30 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - Suppression complete QR Code du projet
 
 ### Build Mobile v1.36.0 (20 Mars 2026)
-- Nouvelle icone app GreenLink (logo vert sur fond #2d5a4d)
-- Icones generees: icon.png, adaptive-icon.png, monochrome, splash, favicon
-- Section "Une plateforme tout-en-un" masquee (conformite Google Play metadonnees)
-- versionCode 36, version 1.36.0
-- Build Credentials 3Ses4evueO
+- Nouvelle icone app GreenLink
+- Build APK + AAB via EAS
 
 ### Correction Bugs ICI/SSRTE (21 Mars 2026)
-- Bug 1: Genre picker mobile remplace par boutons tactiles TouchableOpacity
-- Bug 2: taille_menage nettoyee avant envoi backend (parseInt || 1)
-- Bug 3: Sync croisee SSRTE taille_menage vers ICI profile + pre-remplissage
-- Bug 4: Compteur completion corrige (all_possible_ids: member_id + user_id)
-- Bug 5: Auto-update agent_activities quand 5/5 formulaires completes
-- Tests: iteration_48 (19/19 PASS)
+- Bug 1: Genre picker mobile -> boutons tactiles
+- Bug 2: taille_menage nettoyee avant envoi (parseInt || 1)
+- Bug 3: Sync croisee SSRTE -> ICI pour taille_menage
+- Bug 4: Compteur completion corrige (all_possible_ids)
+- Bug 5: Auto-update agent_activities quand 5/5
 
 ### Dashboard Progression Agents (21 Mars 2026)
-- Nouvel endpoint GET /api/cooperative/agents-progress
-- Nouvelle page /cooperative/agents-progress avec:
-  - 4 cartes resume (Agents, Fermiers Assignes, Fermiers 5/5, Progression Moyenne)
-  - Liste agents avec barres de progression
-  - Details expandables par fermier avec badges formulaires (vert/rouge)
-- Bouton "Progression Agents" ajoute au dashboard cooperative
-- Tests: iteration_49 (15/15 PASS)
+- GET /api/cooperative/agents-progress
+- Page /cooperative/agents-progress (cartes resume + details expandables)
+- Bouton "Progression Agents" dans dashboard cooperative
 
 ### Refactoring farmer_id / member_id (21 Mars 2026)
-- Migration DB: parcels.member_id ObjectId -> String (17 docs fixes)
-- Migration DB: ssrte_cases.member_id -> farmer_id (5 docs migres)
-- cooperative.py: Requetes parcelles utilisent string member_id
-- agent_search.py: _get_farmer_parcels() requetes string
-- carbon_auditor.py: lookup member_id avec fallback coop_members
-- Standard: farmer_id = str(coop_members._id) partout comme string
+- Migration DB: parcels.member_id ObjectId -> String
+- Migration DB: ssrte_cases.member_id -> farmer_id
+- Requetes uniformisees dans cooperative.py, agent_search.py, carbon_auditor.py
+
+### Fix Email SSRTE enfants_observes (21 Mars 2026)
+- Corrige donnees KINDA YABRE (0 -> 1 enfant)
+- Auto-sync enfantsObserves depuis liste_enfants (mobile + web)
+- Validation: alerte si risque critique/eleve mais 0 enfant observe
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway
@@ -63,7 +57,7 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ### P2
 - [ ] Langues Baoule/Dioula
 - [ ] Stockage cloud fichiers (S3)
-- [ ] Refactoring cooperative.py (fichier 2600+ lignes)
+- [ ] Refactoring cooperative.py (2600+ lignes)
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo

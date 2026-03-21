@@ -101,6 +101,14 @@ const SSRTEVisitFormScreen = ({ navigation, route }) => {
     setListeEnfants(listeEnfants.filter((_, i) => i !== index));
   };
 
+  // Auto-sync enfantsObserves from liste_enfants children marked as working
+  useEffect(() => {
+    const workingFromList = listeEnfants.filter(e => e.travaille_exploitation).length;
+    if (workingFromList > enfantsObserves) {
+      setEnfantsObserves(workingFromList);
+    }
+  }, [listeEnfants]);
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsOnline(state.isConnected);
@@ -187,6 +195,23 @@ const SSRTEVisitFormScreen = ({ navigation, route }) => {
       return;
     }
 
+    // Validation: warn if risk is high but no children observed working
+    if ((riskLevel === 'eleve' || riskLevel === 'critique') && enfantsObserves === 0) {
+      Alert.alert(
+        'Attention',
+        'Le niveau de risque est ' + riskLevel + ' mais 0 enfant observe en situation de travail. Voulez-vous continuer ?',
+        [
+          { text: 'Corriger', onPress: () => setLoading(false) },
+          { text: 'Continuer quand meme', onPress: () => doSaveVisit() }
+        ]
+      );
+      return;
+    }
+
+    doSaveVisit();
+  };
+
+  const doSaveVisit = async () => {
     const visitData = {
       farmer_id: selectedFarmer,
       farmer_name: farmerName || members.find(m => m._id === selectedFarmer)?.full_name,

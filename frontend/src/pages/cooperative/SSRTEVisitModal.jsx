@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ClipboardCheck, Save, Loader2, AlertTriangle, ShieldCheck, Heart,
   Home, Users, Plus, Trash2
@@ -91,6 +91,14 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
     setListeEnfants(listeEnfants.filter((_, i) => i !== index));
   };
 
+  // Auto-sync enfantsObserves from liste_enfants children marked as working
+  useEffect(() => {
+    const workingFromList = listeEnfants.filter(e => e.travaille_exploitation).length;
+    if (workingFromList > enfantsObserves) {
+      setEnfantsObserves(workingFromList);
+    }
+  }, [listeEnfants]);
+
   const toggleTask = (code) => {
     setSelectedTasks(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]);
   };
@@ -108,6 +116,15 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
   const handleSave = async () => {
     if (!farmer?.id) return;
     if (!tailleMenage) { toast.error('Veuillez renseigner la taille du menage'); return; }
+    
+    // Validation: warn if risk is high but no children observed working
+    if ((riskLevel === 'eleve' || riskLevel === 'critique') && enfantsObserves === 0) {
+      const proceed = window.confirm(
+        `Le niveau de risque est "${riskLevel}" mais 0 enfant observe en situation de travail. Voulez-vous continuer ?`
+      );
+      if (!proceed) return;
+    }
+    
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
