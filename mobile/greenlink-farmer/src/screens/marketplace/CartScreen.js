@@ -109,7 +109,7 @@ const CartScreen = ({ navigation }) => {
       <View style={styles.itemImageContainer}>
         {item.product_image ? (
           <Image
-            source={{ uri: `${CONFIG.API_URL}${item.product_image}` }}
+            source={{ uri: item.product_image?.startsWith('http') ? item.product_image : `${CONFIG.API_URL}${item.product_image}` }}
             style={styles.itemImage}
             resizeMode="cover"
           />

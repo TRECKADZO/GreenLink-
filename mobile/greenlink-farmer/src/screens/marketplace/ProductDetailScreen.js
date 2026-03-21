@@ -135,7 +135,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
         <View style={styles.imageContainer}>
           {product.images?.length > 0 ? (
             <Image
-              source={{ uri: `${CONFIG.API_URL}${product.images[0]}` }}
+              source={{ uri: product.images[0].startsWith('http') ? product.images[0] : `${CONFIG.API_URL}${product.images[0]}` }}
               style={styles.productImage}
               resizeMode="cover"
             />

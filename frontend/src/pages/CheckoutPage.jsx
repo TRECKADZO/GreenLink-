@@ -636,7 +636,7 @@ const CheckoutPage = () => {
                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         {item.product.images?.length > 0 ? (
                           <img 
-                            src={`${process.env.REACT_APP_BACKEND_URL}${item.product.images[0]}`}
+                            src={item.product.images[0]?.startsWith('http') ? item.product.images[0] : `${process.env.REACT_APP_BACKEND_URL}${item.product.images[0]}`}
                             alt={item.product.name}
                             className="w-full h-full object-cover rounded-lg"
                           />

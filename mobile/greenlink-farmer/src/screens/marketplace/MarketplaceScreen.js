@@ -102,7 +102,7 @@ const MarketplaceScreen = ({ navigation }) => {
       <View style={styles.productImageContainer}>
         {item.images?.length > 0 ? (
           <Image
-            source={{ uri: `${CONFIG.API_URL}${item.images[0]}` }}
+            source={{ uri: item.images[0].startsWith('http') ? item.images[0] : `${CONFIG.API_URL}${item.images[0]}` }}
             style={styles.productImage}
             resizeMode="cover"
           />

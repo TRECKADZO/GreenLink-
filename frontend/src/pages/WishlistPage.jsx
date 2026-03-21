@@ -141,7 +141,7 @@ const WishlistPage = () => {
                   <div className="relative h-48 bg-gradient-to-br from-[#2d5a4d]/10 to-[#d4a574]/10 flex items-center justify-center">
                     {item.product.images?.length > 0 ? (
                       <img 
-                        src={`${process.env.REACT_APP_BACKEND_URL}${item.product.images[0]}`}
+                        src={item.product.images[0]?.startsWith('http') ? item.product.images[0] : `${process.env.REACT_APP_BACKEND_URL}${item.product.images[0]}`}
                         alt={item.product.name}
                         className="w-full h-full object-cover"
                       />

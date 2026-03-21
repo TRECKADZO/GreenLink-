@@ -285,7 +285,7 @@ const MarketplacePage = () => {
                     <div className="relative h-48 bg-gradient-to-br from-[#2d5a4d]/10 to-[#d4a574]/10 flex items-center justify-center">
                       {product.images?.length > 0 ? (
                         <img 
-                          src={`${process.env.REACT_APP_BACKEND_URL}${product.images[0]}`}
+                          src={product.images[0]?.startsWith('http') ? product.images[0] : `${process.env.REACT_APP_BACKEND_URL}${product.images[0]}`}
                           alt={product.name}
                           className="w-full h-full object-cover"
                         />
@@ -484,7 +484,7 @@ const ProductDetailModal = ({ product, onClose, onAddToCart, isInWishlist, onTog
               <div className="h-80 bg-gradient-to-br from-[#2d5a4d]/10 to-[#d4a574]/10 rounded-xl flex items-center justify-center">
                 {product.images?.length > 0 ? (
                   <img 
-                    src={`${process.env.REACT_APP_BACKEND_URL}${product.images[0]}`}
+                    src={product.images[0]?.startsWith('http') ? product.images[0] : `${process.env.REACT_APP_BACKEND_URL}${product.images[0]}`}
                     alt={product.name}
                     className="w-full h-full object-cover rounded-xl"
                   />
