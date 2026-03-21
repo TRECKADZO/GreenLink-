@@ -132,6 +132,29 @@ async def register(user_data: UserCreate):
         result = await db.users.insert_one(user_dict)
         user_dict["_id"] = str(result.inserted_id)
         
+        # Link new user to existing coop_member by phone number
+        if user_data.phone_number:
+            phone_variants = normalize_phone(user_data.phone_number)
+            linked_members = await db.coop_members.find(
+                {"phone_number": {"$in": phone_variants}}, {"_id": 1}
+            ).to_list(10)
+            for member in linked_members:
+                member_id_str = str(member["_id"])
+                # Update coop_member with user_id
+                await db.coop_members.update_one(
+                    {"_id": member["_id"]},
+                    {"$set": {"user_id": str(result.inserted_id)}}
+                )
+                # Update parcels farmer_id where it was set to member_id
+                await db.parcels.update_many(
+                    {"$or": [
+                        {"member_id": member_id_str, "farmer_id": member_id_str},
+                        {"member_id": member_id_str, "farmer_id": None}
+                    ]},
+                    {"$set": {"farmer_id": str(result.inserted_id)}}
+                )
+                logger.info(f"[REGISTER] Linked user {result.inserted_id} to coop_member {member_id_str} and updated parcels")
+        
         # Create ICI profile automatically for producers with ICI data
         if user_data.user_type == "producteur" and user_dict.get("ici_profile_complete"):
             from routes.ici_data_collection import get_zone_risk_category
@@ -865,6 +888,18 @@ async def activate_member_account(request: MemberActivationRequest):
             "activation_date": datetime.utcnow()
         }}
     )
+    
+    # Mettre à jour les parcelles existantes avec le user_id
+    member_id_str = str(member["_id"])
+    updated_parcels = await db.parcels.update_many(
+        {"$or": [
+            {"member_id": member_id_str, "farmer_id": member_id_str},
+            {"member_id": member_id_str, "farmer_id": None},
+            {"member_id": member_id_str, "farmer_id": {"$exists": False}}
+        ]},
+        {"$set": {"farmer_id": user_id}}
+    )
+    logger.info(f"[MEMBER ACTIVATION] Updated {updated_parcels.modified_count} parcels with new farmer_id {user_id}")
     
     # Créer l'abonnement gratuit producteur
     from subscription_models import create_subscription_for_user

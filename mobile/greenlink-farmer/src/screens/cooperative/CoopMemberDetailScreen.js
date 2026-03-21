@@ -211,18 +211,18 @@ export default function CoopMemberDetailScreen({ route, navigation }) {
         {/* Stats Summary */}
         <View style={styles.statsCard}>
           <View style={styles.statBox}>
-            <Text style={styles.statBoxValue}>{parcelsData?.total_parcels || 0}</Text>
+            <Text style={styles.statBoxValue}>{parcelsData?.total_parcelles || parcelsData?.total_parcels || 0}</Text>
             <Text style={styles.statBoxLabel}>Parcelles</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
-            <Text style={styles.statBoxValue}>{parcelsData?.total_hectares || 0}</Text>
+            <Text style={styles.statBoxValue}>{parcelsData?.superficie_totale || parcelsData?.total_hectares || 0}</Text>
             <Text style={styles.statBoxLabel}>Hectares</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
-            <Text style={styles.statBoxValue}>{parcelsData?.total_co2 || 0}</Text>
-            <Text style={styles.statBoxLabel}>Tonnes CO₂</Text>
+            <Text style={styles.statBoxValue}>{parcelsData?.co2_total || parcelsData?.total_co2 || 0}</Text>
+            <Text style={styles.statBoxLabel}>Tonnes CO2</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
@@ -242,8 +242,8 @@ export default function CoopMemberDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
-        {parcelsData?.parcels?.length > 0 ? (
-          parcelsData.parcels.map((parcel, index) => (
+        {(parcelsData?.parcelles || parcelsData?.parcels)?.length > 0 ? (
+          (parcelsData.parcelles || parcelsData.parcels).map((parcel, index) => (
             <ParcelCard
               key={parcel.id || index}
               parcel={parcel}

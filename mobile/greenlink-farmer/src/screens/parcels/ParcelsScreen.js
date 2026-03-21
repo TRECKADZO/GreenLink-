@@ -109,10 +109,10 @@ const ParcelsScreen = ({ navigation }) => {
         ) : (
           parcels.map((parcel, index) => (
             <TouchableOpacity 
-              key={parcel._id || index}
+              key={parcel.id || parcel._id || index}
               style={styles.parcelCard}
               onPress={() => Alert.alert(
-                parcel.localisation || parcel.nom || parcel.location || 'Parcelle',
+                parcel.localisation || parcel.village || parcel.nom || parcel.location || 'Parcelle',
                 `Surface: ${parcel.superficie || parcel.area_hectares || 0} ha\nType: ${parcel.type_culture || parcel.crop_type || 'Non défini'}\nScore: ${parcel.score_carbone || parcel.carbon_score || 0}/10`
               )}
             >
@@ -120,7 +120,7 @@ const ParcelsScreen = ({ navigation }) => {
                 <Text style={styles.parcelEmoji}>🌳</Text>
               </View>
               <View style={styles.parcelInfo}>
-                <Text style={styles.parcelLocation}>{parcel.localisation || parcel.nom || parcel.location || 'Parcelle'}</Text>
+                <Text style={styles.parcelLocation}>{parcel.localisation || parcel.village || parcel.nom || parcel.location || 'Parcelle'}</Text>
                 <Text style={styles.parcelDetails}>
                   {parcel.superficie || parcel.area_hectares || 0} ha • {parcel.type_culture || parcel.crop_type || 'Culture mixte'}
                 </Text>

@@ -28,11 +28,11 @@ const MemberCard = ({ member, onPress }) => (
       <View style={styles.memberStats}>
         <View style={styles.statItem}>
           <Ionicons name="map-outline" size={12} color={COLORS.gray} />
-          <Text style={styles.statText}>{member.parcels_count || 0} parcelles</Text>
+          <Text style={styles.statText}>{member.nombre_parcelles || member.parcels_count || 0} parcelles</Text>
         </View>
         <View style={styles.statItem}>
           <Ionicons name="leaf-outline" size={12} color={COLORS.gray} />
-          <Text style={styles.statText}>{member.total_hectares || 0} ha</Text>
+          <Text style={styles.statText}>{member.superficie_totale || member.total_hectares || 0} ha</Text>
         </View>
       </View>
     </View>

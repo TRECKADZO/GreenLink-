@@ -146,16 +146,19 @@ async def declare_parcel(
 @router.get("/parcels/my-parcels")
 async def get_my_parcels(current_user: dict = Depends(get_current_user)):
     """Obtenir mes parcelles (y compris celles enregistrees par un agent)"""
+    from routes.auth import normalize_phone
+    
     user_id = str(current_user["_id"])
     phone = current_user.get("phone_number", "")
     
     # Build list of possible IDs that could be used as farmer_id
     possible_ids = [user_id]
     
-    # Check if this user is linked to any coop_member (by phone number)
+    # Check if this user is linked to any coop_member (by phone number with normalization)
     if phone:
+        phone_variants = normalize_phone(phone)
         linked_members = await db.coop_members.find(
-            {"phone_number": phone}, {"_id": 1}
+            {"phone_number": {"$in": phone_variants}}, {"_id": 1}
         ).to_list(10)
         for m in linked_members:
             possible_ids.append(str(m["_id"]))
@@ -338,14 +341,17 @@ async def request_payment(
 @router.get("/farmer/dashboard")
 async def get_farmer_dashboard(current_user: dict = Depends(get_current_user)):
     """Tableau de bord agriculteur"""
+    from routes.auth import normalize_phone
+    
     user_id = str(current_user["_id"])
     phone = current_user.get("phone_number", "")
     
     # Build list of possible IDs (same logic as my-parcels)
     possible_ids = [user_id]
     if phone:
+        phone_variants = normalize_phone(phone)
         linked_members = await db.coop_members.find(
-            {"phone_number": phone}, {"_id": 1}
+            {"phone_number": {"$in": phone_variants}}, {"_id": 1}
         ).to_list(10)
         for m in linked_members:
             possible_ids.append(str(m["_id"]))
