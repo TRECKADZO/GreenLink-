@@ -4,6 +4,7 @@ import {
   TouchableOpacity, Dimensions, TextInput, ActivityIndicator, Alert, Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Loader } from '../../components/UI';
@@ -65,6 +66,14 @@ const FieldAgentDashboard = ({ navigation }) => {
   }, [token]);
 
   useEffect(() => { fetchDashboard(); fetchMyFarmers(); }, [fetchDashboard, fetchMyFarmers]);
+
+  // Rafraîchir automatiquement quand l'écran revient au focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboard();
+      fetchMyFarmers();
+    }, [])
+  );
 
   const onRefresh = () => { setRefreshing(true); fetchDashboard(); fetchMyFarmers(); };
 

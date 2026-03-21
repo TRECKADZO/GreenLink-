@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useOffline } from '../../context/OfflineContext';
 import { Button, InfoCard, Loader, EmptyState } from '../../components/UI';
 import { farmerApi } from '../../services/api';
@@ -19,9 +20,12 @@ const ParcelsScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadParcels();
-  }, []);
+  // Rafraîchir automatiquement quand l'écran revient au focus
+  useFocusEffect(
+    useCallback(() => {
+      loadParcels();
+    }, [])
+  );
 
   const loadParcels = async () => {
     try {

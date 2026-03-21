@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -6,6 +6,7 @@ import {
   ScrollView,
   RefreshControl,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { MenuItem, InfoCard, NetworkStatus, Loader } from '../../components/UI';
@@ -26,8 +27,16 @@ const HomeScreen = ({ navigation }) => {
       navigation.replace('FieldAgentDashboard');
       return;
     }
-    loadDashboard();
   }, []);
+
+  // Rafraîchir automatiquement quand l'écran revient au focus
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.user_type !== 'field_agent' && user?.user_type !== 'agent_terrain') {
+        loadDashboard();
+      }
+    }, [])
+  );
 
   const loadDashboard = async () => {
     try {
