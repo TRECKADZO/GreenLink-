@@ -284,6 +284,32 @@ async def create_household_visit(
         except Exception as e:
             logger.error(f"[SSRTE] Failed to send push notification: {e}")
         
+        # Stocker notification pour la coopérative
+        try:
+            coop_id = member.get("coop_id") or member.get("cooperative_id")
+            if coop_id:
+                notif_title = "Alerte SSRTE - Visite critique"
+                notif_body = f"{children_at_risk} enfant(s) à risque détecté(s) chez {member.get('full_name', 'un producteur')}. Agent: {current_user.get('full_name', 'N/A')}."
+                
+                await db.notification_history.insert_one({
+                    "user_id": str(coop_id),
+                    "title": notif_title,
+                    "body": notif_body,
+                    "data": {
+                        "type": "ssrte_critical_alert",
+                        "visit_id": str(result.inserted_id),
+                        "farmer_name": member.get("full_name"),
+                        "children_at_risk": children_at_risk,
+                        "screen": "SSRTE"
+                    },
+                    "type": "ssrte_critical_alert",
+                    "read": False,
+                    "created_at": datetime.now(timezone.utc)
+                })
+                logger.info(f"[SSRTE] Notification critique stockée pour coopérative {coop_id}")
+        except Exception as e:
+            logger.error(f"[SSRTE] Failed to store critical notification: {e}")
+        
         # Envoyer une alerte WebSocket temps réel
         try:
             from services.websocket_manager import send_ssrte_high_risk_visit

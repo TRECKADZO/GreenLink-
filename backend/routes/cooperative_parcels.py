@@ -382,6 +382,48 @@ async def verify_parcel(
     except Exception as e:
         logger.error(f"Parcel verification email notification failed: {e}")
     
+    # Notifier le producteur que sa parcelle a été vérifiée
+    try:
+        farmer_id = parcel.get("farmer_id") or str(parcel.get("member_id", ""))
+        status_label = "vérifiée" if verification.verification_status == "verified" else "rejetée"
+        notif_title = f"Parcelle {status_label}"
+        notif_body = f"Votre parcelle à {parcel.get('location', parcel.get('village', 'N/A'))} ({parcel.get('area_hectares', 0)} ha) a été {status_label} par {current_user.get('full_name', 'un agent')}."
+        if verification.verification_notes:
+            notif_body += f" Notes: {verification.verification_notes}"
+        
+        # Stocker pour le producteur
+        await db.notification_history.insert_one({
+            "user_id": farmer_id,
+            "title": notif_title,
+            "body": notif_body,
+            "data": {
+                "type": "parcel_verified",
+                "parcel_id": parcel_id,
+                "status": verification.verification_status,
+                "screen": "Parcels"
+            },
+            "type": "parcel_verified",
+            "read": False,
+            "created_at": datetime.utcnow()
+        })
+        
+        # Push au producteur s'il a un token
+        from services.push_notifications import push_service
+        farmer_user = await db.users.find_one({"_id": ObjectId(farmer_id)}) if farmer_id else None
+        if not farmer_user and member:
+            farmer_user = await db.users.find_one({"phone_number": member.get("phone_number")})
+        if farmer_user and farmer_user.get("push_token"):
+            await push_service.send_push_notification(
+                tokens=[farmer_user["push_token"]],
+                title=notif_title,
+                body=notif_body,
+                data={"type": "parcel_verified", "parcel_id": parcel_id, "screen": "Parcels"},
+                priority="high"
+            )
+        logger.info(f"Notification parcelle vérifiée envoyée à {farmer_id}")
+    except Exception as e:
+        logger.warning(f"Notification vérification parcelle échouée: {e}")
+    
     return {
         "message": f"Parcelle {'vérifiée' if verification.verification_status == 'verified' else 'mise à jour'}",
         "parcelle_id": parcel_id,

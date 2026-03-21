@@ -396,6 +396,41 @@ async def process_premium_payment(
     except Exception as e:
         logger.error(f"SMS error: {e}")
     
+    # Notification push au producteur
+    try:
+        farmer_user_id = member.get("user_id")
+        if farmer_user_id:
+            notif_title = "Prime carbone reçue"
+            notif_body = f"Félicitations! Votre prime de {round(total_premium):,} XOF pour {round(total_area, 1)} ha a été envoyée. Ref: {payment_ref}"
+            
+            await db.notification_history.insert_one({
+                "user_id": farmer_user_id,
+                "title": notif_title,
+                "body": notif_body,
+                "data": {
+                    "type": "payment_received",
+                    "payment_id": str(result.inserted_id),
+                    "amount": round(total_premium),
+                    "screen": "Payments"
+                },
+                "type": "payment_received",
+                "read": False,
+                "created_at": datetime.now(timezone.utc)
+            })
+            
+            from services.push_notifications import push_service
+            farmer_user = await db.users.find_one({"_id": ObjectId(farmer_user_id)})
+            if farmer_user and farmer_user.get("push_token"):
+                await push_service.send_push_notification(
+                    tokens=[farmer_user["push_token"]],
+                    title=notif_title,
+                    body=notif_body,
+                    data={"type": "payment_received", "payment_id": str(result.inserted_id), "screen": "Payments"},
+                    priority="high"
+                )
+    except Exception as e:
+        logger.error(f"Notification paiement échouée: {e}")
+    
     return {
         "payment_id": str(result.inserted_id),
         "payment_ref": payment_ref,

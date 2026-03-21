@@ -90,16 +90,50 @@ const NotificationsScreen = ({ navigation }) => {
 
   const getIcon = (type) => {
     switch (type) {
+      case 'payment_received':
       case 'payment': return { name: 'wallet', color: '#10b981' };
-      case 'carbon': return { name: 'leaf', color: '#22c55e' };
+      case 'carbon': 
+      case 'carbon_update': return { name: 'leaf', color: '#22c55e' };
+      case 'new_parcel_to_verify': return { name: 'map', color: '#3b82f6' };
+      case 'parcel_verified': return { name: 'checkmark-circle', color: '#059669' };
       case 'parcel': return { name: 'map', color: '#3b82f6' };
       case 'harvest': return { name: 'basket', color: '#f59e0b' };
+      case 'ssrte_critical_alert': return { name: 'alert-circle', color: '#ef4444' };
       case 'alert': return { name: 'warning', color: '#ef4444' };
       case 'ssrte': return { name: 'alert-circle', color: '#f97316' };
       case 'welcome': return { name: 'happy', color: '#8b5cf6' };
       case 'tutorial': return { name: 'book', color: '#06b6d4' };
       case 'message': return { name: 'chatbubble', color: '#6366f1' };
       default: return { name: 'notifications', color: '#64748b' };
+    }
+  };
+
+  const handleNotificationPress = (notification) => {
+    if (!notification.read) {
+      markAsRead(notification._id);
+    }
+    
+    const data = notification.data || {};
+    const screen = data.screen;
+    
+    switch (notification.type || data.type) {
+      case 'new_parcel_to_verify':
+        navigation.navigate('ParcelVerifyList');
+        break;
+      case 'parcel_verified':
+        navigation.navigate('Parcels');
+        break;
+      case 'payment_received':
+        navigation.navigate('Payments');
+        break;
+      case 'ssrte_critical_alert':
+        navigation.navigate('SSRTEDashboard');
+        break;
+      default:
+        if (screen) {
+          try { navigation.navigate(screen); } catch(e) {}
+        }
+        break;
     }
   };
 
@@ -122,6 +156,9 @@ const NotificationsScreen = ({ navigation }) => {
   const filteredNotifications = notifications.filter(n => {
     if (filter === 'all') return true;
     if (filter === 'unread') return !n.read;
+    if (filter === 'parcelles') return ['new_parcel_to_verify', 'parcel_verified', 'parcel'].includes(n.type);
+    if (filter === 'paiements') return ['payment_received', 'payment'].includes(n.type);
+    if (filter === 'alertes') return ['ssrte_critical_alert', 'alert', 'ssrte'].includes(n.type);
     return n.type === filter;
   });
 
@@ -172,9 +209,9 @@ const NotificationsScreen = ({ navigation }) => {
           {[
             { key: 'all', label: 'Toutes', count: notifications.length },
             { key: 'unread', label: 'Non lues', count: unreadCount },
-            { key: 'payment', label: 'Paiements', icon: 'wallet' },
-            { key: 'carbon', label: 'Carbone', icon: 'leaf' },
-            { key: 'alert', label: 'Alertes', icon: 'warning' },
+            { key: 'parcelles', label: 'Parcelles', icon: 'map' },
+            { key: 'paiements', label: 'Paiements', icon: 'wallet' },
+            { key: 'alertes', label: 'Alertes', icon: 'warning' },
           ].map(item => (
             <TouchableOpacity
               key={item.key}
@@ -248,7 +285,7 @@ const NotificationsScreen = ({ navigation }) => {
                   styles.notificationCard,
                   !notification.read && styles.notificationUnread,
                 ]}
-                onPress={() => markAsRead(notification._id)}
+                onPress={() => handleNotificationPress(notification)}
                 activeOpacity={0.7}
               >
                 <View style={[

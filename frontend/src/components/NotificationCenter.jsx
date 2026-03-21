@@ -8,9 +8,13 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getNotifIcon = (type) => {
   switch (type) {
     case 'new_parcel_to_verify':
-      return <MapPin className="h-4 w-4 text-green-500" />;
-    case 'ssrte_alert':
+      return <MapPin className="h-4 w-4 text-blue-500" />;
+    case 'parcel_verified':
+      return <Check className="h-4 w-4 text-green-600" />;
+    case 'ssrte_critical_alert':
       return <AlertTriangle className="h-4 w-4 text-red-500" />;
+    case 'payment_received':
+      return <Leaf className="h-4 w-4 text-emerald-500" />;
     case 'carbon_update':
       return <Leaf className="h-4 w-4 text-emerald-500" />;
     default:
