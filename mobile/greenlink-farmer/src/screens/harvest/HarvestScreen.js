@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useOffline } from '../../context/OfflineContext';
 import { Button, Loader } from '../../components/UI';
 import { farmerApi } from '../../services/api';
@@ -38,9 +39,11 @@ const HarvestScreen = ({ navigation }) => {
     { id: 'poor', label: 'Faible', icon: '👎' },
   ];
 
-  useEffect(() => {
-    loadParcels();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadParcels();
+    }, [])
+  );
 
   const loadParcels = async () => {
     try {
@@ -169,13 +172,13 @@ const HarvestScreen = ({ navigation }) => {
                     styles.parcelName,
                     formData.parcel_id === parcel._id && styles.parcelNameSelected,
                   ]}>
-                    {parcel.location}
+                    {parcel.localisation || parcel.nom || parcel.location}
                   </Text>
                   <Text style={[
                     styles.parcelSize,
                     formData.parcel_id === parcel._id && styles.parcelSizeSelected,
                   ]}>
-                    {parcel.area_hectares || parcel.size || 0} ha
+                    {parcel.superficie || parcel.area_hectares || parcel.size || 0} ha
                   </Text>
                 </TouchableOpacity>
               ))}
