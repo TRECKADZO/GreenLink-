@@ -234,11 +234,11 @@ const FarmerProfileScreen = ({ navigation, route }) => {
                 <Ionicons name="leaf" size={16} color="#059669" />
                 <View style={{ flex: 1, marginLeft: 8 }}>
                   <Text style={styles.parcelName}>{p.village || p.location || 'Parcelle ' + (i + 1)}</Text>
-                  <Text style={styles.parcelInfo}>{p.area_hectares} ha - {p.crop_type || 'cacao'}</Text>
+                  <Text style={styles.parcelInfo}>{p.superficie || p.area_hectares} ha - {p.type_culture || p.crop_type || 'cacao'}</Text>
                 </View>
-                {p.carbon_score > 0 && (
+                {(p.score_carbone || p.carbon_score) > 0 && (
                   <View style={styles.carbonBadge}>
-                    <Text style={styles.carbonText}>C:{p.carbon_score}</Text>
+                    <Text style={styles.carbonText}>C:{p.score_carbone || p.carbon_score}</Text>
                   </View>
                 )}
               </View>

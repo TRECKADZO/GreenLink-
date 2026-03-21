@@ -150,7 +150,7 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>Verification terrain</Text>
-          <Text style={styles.headerSub}>{parcel.farmer_name}</Text>
+          <Text style={styles.headerSub}>{parcel.nom_producteur}</Text>
         </View>
       </View>
 
@@ -162,7 +162,7 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
             <View style={styles.infoItem}>
               <Ionicons name="person-outline" size={16} color="#64748b" />
               <Text style={styles.infoLabel}>Agriculteur</Text>
-              <Text style={styles.infoValue}>{parcel.farmer_name}</Text>
+              <Text style={styles.infoValue}>{parcel.nom_producteur}</Text>
             </View>
             <View style={styles.infoItem}>
               <Ionicons name="location-outline" size={16} color="#64748b" />
@@ -174,19 +174,19 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
             <View style={styles.infoItem}>
               <Ionicons name="resize-outline" size={16} color="#64748b" />
               <Text style={styles.infoLabel}>Surface declaree</Text>
-              <Text style={styles.infoValue}>{parcel.area_hectares} ha</Text>
+              <Text style={styles.infoValue}>{parcel.superficie} ha</Text>
             </View>
             <View style={styles.infoItem}>
               <Ionicons name="leaf-outline" size={16} color="#64748b" />
               <Text style={styles.infoLabel}>Culture</Text>
-              <Text style={styles.infoValue}>{parcel.crop_type || 'cacao'}</Text>
+              <Text style={styles.infoValue}>{parcel.type_culture || 'cacao'}</Text>
             </View>
           </View>
-          {parcel.gps_coordinates && (
+          {parcel.coordonnees_gps && (
             <View style={styles.gpsExisting}>
               <Ionicons name="navigate" size={14} color="#6366f1" />
               <Text style={styles.gpsExistingText}>
-                GPS declare: {parcel.gps_coordinates.lat?.toFixed(5)}, {parcel.gps_coordinates.lng?.toFixed(5)}
+                GPS declare: {parcel.coordonnees_gps.lat?.toFixed(5)}, {parcel.coordonnees_gps.lng?.toFixed(5)}
               </Text>
             </View>
           )}
@@ -237,7 +237,7 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
               style={styles.input}
               value={correctedArea}
               onChangeText={setCorrectedArea}
-              placeholder={`Declaree: ${parcel.area_hectares} ha`}
+              placeholder={`Declaree: ${parcel.superficie} ha`}
               keyboardType="decimal-pad"
               placeholderTextColor="#94a3b8"
             />

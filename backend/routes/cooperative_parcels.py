@@ -127,26 +127,26 @@ async def get_member_parcels(
     parcels = await db.parcels.find({"$or": parcel_or}).to_list(100)
     
     return {
-        "member_id": member_id,
-        "member_name": member.get("full_name", ""),
-        "total_parcels": len(parcels),
-        "total_hectares": round(sum(p.get("area_hectares", 0) for p in parcels), 2),
-        "total_co2": round(sum(p.get("co2_captured_tonnes", 0) for p in parcels), 2),
-        "average_carbon_score": round(sum(p.get("carbon_score", 0) for p in parcels) / max(len(parcels), 1), 1),
-        "parcels": [{
+        "membre_id": member_id,
+        "nom_membre": member.get("full_name", ""),
+        "total_parcelles": len(parcels),
+        "superficie_totale": round(sum(p.get("area_hectares", 0) for p in parcels), 2),
+        "co2_total": round(sum(p.get("co2_captured_tonnes", 0) for p in parcels), 2),
+        "score_carbone_moyen": round(sum(p.get("carbon_score", 0) for p in parcels) / max(len(parcels), 1), 1),
+        "parcelles": [{
             "id": str(p["_id"]),
-            "location": p.get("location", ""),
+            "localisation": p.get("location", ""),
             "village": p.get("village", ""),
-            "area_hectares": p.get("area_hectares", 0),
-            "crop_type": p.get("crop_type", "cacao"),
-            "carbon_score": p.get("carbon_score", 0),
-            "co2_captured_tonnes": p.get("co2_captured_tonnes", 0),
+            "superficie": p.get("area_hectares", 0),
+            "type_culture": p.get("crop_type", "cacao"),
+            "score_carbone": p.get("carbon_score", 0),
+            "co2_capture": p.get("co2_captured_tonnes", 0),
             "certification": p.get("certification"),
-            "gps_coordinates": p.get("gps_coordinates"),
-            "verification_status": p.get("verification_status", "pending"),
-            "verified_at": p.get("verified_at"),
-            "verified_by": p.get("verified_by"),
-            "created_at": p.get("created_at", "")
+            "coordonnees_gps": p.get("gps_coordinates"),
+            "statut_verification": p.get("verification_status", "pending"),
+            "verifie_le": p.get("verified_at"),
+            "verifie_par": p.get("verified_by"),
+            "cree_le": p.get("created_at", "")
         } for p in parcels]
     }
 
@@ -215,21 +215,21 @@ async def get_parcels_pending_verification(
                 pass
         result.append({
             "id": str(p["_id"]),
-            "farmer_id": p.get("farmer_id", ""),
-            "farmer_name": member.get("full_name", "Inconnu") if member else "Inconnu",
-            "farmer_phone": member.get("phone_number", "") if member else "",
-            "location": p.get("location", ""),
+            "producteur_id": p.get("farmer_id", ""),
+            "nom_producteur": member.get("full_name", "Inconnu") if member else "Inconnu",
+            "telephone_producteur": member.get("phone_number", "") if member else "",
+            "localisation": p.get("location", ""),
             "village": p.get("village", ""),
-            "area_hectares": p.get("area_hectares", 0),
-            "crop_type": p.get("crop_type", "cacao"),
-            "gps_coordinates": p.get("gps_coordinates"),
-            "verification_status": p.get("verification_status", "pending"),
-            "created_at": p.get("created_at", "")
+            "superficie": p.get("area_hectares", 0),
+            "type_culture": p.get("crop_type", "cacao"),
+            "coordonnees_gps": p.get("gps_coordinates"),
+            "statut_verification": p.get("verification_status", "pending"),
+            "cree_le": p.get("created_at", "")
         })
     
     return {
-        "total_pending": len(result),
-        "parcels": result
+        "total_en_attente": len(result),
+        "parcelles": result
     }
 
 @router.get("/parcels/all")
@@ -281,26 +281,26 @@ async def get_all_coop_parcels(
                 pass
         result.append({
             "id": str(p["_id"]),
-            "farmer_id": p.get("farmer_id", ""),
-            "farmer_name": member.get("full_name", "Inconnu") if member else "Inconnu",
-            "farmer_phone": member.get("phone_number", "") if member else "",
-            "location": p.get("location", ""),
+            "producteur_id": p.get("farmer_id", ""),
+            "nom_producteur": member.get("full_name", "Inconnu") if member else "Inconnu",
+            "telephone_producteur": member.get("phone_number", "") if member else "",
+            "localisation": p.get("location", ""),
             "village": p.get("village", ""),
-            "area_hectares": p.get("area_hectares", 0),
-            "crop_type": p.get("crop_type", "cacao"),
-            "carbon_score": p.get("carbon_score", 0),
-            "gps_coordinates": p.get("gps_coordinates"),
-            "verification_status": p.get("verification_status", "pending"),
-            "verified_at": p.get("verified_at"),
-            "verified_by": p.get("verified_by"),
-            "verification_notes": p.get("verification_notes"),
-            "created_at": p.get("created_at", "")
+            "superficie": p.get("area_hectares", 0),
+            "type_culture": p.get("crop_type", "cacao"),
+            "score_carbone": p.get("carbon_score", 0),
+            "coordonnees_gps": p.get("gps_coordinates"),
+            "statut_verification": p.get("verification_status", "pending"),
+            "verifie_le": p.get("verified_at"),
+            "verifie_par": p.get("verified_by"),
+            "notes_verification": p.get("verification_notes"),
+            "cree_le": p.get("created_at", "")
         })
     
     return {
         "total": len(result),
-        "status_counts": status_counts,
-        "parcels": result
+        "compteurs_statut": status_counts,
+        "parcelles": result
     }
 
 @router.put("/parcels/{parcel_id}/verify")
@@ -364,10 +364,10 @@ async def verify_parcel(
     
     return {
         "message": f"Parcelle {'vérifiée' if verification.verification_status == 'verified' else 'mise à jour'}",
-        "parcel_id": parcel_id,
-        "verification_status": verification.verification_status,
-        "farmer_name": member.get("full_name", "Inconnu") if member else "Inconnu",
-        "verified_at": update_data["verified_at"].isoformat()
+        "parcelle_id": parcel_id,
+        "statut_verification": verification.verification_status,
+        "nom_producteur": member.get("full_name", "Inconnu") if member else "Inconnu",
+        "verifie_le": update_data["verified_at"].isoformat()
     }
 
 @router.get("/parcels/{parcel_id}/details")
@@ -388,27 +388,27 @@ async def get_parcel_details(
     
     return {
         "id": str(parcel["_id"]),
-        "farmer": {
+        "producteur": {
             "id": str(member["_id"]) if member else "",
-            "name": member.get("full_name", "Inconnu") if member else "Inconnu",
-            "phone": member.get("phone_number", "") if member else "",
+            "nom": member.get("full_name", "Inconnu") if member else "Inconnu",
+            "telephone": member.get("phone_number", "") if member else "",
             "village": member.get("village", "") if member else ""
         },
-        "location": parcel.get("location", ""),
+        "localisation": parcel.get("location", ""),
         "village": parcel.get("village", ""),
-        "area_hectares": parcel.get("area_hectares", 0),
-        "area_hectares_declared": parcel.get("area_hectares_declared"),
-        "crop_type": parcel.get("crop_type", "cacao"),
-        "carbon_score": parcel.get("carbon_score", 0),
-        "co2_captured_tonnes": parcel.get("co2_captured_tonnes", 0),
+        "superficie": parcel.get("area_hectares", 0),
+        "superficie_declaree": parcel.get("area_hectares_declared"),
+        "type_culture": parcel.get("crop_type", "cacao"),
+        "score_carbone": parcel.get("carbon_score", 0),
+        "co2_capture": parcel.get("co2_captured_tonnes", 0),
         "certification": parcel.get("certification"),
-        "gps_coordinates": parcel.get("gps_coordinates"),
-        "verified_gps_coordinates": parcel.get("verified_gps_coordinates"),
-        "verification_status": parcel.get("verification_status", "pending"),
-        "verification_notes": parcel.get("verification_notes"),
-        "verification_photos": parcel.get("verification_photos", []),
-        "verified_at": parcel.get("verified_at"),
-        "verifier_name": verifier.get("full_name", "Agent") if verifier else parcel.get("verifier_name"),
-        "created_at": parcel.get("created_at"),
-        "eudr_compliant": parcel.get("eudr_compliant", True)
+        "coordonnees_gps": parcel.get("gps_coordinates"),
+        "coordonnees_gps_verifiees": parcel.get("verified_gps_coordinates"),
+        "statut_verification": parcel.get("verification_status", "pending"),
+        "notes_verification": parcel.get("verification_notes"),
+        "photos_verification": parcel.get("verification_photos", []),
+        "verifie_le": parcel.get("verified_at"),
+        "nom_verificateur": verifier.get("full_name", "Agent") if verifier else parcel.get("verifier_name"),
+        "cree_le": parcel.get("created_at"),
+        "conforme_eudr": parcel.get("eudr_compliant", True)
     }

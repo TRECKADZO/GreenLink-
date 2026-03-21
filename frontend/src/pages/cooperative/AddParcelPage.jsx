@@ -96,7 +96,7 @@ const AddParcelPage = () => {
         certification: formData.certification || null
       });
       
-      toast.success(`Parcelle ajoutée avec succès! Score carbone: ${result.carbon_score}/10`);
+      toast.success(`Parcelle ajoutée avec succès! Score carbone: ${result.score_carbone || result.carbon_score}/10`);
       navigate(`/cooperative/members/${formData.member_id}/parcels`);
     } catch (error) {
       console.error('Error adding parcel:', error);

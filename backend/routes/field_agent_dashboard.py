@@ -121,9 +121,9 @@ async def get_agent_dashboard(
     recent_activities = [
         {
             "type": "ssrte_visit",
-            "farmer_name": v.get('farmer_name', 'Producteur'),
-            "risk_level": v.get('niveau_risque'),
-            "children_count": v.get('enfants_observes_travaillant', 0),
+            "nom_producteur": v.get('farmer_name', 'Producteur'),
+            "niveau_risque": v.get('niveau_risque'),
+            "enfants_observes": v.get('enfants_observes_travaillant', 0),
             "date": v.get('recorded_at')
         }
         for v in recent_visits
@@ -352,13 +352,13 @@ async def get_my_visits(
         "visits": [
             {
                 "id": str(v['_id']),
-                "farmer_id": v.get('farmer_id'),
-                "farmer_name": v.get('farmer_name', 'Producteur'),
-                "risk_level": v.get('niveau_risque'),
-                "children_count": v.get('enfants_observes_travaillant', 0),
-                "dangerous_tasks": v.get('taches_dangereuses_observees', []),
-                "support_provided": v.get('support_fourni', []),
-                "follow_up_required": v.get('visite_suivi_requise', False),
+                "producteur_id": v.get('farmer_id'),
+                "nom_producteur": v.get('farmer_name', 'Producteur'),
+                "niveau_risque": v.get('niveau_risque'),
+                "enfants_observes": v.get('enfants_observes_travaillant', 0),
+                "taches_dangereuses": v.get('taches_dangereuses_observees', []),
+                "support_fourni": v.get('support_fourni', []),
+                "suivi_requis": v.get('visite_suivi_requise', False),
                 "date": v.get('recorded_at')
             }
             for v in visits
@@ -472,10 +472,10 @@ async def get_my_assigned_farmers(
             "is_active": m.get("is_active", True),
             "status": m.get("status", "active"),
             "parcels": [{
-                "area_hectares": p.get("area_hectares", 0),
-                "carbon_score": p.get("carbon_score", 0),
-                "crop_type": p.get("crop_type", "cacao"),
-                "gps_coordinates": p.get("gps_coordinates"),
+                "superficie": p.get("area_hectares", 0),
+                "score_carbone": p.get("carbon_score", 0),
+                "type_culture": p.get("crop_type", "cacao"),
+                "coordonnees_gps": p.get("gps_coordinates"),
             } for p in parcels],
             "parcels_count": parcels_count or len(parcels),
             "forms_status": forms_status,
@@ -658,20 +658,20 @@ async def get_parcels_to_verify(
         member = members_map.get(mid) or users_map.get(mid)
         result.append({
             "id": str(p["_id"]),
-            "farmer_name": member.get("full_name", "Inconnu") if member else "Inconnu",
-            "farmer_phone": member.get("phone_number", "") if member else "",
-            "farmer_id": p.get("farmer_id", ""),
-            "member_id": p.get("member_id", ""),
+            "nom_producteur": member.get("full_name", "Inconnu") if member else "Inconnu",
+            "telephone_producteur": member.get("phone_number", "") if member else "",
+            "producteur_id": p.get("farmer_id", ""),
+            "membre_id": p.get("member_id", ""),
             "village": p.get("village", ""),
-            "location": p.get("location", ""),
-            "area_hectares": p.get("area_hectares", 0),
-            "crop_type": p.get("crop_type", "cacao"),
-            "gps_coordinates": p.get("gps_coordinates"),
-            "verification_status": p.get("verification_status", "pending"),
-            "verification_notes": p.get("verification_notes"),
-            "verified_at": p.get("verified_at"),
-            "carbon_score": p.get("carbon_score", 0),
-            "created_at": str(p.get("created_at", ""))
+            "localisation": p.get("location", ""),
+            "superficie": p.get("area_hectares", 0),
+            "type_culture": p.get("crop_type", "cacao"),
+            "coordonnees_gps": p.get("gps_coordinates"),
+            "statut_verification": p.get("verification_status", "pending"),
+            "notes_verification": p.get("verification_notes"),
+            "verifie_le": p.get("verified_at"),
+            "score_carbone": p.get("carbon_score", 0),
+            "cree_le": str(p.get("created_at", ""))
         })
 
     # Stats for counters

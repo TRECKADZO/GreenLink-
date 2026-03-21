@@ -221,12 +221,12 @@ async def get_ssrte_dashboard_coop(
             "faible": risk_counts.get("faible", 0)
         },
         
-        "dangerous_tasks": [
+        "taches_dangereuses": [
             {"code": t["_id"], "count": t["count"]} 
             for t in dangerous_tasks
         ],
         
-        "support_provided": [
+        "support_fourni": [
             {"type": s["_id"], "count": s["count"]}
             for s in support_stats
         ],
@@ -242,21 +242,21 @@ async def get_ssrte_dashboard_coop(
             for t in trends
         ],
         
-        "recent_critical_visits": [
+        "visites_critiques_recentes": [
             {
-                "farmer_id": str(a.get("farmer_id", "")),
-                "farmer_name": a.get("farmer_name"),
-                "risk_level": a.get("niveau_risque"),
-                "children_count": a.get("enfants_observes_travaillant", 0),
+                "producteur_id": str(a.get("farmer_id", "")),
+                "nom_producteur": a.get("farmer_name"),
+                "niveau_risque": a.get("niveau_risque"),
+                "enfants_observes": a.get("enfants_observes_travaillant", 0),
                 "date": a.get("date_visite").isoformat() if a.get("date_visite") else None,
-                "dangerous_tasks": a.get("taches_dangereuses_observees", [])
+                "taches_dangereuses": a.get("taches_dangereuses_observees", [])
             }
             for a in recent_alerts
         ]
     }
 
 
-@router.get("/visits")
+@router.get("/analytics/visits")
 async def get_ssrte_visits(
     skip: int = 0,
     limit: int = 50,
@@ -318,24 +318,20 @@ async def get_ssrte_visits(
         "visits": [
             {
                 "id": str(v.get("_id")),
-                "farmer_id": v.get("farmer_id"),
-                "farmer_name": v.get("farmer_name"),
-                "member_name": v.get("member_name") or v.get("farmer_name"),
+                "producteur_id": v.get("farmer_id"),
+                "nom_producteur": v.get("member_name") or v.get("farmer_name"),
                 "cooperative_id": v.get("cooperative_id"),
-                "date_visite": v.get("date_visite").isoformat() if v.get("date_visite") else (v.get("recorded_at").isoformat() if v.get("recorded_at") else None),
-                "visit_date": v.get("recorded_at") or v.get("date_visite") or v.get("visit_date"),
-                "agent_name": v.get("agent_name"),
-                "niveau_risque": v.get("niveau_risque"),
-                "risk_level": v.get("niveau_risque") or v.get("risk_level", "faible"),
-                "enfants_observes_travaillant": v.get("enfants_observes_travaillant", 0),
-                "children_count": v.get("children_count") or v.get("enfants_observes_travaillant", 0),
-                "children_at_risk": v.get("children_at_risk") or v.get("enfants_observes_travaillant", 0),
-                "household_size": v.get("household_size") or v.get("taille_menage", 0),
-                "taches_dangereuses_observees": v.get("taches_dangereuses_observees", []),
+                "date_visite": v.get("recorded_at") or v.get("date_visite") or v.get("visit_date"),
+                "nom_agent": v.get("agent_name"),
+                "niveau_risque": v.get("niveau_risque") or v.get("risk_level", "faible"),
+                "enfants_observes": v.get("children_count") or v.get("enfants_observes_travaillant", 0),
+                "enfants_a_risque": v.get("children_at_risk") or v.get("enfants_observes_travaillant", 0),
+                "taille_menage": v.get("household_size") or v.get("taille_menage", 0),
+                "cas_detectes": v.get("has_cases", v.get("enfants_observes_travaillant", 0) > 0),
+                "taches_dangereuses": v.get("taches_dangereuses_observees", []),
                 "support_fourni": v.get("support_fourni", []),
                 "recommandations": v.get("recommandations", []),
-                "visite_suivi_requise": v.get("visite_suivi_requise", False),
-                "has_cases": v.get("has_cases", v.get("enfants_observes_travaillant", 0) > 0),
+                "suivi_requis": v.get("visite_suivi_requise", False),
                 "notes": v.get("notes"),
                 "photos": v.get("photos", [])
             }
@@ -363,28 +359,28 @@ async def get_visit_detail(
             farmer = await db.coop_members.find_one({"_id": ObjectId(visit["farmer_id"])})
     
     return {
-        "visit": {
+        "visite": {
             "id": str(visit["_id"]),
-            "farmer_id": visit.get("farmer_id"),
-            "farmer_name": visit.get("farmer_name"),
+            "producteur_id": visit.get("farmer_id"),
+            "nom_producteur": visit.get("farmer_name"),
             "date_visite": visit.get("date_visite").isoformat() if visit.get("date_visite") else None,
             "agent_id": visit.get("agent_id"),
-            "agent_name": visit.get("agent_name"),
+            "nom_agent": visit.get("agent_name"),
             "niveau_risque": visit.get("niveau_risque"),
-            "enfants_observes_travaillant": visit.get("enfants_observes_travaillant", 0),
-            "taches_dangereuses_observees": visit.get("taches_dangereuses_observees", []),
+            "enfants_observes": visit.get("enfants_observes_travaillant", 0),
+            "taches_dangereuses": visit.get("taches_dangereuses_observees", []),
             "support_fourni": visit.get("support_fourni", []),
             "recommandations": visit.get("recommandations", []),
-            "visite_suivi_requise": visit.get("visite_suivi_requise", False),
+            "suivi_requis": visit.get("visite_suivi_requise", False),
             "notes": visit.get("notes"),
             "photos": visit.get("photos", []),
-            "location": visit.get("location"),
-            "created_at": visit.get("created_at").isoformat() if visit.get("created_at") else None
+            "localisation": visit.get("location"),
+            "cree_le": visit.get("created_at").isoformat() if visit.get("created_at") else None
         },
-        "farmer": {
+        "producteur": {
             "id": str(farmer["_id"]) if farmer else None,
-            "full_name": farmer.get("full_name") or farmer.get("name") if farmer else None,
-            "phone_number": farmer.get("phone_number") if farmer else None,
+            "nom_complet": farmer.get("full_name") or farmer.get("name") if farmer else None,
+            "telephone": farmer.get("phone_number") if farmer else None,
             "village": farmer.get("village") if farmer else None,
             "photo_url": farmer.get("photo_url") if farmer else None
         } if farmer else None
@@ -402,10 +398,10 @@ async def get_farmer_visit_history(
     
     if not visits:
         return {
-            "farmer_id": farmer_id,
-            "total_visits": 0,
-            "visits": [],
-            "summary": None
+            "producteur_id": farmer_id,
+            "total_visites": 0,
+            "visites": [],
+            "resume": None
         }
     
     # Calculer le résumé
@@ -423,26 +419,26 @@ async def get_farmer_visit_history(
         all_support.extend(v.get("support_fourni", []))
     
     return {
-        "farmer_id": farmer_id,
-        "total_visits": len(visits),
-        "summary": {
-            "total_children_identified": total_children,
-            "critical_visits": critical_visits,
-            "high_risk_visits": high_visits,
-            "last_visit_date": visits[0].get("date_visite").isoformat() if visits[0].get("date_visite") else None,
-            "first_visit_date": visits[-1].get("date_visite").isoformat() if visits[-1].get("date_visite") else None,
-            "most_common_tasks": list(set(all_tasks))[:5],
-            "support_provided": list(set(all_support))
+        "producteur_id": farmer_id,
+        "total_visites": len(visits),
+        "resume": {
+            "total_enfants_identifies": total_children,
+            "visites_critiques": critical_visits,
+            "visites_risque_eleve": high_visits,
+            "derniere_visite": visits[0].get("date_visite").isoformat() if visits[0].get("date_visite") else None,
+            "premiere_visite": visits[-1].get("date_visite").isoformat() if visits[-1].get("date_visite") else None,
+            "taches_frequentes": list(set(all_tasks))[:5],
+            "support_fourni": list(set(all_support))
         },
-        "visits": [
+        "visites": [
             {
                 "id": str(v["_id"]),
                 "date": v.get("date_visite").isoformat() if v.get("date_visite") else None,
-                "risk_level": v.get("niveau_risque"),
-                "children_count": v.get("enfants_observes_travaillant", 0),
-                "tasks_count": len(v.get("taches_dangereuses_observees", [])),
-                "support_count": len(v.get("support_fourni", [])),
-                "follow_up_required": v.get("visite_suivi_requise", False)
+                "niveau_risque": v.get("niveau_risque"),
+                "enfants_observes": v.get("enfants_observes_travaillant", 0),
+                "nombre_taches": len(v.get("taches_dangereuses_observees", [])),
+                "nombre_supports": len(v.get("support_fourni", [])),
+                "suivi_requis": v.get("visite_suivi_requise", False)
             }
             for v in visits
         ]

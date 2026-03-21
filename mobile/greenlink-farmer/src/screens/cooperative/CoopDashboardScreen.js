@@ -83,7 +83,7 @@ export default function CoopDashboardScreen({ navigation }) {
     );
   }
 
-  const { coop_info, members, parcels, lots, financial } = dashboard || {};
+  const { coop_info, members, parcelles, lots, financial } = dashboard || {};
 
   return (
     <MainLayout userType="cooperative">
@@ -123,19 +123,19 @@ export default function CoopDashboardScreen({ navigation }) {
           />
           <StatCard
             icon="map"
-            value={parcels?.total_count || 0}
+            value={parcelles?.total || 0}
             label="Parcelles"
             color="#2196F3"
           />
           <StatCard
             icon="leaf"
-            value={`${parcels?.total_hectares || 0} ha`}
+            value={`${parcelles?.superficie_totale || 0} ha`}
             label="Surface"
             color="#8BC34A"
           />
           <StatCard
             icon="cloud"
-            value={`${parcels?.total_co2_tonnes || 0}t`}
+            value={`${parcelles?.co2_total || 0}t`}
             label="CO₂"
             color="#00BCD4"
           />
@@ -147,13 +147,13 @@ export default function CoopDashboardScreen({ navigation }) {
           <View style={styles.carbonScoreContent}>
             <View style={styles.scoreCircle}>
               <Text style={styles.scoreValue}>
-                {parcels?.average_carbon_score?.toFixed(1) || '0'}
+                {parcelles?.score_carbone_moyen?.toFixed(1) || '0'}
               </Text>
               <Text style={styles.scoreMax}>/10</Text>
             </View>
             <View style={styles.scoreInfo}>
               <Text style={styles.scoreInfoText}>
-                {(parcels?.average_carbon_score || 0) >= 7
+                {(parcelles?.score_carbone_moyen || 0) >= 7
                   ? 'Excellent! Vos pratiques sont durables'
                   : 'Continuez à améliorer vos pratiques'}
               </Text>

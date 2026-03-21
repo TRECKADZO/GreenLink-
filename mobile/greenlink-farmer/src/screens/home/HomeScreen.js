@@ -98,10 +98,10 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.carbonScore}>
           <Text style={styles.carbonLabel}>Score Carbone</Text>
           <Text style={styles.carbonValue}>
-            {dashboard?.carbon_score || 0}/10
+            {dashboard?.score_carbone_moyen || 0}/10
           </Text>
           <Text style={styles.carbonHint}>
-            {dashboard?.carbon_score >= 7 
+            {(dashboard?.score_carbone_moyen || 0) >= 7 
               ? '✓ Éligible aux primes' 
               : 'Améliorez vos pratiques'}
           </Text>
@@ -112,20 +112,20 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.statsContainer}>
         <InfoCard
           title="Parcelles"
-          value={dashboard?.total_parcels || 0}
+          value={dashboard?.total_parcelles || 0}
           icon="🌳"
           color={COLORS.primary}
         />
         <InfoCard
           title="Surface totale"
-          value={dashboard?.total_area_hectares || dashboard?.total_area || 0}
+          value={dashboard?.superficie_totale || 0}
           unit="ha"
           icon="📐"
           color={COLORS.success}
         />
         <InfoCard
           title="Prime estimée"
-          value={(dashboard?.estimated_premium || 0).toLocaleString()}
+          value={(dashboard?.prime_carbone || 0).toLocaleString()}
           unit="XOF"
           icon="💰"
           color={COLORS.secondary}
@@ -139,7 +139,7 @@ const HomeScreen = ({ navigation }) => {
         <MenuItem
           number="1"
           title="Mes Parcelles"
-          subtitle={`${dashboard?.total_parcels || 0} parcelle(s) déclarée(s)`}
+          subtitle={`${dashboard?.total_parcelles || 0} parcelle(s) déclarée(s)`}
           icon="🌳"
           onPress={() => navigation.navigate('Parcels')}
         />
@@ -164,7 +164,7 @@ const HomeScreen = ({ navigation }) => {
         <MenuItem
           number="4"
           title="Mon Score Carbone"
-          subtitle={`Score: ${dashboard?.average_carbon_score?.toFixed(1) || '0'}/10`}
+          subtitle={`Score: ${dashboard?.score_carbone_moyen?.toFixed(1) || '0'}/10`}
           icon="🌱"
           onPress={() => navigation.navigate('MyCarbonScore')}
         />

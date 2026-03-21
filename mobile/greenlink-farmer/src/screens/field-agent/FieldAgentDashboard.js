@@ -266,10 +266,10 @@ const FieldAgentDashboard = ({ navigation }) => {
                 <Text style={styles.cardTitle}>Dernieres Activites</Text>
                 {recent_activities.slice(0, 5).map((activity, index) => (
                   <View key={index} style={styles.activityItem}>
-                    <View style={[styles.activityDot, { backgroundColor: getRiskColor(activity.risk_level) }]} />
+                    <View style={[styles.activityDot, { backgroundColor: getRiskColor(activity.niveau_risque) }]} />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.activityName}>{activity.farmer_name}</Text>
-                      <Text style={styles.activityMeta}>{activity.children_count} enfant(s) - Risque {activity.risk_level}</Text>
+                      <Text style={styles.activityName}>{activity.nom_producteur}</Text>
+                      <Text style={styles.activityMeta}>{activity.enfants_observes} enfant(s) - Risque {activity.niveau_risque}</Text>
                     </View>
                     <Text style={styles.activityDate}>
                       {activity.date ? new Date(activity.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : ''}

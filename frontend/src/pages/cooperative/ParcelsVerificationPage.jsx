@@ -59,8 +59,8 @@ export default function ParcelsVerificationPage() {
       const response = await axios.get(`${API_URL}/api/cooperative/parcels/all${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setParcels(response.data.parcels || []);
-      setStatusCounts(response.data.status_counts || {});
+      setParcels(response.data.parcelles || []);
+      setStatusCounts(response.data.compteurs_statut || {});
     } catch (error) {
       console.error('Error fetching parcels:', error);
       toast.error('Erreur lors du chargement des parcelles');
@@ -73,9 +73,9 @@ export default function ParcelsVerificationPage() {
     if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
     return (
-      p.farmer_name?.toLowerCase().includes(search) ||
+      p.nom_producteur?.toLowerCase().includes(search) ||
       p.village?.toLowerCase().includes(search) ||
-      p.location?.toLowerCase().includes(search)
+      p.localisation?.toLowerCase().includes(search)
     );
   });
 
@@ -207,8 +207,8 @@ export default function ParcelsVerificationPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <Users className="h-5 w-5 text-gray-400" />
-                          <span className="font-semibold text-gray-900">{parcel.farmer_name}</span>
-                          {getStatusBadge(parcel.verification_status)}
+                          <span className="font-semibold text-gray-900">{parcel.nom_producteur}</span>
+                          {getStatusBadge(parcel.statut_verification)}
                         </div>
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -218,29 +218,29 @@ export default function ParcelsVerificationPage() {
                           </div>
                           <div>
                             <span className="text-gray-500">Superficie:</span>
-                            <p className="font-medium">{parcel.area_hectares} ha</p>
+                            <p className="font-medium">{parcel.superficie} ha</p>
                           </div>
                           <div>
                             <span className="text-gray-500">Culture:</span>
-                            <p className="font-medium capitalize">{parcel.crop_type}</p>
+                            <p className="font-medium capitalize">{parcel.type_culture}</p>
                           </div>
                           <div>
                             <span className="text-gray-500">Score Carbone:</span>
-                            <p className="font-medium">{parcel.carbon_score}/10</p>
+                            <p className="font-medium">{parcel.score_carbone}/10</p>
                           </div>
                         </div>
                         
-                        {parcel.gps_coordinates && (
+                        {parcel.coordonnees_gps && (
                           <div className="mt-2 text-xs text-gray-500">
                             <MapPin className="h-3 w-3 inline mr-1" />
-                            GPS: {parcel.gps_coordinates.lat?.toFixed(5)}, {parcel.gps_coordinates.lng?.toFixed(5)}
+                            GPS: {parcel.coordonnees_gps.lat?.toFixed(5)}, {parcel.coordonnees_gps.lng?.toFixed(5)}
                           </div>
                         )}
                         
-                        {parcel.verified_at && (
+                        {parcel.verifie_le && (
                           <div className="mt-2 text-xs text-green-600">
                             <CheckCircle className="h-3 w-3 inline mr-1" />
-                            Vérifié le {new Date(parcel.verified_at).toLocaleDateString('fr-FR')}
+                            Vérifié le {new Date(parcel.verifie_le).toLocaleDateString('fr-FR')}
                           </div>
                         )}
                       </div>

@@ -1,132 +1,140 @@
-<analysis>**original_problem_statement:**
-The user's initial goal was to fix critical mobile app bugs and introduce major features. Over this session, the scope expanded significantly to include:
-1. **SSRTE Workflow**: Enriching SSRTE forms, removing standalone SSRTE access from Coop/Agent dashboards, restricting SSRTE Analytics to Super Admin, and adding critical automated email alerts for high-risk child labor cases.
-2. **UI/UX Cleanup**: Completely removing all QR Code generation/scanning features globally, and removing duplicate/obsolete USSD menu items from both the mobile app and web dashboards.
-3. **Mobile Deployment**: Generating new app icons, cleaning up the welcome screen for Google Play compliance, and compiling production APK and AAB builds (v1.36.1).
-4. **ICI Form Fixes (CURRENT)**: Fixing specific bugs in the ICI data collection forms on mobile/web regarding data entry (gender selection, default household size), cross-form data synchronization, and form completion tracking logic (counter showing 1/5 instead of 5/5).
+<analysis>**original_problem_statement**: 
+Fix dashboard statistics crashes across all platforms (Farmer, Coop, Super Admin). Refactor  for better maintainability. Implement a field agent verification flow for parcels on the mobile app. Fix multiple mobile data display bugs (parcels showing 0 hectares, SSRTE visits showing Invalid Date and missing names). Finally, standardize all data object keys and variable names to French across the entire stack (Backend, Web, Mobile) to prevent recurring UI mapping errors.
 
-**PRODUCT REQUIREMENTS:**
-*   A stable, compliant mobile and web platform.
-*   Accurate tracking and synchronization of farmer data across ICI and SSRTE forms.
-*   Automated alerting for critical field observations.
-*   Clean UI with no redundant features (like unused QR codes or mock USSD codes).
+PRODUCT REQUIREMENTS:
+- 100% stable dashboards with accurate aggregations.
+- Field agents must be able to verify farmer-declared parcels via the mobile app.
+- Mobile app must auto-refresh data upon returning to dashboard screens.
+- All variable names and JSON response keys must be harmonized in French across the backend APIs, web frontend, and mobile app.
 
-**User's preferred language**: French. The next agent MUST respond in French only.
+**User's preferred language**: French (You MUST respond to the user in French only).
 
-**what currently exists?**
-Full-stack application (React / FastAPI / MongoDB). In this session, the agent successfully enriched the SSRTE forms, removed standalone SSRTE menus, restricted SSRTE Analytics to the Super Admin, implemented emergency email alerts via Resend for critical SSRTE visits, completely purged QR code functionalities from the entire codebase, generated new mobile app icons, and successfully built mobile versions v1.36.0 and v1.36.1 (APK & AAB) via Expo EAS.
+**what currently exists?** 
+A full-stack agricultural platform (React/FastAPI/MongoDB/React Native). In this session, the agent fixed all dashboard 500 errors, successfully refactored the massive 2700-line  into 7 modular files, built the parcel verification screens for field agents, and fixed mobile cache/refresh bugs using . After discovering persistent data mapping mismatches (e.g.,  vs ,  vs ), the user ordered a massive refactor to change all JSON keys and variables to French. The agent was in the middle of executing this backend renaming when context ran out.
 
 **Last working item**:
-*   **Last item agent was working**: Fixing a batch of 5 specific bugs reported by the user regarding the ICI and SSRTE forms. The agent identified the root causes and started applying fixes. 
-    *   *Bug 1 (Gender picker failing)*: Replaced Picker with touchable buttons in .
-    *   *Bug 2 (Household size stuck at 1)*: Fixed default value parsing in , , and  to allow erasing the number.
-    *   *Bug 3 (Cross-form auto-fill)*: *Pending implementation*.
-    *   *Bug 4 (Completion counter showing 1/5 incorrectly)*: Identified cause in backend () due to  vs  mismatch. *Pending fix*.
-    *   *Bug 5 (Agent visit auto-update upon 5/5 completion)*: *Pending implementation*.
-*   **Status**: IN PROGRESS
-*   **Agent Testing Done**: N
-*   **Which testing method agent to use?**: Both.  or  for the backend completion calculation. Frontend testing agent / Screenshot tool for the mobile and web form UI changes.
-*   **User Testing Done**: N
+- **Last item agent was working**: Harmonizing field names to French across the codebase. The agent was using  to change keys like  to ,  to , and  to  in the backend API endpoints (, , , ).
+- **Status**: IN PROGRESS
+- **Agent Testing Done**: N
+- **Which testing method agent to use?**: both (You will need backend manual curl testing to ensure the JSON outputs correctly, followed by  for full E2E and frontend flow testing to ensure the Web and Mobile apps don't break due to the renamed keys).
+- **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1: ICI/SSRTE Form Logic and Synchronization (P0 - HIGHEST)**
-    *   **Attempted fixes**: Bugs 1 and 2 (UI inputs) have been patched in the code but need testing. Bugs 3, 4, and 5 have been diagnosed but not yet coded.
-    *   **Next debug checklist**:
-        1. **Backend**: Update  (around line 395+) to properly calculate the  percentage. The issue is a mismatch between , , and  across different form collections.
-        2. **Backend/Frontend**: Implement logic (Bug 3) to auto-fill common data (e.g., household size) between SSRTE and ICI forms.
-        3. **Backend**: Add a hook (Bug 5) so that when a farmer hits 5/5 completed forms, the agent's visit log is automatically updated.
-    *   **Why fix this issue**: Core functionality for field agents; inaccurate data collection tracking frustrates users.
-    *   **Status**: IN PROGRESS
-    *   **Is recurring issue?**: N
-    *   **Should Test frontend/backend/both after fix?**: Both.
-*   **Issue 2: Google Play Console Submission (P1)**
-    *   **Description**: The user needs to upload the newly generated v1.36.1 AAB to Google Play to resolve the previous permission rejection metadata issues.
-    *   **Status**: USER VERIFICATION PENDING
-    *   **Blocked on**: User action.
+Issue 1: Standardize API and Frontend keys to French (P0)
+- **Attempted fixes**: Agent successfully updated several endpoints in  and  to return French keys. Was editing .
+- **Next debug checklist**: 
+  - Complete the backend key renaming.
+  - **CRITICAL**: Search the React Web frontend () and React Native Mobile app () for the old English keys (, , , , , , etc.) and replace them with the new French keys (, , , , ).
+- **Why fix this issue and what will be achieved with the fix?**: User specifically requested this to stop the constant undefined UI bugs caused by frontend and backend expecting different terminology.
+- **Status**: IN PROGRESS
+- **Is recurring issue?**: N
+- **Should Test frontend/backend/both after fix?**: Both
+- **Blocked on other issue**: NA
+
+Issue 2: Route Collision on  (P1)
+- **Attempted fixes**: Agent modified the output of , but both  and  define the same  route.
+- **Next debug checklist**: Ensure standard REST paths or rename one of the routes (e.g., ) so they don't overwrite each other in .
+- **Why fix this issue and what will be achieved with the fix?**: Prevents unpredictable API responses.
+- **Status**: IN PROGRESS
+- **Is recurring issue?**: Y
+- **Should Test frontend/backend/both after fix?**: Both
 
 **In progress Task List**:
-*   **Task 1: ICI Form Data Synchronization & Tracking (P0)**
-    *   **Where to resume**: The agent was modifying . Resume by verifying those UI fixes, then move to the backend completion logic in .
-    *   **What will be achieved**: Accurate form completion tracking and better UX for agents.
-    *   **Status**: IN PROGRESS
-    *   **Should Test frontend/backend/both after fix?**: Both.
+Task 1: Full Stack French Key Translation (P0)
+- **Where to resume**: Resume in , then move to updating the Mobile and Web frontend codebases to read the new French keys.
+- **What will be achieved with this?**: Unified data mapping.
+- **Status**: IN PROGRESS
+- **Should Test frontend/backend/both after fix?**: Both
+- **Blocked on something**: NA
 
 **Upcoming and Future Tasks**:
-*   (P1) Configure a real SMS gateway (Orange API) to replace the mock service for phone-based notifications and USSD simulations.
-*   (P2) Implement local languages (Baoulé and Dioula) in the mobile app.
-*   (P2) Refactor the backend to use a cloud storage solution (e.g., AWS S3) for file and image uploads.
+- (P1) Generate a new EAS build (v1.38.3+) AFTER the French translation refactor is fully completed and tested.
+- (P1) Submit the final AAB to Google Play Console.
+- (P2) Configure real SMS gateway (Orange API) to replace the mock service.
+- (P2) Implement local languages (Baoulé and Dioula) in the mobile app.
+- (P2) Refactor the backend to use cloud storage (AWS S3) for file and image uploads.
 
 **Completed work in this session**:
-- Enriched SSRTE forms on Web Modal, Web Dashboard, and Mobile (DONE).
-- Removed standalone SSRTE menu access from Coop and Agent dashboards (DONE).
-- Created Super Admin-only SSRTE Analytics Dashboard (DONE).
-- Implemented automated Emergency Email Alerts for Critique/Elevée SSRTE visits (DONE).
-- Completely removed all QR Code references/files from Frontend and Backend (DONE).
-- Generated new Mobile App Icons and cleaned up the Welcome screen for Google Play compliance (DONE).
-- Removed redundant USSD menus from Mobile and Web Farmer Dashboards (DONE).
-- Generated EAS Mobile Builds v1.36.0 and v1.36.1 (APK & AAB) (DONE).
-- Diagnosed user login issue (Typo in email: boidigsproplus vs boidigspropplus) (RESOLVED).
+- Fixed all dashboard aggregations (,  crashes) (DONE)
+- Refactored  into , , , , ,  (DONE)
+- Built Field Agent Parcel Verification endpoints and Mobile Screens (DONE)
+- Fixed mobile screen cache issues using  so dashboard stats update immediately after a parcel is declared (DONE)
 
 **Earlier issues found/mentioned but not fixed**:
-- None.
+- None explicitly ignored, but the ongoing renaming task has temporarily broken the contract between the backend and the frontend.
 
 **Known issue recurrence from previous fork**:
-- **Google Play Metadata/Permission Rejection**: App previously rejected by Google Play. We have adjusted the welcome screen and generated a new AAB. Awaiting user submission.
+- Issue recurrence in previous fork: Route collisions ().
+- Recurrence count: 2
+- Status: IN PROGRESS
 
 **Code Architecture**:
 
 
 **Key Technical Concepts**:
-- **Expo EAS Build**: Used for compiling APK/AAB remotely. *Note: The EAS account reached 100% of included build credits this month.*
-- **Cross-form validation**: The platform uses separate collections for SSRTE, ICI, Parcels, etc. Calculating 5/5 completion requires aggregating across these using correct  string vs  matching.
+- **FastAPI dependency injection**: .
+- **EAS Builds**: CLI commands used to compile React Native Expo apps directly to EAS servers.
+- **Data Harmonization**: The system is actively transitioning from English payload keys to French payload keys based on user demand.
 
 **key DB schema**:
-- : Contains , , .
--  / : Linked to farmers via  (sometimes stored as string, sometimes as ObjectId, which causes Bug #4 in completion calculation).
+- MongoDB documents remain mostly the same, but the *API response mapping* (DTOs) is changing. (e.g. DB holds , API now returns ).
 
 **changes in tech stack**:
-- Removed  and  QR dependencies as the feature was purged.
+- None.
 
 **All files of reference**:
--  (Bugs 1 & 2)
--  (Bugs 4 & 5)
--  (Bug 2)
+-  
+- 
+- 
+- All frontend and mobile screens consuming parcels, dashboards, and SSRTE data.
 
 **Areas that need refactoring**:
-- Data synchronization between  and  forms.
-- Consistent usage of  vs  (String vs ObjectId) across collections.
+- The current renaming task across the entire codebase to French variable names.
 
 **key api endpoints**:
--  (needs fixing for completion counter).
--  and  (needs syncing logic).
+- 
+- 
+- 
+- 
 
 **Critical Info for New Agent**:
-- **Language**: You MUST respond in French.
-- **Priority**: Resume immediately where the last agent left off—fixing the 5 ICI form bugs requested by the user. The UI fixes for Bug 1 & 2 are partially applied but need testing. Focus heavily on fixing the backend completion counter () and cross-form sync.
-- Do NOT generate or provide preview URLs in your summary or responses, as they change per fork.
+- **Language Constraint**: MUST respond in French.
+- **Immediate Next Step**: The backend API endpoints are halfway through being rewritten to output French keys (e.g., , ). You MUST finish this backend renaming, and then meticulously search the Web Frontend and Mobile codebase to update all variable references so the UI doesn't break. 
+- Do NOT generate a new EAS build until you are 100% sure the mobile codebase is correctly reading the new French API keys.
+- Do NOT provide preview URLs.
 
 **documents and test reports created in this job**:
 - 
--  (SSRTE Enrichment tests)
--  (SSRTE Analytics & Access tests)
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**:
-1. (User) Requested removal of USSD menu from web farmer dashboard. (Completed)
-2. (User) Reported 5 bugs regarding ICI forms: Gender selection broken, default size stuck at 1, no auto-sync between similar forms, completion counter shows 1/5 incorrectly, visit should auto-update when 5/5 complete. (IN PROGRESS)
-3. (User) Added that agent visit should auto-update. (IN PROGRESS)
+1. (User) Approved refactoring of .
+2. (User) Asked how parcel verification is done by the field agent.
+3. (User) Approved creating the parcel verification mobile UI.
+4. (User) Requested new APK/AAB build for the verification screens.
+5. (User) Shared screenshot: Parcel size showing undefined ha and 0 hectares.
+6. (User) Shared screenshot: Dashboard showing 0 stats even though a 10ha parcel was created (refresh issue).
+7. (User) Approved EAS build v1.38.1.
+8. (User) Shared screenshot: SSRTE visits showing Producteur, 0 enfants, and Invalid Date.
+9. (User) Requested to explicitly harmonize all field names in the code (frontend and backend) to French to avoid these constant mapping errors. (IN PROGRESS - Agent started this refactor but hit context limit).
 
 **Project Health Check:**
-- Broken: ICI Form completion counter logic.
-- Mocked: Orange SMS API.
+- Broken: The API-to-Frontend contract is currently broken because the agent was halfway through renaming JSON keys to French.
+- Mocked: Orange SMS API, Orange Money.
 
 **3rd Party Integrations**:
-- Expo EAS (Mobile Builds) — Requires User Auth (currently logged in via CLI).
-- Resend (Email) — Requires User API Key (Configured).
+- Expo EAS (Mobile Builds) — Requires User Auth (Session active locally).
+- Resend (Email) — Requires User API Key.
 
 **Testing status**:
-- Testing agent used after significant changes: YES (iterations 46, 47).
-- Troubleshoot agent used after agent stuck in loop: NO.
-- Known regressions: None known, but the new ICI UI patches must be tested.
+- Testing agent used after significant changes: YES (Iterations 50 & 51)
+- Troubleshoot agent used after agent stuck in loop: NO
+- Test files created: None
+- Known regressions: The API JSON key renaming is mid-flight. Expect frontend components to fail rendering data until you update them to read the new French keys.
+
+**Credentials to test flow:**
+N/A (Standard testing tokens used).
 
 **What agent forgot to execute**:
-The agent was in the middle of executing the search-and-replace fixes for the ICI form bugs (Bugs 1 & 2) when the context window was exhausted. Bugs 3, 4, and 5 have not been started yet.</analysis>
+The agent ran out of context while running  on the backend files to convert payload keys to French. The mobile and web frontends have not yet been updated to consume these new French keys. You must complete this synchronization.</analysis>

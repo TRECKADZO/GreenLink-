@@ -226,7 +226,7 @@ export default function CoopReportsScreen({ navigation }) {
             />
             <StatBox
               icon="star"
-              value={`${statistics?.average_carbon_score || 0}/10`}
+              value={`${statistics?.score_carbone_moyen || 0}/10`}
               label="Score"
               color="#FF9800"
             />

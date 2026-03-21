@@ -130,7 +130,7 @@ const ParcelVerifyListScreen = ({ navigation }) => {
                   <Ionicons name="map" size={20} color="#059669" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.farmerName}>{p.farmer_name}</Text>
+                  <Text style={styles.farmerName}>{p.nom_producteur}</Text>
                   <Text style={styles.village}>
                     <Ionicons name="location-outline" size={12} color="#94a3b8" />
                     {' '}{p.village || p.location || 'Non specifie'}
@@ -142,27 +142,27 @@ const ParcelVerifyListScreen = ({ navigation }) => {
               <View style={styles.cardDetails}>
                 <View style={styles.detailItem}>
                   <Ionicons name="resize-outline" size={14} color="#64748b" />
-                  <Text style={styles.detailText}>{p.area_hectares} ha</Text>
+                  <Text style={styles.detailText}>{p.superficie} ha</Text>
                 </View>
                 <View style={styles.detailItem}>
                   <Ionicons name="leaf-outline" size={14} color="#64748b" />
-                  <Text style={styles.detailText}>{p.crop_type || 'cacao'}</Text>
+                  <Text style={styles.detailText}>{p.type_culture || 'cacao'}</Text>
                 </View>
-                {p.gps_coordinates && (
+                {p.coordonnees_gps && (
                   <View style={styles.detailItem}>
                     <Ionicons name="navigate-outline" size={14} color="#059669" />
                     <Text style={[styles.detailText, { color: '#059669' }]}>GPS</Text>
                   </View>
                 )}
-                {p.carbon_score > 0 && (
+                {p.score_carbone > 0 && (
                   <View style={styles.detailItem}>
                     <Ionicons name="analytics-outline" size={14} color="#6366f1" />
-                    <Text style={[styles.detailText, { color: '#6366f1' }]}>Score: {p.carbon_score}</Text>
+                    <Text style={[styles.detailText, { color: '#6366f1' }]}>Score: {p.score_carbone}</Text>
                   </View>
                 )}
               </View>
 
-              {p.verification_status !== 'verified' && (
+              {p.statut_verification !== 'verified' && (
                 <View style={styles.cardAction}>
                   <Ionicons name="arrow-forward" size={16} color="#059669" />
                   <Text style={styles.actionText}>Verifier sur le terrain</Text>

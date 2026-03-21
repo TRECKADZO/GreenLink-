@@ -73,7 +73,7 @@ const MemberParcelsPage = () => {
         gps_lng: newParcel.gps_lng ? parseFloat(newParcel.gps_lng) : null,
         certification: newParcel.certification || null
       });
-      toast.success(`Parcelle ajoutée! Score carbone: ${result.carbon_score}/10`);
+      toast.success(`Parcelle ajoutée! Score carbone: ${result.score_carbone || result.carbon_score}/10`);
       setShowAddModal(false);
       setNewParcel({
         location: '',
@@ -146,10 +146,10 @@ const MemberParcelsPage = () => {
               </Button>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  Parcelles de {data?.member_name}
+                  Parcelles de {data?.nom_membre || data?.member_name}
                 </h1>
                 <p className="text-sm text-gray-500">
-                  {data?.total_parcels} parcelles • {data?.total_hectares} ha • {data?.total_co2} T CO₂
+                  {data?.total_parcelles || data?.total_parcels} parcelles • {data?.superficie_totale || data?.total_hectares} ha • {data?.co2_total || data?.total_co2} T CO₂
                 </p>
               </div>
             </div>
@@ -167,28 +167,28 @@ const MemberParcelsPage = () => {
           <Card>
             <CardContent className="p-4 text-center">
               <MapPin className="h-8 w-8 mx-auto text-green-600 mb-2" />
-              <p className="text-2xl font-bold">{data?.total_parcels || 0}</p>
+              <p className="text-2xl font-bold">{data?.total_parcelles || 0}</p>
               <p className="text-sm text-gray-500">Parcelles</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Scale className="h-8 w-8 mx-auto text-blue-600 mb-2" />
-              <p className="text-2xl font-bold">{data?.total_hectares || 0}</p>
+              <p className="text-2xl font-bold">{data?.superficie_totale || 0}</p>
               <p className="text-sm text-gray-500">Hectares</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Leaf className="h-8 w-8 mx-auto text-emerald-600 mb-2" />
-              <p className="text-2xl font-bold">{data?.average_carbon_score || 0}/10</p>
+              <p className="text-2xl font-bold">{data?.score_carbone_moyen || 0}/10</p>
               <p className="text-sm text-gray-500">Score Carbone</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <CheckCircle className="h-8 w-8 mx-auto text-teal-600 mb-2" />
-              <p className="text-2xl font-bold">{data?.total_co2 || 0}</p>
+              <p className="text-2xl font-bold">{data?.co2_total || 0}</p>
               <p className="text-sm text-gray-500">Tonnes CO₂</p>
             </CardContent>
           </Card>
@@ -197,9 +197,9 @@ const MemberParcelsPage = () => {
 
       {/* Parcels List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        {data?.parcels?.length > 0 ? (
+        {data?.parcelles?.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {data.parcels.map((parcel) => (
+            {data.parcelles.map((parcel) => (
               <Card key={parcel.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
@@ -208,7 +208,7 @@ const MemberParcelsPage = () => {
                         <MapPin className="h-5 w-5 text-green-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">{parcel.location}</h3>
+                        <h3 className="font-semibold">{parcel.localisation}</h3>
                         <p className="text-sm text-gray-500">{parcel.village}</p>
                       </div>
                     </div>
@@ -225,19 +225,19 @@ const MemberParcelsPage = () => {
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="p-2 bg-gray-50 rounded">
                       <p className="text-xs text-gray-500">Surface</p>
-                      <p className="font-medium">{parcel.area_hectares} ha</p>
+                      <p className="font-medium">{parcel.superficie} ha</p>
                     </div>
                     <div className="p-2 bg-gray-50 rounded">
                       <p className="text-xs text-gray-500">Culture</p>
-                      <p className="font-medium capitalize">{parcel.crop_type}</p>
+                      <p className="font-medium capitalize">{parcel.type_culture}</p>
                     </div>
                     <div className="p-2 bg-emerald-50 rounded">
                       <p className="text-xs text-emerald-600">Score Carbone</p>
-                      <p className="font-medium text-emerald-700">{parcel.carbon_score}/10</p>
+                      <p className="font-medium text-emerald-700">{parcel.score_carbone}/10</p>
                     </div>
                     <div className="p-2 bg-teal-50 rounded">
                       <p className="text-xs text-teal-600">CO₂ Capturé</p>
-                      <p className="font-medium text-teal-700">{parcel.co2_captured_tonnes} T</p>
+                      <p className="font-medium text-teal-700">{parcel.co2_capture} T</p>
                     </div>
                   </div>
                   
@@ -248,7 +248,7 @@ const MemberParcelsPage = () => {
                         {parcel.certification}
                       </Badge>
                     )}
-                    {parcel.gps_coordinates && (
+                    {parcel.coordonnees_gps && (
                       <Badge className="bg-blue-100 text-blue-800">
                         <Navigation className="h-3 w-3 mr-1" />
                         GPS

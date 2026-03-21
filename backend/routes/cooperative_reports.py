@@ -97,7 +97,7 @@ async def generate_eudr_report(current_user: dict = Depends(get_current_user)):
         "due_diligence": {
             "dds_status": "actif" if compliance_score >= 50 else "a_completer",
             "last_assessment_date": datetime.utcnow().isoformat(),
-            "risk_level": risk_level,
+            "niveau_risque": risk_level,
             "compliance_score": compliance_score,
             "next_review_date": (datetime.utcnow().replace(month=12, day=31)).isoformat(),
         },
@@ -146,13 +146,13 @@ async def generate_eudr_report(current_user: dict = Depends(get_current_user)):
             "origin_country": "Cote d'Ivoire",
             "total_producers": len(members),
             "total_parcels": len(parcels),
-            "total_hectares": total_hectares,
+            "superficie_totale": total_hectares,
         },
         "esg_indicators": {
             "environmental": {
-                "total_co2_tonnes": total_co2,
-                "average_carbon_score": avg_carbon,
-                "total_hectares": total_hectares,
+                "co2_total": total_co2,
+                "score_carbone_moyen": avg_carbon,
+                "superficie_totale": total_hectares,
                 "deforestation_free": True,
                 "biodiversity_score": avg_carbon,
             },
@@ -164,7 +164,7 @@ async def generate_eudr_report(current_user: dict = Depends(get_current_user)):
                 "child_labor_free_rate": child_labor_free_rate,
                 "ssrte_visits": len(ssrte_visits),
                 "ici_profiles": len(ici_profiles),
-                "children_at_risk": children_working,
+                "enfants_a_risque": children_working,
             },
             "governance": {
                 "certifications": certs,
@@ -175,9 +175,9 @@ async def generate_eudr_report(current_user: dict = Depends(get_current_user)):
         },
         "statistics": {
             "total_members": len(members),
-            "total_hectares": total_hectares,
-            "total_co2_tonnes": total_co2,
-            "average_carbon_score": avg_carbon,
+            "superficie_totale": total_hectares,
+            "co2_total": total_co2,
+            "score_carbone_moyen": avg_carbon,
         },
         "export_available": ["PDF", "CSV"]
     }
@@ -283,9 +283,9 @@ async def generate_eudr_pdf_report(
         },
         "statistics": {
             "total_members": len(members),
-            "total_hectares": round(total_hectares, 2),
-            "total_co2_tonnes": round(total_co2, 2),
-            "average_carbon_score": round(avg_score, 1)
+            "superficie_totale": round(total_hectares, 2),
+            "co2_total": round(total_co2, 2),
+            "score_carbone_moyen": round(avg_score, 1)
         },
         "eudr_compliance": {
             "certification_coverage": cert_counts
@@ -341,7 +341,7 @@ async def generate_carbon_pdf_report(
             "carbon_credits_sold": sold_credits,
             "carbon_credits_available": len(carbon_credits) - sold_credits,
             "carbon_revenue_xof": carbon_revenue,
-            "average_carbon_score": round(avg_score, 1),
+            "score_carbone_moyen": round(avg_score, 1),
             "deforestation_free_rate": 98.5
         }
     }

@@ -41,7 +41,7 @@ async def get_coop_lots(
         "actual_tonnage": lot.get("actual_tonnage", 0),
         "certification": lot.get("certification", ""),
         "min_carbon_score": lot.get("min_carbon_score", 6.0),
-        "average_carbon_score": lot.get("average_carbon_score", 0),
+        "score_carbone_moyen": lot.get("average_carbon_score", 0),
         "contributors_count": lot.get("contributors_count", 0),
         "price_per_kg": lot.get("price_per_kg", 0),
         "carbon_premium_per_kg": lot.get("carbon_premium_per_kg", 0),
@@ -120,9 +120,9 @@ async def create_coop_lot(
         "lot_id": str(result.inserted_id),
         "eligible_farmers": unique_farmers,
         "eligible_parcels": len(eligible_parcels),
-        "total_hectares": round(total_hectares, 1),
+        "superficie_totale": round(total_hectares, 1),
         "estimated_tonnage": round(estimated_tonnage, 1),
-        "average_carbon_score": round(avg_score, 1)
+        "score_carbone_moyen": round(avg_score, 1)
     }
 
 @router.put("/lots/{lot_id}/finalize")
@@ -231,10 +231,10 @@ async def distribute_lot_premiums(
         if amount > 0:
             distributions.append({
                 "member_id": str(member["_id"]),
-                "member_name": member.get("full_name", ""),
-                "phone_number": member.get("phone_number", ""),
-                "parcels_count": len(member_parcels),
-                "total_hectares": sum([p.get("area_hectares", 0) for p in member_parcels]),
+                "nom_membre": member.get("full_name", ""),
+                "telephone": member.get("phone_number", ""),
+                "nombre_parcelles": len(member_parcels),
+                "superficie_totale": sum([p.get("area_hectares", 0) for p in member_parcels]),
                 "average_score": sum([p.get("carbon_score", 0) for p in member_parcels]) / len(member_parcels),
                 "share_percentage": round(share_percentage * 100, 2),
                 "amount": round(amount, 0),

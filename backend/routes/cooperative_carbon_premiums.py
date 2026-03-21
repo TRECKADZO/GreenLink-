@@ -96,10 +96,10 @@ async def get_members_carbon_premiums(
         
         premium_data.append({
             "member_id": member_id,
-            "full_name": member.get("full_name"),
-            "phone_number": member.get("phone_number"),
+            "nom_complet": member.get("full_name"),
+            "telephone": member.get("phone_number"),
             "village": member.get("village"),
-            "total_hectares": round(member_total_area, 2),
+            "superficie_totale": round(member_total_area, 2),
             "average_score": member_avg_score,
             "audited_parcels": audited_parcels,
             "premium_xof": round(member_premium),
@@ -118,7 +118,7 @@ async def get_members_carbon_premiums(
         "summary": {
             "total_members": len(members),
             "eligible_members": len([m for m in premium_data if m["premium_xof"] > 0]),
-            "total_hectares": round(total_eligible_hectares, 2),
+            "superficie_totale": round(total_eligible_hectares, 2),
             "total_premium_xof": round(total_premium),
             "total_premium_eur": round(total_premium / 655.957, 2),
             "rate_per_hectare": RATE_PER_HECTARE,
@@ -188,7 +188,7 @@ async def initiate_premium_payment(
     payment = {
         "cooperative_id": coop_id,
         "member_id": member_id,
-        "member_name": member.get("full_name"),
+        "nom_membre": member.get("full_name"),
         "phone_number": member.get("phone_number"),
         "amount_xof": amount_xof,
         "amount_eur": round(amount_xof / 655.957, 2),
@@ -225,7 +225,7 @@ async def get_premium_payment_history(
         "payments": [{
             "id": str(p["_id"]),
             "member_id": p.get("member_id"),
-            "member_name": p.get("member_name"),
+            "nom_membre": p.get("member_name") or p.get("nom_membre"),
             "phone_number": p.get("phone_number"),
             "amount_xof": p.get("amount_xof"),
             "amount_eur": p.get("amount_eur"),
@@ -372,7 +372,7 @@ async def process_premium_payment(
         "cooperative_id": coop_id,
         "cooperative_name": current_user.get("coop_name"),
         "member_id": member_id,
-        "member_name": member.get("full_name"),
+        "nom_membre": member.get("full_name"),
         "phone_number": member.get("phone_number"),
         "amount_xof": round(total_premium),
         "amount_eur": round(total_premium / 655.957, 2),
@@ -402,7 +402,7 @@ async def process_premium_payment(
         "status": "completed",
         "amount_xof": round(total_premium),
         "amount_eur": round(total_premium / 655.957, 2),
-        "member_name": member.get("full_name"),
+        "nom_membre": member.get("full_name"),
         "phone_number": member.get("phone_number"),
         "sms_sent": True,
         "message": f"Prime de {round(total_premium):,} XOF payée à {member.get('full_name')}"
@@ -447,7 +447,7 @@ async def generate_monthly_report_pdf(
         "year": year,
         "payments": [{
             "date": p.get("created_at").strftime("%d/%m/%Y") if p.get("created_at") else "",
-            "member_name": p.get("member_name"),
+            "nom_membre": p.get("member_name") or p.get("nom_membre"),
             "phone": p.get("phone_number"),
             "amount_xof": p.get("amount_xof"),
             "ref": p.get("payment_ref", "N/A"),

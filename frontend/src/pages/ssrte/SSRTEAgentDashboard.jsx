@@ -107,7 +107,7 @@ const SSRTEAgentDashboard = () => {
       });
       
       // Si risque détecté, proposer de créer un cas
-      if (response.data.risk_level === 'high') {
+      if (response.data.niveau_risque === 'critique' || response.data.niveau_risque === 'eleve') {
         setSelectedVisit(response.data);
         setShowCaseForm(true);
         toast.warning('Risque élevé détecté - Veuillez documenter le cas');
@@ -302,21 +302,21 @@ const SSRTEAgentDashboard = () => {
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${
-                          visit.risk_level === 'high' ? 'bg-rose-500' : 'bg-emerald-500'
+                          visit.niveau_risque === 'critique' || visit.niveau_risque === 'eleve' ? 'bg-rose-500' : 'bg-emerald-500'
                         }`} />
                         <div>
-                          <p className="text-white font-medium">{visit.member_name || 'Producteur'}</p>
+                          <p className="text-white font-medium">{visit.nom_membre || 'Producteur'}</p>
                           <p className="text-xs text-slate-400">
-                            {visit.children_count} enfants • {visit.household_size} personnes
+                            {visit.enfants_observes} enfants • {visit.taille_menage} personnes
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <Badge variant={visit.risk_level === 'high' ? 'destructive' : 'secondary'}>
-                          {visit.risk_level === 'high' ? 'Risque' : 'OK'}
+                        <Badge variant={visit.niveau_risque === 'critique' || visit.niveau_risque === 'eleve' ? 'destructive' : 'secondary'}>
+                          {visit.niveau_risque === 'critique' || visit.niveau_risque === 'eleve' ? 'Risque' : 'OK'}
                         </Badge>
                         <p className="text-xs text-slate-400 mt-1">
-                          {new Date(visit.visit_date).toLocaleDateString('fr-FR')}
+                          {visit.date_visite ? new Date(visit.date_visite).toLocaleDateString('fr-FR') : '-'}
                         </p>
                       </div>
                     </div>
@@ -466,21 +466,21 @@ const SSRTEAgentDashboard = () => {
                   <tbody>
                     {visits.map((visit) => (
                       <tr key={visit.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
-                        <td className="p-3 text-white">{visit.member_name}</td>
-                        <td className="p-3 text-slate-300">{visit.household_size} pers.</td>
+                        <td className="p-3 text-white">{visit.nom_membre}</td>
+                        <td className="p-3 text-slate-300">{visit.taille_menage} pers.</td>
                         <td className="p-3">
-                          <span className="text-white">{visit.children_count}</span>
-                          {visit.children_at_risk > 0 && (
-                            <span className="text-rose-400 ml-1">({visit.children_at_risk} à risque)</span>
+                          <span className="text-white">{visit.enfants_observes}</span>
+                          {visit.enfants_a_risque > 0 && (
+                            <span className="text-rose-400 ml-1">({visit.enfants_a_risque} à risque)</span>
                           )}
                         </td>
                         <td className="p-3">
-                          <Badge variant={visit.risk_level === 'high' ? 'destructive' : 'secondary'}>
-                            {visit.risk_level === 'high' ? 'Élevé' : 'Faible'}
+                          <Badge variant={visit.niveau_risque === 'critique' || visit.niveau_risque === 'eleve' ? 'destructive' : 'secondary'}>
+                            {visit.niveau_risque === 'critique' ? 'Critique' : visit.niveau_risque === 'eleve' ? 'Élevé' : 'Faible'}
                           </Badge>
                         </td>
                         <td className="p-3 text-slate-300">
-                          {new Date(visit.visit_date).toLocaleDateString('fr-FR')}
+                          {visit.date_visite ? new Date(visit.date_visite).toLocaleDateString('fr-FR') : '-'}
                         </td>
                         <td className="p-3">
                           <Button variant="ghost" size="sm" className="text-cyan-400">

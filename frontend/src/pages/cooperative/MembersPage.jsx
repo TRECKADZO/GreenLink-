@@ -304,11 +304,11 @@ const MembersPage = () => {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right hidden md:block">
-                        <p className="text-sm font-medium">{member.parcels_count || 0} parcelles</p>
-                        <p className="text-xs text-gray-500">{member.total_hectares || 0} ha</p>
+                        <p className="text-sm font-medium">{member.nombre_parcelles || 0} parcelles</p>
+                        <p className="text-xs text-gray-500">{member.superficie_totale || 0} ha</p>
                       </div>
                       <div className="text-right hidden md:block">
-                        <p className="text-sm font-medium">Score: {member.average_carbon_score || 0}/10</p>
+                        <p className="text-sm font-medium">Score: {member.score_carbone_moyen || 0}/10</p>
                       </div>
                       {getStatusBadge(member.status)}
                       <div className="flex gap-2">
@@ -536,9 +536,9 @@ const MembersPage = () => {
                   <div className="space-y-2">
                     {selectedMember.parcels.map((parcel, i) => (
                       <div key={i} className="p-2 bg-green-50 rounded flex justify-between">
-                        <span>{parcel.location}</span>
+                        <span>{parcel.localisation || parcel.location}</span>
                         <span className="text-sm text-gray-600">
-                          {parcel.area_hectares} ha | Score: {parcel.carbon_score}/10
+                          {parcel.superficie || parcel.area_hectares} ha | Score: {parcel.score_carbone || parcel.carbon_score}/10
                         </span>
                       </div>
                     ))}

@@ -60,9 +60,9 @@ const ParcelsScreen = ({ navigation }) => {
     return <Loader message="Chargement des parcelles..." />;
   }
 
-  const totalArea = parcels.reduce((sum, p) => sum + (p.area_hectares || p.size || 0), 0);
+  const totalArea = parcels.reduce((sum, p) => sum + (p.superficie || p.area_hectares || p.size || 0), 0);
   const avgScore = parcels.length > 0 
-    ? (parcels.reduce((sum, p) => sum + (p.carbon_score || 0), 0) / parcels.length).toFixed(1)
+    ? (parcels.reduce((sum, p) => sum + (p.score_carbone || p.carbon_score || 0), 0) / parcels.length).toFixed(1)
     : 0;
 
   return (
@@ -112,24 +112,24 @@ const ParcelsScreen = ({ navigation }) => {
               key={parcel._id || index}
               style={styles.parcelCard}
               onPress={() => Alert.alert(
-                parcel.location || 'Parcelle',
-                `Surface: ${parcel.area_hectares || parcel.size || 0} ha\nType: ${parcel.crop_type || 'Non défini'}\nScore: ${parcel.carbon_score || 0}/10`
+                parcel.localisation || parcel.nom || parcel.location || 'Parcelle',
+                `Surface: ${parcel.superficie || parcel.area_hectares || 0} ha\nType: ${parcel.type_culture || parcel.crop_type || 'Non défini'}\nScore: ${parcel.score_carbone || parcel.carbon_score || 0}/10`
               )}
             >
               <View style={styles.parcelIcon}>
                 <Text style={styles.parcelEmoji}>🌳</Text>
               </View>
               <View style={styles.parcelInfo}>
-                <Text style={styles.parcelLocation}>{parcel.location || 'Parcelle'}</Text>
+                <Text style={styles.parcelLocation}>{parcel.localisation || parcel.nom || parcel.location || 'Parcelle'}</Text>
                 <Text style={styles.parcelDetails}>
-                  {parcel.area_hectares || parcel.size || 0} ha • {parcel.crop_type || 'Culture mixte'}
+                  {parcel.superficie || parcel.area_hectares || 0} ha • {parcel.type_culture || parcel.crop_type || 'Culture mixte'}
                 </Text>
               </View>
               <View style={[
                 styles.scoreContainer,
-                { backgroundColor: (parcel.carbon_score || 0) >= 7 ? COLORS.success : COLORS.warning }
+                { backgroundColor: (parcel.score_carbone || parcel.carbon_score || 0) >= 7 ? COLORS.success : COLORS.warning }
               ]}>
-                <Text style={styles.scoreText}>{parcel.carbon_score || 0}</Text>
+                <Text style={styles.scoreText}>{parcel.score_carbone || parcel.carbon_score || 0}</Text>
               </View>
             </TouchableOpacity>
           ))

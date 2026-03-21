@@ -240,7 +240,7 @@ const LotsPage = () => {
                           <Leaf className="h-4 w-4 text-green-500" />
                           <div>
                             <p className="text-sm text-gray-500">Score Carbone</p>
-                            <p className="font-medium">{lot.average_carbon_score}/10</p>
+                            <p className="font-medium">{lot.score_carbone_moyen}/10</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">

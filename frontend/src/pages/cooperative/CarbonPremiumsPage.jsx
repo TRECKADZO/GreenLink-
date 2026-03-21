@@ -207,7 +207,7 @@ const CarbonPremiumsPage = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-white">
-                    {premiums?.summary?.total_hectares || 0} ha
+                    {premiums?.summary?.superficie_totale || 0} ha
                   </p>
                   <p className="text-xs text-gray-400">Surface auditée</p>
                 </div>
@@ -332,7 +332,7 @@ const CarbonPremiumsPage = () => {
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-center text-white">
-                        {member.total_hectares} ha
+                        {member.superficie_totale} ha
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span className={`font-medium ${
@@ -416,7 +416,7 @@ const CarbonPremiumsPage = () => {
                               {formatDate(payment.created_at)}
                             </td>
                             <td className="py-3 px-4">
-                              <p className="text-white font-medium">{payment.member_name}</p>
+                              <p className="text-white font-medium">{payment.nom_membre}</p>
                             </td>
                             <td className="py-3 px-4 text-center text-gray-400 text-sm">
                               {payment.phone_number}
@@ -479,7 +479,7 @@ const CarbonPremiumsPage = () => {
                   {formatXOF(selectedMember.premium_xof)}
                 </p>
                 <p className="text-sm text-gray-400">
-                  Pour {selectedMember.total_hectares} ha auditées (score moyen: {selectedMember.average_score}/10)
+                  Pour {selectedMember.superficie_totale} ha auditées (score moyen: {selectedMember.average_score}/10)
                 </p>
               </div>
               

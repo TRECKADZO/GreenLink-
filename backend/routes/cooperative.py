@@ -160,14 +160,14 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
             "active": len(active_members),
             "pending_validation": len([m for m in members if m.get("status") == "pending_validation"])
         },
-        "parcels": {
+        "parcelles": {
             "total": len(parcels),
-            "total_hectares": round(total_hectares, 2),
-            "total_trees": total_trees,
-            "average_carbon_score": round(avg_carbon, 1),
-            "total_co2_tonnes": round(total_co2, 2),
-            "verified": len([p for p in parcels if p.get("verification_status") == "verified"]),
-            "pending_verification": len([p for p in parcels if p.get("verification_status") in ["pending", None]]),
+            "superficie_totale": round(total_hectares, 2),
+            "total_arbres": total_trees,
+            "score_carbone_moyen": round(avg_carbon, 1),
+            "co2_total": round(total_co2, 2),
+            "verifiees": len([p for p in parcels if p.get("verification_status") == "verified"]),
+            "en_attente_verification": len([p for p in parcels if p.get("verification_status") in ["pending", None]]),
         },
         "recent_members": [{
             "id": str(m["_id"]),

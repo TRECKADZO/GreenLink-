@@ -76,9 +76,9 @@ async def get_coop_members(
         if m.get("user_id"):
             parcel_or.append({"farmer_id": m["user_id"]})
         parcels = await db.parcels.find({"$or": parcel_or}).to_list(100)
-        member_data["parcels_count"] = len(parcels)
-        member_data["total_hectares"] = round(sum([p.get("area_hectares", 0) or 0 for p in parcels]), 2)
-        member_data["average_carbon_score"] = round(
+        member_data["nombre_parcelles"] = len(parcels)
+        member_data["superficie_totale"] = round(sum([p.get("area_hectares", 0) or 0 for p in parcels]), 2)
+        member_data["score_carbone_moyen"] = round(
             sum([p.get("carbon_score", 0) or 0 for p in parcels]) / len(parcels), 1
         ) if parcels else 0
         

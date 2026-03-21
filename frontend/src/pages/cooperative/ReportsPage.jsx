@@ -121,7 +121,7 @@ const ReportsPage = () => {
         [''],
         ['DILIGENCE RAISONNEE'],
         ['Score conformite', due_diligence?.compliance_score + '%'],
-        ['Niveau de risque', due_diligence?.risk_level],
+        ['Niveau de risque', due_diligence?.niveau_risque],
         [''],
         ['GEOLOCALISATION'],
         ['Parcelles geolocalisees', compliance?.geolocated_parcels + '/' + compliance?.total_parcels],
@@ -139,9 +139,9 @@ const ReportsPage = () => {
         ['Sans date', cutoff_date?.parcels_no_date],
         [''],
         ['ESG - ENVIRONNEMENT'],
-        ['CO2 capture (tonnes)', esg_indicators?.environmental?.total_co2_tonnes],
-        ['Score carbone moyen', esg_indicators?.environmental?.average_carbon_score + '/10'],
-        ['Surface totale (ha)', esg_indicators?.environmental?.total_hectares],
+        ['CO2 capture (tonnes)', esg_indicators?.environmental?.co2_total],
+        ['Score carbone moyen', esg_indicators?.environmental?.score_carbone_moyen + '/10'],
+        ['Surface totale (ha)', esg_indicators?.environmental?.superficie_totale],
         [''],
         ['ESG - SOCIAL'],
         ['Membres actifs', esg_indicators?.social?.active_members],
@@ -234,7 +234,7 @@ const ReportsPage = () => {
               <div className="space-y-3 mt-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Niveau de risque</span>
-                  <RiskBadge level={due_diligence?.risk_level} />
+                  <RiskBadge level={due_diligence?.niveau_risque} />
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Statut DDS</span>
@@ -451,15 +451,15 @@ const ReportsPage = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">CO2 capture</span>
-                    <span className="font-bold text-emerald-700">{esg_indicators?.environmental?.total_co2_tonnes || 0}t</span>
+                    <span className="font-bold text-emerald-700">{esg_indicators?.environmental?.co2_total || 0}t</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Score carbone</span>
-                    <span className="font-bold text-emerald-700">{esg_indicators?.environmental?.average_carbon_score || 0}/10</span>
+                    <span className="font-bold text-emerald-700">{esg_indicators?.environmental?.score_carbone_moyen || 0}/10</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Surface</span>
-                    <span className="font-bold text-emerald-700">{esg_indicators?.environmental?.total_hectares || 0} ha</span>
+                    <span className="font-bold text-emerald-700">{esg_indicators?.environmental?.superficie_totale || 0} ha</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Zero deforestation</span>
@@ -540,17 +540,17 @@ const ReportsPage = () => {
                 </div>
                 <div className="p-3 bg-green-50 rounded-lg text-center">
                   <MapPin className="h-6 w-6 mx-auto text-green-600 mb-1" />
-                  <p className="text-xl font-bold text-green-900">{statistics?.total_hectares || 0}</p>
+                  <p className="text-xl font-bold text-green-900">{statistics?.superficie_totale || 0}</p>
                   <p className="text-xs text-green-600">Hectares</p>
                 </div>
                 <div className="p-3 bg-emerald-50 rounded-lg text-center">
                   <Leaf className="h-6 w-6 mx-auto text-emerald-600 mb-1" />
-                  <p className="text-xl font-bold text-emerald-900">{statistics?.total_co2_tonnes || 0}</p>
+                  <p className="text-xl font-bold text-emerald-900">{statistics?.co2_total || 0}</p>
                   <p className="text-xs text-emerald-600">Tonnes CO2</p>
                 </div>
                 <div className="p-3 bg-teal-50 rounded-lg text-center">
                   <CheckCircle className="h-6 w-6 mx-auto text-teal-600 mb-1" />
-                  <p className="text-xl font-bold text-teal-900">{statistics?.average_carbon_score || 0}/10</p>
+                  <p className="text-xl font-bold text-teal-900">{statistics?.score_carbone_moyen || 0}/10</p>
                   <p className="text-xs text-teal-600">Score Moyen</p>
                 </div>
               </div>

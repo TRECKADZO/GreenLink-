@@ -35,12 +35,12 @@ const ParcelCard = ({ parcel, onDelete }) => (
     </View>
     <View style={styles.parcelStats}>
       <View style={styles.parcelStat}>
-        <Text style={styles.parcelStatValue}>{parcel.area_hectares} ha</Text>
+        <Text style={styles.parcelStatValue}>{parcel.superficie || parcel.area_hectares} ha</Text>
         <Text style={styles.parcelStatLabel}>Surface</Text>
       </View>
       <View style={styles.parcelStat}>
         <Text style={[styles.parcelStatValue, { color: COLORS.primary }]}>
-          {parcel.carbon_score}/10
+          {parcel.score_carbone || parcel.carbon_score}/10
         </Text>
         <Text style={styles.parcelStatLabel}>Score</Text>
       </View>
@@ -227,7 +227,7 @@ export default function CoopMemberDetailScreen({ route, navigation }) {
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
             <Text style={[styles.statBoxValue, { color: COLORS.primary }]}>
-              {parcelsData?.average_carbon_score || 0}
+              {parcelsData?.score_carbone_moyen || 0}
             </Text>
             <Text style={styles.statBoxLabel}>Score</Text>
           </View>

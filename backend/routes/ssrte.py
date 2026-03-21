@@ -340,16 +340,16 @@ async def list_visits(
     return {
         "visits": [{
             "id": str(v["_id"]),
-            "member_name": v.get("member_name") or v.get("farmer_name"),
-            "agent_name": v.get("agent_name"),
-            "visit_date": v.get("recorded_at") or v.get("date_visite") or v.get("visit_date"),
-            "household_size": v.get("household_size") or v.get("taille_menage", 0),
-            "children_count": v.get("children_count") or v.get("enfants_observes_travaillant", 0),
-            "children_at_risk": v.get("children_at_risk") or v.get("enfants_observes_travaillant", 0),
-            "risk_level": v.get("niveau_risque") or v.get("risk_level", "faible"),
-            "living_conditions": v.get("living_conditions"),
-            "has_cases": v.get("has_cases", v.get("enfants_observes_travaillant", 0) > 0),
-            "farmer_id": v.get("farmer_id")
+            "nom_membre": v.get("member_name") or v.get("farmer_name"),
+            "nom_agent": v.get("agent_name"),
+            "date_visite": v.get("recorded_at") or v.get("date_visite") or v.get("visit_date"),
+            "taille_menage": v.get("household_size") or v.get("taille_menage", 0),
+            "enfants_observes": v.get("children_count") or v.get("enfants_observes_travaillant", 0),
+            "enfants_a_risque": v.get("children_at_risk") or v.get("enfants_observes_travaillant", 0),
+            "niveau_risque": v.get("niveau_risque") or v.get("risk_level", "faible"),
+            "conditions_vie": v.get("living_conditions"),
+            "cas_detectes": v.get("has_cases", v.get("enfants_observes_travaillant", 0) > 0),
+            "producteur_id": v.get("farmer_id")
         } for v in visits],
         "total": len(visits)
     }

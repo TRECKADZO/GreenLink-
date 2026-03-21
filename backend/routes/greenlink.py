@@ -139,7 +139,23 @@ async def get_my_parcels(current_user: dict = Depends(get_current_user)):
         ]
     }).to_list(100)
     
-    return [{**p, "_id": str(p["_id"])} for p in parcels]
+    return [{
+        "id": str(p["_id"]),
+        "producteur_id": p.get("farmer_id", ""),
+        "membre_id": p.get("member_id", ""),
+        "localisation": p.get("location", ""),
+        "village": p.get("village", ""),
+        "region": p.get("region", ""),
+        "superficie": p.get("area_hectares", 0),
+        "type_culture": p.get("crop_type", "cacao"),
+        "score_carbone": p.get("carbon_score", 0),
+        "co2_capture": p.get("co2_captured_tonnes", 0),
+        "coordonnees_gps": p.get("gps_coordinates"),
+        "statut_verification": p.get("verification_status", "pending"),
+        "certification": p.get("certification"),
+        "nom": p.get("name", ""),
+        "cree_le": str(p.get("created_at", ""))
+    } for p in parcels]
 
 @router.post("/harvests", response_model=Harvest)
 async def declare_harvest(
@@ -334,14 +350,14 @@ async def get_farmer_dashboard(current_user: dict = Depends(get_current_user)):
         serialized_harvests.append(harvest_dict)
     
     return {
-        "total_parcels": len(parcels),
-        "total_area_hectares": total_area,
-        "total_trees": total_trees,
-        "average_carbon_score": round(avg_carbon_score, 1),
-        "total_carbon_credits": round(total_carbon_credits, 2),
-        "total_revenue": total_revenue,
-        "carbon_premium_earned": total_carbon_premium,
-        "recent_harvests": serialized_harvests
+        "total_parcelles": len(parcels),
+        "superficie_totale": total_area,
+        "total_arbres": total_trees,
+        "score_carbone_moyen": round(avg_carbon_score, 1),
+        "credits_carbone": round(total_carbon_credits, 2),
+        "revenu_total": total_revenue,
+        "prime_carbone": total_carbon_premium,
+        "recoltes_recentes": serialized_harvests
     }
 
 # ============= SMS NOTIFICATIONS =============

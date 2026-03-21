@@ -337,7 +337,7 @@ const FarmerSearchScreen = ({ navigation }) => {
                   <View key={p.id} style={styles.parcelRow}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.parcelName}>{p.village || p.location}</Text>
-                      <Text style={styles.parcelInfo}>{p.area_hectares} ha • {p.crop_type}</Text>
+                      <Text style={styles.parcelInfo}>{p.superficie || p.area_hectares} ha • {p.type_culture || p.crop_type}</Text>
                     </View>
                     <View style={[styles.verifBadge, { backgroundColor: getStatusColor(p.verification_status) + '20' }]}>
                       <View style={[styles.verifDot, { backgroundColor: getStatusColor(p.verification_status) }]} />

@@ -132,7 +132,7 @@ const Dashboard = () => {
     );
   }
 
-  const { coop_info, members, parcels, lots, financial, recent_members, agents } = dashboardData || {};
+  const { coop_info, members, parcelles, lots, financial, recent_members, agents } = dashboardData || {};
 
   const stats = [
     {
@@ -153,22 +153,22 @@ const Dashboard = () => {
     },
     {
       title: 'Parcelles',
-      value: parcels?.total_count || 0,
-      subtitle: `${parcels?.total_hectares || 0} ha`,
+      value: parcelles?.total || 0,
+      subtitle: `${parcelles?.superficie_totale || 0} ha`,
       icon: MapPin,
       color: 'bg-green-500',
       link: '/cooperative/parcels/new'
     },
     {
       title: 'Score Carbone Moyen',
-      value: parcels?.average_carbon_score?.toFixed(1) || '0',
+      value: parcelles?.score_carbone_moyen?.toFixed(1) || '0',
       subtitle: '/10',
       icon: Leaf,
       color: 'bg-emerald-500'
     },
     {
       title: 'CO₂ Capturé',
-      value: parcels?.total_co2_tonnes?.toFixed(1) || '0',
+      value: parcelles?.co2_total?.toFixed(1) || '0',
       subtitle: 'tonnes',
       icon: TrendingUp,
       color: 'bg-teal-500'
@@ -505,22 +505,22 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center p-4 bg-white rounded-lg border border-green-200">
                   <MapPin className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="text-2xl font-bold text-gray-900">{parcels?.total_count || 0}</p>
+                  <p className="text-2xl font-bold text-gray-900">{parcelles?.total || 0}</p>
                   <p className="text-sm text-gray-500">Parcelles Totales</p>
                 </div>
                 <div className="text-center p-4 bg-white rounded-lg border border-green-200">
                   <Leaf className="h-8 w-8 mx-auto mb-2 text-emerald-600" />
-                  <p className="text-2xl font-bold text-gray-900">{parcels?.total_hectares?.toFixed(1) || 0}</p>
+                  <p className="text-2xl font-bold text-gray-900">{parcelles?.superficie_totale?.toFixed(1) || 0}</p>
                   <p className="text-sm text-gray-500">Hectares Cultivés</p>
                 </div>
                 <div className="text-center p-4 bg-white rounded-lg border border-green-200">
                   <TrendingUp className="h-8 w-8 mx-auto mb-2 text-teal-600" />
-                  <p className="text-2xl font-bold text-gray-900">{parcels?.average_carbon_score?.toFixed(1) || 0}/10</p>
+                  <p className="text-2xl font-bold text-gray-900">{parcelles?.score_carbone_moyen?.toFixed(1) || 0}/10</p>
                   <p className="text-sm text-gray-500">Score Carbone Moyen</p>
                 </div>
                 <div className="text-center p-4 bg-white rounded-lg border border-green-200">
                   <CheckCircle className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <p className="text-2xl font-bold text-gray-900">{parcels?.total_co2_tonnes?.toFixed(1) || 0}</p>
+                  <p className="text-2xl font-bold text-gray-900">{parcelles?.co2_total?.toFixed(1) || 0}</p>
                   <p className="text-sm text-gray-500">Tonnes CO₂ Capturées</p>
                 </div>
               </div>
