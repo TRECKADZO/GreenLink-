@@ -414,13 +414,16 @@ class PasswordResetVerify(BaseModel):
 @limiter.limit("3/minute")
 async def request_password_reset(request: Request, data: PasswordResetRequest):
     """Request a password reset code"""
-    # Find user by email or phone
-    user = await db.users.find_one({
-        "$or": [
-            {"email": data.identifier},
-            {"phone_number": data.identifier}
-        ]
-    })
+    # Find user by email or phone (with phone normalization)
+    search_conditions = [{"email": data.identifier}]
+    
+    if "@" not in data.identifier:
+        phone_variants = normalize_phone(data.identifier)
+        search_conditions.append({"phone_number": {"$in": phone_variants}})
+    else:
+        search_conditions.append({"phone_number": data.identifier})
+    
+    user = await db.users.find_one({"$or": search_conditions})
     
     if not user:
         # For security, don't reveal if user exists
@@ -483,9 +486,10 @@ async def request_password_reset(request: Request, data: PasswordResetRequest):
         "email_sent": email_sent,
     }
     
-    # Include simulation_code only if email was NOT sent (phone-only users or email failure)
-    if not email_sent:
-        response["simulation_code"] = reset_code
+    # Always include simulation_code for mobile users
+    # Real SMS (Orange) not yet configured, so mobile users need this code
+    # Remove this line when real SMS gateway is deployed
+    response["simulation_code"] = reset_code
     
     return response
 
@@ -501,9 +505,15 @@ async def verify_reset_code(data: dict):
             detail="Identifiant et code requis"
         )
     
+    # Build search conditions to handle phone format variations
+    id_conditions = [{"identifier": identifier}]
+    if "@" not in identifier:
+        phone_variants = normalize_phone(identifier)
+        id_conditions = [{"identifier": {"$in": phone_variants + [identifier]}}]
+    
     # Find the reset request
     reset_request = await db.password_resets.find_one({
-        "identifier": identifier,
+        "$or": id_conditions,
         "code": code,
         "used": False,
         "expires_at": {"$gt": datetime.utcnow()}
@@ -520,9 +530,15 @@ async def verify_reset_code(data: dict):
 @router.post("/reset-password")
 async def reset_password(request: PasswordResetVerify):
     """Reset password with valid code"""
+    # Build search conditions to handle phone format variations
+    id_conditions = [{"identifier": request.identifier}]
+    if "@" not in request.identifier:
+        phone_variants = normalize_phone(request.identifier)
+        id_conditions = [{"identifier": {"$in": phone_variants + [request.identifier]}}]
+    
     # Verify the code again
     reset_request = await db.password_resets.find_one({
-        "identifier": request.identifier,
+        "$or": id_conditions,
         "code": request.code,
         "used": False,
         "expires_at": {"$gt": datetime.utcnow()}

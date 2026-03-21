@@ -8,10 +8,11 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { marketplaceApi } from '../../services/marketplace';
-import { COLORS, FONTS, SPACING } from '../../config';
+import { COLORS, FONTS, SPACING, CONFIG } from '../../config';
 
 const CheckoutScreen = ({ route, navigation }) => {
   const { items, total, deliveryFees: initialFees, totalWithDelivery: initialTotal } = route.params;
@@ -124,16 +125,37 @@ const CheckoutScreen = ({ route, navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Récapitulatif</Text>
           <View style={styles.summaryCard}>
-            {items.map((item) => (
-              <View key={item.product_id} style={styles.summaryItem}>
-                <Text style={styles.summaryItemName} numberOfLines={1}>
-                  {item.quantity}x {item.product_name}
-                </Text>
-                <Text style={styles.summaryItemPrice}>
-                  {(item.price * item.quantity).toLocaleString()} F
-                </Text>
-              </View>
-            ))}
+            {items.map((item) => {
+              const imageUri = item.product_image
+                ? (item.product_image.startsWith('http') ? item.product_image : `${CONFIG.API_URL}${item.product_image}`)
+                : null;
+              return (
+                <View key={item.product_id} style={styles.summaryItemRow}>
+                  {imageUri ? (
+                    <Image
+                      source={{ uri: imageUri }}
+                      style={styles.summaryItemImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.summaryItemImagePlaceholder}>
+                      <Text style={{ fontSize: 16 }}>📦</Text>
+                    </View>
+                  )}
+                  <View style={styles.summaryItemInfo}>
+                    <Text style={styles.summaryItemName} numberOfLines={2}>
+                      {item.quantity}x {item.product_name}
+                    </Text>
+                    {item.supplier_name ? (
+                      <Text style={styles.summaryItemSupplier} numberOfLines={1}>{item.supplier_name}</Text>
+                    ) : null}
+                  </View>
+                  <Text style={styles.summaryItemPrice}>
+                    {(item.price * item.quantity).toLocaleString()} F
+                  </Text>
+                </View>
+              );
+            })}
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={styles.summaryItemName}>Sous-total</Text>
@@ -365,6 +387,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: SPACING.xs,
+  },
+  summaryItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray[100],
+  },
+  summaryItemImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: COLORS.gray[100],
+  },
+  summaryItemImagePlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: COLORS.gray[100],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  summaryItemInfo: {
+    flex: 1,
+    marginLeft: SPACING.sm,
+  },
+  summaryItemSupplier: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.gray[400],
+    marginTop: 2,
   },
   summaryDivider: {
     height: 1,
