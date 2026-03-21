@@ -56,7 +56,15 @@ limiter = Limiter(key_func=get_remote_address)
 # Create the main app without a prefix
 app = FastAPI()
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Custom rate limit handler that returns JSON (not plain text)
+async def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Trop de tentatives. Patientez une minute avant de réessayer."}
+    )
+
+app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -77,6 +85,10 @@ class StatusCheckCreate(BaseModel):
 @api_router.get("/")
 async def root():
     return {"message": "Hello World"}
+
+@api_router.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "greenlink-api"}
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):

@@ -89,7 +89,7 @@ export default function ForgotPasswordScreen({ navigation }) {
       Alert.alert('Succès', 'Code vérifié');
       setStep(3);
     } catch (error) {
-      Alert.alert('Erreur', error.response?.data?.detail || 'Code invalide ou expiré');
+      Alert.alert('Erreur', error.response?.data?.detail || 'Code invalide ou expiré. Vérifiez et réessayez.');
     } finally {
       setLoading(false);
     }
@@ -121,7 +121,7 @@ export default function ForgotPasswordScreen({ navigation }) {
         [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
       );
     } catch (error) {
-      Alert.alert('Erreur', error.response?.data?.detail || 'Erreur lors de la réinitialisation');
+      Alert.alert('Erreur', error.response?.data?.detail || 'Erreur lors de la réinitialisation. Réessayez.');
     } finally {
       setLoading(false);
     }

@@ -10,63 +10,34 @@ Plateforme agricole full-stack pour la gestion des coopératives cacao en Côte 
 
 ## Fonctionnalités Implémentées
 
-### Phase 1 - Core Platform (DONE)
-- Authentification multi-rôles
-- Dashboard coopérative, gestion membres, parcelles, SSRTE, lots, primes carbone
+### Phase 1-4 (DONE)
+- Core Platform, Mobile, Backend Refactoring, Harmonisation Clés Françaises
 
-### Phase 2 - Mobile & Field Agent (DONE)
-- App mobile React Native (Expo)
-- Écrans farmer, field agent, coopérative
-- Auto-refresh avec useFocusEffect
-
-### Phase 3 - Refactoring Backend (DONE)
-- cooperative.py refactorisé en 7 modules
-
-### Phase 4 - Harmonisation Clés Françaises (DONE - 21/03/2026)
-- Toutes les clés API en français + frontend/mobile synchronisés
-- Collision routes /api/ssrte/visits corrigée
-
-### Phase 5 - Système de Notifications Complet (DONE - 21/03/2026)
-**4 types de notifications :**
-| Type | Déclencheur | Destinataire | Icône |
-|------|------------|-------------|-------|
-| `new_parcel_to_verify` | Nouvelle parcelle déclarée | Agents terrain + Coopérative | MapPin (bleu) |
-| `parcel_verified` | Parcelle vérifiée/rejetée par agent | Producteur | Check (vert) |
-| `ssrte_critical_alert` | Visite SSRTE avec enfants à risque | Coopérative | AlertTriangle (rouge) |
-| `payment_received` | Prime carbone payée | Producteur | Leaf (émeraude) |
+### Phase 5 - Notifications Push (DONE)
+- 4 types: new_parcel_to_verify, parcel_verified, ssrte_critical_alert, payment_received
 
 ### Phase 6 - Système de Livraison Marketplace (DONE - 21/03/2026)
-**3 modèles de livraison par fournisseur (cumulables) :**
-| Modèle | Description | Champs |
-|--------|------------|--------|
-| `frais_fixe` | Montant fixe par commande | actif, montant |
-| `par_distance` | Tarif par zone de livraison | actif, zones (meme_ville, meme_region, national) |
-| `par_poids` | Prix par unité commandée | actif, prix_par_unite |
-| `seuil_gratuit` | Livraison gratuite au-dessus d'un montant | actif, montant_minimum |
+- 3 modèles cumulables par fournisseur: frais_fixe, par_distance (zones), par_poids
+- Seuil de gratuité optionnel
+- Page web /supplier/delivery-settings + mobile CartScreen/CheckoutScreen mis à jour
+- Backend: GET/PUT delivery-settings, delivery-fees, cart avec frais, checkout avec zone
 
-**Backend :**
-- Collection `delivery_settings` par fournisseur
-- GET/PUT /api/marketplace/supplier/delivery-settings
-- GET /api/marketplace/delivery-fees?zone=... (calcul des frais)
-- GET /api/marketplace/cart inclut delivery_fees, total_delivery, total_with_delivery
-- POST /api/marketplace/cart/checkout accepte delivery_zone dans le body JSON
-
-**Frontend Web :**
-- Page `/supplier/delivery-settings` avec 4 cartes configurables (Switch + inputs)
-- Aperçu client en bas de page
-- Sidebar fournisseur avec lien "Livraison"
-- CheckoutPage mis à jour : sélection de zone + affichage des frais par fournisseur
-
-**Mobile :**
-- CartScreen affiche les frais de livraison par fournisseur
-- CheckoutScreen avec sélection de zone et total incluant la livraison
+### Phase 7 - Correction Erreurs de Connexion (DONE - 21/03/2026)
+**Problème**: "Erreur de connexion" générique sur mobile au lieu de messages d'erreur spécifiques
+**Corrections:**
+- Rate limiter backend retourne maintenant du JSON (au lieu de texte brut qui cassait le parsing mobile)
+- Intercepteur API mobile gère les réponses non-JSON (pages HTML du proxy K8s)
+- Login mobile: messages spécifiques pour 401, 403, 422, 429, 5xx, timeout, erreur réseau
+- Register mobile: même traitement robuste
+- Endpoint /api/health ajouté pour vérification de connectivité
+- Build v1.39.4
 
 ## Credentials
-- Cooperative: identifier=bielaghana@gmail.com, password=greenlink2024
-- Fournisseur: identifier=testfournisseur@test.com, password=supplier2024
+- Cooperative: bielaghana@gmail.com / greenlink2024
+- Fournisseur: testfournisseur@test.com / supplier2024
 
 ## APIs Mockées
-- Orange SMS, Orange Money, Expo Push (notifications stockées en DB)
+- Orange SMS, Orange Money
 
 ## Backlog
 - P1: Soumettre AAB au Google Play Console
@@ -76,18 +47,14 @@ Plateforme agricole full-stack pour la gestion des coopératives cacao en Côte 
 
 ## Key API Endpoints
 - POST /api/auth/login
+- POST /api/auth/register
+- GET /api/health
 - GET/PUT /api/marketplace/supplier/delivery-settings
 - GET /api/marketplace/delivery-fees?zone=...
 - GET /api/marketplace/cart?zone=...
 - POST /api/marketplace/cart/checkout (JSON body)
-- GET /api/marketplace/products
-- POST /api/carbon-payments/request-payment
-- GET /api/notifications/history
 
-## DB Collections
-- `delivery_settings`: {supplier_id, modeles_livraison, seuil_gratuit, updated_at}
-- `notification_history`: {user_id, title, message, type, read, created_at, data}
-- `carts`: {user_id, items: [{product_id, quantity}]}
-- `orders`: {order_number, buyer_id, supplier_id, items, subtotal, frais_livraison, total_amount, delivery_zone, ...}
-- `products`: {name, price, supplier_id, category, stock_quantity, ...}
-- `parcels`: {superficie, nom_producteur, localisation}
+## Builds
+- v1.39.2: Notifications + fixes mobile
+- v1.39.3: Système de livraison marketplace
+- v1.39.4: Correction erreurs de connexion (rate limiter JSON, messages spécifiques)

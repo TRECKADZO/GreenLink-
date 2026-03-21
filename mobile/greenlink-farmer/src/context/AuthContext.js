@@ -67,9 +67,46 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('[Auth] Login error:', error.message);
       console.error('[Auth] Error response:', error.response?.data);
+      console.error('[Auth] Error status:', error.response?.status);
+      
+      let errorMessage = 'Erreur de connexion';
+      
+      if (error.response) {
+        // Server responded with an error status
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        if (typeof data === 'object' && data !== null && data.detail) {
+          // Standard FastAPI error response
+          if (typeof data.detail === 'string') {
+            errorMessage = data.detail;
+          } else if (Array.isArray(data.detail)) {
+            errorMessage = data.detail.map(e => e.msg || e).join('\n');
+          } else {
+            errorMessage = JSON.stringify(data.detail);
+          }
+        } else if (status === 401) {
+          errorMessage = 'Identifiant ou mot de passe incorrect';
+        } else if (status === 403) {
+          errorMessage = 'Compte désactivé. Contactez votre coopérative.';
+        } else if (status === 422) {
+          errorMessage = 'Veuillez vérifier les informations saisies';
+        } else if (status === 429) {
+          errorMessage = 'Trop de tentatives. Patientez une minute avant de réessayer.';
+        } else if (status >= 500) {
+          errorMessage = 'Le serveur rencontre un problème. Réessayez dans quelques instants.';
+        } else {
+          errorMessage = `Erreur (${status}). Veuillez réessayer.`;
+        }
+      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMessage = 'La connexion est trop lente. Vérifiez votre réseau et réessayez.';
+      } else if (error.message?.includes('Network Error') || error.message?.includes('ERR_NETWORK')) {
+        errorMessage = 'Impossible de contacter le serveur. Vérifiez votre connexion internet.';
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.detail || 'Erreur de connexion',
+        error: errorMessage,
       };
     }
   };
@@ -81,7 +118,6 @@ export const AuthProvider = ({ children }) => {
       
       const response = await api.post('/auth/register', {
         ...data,
-        // Use provided user_type or default to 'producteur'
         user_type: data.user_type || 'producteur',
         legal_acceptance: {
           acceptedConditions: true,
@@ -106,43 +142,51 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('[Auth] Register error:', error.message);
       console.error('[Auth] Error response:', error.response?.data);
+      console.error('[Auth] Error status:', error.response?.status);
       
-      // Parse specific error messages from backend
-      let errorMessage = 'Erreur d\'inscription';
-      const backendError = error.response?.data?.detail;
+      let errorMessage = "Erreur d'inscription";
       
-      if (backendError) {
-        // Handle Pydantic validation errors (array of errors)
-        if (Array.isArray(backendError)) {
-          const messages = backendError.map(err => {
-            // Extract the message part after "Value error, "
-            const msg = err.msg || '';
-            return msg.replace('Value error, ', '');
-          });
-          errorMessage = messages.join('\n');
-        } else if (typeof backendError === 'string') {
-          // Normalize for comparison (handle accents)
-          const normalizedError = backendError.toLowerCase();
-          
-          if (normalizedError.includes('téléphone') || 
-              normalizedError.includes('telephone') || 
-              normalizedError.includes('phone') ||
-              normalizedError.includes('numéro')) {
-            errorMessage = 'Ce numéro de téléphone est déjà enregistré. Connectez-vous ou utilisez un autre numéro.';
-          } else if (normalizedError.includes('email') || normalizedError.includes('mail')) {
-            errorMessage = 'Cet email est déjà enregistré. Connectez-vous ou utilisez un autre email.';
-          } else if (normalizedError.includes('mot de passe') || normalizedError.includes('password')) {
-            errorMessage = 'Le mot de passe doit contenir au moins 6 caractères.';
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        const backendError = data?.detail;
+        
+        if (backendError) {
+          if (Array.isArray(backendError)) {
+            const messages = backendError.map(err => {
+              const msg = err.msg || '';
+              return msg.replace('Value error, ', '');
+            });
+            errorMessage = messages.join('\n');
+          } else if (typeof backendError === 'string') {
+            const normalizedError = backendError.toLowerCase();
+            
+            if (normalizedError.includes('téléphone') || 
+                normalizedError.includes('telephone') || 
+                normalizedError.includes('phone') ||
+                normalizedError.includes('numéro')) {
+              errorMessage = 'Ce numéro de téléphone est déjà enregistré. Connectez-vous ou utilisez un autre numéro.';
+            } else if (normalizedError.includes('email') || normalizedError.includes('mail')) {
+              errorMessage = 'Cet email est déjà enregistré. Connectez-vous ou utilisez un autre email.';
+            } else if (normalizedError.includes('mot de passe') || normalizedError.includes('password')) {
+              errorMessage = 'Le mot de passe doit contenir au moins 6 caractères.';
+            } else {
+              errorMessage = backendError;
+            }
           } else {
-            errorMessage = backendError;
+            errorMessage = JSON.stringify(backendError);
           }
-        } else {
-          errorMessage = JSON.stringify(backendError);
+        } else if (status === 422) {
+          errorMessage = 'Veuillez vérifier les informations saisies. Tous les champs obligatoires doivent être remplis.';
+        } else if (status === 429) {
+          errorMessage = 'Trop de tentatives. Patientez une minute avant de réessayer.';
+        } else if (status >= 500) {
+          errorMessage = 'Le serveur rencontre un problème. Réessayez dans quelques instants.';
         }
-      } else if (error.message && error.message.includes('Network')) {
-        errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet.';
-      } else if (error.message && error.message.includes('timeout')) {
-        errorMessage = 'Le serveur met trop de temps à répondre. Réessayez.';
+      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMessage = 'La connexion est trop lente. Vérifiez votre réseau et réessayez.';
+      } else if (error.message?.includes('Network Error') || error.message?.includes('ERR_NETWORK')) {
+        errorMessage = 'Impossible de contacter le serveur. Vérifiez votre connexion internet.';
       }
       
       return {

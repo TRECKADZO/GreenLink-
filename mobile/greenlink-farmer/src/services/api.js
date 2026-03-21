@@ -7,6 +7,7 @@ const axiosInstance = axios.create({
   timeout: CONFIG.REQUEST_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
 });
 
@@ -19,16 +20,30 @@ axiosInstance.interceptors.request.use(
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
     }
+    console.log(`[API] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Intercepteur pour retry automatique
+// Intercepteur pour retry automatique et normalisation des erreurs
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const config = error.config;
+    
+    // Ensure error.response.data is always an object (handle HTML responses from proxy)
+    if (error.response && typeof error.response.data === 'string') {
+      const statusCode = error.response.status;
+      console.warn(`[API] Received non-JSON response (${statusCode}):`, error.response.data?.substring(0, 200));
+      error.response.data = {
+        detail: statusCode === 502 ? 'Serveur temporairement indisponible. Réessayez.' :
+                statusCode === 503 ? 'Service en maintenance. Réessayez dans quelques instants.' :
+                statusCode === 504 ? 'Le serveur ne répond pas. Vérifiez votre connexion.' :
+                statusCode === 429 ? 'Trop de requêtes. Patientez une minute.' :
+                `Erreur serveur (${statusCode})`
+      };
+    }
     
     // Ne pas retry si déjà fait ou si c'est une erreur 4xx
     if (config._retry >= CONFIG.RETRY_ATTEMPTS || (error.response && error.response.status < 500)) {
@@ -36,6 +51,7 @@ axiosInstance.interceptors.response.use(
     }
     
     config._retry = (config._retry || 0) + 1;
+    console.log(`[API] Retry ${config._retry}/${CONFIG.RETRY_ATTEMPTS} for ${config.url}`);
     
     // Attendre avant de retry
     await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
