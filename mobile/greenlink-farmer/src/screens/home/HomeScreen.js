@@ -109,7 +109,7 @@ const HomeScreen = ({ navigation }) => {
         />
         <InfoCard
           title="Surface totale"
-          value={dashboard?.total_area || 0}
+          value={dashboard?.total_area_hectares || dashboard?.total_area || 0}
           unit="ha"
           icon="📐"
           color={COLORS.success}

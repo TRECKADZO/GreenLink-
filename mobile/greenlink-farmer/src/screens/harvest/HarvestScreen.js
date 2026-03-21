@@ -175,7 +175,7 @@ const HarvestScreen = ({ navigation }) => {
                     styles.parcelSize,
                     formData.parcel_id === parcel._id && styles.parcelSizeSelected,
                   ]}>
-                    {parcel.size} ha
+                    {parcel.area_hectares || parcel.size || 0} ha
                   </Text>
                 </TouchableOpacity>
               ))}

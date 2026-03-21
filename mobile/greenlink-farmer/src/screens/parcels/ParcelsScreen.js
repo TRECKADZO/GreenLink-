@@ -56,7 +56,7 @@ const ParcelsScreen = ({ navigation }) => {
     return <Loader message="Chargement des parcelles..." />;
   }
 
-  const totalArea = parcels.reduce((sum, p) => sum + (p.size || 0), 0);
+  const totalArea = parcels.reduce((sum, p) => sum + (p.area_hectares || p.size || 0), 0);
   const avgScore = parcels.length > 0 
     ? (parcels.reduce((sum, p) => sum + (p.carbon_score || 0), 0) / parcels.length).toFixed(1)
     : 0;
@@ -109,7 +109,7 @@ const ParcelsScreen = ({ navigation }) => {
               style={styles.parcelCard}
               onPress={() => Alert.alert(
                 parcel.location || 'Parcelle',
-                `Surface: ${parcel.size} ha\nType: ${parcel.crop_type || 'Non défini'}\nScore: ${parcel.carbon_score || 0}/10`
+                `Surface: ${parcel.area_hectares || parcel.size || 0} ha\nType: ${parcel.crop_type || 'Non défini'}\nScore: ${parcel.carbon_score || 0}/10`
               )}
             >
               <View style={styles.parcelIcon}>
@@ -118,7 +118,7 @@ const ParcelsScreen = ({ navigation }) => {
               <View style={styles.parcelInfo}>
                 <Text style={styles.parcelLocation}>{parcel.location || 'Parcelle'}</Text>
                 <Text style={styles.parcelDetails}>
-                  {parcel.size} ha • {parcel.crop_type || 'Culture mixte'}
+                  {parcel.area_hectares || parcel.size || 0} ha • {parcel.crop_type || 'Culture mixte'}
                 </Text>
               </View>
               <View style={[
