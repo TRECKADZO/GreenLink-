@@ -528,9 +528,9 @@ async def get_realtime_dashboard(current_user: dict = Depends(get_admin_user)):
         "payments": {
             "today": payments_today,
             "week": payments_week,
-            "month_total": round(payment_totals.get("total_amount", 0)),
-            "month_count": payment_totals.get("count", 0),
-            "avg_amount": round(payment_totals.get("avg_amount", 0)),
+            "month_total": round(payment_totals.get("total_amount", 0) or 0),
+            "month_count": payment_totals.get("count", 0) or 0,
+            "avg_amount": round(payment_totals.get("avg_amount", 0) or 0),
             "recent": recent_payments_list
         },
         "regions": {
@@ -538,8 +538,8 @@ async def get_realtime_dashboard(current_user: dict = Depends(get_admin_user)):
                 {
                     "region": r["_id"] or "Non défini",
                     "parcels": r["count"],
-                    "area_ha": round(r["total_area"], 1),
-                    "avg_score": round(r["avg_score"], 1) if r["avg_score"] else 0
+                    "area_ha": round(r.get("total_area", 0) or 0, 1),
+                    "avg_score": round(r.get("avg_score", 0) or 0, 1)
                 }
                 for r in parcels_by_region
             ],

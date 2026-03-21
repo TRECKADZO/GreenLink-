@@ -265,18 +265,17 @@ async def get_coop_members(
             "created_at": m.get("created_at", datetime.utcnow()).isoformat() if isinstance(m.get("created_at"), datetime) else str(m.get("created_at", ""))
         }
         
-        # Get member's parcels if user_id exists
+        # Get member's parcels by member_id AND user_id
+        member_id_str = str(m["_id"])
+        parcel_or = [{"member_id": member_id_str}, {"farmer_id": member_id_str}]
         if m.get("user_id"):
-            parcels = await db.parcels.find({"farmer_id": m["user_id"]}).to_list(100)
-            member_data["parcels_count"] = len(parcels)
-            member_data["total_hectares"] = round(sum([p.get("area_hectares", 0) for p in parcels]), 2)
-            member_data["average_carbon_score"] = round(
-                sum([p.get("carbon_score", 0) for p in parcels]) / len(parcels), 1
-            ) if parcels else 0
-        else:
-            member_data["parcels_count"] = 0
-            member_data["total_hectares"] = 0
-            member_data["average_carbon_score"] = 0
+            parcel_or.append({"farmer_id": m["user_id"]})
+        parcels = await db.parcels.find({"$or": parcel_or}).to_list(100)
+        member_data["parcels_count"] = len(parcels)
+        member_data["total_hectares"] = round(sum([p.get("area_hectares", 0) or 0 for p in parcels]), 2)
+        member_data["average_carbon_score"] = round(
+            sum([p.get("carbon_score", 0) or 0 for p in parcels]) / len(parcels), 1
+        ) if parcels else 0
         
         result.append(member_data)
     
@@ -556,12 +555,10 @@ async def get_member_parcels(
     if not member:
         raise HTTPException(status_code=404, detail="Membre non trouvé")
     
-    parcels = await db.parcels.find({
-        "$or": [
-            {"member_id": member_id},
-            {"farmer_id": str(member["_id"])}
-        ]
-    }).to_list(100)
+    parcel_or = [{"member_id": member_id}, {"farmer_id": member_id}]
+    if member.get("user_id"):
+        parcel_or.append({"farmer_id": member["user_id"]})
+    parcels = await db.parcels.find({"$or": parcel_or}).to_list(100)
     
     return {
         "member_id": member_id,
@@ -633,18 +630,36 @@ async def get_parcels_pending_verification(
 ):
     """Liste des parcelles en attente de vérification pour cette coopérative"""
     verify_cooperative(current_user)
-    coop_id = current_user["_id"]
+    coop_id = str(current_user["_id"])
+    coop_oid = ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None
+    
+    # Get member ids for broader parcel search
+    member_or = [{"coop_id": coop_id}, {"cooperative_id": coop_id}]
+    if coop_oid:
+        member_or.extend([{"coop_id": coop_oid}, {"cooperative_id": coop_oid}])
+    members = await db.coop_members.find({"$or": member_or}).to_list(10000)
+    member_ids = [str(m["_id"]) for m in members]
+    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
     
     # Get parcels pending verification
-    parcels = await db.parcels.find({
-        "coop_id": coop_id,
-        "verification_status": {"$in": ["pending", "needs_correction", None]}
-    }).sort("created_at", -1).to_list(limit)
+    parcel_match = {"$or": [
+        {"coop_id": coop_id},
+        {"farmer_id": {"$in": member_ids + member_user_ids}},
+        {"member_id": {"$in": member_ids}}
+    ]}
+    parcel_match["verification_status"] = {"$in": ["pending", "needs_correction", None]}
+    parcels = await db.parcels.find(parcel_match).sort("created_at", -1).to_list(limit)
     
     # Get member info for each parcel
     result = []
     for p in parcels:
-        member = await db.coop_members.find_one({"_id": p.get("member_id")})
+        mid = p.get("member_id")
+        member = None
+        if mid:
+            try:
+                member = await db.coop_members.find_one({"_id": ObjectId(mid)})
+            except Exception:
+                pass
         result.append({
             "id": str(p["_id"]),
             "farmer_id": p.get("farmer_id", ""),
@@ -672,16 +687,31 @@ async def get_all_coop_parcels(
 ):
     """Liste de toutes les parcelles de la coopérative avec filtre par statut de vérification"""
     verify_cooperative(current_user)
-    coop_id = current_user["_id"]
+    coop_id = str(current_user["_id"])
+    coop_oid = ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None
     
-    query = {"coop_id": coop_id}
+    # Get member ids for broader parcel search
+    member_or = [{"coop_id": coop_id}, {"cooperative_id": coop_id}]
+    if coop_oid:
+        member_or.extend([{"coop_id": coop_oid}, {"cooperative_id": coop_oid}])
+    members = await db.coop_members.find({"$or": member_or}).to_list(10000)
+    member_ids = [str(m["_id"]) for m in members]
+    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    
+    base_parcel_query = {"$or": [
+        {"coop_id": coop_id},
+        {"farmer_id": {"$in": member_ids + member_user_ids}},
+        {"member_id": {"$in": member_ids}}
+    ]}
+    
+    query = {**base_parcel_query}
     if verification_status:
         query["verification_status"] = verification_status
     
     parcels = await db.parcels.find(query).sort("created_at", -1).to_list(limit)
     
     # Count by status
-    all_parcels = await db.parcels.find({"coop_id": coop_id}).to_list(1000)
+    all_parcels = await db.parcels.find(base_parcel_query).to_list(1000)
     status_counts = {
         "pending": sum(1 for p in all_parcels if p.get("verification_status", "pending") in ["pending", None]),
         "verified": sum(1 for p in all_parcels if p.get("verification_status") == "verified"),
@@ -691,7 +721,13 @@ async def get_all_coop_parcels(
     
     result = []
     for p in parcels:
-        member = await db.coop_members.find_one({"_id": p.get("member_id")})
+        mid = p.get("member_id")
+        member = None
+        if mid:
+            try:
+                member = await db.coop_members.find_one({"_id": ObjectId(mid)})
+            except Exception:
+                pass
         result.append({
             "id": str(p["_id"]),
             "farmer_id": p.get("farmer_id", ""),
@@ -2183,7 +2219,7 @@ async def get_members_carbon_premiums(
     logger.info(f"Getting carbon premiums for cooperative: {coop_id}")
     
     # Récupérer tous les membres
-    members = await db.coop_members.find({"cooperative_id": coop_id}).to_list(1000)
+    members = await db.coop_members.find(coop_id_query(coop_id)).to_list(1000)
     
     logger.info(f"Found {len(members)} members for cooperative {coop_id}")
     
@@ -2295,10 +2331,10 @@ async def get_carbon_premium_summary(
     coop_id = str(current_user["_id"])
     
     # Statistiques rapides
-    members_count = await db.coop_members.count_documents({"cooperative_id": coop_id})
+    members_count = await db.coop_members.count_documents(coop_id_query(coop_id))
     
     # Parcelles avec audits approuvés
-    members = await db.coop_members.find({"cooperative_id": coop_id}, {"user_id": 1}).to_list(1000)
+    members = await db.coop_members.find(coop_id_query(coop_id), {"user_id": 1}).to_list(1000)
     user_ids = [m.get("user_id") for m in members if m.get("user_id")]
     member_ids = [str(m["_id"]) for m in members]
     

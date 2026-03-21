@@ -293,20 +293,40 @@ async def request_payment(
 @router.get("/farmer/dashboard")
 async def get_farmer_dashboard(current_user: dict = Depends(get_current_user)):
     """Tableau de bord agriculteur"""
-    parcels = await db.parcels.find({"farmer_id": current_user["_id"]}).to_list(100)
-    harvests = await db.harvests.find({"farmer_id": current_user["_id"]}).to_list(1000)
+    user_id = str(current_user["_id"])
+    phone = current_user.get("phone_number", "")
     
-    total_area = sum([p["area_hectares"] for p in parcels])
-    total_trees = sum([p["trees_count"] for p in parcels])
-    avg_carbon_score = sum([p["carbon_score"] for p in parcels]) / len(parcels) if parcels else 0
-    total_carbon_credits = sum([p["carbon_credits_earned"] for p in parcels])
+    # Build list of possible IDs (same logic as my-parcels)
+    possible_ids = [user_id]
+    if phone:
+        linked_members = await db.coop_members.find(
+            {"phone_number": phone}, {"_id": 1}
+        ).to_list(10)
+        for m in linked_members:
+            possible_ids.append(str(m["_id"]))
     
-    total_revenue = sum([h["total_amount"] for h in harvests])
-    total_carbon_premium = sum([h["carbon_premium"] for h in harvests])
+    parcels = await db.parcels.find({
+        "$or": [
+            {"farmer_id": {"$in": possible_ids}},
+            {"member_id": {"$in": possible_ids}}
+        ]
+    }).to_list(100)
+    
+    harvests = await db.harvests.find({
+        "farmer_id": {"$in": possible_ids}
+    }).to_list(1000)
+    
+    total_area = sum([p.get("area_hectares", 0) or 0 for p in parcels])
+    total_trees = sum([p.get("trees_count", 0) or 0 for p in parcels])
+    avg_carbon_score = sum([p.get("carbon_score", 0) or 0 for p in parcels]) / len(parcels) if parcels else 0
+    total_carbon_credits = sum([p.get("carbon_credits_earned", 0) or 0 for p in parcels])
+    
+    total_revenue = sum([h.get("total_amount", 0) or 0 for h in harvests])
+    total_carbon_premium = sum([h.get("carbon_premium", 0) or 0 for h in harvests])
     
     # Convert ObjectIds to strings for JSON serialization
     serialized_harvests = []
-    for h in sorted(harvests, key=lambda x: x["created_at"], reverse=True)[:5]:
+    for h in sorted(harvests, key=lambda x: x.get("created_at", datetime.min), reverse=True)[:5]:
         harvest_dict = dict(h)
         harvest_dict["_id"] = str(harvest_dict["_id"])
         if "parcel_id" in harvest_dict and hasattr(harvest_dict["parcel_id"], "__str__"):
@@ -317,8 +337,8 @@ async def get_farmer_dashboard(current_user: dict = Depends(get_current_user)):
         "total_parcels": len(parcels),
         "total_area_hectares": total_area,
         "total_trees": total_trees,
-        "average_carbon_score": avg_carbon_score,
-        "total_carbon_credits": total_carbon_credits,
+        "average_carbon_score": round(avg_carbon_score, 1),
+        "total_carbon_credits": round(total_carbon_credits, 2),
         "total_revenue": total_revenue,
         "carbon_premium_earned": total_carbon_premium,
         "recent_harvests": serialized_harvests

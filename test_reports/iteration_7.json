@@ -91,7 +91,7 @@
       "file": "/app/backend/.env",
       "code": "CORS_ORIGINS='*'",
       "problem": "Any website can make authenticated requests to this API if user has valid credentials",
-      "fix": "Set CORS_ORIGINS to specific allowed domains: CORS_ORIGINS='https://ici-form-fixes.preview.emergentagent.com'"
+      "fix": "Set CORS_ORIGINS to specific allowed domains: CORS_ORIGINS='https://mobile-form-sync.preview.emergentagent.com'"
     },
     "no_rate_limiting": {
       "severity": "MEDIUM",

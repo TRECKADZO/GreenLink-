@@ -13,7 +13,7 @@ import requests
 import os
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ici-form-fixes.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://mobile-form-sync.preview.emergentagent.com')
 if BASE_URL:
     BASE_URL = BASE_URL.rstrip('/')
 

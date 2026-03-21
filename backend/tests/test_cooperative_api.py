@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ici-form-fixes.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://mobile-form-sync.preview.emergentagent.com')
 
 # Test cooperative credentials
 COOP_EMAIL = "coop-gagnoa@test.com"

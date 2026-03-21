@@ -309,9 +309,16 @@ async def record_ssrte_visit(
     visit_dict["recorded_by"] = str(current_user["_id"])
     visit_dict["recorded_at"] = datetime.utcnow()
     
-    # Ajouter l'ID de la coopérative si l'utilisateur est une coopérative
+    # Ajouter l'ID de la coopérative
     if current_user.get('user_type') == 'cooperative':
         visit_dict["cooperative_id"] = str(current_user["_id"])
+    else:
+        # Pour les agents terrain, retrouver la coopérative via coop_agents
+        agent_record = await db.coop_agents.find_one({"user_id": str(current_user["_id"])})
+        if agent_record and agent_record.get("coop_id"):
+            visit_dict["cooperative_id"] = str(agent_record["coop_id"])
+        elif current_user.get("cooperative_id"):
+            visit_dict["cooperative_id"] = str(current_user["cooperative_id"])
     
     # Ajouter le nom de l'agent (nom de la coopérative ou de l'admin)
     visit_dict["agent_name"] = current_user.get("full_name") or current_user.get("coop_name") or "Agent"
