@@ -31,7 +31,6 @@ import SupplierAnalytics from "./pages/supplier/Analytics";
 
 // Farmer Routes
 import FarmerDashboard from "./pages/farmer/Dashboard";
-import USSDSimulator from "./pages/farmer/USSDSimulator";
 import USSDCarbonCalculator from "./pages/farmer/USSDCarbonCalculator";
 import CarbonPaymentsDashboard from "./pages/farmer/CarbonPaymentsDashboard";
 
@@ -147,7 +146,6 @@ function App() {
 
               {/* Farmer/Producteur Routes */}
               <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
-              <Route path="/farmer/ussd" element={<USSDSimulator />} />
               <Route path="/farmer/prime-carbone" element={<USSDCarbonCalculator />} />
               <Route path="/farmer/carbon-payments" element={<CarbonPaymentsDashboard />} />
               <Route path="/carbon-payments" element={<CarbonPaymentsDashboard />} />

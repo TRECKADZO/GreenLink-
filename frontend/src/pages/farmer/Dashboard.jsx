@@ -13,7 +13,6 @@ import {
   MapPin,
   Award,
   Plus,
-  Smartphone,
   Phone,
   CheckCircle,
   MessageSquare,
@@ -182,14 +181,6 @@ const FarmerDashboard = () => {
           >
             <Leaf className="w-6 h-6 mr-2" />
             Mes Primes Carbone
-          </Button>
-          <Button 
-            className="h-20 bg-slate-600 hover:bg-slate-700 text-white text-lg"
-            onClick={() => navigate('/farmer/ussd')}
-            data-testid="action-ussd"
-          >
-            <Smartphone className="w-6 h-6 mr-2" />
-            USSD/SMS
           </Button>
           <Button 
             className="h-20 bg-orange-600 hover:bg-orange-700 text-white text-lg"

@@ -91,7 +91,7 @@ const Navbar = () => {
       { icon: User, label: 'Mon profil', route: '/profile' },
     ];
     const extras = {
-      producteur: [{ icon: Smartphone, label: 'Simulateur USSD', route: '/farmer/ussd' }],
+      producteur: [],
       acheteur: [{ icon: ShoppingCart, label: 'Mes commandes', route: '/buyer/dashboard' }],
       entreprise_rse: [{ icon: Leaf, label: 'Crédits carbone', route: '/rse/dashboard' }],
       fournisseur: [
