@@ -83,7 +83,7 @@ async def declare_parcel(
     result = await db.parcels.insert_one(parcel_dict)
     parcel_dict["_id"] = str(result.inserted_id)
     
-    # Create notification
+    # Create notification for the farmer
     await db.notifications.insert_one({
         "user_id": str(current_user["_id"]),
         "title": "Parcelle déclarée",
@@ -93,6 +93,35 @@ async def declare_parcel(
         "created_at": datetime.utcnow(),
         "is_read": False
     })
+    
+    # Notify field agents for verification
+    try:
+        from services.push_notifications import push_service
+        # Find the cooperative this farmer belongs to
+        farmer_member = await db.coop_members.find_one({
+            "$or": [
+                {"user_id": str(current_user["_id"])},
+                {"phone_number": current_user.get("phone_number")}
+            ]
+        })
+        if farmer_member:
+            coop_id = farmer_member.get("coop_id") or farmer_member.get("cooperative_id")
+            if coop_id:
+                coop = await db.users.find_one({"_id": ObjectId(coop_id)}) if coop_id else None
+                await push_service.send_new_parcel_notification_to_agents(
+                    parcel_data={
+                        "parcel_id": str(result.inserted_id),
+                        "nom_producteur": current_user.get("full_name", "Producteur"),
+                        "superficie": area,
+                        "village": parcel_dict.get("village", ""),
+                        "type_culture": parcel_dict.get("crop_type", "cacao"),
+                        "has_gps": bool(parcel_dict.get("coordinates") or parcel_dict.get("gps_coordinates"))
+                    },
+                    cooperative_id=str(coop_id),
+                    cooperative_name=coop.get("coop_name", "") if coop else ""
+                )
+    except Exception as e:
+        logger.error(f"Notification agents terrain échouée: {e}")
     
     # Send push notification to farmer's registered devices
     try:

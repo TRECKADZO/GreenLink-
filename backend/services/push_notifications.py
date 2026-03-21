@@ -6,6 +6,7 @@ import logging
 import httpx
 from typing import List, Optional
 from datetime import datetime
+from bson import ObjectId
 from database import db
 
 logger = logging.getLogger(__name__)
@@ -324,6 +325,111 @@ class PushNotificationService:
             data=data or {},
             priority="normal"
         )
+
+
+    async def send_new_parcel_notification_to_agents(
+        self,
+        parcel_data: dict,
+        cooperative_id: str,
+        cooperative_name: str
+    ) -> dict:
+        """
+        Notifier les agents terrain qu'une nouvelle parcelle a été déclarée
+        et nécessite une vérification sur le terrain.
+        """
+        farmer_name = parcel_data.get("nom_producteur", parcel_data.get("farmer_name", "Producteur"))
+        superficie = parcel_data.get("superficie", parcel_data.get("area_hectares", 0))
+        village = parcel_data.get("village", "")
+        crop_type = parcel_data.get("type_culture", parcel_data.get("crop_type", "cacao"))
+        parcel_id = str(parcel_data.get("parcel_id", ""))
+        has_gps = parcel_data.get("has_gps", False)
+        
+        title = f"Nouvelle parcelle à vérifier"
+        body = f"{farmer_name} - {superficie} ha de {crop_type}"
+        if village:
+            body += f" à {village}"
+        if not has_gps:
+            body += " (sans GPS)"
+        
+        # Récupérer les agents terrain de cette coopérative
+        agents = await db.users.find({
+            "user_type": "field_agent",
+            "cooperative_id": cooperative_id,
+            "push_token": {"$exists": True, "$ne": None}
+        }).to_list(100)
+        
+        # Aussi chercher les agents dans coop_agents
+        coop_agents = await db.coop_agents.find({
+            "cooperative_id": cooperative_id,
+            "status": "active"
+        }).to_list(100)
+        
+        agent_user_ids = [a.get("user_id") for a in coop_agents if a.get("user_id")]
+        
+        if agent_user_ids:
+            additional_agents = await db.users.find({
+                "_id": {"$in": [ObjectId(uid) for uid in agent_user_ids]},
+                "push_token": {"$exists": True, "$ne": None}
+            }).to_list(100)
+            agents.extend(additional_agents)
+        
+        tokens = list(set(a["push_token"] for a in agents if a.get("push_token")))
+        
+        # Aussi notifier la coopérative
+        coop_user = await db.users.find_one({
+            "_id": ObjectId(cooperative_id) if not isinstance(cooperative_id, ObjectId) else cooperative_id
+        })
+        if coop_user and coop_user.get("push_token"):
+            tokens.append(coop_user["push_token"])
+            tokens = list(set(tokens))
+        
+        data = {
+            "type": "new_parcel_to_verify",
+            "parcel_id": parcel_id,
+            "cooperative_id": cooperative_id,
+            "screen": "ParcelVerifyList"
+        }
+        
+        result = await self.send_push_notification(
+            tokens=tokens,
+            title=title,
+            body=body,
+            data=data,
+            priority="high",
+            channel_id="default"
+        )
+        
+        # Stocker les notifications dans l'historique pour chaque agent
+        agent_ids = [str(a["_id"]) for a in agents]
+        if coop_user:
+            agent_ids.append(str(coop_user["_id"]))
+        
+        for agent_id in set(agent_ids):
+            await db.notification_history.insert_one({
+                "user_id": agent_id,
+                "title": title,
+                "body": body,
+                "data": data,
+                "type": "new_parcel_to_verify",
+                "read": False,
+                "created_at": datetime.utcnow()
+            })
+        
+        # Log
+        await db.push_notifications_log.insert_one({
+            "type": "new_parcel_to_verify",
+            "parcel_id": parcel_id,
+            "cooperative_id": cooperative_id,
+            "farmer_name": farmer_name,
+            "tokens_count": len(tokens),
+            "agents_notified": len(agent_ids),
+            "result": result,
+            "created_at": datetime.utcnow()
+        })
+        
+        logger.info(f"[Parcel] Push notifications sent to {len(tokens)} agents for new parcel by {farmer_name}")
+        
+        return result
 
 
 # Instance singleton

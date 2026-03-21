@@ -13,6 +13,7 @@ import { Badge } from '../../components/ui/badge';
 import { Progress } from '../../components/ui/progress';
 import { toast } from 'sonner';
 import Navbar from '../../components/Navbar';
+import { NotificationCenter } from '../../components/NotificationCenter';
 import ICIProfileModal from '../cooperative/ICIProfileModal';
 import SSRTEVisitModal from '../cooperative/SSRTEVisitModal';
 import FarmerHistorySection from './FarmerHistorySection';
@@ -176,6 +177,7 @@ const AgentTerrainDashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <NotificationCenter />
               <Badge className={`${badge.bg} px-3 py-1`}>{badge.text}</Badge>
               <div className="text-center bg-white/10 rounded-lg px-4 py-2">
                 <p className="text-2xl font-bold">{score}%</p>

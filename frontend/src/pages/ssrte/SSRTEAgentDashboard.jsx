@@ -17,6 +17,7 @@ import {
   Plus, Search, MapPin, Calendar, Clock, ChevronRight,
   CheckCircle, XCircle, Eye, TrendingUp, Home, FileText
 } from 'lucide-react';
+import { NotificationCenter } from '../../components/NotificationCenter';
 
 const SSRTEAgentDashboard = () => {
   const { user, token } = useAuth();
@@ -173,7 +174,8 @@ const SSRTEAgentDashboard = () => {
               Système de Suivi et Remédiation du Travail des Enfants
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <NotificationCenter />
             <Button 
               onClick={() => setShowVisitForm(true)}
               className="bg-cyan-600 hover:bg-cyan-700"

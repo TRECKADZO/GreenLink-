@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
+import { NotificationCenter } from '../../components/NotificationCenter';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -217,7 +218,8 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
+            <div className="mt-4 md:mt-0 flex flex-wrap gap-2 items-center">
+              <NotificationCenter />
               <Button 
                 onClick={() => navigate('/')}
                 variant="outline"

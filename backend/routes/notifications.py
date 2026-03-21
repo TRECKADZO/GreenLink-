@@ -134,6 +134,20 @@ async def get_notification_history(
     }
 
 
+@router.get("/unread-count")
+async def get_unread_notification_count(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get count of unread notifications"""
+    user_id = str(current_user["_id"])
+    count = await db.notification_history.count_documents({
+        "user_id": user_id,
+        "read": False
+    })
+    return {"non_lues": count}
+
+
+
 @router.put("/history/{notification_id}/read")
 async def mark_notification_read(
     notification_id: str,

@@ -10,6 +10,8 @@ from datetime import datetime
 from bson import ObjectId
 import logging
 
+logger = logging.getLogger(__name__)
+
 from database import db
 from routes.auth import get_current_user
 from routes.cooperative import verify_cooperative, coop_id_query
@@ -96,6 +98,24 @@ async def add_member_parcel(
             "$set": {"last_parcel_added": datetime.utcnow()}
         }
     )
+    
+    # Notifier les agents terrain de la nouvelle parcelle
+    try:
+        from services.push_notifications import push_service
+        await push_service.send_new_parcel_notification_to_agents(
+            parcel_data={
+                "parcel_id": str(result.inserted_id),
+                "nom_producteur": member.get("full_name", "Producteur"),
+                "superficie": parcel.area_hectares,
+                "village": parcel.village,
+                "type_culture": parcel.crop_type,
+                "has_gps": bool(parcel.gps_lat and parcel.gps_lng)
+            },
+            cooperative_id=coop_id,
+            cooperative_name=current_user.get("coop_name", "")
+        )
+    except Exception as e:
+        logger.warning(f"Notification agents terrain échouée: {e}")
     
     return {
         "message": "Parcelle ajoutée avec succès",

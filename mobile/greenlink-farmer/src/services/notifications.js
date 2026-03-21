@@ -24,6 +24,7 @@ export const NOTIFICATION_TYPES = {
   PAYMENT_PENDING: 'payment_pending',
   PREMIUM_REMINDER: 'premium_reminder',
   PARCEL_VERIFIED: 'parcel_verified',
+  NEW_PARCEL_TO_VERIFY: 'new_parcel_to_verify',
   HARVEST_CONFIRMED: 'harvest_confirmed',
   DISTRIBUTION_COMPLETE: 'distribution_complete',
   TEST: 'test',
@@ -233,6 +234,8 @@ class NotificationService {
       channelId = 'payments';
     } else if (data.type === NOTIFICATION_TYPES.PREMIUM_REMINDER) {
       channelId = 'reminders';
+    } else if (data.type === NOTIFICATION_TYPES.NEW_PARCEL_TO_VERIFY) {
+      channelId = 'alerts';
     }
     
     await Notifications.scheduleNotificationAsync({
