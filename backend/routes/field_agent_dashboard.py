@@ -580,3 +580,173 @@ async def add_farmer_parcel_agent(
     }
     result = await db.parcels.insert_one(parcel_doc)
     return {"message": "Parcelle declaree", "parcel_id": str(result.inserted_id)}
+
+
+
+@router.get("/parcels-to-verify")
+async def get_parcels_to_verify(
+    current_user: dict = Depends(get_current_user),
+    status_filter: Optional[str] = Query(None, description="pending, needs_correction, all"),
+    village: Optional[str] = Query(None)
+):
+    """
+    Liste des parcelles a verifier par l'agent terrain.
+    Filtre par fermiers assignes + zone/village de l'agent.
+    """
+    verify_field_agent(current_user)
+    user_id = str(current_user.get('_id'))
+
+    # Find agent record
+    agent_doc = await db.coop_agents.find_one({"user_id": user_id})
+    if not agent_doc:
+        phone = current_user.get('phone_number', '')
+        agent_doc = await db.coop_agents.find_one({"phone_number": phone})
+
+    if not agent_doc:
+        return {"parcels": [], "total": 0, "stats": {"pending": 0, "needs_correction": 0, "verified": 0}}
+
+    assigned_ids = agent_doc.get("assigned_farmers", [])
+    agent_zone = agent_doc.get("zone", "")
+    agent_villages = agent_doc.get("village_coverage", [])
+
+    # Build parcel query: assigned farmers OR agent zone/villages
+    parcel_or = []
+    if assigned_ids:
+        parcel_or.append({"member_id": {"$in": assigned_ids}})
+        parcel_or.append({"farmer_id": {"$in": assigned_ids}})
+    if agent_villages:
+        parcel_or.append({"village": {"$in": agent_villages}})
+    if agent_zone:
+        parcel_or.append({"village": {"$regex": agent_zone, "$options": "i"}})
+
+    if not parcel_or:
+        return {"parcels": [], "total": 0, "stats": {"pending": 0, "needs_correction": 0, "verified": 0}}
+
+    base_query = {"$or": parcel_or}
+
+    # Status filter
+    if status_filter and status_filter != "all":
+        base_query["verification_status"] = status_filter
+    elif not status_filter:
+        base_query["verification_status"] = {"$in": ["pending", "needs_correction", None]}
+
+    # Village filter
+    if village:
+        base_query["village"] = {"$regex": village, "$options": "i"}
+
+    parcels = await db.parcels.find(base_query).sort("created_at", -1).to_list(200)
+
+    # Batch fetch member names
+    member_ids_set = set()
+    for p in parcels:
+        if p.get("member_id"):
+            member_ids_set.add(p["member_id"])
+        if p.get("farmer_id"):
+            member_ids_set.add(p["farmer_id"])
+
+    oid_list = [ObjectId(mid) for mid in member_ids_set if ObjectId.is_valid(str(mid))]
+    members_list = await db.coop_members.find({"_id": {"$in": oid_list}}).to_list(500)
+    members_map = {str(m["_id"]): m for m in members_list}
+
+    # Also check users collection for farmer names
+    users_list = await db.users.find({"_id": {"$in": oid_list}}).to_list(500)
+    users_map = {str(u["_id"]): u for u in users_list}
+
+    result = []
+    for p in parcels:
+        mid = p.get("member_id") or p.get("farmer_id", "")
+        member = members_map.get(mid) or users_map.get(mid)
+        result.append({
+            "id": str(p["_id"]),
+            "farmer_name": member.get("full_name", "Inconnu") if member else "Inconnu",
+            "farmer_phone": member.get("phone_number", "") if member else "",
+            "farmer_id": p.get("farmer_id", ""),
+            "member_id": p.get("member_id", ""),
+            "village": p.get("village", ""),
+            "location": p.get("location", ""),
+            "area_hectares": p.get("area_hectares", 0),
+            "crop_type": p.get("crop_type", "cacao"),
+            "gps_coordinates": p.get("gps_coordinates"),
+            "verification_status": p.get("verification_status", "pending"),
+            "verification_notes": p.get("verification_notes"),
+            "verified_at": p.get("verified_at"),
+            "carbon_score": p.get("carbon_score", 0),
+            "created_at": str(p.get("created_at", ""))
+        })
+
+    # Stats for counters
+    all_query = {"$or": parcel_or}
+    all_parcels = await db.parcels.find(all_query, {"verification_status": 1}).to_list(1000)
+    stats = {"pending": 0, "needs_correction": 0, "verified": 0, "rejected": 0}
+    for p in all_parcels:
+        vs = p.get("verification_status", "pending") or "pending"
+        if vs in stats:
+            stats[vs] += 1
+
+    return {"parcels": result, "total": len(result), "stats": stats}
+
+
+@router.put("/parcels/{parcel_id}/verify")
+async def verify_parcel_by_agent(
+    parcel_id: str,
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Verifier/Valider une parcelle sur le terrain.
+    Body: {verification_status, verification_notes, gps_lat, gps_lng, corrected_area_hectares}
+    """
+    verify_field_agent(current_user)
+
+    if not ObjectId.is_valid(parcel_id):
+        raise HTTPException(status_code=400, detail="ID parcelle invalide")
+
+    parcel = await db.parcels.find_one({"_id": ObjectId(parcel_id)})
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcelle non trouvee")
+
+    v_status = data.get("verification_status", "verified")
+    if v_status not in ["verified", "rejected", "needs_correction"]:
+        raise HTTPException(status_code=400, detail="Statut invalide")
+
+    update_data = {
+        "verification_status": v_status,
+        "verified_at": datetime.utcnow(),
+        "verified_by": str(current_user["_id"]),
+        "verifier_name": current_user.get("full_name", "Agent"),
+        "verification_notes": data.get("verification_notes", ""),
+    }
+
+    gps_lat = data.get("gps_lat")
+    gps_lng = data.get("gps_lng")
+    if gps_lat and gps_lng:
+        update_data["verified_gps_coordinates"] = {
+            "lat": float(gps_lat),
+            "lng": float(gps_lng)
+        }
+
+    corrected = data.get("corrected_area_hectares")
+    if corrected and float(corrected) != parcel.get("area_hectares", 0):
+        update_data["area_hectares_declared"] = parcel.get("area_hectares")
+        update_data["area_hectares"] = float(corrected)
+        new_score = round(min(9.5, 5.5 + (float(corrected) * 0.3)), 1)
+        update_data["carbon_score"] = new_score
+        update_data["co2_captured_tonnes"] = round(float(corrected) * new_score * 2.5, 2)
+
+    photos = data.get("verification_photos", [])
+    if photos:
+        update_data["verification_photos"] = photos
+
+    await db.parcels.update_one(
+        {"_id": ObjectId(parcel_id)},
+        {"$set": update_data}
+    )
+
+    status_labels = {"verified": "verifiee", "rejected": "rejetee", "needs_correction": "a corriger"}
+
+    return {
+        "message": f"Parcelle {status_labels.get(v_status, v_status)}",
+        "parcel_id": parcel_id,
+        "verification_status": v_status,
+        "verified_at": update_data["verified_at"].isoformat()
+    }

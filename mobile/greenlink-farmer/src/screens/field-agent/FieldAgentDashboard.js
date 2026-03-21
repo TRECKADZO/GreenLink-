@@ -207,6 +207,20 @@ const FieldAgentDashboard = ({ navigation }) => {
               </View>
             )}
 
+            {/* CTA: Verification parcelles */}
+            <TouchableOpacity style={[styles.ctaCard, { borderColor: '#d1fae5' }]} onPress={() => navigation.navigate('ParcelVerifyList')}>
+              <View style={[styles.ctaIcon, { backgroundColor: '#d1fae5' }]}>
+                <Ionicons name="shield-checkmark" size={28} color="#059669" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.ctaTitle}>Verification parcelles</Text>
+                <Text style={styles.ctaDesc}>
+                  Verifiez les parcelles sur le terrain (GPS, photos, surface)
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="#059669" />
+            </TouchableOpacity>
+
             {/* CTA: Select a farmer */}
             <TouchableOpacity style={styles.ctaCard} onPress={() => setTab('farmers')}>
               <View style={styles.ctaIcon}>

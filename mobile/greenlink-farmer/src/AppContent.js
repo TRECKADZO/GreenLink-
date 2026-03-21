@@ -94,6 +94,8 @@ const SSRTEVisitFormScreen = safeRequire(() => require('./screens/field-agent/SS
 const SSRTEAgentDashboardScreen = safeRequire(() => require('./screens/field-agent/SSRTEAgentDashboard'), 'SSRTEAgentDashboard');
 const FarmerICIFormScreen = safeRequire(() => require('./screens/field-agent/FarmerICIFormScreen'), 'FarmerICIFormScreen');
 const FarmerProfileScreen = safeRequire(() => require('./screens/field-agent/FarmerProfileScreen'), 'FarmerProfileScreen');
+const ParcelVerifyListScreen = safeRequire(() => require('./screens/field-agent/ParcelVerifyListScreen'), 'ParcelVerifyListScreen');
+const ParcelVerifyFormScreen = safeRequire(() => require('./screens/field-agent/ParcelVerifyFormScreen'), 'ParcelVerifyFormScreen');
 
 // Auditor
 const AuditorDashboardScreen = safeRequire(() => require('./screens/auditor/AuditorDashboardScreen'), 'AuditorDashboardScreen');
@@ -181,6 +183,8 @@ function AppNavigator() {
       <Stack.Screen name="SSRTEAgentDashboard" component={SSRTEAgentDashboardScreen} />
       <Stack.Screen name="FarmerICIForm" component={FarmerICIFormScreen} />
       <Stack.Screen name="FarmerProfile" component={FarmerProfileScreen} />
+      <Stack.Screen name="ParcelVerifyList" component={ParcelVerifyListScreen} />
+      <Stack.Screen name="ParcelVerifyForm" component={ParcelVerifyFormScreen} />
       <Stack.Screen name="VisitsHistory" component={CoopReportsScreen} />
       
       <Stack.Screen name="AuditorDashboard" component={AuditorDashboardScreen} />
