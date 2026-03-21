@@ -5,30 +5,40 @@ from datetime import datetime
 # ============= AGRICULTEUR MODELS =============
 
 class ParcelBase(BaseModel):
-    farmer_name: str
-    phone_number: str
-    location: str
-    region: str  # Bouafle, Daloa, Soubre, etc.
-    crop_type: str  # cacao, anacarde
-    area_hectares: float
-    trees_count: int
-    farming_practices: List[str]  # agroforesterie, compost, zero_pesticides, etc.
+    farmer_name: Optional[str] = ""
+    phone_number: Optional[str] = ""
+    location: str = ""
+    region: Optional[str] = ""  # Bouafle, Daloa, Soubre, etc.
+    department: Optional[str] = ""  # Alias for region from mobile form
+    crop_type: str = ""  # cacao, anacarde
+    area_hectares: Optional[float] = None
+    size: Optional[float] = None  # Alias for area_hectares from mobile form
+    trees_count: Optional[int] = 0
+    farming_practices: Optional[List[str]] = []  # agroforesterie, compost, zero_pesticides, etc.
+    has_shade_trees: Optional[bool] = False
+    uses_organic_fertilizer: Optional[bool] = False
+    has_erosion_control: Optional[bool] = False
     coordinates: Optional[dict] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    planting_year: Optional[int] = None
+    photos: Optional[List[str]] = []
     language: str = "francais"  # francais, baoule, dioula, senoufo
-    member_id: Optional[str] = None  # ID du membre propriétaire (pour coopératives)
+    member_id: Optional[str] = None  # ID du membre proprietaire (pour cooperatives)
+    member_name: Optional[str] = None
 
 class ParcelCreate(ParcelBase):
     pass
 
 class Parcel(ParcelBase):
     id: str = Field(alias="_id")
-    farmer_id: str
+    farmer_id: Optional[str] = ""
     carbon_score: float = 0.0
     carbon_credits_earned: float = 0.0
     verification_status: str = "pending"  # pending, verified, rejected
-    created_at: datetime
-    updated_at: datetime
-    is_active: bool
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    is_active: bool = True
 
 class HarvestBase(BaseModel):
     parcel_id: str

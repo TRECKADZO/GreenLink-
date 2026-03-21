@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/greenlink", tags=["greenlink"])
 
 # ============= AGRICULTEUR ROUTES =============
 
-@router.post("/parcels", response_model=Parcel)
+@router.post("/parcels")
 async def declare_parcel(
     parcel: ParcelCreate,
     current_user: dict = Depends(get_current_user)
@@ -31,13 +31,40 @@ async def declare_parcel(
     """Déclarer une nouvelle parcelle agricole"""
     parcel_dict = parcel.dict()
     
+    # Normalize fields from mobile form aliases
+    if not parcel_dict.get("area_hectares") and parcel_dict.get("size"):
+        parcel_dict["area_hectares"] = parcel_dict["size"]
+    if not parcel_dict.get("region") and parcel_dict.get("department"):
+        parcel_dict["region"] = parcel_dict["department"]
+    if not parcel_dict.get("farmer_name"):
+        parcel_dict["farmer_name"] = current_user.get("full_name", "")
+    if not parcel_dict.get("phone_number"):
+        parcel_dict["phone_number"] = current_user.get("phone_number", "")
+    if not parcel_dict.get("coordinates") and parcel_dict.get("latitude"):
+        parcel_dict["coordinates"] = {"lat": parcel_dict["latitude"], "lng": parcel_dict["longitude"]}
+    
+    # Build farming_practices from boolean flags if not already set
+    if not parcel_dict.get("farming_practices"):
+        practices = []
+        if parcel_dict.get("has_shade_trees"):
+            practices.append("agroforesterie")
+        if parcel_dict.get("uses_organic_fertilizer"):
+            practices.append("compost")
+        if parcel_dict.get("has_erosion_control"):
+            practices.append("controle_erosion")
+        parcel_dict["farming_practices"] = practices
+    
+    area = parcel_dict.get("area_hectares") or 0
+    if not area:
+        raise HTTPException(status_code=400, detail="La superficie est obligatoire")
+    
     # Si un member_id est fourni (par une coopérative), l'utiliser comme farmer_id
     if parcel.member_id:
         parcel_dict["farmer_id"] = parcel.member_id
-        parcel_dict["registered_by"] = current_user["_id"]  # Qui a enregistré
+        parcel_dict["registered_by"] = str(current_user["_id"])
         parcel_dict["registered_by_type"] = current_user.get("user_type", "unknown")
     else:
-        parcel_dict["farmer_id"] = current_user["_id"]
+        parcel_dict["farmer_id"] = str(current_user["_id"])
     
     parcel_dict["created_at"] = datetime.utcnow()
     parcel_dict["updated_at"] = datetime.utcnow()
@@ -45,45 +72,35 @@ async def declare_parcel(
     parcel_dict["verification_status"] = "pending"
     
     # Calculate carbon score based on practices
-    carbon_score = calculate_carbon_score(parcel_dict["farming_practices"], parcel_dict["area_hectares"])
+    carbon_score = calculate_carbon_score(parcel_dict["farming_practices"], area)
     parcel_dict["carbon_score"] = carbon_score
-    parcel_dict["carbon_credits_earned"] = carbon_score * parcel_dict["area_hectares"] * 0.5  # tonnes CO2
+    parcel_dict["carbon_credits_earned"] = carbon_score * area * 0.5  # tonnes CO2
+    
+    # Clean up alias fields before storing
+    for key in ["size", "department", "has_shade_trees", "uses_organic_fertilizer", "has_erosion_control"]:
+        parcel_dict.pop(key, None)
     
     result = await db.parcels.insert_one(parcel_dict)
     parcel_dict["_id"] = str(result.inserted_id)
     
     # Create notification
     await db.notifications.insert_one({
-        "user_id": current_user["_id"],
+        "user_id": str(current_user["_id"]),
         "title": "Parcelle déclarée",
-        "message": f"Votre parcelle de {parcel.area_hectares} ha a été enregistrée. Score carbone: {carbon_score:.1f}/10",
+        "message": f"Votre parcelle de {area} ha a été enregistrée. Score carbone: {carbon_score:.1f}/10",
         "type": "parcel",
         "action_url": f"/farmer/parcels/{str(result.inserted_id)}",
         "created_at": datetime.utcnow(),
         "is_read": False
     })
     
-    # Send SMS notification if carbon score is premium eligible (>=7)
-    if carbon_score >= 7 and parcel.phone_number:
-        try:
-            sms_result = await SMSService.notify_carbon_premium_eligible(
-                phone_number=parcel.phone_number,
-                farmer_name=parcel.farmer_name,
-                parcel_id=str(result.inserted_id),
-                carbon_score=carbon_score,
-                language=parcel.language
-            )
-            logger.info(f"SMS sent for premium eligible parcel: {sms_result}")
-        except Exception as e:
-            logger.error(f"SMS notification failed: {e}")
-    
     # Send push notification to farmer's registered devices
     try:
         push_result = await send_notification_to_user(
             db=db,
-            user_id=current_user["_id"],
-            title="Parcelle déclarée 🌳",
-            body=f"Parcelle de {parcel.area_hectares} ha enregistrée. Score carbone: {carbon_score:.1f}/10",
+            user_id=str(current_user["_id"]),
+            title="Parcelle déclarée",
+            body=f"Parcelle de {area} ha enregistrée. Score carbone: {carbon_score:.1f}/10",
             data={
                 "type": "parcel_created",
                 "parcel_id": str(result.inserted_id),
@@ -97,10 +114,31 @@ async def declare_parcel(
     
     return parcel_dict
 
-@router.get("/parcels/my-parcels", response_model=List[Parcel])
+@router.get("/parcels/my-parcels")
 async def get_my_parcels(current_user: dict = Depends(get_current_user)):
-    """Obtenir mes parcelles"""
-    parcels = await db.parcels.find({"farmer_id": current_user["_id"]}).to_list(100)
+    """Obtenir mes parcelles (y compris celles enregistrees par un agent)"""
+    user_id = str(current_user["_id"])
+    phone = current_user.get("phone_number", "")
+    
+    # Build list of possible IDs that could be used as farmer_id
+    possible_ids = [user_id]
+    
+    # Check if this user is linked to any coop_member (by phone number)
+    if phone:
+        linked_members = await db.coop_members.find(
+            {"phone_number": phone}, {"_id": 1}
+        ).to_list(10)
+        for m in linked_members:
+            possible_ids.append(str(m["_id"]))
+    
+    # Query parcels by any matching farmer_id or member_id
+    parcels = await db.parcels.find({
+        "$or": [
+            {"farmer_id": {"$in": possible_ids}},
+            {"member_id": {"$in": possible_ids}}
+        ]
+    }).to_list(100)
+    
     return [{**p, "_id": str(p["_id"])} for p in parcels]
 
 @router.post("/harvests", response_model=Harvest)
