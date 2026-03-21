@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -8,11 +8,13 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Button, NetworkStatus } from '../../components/UI';
 import { MainLayout } from '../../components/navigation';
 import { syncService } from '../../services/sync';
+import { farmerApi } from '../../services/api';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const ProfileScreen = ({ navigation }) => {
@@ -21,10 +23,31 @@ const ProfileScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null);
+  const [parcelStats, setParcelStats] = useState({ localisation: null, surface: 0 });
 
-  useEffect(() => {
-    loadSyncStatus();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadSyncStatus();
+      loadParcelStats();
+    }, [])
+  );
+
+  const loadParcelStats = async () => {
+    try {
+      const resp = await farmerApi.getParcels();
+      const parcels = resp.data || [];
+      if (parcels.length > 0) {
+        const totalArea = parcels.reduce((sum, p) => sum + (p.superficie || p.area_hectares || p.size || 0), 0);
+        const villages = [...new Set(parcels.map(p => p.village || p.localisation || p.location).filter(Boolean))];
+        setParcelStats({
+          localisation: villages.join(', ') || null,
+          surface: Math.round(totalArea * 100) / 100,
+        });
+      }
+    } catch (e) {
+      // silencieux
+    }
+  };
 
   const loadSyncStatus = async () => {
     const status = await syncService.getSyncStatus();
@@ -192,13 +215,13 @@ const ProfileScreen = ({ navigation }) => {
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Localisation</Text>
                 <Text style={styles.infoValue}>
-                  {user?.farm_location || 'Non renseigné'}
+                  {user?.farm_location || parcelStats.localisation || user?.village || 'Non renseigné'}
                 </Text>
               </View>
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Surface totale</Text>
                 <Text style={styles.infoValue}>
-                  {user?.farm_size ? `${user.farm_size} ha` : 'Non renseigné'}
+                  {parcelStats.surface > 0 ? `${parcelStats.surface} ha` : user?.farm_size ? `${user.farm_size} ha` : 'Non renseigné'}
                 </Text>
               </View>
             </>
