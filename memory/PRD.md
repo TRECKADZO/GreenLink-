@@ -29,21 +29,30 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - AAB: https://expo.dev/artifacts/eas/bGqpS9YzkKxNfHoq3unWNq.aab
 - Meme keystore: Build Credentials 3Ses4evueO
 
+### Correction Bugs ICI/SSRTE (21 Mars 2026)
+- Bug 1: Genre picker mobile remplace par boutons tactiles TouchableOpacity (FarmerICIFormScreen.js)
+- Bug 2: taille_menage nettoyee avant envoi backend (parseInt || 1) dans ICI mobile + web
+- Bug 3: Sync croisee SSRTE taille_menage vers ICI profile + pre-remplissage ICI depuis SSRTE
+- Bug 4: Compteur completion corrige (all_possible_ids: member_id + user_id + member_id pour parcelles)
+- Bug 5: Auto-update agent_activities + coop_member.all_forms_complete quand 5/5 formulaires completes
+- Tous les 5 bugs testes et verifies (iteration_48: 19/19 backend tests PASS)
+
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway
 
 ## Backlog
 ### P1
-- [ ] Soumission AAB Google Play Store
+- [ ] Soumission AAB Google Play Store (action utilisateur)
 ### P1.5
 - [ ] Configurer Orange SMS API (en attente des cles)
 ### P2
 - [ ] Langues Baoule/Dioula
 - [ ] Stockage cloud fichiers (S3)
 - [ ] Refactoring cooperative.py et ssrte.py
+- [ ] Uniformisation farmer_id vs member_id (String vs ObjectId)
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Coop: traore_eric@yahoo.fr / greenlink2024
-- Agent Test: +2250700000001 / greenlink2024
+- Agent Test (Kone Alphone): +2250709005301 / greenlink2024
 - EAS: treckadzo (session active)
