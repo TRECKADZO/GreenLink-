@@ -8,6 +8,18 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - **Backend**: FastAPI + MongoDB Atlas
 - **Mobile**: Expo SDK 53 + React Native
 
+## Structure Backend cooperative
+```
+/app/backend/routes/
+  cooperative.py              (274 lignes) - Core: models, helpers, dashboard, audit, list
+  cooperative_members.py      (258 lignes) - CRUD membres, import CSV
+  cooperative_parcels.py      (414 lignes) - Parcelles, verification terrain
+  cooperative_lots.py         (363 lignes) - Lots, distribution primes
+  cooperative_agents.py       (355 lignes) - Agents terrain, attribution fermiers, progression
+  cooperative_reports.py      (468 lignes) - Rapports EUDR, stats villages, PDFs
+  cooperative_carbon_premiums.py (475 lignes) - Primes carbone, paiements, CSV, PDF
+```
+
 ## Fonctionnalites Implementees
 
 ### Session Precedente (19 Mars 2026)
@@ -35,19 +47,19 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 - my-parcels: recherche via phone_number -> coop_members
 
 ### Fix Dashboard Agent SSRTE - Stats auto-update (21 Mars 2026)
-- ssrte.py stats/overview: filtre recorded_by pour agents (pas cooperative_id)
-- ssrte.py stats/overview: niveau_risque in [critique,eleve] au lieu de risk_level: high
-- ssrte.py stats/overview: recorded_at au lieu de visit_date pour visites mensuelles
-- ssrte_analytics.py visits: filtre $or recorded_by/agent_id pour agents
-- Resultat: Kone Alphone voit 6 visites, 2 haut risque, 4 cas identifies (avant: 1/0/0)
+- ssrte.py stats/overview: filtre recorded_by pour agents
+- ssrte_analytics.py visits: filtre $or recorded_by/agent_id
 
-### Audit Complet Dashboards - Stats Auto-update (21 Mars 2026)
-- Tous les endpoints stats de tous les dashboards verifient et retournent HTTP 200
-- Fix cooperative/members: requete parcelles par member_id + farmer_id (pas seulement user_id)
-- Fix cooperative/parcels/all + pending-verification: recherche par liens membres (pas seulement coop_id)
-- Fix cooperative/carbon-premiums: utilisation de coop_id_query() pour coherence
-- Tests: 27/27 endpoints passes a 100% (backend + frontend)
-- Bugs confirmes corriges: KeyError trees_count, TypeError round(None), KeyError total_producteurs
+### Audit Complet Dashboards (21 Mars 2026)
+- 27/27 endpoints testes a 100%
+- Fix parcelles membres: requete par member_id + farmer_id
+- Fix carbon-premiums: coop_id_query() pour coherence
+- Bugs corriges: KeyError trees_count, TypeError round(None), KeyError total_producteurs
+
+### Refactoring cooperative.py (21 Mars 2026)
+- Decoupe de 2706 lignes en 7 modules specialises
+- 17/17 endpoints testes OK apres refactoring
+- Aucun changement d'URL, retrocompatibilite totale
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway
@@ -55,13 +67,11 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ## Backlog
 ### P1
 - [ ] Soumission AAB Google Play Store (action utilisateur)
-- [ ] Nouveau build APK/AAB v1.38.0 avec fix stats SSRTE mobile
 ### P1.5
 - [ ] Configurer Orange SMS API (en attente des cles)
 ### P2
-- [ ] Langues Baoule/Dioula
+- [ ] Langues Baoule/Dioula dans l'app mobile
 - [ ] Stockage cloud fichiers (S3)
-- [ ] Refactoring cooperative.py (2700+ lignes)
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
