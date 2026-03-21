@@ -17,6 +17,7 @@ const CartScreen = ({ navigation }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [deliveryFees, setDeliveryFees] = useState({ supplier_fees: [], total_delivery: 0 });
 
   const fetchCart = useCallback(async () => {
     try {
@@ -35,6 +36,14 @@ const CartScreen = ({ navigation }) => {
         stock_quantity: item.product?.stock_quantity || item.stock_quantity || 0,
       }));
       setCartItems(mapped);
+
+      // Extract delivery fees from cart response
+      if (response.data?.delivery_fees) {
+        setDeliveryFees({
+          supplier_fees: response.data.delivery_fees,
+          total_delivery: response.data.total_delivery || 0
+        });
+      }
     } catch (error) {
       console.error('Error fetching cart:', error);
     } finally {
@@ -114,7 +123,12 @@ const CartScreen = ({ navigation }) => {
       Alert.alert('Panier vide', 'Ajoutez des produits avant de commander');
       return;
     }
-    navigation.navigate('Checkout', { items: cartItems, total: calculateTotal() });
+    navigation.navigate('Checkout', {
+      items: cartItems,
+      total: calculateTotal(),
+      deliveryFees: deliveryFees,
+      totalWithDelivery: calculateTotal() + (deliveryFees.total_delivery || 0),
+    });
   };
 
   const renderCartItem = ({ item }) => (
@@ -235,14 +249,28 @@ const CartScreen = ({ navigation }) => {
                 {calculateTotal().toLocaleString()} XOF
               </Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Livraison</Text>
-              <Text style={styles.summaryValue}>À calculer</Text>
-            </View>
+            {deliveryFees.supplier_fees?.length > 0 ? (
+              deliveryFees.supplier_fees.map((sf, idx) => (
+                <View key={idx} style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel} numberOfLines={1}>
+                    Livraison{sf.supplier_name ? ` (${sf.supplier_name})` : ''}
+                  </Text>
+                  <Text style={[styles.summaryValue, sf.livraison?.gratuit && { color: '#22c55e' }]}>
+                    {sf.livraison?.gratuit ? 'Gratuite' :
+                      sf.livraison?.total > 0 ? `${sf.livraison.total.toLocaleString()} F` : 'Gratuite'}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Livraison</Text>
+                <Text style={[styles.summaryValue, { color: '#22c55e' }]}>Gratuite</Text>
+              </View>
+            )}
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total</Text>
               <Text style={styles.totalValue}>
-                {calculateTotal().toLocaleString()} XOF
+                {(calculateTotal() + (deliveryFees.total_delivery || 0)).toLocaleString()} XOF
               </Text>
             </View>
 

@@ -146,6 +146,28 @@ export const marketplaceApi = {
     return response.data;
   },
 
+  // Delivery Settings
+  getDeliverySettings: async () => {
+    const response = await axios.get(`${API}/supplier/delivery-settings`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  updateDeliverySettings: async (settings) => {
+    const response = await axios.put(`${API}/supplier/delivery-settings`, settings, {
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' }
+    });
+    return response.data;
+  },
+
+  getDeliveryFees: async (zone = 'national') => {
+    const response = await axios.get(`${API}/delivery-fees?zone=${zone}`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Shopping Cart
   getCart: async () => {
     const response = await axios.get(`${API}/cart`, {
@@ -183,13 +205,14 @@ export const marketplaceApi = {
   },
 
   checkout: async (deliveryInfo) => {
-    const params = new URLSearchParams({
+    const response = await axios.post(`${API}/cart/checkout`, {
       delivery_address: deliveryInfo.address,
       delivery_phone: deliveryInfo.phone,
+      delivery_city: deliveryInfo.city || '',
+      delivery_zone: deliveryInfo.zone || 'national',
       payment_method: deliveryInfo.payment_method || 'cash_on_delivery',
       notes: deliveryInfo.notes || ''
-    });
-    const response = await axios.post(`${API}/cart/checkout?${params}`, {}, {
+    }, {
       headers: getAuthHeader()
     });
     return response.data;

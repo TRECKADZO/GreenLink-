@@ -14,9 +14,12 @@ import { marketplaceApi } from '../../services/marketplace';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const CheckoutScreen = ({ route, navigation }) => {
-  const { items, total } = route.params;
+  const { items, total, deliveryFees: initialFees, totalWithDelivery: initialTotal } = route.params;
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('orange_money');
+  const [selectedZone, setSelectedZone] = useState('national');
+  const [deliveryFees, setDeliveryFees] = useState(initialFees || { supplier_fees: [], total_delivery: 0 });
+  const [loadingFees, setLoadingFees] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState({
     name: '',
     phone: '',
@@ -24,6 +27,33 @@ const CheckoutScreen = ({ route, navigation }) => {
     city: '',
     notes: '',
   });
+
+  const zones = [
+    { id: 'meme_ville', name: 'Même ville', desc: 'Livraison locale' },
+    { id: 'meme_region', name: 'Même région', desc: 'Région voisine' },
+    { id: 'national', name: 'National', desc: 'Autre région' },
+  ];
+
+  const fetchDeliveryFees = async (zone) => {
+    setLoadingFees(true);
+    try {
+      const response = await marketplaceApi.getDeliveryFees(zone);
+      if (response.data) {
+        setDeliveryFees(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching delivery fees:', error);
+    } finally {
+      setLoadingFees(false);
+    }
+  };
+
+  const handleZoneChange = (zone) => {
+    setSelectedZone(zone);
+    fetchDeliveryFees(zone);
+  };
+
+  const currentTotal = total + (deliveryFees?.total_delivery || 0);
 
   const paymentMethods = [
     { id: 'orange_money', name: 'Orange Money', icon: '📱', color: '#ff6600' },
@@ -42,11 +72,11 @@ const CheckoutScreen = ({ route, navigation }) => {
     try {
       const response = await marketplaceApi.checkout({
         payment_method: paymentMethod,
-        delivery_address: deliveryAddress,
-        items: items.map(item => ({
-          product_id: item.product_id,
-          quantity: item.quantity,
-        })),
+        delivery_address: `${deliveryAddress.address}, ${deliveryAddress.city}`,
+        delivery_phone: deliveryAddress.phone,
+        delivery_city: deliveryAddress.city,
+        delivery_zone: selectedZone,
+        notes: deliveryAddress.notes || '',
       });
 
       if (response.data?.success || response.data?.order_id) {
@@ -92,7 +122,7 @@ const CheckoutScreen = ({ route, navigation }) => {
       <ScrollView style={styles.content}>
         {/* Order Summary */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📦 Récapitulatif</Text>
+          <Text style={styles.sectionTitle}>Récapitulatif</Text>
           <View style={styles.summaryCard}>
             {items.map((item) => (
               <View key={item.product_id} style={styles.summaryItem}>
@@ -104,10 +134,35 @@ const CheckoutScreen = ({ route, navigation }) => {
                 </Text>
               </View>
             ))}
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryItemName}>Sous-total</Text>
+              <Text style={styles.summaryItemPrice}>{total.toLocaleString()} F</Text>
+            </View>
+            {deliveryFees?.supplier_fees?.length > 0 ? (
+              deliveryFees.supplier_fees.map((sf, idx) => (
+                <View key={idx} style={styles.summaryItem}>
+                  <Text style={styles.summaryItemName} numberOfLines={1}>
+                    Livraison{sf.supplier_name ? ` (${sf.supplier_name})` : ''}
+                  </Text>
+                  <Text style={[styles.summaryItemPrice, sf.livraison?.gratuit && { color: '#22c55e' }]}>
+                    {sf.livraison?.gratuit ? 'Gratuit' :
+                      sf.livraison?.total > 0 ? `${sf.livraison.total.toLocaleString()} F` : 'Gratuit'}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryItemName}>Livraison</Text>
+                <Text style={[styles.summaryItemPrice, { color: '#22c55e' }]}>
+                  {loadingFees ? 'Calcul...' : 'Gratuite'}
+                </Text>
+              </View>
+            )}
             <View style={styles.summaryTotal}>
               <Text style={styles.summaryTotalLabel}>Total</Text>
               <Text style={styles.summaryTotalValue}>
-                {total.toLocaleString()} XOF
+                {currentTotal.toLocaleString()} XOF
               </Text>
             </View>
           </View>
@@ -115,7 +170,7 @@ const CheckoutScreen = ({ route, navigation }) => {
 
         {/* Delivery Address */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📍 Adresse de livraison</Text>
+          <Text style={styles.sectionTitle}>Adresse de livraison</Text>
           <View style={styles.formCard}>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Nom complet *</Text>
@@ -177,9 +232,33 @@ const CheckoutScreen = ({ route, navigation }) => {
           </View>
         </View>
 
+        {/* Zone de livraison */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Zone de livraison</Text>
+          <View style={styles.paymentOptions}>
+            {zones.map((zone) => (
+              <TouchableOpacity
+                key={zone.id}
+                style={[
+                  styles.paymentOption,
+                  selectedZone === zone.id && styles.paymentOptionActive,
+                  selectedZone === zone.id && { borderColor: '#3b82f6' },
+                ]}
+                onPress={() => handleZoneChange(zone.id)}
+              >
+                <Text style={styles.paymentName}>{zone.name}</Text>
+                <Text style={{ fontSize: 11, color: COLORS.gray[500] }}>{zone.desc}</Text>
+                {selectedZone === zone.id && (
+                  <Text style={[styles.checkmark, { color: '#3b82f6' }]}>✓</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {/* Payment Method */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💳 Mode de paiement</Text>
+          <Text style={styles.sectionTitle}>Mode de paiement</Text>
           <View style={styles.paymentOptions}>
             {paymentMethods.map((method) => (
               <TouchableOpacity
@@ -221,7 +300,7 @@ const CheckoutScreen = ({ route, navigation }) => {
       <View style={styles.bottomBar}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total à payer</Text>
-          <Text style={styles.totalValue}>{total.toLocaleString()} XOF</Text>
+          <Text style={styles.totalValue}>{currentTotal.toLocaleString()} XOF</Text>
         </View>
         <TouchableOpacity
           style={[styles.checkoutButton, loading && styles.checkoutButtonDisabled]}
@@ -286,6 +365,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: SPACING.xs,
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: COLORS.gray[200],
+    marginVertical: SPACING.xs,
   },
   summaryItemName: {
     flex: 1,

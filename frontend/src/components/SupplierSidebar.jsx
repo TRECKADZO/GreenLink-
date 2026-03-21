@@ -7,7 +7,8 @@ import {
   MessageSquare, 
   Bell, 
   User,
-  Store
+  Store,
+  Truck
 } from 'lucide-react';
 import { Badge } from './ui/badge';
 
@@ -16,6 +17,7 @@ const SupplierSidebar = ({ unreadMessages = 0, unreadNotifications = 0 }) => {
     { path: '/supplier/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
     { path: '/supplier/marketplace', icon: Store, label: 'Marketplace' },
     { path: '/supplier/products', icon: Package, label: 'Mes Produits' },
+    { path: '/supplier/delivery-settings', icon: Truck, label: 'Livraison' },
     { path: '/supplier/orders', icon: ShoppingCart, label: 'Commandes' },
     { path: '/supplier/messages', icon: MessageSquare, label: 'Messagerie', badge: unreadMessages },
     { path: '/supplier/notifications', icon: Bell, label: 'Notifications', badge: unreadNotifications },

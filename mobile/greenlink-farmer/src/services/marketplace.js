@@ -27,4 +27,9 @@ export const marketplaceApi = {
   
   // Checkout
   checkout: (data) => api.post('/marketplace/cart/checkout', data),
+
+  // Delivery
+  getDeliveryFees: (zone = 'national') => api.get(`/marketplace/delivery-fees?zone=${zone}`),
+  getDeliverySettings: () => api.get('/marketplace/supplier/delivery-settings'),
+  updateDeliverySettings: (data) => api.put('/marketplace/supplier/delivery-settings', data),
 };

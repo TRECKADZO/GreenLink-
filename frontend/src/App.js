@@ -28,6 +28,7 @@ import Orders from "./pages/supplier/Orders";
 import Messages from "./pages/supplier/Messages";
 import Notifications from "./pages/supplier/Notifications";
 import SupplierAnalytics from "./pages/supplier/Analytics";
+import DeliverySettings from "./pages/supplier/DeliverySettings";
 
 // Farmer Routes
 import FarmerDashboard from "./pages/farmer/Dashboard";
@@ -144,6 +145,7 @@ function App() {
               <Route path="/supplier/messages" element={<Messages />} />
               <Route path="/supplier/notifications" element={<Notifications />} />
               <Route path="/supplier/analytics" element={<SupplierAnalytics />} />
+              <Route path="/supplier/delivery-settings" element={<DeliverySettings />} />
 
               {/* Farmer/Producteur Routes */}
               <Route path="/farmer/dashboard" element={<FarmerDashboard />} />

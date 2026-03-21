@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Query, UploadFile, File
-from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Depends, status, Query, UploadFile, File, Body
+from typing import List, Optional, Dict
 import os
 import uuid
 import base64
@@ -13,8 +13,98 @@ from auth_models import User
 from routes.auth import get_current_user
 from datetime import datetime, timedelta
 from bson import ObjectId
+from pydantic import BaseModel, Field as PydanticField
 
 router = APIRouter(prefix="/api/marketplace", tags=["marketplace"])
+
+
+# ============= DELIVERY MODELS =============
+
+class DeliveryZones(BaseModel):
+    meme_ville: float = 0
+    meme_region: float = 0
+    national: float = 0
+
+class FraisFixeModel(BaseModel):
+    actif: bool = False
+    montant: float = 0
+
+class ParDistanceModel(BaseModel):
+    actif: bool = False
+    zones: DeliveryZones = DeliveryZones()
+
+class ParPoidsModel(BaseModel):
+    actif: bool = False
+    prix_par_unite: float = 0
+
+class SeuilGratuit(BaseModel):
+    actif: bool = False
+    montant_minimum: float = 0
+
+class ModelesLivraison(BaseModel):
+    frais_fixe: FraisFixeModel = FraisFixeModel()
+    par_distance: ParDistanceModel = ParDistanceModel()
+    par_poids: ParPoidsModel = ParPoidsModel()
+
+class DeliverySettingsUpdate(BaseModel):
+    modeles_livraison: ModelesLivraison = ModelesLivraison()
+    seuil_gratuit: SeuilGratuit = SeuilGratuit()
+
+class CheckoutBody(BaseModel):
+    delivery_address: str
+    delivery_phone: str
+    delivery_city: str = ""
+    delivery_zone: str = "national"
+    payment_method: str = "cash_on_delivery"
+    notes: str = ""
+
+
+async def calculate_delivery_fee(supplier_id: str, items: list, subtotal: float, zone: str = "national") -> dict:
+    """Calculate delivery fee for a supplier's items based on their delivery settings."""
+    settings = await db.delivery_settings.find_one(
+        {"supplier_id": supplier_id}, {"_id": 0}
+    )
+    if not settings:
+        return {"total": 0, "details": [], "gratuit": False}
+
+    modeles = settings.get("modeles_livraison", {})
+    seuil = settings.get("seuil_gratuit", {})
+    fee = 0
+    details = []
+
+    # 1. Frais fixe
+    ff = modeles.get("frais_fixe", {})
+    if ff.get("actif") and ff.get("montant", 0) > 0:
+        fee += ff["montant"]
+        details.append({"modele": "frais_fixe", "label": "Frais fixe", "montant": ff["montant"]})
+
+    # 2. Par distance (zones)
+    pd = modeles.get("par_distance", {})
+    if pd.get("actif"):
+        zone_key = zone if zone in ["meme_ville", "meme_region", "national"] else "national"
+        zone_fee = pd.get("zones", {}).get(zone_key, 0)
+        if zone_fee > 0:
+            fee += zone_fee
+            zone_labels = {"meme_ville": "Même ville", "meme_region": "Même région", "national": "National"}
+            details.append({"modele": "par_distance", "label": f"Zone: {zone_labels.get(zone_key, zone_key)}", "montant": zone_fee})
+
+    # 3. Par poids/quantité
+    pp = modeles.get("par_poids", {})
+    if pp.get("actif") and pp.get("prix_par_unite", 0) > 0:
+        total_qty = sum(item.get("quantity", 1) for item in items)
+        poids_fee = total_qty * pp["prix_par_unite"]
+        fee += poids_fee
+        details.append({"modele": "par_poids", "label": f"{total_qty} unité(s) x {pp['prix_par_unite']} F", "montant": poids_fee})
+
+    # Check seuil gratuit
+    gratuit = False
+    if seuil.get("actif") and seuil.get("montant_minimum", 0) > 0:
+        if subtotal >= seuil["montant_minimum"]:
+            gratuit = True
+            fee = 0
+            details = [{"modele": "seuil_gratuit", "label": f"Gratuit (commande >= {seuil['montant_minimum']:,.0f} F)", "montant": 0}]
+
+    return {"total": fee, "details": details, "gratuit": gratuit, "seuil_gratuit": seuil if seuil.get("actif") else None}
 
 # Ensure upload directory exists
 UPLOAD_DIR = "/app/backend/uploads/products"
@@ -72,6 +162,107 @@ async def get_product_image(filename: str):
         raise HTTPException(status_code=404, detail="Image non trouvée")
     
     return FileResponse(filepath)
+
+# ============= DELIVERY SETTINGS =============
+
+@router.get("/supplier/delivery-settings")
+async def get_delivery_settings(current_user: dict = Depends(get_current_user)):
+    """Get supplier's delivery settings"""
+    if current_user.get("user_type") != "fournisseur":
+        raise HTTPException(status_code=403, detail="Accès réservé aux fournisseurs")
+
+    settings = await db.delivery_settings.find_one(
+        {"supplier_id": current_user["_id"]}, {"_id": 0}
+    )
+
+    if not settings:
+        return {
+            "supplier_id": current_user["_id"],
+            "modeles_livraison": {
+                "frais_fixe": {"actif": False, "montant": 0},
+                "par_distance": {
+                    "actif": False,
+                    "zones": {"meme_ville": 0, "meme_region": 0, "national": 0}
+                },
+                "par_poids": {"actif": False, "prix_par_unite": 0}
+            },
+            "seuil_gratuit": {"actif": False, "montant_minimum": 0}
+        }
+
+    return settings
+
+
+@router.put("/supplier/delivery-settings")
+async def update_delivery_settings(
+    settings: DeliverySettingsUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update supplier's delivery settings"""
+    if current_user.get("user_type") != "fournisseur":
+        raise HTTPException(status_code=403, detail="Accès réservé aux fournisseurs")
+
+    delivery_data = {
+        "supplier_id": current_user["_id"],
+        "modeles_livraison": settings.modeles_livraison.dict(),
+        "seuil_gratuit": settings.seuil_gratuit.dict(),
+        "updated_at": datetime.utcnow()
+    }
+
+    await db.delivery_settings.update_one(
+        {"supplier_id": current_user["_id"]},
+        {"$set": delivery_data},
+        upsert=True
+    )
+
+    return {"message": "Paramètres de livraison mis à jour avec succès"}
+
+
+@router.get("/delivery-fees")
+async def get_delivery_fees_for_cart(
+    zone: str = "national",
+    current_user: dict = Depends(get_current_user)
+):
+    """Calculate delivery fees for the current cart grouped by supplier"""
+    cart = await db.carts.find_one({"user_id": current_user["_id"]})
+    if not cart or not cart.get("items"):
+        return {"supplier_fees": [], "total_delivery": 0}
+
+    # Group items by supplier
+    supplier_items = {}
+    for item in cart.get("items", []):
+        product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+        if not product:
+            continue
+        sid = product["supplier_id"]
+        if sid not in supplier_items:
+            supplier_items[sid] = {
+                "supplier_name": product.get("supplier_name", ""),
+                "items": [],
+                "subtotal": 0
+            }
+        item_total = product["price"] * item["quantity"]
+        supplier_items[sid]["items"].append({
+            "product_id": item["product_id"],
+            "quantity": item["quantity"],
+            "price": product["price"]
+        })
+        supplier_items[sid]["subtotal"] += item_total
+
+    # Calculate fees per supplier
+    supplier_fees = []
+    total_delivery = 0
+    for sid, data in supplier_items.items():
+        fee_info = await calculate_delivery_fee(sid, data["items"], data["subtotal"], zone)
+        supplier_fees.append({
+            "supplier_id": sid,
+            "supplier_name": data["supplier_name"],
+            "subtotal": data["subtotal"],
+            "livraison": fee_info
+        })
+        total_delivery += fee_info["total"]
+
+    return {"supplier_fees": supplier_fees, "total_delivery": total_delivery}
+
 
 # ============= PRODUCTS =============
 
@@ -197,16 +388,20 @@ async def delete_product(
 # ============= SHOPPING CART =============
 
 @router.get("/cart")
-async def get_cart(current_user: dict = Depends(get_current_user)):
-    """Get user's shopping cart"""
+async def get_cart(
+    zone: str = "national",
+    current_user: dict = Depends(get_current_user)
+):
+    """Get user's shopping cart with delivery fee estimates"""
     cart = await db.carts.find_one({"user_id": current_user["_id"]})
     if not cart:
-        return {"items": [], "total": 0, "items_count": 0}
-    
+        return {"items": [], "total": 0, "items_count": 0, "delivery_fees": [], "total_delivery": 0, "total_with_delivery": 0}
+
     # Enrich cart items with product details
     enriched_items = []
     total = 0
-    
+    supplier_groups = {}
+
     for item in cart.get("items", []):
         product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
         if product:
@@ -220,6 +415,7 @@ async def get_cart(current_user: dict = Depends(get_current_user)):
                     "price": product["price"],
                     "unit": product["unit"],
                     "category": product["category"],
+                    "supplier_id": product["supplier_id"],
                     "supplier_name": product.get("supplier_name", ""),
                     "images": product.get("images", []),
                     "stock_quantity": product.get("stock_quantity", 0)
@@ -227,11 +423,42 @@ async def get_cart(current_user: dict = Depends(get_current_user)):
                 "item_total": item_total
             })
             total += item_total
-    
+
+            # Group by supplier for delivery calculation
+            sid = product["supplier_id"]
+            if sid not in supplier_groups:
+                supplier_groups[sid] = {
+                    "supplier_name": product.get("supplier_name", ""),
+                    "items": [],
+                    "subtotal": 0
+                }
+            supplier_groups[sid]["items"].append({
+                "product_id": item["product_id"],
+                "quantity": item["quantity"],
+                "price": product["price"]
+            })
+            supplier_groups[sid]["subtotal"] += item_total
+
+    # Calculate delivery fees per supplier
+    delivery_fees = []
+    total_delivery = 0
+    for sid, data in supplier_groups.items():
+        fee_info = await calculate_delivery_fee(sid, data["items"], data["subtotal"], zone)
+        delivery_fees.append({
+            "supplier_id": sid,
+            "supplier_name": data["supplier_name"],
+            "subtotal": data["subtotal"],
+            "livraison": fee_info
+        })
+        total_delivery += fee_info["total"]
+
     return {
         "items": enriched_items,
         "total": total,
-        "items_count": len(enriched_items)
+        "items_count": len(enriched_items),
+        "delivery_fees": delivery_fees,
+        "total_delivery": total_delivery,
+        "total_with_delivery": total + total_delivery
     }
 
 @router.post("/cart/add")
@@ -338,32 +565,51 @@ async def clear_cart(current_user: dict = Depends(get_current_user)):
 
 @router.post("/cart/checkout")
 async def checkout_cart(
-    delivery_address: str,
-    delivery_phone: str,
+    body: CheckoutBody = None,
+    delivery_address: str = None,
+    delivery_phone: str = None,
     payment_method: str = "cash_on_delivery",
     notes: str = "",
     current_user: dict = Depends(get_current_user)
 ):
-    """Checkout cart and create order"""
+    """Checkout cart and create order (accepts both body and query params for backward compatibility)"""
+    # Support both JSON body and query params
+    if body:
+        addr = body.delivery_address
+        phone = body.delivery_phone
+        city = body.delivery_city
+        zone = body.delivery_zone
+        pay_method = body.payment_method
+        order_notes = body.notes
+    else:
+        addr = delivery_address or ""
+        phone = delivery_phone or ""
+        city = ""
+        zone = "national"
+        pay_method = payment_method
+        order_notes = notes
+
+    if not addr or not phone:
+        raise HTTPException(status_code=400, detail="Adresse et téléphone requis")
+
     cart = await db.carts.find_one({"user_id": current_user["_id"]})
     if not cart or not cart.get("items"):
         raise HTTPException(status_code=400, detail="Panier vide")
-    
+
     # Group items by supplier
     supplier_orders = {}
-    
+
     for item in cart["items"]:
         product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
         if not product:
             continue
-        
-        # Check stock
+
         if product.get("stock_quantity", 0) < item["quantity"]:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Stock insuffisant pour {product['name']}"
             )
-        
+
         supplier_id = product["supplier_id"]
         if supplier_id not in supplier_orders:
             supplier_orders[supplier_id] = {
@@ -372,7 +618,7 @@ async def checkout_cart(
                 "items": [],
                 "total": 0
             }
-        
+
         item_total = product["price"] * item["quantity"]
         supplier_orders[supplier_id]["items"].append({
             "product_id": item["product_id"],
@@ -383,60 +629,75 @@ async def checkout_cart(
             "total": item_total
         })
         supplier_orders[supplier_id]["total"] += item_total
-    
-    # Create orders for each supplier
+
+    # Create orders for each supplier with delivery fees
     created_orders = []
     order_number_base = f"CMD{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
-    
+    grand_total = 0
+
     for idx, (supplier_id, order_data) in enumerate(supplier_orders.items()):
+        # Calculate delivery fee for this supplier
+        fee_items = [{"product_id": i["product_id"], "quantity": i["quantity"], "price": i["unit_price"]} for i in order_data["items"]]
+        fee_info = await calculate_delivery_fee(supplier_id, fee_items, order_data["total"], zone)
+        delivery_fee = fee_info["total"]
+
         order = {
             "order_number": f"{order_number_base}-{idx+1}",
             "buyer_id": current_user["_id"],
             "buyer_name": current_user["full_name"],
             "buyer_email": current_user.get("email", ""),
-            "buyer_phone": delivery_phone,
+            "buyer_phone": phone,
             "supplier_id": supplier_id,
             "supplier_name": order_data["supplier_name"],
             "items": order_data["items"],
-            "total_amount": order_data["total"],
-            "delivery_address": delivery_address,
-            "delivery_phone": delivery_phone,
-            "payment_method": payment_method,
-            "notes": notes,
+            "subtotal": order_data["total"],
+            "frais_livraison": delivery_fee,
+            "details_livraison": fee_info.get("details", []),
+            "total_amount": order_data["total"] + delivery_fee,
+            "delivery_address": addr,
+            "delivery_city": city,
+            "delivery_zone": zone,
+            "delivery_phone": phone,
+            "payment_method": pay_method,
+            "notes": order_notes,
             "status": "pending",
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }
-        
+
         result = await db.orders.insert_one(order)
         order["_id"] = str(result.inserted_id)
         created_orders.append(order)
-        
+        grand_total += order["total_amount"]
+
         # Update product stock
         for item in order_data["items"]:
             await db.products.update_one(
                 {"_id": ObjectId(item["product_id"])},
                 {"$inc": {"stock_quantity": -item["quantity"], "total_sales": item["quantity"]}}
             )
-        
+
         # Create notification for supplier
         await db.notifications.insert_one({
             "user_id": supplier_id,
             "title": "Nouvelle commande reçue",
-            "message": f"Commande #{order['order_number']} de {current_user['full_name']} - {order_data['total']:,.0f} XOF",
+            "message": f"Commande #{order['order_number']} de {current_user['full_name']} - {order['total_amount']:,.0f} XOF",
             "type": "order",
             "action_url": f"/supplier/orders",
             "created_at": datetime.utcnow(),
             "is_read": False
         })
-    
+
     # Clear cart
     await db.carts.delete_one({"user_id": current_user["_id"]})
-    
+
     return {
+        "success": True,
         "message": "Commande passée avec succès",
         "orders": created_orders,
-        "total_orders": len(created_orders)
+        "total_orders": len(created_orders),
+        "grand_total": grand_total,
+        "order_id": created_orders[0]["_id"] if created_orders else None
     }
 
 # ============= BUYER ORDERS =============

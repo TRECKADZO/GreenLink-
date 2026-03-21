@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any
 
 # Backend URL from review request
-BACKEND_URL = "https://multilang-data.preview.emergentagent.com/api"
+BACKEND_URL = "https://livraison-checkout.preview.emergentagent.com/api"
 
 def make_request(method: str, endpoint: str, data: Dict[Any, Any] = None, headers: Dict[str, str] = None) -> requests.Response:
     """Helper function to make HTTP requests with error handling"""

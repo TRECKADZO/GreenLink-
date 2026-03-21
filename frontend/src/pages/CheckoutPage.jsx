@@ -37,6 +37,8 @@ const CheckoutPage = () => {
   const [formData, setFormData] = useState({
     address: '',
     phone: user?.phone_number || '',
+    city: '',
+    zone: 'national',
     payment_method: 'cash_on_delivery',
     notes: ''
   });
@@ -45,6 +47,8 @@ const CheckoutPage = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [simulationMode, setSimulationMode] = useState(true);
+  const [deliveryFees, setDeliveryFees] = useState({ supplier_fees: [], total_delivery: 0 });
+  const [loadingFees, setLoadingFees] = useState(false);
 
   // Check simulation mode on mount
   useEffect(() => {
@@ -58,6 +62,27 @@ const CheckoutPage = () => {
     };
     checkSimulation();
   }, []);
+
+  // Fetch delivery fees when zone changes
+  useEffect(() => {
+    const fetchFees = async () => {
+      if (!user || cart.items.length === 0) return;
+      setLoadingFees(true);
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${API_URL}/api/marketplace/delivery-fees?zone=${formData.zone}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setDeliveryFees(response.data);
+      } catch (error) {
+        console.error('Error fetching delivery fees:', error);
+      } finally {
+        setLoadingFees(false);
+      }
+    };
+    fetchFees();
+  }, [formData.zone, cart.items.length, user]);
 
   // Handle payment return
   useEffect(() => {
@@ -487,17 +512,44 @@ const CheckoutPage = () => {
                         required
                       />
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="phone">Téléphone *</Label>
+                        <Input
+                          id="phone"
+                          data-testid="phone-input"
+                          placeholder="+225 07 00 00 00 00"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          className="mt-1"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="city">Ville</Label>
+                        <Input
+                          id="city"
+                          data-testid="city-input"
+                          placeholder="Abidjan, Bouaké..."
+                          value={formData.city}
+                          onChange={(e) => setFormData({...formData, city: e.target.value})}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
                     <div>
-                      <Label htmlFor="phone">Téléphone *</Label>
-                      <Input
-                        id="phone"
-                        data-testid="phone-input"
-                        placeholder="+225 07 00 00 00 00"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="mt-1"
-                        required
-                      />
+                      <Label htmlFor="zone">Zone de livraison</Label>
+                      <select
+                        id="zone"
+                        data-testid="zone-select"
+                        className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#2d5a4d] focus:border-transparent"
+                        value={formData.zone}
+                        onChange={(e) => setFormData({...formData, zone: e.target.value})}
+                      >
+                        <option value="meme_ville">Même ville que le fournisseur</option>
+                        <option value="meme_region">Même région</option>
+                        <option value="national">National (autre région)</option>
+                      </select>
                     </div>
                   </div>
                 </Card>
@@ -664,13 +716,49 @@ const CheckoutPage = () => {
                     <span>Sous-total</span>
                     <span>{cart.total.toLocaleString()} XOF</span>
                   </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Livraison</span>
-                    <span className="text-green-600">Gratuite</span>
-                  </div>
+                  {/* Delivery fees breakdown */}
+                  {deliveryFees.supplier_fees?.length > 0 ? (
+                    deliveryFees.supplier_fees.map((sf, idx) => (
+                      <div key={idx} className="text-sm">
+                        {sf.livraison.gratuit ? (
+                          <div className="flex justify-between text-green-600">
+                            <span>Livraison ({sf.supplier_name})</span>
+                            <span>Gratuite</span>
+                          </div>
+                        ) : sf.livraison.total > 0 ? (
+                          <div>
+                            <div className="flex justify-between text-gray-600">
+                              <span>Livraison ({sf.supplier_name})</span>
+                              <span>{sf.livraison.total.toLocaleString()} XOF</span>
+                            </div>
+                            {sf.livraison.details?.map((d, di) => (
+                              <div key={di} className="flex justify-between text-xs text-gray-400 pl-2">
+                                <span>{d.label}</span>
+                                <span>{d.montant.toLocaleString()} F</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex justify-between text-green-600">
+                            <span>Livraison ({sf.supplier_name})</span>
+                            <span>Gratuite</span>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex justify-between text-gray-600">
+                      <span>Livraison</span>
+                      <span className="text-green-600">
+                        {loadingFees ? 'Calcul...' : 'Gratuite'}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t">
                     <span>Total</span>
-                    <span className="text-[#2d5a4d]">{cart.total.toLocaleString()} XOF</span>
+                    <span className="text-[#2d5a4d]">
+                      {(cart.total + (deliveryFees.total_delivery || 0)).toLocaleString()} XOF
+                    </span>
                   </div>
                 </div>
 
