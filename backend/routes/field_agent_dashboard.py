@@ -396,30 +396,35 @@ async def get_my_assigned_farmers(
     # Collect all member IDs for batch queries
     member_ids = [str(m["_id"]) for m in members]
     user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+    # Bug 4 fix: Use all possible IDs for form lookups (member_id + user_id)
+    all_possible_ids = list(set(member_ids + [uid for uid in user_ids if uid]))
 
-    # Batch fetch form completion data
+    # Batch fetch form completion data using all possible IDs
     ici_profiles = await db.ici_profiles.find(
-        {"farmer_id": {"$in": member_ids}}, {"farmer_id": 1}
+        {"farmer_id": {"$in": all_possible_ids}}, {"farmer_id": 1}
     ).to_list(500)
     ici_set = {p["farmer_id"] for p in ici_profiles}
 
     ssrte_pipeline = [
-        {"$match": {"farmer_id": {"$in": member_ids}}},
+        {"$match": {"farmer_id": {"$in": all_possible_ids}}},
         {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}, "last": {"$max": "$recorded_at"}}}
     ]
     ssrte_agg = await db.ssrte_visits.aggregate(ssrte_pipeline).to_list(500)
     ssrte_map = {s["_id"]: {"count": s["count"], "last": s.get("last")} for s in ssrte_agg}
 
     photo_pipeline = [
-        {"$match": {"farmer_id": {"$in": member_ids}}},
+        {"$match": {"farmer_id": {"$in": all_possible_ids}}},
         {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}}}
     ]
     photo_agg = await db.geotagged_photos.aggregate(photo_pipeline).to_list(500)
     photo_map = {p["_id"]: p["count"] for p in photo_agg}
 
     parcel_pipeline = [
-        {"$match": {"farmer_id": {"$in": member_ids + user_ids}}},
-        {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}}}
+        {"$match": {"$or": [
+            {"farmer_id": {"$in": all_possible_ids}},
+            {"member_id": {"$in": all_possible_ids}}
+        ]}},
+        {"$group": {"_id": {"$ifNull": ["$member_id", "$farmer_id"]}, "count": {"$sum": 1}}}
     ]
     parcel_agg = await db.parcels.aggregate(parcel_pipeline).to_list(500)
     parcel_map = {p["_id"]: p["count"] for p in parcel_agg}
@@ -430,17 +435,20 @@ async def get_my_assigned_farmers(
         member_id = str(m["_id"])
         parcels = []
         farmer_uid = m.get("user_id", "")
+        # Query parcels by both member_id and farmer_id
+        parcel_query = {"$or": [{"farmer_id": member_id}, {"member_id": member_id}]}
         if farmer_uid:
-            parcels = await db.parcels.find({"farmer_id": farmer_uid}, {"_id": 0}).to_list(50)
+            parcel_query["$or"].append({"farmer_id": farmer_uid})
+        parcels = await db.parcels.find(parcel_query, {"_id": 0}).to_list(50)
 
         parcels_count = parcel_map.get(member_id, 0) or parcel_map.get(farmer_uid, 0) or len(parcels)
 
-        # Form completion status
-        ici_done = member_id in ici_set
-        ssrte_info = ssrte_map.get(member_id, {})
+        # Form completion status - check both member_id and user_id (Bug 4 fix)
+        ici_done = member_id in ici_set or farmer_uid in ici_set
+        ssrte_info = ssrte_map.get(member_id, {}) or ssrte_map.get(farmer_uid, {})
         ssrte_done = ssrte_info.get("count", 0) > 0
         parcels_done = parcels_count > 0
-        photos_done = photo_map.get(member_id, 0) > 0
+        photos_done = photo_map.get(member_id, 0) > 0 or photo_map.get(farmer_uid, 0) > 0
         registered = m.get("status") == "active" or m.get("is_active", False)
 
         forms_status = {

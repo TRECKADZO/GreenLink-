@@ -4,7 +4,6 @@ import {
   Alert, ActivityIndicator, Switch, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -185,16 +184,21 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Clean form data before sending - ensure taille_menage is a valid int
+      const cleanForm = {
+        ...form,
+        taille_menage: parseInt(form.taille_menage) || 1,
+      };
       const netInfo = await NetInfo.fetch();
       if (netInfo.isConnected && token) {
         const resp = await fetch(`${API_URL}/api/ici-data/farmers/${farmerId}/ici-profile`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
+          body: JSON.stringify(cleanForm),
         });
         if (resp.ok) {
           const data = await resp.json();
-          await AsyncStorage.setItem(`ici_profile_${farmerId}`, JSON.stringify(form));
+          await AsyncStorage.setItem(`ici_profile_${farmerId}`, JSON.stringify(cleanForm));
           Alert.alert('Succes', `Fiche ICI sauvegardee. Risque: ${data.niveau_risque || 'N/A'}`,
             [{ text: 'OK', onPress: () => navigation.goBack() }]
           );
@@ -204,9 +208,9 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
         }
       } else {
         // Save offline
-        await AsyncStorage.setItem(`ici_profile_${farmerId}`, JSON.stringify(form));
+        await AsyncStorage.setItem(`ici_profile_${farmerId}`, JSON.stringify(cleanForm));
         const pending = JSON.parse(await AsyncStorage.getItem('pendingActions') || '[]');
-        pending.push({ type: 'ici_profile', farmerId, data: form, timestamp: new Date().toISOString() });
+        pending.push({ type: 'ici_profile', farmerId, data: cleanForm, timestamp: new Date().toISOString() });
         await AsyncStorage.setItem('pendingActions', JSON.stringify(pending));
         Alert.alert('Sauvegarde hors ligne', 'La fiche sera synchronisee quand vous serez connecte.',
           [{ text: 'OK', onPress: () => navigation.goBack() }]
@@ -301,34 +305,39 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
           {/* Producteur Info */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Informations du Producteur</Text>
-            <View style={styles.row}>
-              <View style={styles.halfField}>
-                <Text style={styles.label}>Genre</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker selectedValue={form.genre} onValueChange={v => setForm(p => ({ ...p, genre: v }))} style={styles.picker}>
-                    <Picker.Item label="Choisir..." value="" />
-                    <Picker.Item label="Homme" value="homme" />
-                    <Picker.Item label="Femme" value="femme" />
-                  </Picker>
-                </View>
+            <View style={{ marginBottom: 8 }}>
+              <Text style={styles.label}>Genre</Text>
+              <View style={styles.sexeButtonRow}>
+                <TouchableOpacity
+                  style={[styles.genreButton, form.genre === 'homme' && styles.genreButtonActive]}
+                  onPress={() => setForm(p => ({ ...p, genre: 'homme' }))}>
+                  <Ionicons name="male" size={16} color={form.genre === 'homme' ? '#fff' : '#64748b'} />
+                  <Text style={[styles.genreButtonText, form.genre === 'homme' && styles.genreButtonTextActive]}>Homme</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.genreButton, form.genre === 'femme' && styles.genreButtonActive]}
+                  onPress={() => setForm(p => ({ ...p, genre: 'femme' }))}>
+                  <Ionicons name="female" size={16} color={form.genre === 'femme' ? '#fff' : '#64748b'} />
+                  <Text style={[styles.genreButtonText, form.genre === 'femme' && styles.genreButtonTextActive]}>Femme</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.halfField}>
-                <Text style={styles.label}>Education</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker selectedValue={form.niveau_education} onValueChange={v => setForm(p => ({ ...p, niveau_education: v }))} style={styles.picker}>
-                    <Picker.Item label="Choisir..." value="" />
-                    <Picker.Item label="Aucun" value="aucun" />
-                    <Picker.Item label="Primaire" value="primaire" />
-                    <Picker.Item label="Secondaire" value="secondaire" />
-                    <Picker.Item label="Superieur" value="superieur" />
-                  </Picker>
-                </View>
+            </View>
+            <View style={{ marginBottom: 8 }}>
+              <Text style={styles.label}>Education</Text>
+              <View style={styles.educationRow}>
+                {[{v:'aucun',l:'Aucun'},{v:'primaire',l:'Primaire'},{v:'secondaire',l:'Second.'},{v:'superieur',l:'Superieur'}].map(opt => (
+                  <TouchableOpacity key={opt.v}
+                    style={[styles.eduButton, form.niveau_education === opt.v && styles.eduButtonActive]}
+                    onPress={() => setForm(p => ({ ...p, niveau_education: opt.v }))}>
+                    <Text style={[styles.eduButtonText, form.niveau_education === opt.v && styles.eduButtonTextActive]}>{opt.l}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
             <View style={styles.row}>
               <View style={styles.halfField}>
                 <Text style={styles.label}>Taille du menage</Text>
-                <TextInput style={styles.input} keyboardType="numeric" value={String(form.taille_menage || '')}
+                <TextInput style={styles.input} keyboardType="numeric" value={form.taille_menage === '' || form.taille_menage === 0 ? '' : String(form.taille_menage)}
                   onChangeText={v => setForm(p => ({ ...p, taille_menage: v === '' ? '' : parseInt(v) || '' }))} />
               </View>
               <View style={[styles.halfField, styles.switchRow]}>
@@ -503,6 +512,15 @@ const styles = StyleSheet.create({
   sexeButtonActive: { backgroundColor: '#06b6d4', borderColor: '#06b6d4' },
   sexeButtonText: { fontSize: 12, fontWeight: '600', color: '#64748b' },
   sexeButtonTextActive: { color: '#fff' },
+  genreButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 8, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0' },
+  genreButtonActive: { backgroundColor: '#06b6d4', borderColor: '#06b6d4' },
+  genreButtonText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
+  genreButtonTextActive: { color: '#fff' },
+  educationRow: { flexDirection: 'row', gap: 4, flexWrap: 'wrap' },
+  eduButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0' },
+  eduButtonActive: { backgroundColor: '#06b6d4', borderColor: '#06b6d4' },
+  eduButtonText: { fontSize: 12, fontWeight: '600', color: '#64748b' },
+  eduButtonTextActive: { color: '#fff' },
   childCard: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 12, marginBottom: 10, backgroundColor: '#f8fafc' },
   childHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   childLabel: { fontSize: 13, fontWeight: '600', color: '#06b6d4' },

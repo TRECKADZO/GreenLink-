@@ -161,6 +161,43 @@ def get_zone_risk_category(department: str) -> dict:
         "part_production": 0
     }
 
+# ============= HELPER: CHECK 5/5 COMPLETION (Bug 5) =============
+
+async def check_and_update_farmer_completion(farmer_id: str):
+    """Check if a farmer has completed all 5 forms and auto-update agent visit log"""
+    try:
+        # Check each form type
+        ici_done = await db.ici_profiles.find_one({"farmer_id": farmer_id, "taille_menage": {"$exists": True, "$gt": 0}}) is not None
+        ssrte_done = await db.ssrte_visits.count_documents({"farmer_id": farmer_id}) > 0
+        parcels_done = await db.parcels.count_documents({"$or": [{"farmer_id": farmer_id}, {"member_id": farmer_id}]}) > 0
+        photos_done = await db.geotagged_photos.count_documents({"farmer_id": farmer_id}) > 0
+        
+        # Check registration status
+        member = await db.coop_members.find_one({"_id": ObjectId(farmer_id)}) if ObjectId.is_valid(farmer_id) else None
+        registered = (member.get("status") == "active" or member.get("is_active", False)) if member else False
+        
+        completed = sum([ici_done, ssrte_done, parcels_done, photos_done, registered])
+        
+        if completed == 5:
+            # Auto-update: mark farmer as fully completed in agent activities
+            await db.agent_activities.insert_one({
+                "activity_type": "farmer_5_5_complete",
+                "farmer_id": farmer_id,
+                "farmer_name": member.get("full_name", "") if member else "",
+                "details": {"ici": ici_done, "ssrte": ssrte_done, "parcels": parcels_done, "photos": photos_done, "registered": registered},
+                "timestamp": datetime.utcnow(),
+                "auto_generated": True
+            })
+            # Update member record
+            if member:
+                await db.coop_members.update_one(
+                    {"_id": member["_id"]},
+                    {"$set": {"all_forms_complete": True, "forms_completed_at": datetime.utcnow()}}
+                )
+            logger.info(f"Farmer {farmer_id} reached 5/5 completion - auto-updated")
+    except Exception as e:
+        logger.error(f"Error checking farmer completion: {e}")
+
 # ============= ENDPOINTS COLLECTE DONNÉES =============
 
 @router.post("/farmers/{farmer_id}/ici-profile")
@@ -174,7 +211,6 @@ async def update_farmer_ici_profile(
     # Vérifier que le producteur existe
     farmer = await db.users.find_one({"_id": ObjectId(farmer_id)})
     if not farmer:
-        # Chercher dans coop_members
         farmer = await db.coop_members.find_one({"_id": ObjectId(farmer_id)})
     
     if not farmer:
@@ -250,6 +286,9 @@ async def update_farmer_ici_profile(
             data={"risk_score": risk_score, "taches_dangereuses": profile.household_children.taches_effectuees if profile.household_children else []}
         )
     
+    # Bug 5: Check if farmer reached 5/5 completion
+    await check_and_update_farmer_completion(farmer_id)
+    
     return {
         "message": "Profil ICI mis à jour avec succès",
         "farmer_id": farmer_id,
@@ -295,14 +334,15 @@ async def record_ssrte_visit(
     
     result = await db.ssrte_visits.insert_one(visit_dict)
     
-    # Mettre à jour le profil producteur
+    # Mettre à jour le profil producteur + sync taille_menage (Bug 3: cross-form sync)
     await db.ici_profiles.update_one(
         {"farmer_id": visit.farmer_id},
         {
             "$set": {
                 "ssrte_visite_effectuee": True,
                 "date_derniere_visite_ssrte": visit.date_visite.isoformat(),
-                "dernier_niveau_risque_ssrte": visit.niveau_risque
+                "dernier_niveau_risque_ssrte": visit.niveau_risque,
+                "taille_menage": visit.taille_menage,
             },
             "$inc": {"total_visites_ssrte": 1}
         },
@@ -352,6 +392,9 @@ async def record_ssrte_visit(
         import logging
         logging.getLogger(__name__).error(f"SSRTE email notification failed: {e}")
     
+    # Bug 5: Check if farmer reached 5/5 completion
+    await check_and_update_farmer_completion(visit.farmer_id)
+    
     return {
         "message": "Visite SSRTE enregistrée",
         "visit_id": str(result.inserted_id),
@@ -365,11 +408,23 @@ async def get_farmer_ici_profile(
     farmer_id: str,
     current_user: dict = Depends(get_admin_or_coop_user)
 ):
-    """Obtenir le profil ICI d'un producteur"""
+    """Obtenir le profil ICI d'un producteur (avec cross-sync SSRTE)"""
     
     profile = await db.ici_profiles.find_one({"farmer_id": farmer_id})
     
     if not profile:
+        # Bug 3: Check latest SSRTE visit for common fields to pre-fill
+        latest_ssrte = await db.ssrte_visits.find_one(
+            {"farmer_id": farmer_id},
+            sort=[("recorded_at", -1)]
+        )
+        if latest_ssrte:
+            return {
+                "farmer_id": farmer_id,
+                "profile_complete": False,
+                "taille_menage": latest_ssrte.get("taille_menage", 0),
+                "message": "Pre-rempli depuis la derniere visite SSRTE"
+            }
         return {
             "farmer_id": farmer_id,
             "profile_complete": False,
@@ -377,6 +432,8 @@ async def get_farmer_ici_profile(
         }
     
     profile["_id"] = str(profile["_id"])
+    if "updated_by" in profile and hasattr(profile["updated_by"], '__str__'):
+        profile["updated_by"] = str(profile["updated_by"])
     return profile
 
 

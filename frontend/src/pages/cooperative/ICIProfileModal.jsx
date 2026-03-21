@@ -132,7 +132,8 @@ const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await cooperativeApi.updateICIProfile(farmer.id, form);
+      const cleanForm = { ...form, taille_menage: parseInt(form.taille_menage) || 1 };
+      const res = await cooperativeApi.updateICIProfile(farmer.id, cleanForm);
       toast.success('Fiche ICI sauvegardee');
       onSaved?.(res);
       onOpenChange(false);
