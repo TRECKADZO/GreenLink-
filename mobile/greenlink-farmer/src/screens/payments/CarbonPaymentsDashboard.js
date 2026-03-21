@@ -263,7 +263,8 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
           />
         </View>
 
-        {/* Distribution Model */}
+        {/* Distribution Model - Visible uniquement par le Super Admin */}
+        {user?.user_type === 'admin' && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="pie-chart" size={20} color={COLORS.primary} />
@@ -283,6 +284,7 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
             <Text style={styles.distributionValue}>{distribution_model?.payment_frequency}</Text>
           </View>
         </View>
+        )}
 
         {/* Recent Payments */}
         <View style={styles.card}>
