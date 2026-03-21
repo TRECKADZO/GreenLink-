@@ -21,7 +21,20 @@ const CartScreen = ({ navigation }) => {
   const fetchCart = useCallback(async () => {
     try {
       const response = await marketplaceApi.getCart();
-      setCartItems(response.data?.items || []);
+      const rawItems = response.data?.items || [];
+      // Mapper les données API vers le format attendu par le composant
+      const mapped = rawItems.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        product_name: item.product?.name || item.product_name || '',
+        price: item.product?.price || item.price || 0,
+        unit: item.product?.unit || item.unit || '',
+        supplier_name: item.product?.supplier_name || item.supplier_name || '',
+        product_image: item.product?.images?.[0] || item.product_image || null,
+        item_total: item.item_total || (item.product?.price || 0) * (item.quantity || 1),
+        stock_quantity: item.product?.stock_quantity || item.stock_quantity || 0,
+      }));
+      setCartItems(mapped);
     } catch (error) {
       console.error('Error fetching cart:', error);
     } finally {

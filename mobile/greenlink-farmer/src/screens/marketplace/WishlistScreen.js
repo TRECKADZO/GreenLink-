@@ -22,7 +22,20 @@ const WishlistScreen = ({ navigation }) => {
   const fetchWishlist = useCallback(async () => {
     try {
       const response = await marketplaceApi.getWishlist();
-      setWishlist(response.data || []);
+      const raw = response.data || [];
+      const mapped = raw.map(item => ({
+        _id: item._id,
+        product_id: item.product_id,
+        added_at: item.added_at,
+        product_name: item.product?.name || item.product_name || '',
+        price: item.product?.price || item.price || 0,
+        unit: item.product?.unit || item.unit || '',
+        supplier_name: item.product?.supplier_name || item.supplier_name || '',
+        product_image: item.product?.images?.[0] || item.product_image || null,
+        rating: item.product?.rating || item.rating || 0,
+        stock_quantity: item.product?.stock_quantity || item.stock_quantity || 0,
+      }));
+      setWishlist(mapped);
     } catch (error) {
       console.error('Error fetching wishlist:', error);
     } finally {
