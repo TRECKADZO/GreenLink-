@@ -359,41 +359,56 @@ async def request_carbon_payment(
     Demander un versement des primes carbone accumulées.
     Le paiement sera traité via la coopérative.
     """
-    user_id = str(current_user.get('_id'))
-    
-    # Vérifier s'il y a des primes non versées
-    # Dans un système réel, on calculerait les crédits non encore payés
-    
-    # Créer une demande de paiement
-    payment_request = {
-        "farmer_id": user_id,
-        "farmer_name": current_user.get('full_name'),
-        "cooperative_id": current_user.get('cooperative_id'),
-        "status": "pending",
-        "request_type": "carbon_premium",
-        "requested_at": datetime.utcnow(),
-        "notes": "Demande de versement des primes carbone accumulées"
-    }
-    
-    result = await db.payment_requests.insert_one(payment_request)
-    
-    # Notifier la coopérative
-    if current_user.get('cooperative_id'):
-        await db.notifications.insert_one({
-            "user_id": current_user.get('cooperative_id'),
-            "title": "Demande de paiement carbone",
-            "body": f"{current_user.get('full_name')} demande le versement de ses primes carbone",
-            "type": "payment_request",
-            "data": {"request_id": str(result.inserted_id)},
-            "created_at": datetime.utcnow(),
-            "is_read": False
+    try:
+        user_id = str(current_user.get('_id'))
+        
+        # Vérifier si une demande est déjà en cours
+        existing = await db.payment_requests.find_one({
+            "farmer_id": user_id,
+            "status": "pending",
+            "request_type": "carbon_premium"
         })
-    
-    return {
-        "success": True,
-        "request_id": str(result.inserted_id),
-        "message": "Votre demande a été envoyée à votre coopérative. Le paiement sera traité lors du prochain versement."
-    }
+        if existing:
+            return {
+                "success": True,
+                "request_id": str(existing["_id"]),
+                "message": "Vous avez déjà une demande en cours. Elle sera traitée lors du prochain versement."
+            }
+        
+        # Créer une demande de paiement
+        payment_request = {
+            "farmer_id": user_id,
+            "farmer_name": current_user.get('full_name'),
+            "cooperative_id": current_user.get('cooperative_id'),
+            "status": "pending",
+            "request_type": "carbon_premium",
+            "requested_at": datetime.utcnow(),
+            "notes": "Demande de versement des primes carbone accumulées"
+        }
+        
+        result = await db.payment_requests.insert_one(payment_request)
+        
+        # Notifier la coopérative
+        if current_user.get('cooperative_id'):
+            await db.notification_history.insert_one({
+                "user_id": str(current_user.get('cooperative_id')),
+                "title": "Demande de paiement carbone",
+                "body": f"{current_user.get('full_name')} demande le versement de ses primes carbone",
+                "data": {"type": "payment_request", "request_id": str(result.inserted_id)},
+                "type": "payment_request",
+                "read": False,
+                "created_at": datetime.utcnow()
+            })
+        
+        return {
+            "success": True,
+            "request_id": str(result.inserted_id),
+            "message": "Votre demande a été envoyée à votre coopérative. Le paiement sera traité lors du prochain versement."
+        }
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Payment request error: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
 
 
 @router.get("/projections")

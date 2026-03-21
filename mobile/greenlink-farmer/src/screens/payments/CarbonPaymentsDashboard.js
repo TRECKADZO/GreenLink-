@@ -85,13 +85,19 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
               
               if (response.ok) {
                 const result = await response.json();
-                Alert.alert('Succès', result.message);
+                Alert.alert('Succès', result.message || 'Votre demande a été envoyée');
                 fetchDashboard();
               } else {
-                Alert.alert('Erreur', 'Impossible de créer la demande');
+                let errMsg = 'Impossible de créer la demande';
+                try {
+                  const errData = await response.json();
+                  errMsg = errData.detail || errData.message || errMsg;
+                } catch (e) {}
+                Alert.alert('Erreur', errMsg);
               }
             } catch (error) {
-              Alert.alert('Erreur', 'Erreur de connexion');
+              console.error('Payment request error:', error);
+              Alert.alert('Erreur', 'Erreur de connexion. Vérifiez votre accès internet.');
             } finally {
               setRequestingPayment(false);
             }
