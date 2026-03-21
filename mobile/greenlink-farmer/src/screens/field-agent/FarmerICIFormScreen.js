@@ -27,7 +27,7 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
   const [showFarmerList, setShowFarmerList] = useState(!initialFarmerId);
 
   const [form, setForm] = useState({
-    taille_menage: 1,
+    taille_menage: '',
     genre: '',
     niveau_education: '',
     peut_lire_ecrire: true,
@@ -328,8 +328,8 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
             <View style={styles.row}>
               <View style={styles.halfField}>
                 <Text style={styles.label}>Taille du menage</Text>
-                <TextInput style={styles.input} keyboardType="numeric" value={String(form.taille_menage)}
-                  onChangeText={v => setForm(p => ({ ...p, taille_menage: parseInt(v) || 1 }))} />
+                <TextInput style={styles.input} keyboardType="numeric" value={String(form.taille_menage || '')}
+                  onChangeText={v => setForm(p => ({ ...p, taille_menage: v === '' ? '' : parseInt(v) || '' }))} />
               </View>
               <View style={[styles.halfField, styles.switchRow]}>
                 <Text style={styles.label}>Sait lire/ecrire</Text>
@@ -368,11 +368,17 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
                     </View>
                     <View style={{ flex: 1, marginRight: 8 }}>
                       <Text style={styles.label}>Sexe</Text>
-                      <View style={styles.pickerContainer}>
-                        <Picker selectedValue={child.sexe} onValueChange={v => updateChild(idx, 'sexe', v)} style={styles.picker}>
-                          <Picker.Item label="Fille" value="Fille" />
-                          <Picker.Item label="Garcon" value="Garcon" />
-                        </Picker>
+                      <View style={styles.sexeButtonRow}>
+                        <TouchableOpacity
+                          style={[styles.sexeButton, child.sexe === 'Garcon' && styles.sexeButtonActive]}
+                          onPress={() => updateChild(idx, 'sexe', 'Garcon')}>
+                          <Text style={[styles.sexeButtonText, child.sexe === 'Garcon' && styles.sexeButtonTextActive]}>Garcon</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.sexeButton, child.sexe === 'Fille' && styles.sexeButtonActive]}
+                          onPress={() => updateChild(idx, 'sexe', 'Fille')}>
+                          <Text style={[styles.sexeButtonText, child.sexe === 'Fille' && styles.sexeButtonTextActive]}>Fille</Text>
+                        </TouchableOpacity>
                       </View>
                     </View>
                     <View style={{ flex: 0.7 }}>
@@ -492,6 +498,11 @@ const styles = StyleSheet.create({
   addButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   addButtonText: { color: '#06b6d4', fontSize: 13, fontWeight: '600' },
   emptyText: { textAlign: 'center', color: '#94a3b8', fontSize: 13, paddingVertical: 16 },
+  sexeButtonRow: { flexDirection: 'row', gap: 4 },
+  sexeButton: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+  sexeButtonActive: { backgroundColor: '#06b6d4', borderColor: '#06b6d4' },
+  sexeButtonText: { fontSize: 12, fontWeight: '600', color: '#64748b' },
+  sexeButtonTextActive: { color: '#fff' },
   childCard: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 12, marginBottom: 10, backgroundColor: '#f8fafc' },
   childHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   childLabel: { fontSize: 13, fontWeight: '600', color: '#06b6d4' },

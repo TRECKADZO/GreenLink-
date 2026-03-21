@@ -1,171 +1,132 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was to fix critical mobile app bugs and introduce major features. The scope has expanded to include:
-1.  **Bug Fixing**: Address critical mobile/web bugs, including login, activation, and recurring APK installation failures.
-2.  **Feature Implementation**:
-    *   Implement a real email service (Resend) and prepare for an SMS gateway.
-    *   Fix all PDF/CSV export functionalities across the application, which were reported as failing.
-    *   Enrich the EUDR (EU Deforestation-Free Regulation) reports and dashboards for both cooperative and super-admin users to meet compliance standards.
-    *   Enrich the SSRTE (Child Labor Monitoring) form on both web and mobile to include missing fields identified by the user.
-3.  **UI/UX Cleanup**: Remove a duplicate Visite SSRTE menu item from the agent's web dashboard.
+The user's initial goal was to fix critical mobile app bugs and introduce major features. Over this session, the scope expanded significantly to include:
+1. **SSRTE Workflow**: Enriching SSRTE forms, removing standalone SSRTE access from Coop/Agent dashboards, restricting SSRTE Analytics to Super Admin, and adding critical automated email alerts for high-risk child labor cases.
+2. **UI/UX Cleanup**: Completely removing all QR Code generation/scanning features globally, and removing duplicate/obsolete USSD menu items from both the mobile app and web dashboards.
+3. **Mobile Deployment**: Generating new app icons, cleaning up the welcome screen for Google Play compliance, and compiling production APK and AAB builds (v1.36.1).
+4. **ICI Form Fixes (CURRENT)**: Fixing specific bugs in the ICI data collection forms on mobile/web regarding data entry (gender selection, default household size), cross-form data synchronization, and form completion tracking logic (counter showing 1/5 instead of 5/5).
 
 **PRODUCT REQUIREMENTS:**
-*   A stable platform with fixed login and account activation flows.
-*   A fully functional email notification system for all key events.
-*   Reliable PDF and CSV exporting capabilities for all reports.
-*   A comprehensive and compliant EUDR reporting dashboard.
-*   A complete and consistent SSRTE data collection form on both web and mobile platforms.
-*   A clean user interface without redundant or confusing navigation elements.
+*   A stable, compliant mobile and web platform.
+*   Accurate tracking and synchronization of farmer data across ICI and SSRTE forms.
+*   Automated alerting for critical field observations.
+*   Clean UI with no redundant features (like unused QR codes or mock USSD codes).
 
-**User's preferred language**: French. The next agent MUST respond in French.
+**User's preferred language**: French. The next agent MUST respond in French only.
 
 **what currently exists?**
-The application is a full-stack platform (React/FastAPI/MongoDB). In this session, several critical issues and features were completed:
-*   **Critical Bugs Fixed**:
-    *   A Pydantic validation error causing login failures for phone-based accounts was fixed by adding a pre-validator to . The activation flow was also hardened.
-    *   A  () in  causing EUDR PDF export failures was fixed.
-    *   A  in  was fixed by sanitizing text for the fpdf library.
-    *   An  and  in  and  preventing SSRTE PDF generation were fixed.
-    *   The missing  router was added to , fixing 404 errors.
-*   **New Features & Integrations**:
-    *   **Resend Email Integration**: The mock email service was replaced with a full Resend integration in . The user's domain () was configured and verified, enabling production email sending.
-    *   **Automated Notifications**: Eight new automated email notifications were hooked into key backend events (new member, new harvest, SSRTE visit, agent assignment, parcel verification, etc.).
-    *   **EUDR Dashboard Enrichment**: The cooperative and super-admin dashboards were significantly enhanced with detailed EUDR compliance metrics, risk analysis, and traceability data, both on the backend () and frontend (, ).
+Full-stack application (React / FastAPI / MongoDB). In this session, the agent successfully enriched the SSRTE forms, removed standalone SSRTE menus, restricted SSRTE Analytics to the Super Admin, implemented emergency email alerts via Resend for critical SSRTE visits, completely purged QR code functionalities from the entire codebase, generated new mobile app icons, and successfully built mobile versions v1.36.0 and v1.36.1 (APK & AAB) via Expo EAS.
 
 **Last working item**:
-*   **Last item agent was working**: The user requested to enrich the SSRTE form (web and mobile) based on a screenshot and to remove a redundant menu item on the agent's web dashboard. The agent analyzed the request, identified the missing fields (household size, children details, living conditions), and was about to begin implementation.
-*   **Status**: 
+*   **Last item agent was working**: Fixing a batch of 5 specific bugs reported by the user regarding the ICI and SSRTE forms. The agent identified the root causes and started applying fixes. 
+    *   *Bug 1 (Gender picker failing)*: Replaced Picker with touchable buttons in .
+    *   *Bug 2 (Household size stuck at 1)*: Fixed default value parsing in , , and  to allow erasing the number.
+    *   *Bug 3 (Cross-form auto-fill)*: *Pending implementation*.
+    *   *Bug 4 (Completion counter showing 1/5 incorrectly)*: Identified cause in backend () due to  vs  mismatch. *Pending fix*.
+    *   *Bug 5 (Agent visit auto-update upon 5/5 completion)*: *Pending implementation*.
+*   **Status**: IN PROGRESS
 *   **Agent Testing Done**: N
-*   **Which testing method agent to use?**: both. The backend changes to the  model in  should be tested with . The UI changes to  (web) and  (mobile) should be verified with the .
+*   **Which testing method agent to use?**: Both.  or  for the backend completion calculation. Frontend testing agent / Screenshot tool for the mobile and web form UI changes.
 *   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1: Enrich SSRTE Forms and Clean Up UI (P0 - BLOCKER)**
-    *   **Description**: The SSRTE data collection forms are incomplete. The user wants to add several missing fields to align the web and mobile versions with a more detailed master form. Additionally, a duplicate menu item for Visite SSRTE needs to be removed from the agent's web dashboard.
-    *   **Status**: 
-    *   **Is recurring issue?**: N
+*   **Issue 1: ICI/SSRTE Form Logic and Synchronization (P0 - HIGHEST)**
+    *   **Attempted fixes**: Bugs 1 and 2 (UI inputs) have been patched in the code but need testing. Bugs 3, 4, and 5 have been diagnosed but not yet coded.
     *   **Next debug checklist**:
-        1.  **Backend**: Modify the  Pydantic model in  to include the new fields: , ,  (a list of objects), , , , and .
-        2.  **Web (Modal)**: Update  to include form inputs for all the new fields.
-        3.  **Mobile**: Update  to include the same new form inputs.
-        4.  **Web (UI Cleanup)**: Modify  to remove the Visite SSRTE link from the main menu, as it's now accessible within each farmer's profile.
-    *   **Why fix this issue and what will be achieved with the fix?**: This will standardize data collection for child labor monitoring and improve the agent's user experience.
+        1. **Backend**: Update  (around line 395+) to properly calculate the  percentage. The issue is a mismatch between , , and  across different form collections.
+        2. **Backend/Frontend**: Implement logic (Bug 3) to auto-fill common data (e.g., household size) between SSRTE and ICI forms.
+        3. **Backend**: Add a hook (Bug 5) so that when a farmer hits 5/5 completed forms, the agent's visit log is automatically updated.
+    *   **Why fix this issue**: Core functionality for field agents; inaccurate data collection tracking frustrates users.
+    *   **Status**: IN PROGRESS
+    *   **Is recurring issue?**: N
     *   **Should Test frontend/backend/both after fix?**: Both.
+*   **Issue 2: Google Play Console Submission (P1)**
+    *   **Description**: The user needs to upload the newly generated v1.36.1 AAB to Google Play to resolve the previous permission rejection metadata issues.
+    *   **Status**: USER VERIFICATION PENDING
+    *   **Blocked on**: User action.
 
 **In progress Task List**:
-*   **Task 1: EUDR Dashboard Enrichment (P1)**
-    *   **Where to resume**: The backend (, ) and frontend (, ) have been significantly enriched. The work was interrupted by the user's SSRTE request.
-    *   **What will be achieved with this?**: Provide a comprehensive, compliant EUDR reporting tool for both cooperatives and super-admins.
-    *   **Status**: 
-    *   **Should Test frontend/backend/both after fix?**: Both. Needs frontend verification via screenshots for both cooperative and admin dashboards to confirm the new data is displayed correctly.
-    *   **Blocked on something**: Blocked by the higher-priority SSRTE task.
+*   **Task 1: ICI Form Data Synchronization & Tracking (P0)**
+    *   **Where to resume**: The agent was modifying . Resume by verifying those UI fixes, then move to the backend completion logic in .
+    *   **What will be achieved**: Accurate form completion tracking and better UX for agents.
+    *   **Status**: IN PROGRESS
+    *   **Should Test frontend/backend/both after fix?**: Both.
 
-**Upcoming and Future Tasks**
-*   **Upcoming Tasks:**
-    *   (P0) Build and provide a new mobile build (v1.36.0 APK/AAB) that includes the critical login, activation, PDF, EUDR, and upcoming SSRTE fixes.
-    *   (P1) Guide the user to submit the latest functional AAB to the Google Play Store to resolve the long-standing permission rejection blocker.
-*   **Future Tasks:**
-    *   (P1) Configure a real SMS gateway to replace the mock service for phone-based notifications.
-    *   (P2) Implement Baoulé and Dioula languages in the mobile app.
-    *   (P2) Refactor the backend to use a cloud storage solution (e.g., S3) for file uploads.
-    *   (P2) Refactor monolithic backend route files like  and .
+**Upcoming and Future Tasks**:
+*   (P1) Configure a real SMS gateway (Orange API) to replace the mock service for phone-based notifications and USSD simulations.
+*   (P2) Implement local languages (Baoulé and Dioula) in the mobile app.
+*   (P2) Refactor the backend to use a cloud storage solution (e.g., AWS S3) for file and image uploads.
 
-**Completed work in this session**
--   Phone-Based Account Login Bug (P0) (FIXED)
--   Account Activation Flow Hardening (P1) (FIXED)
--   Resend Email Integration & Domain Verification (DONE)
--   Automated Email Notifications (8 new events) (DONE)
--   All PDF/CSV Export Critical Bugs (EUDR, ICI, SSRTE, etc.) (FIXED)
--   EUDR Report and Dashboard Enrichment (Web & Admin) (IN PROGRESS)
--   Reset cooperative account password for testing access.
+**Completed work in this session**:
+- Enriched SSRTE forms on Web Modal, Web Dashboard, and Mobile (DONE).
+- Removed standalone SSRTE menu access from Coop and Agent dashboards (DONE).
+- Created Super Admin-only SSRTE Analytics Dashboard (DONE).
+- Implemented automated Emergency Email Alerts for Critique/Elevée SSRTE visits (DONE).
+- Completely removed all QR Code references/files from Frontend and Backend (DONE).
+- Generated new Mobile App Icons and cleaned up the Welcome screen for Google Play compliance (DONE).
+- Removed redundant USSD menus from Mobile and Web Farmer Dashboards (DONE).
+- Generated EAS Mobile Builds v1.36.0 and v1.36.1 (APK & AAB) (DONE).
+- Diagnosed user login issue (Typo in email: boidigsproplus vs boidigspropplus) (RESOLVED).
 
-**Earlier issues found/mentioned but not fixed**
--   None.
+**Earlier issues found/mentioned but not fixed**:
+- None.
 
-**Known issue recurrence from previous fork**
--   **Google Play Permission Rejection (P1 - Recurring Blocker)**: The app was previously rejected by Google Play. This is believed to be fixed, but the status is  pending user submission of a new AAB build.
+**Known issue recurrence from previous fork**:
+- **Google Play Metadata/Permission Rejection**: App previously rejected by Google Play. We have adjusted the welcome screen and generated a new AAB. Awaiting user submission.
 
-**Code Architecture**
+**Code Architecture**:
 
 
-**Key Technical Concepts**
--   **Email Integration (Resend)**: Replaced a mock SMTP service with the Resend API, configured a verified sending domain (), and updated the UI/backend to handle real email flows.
--   **Pydantic Pre-validation**: Used a  to sanitize data ( to ) before it hits the main validation logic, fixing the core login bug.
--   **PDF Library Quirks**: Dealt with two types of PDF generation issues: Unicode incompatibility in  (requiring manual text sanitization) and missing methods/imports when using .
--   **Systematic Debugging**: Used a combination of , , log analysis, and database queries to trace bugs from frontend user reports down to specific backend code lines.
--   **Fire-and-Forget Notifications**: Implemented background email notifications within API endpoints using  blocks to ensure they don't block the main request-response cycle.
+**Key Technical Concepts**:
+- **Expo EAS Build**: Used for compiling APK/AAB remotely. *Note: The EAS account reached 100% of included build credits this month.*
+- **Cross-form validation**: The platform uses separate collections for SSRTE, ICI, Parcels, etc. Calculating 5/5 completion requires aggregating across these using correct  string vs  matching.
 
-**key DB schema**
--   **users**: The logic for handling the  field was hardened to accommodate  or  values. The  field was also handled more robustly to prevent  when it is .
--   **coop_agents/coop_members**: The  is a , which requires explicit conversion to  in some backend lookups.
+**key DB schema**:
+- : Contains , , .
+-  / : Linked to farmers via  (sometimes stored as string, sometimes as ObjectId, which causes Bug #4 in completion calculation).
 
-**changes in tech stack**
--   Added  (v2.25.0) to backend dependencies.
+**changes in tech stack**:
+- Removed  and  QR dependencies as the feature was purged.
 
-**All files of reference**
-*   : Target for SSRTE model enrichment.
-*   : Target for web SSRTE form enrichment.
-*   : Target for mobile SSRTE form enrichment.
-*   : Target for UI cleanup (menu removal).
-*   : Contains the new Resend integration logic.
-*   , : Contain the new enriched EUDR logic.
-*   , : Contain the new EUDR UI.
+**All files of reference**:
+-  (Bugs 1 & 2)
+-  (Bugs 4 & 5)
+-  (Bug 2)
 
 **Areas that need refactoring**:
--   The monolithic nature of  and  remains a long-term technical debt.
+- Data synchronization between  and  forms.
+- Consistent usage of  vs  (String vs ObjectId) across collections.
 
-**key api endpoints**
-*   **Fixed**:
-    *   : Now works for both email and phone-based users.
-    *   , : Hardened and tested.
-    *   : Now sends real emails via Resend.
-    *   , , ,  and all other PDF/CSV endpoints are now functional.
-*   **Enriched**:
-    *   : Returns significantly more detailed data for EUDR compliance.
-    *   : Returns enriched EUDR metrics for the super-admin view.
-*   **To be Modified**:
-    *   : The request body for this endpoint will be expanded with new SSRTE fields.
+**key api endpoints**:
+-  (needs fixing for completion counter).
+-  and  (needs syncing logic).
 
-**Critical Info for New Agent**
--   **Répondez en français.** All communication with the user must be in French.
--   **Immediate Priority (P0 - SSRTE)**: Your first task is to complete the SSRTE form enrichment on both web and mobile, and remove the redundant menu item from the agent web dashboard as requested.
--   **Next Steps**: After completing the SSRTE task, verify the EUDR dashboard enhancements with screenshots. Then, create and provide the user with a new mobile build (v1.36.0) containing all the recent fixes.
--   **Email is Live**: The Resend integration is fully operational with a verified domain. All emails sent from  should reach their destination.
+**Critical Info for New Agent**:
+- **Language**: You MUST respond in French.
+- **Priority**: Resume immediately where the last agent left off—fixing the 5 ICI form bugs requested by the user. The UI fixes for Bug 1 & 2 are partially applied but need testing. Focus heavily on fixing the backend completion counter () and cross-form sync.
+- Do NOT generate or provide preview URLs in your summary or responses, as they change per fork.
 
-**documents and test reports created in this job**
--    (updated multiple times)
--    (Login/Activation Fix)
--    (Resend Integration)
--    (Email Notifications)
--    (PDF/CSV Export Fixes)
+**documents and test reports created in this job**:
+- 
+-  (SSRTE Enrichment tests)
+-  (SSRTE Analytics & Access tests)
 
-**Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Asks to enrich the EUDR reports. **Status**: .
-2.  **User**: Provides an image and asks to enrich the SSRTE form on web/mobile with missing fields, and to remove a duplicate menu item. **Status**:  (Current Task).
-3.  **User**: Says Continue to the PDF/CSV test report and initiates the EUDR enrichment request. **Status**: .
-4.  **User**: Confirms they have verified the domain on Resend. **Status**: .
-5.  **User**: Provides the domain name . **Status**: .
-6.  **User**: Says Oui to the suggestion of adding more automated email notifications. **Status**: .
-7.  **User**: Provides Resend API key. **Status**: .
-8.  **User**: Selects Resend for email, states Orange SMS APIs are not ready, and confirms the plan. **Status**: .
-9.  **User**: Asks to configure a real SMTP/SMS gateway. **Status**: .
-10. **User**: Reports an error downloading a PDF from the cooperative dashboard and asks to verify all PDF/Excel exports. **Status**: .
+**Last 10 User Messages and any pending HUMAN messages**:
+1. (User) Requested removal of USSD menu from web farmer dashboard. (Completed)
+2. (User) Reported 5 bugs regarding ICI forms: Gender selection broken, default size stuck at 1, no auto-sync between similar forms, completion counter shows 1/5 incorrectly, visit should auto-update when 5/5 complete. (IN PROGRESS)
+3. (User) Added that agent visit should auto-update. (IN PROGRESS)
 
 **Project Health Check:**
-*   **Broken**: No core services are broken.
-*   **Mocked**: The Orange SMS gateway is still mocked. The user confirmed the APIs are not ready yet.
+- Broken: ICI Form completion counter logic.
+- Mocked: Orange SMS API.
 
-**3rd Party Integrations**
-*   **Resend**: Used for sending all transactional emails. Configured with a user-provided API key and a verified domain (). The playbook from  was followed.
+**3rd Party Integrations**:
+- Expo EAS (Mobile Builds) — Requires User Auth (currently logged in via CLI).
+- Resend (Email) — Requires User API Key (Configured).
 
-**Testing status**
--   **Testing agent used after significant changes**: YES. The testing agent was used successfully to validate the login/activation fixes, the Resend integration, and the comprehensive PDF/CSV export fixes. The last report is .
--   **Troubleshoot agent used after agent stuck in loop**: NO.
--   **Test files created**: None.
--   **Known regressions**: None. All fixes were tested for regressions.
+**Testing status**:
+- Testing agent used after significant changes: YES (iterations 46, 47).
+- Troubleshoot agent used after agent stuck in loop: NO.
+- Known regressions: None known, but the new ICI UI patches must be tested.
 
-**Credentials to test flow:**
-*   **Cooperative Account**: The user  was configured as a cooperative and its password was reset to . This is the primary account for testing cooperative-level features.
-*   **Admin Account**:  / .
-
-**What agent forgot to execute**
-The agent did not forget to execute anything but was in the middle of a multi-step task when the session was forked. The next step is to start implementing the code changes for the SSRTE form enrichment, which has already been planned.</analysis>
+**What agent forgot to execute**:
+The agent was in the middle of executing the search-and-replace fixes for the ICI form bugs (Bugs 1 & 2) when the context window was exhausted. Bugs 3, 4, and 5 have not been started yet.</analysis>

@@ -24,7 +24,7 @@ const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({
-    taille_menage: 1,
+    taille_menage: '',
     date_naissance: '',
     genre: '',
     niveau_education: '',
@@ -199,7 +199,7 @@ const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
                   </div>
                   <div>
                     <Label className="text-xs">Taille du menage</Label>
-                    <Input type="number" min={1} value={form.taille_menage} onChange={e => setForm(p => ({ ...p, taille_menage: parseInt(e.target.value) || 1 }))} data-testid="ici-taille-menage" />
+                    <Input type="number" min={1} value={form.taille_menage} onChange={e => setForm(p => ({ ...p, taille_menage: e.target.value === '' ? '' : parseInt(e.target.value) || '' }))} data-testid="ici-taille-menage" />
                   </div>
                   <div className="flex items-center gap-2 pt-5">
                     <Switch checked={form.peut_lire_ecrire} onCheckedChange={v => setForm(p => ({ ...p, peut_lire_ecrire: v }))} />
