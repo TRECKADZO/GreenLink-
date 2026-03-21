@@ -478,7 +478,7 @@ async def _get_farmer_parcels(farmer_id: str) -> list:
     """Récupère les parcelles d'un planteur"""
     parcels_query = {"$or": [
         {"farmer_id": farmer_id},
-        {"member_id": ObjectId(farmer_id) if ObjectId.is_valid(farmer_id) else farmer_id}
+        {"member_id": farmer_id}
     ]}
     parcels = await db.parcels.find(parcels_query).to_list(100)
 

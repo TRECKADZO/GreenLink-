@@ -877,7 +877,10 @@ async def get_audit_pdf_report(audit_id: str):
     
     farmer = None
     if parcel and parcel.get("member_id"):
-        farmer = await db.users.find_one({"_id": ObjectId(parcel["member_id"])})
+        mid = parcel["member_id"]
+        farmer = await db.users.find_one({"_id": ObjectId(mid)}) if ObjectId.is_valid(str(mid)) else None
+        if not farmer:
+            farmer = await db.coop_members.find_one({"_id": ObjectId(mid)}) if ObjectId.is_valid(str(mid)) else None
     
     data = {
         "audit_id": str(audit["_id"]),

@@ -124,12 +124,12 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
     member_ids = [str(m["_id"]) for m in members]
     member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
     
-    # Search parcels by multiple possible fields
+    # Search parcels by multiple possible fields (farmer_id and member_id are now both strings)
     parcels = await db.parcels.find({
         "$or": [
             {"coop_id": coop_id},
             {"farmer_id": {"$in": member_ids + member_user_ids}},
-            {"member_id": {"$in": [ObjectId(m) for m in member_ids]}}
+            {"member_id": {"$in": member_ids}}
         ]
     }).to_list(10000)
     total_hectares = sum([p.get("area_hectares", 0) for p in parcels])
@@ -426,9 +426,14 @@ async def get_member_details(
     total_premium = 0
     
     if member.get("user_id"):
-        parcels = await db.parcels.find({"farmer_id": member["user_id"]}).to_list(100)
+        parcels = await db.parcels.find({"$or": [{"farmer_id": member["user_id"]}, {"member_id": str(member["_id"])}, {"farmer_id": str(member["_id"])}]}).to_list(100)
         harvests = await db.harvests.find({"farmer_id": member["user_id"]}).to_list(100)
         total_premium = sum([h.get("carbon_premium", 0) for h in harvests])
+    else:
+        mid = str(member["_id"])
+        parcels = await db.parcels.find({"$or": [{"farmer_id": mid}, {"member_id": mid}]}).to_list(100)
+        harvests = []
+        total_premium = 0
     
     return {
         "id": str(member["_id"]),
@@ -486,7 +491,7 @@ async def add_member_parcel(
     co2_captured = round(parcel.area_hectares * carbon_score * 2.5, 2)
     
     parcel_doc = {
-        "member_id": ObjectId(member_id),
+        "member_id": str(member["_id"]),
         "coop_id": current_user["_id"],
         "farmer_id": member.get("user_id") or str(member["_id"]),
         "location": parcel.location,
@@ -553,7 +558,7 @@ async def get_member_parcels(
     
     parcels = await db.parcels.find({
         "$or": [
-            {"member_id": ObjectId(member_id)},
+            {"member_id": member_id},
             {"farmer_id": str(member["_id"])}
         ]
     }).to_list(100)
@@ -593,7 +598,7 @@ async def delete_member_parcel(
     
     parcel = await db.parcels.find_one({
         "_id": ObjectId(parcel_id),
-        "member_id": ObjectId(member_id)
+        "$or": [{"member_id": member_id}, {"farmer_id": member_id}]
     })
     
     if not parcel:
@@ -1404,6 +1409,168 @@ async def unassign_farmers_from_agent(agent_id: str, body: FarmerAssignRequest, 
     return {
         "message": f"{len(body.farmer_ids)} fermier(s) retiré(s) de {agent.get('full_name', 'agent')}",
         "remaining_count": remaining
+    }
+
+
+# ============= AGENTS PROGRESS DASHBOARD =============
+
+@router.get("/agents-progress")
+async def get_agents_progress(current_user: dict = Depends(get_current_user)):
+    """Tableau de bord de progression des agents - montre quels fermiers sont a 5/5"""
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    coop_oid = ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None
+
+    # Get all agents for this coop
+    agents_or = [{"coop_id": coop_id}]
+    if coop_oid:
+        agents_or.append({"coop_id": coop_oid})
+    agents = await db.coop_agents.find({"$or": agents_or}).to_list(100)
+
+    if not agents:
+        return {"agents": [], "summary": {"total_agents": 0, "total_farmers": 0, "farmers_5_5": 0, "average_progress": 0}}
+
+    # Get agent user details
+    agent_user_ids = [a.get("user_id") for a in agents if a.get("user_id")]
+    agent_users = {}
+    for uid in agent_user_ids:
+        if uid and ObjectId.is_valid(str(uid)):
+            u = await db.users.find_one({"_id": ObjectId(uid)}, {"full_name": 1, "phone_number": 1})
+            if u:
+                agent_users[str(uid)] = u
+
+    # Collect all farmer IDs across all agents
+    all_farmer_ids = []
+    for a in agents:
+        all_farmer_ids.extend(a.get("assigned_farmers", []))
+    all_farmer_ids = list(set(all_farmer_ids))
+
+    if not all_farmer_ids:
+        agent_results = []
+        for a in agents:
+            uid = a.get("user_id", "")
+            au = agent_users.get(str(uid), {})
+            agent_results.append({
+                "id": str(a["_id"]),
+                "full_name": a.get("full_name") or au.get("full_name", "Agent"),
+                "phone_number": a.get("phone_number") or au.get("phone_number", ""),
+                "zone": a.get("zone", ""),
+                "assigned_count": 0,
+                "farmers_5_5": 0,
+                "progress_percent": 0,
+                "farmers": []
+            })
+        return {"agents": agent_results, "summary": {"total_agents": len(agents), "total_farmers": 0, "farmers_5_5": 0, "average_progress": 0}}
+
+    # Batch fetch all form data for all farmers
+    oid_list = [ObjectId(fid) for fid in all_farmer_ids if ObjectId.is_valid(str(fid))]
+    members_list = await db.coop_members.find({"_id": {"$in": oid_list}}).to_list(500)
+    members_map = {str(m["_id"]): m for m in members_list}
+
+    # ICI profiles
+    ici_docs = await db.ici_profiles.find({"farmer_id": {"$in": all_farmer_ids}}, {"farmer_id": 1, "taille_menage": 1}).to_list(1000)
+    ici_set = {d["farmer_id"] for d in ici_docs if d.get("taille_menage") and d["taille_menage"] > 0}
+
+    # SSRTE visits
+    ssrte_agg = await db.ssrte_visits.aggregate([
+        {"$match": {"farmer_id": {"$in": all_farmer_ids}}},
+        {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}}}
+    ]).to_list(500)
+    ssrte_set = {s["_id"] for s in ssrte_agg if s["count"] > 0}
+
+    # Parcels (check both farmer_id and member_id)
+    parcel_agg = await db.parcels.aggregate([
+        {"$match": {"$or": [
+            {"farmer_id": {"$in": all_farmer_ids}},
+            {"member_id": {"$in": all_farmer_ids}}
+        ]}},
+        {"$group": {"_id": {"$ifNull": ["$member_id", "$farmer_id"]}, "count": {"$sum": 1}}}
+    ]).to_list(500)
+    parcel_set = set()
+    for p in parcel_agg:
+        pid = str(p["_id"]) if p["_id"] else None
+        if pid and p["count"] > 0:
+            parcel_set.add(pid)
+
+    # Photos
+    photo_agg = await db.geotagged_photos.aggregate([
+        {"$match": {"farmer_id": {"$in": all_farmer_ids}}},
+        {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}}}
+    ]).to_list(500)
+    photo_set = {p["_id"] for p in photo_agg if p["count"] > 0}
+
+    # Build per-agent progress
+    total_5_5 = 0
+    total_completed_forms = 0
+    total_farmers_count = 0
+    agent_results = []
+
+    for a in agents:
+        uid = a.get("user_id", "")
+        au = agent_users.get(str(uid), {})
+        assigned = a.get("assigned_farmers", [])
+        farmers_detail = []
+        agent_5_5 = 0
+
+        for fid in assigned:
+            member = members_map.get(fid, {})
+            registered = member.get("status") == "active" or member.get("is_active", False)
+            ici_done = fid in ici_set
+            ssrte_done = fid in ssrte_set
+            parcels_done = fid in parcel_set
+            photos_done = fid in photo_set
+
+            completed = sum([registered, ici_done, ssrte_done, parcels_done, photos_done])
+            if completed == 5:
+                agent_5_5 += 1
+            total_completed_forms += completed
+
+            farmers_detail.append({
+                "id": fid,
+                "full_name": member.get("full_name", "Inconnu"),
+                "village": member.get("village", ""),
+                "completed": completed,
+                "total": 5,
+                "percentage": round(completed / 5 * 100),
+                "forms": {
+                    "register": registered,
+                    "ici": ici_done,
+                    "ssrte": ssrte_done,
+                    "parcels": parcels_done,
+                    "photos": photos_done
+                }
+            })
+
+        total_5_5 += agent_5_5
+        total_farmers_count += len(assigned)
+
+        # Sort farmers: incomplete first
+        farmers_detail.sort(key=lambda f: f["completed"])
+
+        agent_results.append({
+            "id": str(a["_id"]),
+            "full_name": a.get("full_name") or au.get("full_name", "Agent"),
+            "phone_number": a.get("phone_number") or au.get("phone_number", ""),
+            "zone": a.get("zone", ""),
+            "assigned_count": len(assigned),
+            "farmers_5_5": agent_5_5,
+            "progress_percent": round(total_completed_forms / (len(assigned) * 5) * 100) if assigned else 0,
+            "farmers": farmers_detail
+        })
+
+    # Sort agents: lowest progress first
+    agent_results.sort(key=lambda a: a["progress_percent"])
+
+    avg_progress = round(total_completed_forms / (total_farmers_count * 5) * 100) if total_farmers_count > 0 else 0
+
+    return {
+        "agents": agent_results,
+        "summary": {
+            "total_agents": len(agents),
+            "total_farmers": total_farmers_count,
+            "farmers_5_5": total_5_5,
+            "average_progress": avg_progress
+        }
     }
 
 

@@ -7,7 +7,7 @@ import {
   TrendingUp, FileText, Plus, ChevronRight,
   CheckCircle, Clock, AlertTriangle, Building2,
   Shield, Store, Home, UserCircle,
-  TreePine, Pencil, Save, X, Loader2
+  TreePine, Pencil, Save, X, Loader2, Target
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -405,6 +405,18 @@ const Dashboard = () => {
                   Agents Terrain
                 </span>
                 <ChevronRight className="h-4 w-4 text-cyan-700" />
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between bg-indigo-50 border-indigo-200 hover:bg-indigo-100"
+                onClick={() => navigate('/cooperative/agents-progress')}
+                data-testid="quick-action-agents-progress"
+              >
+                <span className="flex items-center text-indigo-700">
+                  <Target className="h-4 w-4 mr-2" />
+                  Progression Agents
+                </span>
+                <ChevronRight className="h-4 w-4 text-indigo-700" />
               </Button>
             </CardContent>
           </Card>

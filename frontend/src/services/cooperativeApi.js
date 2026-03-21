@@ -249,6 +249,14 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  // Agents Progress Dashboard
+  getAgentsProgress: async () => {
+    const response = await axios.get(`${API}/agents-progress`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Statistics
   getVillageStats: async () => {
     const response = await axios.get(`${API}/stats/villages`, {
