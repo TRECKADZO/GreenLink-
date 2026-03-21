@@ -11,38 +11,35 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ## Fonctionnalites Implementees
 
 ### Session Precedente (19 Mars 2026)
-- Fix login comptes telephone
-- Integration Resend Email
-- 8 notifications email automatiques
+- Fix login, Integration Resend Email, 8 notifications email
 - Enrichissement EUDR Dashboard + SSRTE
-- Suppression QR Code
-- Alertes automatiques SSRTE critiques
+- Suppression QR Code, Alertes SSRTE critiques
 
-### Build Mobile v1.36.0 (20 Mars 2026)
-- Nouvelle icone app GreenLink
-- Build APK + AAB via EAS
+### Build Mobile v1.36.0 - v1.37.1 (20-21 Mars 2026)
+- Nouvelle icone app, builds APK + AAB
 
 ### Correction Bugs ICI/SSRTE (21 Mars 2026)
-- Bug 1-5: Genre picker, taille_menage, sync croisee, compteur completion, auto-update 5/5
-- Tests: iteration_48 (19/19 PASS)
+- Genre picker, taille_menage, sync croisee, compteur completion, auto-update 5/5
 
 ### Dashboard Progression Agents (21 Mars 2026)
 - GET /api/cooperative/agents-progress + page web
-- Tests: iteration_49 (15/15 PASS)
 
 ### Refactoring farmer_id / member_id (21 Mars 2026)
-- Migration DB parcels/ssrte_cases
-- Requetes uniformisees
+- Migration DB, requetes uniformisees
 
 ### Fix Email SSRTE enfants_observes (21 Mars 2026)
 - Corrige donnees + auto-sync + validation
 
 ### Fix Crash Parcelle + Visibilite (21 Mars 2026)
-- ParcelCreate model elargi: accepte format mobile (size, department, has_shade_trees etc.)
-- Normalisation backend: size->area_hectares, department->region, booleans->farming_practices
-- my-parcels: recherche via phone_number -> coop_members pour lier farmer<->agent parcelles
-- Producteur voit maintenant les parcelles enregistrees par l'agent terrain
-- Build APK v1.37.0 genere
+- ParcelCreate model elargi pour format mobile
+- my-parcels: recherche via phone_number -> coop_members
+
+### Fix Dashboard Agent SSRTE - Stats auto-update (21 Mars 2026)
+- ssrte.py stats/overview: filtre recorded_by pour agents (pas cooperative_id)
+- ssrte.py stats/overview: niveau_risque in [critique,eleve] au lieu de risk_level: high
+- ssrte.py stats/overview: recorded_at au lieu de visit_date pour visites mensuelles
+- ssrte_analytics.py visits: filtre $or recorded_by/agent_id pour agents
+- Resultat: Kone Alphone voit 6 visites, 2 haut risque, 4 cas identifies (avant: 1/0/0)
 
 ## Services MOCK
 - Orange Money, Orange SMS, USSD Gateway
@@ -50,6 +47,7 @@ Plateforme numerique pour les cooperatives de cacao/cafe en Cote d'Ivoire.
 ## Backlog
 ### P1
 - [ ] Soumission AAB Google Play Store (action utilisateur)
+- [ ] Nouveau build APK/AAB v1.38.0 avec fix stats SSRTE mobile
 ### P1.5
 - [ ] Configurer Orange SMS API (en attente des cles)
 ### P2

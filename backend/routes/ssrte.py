@@ -327,27 +327,29 @@ async def list_visits(
         query["cooperative_id"] = str(current_user["_id"])
     
     if agent_id:
-        query["agent_id"] = agent_id
-    elif current_user.get('user_type') == 'field_agent':
-        query["agent_id"] = str(current_user["_id"])
+        query["$or"] = [{"agent_id": agent_id}, {"recorded_by": agent_id}]
+    elif current_user.get('user_type') in ('field_agent', 'agent_terrain'):
+        uid = str(current_user["_id"])
+        query["$or"] = [{"agent_id": uid}, {"recorded_by": uid}]
     
     if risk_level:
-        query["risk_level"] = risk_level
+        query["niveau_risque"] = risk_level
     
-    visits = await db.ssrte_visits.find(query).sort("visit_date", -1).limit(limit).to_list(limit)
+    visits = await db.ssrte_visits.find(query).sort("recorded_at", -1).limit(limit).to_list(limit)
     
     return {
         "visits": [{
             "id": str(v["_id"]),
             "member_name": v.get("member_name") or v.get("farmer_name"),
             "agent_name": v.get("agent_name"),
-            "visit_date": v.get("visit_date") or v.get("date_visite"),
-            "household_size": v.get("household_size") or 0,
+            "visit_date": v.get("recorded_at") or v.get("date_visite") or v.get("visit_date"),
+            "household_size": v.get("household_size") or v.get("taille_menage", 0),
             "children_count": v.get("children_count") or v.get("enfants_observes_travaillant", 0),
-            "children_at_risk": v.get("children_at_risk", 0),
-            "risk_level": v.get("risk_level") or v.get("niveau_risque", "low"),
+            "children_at_risk": v.get("children_at_risk") or v.get("enfants_observes_travaillant", 0),
+            "risk_level": v.get("niveau_risque") or v.get("risk_level", "faible"),
             "living_conditions": v.get("living_conditions"),
-            "has_cases": v.get("has_cases", False)
+            "has_cases": v.get("has_cases", v.get("enfants_observes_travaillant", 0) > 0),
+            "farmer_id": v.get("farmer_id")
         } for v in visits],
         "total": len(visits)
     }
@@ -947,36 +949,60 @@ async def get_ssrte_overview(
     elif current_user.get('user_type') == 'cooperative':
         query["cooperative_id"] = str(current_user["_id"])
     elif current_user.get('user_type') in ('field_agent', 'agent_terrain'):
-        query["cooperative_id"] = current_user.get('cooperative_id', '')
+        # Pour les agents terrain, filtrer par recorded_by (leur propre user_id)
+        query["recorded_by"] = str(current_user["_id"])
     
-    # Statistiques des visites
+    # Statistiques des visites (champs en francais)
     total_visits = await db.ssrte_visits.count_documents(query)
-    high_risk_visits = await db.ssrte_visits.count_documents({**query, "risk_level": "high"})
+    high_risk_visits = await db.ssrte_visits.count_documents({
+        **query, "niveau_risque": {"$in": ["critique", "eleve"]}
+    })
     
     # Statistiques des cas
-    case_query = query.copy()
+    case_query = {}
+    if "cooperative_id" in query:
+        case_query["cooperative_id"] = query["cooperative_id"]
+    elif "recorded_by" in query:
+        case_query["$or"] = [
+            {"recorded_by": query["recorded_by"]},
+            {"agent_id": query["recorded_by"]}
+        ]
     total_cases = await db.ssrte_cases.count_documents(case_query)
     cases_identified = await db.ssrte_cases.count_documents({**case_query, "status": "identified"})
     cases_in_progress = await db.ssrte_cases.count_documents({**case_query, "status": "in_progress"})
     cases_resolved = await db.ssrte_cases.count_documents({**case_query, "status": "resolved"})
     
+    # Si pas de cas dans ssrte_cases, calculer depuis ssrte_visits directement
+    if total_cases == 0 and total_visits > 0:
+        total_cases = await db.ssrte_visits.count_documents({
+            **query, "enfants_observes_travaillant": {"$gt": 0}
+        })
+        cases_identified = total_cases
+        cases_resolved = 0
+        cases_in_progress = 0
+    
     # Par type de travail
     hazardous_cases = await db.ssrte_cases.count_documents({**case_query, "labor_type": "hazardous"})
+    if hazardous_cases == 0 and total_visits > 0:
+        hazardous_cases = await db.ssrte_visits.count_documents({
+            **query, "taches_dangereuses_count": {"$gt": 0}
+        })
     worst_forms_cases = await db.ssrte_cases.count_documents({**case_query, "labor_type": "worst_forms"})
     
-    # Statistiques des remédiations
-    total_remediations = await db.ssrte_remediations.count_documents(query)
-    completed_remediations = await db.ssrte_remediations.count_documents({**query, "status": "completed"})
+    # Statistiques des remediations
+    rem_query = case_query.copy() if case_query else query.copy()
+    total_remediations = await db.ssrte_remediations.count_documents(rem_query)
+    completed_remediations = await db.ssrte_remediations.count_documents({**rem_query, "status": "completed"})
     
-    # Calcul du taux de prévalence
+    # Calcul des taux
     prevalence_rate = (total_cases / total_visits * 100) if total_visits > 0 else 0
     resolution_rate = (cases_resolved / total_cases * 100) if total_cases > 0 else 0
     
-    # Visites ce mois
+    # Visites ce mois (utiliser recorded_at, pas visit_date)
     month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     monthly_visits = await db.ssrte_visits.count_documents({
         **query,
-        "visit_date": {"$gte": month_start}
+        "recorded_at": {"$gte": month_start}
     })
     
     return {

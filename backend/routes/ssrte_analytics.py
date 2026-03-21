@@ -276,11 +276,13 @@ async def get_ssrte_visits(
     # Query de base
     query = {}
     
-    # Filtre coopérative
+    # Filtre coopérative / agent
     if user_type == 'cooperative':
         query["cooperative_id"] = str(current_user.get('_id'))
     elif user_type in ('field_agent', 'agent_terrain'):
-        query["cooperative_id"] = current_user.get('cooperative_id', '')
+        # Pour les agents, filtrer par recorded_by ou agent_id
+        uid = str(current_user["_id"])
+        query["$or"] = [{"recorded_by": uid}, {"agent_id": uid}]
     elif cooperative_id:
         query["cooperative_id"] = cooperative_id
     
