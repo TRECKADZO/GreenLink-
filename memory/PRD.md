@@ -27,30 +27,21 @@ Plateforme agricole full-stack pour la gestion des coopératives cacao en Côte 
 - Auto-refresh avec useFocusEffect
 
 ### Phase 3 - Refactoring Backend (DONE)
-- Refactorisé cooperative.py (2700 lignes) en 7 modules:
-  - cooperative.py (core + dashboard)
-  - cooperative_members.py
-  - cooperative_parcels.py
-  - cooperative_lots.py
-  - cooperative_agents.py
-  - cooperative_reports.py
-  - cooperative_carbon_premiums.py
+- Refactorisé cooperative.py (2700 lignes) en 7 modules
 
 ### Phase 4 - Harmonisation Clés Françaises (DONE - 21/03/2026)
-- Toutes les clés de réponse API converties en français:
-  - area_hectares → superficie
-  - carbon_score → score_carbone
-  - farmer_name → nom_producteur
-  - crop_type → type_culture
-  - risk_level → niveau_risque
-  - children_count → enfants_observes
-  - visit_date → date_visite
-  - total_hectares → superficie_totale
-  - average_carbon_score → score_carbone_moyen
-  - total_co2 → co2_total
-- Frontend Web mis à jour pour lire les nouvelles clés
-- Mobile mis à jour pour lire les nouvelles clés
-- Collision de routes /api/ssrte/visits corrigée (analytics → /api/ssrte/analytics/visits)
+- Toutes les clés de réponse API converties en français (superficie, score_carbone, nom_producteur, etc.)
+- Frontend Web et Mobile mis à jour
+- Collision de routes /api/ssrte/visits corrigée
+
+### Phase 5 - Notifications Push (DONE - 21/03/2026)
+- Notification automatique aux agents terrain quand une parcelle est déclarée
+- Centre de notifications (NotificationCenter) intégré dans les dashboards coopérative, agent terrain, et SSRTE
+- Cloche avec badge non-lues animé (pulse)
+- Dropdown avec historique, marquer comme lu, marquer tout comme lu
+- API endpoints: GET /unread-count, GET /history, PUT /history/{id}/read, PUT /history/read-all
+- Stockage en DB (notification_history) pour persistance
+- Type mobile ajouté: NEW_PARCEL_TO_VERIFY avec channel 'alerts'
 
 ## Credentials de Test
 - Cooperative: identifier=bielaghana@gmail.com, password=greenlink2024
@@ -58,6 +49,7 @@ Plateforme agricole full-stack pour la gestion des coopératives cacao en Côte 
 ## APIs Mockées
 - Orange SMS (mode MOCK)
 - Orange Money (mode MOCK)
+- Expo Push (pas de device physique, mais notifications stockées en DB)
 
 ## Backlog
 - P1: Générer build EAS (v1.38.3+) après stabilisation complète
@@ -65,3 +57,4 @@ Plateforme agricole full-stack pour la gestion des coopératives cacao en Côte 
 - P2: Configurer passerelle SMS réelle (Orange API)
 - P2: Implémenter langues locales (Baoulé, Dioula)
 - P2: Stockage cloud (AWS S3) pour fichiers/images
+- P3: Notifications pour d'autres événements (vérification terminée, paiement reçu, visite SSRTE critique)
