@@ -41,12 +41,29 @@ axiosInstance.interceptors.response.use(
                 statusCode === 503 ? 'Service en maintenance. Réessayez dans quelques instants.' :
                 statusCode === 504 ? 'Le serveur ne répond pas. Vérifiez votre connexion.' :
                 statusCode === 429 ? 'Trop de requêtes. Patientez une minute.' :
-                `Erreur serveur (${statusCode})`
+                statusCode === 404 ? 'Service temporairement inaccessible. Vérifiez votre connexion internet et réessayez.' :
+                statusCode === 403 ? 'Accès temporairement bloqué. Réessayez dans quelques secondes.' :
+                `Erreur serveur (${statusCode}). Vérifiez votre connexion internet.`
       };
     }
     
-    // Ne pas retry si déjà fait ou si c'est une erreur 4xx
-    if (config._retry >= CONFIG.RETRY_ATTEMPTS || (error.response && error.response.status < 500)) {
+    // Handle network errors (no response at all)
+    if (!error.response && error.message) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('network') || msg.includes('timeout') || msg.includes('abort')) {
+        error.response = {
+          status: 0,
+          data: { detail: 'Pas de connexion internet. Vérifiez votre réseau et réessayez.' }
+        };
+        return Promise.reject(error);
+      }
+    }
+    
+    // Retry logic: retry on 5xx AND on non-JSON 404/403 (proxy/Cloudflare issues)
+    const isProxyError = error.response && [404, 403].includes(error.response.status) && 
+                         typeof error.config?._originalData !== 'undefined';
+    if (config._retry >= CONFIG.RETRY_ATTEMPTS || 
+        (error.response && error.response.status < 500 && !isProxyError)) {
       return Promise.reject(error);
     }
     

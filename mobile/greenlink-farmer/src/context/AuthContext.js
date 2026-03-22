@@ -95,8 +95,10 @@ export const AuthProvider = ({ children }) => {
           errorMessage = 'Trop de tentatives. Patientez une minute avant de réessayer.';
         } else if (status >= 500) {
           errorMessage = 'Le serveur rencontre un problème. Réessayez dans quelques instants.';
+        } else if (status === 404) {
+          errorMessage = 'Service temporairement inaccessible. Vérifiez votre connexion internet et réessayez.';
         } else {
-          errorMessage = `Erreur (${status}). Veuillez réessayer.`;
+          errorMessage = `Erreur (${status}). Vérifiez votre connexion et réessayez.`;
         }
       } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         errorMessage = 'La connexion est trop lente. Vérifiez votre réseau et réessayez.';
