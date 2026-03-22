@@ -51,7 +51,8 @@ const MemberCard = ({ member, onPress }) => (
   </TouchableOpacity>
 );
 
-export default function CoopMembersScreen({ navigation }) {
+export default function CoopMembersScreen({ navigation, route }) {
+  const selectMode = route?.params?.selectMode || null; // 'ssrte' or null
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [members, setMembers] = useState([]);
@@ -88,7 +89,15 @@ export default function CoopMembersScreen({ navigation }) {
   }, [fetchMembers]);
 
   const handleMemberPress = (member) => {
-    navigation.navigate('CoopMemberDetail', { memberId: member.id, memberName: member.full_name });
+    if (selectMode === 'ssrte') {
+      navigation.navigate('SSRTEVisitForm', {
+        farmerId: member.id || member._id,
+        farmerName: member.full_name,
+        farmerData: member,
+      });
+    } else {
+      navigation.navigate('CoopMemberDetail', { memberId: member.id, memberName: member.full_name });
+    }
   };
 
   const handleAddMember = () => {
@@ -117,7 +126,7 @@ export default function CoopMembersScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Membres</Text>
+        <Text style={styles.headerTitle}>{selectMode === 'ssrte' ? 'Choisir un planteur' : 'Membres'}</Text>
         <TouchableOpacity onPress={handleAddMember} style={styles.addButton}>
           <Ionicons name="add" size={24} color={COLORS.white} />
         </TouchableOpacity>

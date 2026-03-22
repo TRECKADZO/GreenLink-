@@ -59,7 +59,7 @@ const QUICK_ACTIONS = {
     { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#10b981' },
     { name: 'CoopMembers', icon: 'people', label: 'Mes Membres', color: '#3b82f6' },
     { name: 'CoopReports', icon: 'bar-chart', label: 'Rapports', color: '#8b5cf6' },
-    { name: 'SSRTEVisitForm', icon: 'clipboard', label: 'Visite SSRTE', color: '#f59e0b' },
+    { name: 'CoopMembers', icon: 'clipboard', label: 'Visite SSRTE', color: '#f59e0b', params: { selectMode: 'ssrte' } },
     { name: 'SSRTEAgentDashboard', icon: 'shield-checkmark', label: 'Suivi SSRTE', color: '#ec4899' },
     { name: 'Marketplace', icon: 'cart', label: 'Marketplace', color: '#64748b' },
     { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
@@ -251,9 +251,9 @@ const AnimatedMainButton = ({ tab, onPress, userType }) => {
     }).start(() => setShowMenu(false));
   };
 
-  const handleActionPress = (actionName) => {
+  const handleActionPress = (action) => {
     setShowMenu(false);
-    navigation.navigate(actionName);
+    navigation.navigate(action.name, action.params || {});
   };
 
   useEffect(() => {
@@ -335,7 +335,7 @@ const AnimatedMainButton = ({ tab, onPress, userType }) => {
                 <TouchableOpacity
                   key={action.name}
                   style={styles.menuItem}
-                  onPress={() => handleActionPress(action.name)}
+                  onPress={() => handleActionPress(action)}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.menuItemIcon, { backgroundColor: action.color + '20' }]}>
