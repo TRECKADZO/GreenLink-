@@ -278,7 +278,7 @@ const ProfileScreen = ({ navigation }) => {
         </TouchableOpacity>
 
         {/* Version */}
-        <Text style={styles.version}>GreenLink Farmer v1.1.0</Text>
+        <Text style={styles.version}>GreenLink Agritech v1.1.0</Text>
         
         {/* Bottom spacing for tab bar */}
         <View style={{ height: 100 }} />

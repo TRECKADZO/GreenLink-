@@ -53,7 +53,7 @@ const LoginScreen = ({ navigation }) => {
         {/* Logo et titre */}
         <View style={styles.header}>
           <Text style={styles.logo}>🌱</Text>
-          <Text style={styles.title}>GreenLink</Text>
+          <Text style={styles.title}>GreenLink Agritech</Text>
           <Text style={styles.subtitle}>Agriculture durable</Text>
         </View>
 

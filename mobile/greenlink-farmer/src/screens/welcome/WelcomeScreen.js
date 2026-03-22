@@ -63,7 +63,7 @@ const WelcomeScreen = ({ navigation }) => {
             <View style={styles.logoContainer}>
               <Text style={styles.logoIcon}>🌿</Text>
               <View>
-                <Text style={styles.logoText}>GreenLink</Text>
+                <Text style={styles.logoText}>GreenLink Agritech</Text>
                 <Text style={styles.logoSubtext}>Côte d'Ivoire</Text>
               </View>
             </View>
@@ -181,15 +181,6 @@ const WelcomeScreen = ({ navigation }) => {
             </Text>
           </View>
 
-          {/* USSD Access Banner */}
-          <View style={styles.ussdBanner}>
-            <Text style={styles.ussdIcon}>📱</Text>
-            <View style={styles.ussdContent}>
-              <Text style={styles.ussdTitle}>Accès sans internet</Text>
-              <Text style={styles.ussdCode}>*144*88# ou SMS au 1234</Text>
-              <Text style={styles.ussdSubtitle}>Disponible en français (baoulé et dioula bientôt)</Text>
-            </View>
-          </View>
 
           {/* Footer */}
           <View style={styles.footer}>

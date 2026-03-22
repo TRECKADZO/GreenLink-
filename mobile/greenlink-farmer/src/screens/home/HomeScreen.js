@@ -207,15 +207,6 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="9"
-          title="*144*88# Prime Carbone"
-          subtitle="Calculez votre prime en 60s"
-          icon="📞"
-          onPress={() => navigation.navigate('USSDCarbon')}
-          highlight={true}
-        />
-        
-        <MenuItem
           number="*"
           title="Mon Profil"
           subtitle="Gérer mon compte"
