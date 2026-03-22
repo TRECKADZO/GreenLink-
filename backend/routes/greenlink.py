@@ -211,16 +211,12 @@ async def get_my_harvests(
         for m in linked_members:
             possible_ids.append(str(m["_id"]))
     
-    query = {"farmer_id": {"$in": possible_ids}}
-    if statut:
-        query["statut"] = statut
+    base_query = {"farmer_id": {"$in": possible_ids}}
     
-    total = await db.harvests.count_documents(query)
-    harvests = await db.harvests.find(query).sort("created_at", -1).to_list(200)
-    
-    # Compute stats
-    stats = {"total": total, "en_attente": 0, "validees": 0, "rejetees": 0, "total_kg": 0}
-    for h in harvests:
+    # Always compute stats from ALL harvests (unfiltered)
+    all_harvests = await db.harvests.find(base_query).sort("created_at", -1).to_list(200)
+    stats = {"total": len(all_harvests), "en_attente": 0, "validees": 0, "rejetees": 0, "total_kg": 0}
+    for h in all_harvests:
         s = h.get("statut", "en_attente")
         if s == "en_attente":
             stats["en_attente"] += 1
@@ -229,6 +225,12 @@ async def get_my_harvests(
         elif s == "rejetee":
             stats["rejetees"] += 1
         stats["total_kg"] += h.get("quantity_kg", 0)
+    
+    # Apply filter for the displayed list
+    if statut:
+        harvests = [h for h in all_harvests if h.get("statut") == statut]
+    else:
+        harvests = all_harvests
     
     result = []
     for h in harvests:
@@ -265,7 +267,7 @@ async def get_my_harvests(
     return {
         "harvests": result,
         "stats": stats,
-        "total": total,
+        "total": len(harvests),
     }
 
 
