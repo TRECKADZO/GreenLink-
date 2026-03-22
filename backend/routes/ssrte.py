@@ -506,7 +506,10 @@ async def list_cases(
         query["cooperative_id"] = current_user.get('cooperative_id', '')
     
     if status:
-        query["status"] = status
+        if ',' in status:
+            query["status"] = {"$in": [s.strip() for s in status.split(',')]}
+        else:
+            query["status"] = status
     
     if labor_type:
         query["labor_type"] = labor_type

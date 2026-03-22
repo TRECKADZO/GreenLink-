@@ -330,21 +330,21 @@ const SSRTEAgentDashboard = ({ navigation }) => {
           ) : (
             recentVisits.slice(0, 5).map((visit) => (
               <TouchableOpacity key={visit.id} style={styles.visitCard}>
-                <View style={[styles.visitRiskIndicator, { backgroundColor: getRiskColor(visit.risk_level) }]} />
+                <View style={[styles.visitRiskIndicator, { backgroundColor: getRiskColor(visit.niveau_risque || visit.risk_level) }]} />
                 <View style={styles.visitContent}>
-                  <Text style={styles.visitName}>{visit.member_name || 'Producteur'}</Text>
+                  <Text style={styles.visitName}>{visit.nom_membre || visit.member_name || 'Producteur'}</Text>
                   <Text style={styles.visitDetails}>
-                    {visit.children_count || 0} enfants • {visit.household_size || 0} personnes
+                    {visit.enfants_observes || visit.children_count || 0} enfants • {visit.taille_menage || visit.household_size || 0} personnes
                   </Text>
                   <Text style={styles.visitDate}>
-                    {new Date(visit.visit_date).toLocaleDateString('fr-FR')}
+                    {visit.date_visite || visit.visit_date ? new Date(visit.date_visite || visit.visit_date).toLocaleDateString('fr-FR') : '-'}
                   </Text>
                 </View>
                 <View style={styles.visitStats}>
-                  {visit.children_at_risk > 0 && (
+                  {(visit.enfants_a_risque || visit.children_at_risk || 0) > 0 && (
                     <View style={styles.riskBadge}>
                       <Ionicons name="warning" size={12} color="#ef4444" />
-                      <Text style={styles.riskBadgeText}>{visit.children_at_risk}</Text>
+                      <Text style={styles.riskBadgeText}>{visit.enfants_a_risque || visit.children_at_risk}</Text>
                     </View>
                   )}
                   <Ionicons name="chevron-forward" size={20} color="#64748b" />
