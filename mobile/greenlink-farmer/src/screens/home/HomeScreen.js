@@ -146,6 +146,14 @@ const HomeScreen = ({ navigation }) => {
         
         <MenuItem
           number="2"
+          title="Mes Récoltes"
+          subtitle="Suivez vos déclarations"
+          icon="📋"
+          onPress={() => navigation.navigate('MyHarvests')}
+        />
+        
+        <MenuItem
+          number="3"
           title="Déclarer une Récolte"
           subtitle="Enregistrez votre production"
           iconImage="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=64&h=64&fit=crop"
@@ -153,7 +161,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="3"
+          number="4"
           title="Marketplace Intrants"
           subtitle="Achetez intrants & équipements"
           icon="🛒"
@@ -162,7 +170,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="4"
+          number="5"
           title="Mon Score Carbone"
           subtitle={`Score: ${dashboard?.score_carbone_moyen?.toFixed(1) || '0'}/10`}
           icon="🌱"
@@ -170,7 +178,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="5"
+          number="6"
           title="Mes Commandes"
           subtitle="Suivez vos achats"
           icon="📦"
@@ -178,7 +186,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="6"
+          number="7"
           title="Mes Paiements"
           subtitle="Primes et historique"
           icon="💳"
@@ -186,7 +194,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="7"
+          number="8"
           title="Notifications"
           subtitle={`${dashboard?.unread_notifications || 0} non lue(s)`}
           icon="🔔"
@@ -194,7 +202,7 @@ const HomeScreen = ({ navigation }) => {
         />
         
         <MenuItem
-          number="8"
+          number="9"
           title="*144*88# Prime Carbone"
           subtitle="Calculez votre prime en 60s"
           icon="📞"

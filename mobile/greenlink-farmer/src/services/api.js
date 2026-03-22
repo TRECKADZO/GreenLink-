@@ -78,7 +78,7 @@ export const farmerApi = {
   createParcel: (data) => api.post('/greenlink/parcels', data),
   
   // Récoltes
-  getHarvests: () => api.get('/greenlink/harvests/my-harvests'),
+  getHarvests: (params) => api.get(`/greenlink/harvests/my-harvests${params || ''}`),
   createHarvest: (data) => api.post('/greenlink/harvests', data),
   
   // Dashboard

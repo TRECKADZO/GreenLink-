@@ -190,6 +190,86 @@ async def get_my_parcels(current_user: dict = Depends(get_current_user)):
         "cree_le": str(p.get("created_at", ""))
     } for p in parcels]
 
+@router.get("/harvests/my-harvests")
+async def get_my_harvests(
+    statut: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obtenir mes récoltes déclarées avec statut"""
+    from routes.auth import normalize_phone
+    
+    user_id = str(current_user["_id"])
+    phone = current_user.get("phone_number", "")
+    
+    # Build possible farmer IDs (same logic as my-parcels)
+    possible_ids = [user_id, current_user["_id"]]
+    if phone:
+        phone_variants = normalize_phone(phone)
+        linked_members = await db.coop_members.find(
+            {"phone_number": {"$in": phone_variants}}, {"_id": 1}
+        ).to_list(10)
+        for m in linked_members:
+            possible_ids.append(str(m["_id"]))
+    
+    query = {"farmer_id": {"$in": possible_ids}}
+    if statut:
+        query["statut"] = statut
+    
+    total = await db.harvests.count_documents(query)
+    harvests = await db.harvests.find(query).sort("created_at", -1).to_list(200)
+    
+    # Compute stats
+    stats = {"total": total, "en_attente": 0, "validees": 0, "rejetees": 0, "total_kg": 0}
+    for h in harvests:
+        s = h.get("statut", "en_attente")
+        if s == "en_attente":
+            stats["en_attente"] += 1
+        elif s == "validee":
+            stats["validees"] += 1
+        elif s == "rejetee":
+            stats["rejetees"] += 1
+        stats["total_kg"] += h.get("quantity_kg", 0)
+    
+    result = []
+    for h in harvests:
+        h_unit = h.get("unit", "kg")
+        h_qty = h.get("quantity_kg", 0)
+        if h.get("quantity_display"):
+            h_display = h["quantity_display"]
+        elif h_unit == "tonnes":
+            h_display = f"{int(h_qty / 1000)} tonne(s) ({int(h_qty)} kg)"
+        elif h_unit == "sacs":
+            h_display = f"{int(h_qty / 65)} sac(s) ({int(h_qty)} kg)"
+        else:
+            h_display = f"{int(h_qty)} kg"
+        
+        result.append({
+            "id": str(h["_id"]),
+            "parcel_id": h.get("parcel_id", ""),
+            "quantity_kg": h.get("quantity_kg", 0),
+            "original_quantity": h.get("original_quantity", h_qty),
+            "quantity_display": h_display,
+            "quality_grade": h.get("quality_grade", ""),
+            "unit": h_unit,
+            "notes": h.get("notes", ""),
+            "statut": h.get("statut", "en_attente"),
+            "coop_name": h.get("coop_name", ""),
+            "carbon_premium": h.get("carbon_premium", 0),
+            "total_amount": h.get("total_amount", 0),
+            "harvest_date": h.get("harvest_date", h.get("created_at", "")),
+            "created_at": h.get("created_at", ""),
+            "validated_at": h.get("validated_at", None),
+            "rejection_reason": h.get("rejection_reason", None),
+        })
+    
+    return {
+        "harvests": result,
+        "stats": stats,
+        "total": total,
+    }
+
+
+
 @router.post("/harvests")
 async def declare_harvest(
     harvest: HarvestCreate,

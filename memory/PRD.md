@@ -30,18 +30,31 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 4. Statuts: en_attente -> validee / rejetee
 
 ### Phase 9 - Conversion Unites & Emails Recoltes (DONE - 22/03/2026)
-**Corrections:**
 - Conversion unites correcte: tonnes->kg (x1000), sacs->kg (x65)
 - Notifications affichent quantite originale + conversion: "2 tonne(s) (2000 kg)"
 - Email Resend envoye a la cooperative lors de chaque declaration de recolte
 - Template email mis a jour avec quantite originale et unite
 - Champs original_quantity et quantity_display ajoutes aux reponses API
-- Validation/rejet cooperative affiche aussi l'unite originale
+
+### Phase 10 - Ecran Suivi Recoltes Agriculteur (DONE - 22/03/2026)
+**Backend:**
+- GET /api/greenlink/harvests/my-harvests (filtres par statut, stats resumees)
+- Retourne: harvests[], stats{total, en_attente, validees, rejetees, total_kg}
+
+**Mobile:**
+- MyHarvestsScreen: liste de toutes les recoltes declarees avec statuts
+- Filtres: Toutes / En attente / Validees / Rejetees
+- Stats resumees en haut (compteurs + total kg)
+- Bouton "+" pour declarer une nouvelle recolte
+- Affichage: quantity_display, qualite, cooperative, montant, prime carbone
+- Motif de rejet affiche si applicable
+- Menu HomeScreen mis a jour avec "Mes Recoltes" en position 2
 
 ## Builds
 - v1.39.2-v1.39.9: Corrections diverses (images, connexion, parcelles, selection)
 - v1.40.0: Declaration recolte corrigee (mapping champs backend)
 - v1.40.1: Flux complet recoltes + validation cooperative + ecran CoopHarvests
+- v1.40.2: Fix conversion unites + ecran Mes Recoltes (build en cours)
 
 ## Credentials
 - Cooperative: bielaghana@gmail.com / greenlink2024
@@ -56,7 +69,7 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
 - P2: Stockage cloud AWS S3
-- P3: Refactoring greenlink.py en fichiers dedies (parcels.py, harvests.py)
+- P3: Refactoring greenlink.py (1000+ lignes) en fichiers dedies (parcels.py, harvests.py)
 
 ## Key API Endpoints
 - POST /api/auth/login | register | forgot-password | verify-reset-code | reset-password
@@ -65,6 +78,7 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - GET /api/marketplace/delivery-fees | cart | products
 - POST /api/marketplace/cart/checkout
 - POST /api/greenlink/harvests
+- GET /api/greenlink/harvests/my-harvests
 - GET /api/greenlink/parcels/my-parcels
 - GET /api/greenlink/farmer/dashboard
 - GET /api/cooperative/harvests | harvests/summary

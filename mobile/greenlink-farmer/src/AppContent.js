@@ -59,6 +59,7 @@ const HomeScreen = safeRequire(() => require('./screens/home/HomeScreen'), 'Home
 const ParcelsScreen = safeRequire(() => require('./screens/parcels/ParcelsScreen'), 'ParcelsScreen');
 const AddParcelScreen = safeRequire(() => require('./screens/parcels/AddParcelScreen'), 'AddParcelScreen');
 const HarvestScreen = safeRequire(() => require('./screens/harvest/HarvestScreen'), 'HarvestScreen');
+const MyHarvestsScreen = safeRequire(() => require('./screens/harvest/MyHarvestsScreen'), 'MyHarvestsScreen');
 const PaymentsScreen = safeRequire(() => require('./screens/payments/PaymentsScreen'), 'PaymentsScreen');
 const CarbonPaymentsDashboard = safeRequire(() => require('./screens/payments/CarbonPaymentsDashboard'), 'CarbonPaymentsDashboard');
 const NotificationsScreen = safeRequire(() => require('./screens/notifications/NotificationsScreen'), 'NotificationsScreen');
@@ -152,6 +153,7 @@ function AppNavigator() {
       <Stack.Screen name="Parcels" component={ParcelsScreen} />
       <Stack.Screen name="AddParcel" component={AddParcelScreen} />
       <Stack.Screen name="Harvest" component={HarvestScreen} />
+      <Stack.Screen name="MyHarvests" component={MyHarvestsScreen} />
       <Stack.Screen name="Payments" component={PaymentsScreen} />
       <Stack.Screen name="CarbonPayments" component={CarbonPaymentsDashboard} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
