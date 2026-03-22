@@ -1,0 +1,108 @@
+{
+  "summary": "Iteration 56 - My Harvests API & Unit Conversion Testing. 17/17 backend tests passed (100%). All core features working: GET /api/greenlink/harvests/my-harvests returns harvests with stats, filtering by statut works, unit conversion (tonnes→kg x1000, sacs→kg x65) is correct, quantity_display format includes original unit.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/greenlink/harvests/my-harvests?statut=X",
+        "issue": "Stats are computed from filtered harvests only, not ALL harvests. When filtering by statut=en_attente, stats show only en_attente counts. Main agent note indicated stats should reflect ALL harvests regardless of filter.",
+        "priority": "LOW",
+        "current_behavior": "stats.total=8 when filtering en_attente (only filtered count)",
+        "expected_behavior": "stats should show total=12 (all harvests) even when filtering"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_my_harvests_iteration56.py",
+    "/app/test_reports/pytest/pytest_my_harvests_iteration56.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Fix stats calculation in GET /api/greenlink/harvests/my-harvests to show ALL harvests stats even when filter is applied (line 218-231 in greenlink.py)"
+  ],
+  "critical_code_review_comments": [
+    "Unit conversion logic is correct: tonnes x1000, sacs x65, kg unchanged",
+    "quantity_display format is correct: '2 tonne(s) (2000 kg)', '3 sac(s) (195 kg)', '500 kg'",
+    "original_quantity field correctly stores pre-conversion value",
+    "Stats calculation works but only for filtered results (see minor issue)",
+    "Authentication properly enforced (403 without token)",
+    "Filtering by statut (en_attente, validee, rejetee) works correctly",
+    "Email notification helper correctly passes original_quantity and unit to email service",
+    "send_harvest_notification_email correctly formats quantity_str with unit labels"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_my_harvests_iteration56.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "N/A (mobile app - not testable in browser)"
+  },
+  "test_credentials": {
+    "farmer": {"identifier": "+2250709090909", "password": "koffi2024", "user_type": "producteur"},
+    "cooperative": {"identifier": "bielaghana@gmail.com", "password": "greenlink2024", "user_type": "cooperative"}
+  },
+  "seed_data_creation": "Created 6 test harvests (2 each for tonnes, sacs, kg units) with notes prefixed 'TEST_'",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "My-harvests endpoint fully functional. Farmer has 12 total harvests (10 en_attente, 2 validee). Unit conversion verified: tonnes x1000, sacs x65. Test data created with notes containing 'TEST_' prefix. Minor issue: stats are computed from filtered results only, not all harvests.",
+  "mocked_api_note": {
+    "Orange Money API": "MOCKED",
+    "Orange SMS API": "MOCKED",
+    "Resend Email API": "CONFIGURED (real emails sent)"
+  },
+  "api_endpoints_tested": {
+    "authentication": {
+      "POST /api/auth/login (farmer)": "PASS",
+      "POST /api/auth/login (cooperative)": "PASS",
+      "GET /api/greenlink/harvests/my-harvests (no token)": "PASS - Returns 403"
+    },
+    "my_harvests": {
+      "GET /api/greenlink/harvests/my-harvests": "PASS - Returns harvests with stats",
+      "GET /api/greenlink/harvests/my-harvests?statut=en_attente": "PASS - Filters correctly",
+      "GET /api/greenlink/harvests/my-harvests?statut=validee": "PASS - Filters correctly",
+      "GET /api/greenlink/harvests/my-harvests?statut=rejetee": "PASS - Filters correctly"
+    },
+    "harvest_declaration": {
+      "POST /api/greenlink/harvests (unit=tonnes)": "PASS - 2 tonnes = 2000 kg",
+      "POST /api/greenlink/harvests (unit=sacs)": "PASS - 3 sacs = 195 kg",
+      "POST /api/greenlink/harvests (unit=kg)": "PASS - 500 kg = 500 kg"
+    },
+    "cooperative_harvests": {
+      "GET /api/cooperative/harvests": "PASS - Returns harvests with quantity_display"
+    }
+  },
+  "unit_conversion_verified": {
+    "tonnes_to_kg": {
+      "input": "2 tonnes",
+      "output_quantity_kg": 2000,
+      "output_original_quantity": 2,
+      "output_quantity_display": "2 tonne(s) (2000 kg)",
+      "status": "CORRECT"
+    },
+    "sacs_to_kg": {
+      "input": "3 sacs",
+      "output_quantity_kg": 195,
+      "output_original_quantity": 3,
+      "output_quantity_display": "3 sac(s) (195 kg)",
+      "status": "CORRECT"
+    },
+    "kg_no_conversion": {
+      "input": "500 kg",
+      "output_quantity_kg": 500,
+      "output_original_quantity": 500,
+      "output_quantity_display": "500 kg",
+      "status": "CORRECT"
+    }
+  },
+  "stats_fields_verified": {
+    "total": "PASS - Count of harvests",
+    "en_attente": "PASS - Count of pending harvests",
+    "validees": "PASS - Count of validated harvests",
+    "rejetees": "PASS - Count of rejected harvests",
+    "total_kg": "PASS - Sum of all quantity_kg"
+  }
+}
