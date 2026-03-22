@@ -21,11 +21,11 @@ const STATUSES = [
 ];
 
 const ECOLOGICAL_PRACTICES = [
-  { id: 'compostage', label: 'Compostage', icon: 'leaf' },
-  { id: 'absence_pesticides', label: 'Absence de pesticides chimiques', icon: 'shield-checkmark' },
-  { id: 'gestion_dechets', label: 'Gestion des dechets', icon: 'trash' },
-  { id: 'protection_cours_eau', label: 'Protection des cours d\'eau', icon: 'water' },
-  { id: 'agroforesterie', label: 'Agroforesterie', icon: 'flower' },
+  { id: 'compostage', label: 'Compostage', icon: 'leaf', hint: 'Utilisation de dechets organiques (feuilles, cabosses) comme engrais naturel sur la parcelle' },
+  { id: 'absence_pesticides', label: 'Absence de pesticides chimiques', icon: 'shield-checkmark', hint: 'Aucun produit chimique de synthese (herbicide, insecticide, fongicide) utilise sur la parcelle' },
+  { id: 'gestion_dechets', label: 'Gestion des dechets', icon: 'trash', hint: 'Les emballages, plastiques et dechets non organiques sont collectes et evacues hors de la parcelle' },
+  { id: 'protection_cours_eau', label: 'Protection des cours d\'eau', icon: 'water', hint: 'Une bande vegetale d\'au moins 5m est maintenue entre la plantation et les rivieres ou marigots' },
+  { id: 'agroforesterie', label: 'Agroforesterie', icon: 'flower', hint: 'Presence d\'arbres d\'ombrage diversifies (fruitiers, forestiers) associes aux cacaoyers' },
 ];
 
 const ParcelVerifyFormScreen = ({ navigation, route }) => {
@@ -371,13 +371,16 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
                     onPress={() => togglePractice(practice.id)}
                     testID={`practice-${practice.id}`}
                   >
-                    <View style={[styles.practiceCheckbox, isSelected && styles.practiceCheckboxActive]}>
-                      {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
+                    <View style={styles.practiceTopRow}>
+                      <View style={[styles.practiceCheckbox, isSelected && styles.practiceCheckboxActive]}>
+                        {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
+                      </View>
+                      <Ionicons name={practice.icon} size={16} color={isSelected ? '#059669' : '#94a3b8'} />
+                      <Text style={[styles.practiceLabel, isSelected && styles.practiceLabelActive]}>
+                        {practice.label}
+                      </Text>
                     </View>
-                    <Ionicons name={practice.icon} size={16} color={isSelected ? '#059669' : '#94a3b8'} />
-                    <Text style={[styles.practiceLabel, isSelected && styles.practiceLabelActive]}>
-                      {practice.label}
-                    </Text>
+                    <Text style={styles.practiceHint}>{practice.hint}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -502,12 +505,14 @@ const styles = StyleSheet.create({
   shadeEmptyCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f8fafc', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#e2e8f0' },
   shadeEmptyText: { flex: 1, fontSize: 12, color: '#94a3b8' },
   practicesList: { gap: 8 },
-  practiceItem: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#fff' },
+  practiceItem: { padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#fff' },
   practiceItemActive: { borderColor: '#059669', backgroundColor: '#ecfdf5' },
+  practiceTopRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   practiceCheckbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#cbd5e1', alignItems: 'center', justifyContent: 'center' },
   practiceCheckboxActive: { backgroundColor: '#059669', borderColor: '#059669' },
   practiceLabel: { flex: 1, fontSize: 13, color: '#64748b' },
   practiceLabelActive: { color: '#1e293b', fontWeight: '600' },
+  practiceHint: { fontSize: 11, color: '#94a3b8', marginTop: 6, marginLeft: 32, lineHeight: 15, fontStyle: 'italic' },
   practiceCount: { fontSize: 11, color: '#059669', fontWeight: '600', marginTop: 6 },
 });
 
