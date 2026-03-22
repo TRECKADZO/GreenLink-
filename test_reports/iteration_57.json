@@ -1,0 +1,100 @@
+{
+  "summary": "Iteration 57 - Carbon Premium Verification Tests. 17/17 backend tests executed (13 passed, 4 skipped due to rate limiting). All core carbon premium features working: PUT /api/field-agent/parcels/{parcel_id}/verify accepts and stores nombre_arbres, couverture_ombragee, pratiques_ecologiques. Carbon score recalculation works correctly. GET /api/greenlink/parcels/my-parcels returns all carbon premium fields.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_carbon_premium_verification_iteration57.py",
+    "/app/test_reports/pytest/pytest_carbon_premium_verification_iteration57.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Carbon score calculation formula correctly implemented in _calculate_verified_carbon_score()",
+    "Base score 3.0, max capped at 10.0 - VERIFIED",
+    "Tree density bonus thresholds: >=100->+2, >=50->+1.5, >=20->+1, >=5->+0.5 - VERIFIED",
+    "Shade cover bonus thresholds: >=60%->+2, >=40%->+1.5, >=20%->+1, >=10%->+0.5 - VERIFIED",
+    "Practices bonus: 0.5 each for compostage, absence_pesticides, gestion_dechets, protection_cours_eau, agroforesterie - VERIFIED",
+    "Area bonus: >=5ha->+0.5 - VERIFIED",
+    "Backward compatibility maintained - verification without carbon fields still works",
+    "my-parcels endpoint correctly returns nombre_arbres, couverture_ombragee, pratiques_ecologiques fields",
+    "Invalid verification status correctly rejected with 400",
+    "Unauthorized access correctly rejected with 401/403"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_carbon_premium_verification_iteration57.py"
+  ],
+  "success_rate": {
+    "backend": "100% (all features working, 4 tests skipped due to rate limiting)",
+    "frontend": "N/A (mobile app - not testable in browser)"
+  },
+  "test_credentials": {
+    "field_agent": {"identifier": "test_agent@greenlink.ci", "password": "agent2024", "user_type": "field_agent"},
+    "farmer": {"identifier": "+2250709090909", "password": "koffi2024", "user_type": "producteur"}
+  },
+  "seed_data_creation": "Used existing test parcels: 69a22f4b8f9312b75348af4e, 69a22f4c8f9312b75348af4f",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Carbon premium verification fully functional. Field agent can verify parcels with nombre_arbres, couverture_ombragee, pratiques_ecologiques. Carbon score recalculated correctly. my-parcels returns all carbon fields. Rate limiting may cause test skips - wait 60s between test runs.",
+  "mocked_api_note": {
+    "Orange Money API": "MOCKED",
+    "Orange SMS API": "MOCKED"
+  },
+  "api_endpoints_tested": {
+    "authentication": {
+      "POST /api/auth/login (field_agent)": "PASS",
+      "PUT /api/field-agent/parcels/{id}/verify (no token)": "PASS - Returns 401/403"
+    },
+    "parcel_verification": {
+      "PUT /api/field-agent/parcels/{id}/verify (all carbon fields)": "PASS - Stores and calculates correctly",
+      "PUT /api/field-agent/parcels/{id}/verify (partial carbon fields)": "PASS",
+      "PUT /api/field-agent/parcels/{id}/verify (no carbon fields)": "PASS - Backward compatible",
+      "PUT /api/field-agent/parcels/{id}/verify (invalid status)": "PASS - Returns 400"
+    },
+    "my_parcels": {
+      "GET /api/greenlink/parcels/my-parcels": "PASS - Returns nombre_arbres, couverture_ombragee, pratiques_ecologiques"
+    }
+  },
+  "carbon_score_calculation_verified": {
+    "max_score_test": {
+      "input": "500 trees, 70% shade, 5 practices, 5ha",
+      "expected": 10.0,
+      "actual": 10.0,
+      "status": "PASS"
+    },
+    "medium_score_test": {
+      "input": "60 trees, 35% shade, 2 practices, 2ha",
+      "expected": 6.0,
+      "actual": 6.0,
+      "status": "PASS"
+    },
+    "base_score_test": {
+      "input": "2 trees, 5% shade, 0 practices, 2ha",
+      "expected": 3.0,
+      "actual": 3.0,
+      "status": "PASS"
+    },
+    "tree_density_threshold_test": {
+      "input": "150 trees on 2ha = 75 arbres/ha",
+      "expected": 4.5,
+      "actual": 4.5,
+      "status": "PASS"
+    },
+    "shade_cover_threshold_test": {
+      "input": "15% shade cover",
+      "expected": 3.5,
+      "actual": 3.5,
+      "status": "PASS"
+    }
+  },
+  "carbon_fields_in_my_parcels": {
+    "nombre_arbres": "PRESENT (default 0)",
+    "couverture_ombragee": "PRESENT (default 0)",
+    "pratiques_ecologiques": "PRESENT (default [])"
+  }
+}

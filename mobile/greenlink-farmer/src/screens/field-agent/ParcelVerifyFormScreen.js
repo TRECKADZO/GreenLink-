@@ -20,6 +20,14 @@ const STATUSES = [
   { id: 'rejected', label: 'Non conforme', icon: 'close-circle', color: '#ef4444', bg: '#fee2e2' },
 ];
 
+const ECOLOGICAL_PRACTICES = [
+  { id: 'compostage', label: 'Compostage', icon: 'leaf' },
+  { id: 'absence_pesticides', label: 'Absence de pesticides chimiques', icon: 'shield-checkmark' },
+  { id: 'gestion_dechets', label: 'Gestion des dechets', icon: 'trash' },
+  { id: 'protection_cours_eau', label: 'Protection des cours d\'eau', icon: 'water' },
+  { id: 'agroforesterie', label: 'Agroforesterie', icon: 'flower' },
+];
+
 const ParcelVerifyFormScreen = ({ navigation, route }) => {
   const { parcel, onVerified } = route?.params || {};
   const { token } = useAuth();
@@ -31,6 +39,11 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
   const [gps, setGps] = useState(null);
   const [gpsLoading, setGpsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // Carbon premium fields
+  const [treeCount, setTreeCount] = useState('');
+  const [shadeCover, setShadeCover] = useState('');
+  const [selectedPractices, setSelectedPractices] = useState([]);
 
   useEffect(() => {
     getLocation();
@@ -76,6 +89,14 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
+  const togglePractice = (practiceId) => {
+    setSelectedPractices(prev =>
+      prev.includes(practiceId)
+        ? prev.filter(id => id !== practiceId)
+        : [...prev, practiceId]
+    );
+  };
+
   const handleSubmit = async () => {
     if (!notes.trim() && status !== 'verified') {
       Alert.alert('Notes requises', 'Ajoutez des notes pour expliquer votre decision');
@@ -99,6 +120,9 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
         verification_status: status,
         verification_notes: notes.trim(),
         verification_photos: photos,
+        nombre_arbres: treeCount ? parseInt(treeCount) : null,
+        couverture_ombragee: shadeCover ? parseFloat(shadeCover) : null,
+        pratiques_ecologiques: selectedPractices,
       };
       if (gps) {
         body.gps_lat = gps.lat;
@@ -244,6 +268,83 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
           </View>
         )}
 
+        {/* Carbon Premium Section */}
+        <View style={styles.carbonSection}>
+          <View style={styles.carbonSectionHeader}>
+            <Ionicons name="leaf" size={18} color="#059669" />
+            <Text style={styles.carbonSectionTitle}>Indicateurs prime carbone</Text>
+          </View>
+
+          {/* Tree Count */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Decomptage des arbres</Text>
+            <TextInput
+              style={styles.input}
+              value={treeCount}
+              onChangeText={setTreeCount}
+              placeholder="Nombre d'arbres observes sur la parcelle"
+              keyboardType="number-pad"
+              placeholderTextColor="#94a3b8"
+              testID="tree-count-input"
+            />
+          </View>
+
+          {/* Shade Cover */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Couverture ombragee (%)</Text>
+            <TextInput
+              style={styles.input}
+              value={shadeCover}
+              onChangeText={(val) => {
+                const num = parseFloat(val);
+                if (val === '' || (!isNaN(num) && num >= 0 && num <= 100)) {
+                  setShadeCover(val);
+                }
+              }}
+              placeholder="Estimation du pourcentage de couvert ombrage"
+              keyboardType="decimal-pad"
+              placeholderTextColor="#94a3b8"
+              testID="shade-cover-input"
+            />
+            {shadeCover !== '' && (
+              <View style={styles.shadeIndicator}>
+                <View style={[styles.shadeBar, { width: `${Math.min(parseFloat(shadeCover) || 0, 100)}%` }]} />
+              </View>
+            )}
+          </View>
+
+          {/* Ecological Practices Checklist */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Pratiques ecologiques observees</Text>
+            <View style={styles.practicesList}>
+              {ECOLOGICAL_PRACTICES.map(practice => {
+                const isSelected = selectedPractices.includes(practice.id);
+                return (
+                  <TouchableOpacity
+                    key={practice.id}
+                    style={[styles.practiceItem, isSelected && styles.practiceItemActive]}
+                    onPress={() => togglePractice(practice.id)}
+                    testID={`practice-${practice.id}`}
+                  >
+                    <View style={[styles.practiceCheckbox, isSelected && styles.practiceCheckboxActive]}>
+                      {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
+                    </View>
+                    <Ionicons name={practice.icon} size={16} color={isSelected ? '#059669' : '#94a3b8'} />
+                    <Text style={[styles.practiceLabel, isSelected && styles.practiceLabelActive]}>
+                      {practice.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {selectedPractices.length > 0 && (
+              <Text style={styles.practiceCount}>
+                {selectedPractices.length} pratique{selectedPractices.length > 1 ? 's' : ''} selectionnee{selectedPractices.length > 1 ? 's' : ''}
+              </Text>
+            )}
+          </View>
+        </View>
+
         {/* Notes */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>
@@ -337,6 +438,20 @@ const styles = StyleSheet.create({
   addPhotoText: { fontSize: 10, color: '#059669', fontWeight: '600' },
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#059669', paddingVertical: 16, borderRadius: 12, marginTop: 8 },
   submitText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  // Carbon premium styles
+  carbonSection: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#d1fae5' },
+  carbonSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
+  carbonSectionTitle: { fontSize: 14, fontWeight: '700', color: '#059669' },
+  shadeIndicator: { height: 6, backgroundColor: '#e2e8f0', borderRadius: 3, marginTop: 8, overflow: 'hidden' },
+  shadeBar: { height: '100%', backgroundColor: '#059669', borderRadius: 3 },
+  practicesList: { gap: 8 },
+  practiceItem: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#fff' },
+  practiceItemActive: { borderColor: '#059669', backgroundColor: '#ecfdf5' },
+  practiceCheckbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#cbd5e1', alignItems: 'center', justifyContent: 'center' },
+  practiceCheckboxActive: { backgroundColor: '#059669', borderColor: '#059669' },
+  practiceLabel: { flex: 1, fontSize: 13, color: '#64748b' },
+  practiceLabelActive: { color: '#1e293b', fontWeight: '600' },
+  practiceCount: { fontSize: 11, color: '#059669', fontWeight: '600', marginTop: 6 },
 });
 
 export default ParcelVerifyFormScreen;

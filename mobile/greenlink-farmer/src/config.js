@@ -4,7 +4,7 @@
 export const CONFIG = {
   // API Backend - Uses EXPO_PUBLIC_API_URL from EAS build or falls back to hardcoded URL
   API_URL: process.env.EXPO_PUBLIC_API_URL 
-    || 'https://agri-platform-qa.preview.emergentagent.com',
+    || 'https://carbon-parcel-verify.preview.emergentagent.com',
   
   // Timeouts adaptés à la faible connectivité
   REQUEST_TIMEOUT: 45000, // 45 secondes

@@ -694,7 +694,8 @@ async def verify_parcel_by_agent(
 ):
     """
     Verifier/Valider une parcelle sur le terrain.
-    Body: {verification_status, verification_notes, gps_lat, gps_lng, corrected_area_hectares}
+    Body: {verification_status, verification_notes, gps_lat, gps_lng, corrected_area_hectares,
+           nombre_arbres, couverture_ombragee, pratiques_ecologiques}
     """
     verify_field_agent(current_user)
 
@@ -729,13 +730,36 @@ async def verify_parcel_by_agent(
     if corrected and float(corrected) != parcel.get("area_hectares", 0):
         update_data["area_hectares_declared"] = parcel.get("area_hectares")
         update_data["area_hectares"] = float(corrected)
-        new_score = round(min(9.5, 5.5 + (float(corrected) * 0.3)), 1)
-        update_data["carbon_score"] = new_score
-        update_data["co2_captured_tonnes"] = round(float(corrected) * new_score * 2.5, 2)
 
     photos = data.get("verification_photos", [])
     if photos:
         update_data["verification_photos"] = photos
+
+    # Carbon premium fields
+    nombre_arbres = data.get("nombre_arbres")
+    if nombre_arbres is not None:
+        update_data["nombre_arbres"] = int(nombre_arbres)
+
+    couverture_ombragee = data.get("couverture_ombragee")
+    if couverture_ombragee is not None:
+        update_data["couverture_ombragee"] = float(couverture_ombragee)
+
+    pratiques = data.get("pratiques_ecologiques", [])
+    if pratiques:
+        update_data["pratiques_ecologiques"] = pratiques
+
+    # Recalculate carbon score with enriched data
+    area = float(corrected) if corrected else parcel.get("area_hectares", 0)
+    carbon_score = _calculate_verified_carbon_score(
+        nombre_arbres=nombre_arbres,
+        couverture_ombragee=couverture_ombragee,
+        pratiques=pratiques,
+        area=area,
+        existing_practices=parcel.get("farming_practices", [])
+    )
+    update_data["carbon_score"] = carbon_score
+    update_data["co2_captured_tonnes"] = round(area * carbon_score * 2.5, 2)
+    update_data["carbon_credits_earned"] = round(carbon_score * area * 0.5, 2)
 
     await db.parcels.update_one(
         {"_id": ObjectId(parcel_id)},
@@ -748,5 +772,59 @@ async def verify_parcel_by_agent(
         "message": f"Parcelle {status_labels.get(v_status, v_status)}",
         "parcel_id": parcel_id,
         "verification_status": v_status,
+        "carbon_score": carbon_score,
         "verified_at": update_data["verified_at"].isoformat()
     }
+
+
+def _calculate_verified_carbon_score(nombre_arbres, couverture_ombragee, pratiques, area, existing_practices=None):
+    """
+    Recalculate carbon score using field-verified data.
+    Base score 3.0, max 10.0.
+    """
+    score = 3.0
+
+    # Tree density bonus (0-2 pts)
+    if nombre_arbres and area > 0:
+        density = nombre_arbres / area
+        if density >= 100:
+            score += 2.0
+        elif density >= 50:
+            score += 1.5
+        elif density >= 20:
+            score += 1.0
+        elif density >= 5:
+            score += 0.5
+
+    # Shade cover bonus (0-2 pts)
+    if couverture_ombragee is not None:
+        pct = float(couverture_ombragee)
+        if pct >= 60:
+            score += 2.0
+        elif pct >= 40:
+            score += 1.5
+        elif pct >= 20:
+            score += 1.0
+        elif pct >= 10:
+            score += 0.5
+
+    # Ecological practices bonus (0-2.5 pts, 0.5 each)
+    practice_scores = {
+        "compostage": 0.5,
+        "absence_pesticides": 0.5,
+        "gestion_dechets": 0.5,
+        "protection_cours_eau": 0.5,
+        "agroforesterie": 0.5,
+    }
+    all_practices = list(pratiques or []) + list(existing_practices or [])
+    seen = set()
+    for p in all_practices:
+        if p not in seen:
+            score += practice_scores.get(p, 0)
+            seen.add(p)
+
+    # Area bonus (0-0.5 pts)
+    if area >= 5:
+        score += 0.5
+
+    return round(min(score, 10.0), 1)

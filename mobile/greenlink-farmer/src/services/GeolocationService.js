@@ -10,7 +10,7 @@ import { Alert, Platform } from 'react-native';
 
 const LOCATION_TASK_NAME = 'greenlink-location-tracking';
 const LOCATION_STORAGE_KEY = 'pending_locations';
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://agri-platform-qa.preview.emergentagent.com';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://carbon-parcel-verify.preview.emergentagent.com';
 
 // Configuration du tracking
 const TRACKING_CONFIG = {

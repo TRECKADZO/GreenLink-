@@ -187,6 +187,9 @@ async def get_my_parcels(current_user: dict = Depends(get_current_user)):
         "statut_verification": p.get("verification_status", "pending"),
         "certification": p.get("certification"),
         "nom": p.get("name", ""),
+        "nombre_arbres": p.get("nombre_arbres", 0),
+        "couverture_ombragee": p.get("couverture_ombragee", 0),
+        "pratiques_ecologiques": p.get("pratiques_ecologiques", []),
         "cree_le": str(p.get("created_at", ""))
     } for p in parcels]
 
