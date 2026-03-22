@@ -643,7 +643,7 @@ async def checkout_cart(
 
         order = {
             "order_number": f"{order_number_base}-{idx+1}",
-            "buyer_id": current_user["_id"],
+            "buyer_id": str(current_user["_id"]),
             "buyer_name": current_user["full_name"],
             "buyer_email": current_user.get("email", ""),
             "buyer_phone": phone,
@@ -759,18 +759,32 @@ async def create_order(
     
     return order_dict
 
-@router.get("/orders/my-orders", response_model=List[Order])
+@router.get("/orders/my-orders")
 async def get_my_orders(
     current_user: dict = Depends(get_current_user)
 ):
-    query = {}
+    user_id = str(current_user["_id"])
     if current_user.get("user_type") == "fournisseur":
-        query["supplier_id"] = current_user["_id"]
+        query = {"supplier_id": {"$in": [user_id, current_user["_id"]]}}
     else:
-        query["customer_id"] = current_user["_id"]
+        query = {"$or": [
+            {"buyer_id": user_id},
+            {"buyer_id": current_user["_id"]},
+            {"customer_id": user_id},
+            {"customer_id": current_user["_id"]},
+        ]}
     
     orders = await db.orders.find(query).sort("created_at", -1).to_list(100)
-    return [{**o, "_id": str(o["_id"])} for o in orders]
+    result = []
+    for o in orders:
+        o["_id"] = str(o["_id"])
+        # Normalize: ensure buyer_id fields are present as strings
+        if "buyer_id" in o:
+            o["buyer_id"] = str(o["buyer_id"])
+        if "customer_id" in o:
+            o["customer_id"] = str(o["customer_id"])
+        result.append(o)
+    return result
 
 @router.get("/orders/{order_id}", response_model=Order)
 async def get_order(
