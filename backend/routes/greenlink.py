@@ -189,31 +189,59 @@ async def get_my_parcels(current_user: dict = Depends(get_current_user)):
         "cree_le": str(p.get("created_at", ""))
     } for p in parcels]
 
-@router.post("/harvests", response_model=Harvest)
+@router.post("/harvests")
 async def declare_harvest(
     harvest: HarvestCreate,
     current_user: dict = Depends(get_current_user)
 ):
     """Déclarer une récolte"""
+    # Map mobile field names to backend field names
+    quantity_kg = harvest.quantity_kg or harvest.quantity or 0
+    quality_grade = harvest.quality or harvest.quality_grade or "B"
+    # Clean quality grade (remove "Grade " prefix if present)
+    if quality_grade and quality_grade.startswith("Grade "):
+        quality_grade = quality_grade.replace("Grade ", "")
+    price_per_kg = harvest.price_per_kg or 0
+    sale_type = harvest.sale_type or "cooperative"
+    
+    # Convert units if necessary (sacs ~= 65kg, tonnes = 1000kg)
+    unit = harvest.unit or "kg"
+    if unit == "sacs":
+        quantity_kg = quantity_kg * 65
+    elif unit == "tonnes":
+        quantity_kg = quantity_kg * 1000
+    
     # Get parcel info
-    parcel = await db.parcels.find_one({"_id": ObjectId(harvest.parcel_id)})
+    try:
+        parcel = await db.parcels.find_one({"_id": ObjectId(harvest.parcel_id)})
+    except Exception:
+        parcel = None
     if not parcel:
         raise HTTPException(status_code=404, detail="Parcelle non trouvée")
     
-    harvest_dict = harvest.dict()
-    harvest_dict["farmer_id"] = current_user["_id"]
-    harvest_dict["harvest_date"] = datetime.utcnow()
-    harvest_dict["created_at"] = datetime.utcnow()
+    harvest_dict = {
+        "parcel_id": harvest.parcel_id,
+        "quantity_kg": quantity_kg,
+        "quality_grade": quality_grade,
+        "price_per_kg": price_per_kg,
+        "sale_type": sale_type,
+        "unit": unit,
+        "notes": harvest.notes or "",
+        "farmer_id": current_user["_id"],
+        "harvest_date": datetime.utcnow(),
+        "created_at": datetime.utcnow(),
+    }
     
     # Calculate carbon premium (10% bonus for high carbon score)
-    if parcel["carbon_score"] >= 7:
-        harvest_dict["carbon_premium"] = harvest.quantity_kg * harvest.price_per_kg * 0.10
+    carbon_score = parcel.get("carbon_score") or parcel.get("score_carbone") or 0
+    if carbon_score >= 7:
+        harvest_dict["carbon_premium"] = quantity_kg * price_per_kg * 0.10
     else:
         harvest_dict["carbon_premium"] = 0
     
-    harvest_dict["total_amount"] = (harvest.quantity_kg * harvest.price_per_kg) + harvest_dict["carbon_premium"]
+    harvest_dict["total_amount"] = (quantity_kg * price_per_kg) + harvest_dict["carbon_premium"]
     harvest_dict["payment_status"] = "pending"
-    harvest_dict["payment_method"] = "orange_money"  # Default
+    harvest_dict["payment_method"] = "orange_money"
     
     result = await db.harvests.insert_one(harvest_dict)
     harvest_dict["_id"] = str(result.inserted_id)
@@ -222,7 +250,7 @@ async def declare_harvest(
     await db.notifications.insert_one({
         "user_id": current_user["_id"],
         "title": "Récolte déclarée",
-        "message": f"Récolte de {harvest.quantity_kg} kg enregistrée. Prime carbone: {harvest_dict['carbon_premium']:,.0f} XOF",
+        "message": f"Récolte de {quantity_kg} kg enregistrée. Prime carbone: {harvest_dict['carbon_premium']:,.0f} XOF",
         "type": "harvest",
         "action_url": f"/farmer/harvests/{str(result.inserted_id)}",
         "created_at": datetime.utcnow(),
@@ -234,8 +262,8 @@ async def declare_harvest(
         push_result = await send_notification_to_user(
             db=db,
             user_id=current_user["_id"],
-            title="Récolte enregistrée 🌾",
-            body=f"{harvest.quantity_kg} kg déclarés. Prime carbone: {harvest_dict['carbon_premium']:,.0f} XOF",
+            title="Récolte enregistrée",
+            body=f"{quantity_kg} kg déclarés. Prime carbone: {harvest_dict['carbon_premium']:,.0f} XOF",
             data={
                 "type": "harvest_created",
                 "harvest_id": str(result.inserted_id),
@@ -255,14 +283,22 @@ async def declare_harvest(
         _asyncio.create_task(send_notification_email_async(db, "harvest_declared",
             coop_id=coop_id,
             farmer_name=current_user.get("full_name", "Producteur"),
-            quantity_kg=harvest.quantity_kg,
+            quantity_kg=quantity_kg,
             crop_type=parcel.get("crop_type", "cacao"),
             carbon_premium=harvest_dict.get("carbon_premium", 0)
         ))
     except Exception as e:
         logger.error(f"Harvest email notification failed: {e}")
     
-    return harvest_dict
+    # Clean response
+    harvest_dict.pop("_id", None)
+    harvest_dict["id"] = str(result.inserted_id)
+    
+    return {
+        "success": True,
+        "message": "Récolte déclarée avec succès",
+        "harvest": harvest_dict
+    }
 
 @router.post("/payments/request")
 async def request_payment(

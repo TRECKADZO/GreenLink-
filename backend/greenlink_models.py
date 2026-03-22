@@ -42,10 +42,16 @@ class Parcel(ParcelBase):
 
 class HarvestBase(BaseModel):
     parcel_id: str
-    quantity_kg: float
-    quality_grade: str  # A, B, C
-    price_per_kg: float
-    sale_type: str  # direct, cooperative, marketplace
+    quantity_kg: float = 0
+    quality_grade: str = "B"  # A, B, C
+    price_per_kg: float = 0
+    sale_type: str = "cooperative"  # direct, cooperative, marketplace
+    # Accept mobile field names too
+    quantity: Optional[float] = None
+    unit: Optional[str] = None
+    quality: Optional[str] = None
+    notes: Optional[str] = None
+    harvest_date: Optional[str] = None
     
 class HarvestCreate(HarvestBase):
     pass
