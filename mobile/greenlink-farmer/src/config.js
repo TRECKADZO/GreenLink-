@@ -7,9 +7,9 @@ export const CONFIG = {
     || 'https://agri-platform-qa.preview.emergentagent.com',
   
   // Timeouts adaptés à la faible connectivité
-  REQUEST_TIMEOUT: 30000, // 30 secondes
-  RETRY_ATTEMPTS: 3,
-  RETRY_DELAY: 2000, // 2 secondes entre les tentatives
+  REQUEST_TIMEOUT: 45000, // 45 secondes
+  RETRY_ATTEMPTS: 4,
+  RETRY_DELAY: 1500, // 1.5 secondes (progressif: 1.5s, 3s, 4.5s, 6s)
   
   // Cache local
   CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 heures

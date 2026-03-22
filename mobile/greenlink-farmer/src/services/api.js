@@ -32,18 +32,20 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const config = error.config;
     
-    // Ensure error.response.data is always an object (handle HTML responses from proxy)
+    // Detect non-JSON (HTML) response from proxy/Cloudflare
+    let isNonJsonResponse = false;
     if (error.response && typeof error.response.data === 'string') {
+      isNonJsonResponse = true;
       const statusCode = error.response.status;
-      console.warn(`[API] Received non-JSON response (${statusCode}):`, error.response.data?.substring(0, 200));
+      console.warn(`[API] Non-JSON response (${statusCode}):`, error.response.data?.substring(0, 100));
       error.response.data = {
         detail: statusCode === 502 ? 'Serveur temporairement indisponible. Réessayez.' :
                 statusCode === 503 ? 'Service en maintenance. Réessayez dans quelques instants.' :
                 statusCode === 504 ? 'Le serveur ne répond pas. Vérifiez votre connexion.' :
                 statusCode === 429 ? 'Trop de requêtes. Patientez une minute.' :
-                statusCode === 404 ? 'Service temporairement inaccessible. Vérifiez votre connexion internet et réessayez.' :
-                statusCode === 403 ? 'Accès temporairement bloqué. Réessayez dans quelques secondes.' :
-                `Erreur serveur (${statusCode}). Vérifiez votre connexion internet.`
+                statusCode === 404 ? 'Service temporairement inaccessible. Réessayez.' :
+                statusCode === 403 ? 'Accès temporairement bloqué. Réessayez.' :
+                `Erreur serveur (${statusCode}).`
       };
     }
     
@@ -51,6 +53,13 @@ axiosInstance.interceptors.response.use(
     if (!error.response && error.message) {
       const msg = error.message.toLowerCase();
       if (msg.includes('network') || msg.includes('timeout') || msg.includes('abort')) {
+        // Network errors should also be retried
+        if (!config._retry || config._retry < CONFIG.RETRY_ATTEMPTS) {
+          config._retry = (config._retry || 0) + 1;
+          console.log(`[API] Network retry ${config._retry}/${CONFIG.RETRY_ATTEMPTS} for ${config.url}`);
+          await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
+          return axiosInstance(config);
+        }
         error.response = {
           status: 0,
           data: { detail: 'Pas de connexion internet. Vérifiez votre réseau et réessayez.' }
@@ -59,20 +68,23 @@ axiosInstance.interceptors.response.use(
       }
     }
     
-    // Retry logic: retry on 5xx AND on non-JSON 404/403 (proxy/Cloudflare issues)
-    const isProxyError = error.response && [404, 403].includes(error.response.status) && 
-                         typeof error.config?._originalData !== 'undefined';
-    if (config._retry >= CONFIG.RETRY_ATTEMPTS || 
-        (error.response && error.response.status < 500 && !isProxyError)) {
+    // Determine if we should retry
+    const maxRetries = CONFIG.RETRY_ATTEMPTS;
+    const currentRetry = config._retry || 0;
+    const status = error.response?.status;
+    
+    // Retry on: 5xx errors, OR non-JSON 404/403 (proxy/Cloudflare issues)
+    const shouldRetry = status >= 500 || (isNonJsonResponse && [404, 403].includes(status));
+    
+    if (currentRetry >= maxRetries || !shouldRetry) {
       return Promise.reject(error);
     }
     
-    config._retry = (config._retry || 0) + 1;
-    console.log(`[API] Retry ${config._retry}/${CONFIG.RETRY_ATTEMPTS} for ${config.url}`);
+    config._retry = currentRetry + 1;
+    const delay = CONFIG.RETRY_DELAY * config._retry; // Progressive delay
+    console.log(`[API] Retry ${config._retry}/${maxRetries} for ${config.url} (delay ${delay}ms)`);
     
-    // Attendre avant de retry
-    await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
-    
+    await new Promise(resolve => setTimeout(resolve, delay));
     return axiosInstance(config);
   }
 );
