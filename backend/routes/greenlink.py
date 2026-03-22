@@ -836,7 +836,7 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
             "total_credits": 0,
             "total_premium": 0,
             "parcels_count": 0,
-            "breakdown": {"arbres": 0, "ombrage": 0, "pratiques": 0, "surface": 0},
+            "breakdown": {"base": 3.0, "arbres": 0, "ombrage": 0, "pratiques": 0, "surface": 0, "max_possible": 10.0},
             "recommendations": [],
             "parcels": []
         }

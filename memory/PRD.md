@@ -18,62 +18,54 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 
 ### Phase 7 - Corrections Connexion & Parcelles (DONE - 21/03/2026)
 - Rate limiter JSON, messages d'erreur specifiques, normalisation telephone
-- Mapping cles francaises (nombre_parcelles, superficie_totale) dans mobile
-- Liaison auto parcelles lors inscription/activation membre
-- Reset mot de passe fonctionne avec telephone (tous formats)
+- Mapping cles francaises dans mobile, liaison auto parcelles, reset mot de passe
 
 ### Phase 8 - Recoltes & Validation Cooperative (DONE - 21/03/2026)
-**Flux complet:**
-1. Agriculteur declare une recolte -> auto-liee a sa cooperative via coop_member
-2. Cooperative recoit une notification "Nouvelle recolte a valider"
-3. Cooperative valide ou rejette -> notification envoyee a l'agriculteur
-4. Statuts: en_attente -> validee / rejetee
+- Flux complet: declaration -> notification coop -> validation/rejet -> notification agriculteur
 
 ### Phase 9 - Conversion Unites & Emails Recoltes (DONE - 22/03/2026)
 - Conversion unites correcte: tonnes->kg (x1000), sacs->kg (x65)
-- Notifications affichent quantite originale + conversion: "2 tonne(s) (2000 kg)"
-- Email Resend envoye a la cooperative lors de chaque declaration de recolte
+- Email Resend envoye a la cooperative lors de chaque declaration
 
 ### Phase 10 - Ecran Suivi Recoltes & Dashboard Coop (DONE - 22/03/2026)
-**Backend:**
-- GET /api/greenlink/harvests/my-harvests (filtres par statut, stats globales)
-
-**Mobile Agriculteur:**
-- MyHarvestsScreen: liste recoltes avec filtres, stats, quantity_display
-- Menu HomeScreen mis a jour avec "Mes Recoltes" en position 2
-
-**Mobile Cooperative:**
-- Redirection automatique des utilisateurs cooperative vers CoopDashboard
-- Section "Recoltes en attente" avec bandeau d'alerte + compteur
-- Apercu des 3 dernieres declarations dans le dashboard
-- Lien direct vers CoopHarvests pour valider/rejeter
+- GET /api/greenlink/harvests/my-harvests, MyHarvestsScreen, CoopDashboard recoltes en attente
 
 ### Phase 11 - Prime Carbone dans Verification Terrain (DONE - 22/03/2026)
 **Backend:**
-- PUT /api/field-agent/parcels/{parcel_id}/verify enrichi avec: nombre_arbres, couverture_ombragee, pratiques_ecologiques
-- Recalcul du score carbone base sur donnees terrain: base 3.0, densite arbres (0-2pts), couverture ombragee (0-2pts), pratiques ecologiques (0-2.5pts, 0.5 chacune), bonus surface (0.5pt), max 10.0
-- GET /api/greenlink/parcels/my-parcels retourne nombre_arbres, couverture_ombragee, pratiques_ecologiques
+- PUT /api/field-agent/parcels/{id}/verify enrichi: nombre_arbres, couverture_ombragee, pratiques_ecologiques
+- Recalcul score carbone: base 3.0, densite arbres (0-2pts), ombrage (0-2pts), pratiques (0-2.5pts), surface (0.5pt), max 10.0
+- GET /api/greenlink/parcels/my-parcels retourne champs carbone enrichis
 
 **Mobile Agent Terrain:**
-- ParcelVerifyFormScreen enrichi avec section "Indicateurs prime carbone":
-  - Decomptage des arbres (input numerique)
-  - Couverture ombragee (% avec barre visuelle)
-  - Checklist pratiques ecologiques: compostage, absence pesticides chimiques, gestion dechets, protection cours d'eau, agroforesterie
-- Pas de mention "Nouveau" (demande explicite utilisateur)
+- ParcelVerifyFormScreen enrichi avec section "Indicateurs prime carbone"
+- Decomptage arbres, couverture ombragee (%), checklist 5 pratiques ecologiques
+
+### Phase 12 - Dashboard Score Carbone Visuel (DONE - 22/03/2026)
+**Backend:**
+- GET /api/greenlink/carbon/my-score enrichi avec:
+  - Decomposition du score (base, arbres, ombrage, pratiques, surface)
+  - Recommandations personnalisees triees par gain potentiel
+  - Stats agregees (total_trees, avg_shade_cover, practices_count/list)
+  - Scores par parcelle avec detail carbone
+
+**Mobile Agriculteur:**
+- HomeScreen: carte score carbone interactive avec jauge mini + barre de progression + lien vers detail
+- MyCarbonScoreScreen revampe:
+  - Jauge animee avec score et label de qualite
+  - Stats rapides (tCO2, primes XOF, parcelles)
+  - Barres de progression par composante (base, arbres, ombrage, pratiques, surface)
+  - Chips des pratiques actives
+  - Recommandations personnalisees avec gain potentiel
+  - Scores par parcelle avec indicateurs visuels
 
 ## Builds
-- v1.39.2-v1.39.9: Corrections diverses
-- v1.40.0: Declaration recolte corrigee
-- v1.40.1: Flux recoltes + validation cooperative
-- v1.40.2: Fix conversion unites
-- v1.40.3: Ecran Mes Recoltes + Dashboard coop ameliore
-- v1.41.0: Corrections crash React hooks + API retry Cloudflare + renommage GreenLink Agritech
+- v1.39-v1.40: Corrections diverses et features
+- v1.41.0: Corrections crash React hooks + API retry + renommage GreenLink Agritech
 
 ## Credentials
-- Cooperative: coop-gagnoa@greenlink.ci
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Agent terrain test: test_agent@greenlink.ci / agent2024
-- Producteur test: +2250709090909 / koffi2024
+- Producteur test: +2250705551234 / koffi2024
 
 ## APIs Mockees
 - Orange SMS, Orange Money
@@ -87,14 +79,11 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 
 ## Key API Endpoints
 - POST /api/auth/login | register | forgot-password | verify-reset-code | reset-password
+- GET /api/greenlink/carbon/my-score (enrichi avec breakdown + recommandations)
 - GET /api/greenlink/harvests/my-harvests
 - POST /api/greenlink/harvests
 - GET /api/greenlink/parcels/my-parcels
 - GET /api/greenlink/farmer/dashboard
-- GET /api/cooperative/dashboard
-- GET /api/cooperative/harvests
+- PUT /api/field-agent/parcels/{id}/verify (enrichi prime carbone)
+- GET /api/cooperative/dashboard | harvests | members
 - PUT /api/cooperative/harvests/{id}/validate | reject
-- GET /api/cooperative/members
-- PUT /api/field-agent/parcels/{parcel_id}/verify (enrichi prime carbone)
-- GET/PUT /api/marketplace/supplier/delivery-settings
-- POST /api/marketplace/cart/checkout
