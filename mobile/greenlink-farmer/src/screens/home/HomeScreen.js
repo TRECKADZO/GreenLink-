@@ -27,12 +27,17 @@ const HomeScreen = ({ navigation }) => {
       navigation.replace('FieldAgentDashboard');
       return;
     }
+    // Rediriger les coopératives vers leur dashboard dédié
+    if (user?.user_type === 'cooperative') {
+      navigation.replace('CoopDashboard');
+      return;
+    }
   }, []);
 
   // Rafraîchir automatiquement quand l'écran revient au focus
   useFocusEffect(
     useCallback(() => {
-      if (user?.user_type !== 'field_agent' && user?.user_type !== 'agent_terrain') {
+      if (user?.user_type !== 'field_agent' && user?.user_type !== 'agent_terrain' && user?.user_type !== 'cooperative') {
         loadDashboard();
       }
     }, [])

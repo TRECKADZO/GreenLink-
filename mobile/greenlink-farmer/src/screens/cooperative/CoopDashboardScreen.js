@@ -40,13 +40,18 @@ export default function CoopDashboardScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dashboard, setDashboard] = useState(null);
+  const [harvestStats, setHarvestStats] = useState(null);
   const [error, setError] = useState(null);
 
   const fetchDashboard = useCallback(async () => {
     try {
       setError(null);
-      const data = await cooperativeApi.getDashboard();
-      setDashboard(data);
+      const [dashData, harvestData] = await Promise.all([
+        cooperativeApi.getDashboard(),
+        cooperativeApi.getHarvests('en_attente').catch(() => ({ total: 0, harvests: [], stats: {} })),
+      ]);
+      setDashboard(dashData);
+      setHarvestStats(harvestData);
     } catch (err) {
       console.error('Error fetching dashboard:', err);
       setError('Impossible de charger les données');
@@ -140,6 +145,51 @@ export default function CoopDashboardScreen({ navigation }) {
             color="#00BCD4"
           />
         </View>
+
+        {/* Pending Harvests Alert */}
+        {(harvestStats?.total || 0) > 0 && (
+          <TouchableOpacity
+            style={styles.harvestAlert}
+            onPress={() => navigation.navigate('CoopHarvests')}
+            data-testid="pending-harvests-alert"
+          >
+            <View style={styles.harvestAlertLeft}>
+              <View style={styles.harvestAlertBadge}>
+                <Text style={styles.harvestAlertCount}>{harvestStats?.total || 0}</Text>
+              </View>
+              <View style={{ marginLeft: 12, flex: 1 }}>
+                <Text style={styles.harvestAlertTitle}>Recoltes en attente</Text>
+                <Text style={styles.harvestAlertSubtitle}>
+                  {harvestStats?.stats?.total_kg_attente ? `${Math.round(harvestStats.stats.total_kg_attente).toLocaleString()} kg a valider` : 'A valider par votre cooperative'}
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#d97706" />
+          </TouchableOpacity>
+        )}
+
+        {/* Recent Pending Harvests Preview */}
+        {harvestStats?.harvests?.length > 0 && (
+          <View style={styles.pendingHarvestsCard}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={styles.sectionTitle}>Dernieres declarations</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('CoopHarvests')}>
+                <Text style={{ fontSize: 13, color: COLORS.primary, fontWeight: '500' }}>Voir tout</Text>
+              </TouchableOpacity>
+            </View>
+            {harvestStats.harvests.slice(0, 3).map((h, i) => (
+              <View key={h.id || i} style={styles.pendingHarvestItem}>
+                <View style={styles.pendingHarvestInfo}>
+                  <Text style={styles.pendingHarvestName}>{h.farmer_name || 'Producteur'}</Text>
+                  <Text style={styles.pendingHarvestQty}>{h.quantity_display || `${h.quantity_kg} kg`}</Text>
+                </View>
+                <View style={styles.pendingHarvestBadge}>
+                  <Text style={styles.pendingHarvestGrade}>Grade {h.quality_grade || '-'}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Carbon Score */}
         <View style={styles.carbonScoreCard}>
@@ -527,6 +577,90 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 80,
+  },
+  harvestAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fffbeb',
+    marginHorizontal: 8,
+    marginBottom: 8,
+    padding: 14,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#d97706',
+  },
+  harvestAlertLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  harvestAlertBadge: {
+    backgroundColor: '#d97706',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  harvestAlertCount: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  harvestAlertTitle: {
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#92400e',
+  },
+  harvestAlertSubtitle: {
+    fontSize: 12,
+    color: '#b45309',
+    marginTop: 2,
+  },
+  pendingHarvestsCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 8,
+    marginBottom: 8,
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  pendingHarvestItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  pendingHarvestInfo: {
+    flex: 1,
+  },
+  pendingHarvestName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  pendingHarvestQty: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  pendingHarvestBadge: {
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  pendingHarvestGrade: {
+    fontSize: 11,
+    color: '#16a34a',
+    fontWeight: '600',
   },
   bottomNav: {
     position: 'absolute',

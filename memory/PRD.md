@@ -33,28 +33,27 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Conversion unites correcte: tonnes->kg (x1000), sacs->kg (x65)
 - Notifications affichent quantite originale + conversion: "2 tonne(s) (2000 kg)"
 - Email Resend envoye a la cooperative lors de chaque declaration de recolte
-- Template email mis a jour avec quantite originale et unite
-- Champs original_quantity et quantity_display ajoutes aux reponses API
 
-### Phase 10 - Ecran Suivi Recoltes Agriculteur (DONE - 22/03/2026)
+### Phase 10 - Ecran Suivi Recoltes & Dashboard Coop (DONE - 22/03/2026)
 **Backend:**
-- GET /api/greenlink/harvests/my-harvests (filtres par statut, stats resumees)
-- Retourne: harvests[], stats{total, en_attente, validees, rejetees, total_kg}
+- GET /api/greenlink/harvests/my-harvests (filtres par statut, stats globales)
 
-**Mobile:**
-- MyHarvestsScreen: liste de toutes les recoltes declarees avec statuts
-- Filtres: Toutes / En attente / Validees / Rejetees
-- Stats resumees en haut (compteurs + total kg)
-- Bouton "+" pour declarer une nouvelle recolte
-- Affichage: quantity_display, qualite, cooperative, montant, prime carbone
-- Motif de rejet affiche si applicable
+**Mobile Agriculteur:**
+- MyHarvestsScreen: liste recoltes avec filtres, stats, quantity_display
 - Menu HomeScreen mis a jour avec "Mes Recoltes" en position 2
 
+**Mobile Cooperative:**
+- Redirection automatique des utilisateurs cooperative vers CoopDashboard
+- Section "Recoltes en attente" avec bandeau d'alerte + compteur
+- Apercu des 3 dernieres declarations dans le dashboard
+- Lien direct vers CoopHarvests pour valider/rejeter
+
 ## Builds
-- v1.39.2-v1.39.9: Corrections diverses (images, connexion, parcelles, selection)
-- v1.40.0: Declaration recolte corrigee (mapping champs backend)
-- v1.40.1: Flux complet recoltes + validation cooperative + ecran CoopHarvests
-- v1.40.2: Fix conversion unites + ecran Mes Recoltes (build en cours)
+- v1.39.2-v1.39.9: Corrections diverses
+- v1.40.0: Declaration recolte corrigee
+- v1.40.1: Flux recoltes + validation cooperative
+- v1.40.2: Fix conversion unites (build en cours)
+- v1.40.3: Ecran Mes Recoltes + Dashboard coop ameliore (build en cours)
 
 ## Credentials
 - Cooperative: bielaghana@gmail.com / greenlink2024
@@ -69,24 +68,17 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
 - P2: Stockage cloud AWS S3
-- P3: Refactoring greenlink.py (1000+ lignes) en fichiers dedies (parcels.py, harvests.py)
+- P3: Refactoring greenlink.py en fichiers dedies
 
 ## Key API Endpoints
 - POST /api/auth/login | register | forgot-password | verify-reset-code | reset-password
-- GET /api/health
-- GET/PUT /api/marketplace/supplier/delivery-settings
-- GET /api/marketplace/delivery-fees | cart | products
-- POST /api/marketplace/cart/checkout
-- POST /api/greenlink/harvests
 - GET /api/greenlink/harvests/my-harvests
+- POST /api/greenlink/harvests
 - GET /api/greenlink/parcels/my-parcels
 - GET /api/greenlink/farmer/dashboard
-- GET /api/cooperative/harvests | harvests/summary
+- GET /api/cooperative/dashboard
+- GET /api/cooperative/harvests
 - PUT /api/cooperative/harvests/{id}/validate | reject
 - GET /api/cooperative/members
-
-## DB Collections
-- `harvests`: {parcel_id, farmer_id, farmer_name, member_id, coop_id, coop_name, quantity_kg, original_quantity, unit, quantity_display, quality_grade, statut, ...}
-- `delivery_settings`: {supplier_id, modeles_livraison, seuil_gratuit}
-- `parcels`: {superficie, nom_producteur, localisation, farmer_id, member_id, coop_id}
-- `coop_members`: {full_name, phone_number, user_id, coop_id, parcels_count}
+- GET/PUT /api/marketplace/supplier/delivery-settings
+- POST /api/marketplace/cart/checkout
