@@ -71,6 +71,7 @@ const ProductDetailScreen = safeRequire(() => require('./screens/marketplace/Pro
 const CartScreen = safeRequire(() => require('./screens/marketplace/CartScreen'), 'CartScreen');
 const CheckoutScreen = safeRequire(() => require('./screens/marketplace/CheckoutScreen'), 'CheckoutScreen');
 const OrdersScreen = safeRequire(() => require('./screens/marketplace/OrdersScreen'), 'OrdersScreen');
+const OrderDetailScreen = safeRequire(() => require('./screens/marketplace/OrderDetailScreen'), 'OrderDetailScreen');
 const WishlistScreen = safeRequire(() => require('./screens/marketplace/WishlistScreen'), 'WishlistScreen');
 
 // Carbon
@@ -166,6 +167,7 @@ function AppNavigator() {
       <Stack.Screen name="Cart" component={CartScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="Orders" component={OrdersScreen} />
+      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
       
       <Stack.Screen name="CarbonMarketplace" component={CarbonMarketplaceScreen} />
