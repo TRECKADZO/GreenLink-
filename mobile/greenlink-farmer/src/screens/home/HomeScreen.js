@@ -41,9 +41,9 @@ const HomeScreen = ({ navigation }) => {
   // Bloquer le rendu pendant la redirection
   if (redirecting || user?.user_type === 'cooperative' || user?.user_type === 'field_agent' || user?.user_type === 'agent_terrain') {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8f9fa' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8f9fa' }}>
         <ActivityIndicator size="large" color="#059669" />
-      </SafeAreaView>
+      </View>
     );
   }
 
