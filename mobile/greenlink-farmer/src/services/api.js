@@ -43,7 +43,7 @@ axiosInstance.interceptors.response.use(
                 statusCode === 503 ? 'Service en maintenance. Réessayez dans quelques instants.' :
                 statusCode === 504 ? 'Le serveur ne répond pas. Vérifiez votre connexion.' :
                 statusCode === 429 ? 'Trop de requêtes. Patientez une minute.' :
-                statusCode === 404 ? 'Service temporairement inaccessible. Réessayez.' :
+                statusCode === 404 ? 'Connexion au serveur en cours. Réessayez dans quelques secondes.' :
                 statusCode === 403 ? 'Accès temporairement bloqué. Réessayez.' :
                 `Erreur serveur (${statusCode}).`
       };
