@@ -54,7 +54,7 @@ export default function CoopDashboardScreen({ navigation }) {
       setHarvestStats(harvestData);
     } catch (err) {
       console.error('Error fetching dashboard:', err);
-      setError('Impossible de charger les données');
+      setError('Impossible de charger les donnees. Tirez vers le bas pour reessayer.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -63,6 +63,14 @@ export default function CoopDashboardScreen({ navigation }) {
 
   useEffect(() => {
     fetchDashboard();
+    // Safety timeout - stop loading after 20s even if API doesn't respond
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      if (!dashboard) {
+        setError('Le serveur met trop de temps a repondre. Tirez vers le bas pour reessayer.');
+      }
+    }, 20000);
+    return () => clearTimeout(timeout);
   }, [fetchDashboard]);
 
   const onRefresh = useCallback(() => {

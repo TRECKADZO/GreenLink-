@@ -27,16 +27,16 @@ const HomeScreen = ({ navigation }) => {
     // Rediriger les agents terrain vers leur dashboard dédié
     if (user?.user_type === 'field_agent' || user?.user_type === 'agent_terrain') {
       setRedirecting(true);
-      navigation.replace('FieldAgentDashboard');
+      setTimeout(() => navigation.replace('FieldAgentDashboard'), 100);
       return;
     }
     // Rediriger les coopératives vers leur dashboard dédié
     if (user?.user_type === 'cooperative') {
       setRedirecting(true);
-      navigation.replace('CoopDashboard');
+      setTimeout(() => navigation.replace('CoopDashboard'), 100);
       return;
     }
-  }, []);
+  }, [user]);
 
   const loadDashboard = async () => {
     try {
