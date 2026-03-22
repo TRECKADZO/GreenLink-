@@ -50,6 +50,7 @@ const QUICK_ACTIONS = {
     { name: 'MyCarbonScore', icon: 'analytics', label: 'Score Carbone', color: '#f59e0b' },
     { name: 'CarbonPayments', icon: 'cash', label: 'Mes Revenus Carbone', color: '#06b6d4' },
     { name: 'Marketplace', icon: 'cart', label: 'Marketplace', color: '#64748b' },
+    { name: 'USSDCarbon', icon: 'call', label: '*144*88# Prime', color: '#f97316' },
     { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
   ],
   field_agent: [],

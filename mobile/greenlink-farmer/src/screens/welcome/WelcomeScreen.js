@@ -182,6 +182,16 @@ const WelcomeScreen = ({ navigation }) => {
           </View>
 
 
+          {/* USSD Access Banner */}
+          <View style={styles.ussdBanner}>
+            <Text style={styles.ussdIcon}>📱</Text>
+            <View style={styles.ussdContent}>
+              <Text style={styles.ussdTitle}>Accès sans internet</Text>
+              <Text style={styles.ussdCode}>*144*88#</Text>
+              <Text style={styles.ussdSubtitle}>Disponible en français</Text>
+            </View>
+          </View>
+
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>
