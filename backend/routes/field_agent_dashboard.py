@@ -741,6 +741,13 @@ async def verify_parcel_by_agent(
         update_data["nombre_arbres"] = int(nombre_arbres)
 
     couverture_ombragee = data.get("couverture_ombragee")
+    # Auto-calculate shade cover if not provided but tree count is available
+    if couverture_ombragee is None and nombre_arbres is not None:
+        area_for_calc = float(corrected) if corrected else parcel.get("area_hectares", 0)
+        if area_for_calc > 0:
+            CANOPY_M2 = 80  # average shade tree canopy ~80m²
+            couverture_ombragee = min((int(nombre_arbres) * CANOPY_M2) / (area_for_calc * 10000) * 100, 100)
+            couverture_ombragee = round(couverture_ombragee, 1)
     if couverture_ombragee is not None:
         update_data["couverture_ombragee"] = float(couverture_ombragee)
 

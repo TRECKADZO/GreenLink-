@@ -42,8 +42,16 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
 
   // Carbon premium fields
   const [treeCount, setTreeCount] = useState('');
-  const [shadeCover, setShadeCover] = useState('');
+  const [shadeOverride, setShadeOverride] = useState('');
   const [selectedPractices, setSelectedPractices] = useState([]);
+
+  // Auto-calculate shade cover from tree count and parcel area
+  const CANOPY_M2_PER_TREE = 80; // average shade tree canopy ~80m²
+  const parcelArea = correctedArea ? parseFloat(correctedArea) : (parcel?.superficie || 0);
+  const autoShadeCover = (treeCount && parcelArea > 0)
+    ? Math.min(((parseInt(treeCount) * CANOPY_M2_PER_TREE) / (parcelArea * 10000)) * 100, 100)
+    : 0;
+  const effectiveShadeCover = shadeOverride !== '' ? parseFloat(shadeOverride) : autoShadeCover;
 
   useEffect(() => {
     getLocation();
@@ -121,7 +129,7 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
         verification_notes: notes.trim(),
         verification_photos: photos,
         nombre_arbres: treeCount ? parseInt(treeCount) : null,
-        couverture_ombragee: shadeCover ? parseFloat(shadeCover) : null,
+        couverture_ombragee: effectiveShadeCover > 0 ? Math.round(effectiveShadeCover * 10) / 10 : null,
         pratiques_ecologiques: selectedPractices,
       };
       if (gps) {
@@ -281,34 +289,71 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
             <TextInput
               style={styles.input}
               value={treeCount}
-              onChangeText={setTreeCount}
+              onChangeText={(val) => {
+                setTreeCount(val);
+                setShadeOverride('');
+              }}
               placeholder="Nombre d'arbres observes sur la parcelle"
               keyboardType="number-pad"
               placeholderTextColor="#94a3b8"
               testID="tree-count-input"
             />
+            {treeCount !== '' && parcelArea > 0 && (
+              <Text style={styles.densityHint}>
+                Densite: {Math.round(parseInt(treeCount || 0) / parcelArea)} arbres/ha
+              </Text>
+            )}
           </View>
 
-          {/* Shade Cover */}
+          {/* Shade Cover - Auto-calculated */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Couverture ombragee (%)</Text>
-            <TextInput
-              style={styles.input}
-              value={shadeCover}
-              onChangeText={(val) => {
-                const num = parseFloat(val);
-                if (val === '' || (!isNaN(num) && num >= 0 && num <= 100)) {
-                  setShadeCover(val);
-                }
-              }}
-              placeholder="Estimation du pourcentage de couvert ombrage"
-              keyboardType="decimal-pad"
-              placeholderTextColor="#94a3b8"
-              testID="shade-cover-input"
-            />
-            {shadeCover !== '' && (
-              <View style={styles.shadeIndicator}>
-                <View style={[styles.shadeBar, { width: `${Math.min(parseFloat(shadeCover) || 0, 100)}%` }]} />
+            <Text style={styles.label}>Couverture ombragee</Text>
+            {treeCount !== '' && parcelArea > 0 ? (
+              <View>
+                <View style={styles.shadeAutoCard}>
+                  <View style={styles.shadeAutoRow}>
+                    <Ionicons name="calculator" size={16} color="#059669" />
+                    <Text style={styles.shadeAutoLabel}>Calcul automatique</Text>
+                  </View>
+                  <Text style={styles.shadeAutoValue}>
+                    {autoShadeCover.toFixed(1)}%
+                  </Text>
+                  <Text style={styles.shadeAutoFormula}>
+                    {treeCount} arbres x 80m² canopee / {parcelArea} ha
+                  </Text>
+                  <View style={styles.shadeIndicator}>
+                    <View style={[styles.shadeBar, { width: `${Math.min(autoShadeCover, 100)}%` }]} />
+                  </View>
+                </View>
+                <View style={styles.shadeOverrideRow}>
+                  <Text style={styles.shadeOverrideLabel}>Ajuster manuellement :</Text>
+                  <TextInput
+                    style={styles.shadeOverrideInput}
+                    value={shadeOverride}
+                    onChangeText={(val) => {
+                      const num = parseFloat(val);
+                      if (val === '' || (!isNaN(num) && num >= 0 && num <= 100)) {
+                        setShadeOverride(val);
+                      }
+                    }}
+                    placeholder={`${autoShadeCover.toFixed(1)}%`}
+                    keyboardType="decimal-pad"
+                    placeholderTextColor="#94a3b8"
+                    testID="shade-override-input"
+                  />
+                </View>
+                {shadeOverride !== '' && (
+                  <Text style={styles.shadeOverrideNote}>
+                    Valeur ajustee: {parseFloat(shadeOverride).toFixed(1)}% (auto: {autoShadeCover.toFixed(1)}%)
+                  </Text>
+                )}
+              </View>
+            ) : (
+              <View style={styles.shadeEmptyCard}>
+                <Ionicons name="information-circle-outline" size={16} color="#94a3b8" />
+                <Text style={styles.shadeEmptyText}>
+                  Saisissez le nombre d'arbres pour calculer automatiquement la couverture ombragee
+                </Text>
               </View>
             )}
           </View>
@@ -444,6 +489,18 @@ const styles = StyleSheet.create({
   carbonSectionTitle: { fontSize: 14, fontWeight: '700', color: '#059669' },
   shadeIndicator: { height: 6, backgroundColor: '#e2e8f0', borderRadius: 3, marginTop: 8, overflow: 'hidden' },
   shadeBar: { height: '100%', backgroundColor: '#059669', borderRadius: 3 },
+  densityHint: { fontSize: 11, color: '#059669', fontWeight: '600', marginTop: 4 },
+  shadeAutoCard: { backgroundColor: '#f0fdf4', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#d1fae5' },
+  shadeAutoRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  shadeAutoLabel: { fontSize: 11, color: '#059669', fontWeight: '600' },
+  shadeAutoValue: { fontSize: 28, fontWeight: '800', color: '#059669', marginBottom: 2 },
+  shadeAutoFormula: { fontSize: 10, color: '#64748b', marginBottom: 8 },
+  shadeOverrideRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 8 },
+  shadeOverrideLabel: { fontSize: 11, color: '#64748b' },
+  shadeOverrideInput: { flex: 1, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 8, fontSize: 14, color: '#1e293b', backgroundColor: '#fff', textAlign: 'center' },
+  shadeOverrideNote: { fontSize: 10, color: '#f59e0b', fontWeight: '500', marginTop: 4 },
+  shadeEmptyCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f8fafc', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+  shadeEmptyText: { flex: 1, fontSize: 12, color: '#94a3b8' },
   practicesList: { gap: 8 },
   practiceItem: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#fff' },
   practiceItemActive: { borderColor: '#059669', backgroundColor: '#ecfdf5' },
