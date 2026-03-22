@@ -66,6 +66,24 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  // ============= AGENTS TERRAIN =============
+
+  getAgents: async () => {
+    const response = await api.get('/cooperative/agents');
+    return response.data;
+  },
+
+  getAssignedFarmers: async (agentId) => {
+    const response = await api.get(`/cooperative/agents/${agentId}/assigned-farmers`);
+    return response.data;
+  },
+
+  assignFarmersToAgent: async (agentId, farmerIds) => {
+    const response = await api.post(`/cooperative/agents/${agentId}/assign-farmers`, { farmer_ids: farmerIds });
+    return response.data;
+  },
+
+
   getParcelDetails: async (token, parcelId) => {
     const response = await api.get(`/cooperative/parcels/${parcelId}/details`);
     return response;

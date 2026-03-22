@@ -58,6 +58,7 @@ const QUICK_ACTIONS = {
     { name: 'CoopHarvests', icon: 'checkmark-done-circle', label: 'Valider Récoltes', color: '#059669' },
     { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#10b981' },
     { name: 'AgentActivation', icon: 'body', label: 'Nouvel Agent Terrain', color: '#0ea5e9' },
+    { name: 'AgentList', icon: 'swap-horizontal', label: 'Attribuer Planteurs', color: '#7c3aed' },
     { name: 'CoopMembers', icon: 'people', label: 'Mes Membres', color: '#3b82f6' },
     { name: 'CoopReports', icon: 'bar-chart', label: 'Rapports', color: '#8b5cf6' },
     { name: 'CoopMembers', icon: 'clipboard', label: 'Visite SSRTE', color: '#f59e0b', params: { selectMode: 'ssrte' } },
