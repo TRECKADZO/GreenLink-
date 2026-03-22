@@ -32,12 +32,24 @@ async def get_cooperative_harvests(
     # Enrichir avec les infos
     result = []
     for h in harvests:
+        # Build display string
+        h_unit = h.get("unit", "kg")
+        h_qty = h.get("quantity_kg", 0)
+        if h_unit == "tonnes":
+            h_display = f"{int(h_qty / 1000)} tonne(s) ({int(h_qty)} kg)"
+        elif h_unit == "sacs":
+            h_display = f"{int(h_qty / 65)} sac(s) ({int(h_qty)} kg)"
+        else:
+            h_display = f"{int(h_qty)} kg"
+        
         result.append({
             "id": str(h["_id"]),
             "farmer_id": h.get("farmer_id", ""),
             "farmer_name": h.get("farmer_name", ""),
             "parcel_id": h.get("parcel_id", ""),
             "quantity_kg": h.get("quantity_kg", 0),
+            "original_quantity": h.get("original_quantity", h.get("quantity_kg", 0)),
+            "quantity_display": h.get("quantity_display", h_display),
             "quality_grade": h.get("quality_grade", ""),
             "unit": h.get("unit", "kg"),
             "notes": h.get("notes", ""),
@@ -113,11 +125,21 @@ async def validate_harvest(
         }}
     )
     
+    # Build display string for notifications
+    unit = harvest.get("unit", "kg")
+    stored_qty = harvest.get('quantity_kg', 0)
+    if unit == "tonnes":
+        qty_display = f"{int(stored_qty / 1000)} tonne(s) ({int(stored_qty)} kg)"
+    elif unit == "sacs":
+        qty_display = f"{int(stored_qty / 65)} sac(s) ({int(stored_qty)} kg)"
+    else:
+        qty_display = f"{int(stored_qty)} kg"
+    
     # Notifier l'agriculteur
     await db.notifications.insert_one({
         "user_id": harvest.get("farmer_id", ""),
         "title": "Récolte validée",
-        "message": f"Votre récolte de {harvest.get('quantity_kg', 0)} kg a été validée par votre coopérative",
+        "message": f"Votre récolte de {qty_display} a été validée par votre coopérative",
         "type": "harvest_validated",
         "created_at": datetime.utcnow(),
         "is_read": False
@@ -155,12 +177,22 @@ async def reject_harvest(
         }}
     )
     
+    # Build display string for notifications
+    unit_r = harvest.get("unit", "kg")
+    stored_qty_r = harvest.get('quantity_kg', 0)
+    if unit_r == "tonnes":
+        qty_display_r = f"{int(stored_qty_r / 1000)} tonne(s) ({int(stored_qty_r)} kg)"
+    elif unit_r == "sacs":
+        qty_display_r = f"{int(stored_qty_r / 65)} sac(s) ({int(stored_qty_r)} kg)"
+    else:
+        qty_display_r = f"{int(stored_qty_r)} kg"
+    
     # Notifier l'agriculteur
     reason_text = f" - Motif: {reason}" if reason else ""
     await db.notifications.insert_one({
         "user_id": harvest.get("farmer_id", ""),
         "title": "Récolte rejetée",
-        "message": f"Votre récolte de {harvest.get('quantity_kg', 0)} kg a été rejetée{reason_text}",
+        "message": f"Votre récolte de {qty_display_r} a été rejetée{reason_text}",
         "type": "harvest_rejected",
         "created_at": datetime.utcnow(),
         "is_read": False

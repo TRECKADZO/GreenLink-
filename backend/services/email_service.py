@@ -244,8 +244,15 @@ def send_new_member_activated_email(to_coop_email, coop_name, member_name, membe
     return send_email(to_coop_email, subject, _wrap_template(body))
 
 
-def send_harvest_notification_email(to_coop_email, coop_name, farmer_name, quantity_kg, crop_type="cacao", carbon_premium=0):
-    subject = f"GreenLink - Nouvelle recolte: {farmer_name} ({quantity_kg} kg)"
+def send_harvest_notification_email(to_coop_email, coop_name, farmer_name, quantity_kg, crop_type="cacao", carbon_premium=0, original_quantity=None, unit=None):
+    # Build display string
+    if unit and unit != "kg" and original_quantity:
+        unit_label = "tonne(s)" if unit == "tonnes" else "sac(s)" if unit == "sacs" else unit
+        quantity_str = f"{int(original_quantity)} {unit_label} ({int(quantity_kg)} kg)"
+    else:
+        quantity_str = f"{int(quantity_kg)} kg"
+    
+    subject = f"GreenLink - Nouvelle recolte: {farmer_name} ({quantity_str})"
     premium_html = ""
     if carbon_premium > 0:
         premium_html = f"""
@@ -261,7 +268,7 @@ def send_harvest_notification_email(to_coop_email, coop_name, farmer_name, quant
         <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin:16px 0;border-left:4px solid #059669;">
           <table style="width:100%;border-collapse:collapse;">
             <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Producteur:</td><td style="color:#065f46;padding:4px 8px;">{farmer_name}</td></tr>
-            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Quantite:</td><td style="color:#065f46;padding:4px 8px;">{quantity_kg} kg de {crop_type}</td></tr>
+            <tr><td style="color:#065f46;padding:4px 8px;font-weight:bold;">Quantite:</td><td style="color:#065f46;padding:4px 8px;">{quantity_str} de {crop_type}</td></tr>
           </table>
         </div>
         {premium_html}

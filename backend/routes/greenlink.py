@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 import random
 import hashlib
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -207,10 +208,21 @@ async def declare_harvest(
     
     # Convert units if necessary (sacs ~= 65kg, tonnes = 1000kg)
     unit = harvest.unit or "kg"
+    original_quantity = quantity_kg  # Save original value before conversion
     if unit == "sacs":
         quantity_kg = quantity_kg * 65
     elif unit == "tonnes":
         quantity_kg = quantity_kg * 1000
+    
+    # Build human-readable quantity string for notifications
+    if unit == "kg":
+        quantity_display = f"{int(quantity_kg)} kg"
+    elif unit == "tonnes":
+        quantity_display = f"{int(original_quantity)} tonne(s) ({int(quantity_kg)} kg)"
+    elif unit == "sacs":
+        quantity_display = f"{int(original_quantity)} sac(s) ({int(quantity_kg)} kg)"
+    else:
+        quantity_display = f"{int(quantity_kg)} kg"
     
     # Get parcel info
     try:
@@ -247,10 +259,12 @@ async def declare_harvest(
     harvest_dict = {
         "parcel_id": harvest.parcel_id,
         "quantity_kg": quantity_kg,
+        "original_quantity": original_quantity,
         "quality_grade": quality_grade,
         "price_per_kg": price_per_kg,
         "sale_type": sale_type,
         "unit": unit,
+        "quantity_display": quantity_display,
         "notes": harvest.notes or "",
         "farmer_id": current_user["_id"],
         "farmer_name": current_user.get("full_name", ""),
@@ -280,7 +294,7 @@ async def declare_harvest(
     await db.notifications.insert_one({
         "user_id": current_user["_id"],
         "title": "Récolte déclarée",
-        "message": f"Récolte de {quantity_kg} kg enregistrée{' - En attente de validation par ' + coop_name if coop_name else ''}",
+        "message": f"Récolte de {quantity_display} enregistrée{' - En attente de validation par ' + coop_name if coop_name else ''}",
         "type": "harvest",
         "action_url": f"/farmer/harvests/{str(result.inserted_id)}",
         "created_at": datetime.utcnow(),
@@ -292,9 +306,9 @@ async def declare_harvest(
         await db.notifications.insert_one({
             "user_id": str(coop_id),
             "title": "Nouvelle récolte à valider",
-            "message": f"{current_user.get('full_name', 'Un producteur')} a déclaré {quantity_kg} kg - Qualité {quality_grade}",
+            "message": f"{current_user.get('full_name', 'Un producteur')} a déclaré {quantity_display} - Qualité {quality_grade}",
             "type": "harvest_to_validate",
-            "action_url": f"/cooperative/harvests",
+            "action_url": "/cooperative/harvests",
             "created_at": datetime.utcnow(),
             "is_read": False
         })
@@ -302,18 +316,33 @@ async def declare_harvest(
             await send_notification_to_user(
                 db=db, user_id=str(coop_id),
                 title="Nouvelle récolte à valider",
-                body=f"{current_user.get('full_name', 'Producteur')}: {quantity_kg} kg (Qualité {quality_grade})",
+                body=f"{current_user.get('full_name', 'Producteur')}: {quantity_display} (Qualité {quality_grade})",
                 data={"type": "harvest_to_validate", "harvest_id": str(result.inserted_id), "screen": "CoopHarvests"}
             )
         except Exception as e:
             logger.error(f"Coop harvest notification failed: {e}")
+        
+        # Send email notification to cooperative
+        try:
+            from services.notification_email_helper import send_notification_email_async
+            asyncio.create_task(send_notification_email_async(db, "harvest_declared",
+                coop_id=str(coop_id),
+                farmer_name=current_user.get("full_name", "Producteur"),
+                quantity_kg=int(quantity_kg),
+                crop_type=parcel.get("crop_type", "cacao"),
+                carbon_premium=harvest_dict.get("carbon_premium", 0),
+                original_quantity=original_quantity,
+                unit=unit
+            ))
+        except Exception as e:
+            logger.error(f"Harvest email notification failed: {e}")
     
     # Push notification for farmer
     try:
         await send_notification_to_user(
             db=db, user_id=current_user["_id"],
             title="Récolte enregistrée",
-            body=f"{quantity_kg} kg déclarés{' - En attente de validation' if coop_id else ''}",
+            body=f"{quantity_display} déclarés{' - En attente de validation' if coop_id else ''}",
             data={"type": "harvest_created", "harvest_id": str(result.inserted_id), "screen": "Harvest"}
         )
     except Exception as e:
@@ -957,7 +986,7 @@ async def mark_notification_read(
 
 # ============= PUSH NOTIFICATION ROUTES =============
 
-from services.fcm_service import fcm_service, send_notification_to_user
+from services.fcm_service import fcm_service
 
 class PushNotificationRequest(BaseModel):
     title: str

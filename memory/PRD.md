@@ -1,65 +1,62 @@
 # GreenLink - Product Requirements Document
 
-## Problème Original
-Plateforme agricole full-stack pour la gestion des coopératives cacao en Côte d'Ivoire, avec suivi carbone, conformité EUDR, et protection des enfants (SSRTE).
+## Probleme Original
+Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'Ivoire, avec suivi carbone, conformite EUDR, et protection des enfants (SSRTE).
 
 ## Architecture
 - **Backend**: FastAPI + MongoDB (Atlas)
 - **Frontend Web**: React + Shadcn UI
 - **Mobile**: React Native (Expo/EAS)
 
-## Fonctionnalités Implémentées
+## Fonctionnalites Implementees
 
 ### Phases 1-5 (DONE)
-- Core Platform, Mobile, Backend Refactoring, Clés Françaises, Notifications Push
+- Core Platform, Mobile, Backend Refactoring, Cles Francaises, Notifications Push
 
-### Phase 6 - Système de Livraison Marketplace (DONE)
-- 3 modèles cumulables: frais_fixe, par_distance, par_poids + seuil_gratuit
+### Phase 6 - Systeme de Livraison Marketplace (DONE)
+- 3 modeles cumulables: frais_fixe, par_distance, par_poids + seuil_gratuit
 
 ### Phase 7 - Corrections Connexion & Parcelles (DONE - 21/03/2026)
-- Rate limiter JSON, messages d'erreur spécifiques, normalisation téléphone
-- Mapping clés françaises (nombre_parcelles, superficie_totale) dans mobile
+- Rate limiter JSON, messages d'erreur specifiques, normalisation telephone
+- Mapping cles francaises (nombre_parcelles, superficie_totale) dans mobile
 - Liaison auto parcelles lors inscription/activation membre
-- Reset mot de passe fonctionne avec téléphone (tous formats)
+- Reset mot de passe fonctionne avec telephone (tous formats)
 
-### Phase 8 - Récoltes & Validation Coopérative (DONE - 21/03/2026)
+### Phase 8 - Recoltes & Validation Cooperative (DONE - 21/03/2026)
 **Flux complet:**
-1. Agriculteur déclare une récolte → auto-liée à sa coopérative via coop_member
-2. Coopérative reçoit une notification "Nouvelle récolte à valider"
-3. Coopérative valide ou rejette → notification envoyée à l'agriculteur
-4. Statuts: en_attente → validee / rejetee
+1. Agriculteur declare une recolte -> auto-liee a sa cooperative via coop_member
+2. Cooperative recoit une notification "Nouvelle recolte a valider"
+3. Cooperative valide ou rejette -> notification envoyee a l'agriculteur
+4. Statuts: en_attente -> validee / rejetee
 
-**Backend:**
-- POST /api/greenlink/harvests (accepte format mobile: quantity, quality, unit, notes)
-- GET /api/cooperative/harvests (filtres par statut, pagination)
-- PUT /api/cooperative/harvests/{id}/validate
-- PUT /api/cooperative/harvests/{id}/reject
-- GET /api/cooperative/harvests/summary (résumé par membre)
-- Conversion auto: sacs→kg (×65), tonnes→kg (×1000), "Grade A"→"A"
-
-**Mobile:**
-- CoopHarvestsScreen: liste des récoltes avec filtres, validation/rejet
-- Bouton "Récoltes" dans le dashboard coopérative
-- Sélection individuelle de parcelle corrigée (parcel.id au lieu de parcel._id)
+### Phase 9 - Conversion Unites & Emails Recoltes (DONE - 22/03/2026)
+**Corrections:**
+- Conversion unites correcte: tonnes->kg (x1000), sacs->kg (x65)
+- Notifications affichent quantite originale + conversion: "2 tonne(s) (2000 kg)"
+- Email Resend envoye a la cooperative lors de chaque declaration de recolte
+- Template email mis a jour avec quantite originale et unite
+- Champs original_quantity et quantity_display ajoutes aux reponses API
+- Validation/rejet cooperative affiche aussi l'unite originale
 
 ## Builds
-- v1.39.2-v1.39.9: Corrections diverses (images, connexion, parcelles, sélection)
-- v1.40.0: Déclaration récolte corrigée (mapping champs backend)
-- v1.40.1: Flux complet récoltes + validation coopérative + écran CoopHarvests
+- v1.39.2-v1.39.9: Corrections diverses (images, connexion, parcelles, selection)
+- v1.40.0: Declaration recolte corrigee (mapping champs backend)
+- v1.40.1: Flux complet recoltes + validation cooperative + ecran CoopHarvests
 
 ## Credentials
 - Cooperative: bielaghana@gmail.com / greenlink2024
 - Fournisseur: testfournisseur@test.com / supplier2024
 - Producteur test: +2250709090909 / koffi2024
 
-## APIs Mockées
+## APIs Mockees
 - Orange SMS, Orange Money
 
 ## Backlog
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
-- P2: Langues locales (Baoulé, Dioula)
+- P2: Langues locales (Baoule, Dioula)
 - P2: Stockage cloud AWS S3
+- P3: Refactoring greenlink.py en fichiers dedies (parcels.py, harvests.py)
 
 ## Key API Endpoints
 - POST /api/auth/login | register | forgot-password | verify-reset-code | reset-password
@@ -75,7 +72,7 @@ Plateforme agricole full-stack pour la gestion des coopératives cacao en Côte 
 - GET /api/cooperative/members
 
 ## DB Collections
-- `harvests`: {parcel_id, farmer_id, farmer_name, member_id, coop_id, coop_name, quantity_kg, quality_grade, statut, ...}
+- `harvests`: {parcel_id, farmer_id, farmer_name, member_id, coop_id, coop_name, quantity_kg, original_quantity, unit, quantity_display, quality_grade, statut, ...}
 - `delivery_settings`: {supplier_id, modeles_livraison, seuil_gratuit}
 - `parcels`: {superficie, nom_producteur, localisation, farmer_id, member_id, coop_id}
 - `coop_members`: {full_name, phone_number, user_id, coop_id, parcels_count}

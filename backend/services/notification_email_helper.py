@@ -111,7 +111,9 @@ async def send_notification_email_async(db, notification_type, **kwargs):
                     kwargs.get("farmer_name", "Producteur"),
                     kwargs.get("quantity_kg", 0),
                     kwargs.get("crop_type", "cacao"),
-                    kwargs.get("carbon_premium", 0)
+                    kwargs.get("carbon_premium", 0),
+                    kwargs.get("original_quantity"),
+                    kwargs.get("unit")
                 )
                 logger.info(f"[NOTIF] Email recolte envoye a coop {coop_email}")
 

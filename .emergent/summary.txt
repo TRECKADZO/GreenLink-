@@ -1,96 +1,97 @@
 <analysis>**original_problem_statement**: 
-Fix dashboard statistics crashes, harmonize all backend and frontend keys to French, implement field agent parcel verification, and fix various UI/UX bugs on the mobile app (cache refresh, missing images, cart mapping errors). Implement push notifications and handle specific UI permission views (like hiding distribution models from non-admins).
+Fix marketplace delivery calculation logic, fix mobile app bugs (login connection errors, image regressions, password reset, parcel mapping to cooperatives, harvest declarations bugs, unit conversion), and implement a cooperative harvest validation flow.
 
 PRODUCT REQUIREMENTS:
 - All variable names and JSON response keys must be unified in French across the stack.
-- Push notifications must be sent for new parcels, verified parcels, payments, and SSRTE alerts.
-- Mobile UI must be strictly bug-free (images loading, cart calculations, auto-refresh on screens).
-- Super Admin exclusive visibility for certain carbon distribution configurations.
+- Suppliers must have options to set specific delivery rules (fixed, by zone/distance, by quantity, with a free shipping threshold).
+- Push notifications and emails must contain correct unit measures for agricultural products.
+- Mobile UI must be strictly bug-free, specifically handling API errors gracefully instead of generic connection errors.
 
-**User's preferred language**: French (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only)
+**User's preferred language**: French (INSTRUCT next agent to respond in the user's preferred language only)
 
 **what currently exists?** 
-A full-stack agricultural platform (React web, FastAPI backend, React Native mobile, MongoDB). In this session, the agent successfully renamed all API keys to French (, , etc.), built a robust Push Notification system (Backend triggers + Web/Mobile Notification Centers), generated multiple EAS builds (up to v1.39.2), and resolved numerous mobile UI bugs including missing marketplace images, broken cart calculations, silent 500 errors on payment requests, and non-updating Harvest/Profile screens.
+A full-stack agricultural platform (React web, FastAPI backend, React Native mobile, MongoDB). In this session, the agent successfully implemented a 3-model Marketplace Delivery System for suppliers, fixed rate limiting and non-JSON proxy errors causing Erreur de connexion on mobile, fixed image regressions in the Checkout flow, implemented robust phone number normalization for password resets, mapped farmer parcels properly to cooperative dashboards, fixed multiple crashes in the harvest declaration flow, and built a cooperative harvest validation dashboard. Multiple EAS builds were generated up to v1.40.1.
 
 **Last working item**: 
-    - Last item agent was working: Investigating the delivery price logic in the marketplace. The user asked: A quel moment est calculé et ajouté le prix de la livraison ? (When is the delivery price calculated and added?). The agent started checking  and  but context ended before providing an answer or implementing any missing logic.
+    - Last item agent was working: Investigating the unit conversion logic (tonnes vs kg) for Harvest Declarations. The user complained that an email receipt showed 2.0 kg instead of 2000 kg when they selected 2 tonnes in the mobile app.
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? manual testing by screenshot/code review + backend testing for checkout API logic.
+    - Which testing method agent to use? backend testing agent or curl for backend logic verification + python -c to verify the database and email template inputs. 
     - User Testing Done: N
 
-**All Pending/In progress Issue list**:
-  Issue 1: Marketplace Delivery Price Calculation (P0)
-     - Attempted fixes: Agent only executed bash  on  and  to locate where delivery info is handled, but made no code changes or responses yet.
-     - Next debug checklist: Check  and  (specifically  endpoint). Verify if a delivery fee is currently calculated. If not, ask the user for the delivery pricing logic (fixed fee, distance-based, weight-based) or implement a standard delivery fee line item in the cart/checkout totals. Reply to the user's question clearly in French.
-     - Why fix this issue and what will be achieved with the fix? Answers the user's direct question and ensures customers pay the correct total including delivery.
+**All Pending/In progress Issue list**: 
+  Issue 1: Harvest quantity unit conversion failing in emails/backend (P0)
+     - Attempted fixes: Agent grepped  to see the unit selector code (, , ) but context ended before the backend fix or email logic could be patched.
+     - Next debug checklist: Check  (specifically the  endpoint) and where the email/notification is sent. Ensure the converted  is passed to the email template/notification system, rather than the raw un-multiplied . Also double-check  to ensure the correct unit string is being sent in the API payload.
+     - Why fix this issue and what will be achieved with the fix? Fixes severe data inaccuracies where farmers declare massive harvests (tonnes) but receive receipts for tiny amounts (kg), eroding trust.
      - Status: IN PROGRESS
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? both
+     - Should Test frontend/backend/both after fix? backend
      - Blocked on other issue: None
 
 **In progress Task List**:
-  Task 1: Delivery Fee Implementation (P0)
-     - Where to resume: Review the  UI and the  functions in the cart/checkout flow.
-     - What will be achieved with this? Complete marketplace checkout experience with transparent delivery costs.
+  Task 1: Unit conversion in Harvest Email Notifications (P0)
+     - Where to resume: Investigate  near . The backend claims to convert  to , but the email notification payload might be using the raw value.
+     - What will be achieved with this? Accurate email receipts and push notifications for declared harvests.
      - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? both
-     - Blocked on something: User clarification on pricing rules may be needed.
+     - Should Test frontend/backend/both after fix? backend
+     - Blocked on something: None
 
-**Upcoming and Future Tasks**:
+**Upcoming and Future Tasks**
     Upcoming Tasks:
     - (P1) Submit the final AAB to Google Play Console.
+    
     Future Tasks:
     - (P2) Configure real SMS gateway (Orange API) to replace the mock service.
     - (P2) Implement local languages (Baoulé and Dioula) in the mobile app.
     - (P2) Refactor the backend to use cloud storage (AWS S3) for file and image uploads.
 
 **Completed work in this session**
-- Standardized all API keys to French (, , , etc.) across Backend, Web, and Mobile (DONE)
-- Fixed route collision on  (DONE)
-- Implemented Push Notifications & History for Web/Mobile (, , , ) (DONE)
-- Fixed Mobile Marketplace Images (Prevented double-prefixing absolute image URLs) (DONE)
-- Fixed Mobile Cart & Wishlist Mapping (Mapped nested  and  correctly) (DONE)
-- Hid Modèle de distribution in Mobile Carbon Payments for non-admins (DONE)
-- Fixed Demander un paiement error handling & deduplication (Added Try/Catch & duplicate checks) (DONE)
-- Fixed Mobile Harvest Screen (superficie fallback + auto-refresh on focus) (DONE)
-- Fixed Mobile Profile Screen (dynamic calculation of farm size and location + auto-refresh) (DONE)
-- Generated EAS Builds v1.39.0, v1.39.1, v1.39.2 (DONE)
+- Marketplace Supplier Delivery Settings (Fixed fees, zones, quantity, free threshold) (DONE)
+- Fixed Mobile Login Erreur de connexion by handling non-JSON proxy responses and formatting Rate Limiter JSON (DONE)
+- Fixed Missing Product Images in Mobile Checkout Summary (DONE)
+- Fixed Forgot Password flow for phone numbers (added normalization for 07XX, +225, etc., and exposed simulation code to UI) (DONE)
+- Fixed Parcel mappings between Farmers and Cooperatives ( -> ) (DONE)
+- Auto-link existing parcels to user ID upon registration/activation (DONE)
+- Fixed Harvest Declaration selection bug (using  instead of ) (DONE)
+- Fixed Harvest Declaration crash (payload mismatches  vs  and ObjectId serialization) (DONE)
+- Implemented Cooperative Harvest Dashboard and Validation Flow (DONE)
+- EAS APK Builds generated (v1.39.3, v1.39.4, v1.39.5, v1.39.7, v1.39.8, v1.39.9, v1.40.0, v1.40.1) (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-   None. All previous user complaints in the session were addressed and shipped in v1.39.2.
+   None. All previous user complaints in the session were addressed and shipped.
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Route collisions ().
-  - Recurrence count: 1
-  - Status: RESOLVED (Agent separated analytics and standard routes).
+  - Issue recurrence in previous fork: None
+  - Recurrence count: 0
+  - Status: RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-React (Web), React Native (Mobile Expo EAS), FastAPI (Backend), MongoDB (Database), Expo Push Notifications.
+React (Web), React Native (Mobile Expo EAS), FastAPI (Backend), MongoDB (Database), Expo Push Notifications, Resend (Emails).
 
 **key DB schema**
-  - : {user_id, title, message, type, read, created_at, data}
-  - : {user_id, items: [{product, quantity, price}]}
-  - : {superficie, nom_producteur, localisation}
+  - : {parcel_id, quantity_kg, quality_grade, price_per_kg, payment_status, payment_method, statut}
+  - : {phone_number, full_name, coop_id, user_id}
+  - : {farmer_id, membre_id, superficie, localisation, id}
 
 **changes in tech stack**
   - None.
 
 **All files of reference**
-  -  (Push API implementation)
-  -  (New history endpoint)
-  -  (Currently investigating for delivery logic)
-  -  (Fixed mapping bugs)
-  -  (Fixed admin visibility & payment requests)
-  -  (Fixed dynamic calculation)
+  -  (Currently investigating for unit conversion logic)
+  -  (New file for coop harvest validation)
+  -  (Current focus for harvest payload)
+  -  (Contains robust  function that MUST be used for phone queries)
+  - 
 
 **Areas that need refactoring**:
-  - The marketplace checkout logic ( and ) needs review for delivery fee handling, which triggered the current user question.
+  -  is getting excessively large (900+ lines). It handles general dashboard endpoints, parcels, and harvests. It should eventually be split into dedicated  and  routes.
 
 **key api endpoints**
+  - 
   - 
   - 
   - 
@@ -98,43 +99,42 @@ React (Web), React Native (Mobile Expo EAS), FastAPI (Backend), MongoDB (Databas
 
 **Critical Info for New Agent**
   - **Language**: MUST respond in French.
-  - **Payload Keys**: Be hyper-aware that the backend now outputs primarily French keys (e.g., , , ). If frontend elements show undefined or NaN, it is almost always a mapping issue from the recent translation.
-  - **Marketplace Images**: Images returned from the API for products are now full absolute URLs (). Do NOT prefix them with  on the frontend.
+  - **Phone Normalization**: Always use the  helper function in  when looking up users by phone. Users enter , , etc. Exact string matching will fail.
+  - **Key Naming**: Be very careful mapping mobile JS object keys to the Backend Pydantic models. The backend mostly returns French (, ) while mobile might sometimes still look for English (, ).
 
 **documents and test reports created in this job**
   - 
   - 
-  - 
-  - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. (User) A quel moment est calculé et ajouté le prix de la livraison ? (PENDING - Agent was investigating when context cut off).
- 2. (User) Build APK (COMPLETED - v1.39.2 built).
- 3. (User) Cette page doit être automatiquement être mise a jour surtout localisation et superficie (COMPLETED).
- 4. (User) Cette page n est pas automatiquement mis à jour ? Je ne vois pas les Ha des plantations enregistrées (COMPLETED).
- 5. (User) Pourquoi ? [Screenshot of payment error] (COMPLETED).
- 6. (User) Seul le super Admin doit connaître les pourcentages et les réparations (COMPLETED).
- 7. (User) Le panier n'affiche pas les prix et les images des items. Pourquoi ? (COMPLETED).
- 8. (User) Rebuild apk (COMPLETED - v1.39.1 built).
- 9. (User) Dans la version mobile, les photos dans le marketplace des intrants n apparaissent pas (COMPLETED).
- 10. (User) Version supérieure (COMPLETED).
+ 1. (User) La quantité est de 2 tonnes et non 2kg. Assurez-vous que les choix est unité de mesure soit respectées (PENDING - Agent investigating conversion).
+ 2. (User) C est vous l'expert et vous comprenez bien le projet (COMPLETED).
+ 3. (User) Où va les récoltes déclarées par l'agriculteur ? Au bien membre d une coopératives ou non (COMPLETED).
+ 4. (User) La Déclaration de récolte echoue et fait planter l application [Screenshot] (COMPLETED).
+ 5. (User) J ai pas La possibilité de sélection une parcelles ou 2 en particulier. Tous sont sélectionnées en même temps [Screenshot] (COMPLETED).
+ 6. (User) Les parcelles dans planteurs ne est pas miss a jour automatiquement dans le compte coopérative... [Screenshot] (COMPLETED).
+ 7. (User) Vérifier aussi le changement de mot de passe lorsque l'inscription est fait avec un numéro de téléphone car il ne fonctionne pas aussi (COMPLETED).
+ 8. (User) Le changement de mot de passe ne fonctionne pas sur mobile (COMPLETED).
+ 9. (User) Les images des produits n apparaît pas. Pourtant cette erreur avait deja été corrigé... [Screenshot] (COMPLETED).
+ 10. (User) Corriger toutes les erreurs de connexion [Screenshot] (COMPLETED).
 
 **Project Health Check:**
-- Broken: Delivery fee calculation logic in marketplace checkout is missing/unclear.
+- Broken: Email notifications for harvest declarations (Unit conversion not applying correctly to the text).
 - Mocked: Orange SMS, Orange Money.
 
 **3rd Party Integrations** 
+  - Resend (Emails) — Uses Emergent LLM Key / Environment
   - Expo Push Notifications — Requires User setup/EAS.
   - Expo EAS Builds — Requires User Auth (Session active locally).
 
 **Testing status**
-  - Testing agent used after significant changes: YES (iterations 52, 53, 54)
+  - Testing agent used after significant changes: YES (iteration 55 for delivery system)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None
-  - Known regressions: None
+  - Known regressions: None currently (Fixed the Checkout image regression).
 
 **Credentials to test flow:**
-Standard mock users.
+Standard mock users. (,  for farmer).
 
 **What agent forgot to execute**
-The agent started parsing  and  to answer the user's final question regarding the delivery price, but ran out of context before answering the user or implementing the feature. Ensure you start by addressing this question immediately.</analysis>
+The agent realized the problem with the unit conversion displaying 2.0 kg instead of 2000 kg in the email, and checked the mobile code  for the unit options (, , ), but context ran out before the backend conversion logic in  or the email template could be fixed. Start here.</analysis>
