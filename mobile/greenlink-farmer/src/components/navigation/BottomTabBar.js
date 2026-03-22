@@ -55,13 +55,13 @@ const QUICK_ACTIONS = {
   ],
   field_agent: [],
   cooperative: [
+    { name: 'CoopHarvests', icon: 'checkmark-done-circle', label: 'Valider Récoltes', color: '#059669' },
     { name: 'AddCoopMember', icon: 'person-add', label: 'Nouveau Membre', color: '#10b981' },
-    { name: 'Messaging', icon: 'chatbubbles', label: 'Messagerie', color: '#8b5cf6' },
+    { name: 'CoopMembers', icon: 'people', label: 'Mes Membres', color: '#3b82f6' },
+    { name: 'CoopReports', icon: 'bar-chart', label: 'Rapports', color: '#8b5cf6' },
     { name: 'SSRTEVisitForm', icon: 'clipboard', label: 'Visite SSRTE', color: '#f59e0b' },
-    { name: 'FarmerSearch', icon: 'search', label: 'Recherche Planteur', color: '#3b82f6' },
-    { name: 'GeoPhoto', icon: 'camera', label: 'Photo Géolocalisée', color: '#06b6d4' },
-    { name: 'FieldAgentDashboard', icon: 'shield-checkmark', label: 'Agent Terrain', color: '#ec4899' },
-    { name: 'CoopLots', icon: 'layers', label: 'Lots Groupés', color: '#64748b' },
+    { name: 'SSRTEAgentDashboard', icon: 'shield-checkmark', label: 'Suivi SSRTE', color: '#ec4899' },
+    { name: 'Marketplace', icon: 'cart', label: 'Marketplace', color: '#64748b' },
     { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
   ],
 };
