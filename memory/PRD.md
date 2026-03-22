@@ -10,31 +10,47 @@ Plateforme agricole full-stack pour la gestion des coopératives cacao en Côte 
 
 ## Fonctionnalités Implémentées
 
-### Phase 1-4 (DONE)
-- Core Platform, Mobile, Backend Refactoring, Harmonisation Clés Françaises
+### Phases 1-5 (DONE)
+- Core Platform, Mobile, Backend Refactoring, Clés Françaises, Notifications Push
 
-### Phase 5 - Notifications Push (DONE)
-- 4 types: new_parcel_to_verify, parcel_verified, ssrte_critical_alert, payment_received
+### Phase 6 - Système de Livraison Marketplace (DONE)
+- 3 modèles cumulables: frais_fixe, par_distance, par_poids + seuil_gratuit
 
-### Phase 6 - Système de Livraison Marketplace (DONE - 21/03/2026)
-- 3 modèles cumulables par fournisseur: frais_fixe, par_distance (zones), par_poids
-- Seuil de gratuité optionnel
-- Page web /supplier/delivery-settings + mobile CartScreen/CheckoutScreen mis à jour
-- Backend: GET/PUT delivery-settings, delivery-fees, cart avec frais, checkout avec zone
+### Phase 7 - Corrections Connexion & Parcelles (DONE - 21/03/2026)
+- Rate limiter JSON, messages d'erreur spécifiques, normalisation téléphone
+- Mapping clés françaises (nombre_parcelles, superficie_totale) dans mobile
+- Liaison auto parcelles lors inscription/activation membre
+- Reset mot de passe fonctionne avec téléphone (tous formats)
 
-### Phase 7 - Correction Erreurs de Connexion (DONE - 21/03/2026)
-**Problème**: "Erreur de connexion" générique sur mobile au lieu de messages d'erreur spécifiques
-**Corrections:**
-- Rate limiter backend retourne maintenant du JSON (au lieu de texte brut qui cassait le parsing mobile)
-- Intercepteur API mobile gère les réponses non-JSON (pages HTML du proxy K8s)
-- Login mobile: messages spécifiques pour 401, 403, 422, 429, 5xx, timeout, erreur réseau
-- Register mobile: même traitement robuste
-- Endpoint /api/health ajouté pour vérification de connectivité
-- Build v1.39.4
+### Phase 8 - Récoltes & Validation Coopérative (DONE - 21/03/2026)
+**Flux complet:**
+1. Agriculteur déclare une récolte → auto-liée à sa coopérative via coop_member
+2. Coopérative reçoit une notification "Nouvelle récolte à valider"
+3. Coopérative valide ou rejette → notification envoyée à l'agriculteur
+4. Statuts: en_attente → validee / rejetee
+
+**Backend:**
+- POST /api/greenlink/harvests (accepte format mobile: quantity, quality, unit, notes)
+- GET /api/cooperative/harvests (filtres par statut, pagination)
+- PUT /api/cooperative/harvests/{id}/validate
+- PUT /api/cooperative/harvests/{id}/reject
+- GET /api/cooperative/harvests/summary (résumé par membre)
+- Conversion auto: sacs→kg (×65), tonnes→kg (×1000), "Grade A"→"A"
+
+**Mobile:**
+- CoopHarvestsScreen: liste des récoltes avec filtres, validation/rejet
+- Bouton "Récoltes" dans le dashboard coopérative
+- Sélection individuelle de parcelle corrigée (parcel.id au lieu de parcel._id)
+
+## Builds
+- v1.39.2-v1.39.9: Corrections diverses (images, connexion, parcelles, sélection)
+- v1.40.0: Déclaration récolte corrigée (mapping champs backend)
+- v1.40.1: Flux complet récoltes + validation coopérative + écran CoopHarvests
 
 ## Credentials
 - Cooperative: bielaghana@gmail.com / greenlink2024
 - Fournisseur: testfournisseur@test.com / supplier2024
+- Producteur test: +2250709090909 / koffi2024
 
 ## APIs Mockées
 - Orange SMS, Orange Money
@@ -46,15 +62,20 @@ Plateforme agricole full-stack pour la gestion des coopératives cacao en Côte 
 - P2: Stockage cloud AWS S3
 
 ## Key API Endpoints
-- POST /api/auth/login
-- POST /api/auth/register
+- POST /api/auth/login | register | forgot-password | verify-reset-code | reset-password
 - GET /api/health
 - GET/PUT /api/marketplace/supplier/delivery-settings
-- GET /api/marketplace/delivery-fees?zone=...
-- GET /api/marketplace/cart?zone=...
-- POST /api/marketplace/cart/checkout (JSON body)
+- GET /api/marketplace/delivery-fees | cart | products
+- POST /api/marketplace/cart/checkout
+- POST /api/greenlink/harvests
+- GET /api/greenlink/parcels/my-parcels
+- GET /api/greenlink/farmer/dashboard
+- GET /api/cooperative/harvests | harvests/summary
+- PUT /api/cooperative/harvests/{id}/validate | reject
+- GET /api/cooperative/members
 
-## Builds
-- v1.39.2: Notifications + fixes mobile
-- v1.39.3: Système de livraison marketplace
-- v1.39.4: Correction erreurs de connexion (rate limiter JSON, messages spécifiques)
+## DB Collections
+- `harvests`: {parcel_id, farmer_id, farmer_name, member_id, coop_id, coop_name, quantity_kg, quality_grade, statut, ...}
+- `delivery_settings`: {supplier_id, modeles_livraison, seuil_gratuit}
+- `parcels`: {superficie, nom_producteur, localisation, farmer_id, member_id, coop_id}
+- `coop_members`: {full_name, phone_number, user_id, coop_id, parcels_count}

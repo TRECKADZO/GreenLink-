@@ -84,6 +84,7 @@ const CoopMemberDetailScreen = safeRequire(() => require('./screens/cooperative/
 const AddCoopMemberScreen = safeRequire(() => require('./screens/cooperative/AddCoopMemberScreen'), 'AddCoopMemberScreen');
 const AddMemberParcelScreen = safeRequire(() => require('./screens/cooperative/AddMemberParcelScreen'), 'AddMemberParcelScreen');
 const CoopReportsScreen = safeRequire(() => require('./screens/cooperative/CoopReportsScreen'), 'CoopReportsScreen');
+const CoopHarvestsScreen = safeRequire(() => require('./screens/cooperative/CoopHarvestsScreen'), 'CoopHarvestsScreen');
 
 // Field Agent
 const FieldAgentDashboard = safeRequire(() => require('./screens/field-agent/FieldAgentDashboard'), 'FieldAgentDashboard');
@@ -173,6 +174,7 @@ function AppNavigator() {
       <Stack.Screen name="AddCoopMember" component={AddCoopMemberScreen} />
       <Stack.Screen name="AddMemberParcel" component={AddMemberParcelScreen} />
       <Stack.Screen name="CoopReports" component={CoopReportsScreen} />
+      <Stack.Screen name="CoopHarvests" component={CoopHarvestsScreen} />
       <Stack.Screen name="CoopLots" component={CoopReportsScreen} />
       
       <Stack.Screen name="FieldAgentDashboard" component={FieldAgentDashboard} />

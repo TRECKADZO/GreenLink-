@@ -345,6 +345,30 @@ export const cooperativeApi = {
     const response = await api.post('/field-agent/geotagged-photos', photoData);
     return response.data;
   },
+
+  // ============= HARVESTS (RÉCOLTES) =============
+
+  getHarvests: async (statut = null, page = 1) => {
+    let url = `/cooperative/harvests?page=${page}`;
+    if (statut) url += `&statut=${statut}`;
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  validateHarvest: async (harvestId) => {
+    const response = await api.put(`/cooperative/harvests/${harvestId}/validate`);
+    return response.data;
+  },
+
+  rejectHarvest: async (harvestId, reason = '') => {
+    const response = await api.put(`/cooperative/harvests/${harvestId}/reject`, { reason });
+    return response.data;
+  },
+
+  getHarvestsSummary: async () => {
+    const response = await api.get('/cooperative/harvests/summary');
+    return response.data;
+  },
 };
 
 export default cooperativeApi;

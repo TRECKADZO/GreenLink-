@@ -195,10 +195,11 @@ async def declare_harvest(
     current_user: dict = Depends(get_current_user)
 ):
     """Déclarer une récolte"""
+    from routes.auth import normalize_phone
+    
     # Map mobile field names to backend field names
     quantity_kg = harvest.quantity_kg or harvest.quantity or 0
     quality_grade = harvest.quality or harvest.quality_grade or "B"
-    # Clean quality grade (remove "Grade " prefix if present)
     if quality_grade and quality_grade.startswith("Grade "):
         quality_grade = quality_grade.replace("Grade ", "")
     price_per_kg = harvest.price_per_kg or 0
@@ -219,6 +220,30 @@ async def declare_harvest(
     if not parcel:
         raise HTTPException(status_code=404, detail="Parcelle non trouvée")
     
+    # Auto-link to cooperative via coop_member
+    coop_id = None
+    coop_name = ""
+    member_id = parcel.get("member_id")
+    phone = current_user.get("phone_number", "")
+    
+    # Try to find the cooperative link
+    if member_id:
+        member = await db.coop_members.find_one({"_id": ObjectId(member_id)})
+        if member:
+            coop_id = member.get("coop_id")
+    
+    if not coop_id and phone:
+        phone_variants = normalize_phone(phone)
+        member = await db.coop_members.find_one({"phone_number": {"$in": phone_variants}})
+        if member:
+            coop_id = member.get("coop_id")
+            member_id = str(member["_id"])
+    
+    if coop_id:
+        coop = await db.users.find_one({"_id": ObjectId(coop_id) if not isinstance(coop_id, ObjectId) else coop_id})
+        if coop:
+            coop_name = coop.get("full_name") or coop.get("cooperative_name", "")
+    
     harvest_dict = {
         "parcel_id": harvest.parcel_id,
         "quantity_kg": quantity_kg,
@@ -228,6 +253,11 @@ async def declare_harvest(
         "unit": unit,
         "notes": harvest.notes or "",
         "farmer_id": current_user["_id"],
+        "farmer_name": current_user.get("full_name", ""),
+        "member_id": member_id or "",
+        "coop_id": str(coop_id) if coop_id else "",
+        "coop_name": coop_name,
+        "statut": "en_attente",  # en_attente -> validee / rejetee
         "harvest_date": datetime.utcnow(),
         "created_at": datetime.utcnow(),
     }
@@ -246,49 +276,48 @@ async def declare_harvest(
     result = await db.harvests.insert_one(harvest_dict)
     harvest_dict["_id"] = str(result.inserted_id)
     
-    # Create in-app notification
+    # Notification for the farmer
     await db.notifications.insert_one({
         "user_id": current_user["_id"],
         "title": "Récolte déclarée",
-        "message": f"Récolte de {quantity_kg} kg enregistrée. Prime carbone: {harvest_dict['carbon_premium']:,.0f} XOF",
+        "message": f"Récolte de {quantity_kg} kg enregistrée{' - En attente de validation par ' + coop_name if coop_name else ''}",
         "type": "harvest",
         "action_url": f"/farmer/harvests/{str(result.inserted_id)}",
         "created_at": datetime.utcnow(),
         "is_read": False
     })
     
-    # Send push notification
+    # Notification for the cooperative
+    if coop_id:
+        await db.notifications.insert_one({
+            "user_id": str(coop_id),
+            "title": "Nouvelle récolte à valider",
+            "message": f"{current_user.get('full_name', 'Un producteur')} a déclaré {quantity_kg} kg - Qualité {quality_grade}",
+            "type": "harvest_to_validate",
+            "action_url": f"/cooperative/harvests",
+            "created_at": datetime.utcnow(),
+            "is_read": False
+        })
+        try:
+            await send_notification_to_user(
+                db=db, user_id=str(coop_id),
+                title="Nouvelle récolte à valider",
+                body=f"{current_user.get('full_name', 'Producteur')}: {quantity_kg} kg (Qualité {quality_grade})",
+                data={"type": "harvest_to_validate", "harvest_id": str(result.inserted_id), "screen": "CoopHarvests"}
+            )
+        except Exception as e:
+            logger.error(f"Coop harvest notification failed: {e}")
+    
+    # Push notification for farmer
     try:
-        push_result = await send_notification_to_user(
-            db=db,
-            user_id=current_user["_id"],
+        await send_notification_to_user(
+            db=db, user_id=current_user["_id"],
             title="Récolte enregistrée",
-            body=f"{quantity_kg} kg déclarés. Prime carbone: {harvest_dict['carbon_premium']:,.0f} XOF",
-            data={
-                "type": "harvest_created",
-                "harvest_id": str(result.inserted_id),
-                "carbon_premium": harvest_dict['carbon_premium'],
-                "screen": "Harvest"
-            }
+            body=f"{quantity_kg} kg déclarés{' - En attente de validation' if coop_id else ''}",
+            data={"type": "harvest_created", "harvest_id": str(result.inserted_id), "screen": "Harvest"}
         )
-        logger.info(f"Harvest push notification sent: {push_result}")
     except Exception as e:
         logger.error(f"Harvest push notification failed: {e}")
-    
-    # Envoyer email notification a la cooperative
-    try:
-        import asyncio as _asyncio
-        from services.notification_email_helper import send_notification_email_async
-        coop_id = current_user.get("cooperative_id")
-        _asyncio.create_task(send_notification_email_async(db, "harvest_declared",
-            coop_id=coop_id,
-            farmer_name=current_user.get("full_name", "Producteur"),
-            quantity_kg=quantity_kg,
-            crop_type=parcel.get("crop_type", "cacao"),
-            carbon_premium=harvest_dict.get("carbon_premium", 0)
-        ))
-    except Exception as e:
-        logger.error(f"Harvest email notification failed: {e}")
     
     # Clean response
     harvest_dict.pop("_id", None)
@@ -296,7 +325,7 @@ async def declare_harvest(
     
     return {
         "success": True,
-        "message": "Récolte déclarée avec succès",
+        "message": "Récolte déclarée avec succès" + (" - En attente de validation par votre coopérative" if coop_id else ""),
         "harvest": harvest_dict
     }
 

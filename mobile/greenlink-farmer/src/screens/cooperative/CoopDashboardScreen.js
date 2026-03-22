@@ -212,6 +212,12 @@ export default function CoopDashboardScreen({ navigation }) {
             color="#9C27B0"
           />
           <QuickAction
+            icon="leaf"
+            label="Récoltes"
+            onPress={() => navigation.navigate('CoopHarvests')}
+            color="#16a34a"
+          />
+          <QuickAction
             icon="download"
             label="Télécharger PDF"
             onPress={async () => {
