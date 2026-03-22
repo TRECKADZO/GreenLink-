@@ -808,41 +808,138 @@ async def get_my_carbon_purchases(current_user: dict = Depends(get_current_user)
 
 @router.get("/carbon/my-score")
 async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
-    """Get farmer's carbon score and statistics"""
-    # Get user's parcels
-    parcels = await db.parcels.find({"farmer_id": current_user["_id"]}).to_list(100)
-    
+    """Get farmer's carbon score and detailed breakdown"""
+    from routes.auth import normalize_phone
+
+    user_id = str(current_user["_id"])
+    phone = current_user.get("phone_number", "")
+
+    possible_ids = [user_id]
+    if phone:
+        phone_variants = normalize_phone(phone)
+        linked_members = await db.coop_members.find(
+            {"phone_number": {"$in": phone_variants}}, {"_id": 1}
+        ).to_list(10)
+        for m in linked_members:
+            possible_ids.append(str(m["_id"]))
+
+    parcels = await db.parcels.find({
+        "$or": [
+            {"farmer_id": {"$in": possible_ids}},
+            {"member_id": {"$in": possible_ids}}
+        ]
+    }).to_list(100)
+
     if not parcels:
         return {
             "average_score": 0,
             "total_credits": 0,
             "total_premium": 0,
-            "parcels_count": 0
+            "parcels_count": 0,
+            "breakdown": {"arbres": 0, "ombrage": 0, "pratiques": 0, "surface": 0},
+            "recommendations": [],
+            "parcels": []
         }
-    
-    # Calculate average score
+
     scores = [p.get("carbon_score", 0) for p in parcels]
     avg_score = sum(scores) / len(scores) if scores else 0
-    
-    # Calculate total credits and premium
     total_credits = sum([p.get("carbon_credits_earned", 0) for p in parcels])
-    
-    # Get harvests for premium calculation
-    harvests = await db.harvests.find({"farmer_id": current_user["_id"]}).to_list(100)
+    total_area = sum([p.get("area_hectares", 0) for p in parcels])
+    total_trees = sum([p.get("nombre_arbres", 0) or 0 for p in parcels])
+    avg_shade = 0
+    shade_count = 0
+    for p in parcels:
+        shade = p.get("couverture_ombragee")
+        if shade is not None and shade > 0:
+            avg_shade += shade
+            shade_count += 1
+    avg_shade = avg_shade / shade_count if shade_count else 0
+
+    all_practices = set()
+    for p in parcels:
+        for pr in (p.get("pratiques_ecologiques") or p.get("farming_practices") or []):
+            all_practices.add(pr)
+
+    # Calculate breakdown components (averaged)
+    tree_density = total_trees / total_area if total_area > 0 else 0
+    tree_pts = 2.0 if tree_density >= 100 else 1.5 if tree_density >= 50 else 1.0 if tree_density >= 20 else 0.5 if tree_density >= 5 else 0
+    shade_pts = 2.0 if avg_shade >= 60 else 1.5 if avg_shade >= 40 else 1.0 if avg_shade >= 20 else 0.5 if avg_shade >= 10 else 0
+    practice_map = {"compostage": 0.5, "absence_pesticides": 0.5, "gestion_dechets": 0.5, "protection_cours_eau": 0.5, "agroforesterie": 0.5}
+    practice_pts = sum(practice_map.get(p, 0) for p in all_practices)
+    area_pts = 0.5 if total_area >= 5 else 0
+
+    harvests = await db.harvests.find({"farmer_id": {"$in": possible_ids}}).to_list(100)
     total_premium = sum([h.get("carbon_premium", 0) for h in harvests])
-    
+
+    # Build personalized recommendations
+    recommendations = []
+    if tree_pts < 2.0:
+        target = 100 if tree_density < 20 else 50
+        recommendations.append({
+            "type": "arbres",
+            "title": "Plantez plus d'arbres",
+            "description": f"Densite actuelle: {int(tree_density)} arbres/ha. Visez {target}+ arbres/ha pour gagner +{2.0 - tree_pts:.1f} pts",
+            "potential_gain": round(2.0 - tree_pts, 1),
+            "priority": "haute" if tree_pts == 0 else "moyenne"
+        })
+    if shade_pts < 2.0:
+        recommendations.append({
+            "type": "ombrage",
+            "title": "Augmentez la couverture ombragee",
+            "description": f"Couverture actuelle: {int(avg_shade)}%. Visez 60%+ pour gagner +{2.0 - shade_pts:.1f} pts",
+            "potential_gain": round(2.0 - shade_pts, 1),
+            "priority": "haute" if shade_pts == 0 else "moyenne"
+        })
+    missing_practices = [k for k in practice_map if k not in all_practices]
+    practice_labels = {
+        "compostage": "Compostage",
+        "absence_pesticides": "Elimination des pesticides chimiques",
+        "gestion_dechets": "Gestion des dechets",
+        "protection_cours_eau": "Protection des cours d'eau",
+        "agroforesterie": "Agroforesterie"
+    }
+    for mp in missing_practices[:3]:
+        recommendations.append({
+            "type": "pratique",
+            "title": f"Adoptez: {practice_labels.get(mp, mp)}",
+            "description": f"Cette pratique ecologique vous rapportera +0.5 pt sur votre score carbone",
+            "potential_gain": 0.5,
+            "priority": "faible"
+        })
+
+    # Sort by potential gain
+    recommendations.sort(key=lambda r: r["potential_gain"], reverse=True)
+
     return {
         "average_score": round(avg_score, 1),
         "total_credits": round(total_credits, 2),
         "total_premium": total_premium,
         "parcels_count": len(parcels),
+        "total_area": round(total_area, 1),
+        "total_trees": total_trees,
+        "avg_shade_cover": round(avg_shade, 1),
+        "practices_count": len(all_practices),
+        "practices_list": list(all_practices),
+        "breakdown": {
+            "base": 3.0,
+            "arbres": round(tree_pts, 1),
+            "ombrage": round(shade_pts, 1),
+            "pratiques": round(practice_pts, 1),
+            "surface": round(area_pts, 1),
+            "max_possible": 10.0
+        },
+        "recommendations": recommendations[:5],
         "parcels": [{
             "id": str(p["_id"]),
-            "location": p.get("location", ""),
+            "village": p.get("village", p.get("location", "")),
             "area_hectares": p.get("area_hectares", 0),
             "carbon_score": p.get("carbon_score", 0),
-            "carbon_credits_earned": p.get("carbon_credits_earned", 0)
-        } for p in parcels[:5]]
+            "carbon_credits_earned": p.get("carbon_credits_earned", 0),
+            "nombre_arbres": p.get("nombre_arbres", 0) or 0,
+            "couverture_ombragee": p.get("couverture_ombragee", 0) or 0,
+            "pratiques_ecologiques": p.get("pratiques_ecologiques", []),
+            "verification_status": p.get("verification_status", "pending"),
+        } for p in parcels[:10]]
     }
 
 @router.get("/carbon/my-credits")

@@ -113,17 +113,45 @@ const HomeScreen = ({ navigation }) => {
         </View>
         
         {/* Score carbone */}
-        <View style={styles.carbonScore}>
-          <Text style={styles.carbonLabel}>Score Carbone</Text>
-          <Text style={styles.carbonValue}>
-            {dashboard?.score_carbone_moyen || 0}/10
-          </Text>
-          <Text style={styles.carbonHint}>
-            {(dashboard?.score_carbone_moyen || 0) >= 7 
-              ? '✓ Éligible aux primes' 
-              : 'Améliorez vos pratiques'}
-          </Text>
-        </View>
+        <TouchableOpacity 
+          style={styles.carbonScore}
+          onPress={() => navigation.navigate('MyCarbonScore')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.carbonScoreRow}>
+            <View style={styles.carbonGaugeMini}>
+              <View style={[styles.carbonGaugeRing, { 
+                borderColor: (dashboard?.score_carbone_moyen || 0) >= 7 ? '#22c55e' 
+                  : (dashboard?.score_carbone_moyen || 0) >= 5 ? '#f59e0b' : '#ef4444' 
+              }]}>
+                <Text style={[styles.carbonGaugeNum, { 
+                  color: (dashboard?.score_carbone_moyen || 0) >= 7 ? '#22c55e' 
+                    : (dashboard?.score_carbone_moyen || 0) >= 5 ? '#f59e0b' : '#ef4444' 
+                }]}>
+                  {(dashboard?.score_carbone_moyen || 0).toFixed(1)}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.carbonInfo}>
+              <Text style={styles.carbonLabel}>Score Carbone</Text>
+              <Text style={styles.carbonHint}>
+                {(dashboard?.score_carbone_moyen || 0) >= 7 
+                  ? 'Eligible aux primes' 
+                  : 'Ameliorez vos pratiques'}
+              </Text>
+              <View style={styles.carbonBarBg}>
+                <View style={[styles.carbonBarFill, { 
+                  width: `${Math.min((dashboard?.score_carbone_moyen || 0) * 10, 100)}%`,
+                  backgroundColor: (dashboard?.score_carbone_moyen || 0) >= 7 ? '#22c55e' 
+                    : (dashboard?.score_carbone_moyen || 0) >= 5 ? '#f59e0b' : '#ef4444'
+                }]} />
+              </View>
+            </View>
+            <View style={styles.carbonArrow}>
+              <Text style={{ color: '#94a3b8', fontSize: 18 }}>{'>'}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Stats rapides */}
@@ -292,22 +320,53 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 16,
     padding: SPACING.md,
+  },
+  carbonScoreRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  carbonGaugeMini: {
+    marginRight: SPACING.md,
+  },
+  carbonGaugeRing: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+  },
+  carbonGaugeNum: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  carbonInfo: {
+    flex: 1,
   },
   carbonLabel: {
     fontSize: FONTS.sizes.sm,
-    color: COLORS.gray[600],
-    marginBottom: SPACING.xs,
-  },
-  carbonValue: {
-    fontSize: FONTS.sizes.xxxl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
+    fontWeight: '700',
+    color: COLORS.gray[800],
+    marginBottom: 2,
   },
   carbonHint: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.success,
-    marginTop: SPACING.xs,
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.gray[500],
+    marginBottom: SPACING.xs,
+  },
+  carbonBarBg: {
+    height: 6,
+    backgroundColor: COLORS.gray[200],
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  carbonBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  carbonArrow: {
+    marginLeft: SPACING.sm,
   },
   statsContainer: {
     padding: SPACING.md,
