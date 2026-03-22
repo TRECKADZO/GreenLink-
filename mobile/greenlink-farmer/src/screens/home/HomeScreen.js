@@ -38,24 +38,6 @@ const HomeScreen = ({ navigation }) => {
     }
   }, []);
 
-  // Bloquer le rendu pendant la redirection
-  if (redirecting || user?.user_type === 'cooperative' || user?.user_type === 'field_agent' || user?.user_type === 'agent_terrain') {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8f9fa' }}>
-        <ActivityIndicator size="large" color="#059669" />
-      </View>
-    );
-  }
-
-  // Rafraîchir automatiquement quand l'écran revient au focus
-  useFocusEffect(
-    useCallback(() => {
-      if (user?.user_type !== 'field_agent' && user?.user_type !== 'agent_terrain' && user?.user_type !== 'cooperative') {
-        loadDashboard();
-      }
-    }, [])
-  );
-
   const loadDashboard = async () => {
     try {
       // Essayer d'abord le cache si offline
@@ -81,6 +63,24 @@ const HomeScreen = ({ navigation }) => {
       setRefreshing(false);
     }
   };
+
+  // Rafraîchir automatiquement quand l'écran revient au focus
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.user_type !== 'field_agent' && user?.user_type !== 'agent_terrain' && user?.user_type !== 'cooperative') {
+        loadDashboard();
+      }
+    }, [])
+  );
+
+  // Bloquer le rendu pendant la redirection
+  if (redirecting || user?.user_type === 'cooperative' || user?.user_type === 'field_agent' || user?.user_type === 'agent_terrain') {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8f9fa' }}>
+        <ActivityIndicator size="large" color="#059669" />
+      </View>
+    );
+  }
 
   const onRefresh = () => {
     setRefreshing(true);

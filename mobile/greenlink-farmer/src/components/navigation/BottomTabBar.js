@@ -61,7 +61,6 @@ const QUICK_ACTIONS = {
     { name: 'AgentList', icon: 'swap-horizontal', label: 'Attribuer Planteurs', color: '#7c3aed' },
     { name: 'CoopMembers', icon: 'people', label: 'Mes Membres', color: '#3b82f6' },
     { name: 'CoopReports', icon: 'bar-chart', label: 'Rapports', color: '#8b5cf6' },
-    { name: 'CoopMembers', icon: 'clipboard', label: 'Visite SSRTE', color: '#f59e0b', params: { selectMode: 'ssrte' } },
     { name: 'SSRTEAgentDashboard', icon: 'shield-checkmark', label: 'Suivi SSRTE', color: '#ec4899' },
     { name: 'Marketplace', icon: 'cart', label: 'Marketplace', color: '#64748b' },
     { name: 'Notifications', icon: 'notifications', label: 'Notifications', color: '#ef4444' },
