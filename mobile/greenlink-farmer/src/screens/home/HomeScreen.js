@@ -5,6 +5,7 @@ import {
   StyleSheet, 
   ScrollView,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
@@ -20,19 +21,31 @@ const HomeScreen = ({ navigation }) => {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     // Rediriger les agents terrain vers leur dashboard dédié
     if (user?.user_type === 'field_agent' || user?.user_type === 'agent_terrain') {
+      setRedirecting(true);
       navigation.replace('FieldAgentDashboard');
       return;
     }
     // Rediriger les coopératives vers leur dashboard dédié
     if (user?.user_type === 'cooperative') {
+      setRedirecting(true);
       navigation.replace('CoopDashboard');
       return;
     }
   }, []);
+
+  // Bloquer le rendu pendant la redirection
+  if (redirecting || user?.user_type === 'cooperative' || user?.user_type === 'field_agent' || user?.user_type === 'agent_terrain') {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8f9fa' }}>
+        <ActivityIndicator size="large" color="#059669" />
+      </SafeAreaView>
+    );
+  }
 
   // Rafraîchir automatiquement quand l'écran revient au focus
   useFocusEffect(
