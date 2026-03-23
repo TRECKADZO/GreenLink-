@@ -38,31 +38,22 @@ axiosInstance.interceptors.response.use(
       isNonJsonResponse = true;
       const statusCode = error.response.status;
       console.warn(`[API] Non-JSON response (${statusCode}):`, error.response.data?.substring(0, 100));
-      error.response.data = {
-        detail: statusCode === 502 ? 'Serveur temporairement indisponible. Réessayez.' :
-                statusCode === 503 ? 'Service en maintenance. Réessayez dans quelques instants.' :
-                statusCode === 504 ? 'Le serveur ne répond pas. Vérifiez votre connexion.' :
-                statusCode === 429 ? 'Trop de requêtes. Patientez une minute.' :
-                statusCode === 404 ? 'Connexion au serveur en cours. Réessayez dans quelques secondes.' :
-                statusCode === 403 ? 'Accès temporairement bloqué. Réessayez.' :
-                `Erreur serveur (${statusCode}).`
-      };
+      // Don't overwrite error.response.data yet - wait until retries are exhausted
     }
     
     // Handle network errors (no response at all)
     if (!error.response && error.message) {
       const msg = error.message.toLowerCase();
       if (msg.includes('network') || msg.includes('timeout') || msg.includes('abort')) {
-        // Network errors should also be retried
         if (!config._retry || config._retry < CONFIG.RETRY_ATTEMPTS) {
           config._retry = (config._retry || 0) + 1;
           console.log(`[API] Network retry ${config._retry}/${CONFIG.RETRY_ATTEMPTS} for ${config.url}`);
-          await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
+          await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY * config._retry));
           return axiosInstance(config);
         }
         error.response = {
           status: 0,
-          data: { detail: 'Pas de connexion internet. Vérifiez votre réseau et réessayez.' }
+          data: { detail: 'Pas de connexion internet. Verifiez votre reseau et reessayez.' }
         };
         return Promise.reject(error);
       }
@@ -76,16 +67,22 @@ axiosInstance.interceptors.response.use(
     // Retry on: 5xx errors, OR non-JSON 404/403 (proxy/Cloudflare issues)
     const shouldRetry = status >= 500 || (isNonJsonResponse && [404, 403].includes(status));
     
-    if (currentRetry >= maxRetries || !shouldRetry) {
-      return Promise.reject(error);
+    if (currentRetry < maxRetries && shouldRetry) {
+      config._retry = currentRetry + 1;
+      const delay = 2000 * config._retry; // 2s, 4s, 6s, 8s
+      console.log(`[API] Retry ${config._retry}/${maxRetries} for ${config.url} (delay ${delay}ms)`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return axiosInstance(config);
     }
     
-    config._retry = currentRetry + 1;
-    const delay = CONFIG.RETRY_DELAY * config._retry; // Progressive delay
-    console.log(`[API] Retry ${config._retry}/${maxRetries} for ${config.url} (delay ${delay}ms)`);
+    // All retries exhausted - now format the error message
+    if (isNonJsonResponse) {
+      error.response.data = {
+        detail: 'Le serveur est momentanement inaccessible. Fermez l\'application et reessayez dans 30 secondes.'
+      };
+    }
     
-    await new Promise(resolve => setTimeout(resolve, delay));
-    return axiosInstance(config);
+    return Promise.reject(error);
   }
 );
 

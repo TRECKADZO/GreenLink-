@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
         } else if (status >= 500) {
           errorMessage = 'Le serveur rencontre un problème. Réessayez dans quelques instants.';
         } else if (status === 404) {
-          errorMessage = 'Connexion au serveur en cours. Réessayez dans quelques secondes.';
+          errorMessage = 'Le serveur est momentanement inaccessible. Fermez l\'application et reessayez dans 30 secondes.';
         } else {
           errorMessage = `Erreur (${status}). Vérifiez votre connexion et réessayez.`;
         }
