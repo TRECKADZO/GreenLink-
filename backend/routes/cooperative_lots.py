@@ -423,7 +423,7 @@ async def execute_distribution_payments(
         d["payment_date"] = datetime.utcnow().isoformat()
         d["transaction_id"] = f"OM-{d['member_id'][-6:]}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
         successful += 1
-        logger.info(f"SMS sent to {d['phone_number']}: Prime carbone {d['amount']} XOF reçue")
+        logger.info(f"SMS sent to {d.get('telephone', '')}: Prime carbone {d['amount']} XOF reçue")
     
     await db.coop_distributions.update_one(
         {"_id": ObjectId(dist_id)},
@@ -483,11 +483,48 @@ async def get_distributions_history(
     
     return [{
         "id": str(d["_id"]),
+        "lot_id": d.get("lot_id", ""),
         "lot_name": d.get("lot_name", ""),
         "total_premium": d.get("total_premium", 0),
+        "commission_rate": d.get("commission_rate", 0),
         "commission_amount": d.get("commission_amount", 0),
         "amount_distributed": d.get("amount_distributed", 0),
+        "total_tonnage_kg": d.get("total_tonnage_kg", 0),
         "beneficiaries_count": d.get("beneficiaries_count", 0),
+        "distributions": d.get("distributions", []),
         "status": d.get("status", ""),
         "created_at": d.get("created_at", datetime.utcnow()).isoformat() if isinstance(d.get("created_at"), datetime) else str(d.get("created_at", ""))
     } for d in distributions]
+
+
+@router.get("/distributions/{dist_id}")
+async def get_distribution_detail(
+    dist_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Détail d'une distribution spécifique"""
+    verify_cooperative(current_user)
+
+    dist = await db.coop_distributions.find_one({
+        "_id": ObjectId(dist_id),
+        "coop_id": current_user["_id"]
+    })
+
+    if not dist:
+        raise HTTPException(status_code=404, detail="Distribution non trouvée")
+
+    return {
+        "id": str(dist["_id"]),
+        "lot_id": dist.get("lot_id", ""),
+        "lot_name": dist.get("lot_name", ""),
+        "total_premium": dist.get("total_premium", 0),
+        "commission_rate": dist.get("commission_rate", 0),
+        "commission_amount": dist.get("commission_amount", 0),
+        "amount_distributed": dist.get("amount_distributed", 0),
+        "total_tonnage_kg": dist.get("total_tonnage_kg", 0),
+        "beneficiaries_count": dist.get("beneficiaries_count", 0),
+        "distributions": dist.get("distributions", []),
+        "status": dist.get("status", ""),
+        "created_at": dist.get("created_at", datetime.utcnow()).isoformat() if isinstance(dist.get("created_at"), datetime) else str(dist.get("created_at", "")),
+        "executed_at": dist.get("executed_at", "").isoformat() if isinstance(dist.get("executed_at"), datetime) else str(dist.get("executed_at", ""))
+    }

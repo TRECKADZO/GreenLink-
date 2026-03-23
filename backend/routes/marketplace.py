@@ -11,6 +11,7 @@ from marketplace_models import (
 )
 from auth_models import User
 from routes.auth import get_current_user
+from routes.notifications import notify_sse_clients
 from datetime import datetime, timedelta
 from bson import ObjectId
 from pydantic import BaseModel, Field as PydanticField
@@ -678,7 +679,7 @@ async def checkout_cart(
             )
 
         # Create notification for supplier
-        await db.notifications.insert_one({
+        supplier_notif = {
             "user_id": supplier_id,
             "title": "Nouvelle commande reçue",
             "message": f"Commande #{order['order_number']} de {current_user['full_name']} - {order['total_amount']:,.0f} XOF",
@@ -686,6 +687,16 @@ async def checkout_cart(
             "action_url": f"/supplier/orders",
             "created_at": datetime.utcnow(),
             "is_read": False
+        }
+        ins = await db.notifications.insert_one(supplier_notif)
+        notify_sse_clients(supplier_id, {
+            "id": str(ins.inserted_id),
+            "title": supplier_notif["title"],
+            "message": supplier_notif["message"],
+            "type": supplier_notif["type"],
+            "action_url": supplier_notif["action_url"],
+            "is_read": False,
+            "created_at": supplier_notif["created_at"].isoformat()
         })
 
     # Clear cart
@@ -747,7 +758,7 @@ async def create_order(
     order_dict["_id"] = str(result.inserted_id)
     
     # Create notification for supplier
-    await db.notifications.insert_one({
+    single_notif = {
         "user_id": product["supplier_id"],
         "title": "Nouvelle commande",
         "message": f"Nouvelle commande {order_dict['order_number']} de {current_user['full_name']}",
@@ -755,6 +766,16 @@ async def create_order(
         "action_url": f"/supplier/orders/{str(result.inserted_id)}",
         "created_at": datetime.utcnow(),
         "is_read": False
+    }
+    ins2 = await db.notifications.insert_one(single_notif)
+    notify_sse_clients(product["supplier_id"], {
+        "id": str(ins2.inserted_id),
+        "title": single_notif["title"],
+        "message": single_notif["message"],
+        "type": single_notif["type"],
+        "action_url": single_notif["action_url"],
+        "is_read": False,
+        "created_at": single_notif["created_at"].isoformat()
     })
     
     return order_dict
@@ -828,7 +849,7 @@ async def update_order_status(
     )
     
     # Notify customer
-    await db.notifications.insert_one({
+    status_notif = {
         "user_id": order["customer_id"],
         "title": "Mise à jour de commande",
         "message": f"Votre commande {order['order_number']} est maintenant: {status}",
@@ -836,6 +857,17 @@ async def update_order_status(
         "action_url": f"/orders/{order_id}",
         "created_at": datetime.utcnow(),
         "is_read": False
+    }
+    ins_s = await db.notifications.insert_one(status_notif)
+    customer_id = str(order["customer_id"]) if isinstance(order["customer_id"], ObjectId) else order["customer_id"]
+    notify_sse_clients(customer_id, {
+        "id": str(ins_s.inserted_id),
+        "title": status_notif["title"],
+        "message": status_notif["message"],
+        "type": status_notif["type"],
+        "action_url": status_notif["action_url"],
+        "is_read": False,
+        "created_at": status_notif["created_at"].isoformat()
     })
     
     return {"message": "Statut mis à jour"}

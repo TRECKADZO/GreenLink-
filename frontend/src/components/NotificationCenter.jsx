@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, Check, CheckCheck, MapPin, Leaf, AlertTriangle, X } from 'lucide-react';
+import { Bell, Check, CheckCheck, MapPin, Leaf, AlertTriangle, X, ShoppingCart, Wheat } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 
@@ -14,9 +14,15 @@ const getNotifIcon = (type) => {
     case 'ssrte_critical_alert':
       return <AlertTriangle className="h-4 w-4 text-red-500" />;
     case 'payment_received':
-      return <Leaf className="h-4 w-4 text-emerald-500" />;
     case 'carbon_update':
       return <Leaf className="h-4 w-4 text-emerald-500" />;
+    case 'harvest_to_validate':
+    case 'harvest_validated':
+    case 'harvest_rejected':
+    case 'harvest':
+      return <Wheat className="h-4 w-4 text-amber-500" />;
+    case 'order':
+      return <ShoppingCart className="h-4 w-4 text-purple-500" />;
     default:
       return <Bell className="h-4 w-4 text-blue-500" />;
   }
@@ -40,13 +46,14 @@ export const NotificationCenter = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const ref = useRef(null);
+  const sseRef = useRef(null);
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
   const fetchUnreadCount = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/notifications/unread-count`, { headers });
+      const res = await fetch(`${API_URL}/api/notifications/web/unread-count`, { headers });
       if (res.ok) {
         const data = await res.json();
         setUnreadCount(data.non_lues || 0);
@@ -57,10 +64,11 @@ export const NotificationCenter = () => {
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/notifications/history?limit=20`, { headers });
+      const res = await fetch(`${API_URL}/api/notifications/web?limit=20`, { headers });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications || []);
+        setUnreadCount(data.non_lues || 0);
       }
     } catch (e) { /* silent */ }
     setLoading(false);
@@ -68,24 +76,92 @@ export const NotificationCenter = () => {
 
   const markAsRead = async (id) => {
     try {
-      await fetch(`${API_URL}/api/notifications/history/${id}/read`, {
+      await fetch(`${API_URL}/api/notifications/web/${id}/read`, {
         method: 'PUT', headers
       });
-      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (e) { /* silent */ }
   };
 
   const markAllRead = async () => {
     try {
-      await fetch(`${API_URL}/api/notifications/history/read-all`, {
+      await fetch(`${API_URL}/api/notifications/web/read-all`, {
         method: 'PUT', headers
       });
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (e) { /* silent */ }
   };
 
+  // SSE real-time connection
+  useEffect(() => {
+    if (!token) return;
+
+    const connectSSE = () => {
+      const url = `${API_URL}/api/notifications/stream`;
+      const eventSource = new EventSource(url);
+
+      // SSE doesn't natively support auth headers, so we use a workaround:
+      // Close the EventSource and use fetch-based SSE instead
+      eventSource.close();
+
+      // Use fetch-based SSE with auth headers
+      const controller = new AbortController();
+      fetch(url, {
+        headers: { ...headers, Accept: 'text/event-stream' },
+        signal: controller.signal
+      }).then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        const readStream = () => {
+          reader.read().then(({ done, value }) => {
+            if (done) return;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            let eventType = '';
+            let eventData = '';
+
+            for (const line of lines) {
+              if (line.startsWith('event: ')) {
+                eventType = line.slice(7);
+              } else if (line.startsWith('data: ')) {
+                eventData = line.slice(6);
+              } else if (line === '' && eventData) {
+                try {
+                  const parsed = JSON.parse(eventData);
+                  if (eventType === 'notification') {
+                    setNotifications(prev => [parsed, ...prev.slice(0, 19)]);
+                    setUnreadCount(prev => prev + 1);
+                  } else if (eventType === 'unread_count') {
+                    setUnreadCount(parsed.non_lues || 0);
+                  }
+                } catch (e) { /* ignore parse errors */ }
+                eventType = '';
+                eventData = '';
+              }
+            }
+            readStream();
+          }).catch(() => { /* stream closed */ });
+        };
+        readStream();
+      }).catch(() => { /* connection failed, fallback to polling */ });
+
+      sseRef.current = controller;
+    };
+
+    connectSSE();
+
+    return () => {
+      if (sseRef.current) sseRef.current.abort();
+    };
+  }, [token]);
+
+  // Fallback polling for unread count
   useEffect(() => {
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, 30000);
@@ -157,24 +233,24 @@ export const NotificationCenter = () => {
             ) : (
               notifications.map((notif) => (
                 <div
-                  key={notif._id}
+                  key={notif.id}
                   className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors ${
-                    notif.read ? 'bg-white' : 'bg-green-50/60'
+                    notif.is_read ? 'bg-white' : 'bg-green-50/60'
                   } hover:bg-gray-50`}
-                  onClick={() => !notif.read && markAsRead(notif._id)}
-                  data-testid={`notification-item-${notif._id}`}
+                  onClick={() => !notif.is_read && markAsRead(notif.id)}
+                  data-testid={`notification-item-${notif.id}`}
                 >
                   <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
                     {getNotifIcon(notif.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm ${notif.read ? 'text-gray-600' : 'text-gray-900 font-medium'}`}>
+                    <p className={`text-sm ${notif.is_read ? 'text-gray-600' : 'text-gray-900 font-medium'}`}>
                       {notif.title}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5 truncate">{notif.body}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 truncate">{notif.message}</p>
                     <p className="text-[10px] text-gray-400 mt-1">{timeAgo(notif.created_at)}</p>
                   </div>
-                  {!notif.read && (
+                  {!notif.is_read && (
                     <div className="mt-2 w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
                   )}
                 </div>

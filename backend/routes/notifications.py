@@ -1,12 +1,15 @@
 # Notifications API Routes for GreenLink
 # Handles push notifications, reminders, and scheduled tasks
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 from bson import ObjectId
 import logging
+import asyncio
+import json
 
 from database import db
 from routes.auth import get_current_user
@@ -22,6 +25,19 @@ from services.fcm_service import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
+
+# In-memory SSE clients registry
+_sse_clients: Dict[str, List[asyncio.Queue]] = {}
+
+
+def notify_sse_clients(user_id: str, notification: dict):
+    """Push a notification to all SSE clients for a given user."""
+    queues = _sse_clients.get(user_id, [])
+    for q in queues:
+        try:
+            q.put_nowait(notification)
+        except asyncio.QueueFull:
+            pass
 
 
 class DeviceRegistration(BaseModel):
@@ -434,3 +450,120 @@ async def send_test_notification(
     )
     
     return result
+
+
+
+# ============= WEB NOTIFICATIONS (reads from `notifications` collection) =============
+
+@router.get("/web")
+async def get_web_notifications(
+    limit: int = 30,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get notifications for the web dashboard (reads from notifications collection)."""
+    user_id = str(current_user["_id"])
+    notifs = await db.notifications.find(
+        {"user_id": {"$in": [user_id, current_user["_id"]]}}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+
+    return {
+        "notifications": [{
+            "id": str(n["_id"]),
+            "title": n.get("title", ""),
+            "message": n.get("message", ""),
+            "type": n.get("type", ""),
+            "action_url": n.get("action_url", ""),
+            "is_read": n.get("is_read", False),
+            "created_at": n["created_at"].isoformat() if isinstance(n.get("created_at"), datetime) else str(n.get("created_at", ""))
+        } for n in notifs],
+        "non_lues": sum(1 for n in notifs if not n.get("is_read", False))
+    }
+
+
+@router.get("/web/unread-count")
+async def get_web_unread_count(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get unread notification count from notifications collection."""
+    user_id = str(current_user["_id"])
+    count = await db.notifications.count_documents({
+        "user_id": {"$in": [user_id, current_user["_id"]]},
+        "is_read": False
+    })
+    return {"non_lues": count}
+
+
+@router.put("/web/{notification_id}/read")
+async def mark_web_notification_read(
+    notification_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark a web notification as read."""
+    result = await db.notifications.update_one(
+        {"_id": ObjectId(notification_id)},
+        {"$set": {"is_read": True}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Notification non trouvée")
+    return {"success": True}
+
+
+@router.put("/web/read-all")
+async def mark_all_web_notifications_read(
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark all web notifications as read."""
+    user_id = str(current_user["_id"])
+    result = await db.notifications.update_many(
+        {"user_id": {"$in": [user_id, current_user["_id"]]}, "is_read": False},
+        {"$set": {"is_read": True}}
+    )
+    return {"success": True, "updated": result.modified_count}
+
+
+# ============= SSE STREAM =============
+
+@router.get("/stream")
+async def notification_stream(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """SSE endpoint – streams new notifications to the connected web client."""
+    user_id = str(current_user["_id"])
+    queue: asyncio.Queue = asyncio.Queue(maxsize=50)
+
+    if user_id not in _sse_clients:
+        _sse_clients[user_id] = []
+    _sse_clients[user_id].append(queue)
+
+    async def event_generator():
+        try:
+            # Send initial unread count
+            count = await db.notifications.count_documents({
+                "user_id": {"$in": [user_id, current_user["_id"]]},
+                "is_read": False
+            })
+            yield f"event: unread_count\ndata: {json.dumps({'non_lues': count})}\n\n"
+
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    notification = await asyncio.wait_for(queue.get(), timeout=30)
+                    yield f"event: notification\ndata: {json.dumps(notification, default=str)}\n\n"
+                except asyncio.TimeoutError:
+                    yield f"event: ping\ndata: {json.dumps({'ts': datetime.utcnow().isoformat()})}\n\n"
+        finally:
+            _sse_clients.get(user_id, []).remove(queue) if queue in _sse_clients.get(user_id, []) else None
+            if not _sse_clients.get(user_id):
+                _sse_clients.pop(user_id, None)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )

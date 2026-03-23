@@ -5,6 +5,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import Navbar from '../../components/Navbar';
+import { NotificationCenter } from '../../components/NotificationCenter';
 import { greenlinkApi } from '../../services/greenlinkApi';
 import { 
   Sprout, 
@@ -142,11 +143,18 @@ const FarmerDashboard = () => {
       <div className="max-w-7xl mx-auto px-6 py-12 pt-24">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Sprout className="w-10 h-10 text-green-600" />
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">Bienvenue {user?.full_name}</h1>
-              <p className="text-gray-600">Votre espace planteur GreenLink</p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <Sprout className="w-10 h-10 text-green-600" />
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900">Bienvenue {user?.full_name}</h1>
+                <p className="text-gray-600">Votre espace planteur GreenLink</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="[&_button]:border-green-300 [&_button]:text-green-700 [&_button]:hover:bg-green-100">
+                <NotificationCenter />
+              </div>
             </div>
           </div>
         </div>

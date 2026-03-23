@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from database import db
 from routes.auth import get_current_user
+from routes.notifications import notify_sse_clients
 from datetime import datetime
 from bson import ObjectId
 import logging
@@ -136,14 +137,26 @@ async def validate_harvest(
         qty_display = f"{int(stored_qty)} kg"
     
     # Notifier l'agriculteur
-    await db.notifications.insert_one({
+    validated_notif = {
         "user_id": harvest.get("farmer_id", ""),
         "title": "Récolte validée",
         "message": f"Votre récolte de {qty_display} a été validée par votre coopérative",
         "type": "harvest_validated",
         "created_at": datetime.utcnow(),
         "is_read": False
-    })
+    }
+    insert_r = await db.notifications.insert_one(validated_notif)
+    farmer_id = str(harvest.get("farmer_id", ""))
+    if farmer_id:
+        notify_sse_clients(farmer_id, {
+            "id": str(insert_r.inserted_id),
+            "title": validated_notif["title"],
+            "message": validated_notif["message"],
+            "type": validated_notif["type"],
+            "action_url": "",
+            "is_read": False,
+            "created_at": validated_notif["created_at"].isoformat()
+        })
     
     return {"success": True, "message": "Récolte validée avec succès"}
 
@@ -189,14 +202,26 @@ async def reject_harvest(
     
     # Notifier l'agriculteur
     reason_text = f" - Motif: {reason}" if reason else ""
-    await db.notifications.insert_one({
+    reject_notif = {
         "user_id": harvest.get("farmer_id", ""),
         "title": "Récolte rejetée",
         "message": f"Votre récolte de {qty_display_r} a été rejetée{reason_text}",
         "type": "harvest_rejected",
         "created_at": datetime.utcnow(),
         "is_read": False
-    })
+    }
+    insert_rej = await db.notifications.insert_one(reject_notif)
+    farmer_id_r = str(harvest.get("farmer_id", ""))
+    if farmer_id_r:
+        notify_sse_clients(farmer_id_r, {
+            "id": str(insert_rej.inserted_id),
+            "title": reject_notif["title"],
+            "message": reject_notif["message"],
+            "type": reject_notif["type"],
+            "action_url": "",
+            "is_read": False,
+            "created_at": reject_notif["created_at"].isoformat()
+        })
     
     return {"success": True, "message": "Récolte rejetée"}
 

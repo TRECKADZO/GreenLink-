@@ -12,6 +12,7 @@ from greenlink_models import (
 from routes.auth import get_current_user
 from services.sms_service import SMSService
 from services.fcm_service import send_notification_to_user
+from routes.notifications import notify_sse_clients
 from datetime import datetime, timedelta
 from bson import ObjectId
 import random
@@ -388,7 +389,7 @@ async def declare_harvest(
     
     # Notification for the cooperative
     if coop_id:
-        await db.notifications.insert_one({
+        coop_notif = {
             "user_id": str(coop_id),
             "title": "Nouvelle récolte à valider",
             "message": f"{current_user.get('full_name', 'Un producteur')} a déclaré {quantity_display} - Qualité {quality_grade}",
@@ -396,6 +397,16 @@ async def declare_harvest(
             "action_url": "/cooperative/harvests",
             "created_at": datetime.utcnow(),
             "is_read": False
+        }
+        insert_result = await db.notifications.insert_one(coop_notif)
+        notify_sse_clients(str(coop_id), {
+            "id": str(insert_result.inserted_id),
+            "title": coop_notif["title"],
+            "message": coop_notif["message"],
+            "type": coop_notif["type"],
+            "action_url": coop_notif["action_url"],
+            "is_read": False,
+            "created_at": coop_notif["created_at"].isoformat()
         })
         try:
             await send_notification_to_user(

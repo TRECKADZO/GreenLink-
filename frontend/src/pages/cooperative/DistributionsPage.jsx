@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { cooperativeApi } from '../../services/cooperativeApi';
 import { 
   DollarSign, ChevronLeft, CheckCircle, Clock,
-  Users, Send, AlertCircle, Wallet
+  Users, Send, AlertCircle, Wallet, ChevronDown, ChevronUp,
+  Percent, Scale
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -25,6 +26,9 @@ const DistributionsPage = () => {
   const [showExecuteModal, setShowExecuteModal] = useState(false);
   const [selectedDistribution, setSelectedDistribution] = useState(null);
   const [executing, setExecuting] = useState(false);
+  const [expandedDist, setExpandedDist] = useState(null);
+  const [detailData, setDetailData] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   const fetchDistributions = async () => {
     try {
@@ -42,6 +46,24 @@ const DistributionsPage = () => {
   useEffect(() => {
     fetchDistributions();
   }, []);
+
+  const toggleDetail = async (distId) => {
+    if (expandedDist === distId) {
+      setExpandedDist(null);
+      return;
+    }
+    setExpandedDist(distId);
+    setLoadingDetail(true);
+    try {
+      const data = await cooperativeApi.getDistributionDetail(distId);
+      setDetailData(data);
+    } catch (error) {
+      toast.error('Erreur lors du chargement du détail');
+      setDetailData(null);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
 
   const handleExecutePayments = async () => {
     setExecuting(true);
@@ -172,7 +194,7 @@ const DistributionsPage = () => {
                           <p className="font-medium">{(dist.commission_amount || 0).toLocaleString()} XOF</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">À Distribuer</p>
+                          <p className="text-sm text-gray-500">Distribué</p>
                           <p className="font-medium text-green-600">{(dist.amount_distributed || 0).toLocaleString()} XOF</p>
                         </div>
                         <div>
@@ -185,20 +207,89 @@ const DistributionsPage = () => {
                       </div>
                     </div>
 
-                    {dist.status === 'pending_payment' && (
-                      <Button 
-                        onClick={() => {
-                          setSelectedDistribution(dist);
-                          setShowExecuteModal(true);
-                        }}
-                        className="bg-green-600 hover:bg-green-700"
-                        data-testid={`execute-distribution-${dist.id}`}
+                    <div className="flex flex-col gap-2">
+                      {dist.status === 'pending_payment' && (
+                        <Button 
+                          onClick={() => {
+                            setSelectedDistribution(dist);
+                            setShowExecuteModal(true);
+                          }}
+                          className="bg-green-600 hover:bg-green-700"
+                          data-testid={`execute-distribution-${dist.id}`}
+                        >
+                          <Send className="h-4 w-4 mr-2" />
+                          Exécuter Paiements
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleDetail(dist.id)}
+                        data-testid={`detail-distribution-${dist.id}`}
                       >
-                        <Send className="h-4 w-4 mr-2" />
-                        Exécuter Paiements
+                        <Users className="h-4 w-4 mr-2" />
+                        Détail par Agriculteur
+                        {expandedDist === dist.id ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
                       </Button>
-                    )}
+                    </div>
                   </div>
+
+                  {/* Farmer Detail Breakdown */}
+                  {expandedDist === dist.id && (
+                    <div className="border-t mt-4 pt-4">
+                      {loadingDetail ? (
+                        <div className="py-4 text-center text-gray-400 text-sm">Chargement...</div>
+                      ) : detailData && detailData.distributions?.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm" data-testid="distribution-detail-table">
+                            <thead>
+                              <tr className="text-left text-xs text-gray-500 bg-gray-50 border-b">
+                                <th className="py-2 px-3">Agriculteur</th>
+                                <th className="py-2 px-3 text-center">Parcelles</th>
+                                <th className="py-2 px-3 text-right">Surface (ha)</th>
+                                <th className="py-2 px-3 text-right">Tonnage (kg)</th>
+                                <th className="py-2 px-3 text-right">% Contribution</th>
+                                <th className="py-2 px-3 text-right">Montant (XOF)</th>
+                                <th className="py-2 px-3 text-center">Paiement</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {detailData.distributions.map((d, idx) => (
+                                <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
+                                  <td className="py-2 px-3 font-medium text-gray-900">{d.nom_membre || 'Inconnu'}</td>
+                                  <td className="py-2 px-3 text-center">{d.nombre_parcelles || 0}</td>
+                                  <td className="py-2 px-3 text-right">{d.superficie_totale || 0}</td>
+                                  <td className="py-2 px-3 text-right">{(d.tonnage_contribution_kg || 0).toLocaleString()}</td>
+                                  <td className="py-2 px-3 text-right">{d.contribution_pct || 0}%</td>
+                                  <td className="py-2 px-3 text-right font-bold text-green-700">{(d.amount || 0).toLocaleString()}</td>
+                                  <td className="py-2 px-3 text-center">
+                                    {d.payment_status === 'completed' ? (
+                                      <Badge className="bg-green-100 text-green-700 text-xs">Payé</Badge>
+                                    ) : (
+                                      <Badge className="bg-amber-100 text-amber-700 text-xs">En attente</Badge>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot>
+                              <tr className="font-bold bg-gray-50 border-t-2">
+                                <td className="py-2 px-3">Total ({detailData.distributions.length})</td>
+                                <td className="py-2 px-3 text-center">{detailData.distributions.reduce((s, d) => s + (d.nombre_parcelles || 0), 0)}</td>
+                                <td className="py-2 px-3 text-right">{detailData.distributions.reduce((s, d) => s + (d.superficie_totale || 0), 0).toFixed(1)}</td>
+                                <td className="py-2 px-3 text-right">{detailData.distributions.reduce((s, d) => s + (d.tonnage_contribution_kg || 0), 0).toLocaleString()}</td>
+                                <td className="py-2 px-3 text-right">100%</td>
+                                <td className="py-2 px-3 text-right text-green-700">{(detailData.amount_distributed || 0).toLocaleString()}</td>
+                                <td></td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="py-4 text-center text-gray-400 text-sm">Aucun détail disponible</div>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

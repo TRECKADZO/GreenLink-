@@ -59,6 +59,12 @@ const LotsPage = () => {
   const [contributors, setContributors] = useState([]);
   const [loadingContributors, setLoadingContributors] = useState(false);
 
+  const [showDistributeModal, setShowDistributeModal] = useState(false);
+  const [distributeLot, setDistributeLot] = useState(null);
+  const [distributePreview, setDistributePreview] = useState(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [distributing, setDistributing] = useState(false);
+
   const toggleContributors = async (lotId) => {
     if (expandedLot === lotId) {
       setExpandedLot(null);
@@ -143,14 +149,55 @@ const LotsPage = () => {
     }
   };
 
-  const handleDistribute = async (lotId) => {
+  const handleDistributePreview = async (lot) => {
+    setDistributeLot(lot);
+    setShowDistributeModal(true);
+    setLoadingPreview(true);
+    setDistributePreview(null);
     try {
-      const result = await cooperativeApi.distributeLotPremiums(lotId);
+      const data = await cooperativeApi.getLotContributors(lot.id);
+      const totalTonnage = (data.contributors || []).reduce((s, c) => s + (c.estimated_tonnage_kg || 0), 0);
+      const totalPremium = (lot.actual_tonnage || 0) * 1000 * (lot.carbon_premium_per_kg || 0);
+      const commissionRate = 0.10;
+      const commission = totalPremium * commissionRate;
+      const distributable = totalPremium - commission;
+      
+      const breakdown = (data.contributors || []).map(c => {
+        const sharePct = totalTonnage > 0 ? (c.estimated_tonnage_kg || 0) / totalTonnage : 0;
+        return {
+          ...c,
+          share_pct: sharePct,
+          amount: Math.round(distributable * sharePct)
+        };
+      });
+      
+      setDistributePreview({
+        contributors: breakdown,
+        total_premium: totalPremium,
+        commission,
+        commission_rate: commissionRate,
+        distributable,
+        total_tonnage: totalTonnage
+      });
+    } catch (error) {
+      toast.error('Erreur lors du chargement de la prévisualisation');
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleConfirmDistribute = async () => {
+    if (!distributeLot) return;
+    setDistributing(true);
+    try {
+      const result = await cooperativeApi.distributeLotPremiums(distributeLot.id);
       toast.success(`Distribution créée pour ${result.beneficiaries_count} bénéficiaires`);
+      setShowDistributeModal(false);
       navigate('/cooperative/distributions');
     } catch (error) {
-      console.error('Error distributing:', error);
       toast.error(error.response?.data?.detail || 'Erreur lors de la distribution');
+    } finally {
+      setDistributing(false);
     }
   };
 
@@ -315,7 +362,7 @@ const LotsPage = () => {
                       {lot.status === 'completed' && (
                         <Button 
                           variant="outline"
-                          onClick={() => handleDistribute(lot.id)}
+                          onClick={() => handleDistributePreview(lot)}
                           data-testid={`distribute-lot-${lot.id}`}
                         >
                           <DollarSign className="h-4 w-4 mr-2" />
@@ -595,6 +642,96 @@ const LotsPage = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Distribution Preview Modal */}
+      <Dialog open={showDistributeModal} onOpenChange={setShowDistributeModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" data-testid="distribute-preview-modal">
+          <DialogHeader>
+            <DialogTitle>Prévisualisation de la Distribution</DialogTitle>
+            <DialogDescription>
+              Répartition proportionnelle des primes pour : {distributeLot?.lot_name}
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingPreview ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            </div>
+          ) : distributePreview ? (
+            <div className="space-y-4 py-2">
+              {/* Summary */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500">Prime Totale</p>
+                  <p className="font-bold text-lg">{(distributePreview.total_premium || 0).toLocaleString()} XOF</p>
+                </div>
+                <div className="p-3 bg-amber-50 rounded-lg">
+                  <p className="text-xs text-gray-500">Commission Coop ({(distributePreview.commission_rate * 100).toFixed(0)}%)</p>
+                  <p className="font-bold text-lg text-amber-700">{(distributePreview.commission || 0).toLocaleString()} XOF</p>
+                </div>
+                <div className="p-3 bg-green-50 rounded-lg col-span-2">
+                  <p className="text-xs text-gray-500">Montant à Distribuer</p>
+                  <p className="font-bold text-xl text-green-700">{(distributePreview.distributable || 0).toLocaleString()} XOF</p>
+                </div>
+              </div>
+
+              {/* Farmer Breakdown Table */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Répartition par Agriculteur ({distributePreview.contributors?.length || 0})
+                </h4>
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="w-full text-sm" data-testid="distribution-breakdown-table">
+                    <thead>
+                      <tr className="text-left text-xs text-gray-500 bg-gray-50 border-b">
+                        <th className="py-2 px-3">Agriculteur</th>
+                        <th className="py-2 px-3 text-right">Tonnage (kg)</th>
+                        <th className="py-2 px-3 text-right">% du Lot</th>
+                        <th className="py-2 px-3 text-right">Montant (XOF)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(distributePreview.contributors || []).map((c, idx) => (
+                        <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
+                          <td className="py-2 px-3 font-medium">{c.farmer_name || 'Inconnu'}</td>
+                          <td className="py-2 px-3 text-right">{(c.estimated_tonnage_kg || 0).toLocaleString()}</td>
+                          <td className="py-2 px-3 text-right">{((c.share_pct || 0) * 100).toFixed(1)}%</td>
+                          <td className="py-2 px-3 text-right font-bold text-green-700">{(c.amount || 0).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="font-bold bg-gray-50 border-t-2">
+                        <td className="py-2 px-3">Total</td>
+                        <td className="py-2 px-3 text-right">{(distributePreview.total_tonnage || 0).toLocaleString()}</td>
+                        <td className="py-2 px-3 text-right">100%</td>
+                        <td className="py-2 px-3 text-right text-green-700">{(distributePreview.distributable || 0).toLocaleString()}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-gray-400">Aucune donnée disponible</div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDistributeModal(false)}>
+              Annuler
+            </Button>
+            <Button
+              onClick={handleConfirmDistribute}
+              disabled={distributing || !distributePreview}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid="confirm-distribute-btn"
+            >
+              {distributing ? 'Distribution...' : 'Confirmer la Distribution'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

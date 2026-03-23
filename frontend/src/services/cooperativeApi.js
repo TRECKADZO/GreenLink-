@@ -130,6 +130,13 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  getDistributionDetail: async (distId) => {
+    const response = await axios.get(`${API}/distributions/${distId}`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Agents Management
   getAgents: async () => {
     const response = await axios.get(`${API}/agents`, {
