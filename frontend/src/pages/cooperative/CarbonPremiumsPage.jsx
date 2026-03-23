@@ -39,6 +39,12 @@ const CarbonPremiumsPage = () => {
   useEffect(() => {
     fetchPremiums();
     fetchPaymentHistory();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchPremiums();
+      fetchPaymentHistory();
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchPremiums = async () => {

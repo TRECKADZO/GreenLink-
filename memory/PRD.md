@@ -10,60 +10,55 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 
 ## Fonctionnalites Implementees
 
-### Phases 1-5 (DONE)
-- Core Platform, Mobile, Backend Refactoring, Cles Francaises, Notifications Push
-
-### Phase 6 - Systeme de Livraison Marketplace (DONE)
-- 3 modeles cumulables: frais_fixe, par_distance, par_poids + seuil_gratuit
-
-### Phase 7 - Corrections Connexion & Parcelles (DONE - 21/03/2026)
-- Rate limiter JSON, messages d'erreur specifiques, normalisation telephone
-- Mapping cles francaises dans mobile, liaison auto parcelles, reset mot de passe
-
-### Phase 8 - Recoltes & Validation Cooperative (DONE - 21/03/2026)
-- Flux complet: declaration -> notification coop -> validation/rejet -> notification agriculteur
-
-### Phase 9 - Conversion Unites & Emails Recoltes (DONE - 22/03/2026)
-- Conversion unites correcte: tonnes->kg (x1000), sacs->kg (x65)
-- Email Resend envoye a la cooperative lors de chaque declaration
-
-### Phase 10 - Ecran Suivi Recoltes & Dashboard Coop (DONE - 22/03/2026)
-- GET /api/greenlink/harvests/my-harvests, MyHarvestsScreen, CoopDashboard recoltes en attente
+### Phases 1-10 (DONE - voir historique)
 
 ### Phase 11 - Prime Carbone dans Verification Terrain (DONE - 22/03/2026)
-**Backend:**
-- PUT /api/field-agent/parcels/{id}/verify enrichi: nombre_arbres, couverture_ombragee, pratiques_ecologiques
-- Recalcul score carbone: base 3.0, densite arbres (0-2pts), ombrage (0-2pts), pratiques (0-2.5pts), surface (0.5pt), max 10.0
+- PUT /api/field-agent/parcels/{id}/verify enrichi: nombre_arbres, couverture_ombragee (auto-calculee), pratiques_ecologiques
+- Calcul score carbone: base 3.0 + arbres (0-2) + ombrage (0-2) + pratiques (0-2.5) + surface (0.5), max 10
+- Lexiques explicatifs pour chaque pratique ecologique
 - GET /api/greenlink/parcels/my-parcels retourne champs carbone enrichis
 
-**Mobile Agent Terrain:**
-- ParcelVerifyFormScreen enrichi avec section "Indicateurs prime carbone"
-- Decomptage arbres, couverture ombragee (%), checklist 5 pratiques ecologiques
-
 ### Phase 12 - Dashboard Score Carbone Visuel (DONE - 22/03/2026)
-**Backend:**
-- GET /api/greenlink/carbon/my-score enrichi avec:
-  - Decomposition du score (base, arbres, ombrage, pratiques, surface)
-  - Recommandations personnalisees triees par gain potentiel
-  - Stats agregees (total_trees, avg_shade_cover, practices_count/list)
-  - Scores par parcelle avec detail carbone
+- GET /api/greenlink/carbon/my-score enrichi: decomposition, recommandations, stats, parcelles
+- Mobile: MyCarbonScoreScreen revampe + HomeScreen carte carbone interactive
+- Web: CarbonScorePage creee avec jauge, barres progression, recommandations, scores parcelles
 
-**Mobile Agriculteur:**
-- HomeScreen: carte score carbone interactive avec jauge mini + barre de progression + lien vers detail
-- MyCarbonScoreScreen revampe:
-  - Jauge animee avec score et label de qualite
-  - Stats rapides (tCO2, primes XOF, parcelles)
-  - Barres de progression par composante (base, arbres, ombrage, pratiques, surface)
-  - Chips des pratiques actives
-  - Recommandations personnalisees avec gain potentiel
-  - Scores par parcelle avec indicateurs visuels
+### Phase 13 - Corrections Web + Fonctionnalites Manquantes (DONE - 23/03/2026)
+**Farmer Dashboard Web:**
+- Fix page blanche: mapping cles francaises (total_parcelles, superficie_totale, score_carbone_moyen...)
+- Fix redirection login producteur -> /farmer/dashboard (ajout 'producteur' dans switch)
+- 8 boutons d'action: Declarer Parcelle, Declarer Recolte, Score Carbone, Mes Recoltes, Primes Carbone, Marketplace Intrants, Mes Commandes, Bourse Recoltes
+
+**Nouvelles pages web farmer:**
+- /farmer/my-harvests: Suivi recoltes avec filtres, stats par statut
+- /farmer/carbon-score: Score carbone detaille (jauge, decomposition, recommandations, scores parcelles)
+
+**Cooperative Dashboard Web:**
+- Boutons Marketplace Intrants + Suivi Commandes ajoutes aux actions rapides
+- Primes Carbone: auto-refresh 30s
+- Soumissions Carbone: auto-refresh 30s + suivi detaille post-approbation (date, ventes, revenus)
+- Page Lots: bouton "Contributeurs" expandable avec tableau tonnages par agriculteur
+
+**Super Admin:**
+- Bouton retour ajoute dans Centre de Donnees Strategiques
+
+**Backend:**
+- GET /api/cooperative/lots/{id}/contributors: liste contributeurs avec tonnages/ha/arbres/score par agriculteur
+- Fix /api/marketplace/orders/my-orders: recherche buyer_id ET customer_id (compatibilite checkout)
+- Fix checkout: buyer_id stocke en string
+
+**Mobile:**
+- v1.50.0: Retry Cloudflare ameliore (5 tentatives, delais progressifs 2-10s), messages erreur clairs
+- OrderDetailScreen cree (articles, prix, livraison, fournisseur)
+- CoopDashboard: boutons Marketplace + Mes Commandes
+- Filtres marketplace redimensionnes
 
 ## Builds
-- v1.39-v1.40: Corrections diverses et features
-- v1.41.0: Corrections crash React hooks + API retry + renommage GreenLink Agritech
+- v1.42.0-v1.50.0: Prime carbone, score visuel, corrections web, commandes, filtres
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
+- Cooperative Gagnoa: +2250505000001 / coop2024
 - Agent terrain test: test_agent@greenlink.ci / agent2024
 - Producteur test: +2250705551234 / koffi2024
 
@@ -79,11 +74,12 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 
 ## Key API Endpoints
 - POST /api/auth/login | register | forgot-password | verify-reset-code | reset-password
-- GET /api/greenlink/carbon/my-score (enrichi avec breakdown + recommandations)
+- GET /api/greenlink/carbon/my-score (enrichi breakdown + recommandations)
 - GET /api/greenlink/harvests/my-harvests
-- POST /api/greenlink/harvests
 - GET /api/greenlink/parcels/my-parcels
 - GET /api/greenlink/farmer/dashboard
 - PUT /api/field-agent/parcels/{id}/verify (enrichi prime carbone)
 - GET /api/cooperative/dashboard | harvests | members
-- PUT /api/cooperative/harvests/{id}/validate | reject
+- GET /api/cooperative/lots/{id}/contributors
+- GET /api/marketplace/orders/my-orders
+- PUT /api/marketplace/orders/{id}/status

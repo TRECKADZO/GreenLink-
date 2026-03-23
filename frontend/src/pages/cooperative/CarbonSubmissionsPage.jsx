@@ -26,6 +26,9 @@ const CarbonSubmissionsPage = () => {
 
   useEffect(() => {
     fetchMyListings();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchMyListings, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchMyListings = async () => {
@@ -151,17 +154,40 @@ const CarbonSubmissionsPage = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        {listing.status === 'approved' && listing.price_per_tonne ? (
+                        {listing.status === 'approved' ? (
                           <div>
                             <p className="text-lg font-bold text-emerald-700">Approuve</p>
                             <p className="text-xs text-gray-500">Credit publie sur le marche</p>
+                            {listing.price_per_tonne > 0 && (
+                              <p className="text-xs text-emerald-600 mt-1">
+                                Prix: {listing.price_per_tonne?.toLocaleString()} XOF/t
+                              </p>
+                            )}
+                            {listing.quantity_sold > 0 && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                Vendu: {listing.quantity_sold}/{listing.quantity_tonnes_co2} t
+                              </p>
+                            )}
+                            {listing.revenue_generated > 0 && (
+                              <p className="text-xs font-bold text-green-700 mt-1">
+                                Revenus: {listing.revenue_generated?.toLocaleString()} XOF
+                              </p>
+                            )}
+                            {listing.approved_at && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                Approuve le {new Date(listing.approved_at).toLocaleDateString('fr-FR')}
+                              </p>
+                            )}
                           </div>
                         ) : listing.status === 'pending_approval' ? (
                           <p className="text-sm text-amber-600">En cours de verification</p>
                         ) : (
-                          <p className="text-sm text-red-600">
-                            {listing.admin_note || 'Soumission rejetee'}
-                          </p>
+                          <div>
+                            <p className="text-sm text-red-600">Soumission rejetee</p>
+                            {listing.admin_note && (
+                              <p className="text-xs text-red-500 mt-1">Motif: {listing.admin_note}</p>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

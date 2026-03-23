@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cooperativeApi } from '../../services/cooperativeApi';
 import { 
-  Package, Plus, ChevronLeft, Leaf, Users,
+  Package, Plus, ChevronLeft, ChevronDown, ChevronUp, Leaf, Users,
   DollarSign, CheckCircle, Clock, TrendingUp,
-  Scale, FileCheck
+  Scale, FileCheck, TreePine, MapPin
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -54,6 +54,28 @@ const LotsPage = () => {
     price_per_kg: '',
     carbon_premium_per_kg: ''
   });
+
+  const [expandedLot, setExpandedLot] = useState(null);
+  const [contributors, setContributors] = useState([]);
+  const [loadingContributors, setLoadingContributors] = useState(false);
+
+  const toggleContributors = async (lotId) => {
+    if (expandedLot === lotId) {
+      setExpandedLot(null);
+      return;
+    }
+    setExpandedLot(lotId);
+    setLoadingContributors(true);
+    try {
+      const data = await cooperativeApi.getLotContributors(lotId);
+      setContributors(data.contributors || []);
+    } catch (error) {
+      toast.error('Erreur lors du chargement des contributeurs');
+      setContributors([]);
+    } finally {
+      setLoadingContributors(false);
+    }
+  };
 
   const fetchLots = async () => {
     try {
@@ -300,8 +322,74 @@ const LotsPage = () => {
                           Distribuer Primes
                         </Button>
                       )}
+                      <Button 
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleContributors(lot.id)}
+                        data-testid={`contributors-${lot.id}`}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Contributeurs
+                        {expandedLot === lot.id ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                      </Button>
                     </div>
                   </div>
+
+                  {/* Contributors Section */}
+                  {expandedLot === lot.id && (
+                    <div className="border-t mt-3 pt-3">
+                      <h4 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                        <TreePine className="h-4 w-4 text-green-600" />
+                        Tonnages par agriculteur
+                      </h4>
+                      {loadingContributors ? (
+                        <div className="py-4 text-center text-gray-400 text-sm">Chargement...</div>
+                      ) : contributors.length === 0 ? (
+                        <div className="py-4 text-center text-gray-400 text-sm">Aucun contributeur eligible</div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-left text-xs text-gray-500 border-b">
+                                <th className="py-2 px-2">Agriculteur</th>
+                                <th className="py-2 px-2 text-center">Parcelles</th>
+                                <th className="py-2 px-2 text-right">Surface (ha)</th>
+                                <th className="py-2 px-2 text-right">Tonnage est. (kg)</th>
+                                <th className="py-2 px-2 text-right">Arbres</th>
+                                <th className="py-2 px-2 text-center">Score</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {contributors.map((c, idx) => (
+                                <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
+                                  <td className="py-2 px-2 font-medium text-gray-900">{c.farmer_name}</td>
+                                  <td className="py-2 px-2 text-center">{c.parcels_count}</td>
+                                  <td className="py-2 px-2 text-right">{c.total_hectares}</td>
+                                  <td className="py-2 px-2 text-right font-semibold text-green-700">{c.estimated_tonnage_kg?.toLocaleString()}</td>
+                                  <td className="py-2 px-2 text-right">{c.nombre_arbres}</td>
+                                  <td className="py-2 px-2 text-center">
+                                    <Badge className={`text-xs ${c.avg_carbon_score >= 7 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                                      {c.avg_carbon_score}
+                                    </Badge>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot>
+                              <tr className="font-bold text-gray-800 border-t-2">
+                                <td className="py-2 px-2">Total ({contributors.length})</td>
+                                <td className="py-2 px-2 text-center">{contributors.reduce((s, c) => s + c.parcels_count, 0)}</td>
+                                <td className="py-2 px-2 text-right">{contributors.reduce((s, c) => s + c.total_hectares, 0).toFixed(1)}</td>
+                                <td className="py-2 px-2 text-right text-green-700">{contributors.reduce((s, c) => s + c.estimated_tonnage_kg, 0).toLocaleString()}</td>
+                                <td className="py-2 px-2 text-right">{contributors.reduce((s, c) => s + c.nombre_arbres, 0)}</td>
+                                <td className="py-2 px-2"></td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

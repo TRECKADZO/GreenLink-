@@ -34,6 +34,8 @@ import DeliverySettings from "./pages/supplier/DeliverySettings";
 import FarmerDashboard from "./pages/farmer/Dashboard";
 import USSDCarbonCalculator from "./pages/farmer/USSDCarbonCalculator";
 import CarbonPaymentsDashboard from "./pages/farmer/CarbonPaymentsDashboard";
+import MyHarvestsPage from "./pages/farmer/MyHarvestsPage";
+import CarbonScorePage from "./pages/farmer/CarbonScorePage";
 
 // Buyer Routes
 import BuyerDashboard from "./pages/buyer/Dashboard";
@@ -151,6 +153,8 @@ function App() {
               <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
               <Route path="/farmer/prime-carbone" element={<USSDCarbonCalculator />} />
               <Route path="/farmer/carbon-payments" element={<CarbonPaymentsDashboard />} />
+              <Route path="/farmer/my-harvests" element={<MyHarvestsPage />} />
+              <Route path="/farmer/carbon-score" element={<CarbonScorePage />} />
               <Route path="/carbon-payments" element={<CarbonPaymentsDashboard />} />
 
               {/* Buyer/Acheteur Routes */}

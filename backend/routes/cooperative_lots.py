@@ -125,6 +125,87 @@ async def create_coop_lot(
         "score_carbone_moyen": round(avg_score, 1)
     }
 
+@router.get("/lots/{lot_id}/contributors")
+async def get_lot_contributors(
+    lot_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Liste des contributeurs (agriculteurs) d'un lot avec tonnages"""
+    verify_cooperative(current_user)
+    coop_id = current_user["_id"]
+
+    lot = await db.coop_lots.find_one({"_id": ObjectId(lot_id), "coop_id": coop_id})
+    if not lot:
+        raise HTTPException(status_code=404, detail="Lot non trouve")
+
+    members = await db.coop_members.find({
+        "coop_id": coop_id,
+        "status": "active"
+    }).to_list(10000)
+
+    member_ids = [m["_id"] for m in members]
+    member_user_ids = [str(m.get("user_id")) for m in members if m.get("user_id")]
+    member_str_ids = [str(m["_id"]) for m in members]
+
+    min_score = lot.get("min_carbon_score", 6.0)
+    parcels = await db.parcels.find({
+        "$or": [
+            {"member_id": {"$in": member_ids}},
+            {"farmer_id": {"$in": member_user_ids + member_str_ids}},
+            {"coop_id": coop_id}
+        ],
+        "carbon_score": {"$gte": min_score}
+    }).to_list(10000)
+
+    # Group by farmer
+    farmer_map = {}
+    for p in parcels:
+        fid = str(p.get("farmer_id") or p.get("member_id") or "")
+        if fid not in farmer_map:
+            farmer_map[fid] = {
+                "farmer_id": fid,
+                "farmer_name": "",
+                "parcels": [],
+                "total_hectares": 0,
+                "estimated_tonnage_kg": 0,
+                "avg_carbon_score": 0,
+                "nombre_arbres": 0,
+            }
+        farmer_map[fid]["parcels"].append({
+            "village": p.get("village", p.get("location", "")),
+            "hectares": p.get("area_hectares", 0),
+            "carbon_score": p.get("carbon_score", 0),
+            "nombre_arbres": p.get("nombre_arbres", 0) or 0,
+        })
+        farmer_map[fid]["total_hectares"] += p.get("area_hectares", 0)
+        farmer_map[fid]["estimated_tonnage_kg"] += p.get("area_hectares", 0) * 2250
+        farmer_map[fid]["nombre_arbres"] += (p.get("nombre_arbres", 0) or 0)
+
+    # Resolve farmer names
+    member_dict = {str(m["_id"]): m.get("full_name", "Inconnu") for m in members}
+    for fid, data in farmer_map.items():
+        data["farmer_name"] = member_dict.get(fid, "")
+        if not data["farmer_name"]:
+            user = await db.users.find_one({"_id": ObjectId(fid)}, {"full_name": 1}) if ObjectId.is_valid(fid) else None
+            data["farmer_name"] = user.get("full_name", "Inconnu") if user else "Inconnu"
+        scores = [p["carbon_score"] for p in data["parcels"]]
+        data["avg_carbon_score"] = round(sum(scores) / len(scores), 1) if scores else 0
+        data["total_hectares"] = round(data["total_hectares"], 2)
+        data["estimated_tonnage_kg"] = round(data["estimated_tonnage_kg"])
+        data["parcels_count"] = len(data["parcels"])
+
+    contributors = sorted(farmer_map.values(), key=lambda x: x["estimated_tonnage_kg"], reverse=True)
+
+    return {
+        "lot_id": lot_id,
+        "lot_name": lot.get("lot_name"),
+        "min_carbon_score": min_score,
+        "total_contributors": len(contributors),
+        "total_hectares": round(sum(c["total_hectares"] for c in contributors), 1),
+        "total_estimated_tonnage_kg": round(sum(c["estimated_tonnage_kg"] for c in contributors)),
+        "contributors": contributors
+    }
+
 @router.put("/lots/{lot_id}/finalize")
 async def finalize_lot_sale(
     lot_id: str,

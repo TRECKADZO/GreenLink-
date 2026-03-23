@@ -109,6 +109,13 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  getLotContributors: async (lotId) => {
+    const response = await axios.get(`${API}/lots/${lotId}/contributors`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   executeDistributionPayments: async (distributionId) => {
     const response = await axios.put(`${API}/distributions/${distributionId}/execute`, {}, {
       headers: getAuthHeader()

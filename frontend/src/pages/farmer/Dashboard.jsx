@@ -18,7 +18,10 @@ import {
   MessageSquare,
   Send,
   Store,
-  Leaf
+  Leaf,
+  Package,
+  Clock,
+  BarChart3
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -149,46 +152,70 @@ const FarmerDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           <Button 
-            className="h-20 bg-green-600 hover:bg-green-700 text-white text-lg"
+            className="h-16 bg-green-600 hover:bg-green-700 text-white"
             onClick={() => navigate('/farmer/parcels/new')}
             data-testid="action-new-parcel"
           >
-            <Plus className="w-6 h-6 mr-2" />
-            Déclarer une Parcelle
+            <Plus className="w-5 h-5 mr-2" />
+            Declarer Parcelle
           </Button>
           <Button 
-            className="h-20 bg-blue-600 hover:bg-blue-700 text-white text-lg"
+            className="h-16 bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => navigate('/farmer/harvests/new')}
             data-testid="action-new-harvest"
           >
-            <TrendingUp className="w-6 h-6 mr-2" />
-            Déclarer une Récolte
+            <TrendingUp className="w-5 h-5 mr-2" />
+            Declarer Recolte
           </Button>
           <Button 
-            className="h-20 bg-amber-600 hover:bg-amber-700 text-white text-lg"
-            onClick={() => navigate('/marketplace/harvest')}
-            data-testid="action-harvest-marketplace"
+            className="h-16 bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={() => navigate('/farmer/carbon-score')}
+            data-testid="action-carbon-score"
           >
-            <Store className="w-6 h-6 mr-2" />
-            Bourse des Récoltes
+            <Award className="w-5 h-5 mr-2" />
+            Score Carbone
           </Button>
           <Button 
-            className="h-20 bg-teal-600 hover:bg-teal-700 text-white text-lg"
+            className="h-16 bg-amber-600 hover:bg-amber-700 text-white"
+            onClick={() => navigate('/farmer/my-harvests')}
+            data-testid="action-my-harvests"
+          >
+            <Package className="w-5 h-5 mr-2" />
+            Mes Recoltes
+          </Button>
+          <Button 
+            className="h-16 bg-teal-600 hover:bg-teal-700 text-white"
             onClick={() => navigate('/farmer/carbon-payments')}
             data-testid="action-carbon-payments"
           >
-            <Leaf className="w-6 h-6 mr-2" />
-            Mes Primes Carbone
+            <Leaf className="w-5 h-5 mr-2" />
+            Primes Carbone
           </Button>
           <Button 
-            className="h-20 bg-orange-600 hover:bg-orange-700 text-white text-lg"
-            onClick={() => navigate('/farmer/prime-carbone')}
-            data-testid="action-prime-ussd"
+            className="h-16 bg-orange-600 hover:bg-orange-700 text-white"
+            onClick={() => navigate('/marketplace')}
+            data-testid="action-marketplace"
           >
-            <Phone className="w-6 h-6 mr-2" />
-            *144*88# Prime
+            <Store className="w-5 h-5 mr-2" />
+            Marketplace Intrants
+          </Button>
+          <Button 
+            className="h-16 bg-violet-600 hover:bg-violet-700 text-white"
+            onClick={() => navigate('/buyer/orders')}
+            data-testid="action-orders"
+          >
+            <Clock className="w-5 h-5 mr-2" />
+            Mes Commandes
+          </Button>
+          <Button 
+            className="h-16 bg-cyan-600 hover:bg-cyan-700 text-white"
+            onClick={() => navigate('/marketplace/harvest')}
+            data-testid="action-harvest-marketplace"
+          >
+            <BarChart3 className="w-5 h-5 mr-2" />
+            Bourse Recoltes
           </Button>
         </div>
 

@@ -91,6 +91,16 @@ const SuperAdminDashboard = () => {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/admin/dashboard')}
+                  className="text-slate-400 hover:text-white hover:bg-slate-700"
+                  data-testid="back-button"
+                >
+                  <ArrowUpRight className="h-4 w-4 rotate-[225deg]" />
+                  Retour
+                </Button>
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
                   <BarChart3 className="h-6 w-6 text-white" />
                 </div>
