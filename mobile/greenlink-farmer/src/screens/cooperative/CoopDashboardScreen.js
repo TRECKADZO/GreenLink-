@@ -277,16 +277,28 @@ export default function CoopDashboardScreen({ navigation }) {
           />
           <QuickAction
             icon="download"
-            label="Télécharger PDF"
+            label="Telecharger PDF"
             onPress={async () => {
               try {
-                Alert.alert('Téléchargement', 'Génération du rapport PDF...');
+                Alert.alert('Telechargement', 'Generation du rapport PDF...');
                 await cooperativeApi.downloadEUDRPdf();
               } catch (err) {
-                Alert.alert('Erreur', 'Impossible de télécharger le PDF');
+                Alert.alert('Erreur', 'Impossible de telecharger le PDF');
               }
             }}
             color="#FF5722"
+          />
+          <QuickAction
+            icon="cart"
+            label="Marketplace"
+            onPress={() => navigation.navigate('Marketplace')}
+            color="#f59e0b"
+          />
+          <QuickAction
+            icon="receipt"
+            label="Mes Commandes"
+            onPress={() => navigation.navigate('Orders')}
+            color="#6366f1"
           />
         </View>
 
