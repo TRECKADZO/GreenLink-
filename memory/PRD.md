@@ -86,7 +86,11 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 ## APIs Mockees
 - Orange SMS, Orange Money
 
-## Backlog
+### Phase 15 - Vérification Mobile + Builds v1.51.0 (DONE - 24/03/2026)
+- Vérification complète des erreurs de connexion mobile: tous les endpoints testés (login, register, forgot-password, dashboard, parcels, harvests, carbon score, cooperative, marketplace)
+- Gestion d'erreurs robuste: retry progressif (5 tentatives, 2-10s), messages spécifiques par type d'erreur, fallback cache offline
+- Build APK v1.51.0: https://expo.dev/artifacts/eas/58ndnox8s58XwDDk2aJcFT.apk
+- Build AAB v1.51.0 (versionCode 42): https://expo.dev/artifacts/eas/4b9kgy4hp8HahFNYD6osSv.aab
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
