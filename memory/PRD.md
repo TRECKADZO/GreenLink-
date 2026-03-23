@@ -53,6 +53,27 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - CoopDashboard: boutons Marketplace + Mes Commandes
 - Filtres marketplace redimensionnes
 
+### Phase 14 - Distribution Proportionnelle + Notifications Temps Reel (DONE - 23/03/2026)
+**Distribution Proportionnelle des Primes Carbone:**
+- POST /api/cooperative/lots/{lot_id}/distribute: redistribution proportionnelle au tonnage de chaque agriculteur
+  - Calcul: share_pct = tonnage_farmer / total_tonnage, amount = distributable * share_pct
+  - 7 agriculteurs avec contributions 12.0% a 16.5% verifiees
+- GET /api/cooperative/distributions/{dist_id}: detail complet par agriculteur
+- GET /api/cooperative/distributions: enrichi avec distributions array et total_tonnage_kg
+- Frontend LotsPage: Modale de previsualisation avant distribution (Prime Totale, Commission 10%, Montant Distribuable, tableau par agriculteur avec nom/tonnage/%/montant)
+- Frontend DistributionsPage: Section expandable "Detail par Agriculteur" avec tableau complet (nom, parcelles, surface, tonnage, % contribution, montant, statut paiement)
+- Fix bug: cle `phone_number` remplacee par `telephone` dans execute_distribution_payments
+
+**Notifications Temps Reel Web (SSE):**
+- GET /api/notifications/web: lecture depuis collection `notifications` (ou les evenements ecrivent)
+- GET /api/notifications/web/unread-count: compteur non-lues
+- PUT /api/notifications/web/{id}/read: marquer comme lu
+- PUT /api/notifications/web/read-all: marquer toutes comme lues
+- GET /api/notifications/stream: endpoint SSE avec auth, push temps reel via in-memory queues
+- NotificationCenter component: SSE fetch-based (auth headers), icones par type (recolte, commande, parcelle), timeAgo français
+- SSE notify_sse_clients() integre dans: declaration recolte (notifie coop), validation/rejet recolte (notifie farmer), commandes marketplace (notifie fournisseur/client)
+- NotificationCenter ajoute au dashboard Farmer (en plus de Cooperative, Agent Terrain, SSRTE)
+
 ## Builds
 - v1.42.0-v1.50.0: Prime carbone, score visuel, corrections web, commandes, filtres
 
@@ -81,5 +102,10 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - PUT /api/field-agent/parcels/{id}/verify (enrichi prime carbone)
 - GET /api/cooperative/dashboard | harvests | members
 - GET /api/cooperative/lots/{id}/contributors
+- POST /api/cooperative/lots/{lot_id}/distribute
+- GET /api/cooperative/distributions/{dist_id}
 - GET /api/marketplace/orders/my-orders
 - PUT /api/marketplace/orders/{id}/status
+- GET /api/notifications/web | web/unread-count
+- PUT /api/notifications/web/{id}/read | web/read-all
+- GET /api/notifications/stream (SSE)
