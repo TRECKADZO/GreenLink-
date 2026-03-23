@@ -33,7 +33,7 @@ const FarmerDashboard = () => {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || user.user_type !== 'producteur') {
+    if (!user || !['producteur', 'producer', 'farmer'].includes(user.user_type)) {
       navigate('/');
       return;
     }
@@ -100,31 +100,31 @@ const FarmerDashboard = () => {
   const statCards = [
     {
       title: 'Mes Parcelles',
-      value: stats.total_parcels,
-      subtitle: `${stats.total_area_hectares.toFixed(1)} hectares`,
+      value: stats.total_parcelles || 0,
+      subtitle: `${(stats.superficie_totale || 0).toFixed(1)} hectares`,
       icon: MapPin,
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
     {
       title: 'Score Carbone Moyen',
-      value: `${stats.average_carbon_score.toFixed(1)}/10`,
-      subtitle: `${stats.total_carbon_credits.toFixed(1)} crédits CO₂`,
+      value: `${(stats.score_carbone_moyen || 0).toFixed(1)}/10`,
+      subtitle: `${(stats.credits_carbone || 0).toFixed(1)} credits CO2`,
       icon: Award,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100'
     },
     {
       title: 'Revenus Total',
-      value: `${stats.total_revenue.toLocaleString()} F`,
-      subtitle: `+${stats.carbon_premium_earned.toLocaleString()} F prime`,
+      value: `${(stats.revenu_total || 0).toLocaleString()} F`,
+      subtitle: `+${(stats.prime_carbone || 0).toLocaleString()} F prime`,
       icon: DollarSign,
       color: 'text-amber-600',
       bgColor: 'bg-amber-100'
     },
     {
       title: 'Arbres Plantés',
-      value: stats.total_trees.toLocaleString(),
+      value: (stats.total_arbres || 0).toLocaleString(),
       subtitle: 'Impact environnemental',
       icon: Sprout,
       color: 'text-emerald-600',
@@ -207,7 +207,7 @@ const FarmerDashboard = () => {
         </div>
 
         {/* Carbon Premium Info */}
-        {stats.average_carbon_score >= 7 && (
+        {(stats.score_carbone_moyen || 0) >= 7 && (
           <Card className="p-6 mb-8 border-l-4 border-green-500 bg-green-50">
             <div className="flex items-start gap-3">
               <CheckCircle className="w-6 h-6 text-green-600 mt-1" />
@@ -216,10 +216,10 @@ const FarmerDashboard = () => {
                   🎉 Prime Carbone Active!
                 </h3>
                 <p className="text-green-800">
-                  Votre score carbone de <strong>{stats.average_carbon_score.toFixed(1)}/10</strong> vous donne droit à une prime de <strong>10%</strong> sur toutes vos ventes!
+                  Votre score carbone de <strong>{(stats.score_carbone_moyen || 0).toFixed(1)}/10</strong> vous donne droit à une prime de <strong>10%</strong> sur toutes vos ventes!
                 </p>
                 <p className="text-sm text-green-700 mt-2">
-                  Vous avez déjà gagné <strong>{stats.carbon_premium_earned.toLocaleString()} XOF</strong> en primes carbone.
+                  Vous avez déjà gagné <strong>{(stats.prime_carbone || 0).toLocaleString()} XOF</strong> en primes carbone.
                 </p>
               </div>
             </div>
@@ -230,14 +230,14 @@ const FarmerDashboard = () => {
         <Card className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Récoltes Récentes</h2>
           
-          {stats.recent_harvests.length === 0 ? (
+          {(stats.recoltes_recentes || []).length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>Aucune récolte déclarée</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {stats.recent_harvests.map((harvest, index) => (
+              {(stats.recoltes_recentes || []).map((harvest, index) => (
                 <div 
                   key={index}
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"

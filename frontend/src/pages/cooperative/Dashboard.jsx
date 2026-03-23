@@ -420,6 +420,30 @@ const Dashboard = () => {
                 </span>
                 <ChevronRight className="h-4 w-4 text-indigo-700" />
               </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between bg-orange-50 border-orange-200 hover:bg-orange-100"
+                onClick={() => navigate('/marketplace')}
+                data-testid="quick-action-marketplace-intrants"
+              >
+                <span className="flex items-center text-orange-700">
+                  <Package className="h-4 w-4 mr-2" />
+                  Marketplace Intrants
+                </span>
+                <ChevronRight className="h-4 w-4 text-orange-700" />
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between bg-violet-50 border-violet-200 hover:bg-violet-100"
+                onClick={() => navigate('/buyer/orders')}
+                data-testid="quick-action-orders"
+              >
+                <span className="flex items-center text-violet-700">
+                  <Clock className="h-4 w-4 mr-2" />
+                  Suivi Commandes
+                </span>
+                <ChevronRight className="h-4 w-4 text-violet-700" />
+              </Button>
             </CardContent>
           </Card>
 

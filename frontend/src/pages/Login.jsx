@@ -29,8 +29,12 @@ const Login = () => {
       case 'carbon_auditor':
         return '/auditor/dashboard';
       case 'field_agent':
+      case 'agent_terrain':
         return '/agent/terrain';
+      case 'producteur':
       case 'producer':
+      case 'farmer':
+        return '/farmer/dashboard';
       default:
         return '/profile';
     }
