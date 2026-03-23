@@ -258,70 +258,116 @@ async def distribute_lot_premiums(
     lot_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Redistribuer les primes carbone aux membres"""
+    """Redistribuer les primes carbone aux membres proportionnellement a leur contribution"""
     verify_cooperative(current_user)
     coop_id = current_user["_id"]
-    
+
     lot = await db.coop_lots.find_one({
         "_id": ObjectId(lot_id),
         "coop_id": coop_id,
         "status": "completed"
     })
-    
+
     if not lot:
-        raise HTTPException(status_code=404, detail="Lot non trouvé ou pas encore finalisé")
-    
+        raise HTTPException(status_code=404, detail="Lot non trouve ou pas encore finalise")
+
     existing_dist = await db.coop_distributions.find_one({"lot_id": lot_id})
     if existing_dist:
-        raise HTTPException(status_code=400, detail="Les primes de ce lot ont déjà été redistribuées")
-    
+        raise HTTPException(status_code=400, detail="Les primes de ce lot ont deja ete redistribuees")
+
     total_premium = lot.get("total_carbon_premium", 0)
     commission_rate = current_user.get("commission_rate", 0.10)
-    
     commission = total_premium * commission_rate
     distributable = total_premium - commission
-    
+
+    # Get contributors using the same logic as get_lot_contributors
     members = await db.coop_members.find({
         "coop_id": coop_id,
-        "status": "active",
-        "is_active": True
+        "status": "active"
     }).to_list(10000)
-    
-    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
-    
+
+    member_ids = [m["_id"] for m in members]
+    member_user_ids = [str(m.get("user_id")) for m in members if m.get("user_id")]
+    member_str_ids = [str(m["_id"]) for m in members]
+
+    min_score = lot.get("min_carbon_score", 6.0)
     parcels = await db.parcels.find({
-        "farmer_id": {"$in": member_user_ids},
-        "carbon_score": {"$gte": lot.get("min_carbon_score", 6.0)}
+        "$or": [
+            {"member_id": {"$in": member_ids}},
+            {"farmer_id": {"$in": member_user_ids + member_str_ids}},
+            {"coop_id": coop_id}
+        ],
+        "carbon_score": {"$gte": min_score}
     }).to_list(10000)
-    
-    total_weighted = sum([p.get("area_hectares", 0) * p.get("carbon_score", 0) for p in parcels])
-    
+
+    # Group by farmer and calculate contribution
+    farmer_map = {}
+    member_dict = {str(m["_id"]): m for m in members}
+
+    for p in parcels:
+        fid = str(p.get("farmer_id") or p.get("member_id") or "")
+        if not fid:
+            continue
+        if fid not in farmer_map:
+            farmer_map[fid] = {
+                "farmer_id": fid,
+                "parcels": [],
+                "total_hectares": 0,
+                "estimated_tonnage_kg": 0,
+                "weighted_score": 0,
+            }
+        area = p.get("area_hectares", 0)
+        score = p.get("carbon_score", 0)
+        farmer_map[fid]["parcels"].append(p)
+        farmer_map[fid]["total_hectares"] += area
+        farmer_map[fid]["estimated_tonnage_kg"] += area * 2250
+        farmer_map[fid]["weighted_score"] += area * score
+
+    # Calculate total tonnage for proportional distribution
+    total_tonnage = sum(f["estimated_tonnage_kg"] for f in farmer_map.values())
+
     distributions = []
-    for member in members:
-        if not member.get("user_id"):
+    for fid, data in farmer_map.items():
+        if total_tonnage <= 0 or data["estimated_tonnage_kg"] <= 0:
             continue
-        
-        member_parcels = [p for p in parcels if p.get("farmer_id") == member.get("user_id")]
-        if not member_parcels:
-            continue
-        
-        member_weighted = sum([p.get("area_hectares", 0) * p.get("carbon_score", 0) for p in member_parcels])
-        share_percentage = member_weighted / total_weighted if total_weighted > 0 else 0
-        amount = distributable * share_percentage
-        
-        if amount > 0:
-            distributions.append({
-                "member_id": str(member["_id"]),
-                "nom_membre": member.get("full_name", ""),
-                "telephone": member.get("phone_number", ""),
-                "nombre_parcelles": len(member_parcels),
-                "superficie_totale": sum([p.get("area_hectares", 0) for p in member_parcels]),
-                "average_score": sum([p.get("carbon_score", 0) for p in member_parcels]) / len(member_parcels),
-                "share_percentage": round(share_percentage * 100, 2),
-                "amount": round(amount, 0),
-                "payment_status": "pending"
-            })
-    
+
+        # Proportional share based on tonnage contribution
+        share_pct = data["estimated_tonnage_kg"] / total_tonnage
+        amount = distributable * share_pct
+        avg_score = data["weighted_score"] / data["total_hectares"] if data["total_hectares"] > 0 else 0
+
+        # Resolve farmer name
+        farmer_name = ""
+        member = member_dict.get(fid)
+        if member:
+            farmer_name = member.get("full_name", "")
+            phone = member.get("phone_number", "")
+        else:
+            try:
+                user = await db.users.find_one({"_id": ObjectId(fid)}, {"full_name": 1, "phone_number": 1})
+                farmer_name = user.get("full_name", "Inconnu") if user else "Inconnu"
+                phone = user.get("phone_number", "") if user else ""
+            except Exception:
+                farmer_name = "Inconnu"
+                phone = ""
+
+        distributions.append({
+            "member_id": fid,
+            "nom_membre": farmer_name,
+            "telephone": phone,
+            "nombre_parcelles": len(data["parcels"]),
+            "superficie_totale": round(data["total_hectares"], 2),
+            "tonnage_contribution_kg": round(data["estimated_tonnage_kg"]),
+            "contribution_pct": round(share_pct * 100, 1),
+            "average_score": round(avg_score, 1),
+            "share_percentage": round(share_pct * 100, 2),
+            "amount": round(amount, 0),
+            "payment_status": "pending"
+        })
+
+    # Sort by amount descending
+    distributions.sort(key=lambda x: x["amount"], reverse=True)
+
     dist_doc = {
         "coop_id": coop_id,
         "lot_id": lot_id,
@@ -330,24 +376,27 @@ async def distribute_lot_premiums(
         "commission_rate": commission_rate,
         "commission_amount": commission,
         "amount_distributed": distributable,
+        "total_tonnage_kg": round(total_tonnage),
         "beneficiaries_count": len(distributions),
         "distributions": distributions,
         "status": "pending_payment",
         "created_at": datetime.utcnow(),
         "created_by": current_user["_id"]
     }
-    
+
     result = await db.coop_distributions.insert_one(dist_doc)
-    
+
     return {
-        "message": "Redistribution calculée avec succès",
+        "message": "Redistribution calculee avec succes",
         "distribution_id": str(result.inserted_id),
         "total_premium": total_premium,
         "commission": commission,
+        "commission_rate_pct": round(commission_rate * 100, 1),
         "amount_to_distribute": distributable,
+        "total_tonnage_kg": round(total_tonnage),
         "beneficiaries_count": len(distributions),
-        "distributions": distributions[:10],
-        "next_step": "Valider et déclencher les paiements Orange Money"
+        "distributions": distributions,
+        "next_step": "Valider et declencher les paiements Orange Money"
     }
 
 @router.put("/distributions/{dist_id}/execute")
