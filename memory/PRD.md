@@ -243,8 +243,16 @@ Etape 2 - Planteur compose *144*88#
 - Pages ActivateMember.jsx et ActivateAgent.jsx: titres mis a jour
 **Tests: Flux testes manuellement via curl (creation, check, activation, login) - tous OK**
 
-## Backlog (P0-P3)
-- P1: Soumettre AAB au Google Play Console
+### Phase 25 - Build APK/AAB v1.52.0 (SUBMITTED - 24/03/2026)
+- Build AAB (production - Google Play Store) soumis sur EAS
+  - Build ID: fec6bd1f-095f-4213-9e76-0d225cb321f7
+  - URL: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/fec6bd1f-095f-4213-9e76-0d225cb321f7
+  - Version: v1.52.0, versionCode 48
+- Build APK (production-apk) soumis sur EAS
+  - Build ID: e8e985c2-703f-4560-a0e8-e12fb44ec312
+  - URL: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/e8e985c2-703f-4560-a0e8-e12fb44ec312
+- Statut: En file d'attente (limite de concurrence Expo, credits 100% utilises ce mois)
+
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
 - P2: Stockage cloud AWS S3
