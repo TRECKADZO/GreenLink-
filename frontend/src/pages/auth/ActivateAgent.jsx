@@ -166,11 +166,11 @@ const ActivateAgent = () => {
             <Shield className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Agent Terrain</h1>
+            <h1 className="text-xl font-bold text-gray-900">Activer mon accès web</h1>
             <p className="text-sm text-gray-600">
               {step === 1 
                 ? 'Entrez le numéro enregistré par votre coopérative'
-                : 'Créez votre mot de passe'}
+                : 'Créez votre mot de passe pour accéder au dashboard'}
             </p>
           </div>
         </div>
@@ -300,7 +300,7 @@ const ActivateAgent = () => {
               disabled={loading}
               data-testid="activate-agent-account-btn"
             >
-              {loading ? 'Activation...' : 'Activer mon compte Agent'}
+              {loading ? 'Activation...' : 'Activer mon accès agent'}
             </Button>
           </form>
         )}

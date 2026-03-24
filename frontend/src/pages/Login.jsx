@@ -165,7 +165,7 @@ const Login = () => {
         {/* Activation Buttons */}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center mb-3">
-            Déjà enregistré par une coopérative?
+            Inscrit par votre coopérative ? Activez votre accès web
           </p>
           <div className="space-y-2">
             <Button
@@ -176,7 +176,7 @@ const Login = () => {
               data-testid="activate-member-btn"
             >
               <UserPlus className="w-4 h-4 mr-2" />
-              Activer mon compte Membre Coopérative
+              Je suis planteur — Activer mon accès web
             </Button>
             <Button
               type="button"
@@ -186,7 +186,7 @@ const Login = () => {
               data-testid="activate-agent-btn"
             >
               <Shield className="w-4 h-4 mr-2" />
-              Activer mon compte Agent Terrain
+              Je suis agent terrain — Activer mon accès web
             </Button>
           </div>
         </div>

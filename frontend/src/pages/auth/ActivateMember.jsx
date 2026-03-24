@@ -157,11 +157,11 @@ const ActivateMember = () => {
             <UserPlus className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Activation Compte Membre</h1>
+            <h1 className="text-xl font-bold text-gray-900">Activer mon accès web</h1>
             <p className="text-sm text-gray-600">
               {step === 1 
                 ? 'Entrez le numéro enregistré par votre coopérative'
-                : 'Créez votre mot de passe'}
+                : 'Créez votre mot de passe pour accéder au dashboard'}
             </p>
           </div>
         </div>

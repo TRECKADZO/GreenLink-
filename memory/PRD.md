@@ -232,6 +232,17 @@ Etape 2 - Planteur compose *144*88#
 - Endpoint: `GET /api/cooperative/members/export?format=xlsx|pdf&status=xxx&search=xxx`
 **Tests: 11/11 backend PASS, 100% frontend PASS (iteration 71)**
 
+### Phase 24 - Verification Flux Activation + Libelles (DONE - 24/03/2026)
+- Verifie et valide les 2 flux d'activation bout-en-bout:
+  - Membre: Coop cree planteur → check-member-phone → activate-member-account → login OK
+  - Agent: Coop cree agent → check-agent-phone → activate-agent-account → login OK
+- Amelioration des libelles sur la page Login:
+  - "Inscrit par votre cooperative ? Activez votre acces web"
+  - "Je suis planteur — Activer mon acces web"
+  - "Je suis agent terrain — Activer mon acces web"
+- Pages ActivateMember.jsx et ActivateAgent.jsx: titres mis a jour
+**Tests: Flux testes manuellement via curl (creation, check, activation, login) - tous OK**
+
 ## Backlog (P0-P3)
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
