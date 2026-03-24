@@ -110,6 +110,19 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Web: Visualisation categories (3 cartes + barre proportionnelle biomasse)
 - USSD *144*88#: 9 questions (ajout arbres moyens 8-12m separe)
 
+### Phase 17 - Super Admin Gestion Primes Carbone (DONE - 24/03/2026)
+**Flux complet: Verification terrain -> Admissibilite -> USSD -> Admin validation -> Paiement Orange Money**
+- Backend carbon_premiums.py: GET /config, /stats, /requests, /requests/{id}, PUT /requests/{id}/validate, /requests/{id}/pay
+- USSD *123*45# menu 2→1: appelle create_ussd_payment_request() pour creer une demande dans carbon_payment_requests
+- Admissibilite automatique: parcelles avec score >= 6.0 marquees admissibles apres verification terrain
+- Calcul prime: score_carbone x 5,000 XOF x hectares, commission cooperative 10%
+- Super Admin UI: /admin/carbon-premiums (stats, resume financier, tableau demandes filtrable, detail parcelles expandable)
+- Actions Admin: Approuver, Rejeter (avec motif), Payer via Orange Money (MOCK)
+- Notifications SSE: planteur notifie a chaque etape (admissible, approuve, rejete, paye), admin notifie nouvelle demande
+- Bouton "Primes Carbone" ajoute au Dashboard Admin (acces rapide)
+- Orange Money: MOCK (logs uniquement). Transaction IDs generes.
+- Tests: 13/13 backend, 100% frontend (iteration 62)
+
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
@@ -132,3 +145,7 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - GET /api/notifications/web | web/unread-count
 - PUT /api/notifications/web/{id}/read | web/read-all
 - GET /api/notifications/stream (SSE)
+- GET /api/admin/carbon-premiums/config | stats | requests
+- GET /api/admin/carbon-premiums/requests/{id}
+- PUT /api/admin/carbon-premiums/requests/{id}/validate (approve|reject)
+- PUT /api/admin/carbon-premiums/requests/{id}/pay (Orange Money MOCK)
