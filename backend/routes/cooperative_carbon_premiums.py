@@ -508,3 +508,68 @@ async def generate_monthly_report_pdf(
             "Content-Disposition": f"attachment; filename=rapport_paiements_{month_names[month]}_{year}.pdf"
         }
     )
+
+
+
+@router.get("/carbon-premiums/admin-requests")
+async def get_coop_members_admin_requests(
+    current_user: dict = Depends(get_current_user)
+):
+    """View Super Admin carbon premium requests for cooperative members."""
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+
+    # Get all coop members
+    members = await db.coop_members.find(coop_id_query(coop_id)).to_list(1000)
+    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+
+    # Find payment requests linked to this cooperative OR to member user_ids
+    query = {"$or": [
+        {"coop_id": coop_id},
+        {"farmer_id": {"$in": [str(uid) for uid in member_user_ids]}}
+    ]}
+    requests_list = await db.carbon_payment_requests.find(query).sort("requested_at", -1).to_list(200)
+
+    # Stats
+    pending = sum(1 for r in requests_list if r.get("status") == "pending")
+    approved = sum(1 for r in requests_list if r.get("status") == "approved")
+    paid = sum(1 for r in requests_list if r.get("status") == "paid")
+    rejected = sum(1 for r in requests_list if r.get("status") == "rejected")
+    total_farmer = sum(r.get("farmer_amount", 0) for r in requests_list if r.get("status") == "paid")
+    total_commission = sum(r.get("coop_commission", 0) for r in requests_list if r.get("status") == "paid")
+
+    # Admissible parcels count for coop members
+    member_ids_str = [str(m["_id"]) for m in members]
+    all_farmer_ids = member_ids_str + [str(uid) for uid in member_user_ids]
+    admissible_count = await db.parcels.count_documents({
+        "farmer_id": {"$in": all_farmer_ids},
+        "admissibilite_prime": "admissible"
+    })
+
+    return {
+        "stats": {
+            "en_attente": pending,
+            "approuvees": approved,
+            "payees": paid,
+            "rejetees": rejected,
+            "total_paye_planteurs": total_farmer,
+            "total_commissions_coop": total_commission,
+            "parcelles_admissibles": admissible_count,
+        },
+        "requests": [{
+            "id": str(r["_id"]),
+            "farmer_name": r.get("farmer_name", ""),
+            "farmer_phone": r.get("farmer_phone", ""),
+            "parcels_count": r.get("parcels_count", 0),
+            "average_carbon_score": r.get("average_carbon_score", 0),
+            "total_premium": r.get("total_premium", 0),
+            "coop_commission": r.get("coop_commission", 0),
+            "farmer_amount": r.get("farmer_amount", 0),
+            "status": r.get("status", ""),
+            "requested_at": r["requested_at"].isoformat() if isinstance(r.get("requested_at"), datetime) else str(r.get("requested_at", "")),
+            "requested_via": r.get("requested_via", ""),
+            "paid_at": r.get("paid_at", "").isoformat() if isinstance(r.get("paid_at"), datetime) else str(r.get("paid_at", "")),
+            "farmer_transaction_id": r.get("farmer_transaction_id", ""),
+            "coop_transaction_id": r.get("coop_transaction_id", ""),
+        } for r in requests_list]
+    }

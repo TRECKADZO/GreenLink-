@@ -130,6 +130,15 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Affiche: statut (en attente/approuvee/payee/rejetee), montant, ref Orange Money, instructions USSD
 - Message adaptatif si score < 6.0 ou si parcelle admissible disponible
 
+### Phase 17c - Mise a jour page Cooperative "Distribuer Primes" (DONE - 24/03/2026)
+- Page CarbonPremiumsPage.jsx reecrite pour refleter le nouveau flux Super Admin
+- GET /api/cooperative/carbon-premiums/admin-requests: endpoint cooperative pour voir les demandes Super Admin de ses membres
+- Banniere explicative du flux en 5 etapes (Verification -> Admissible -> USSD -> Super Admin -> Orange Money)
+- 2 onglets: "Suivi des demandes" (statut des demandes USSD) + "Membres eligibles" (tableau avec score et prime estimee)
+- Stats: en attente, payees, paye aux planteurs, commission coop (10%)
+- Recherche + filtre par statut
+- Plus de bouton "Payer" direct (le Super Admin gere les paiements)
+
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
