@@ -27,6 +27,7 @@ const RegisterFarmerPage = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [successData, setSuccessData] = useState(null);
+  const [cooperatives, setCooperatives] = useState([]);
   const [form, setForm] = useState({
     nom_complet: '',
     telephone: '',
@@ -42,6 +43,20 @@ const RegisterFarmerPage = () => {
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
+
+  // Load cooperatives list
+  React.useEffect(() => {
+    const loadCoops = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/cooperatives`);
+        if (res.ok) {
+          const data = await res.json();
+          setCooperatives(data.cooperatives || []);
+        }
+      } catch { /* silent */ }
+    };
+    loadCoops();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -209,16 +224,22 @@ const RegisterFarmerPage = () => {
               {/* Code cooperative (optionnel) */}
               <div className="space-y-1.5">
                 <Label className="text-sm text-gray-300">
-                  <TreePine className="w-3.5 h-3.5 inline mr-1" /> Code cooperative (si rattache)
+                  <TreePine className="w-3.5 h-3.5 inline mr-1" /> Cooperative de rattachement
                 </Label>
-                <Input
-                  data-testid="register-coop-input"
-                  placeholder="Optionnel - ex: COOP-DAL"
-                  value={form.cooperative_code}
-                  onChange={(e) => handleChange('cooperative_code', e.target.value)}
-                  className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
-                />
-                <p className="text-xs text-gray-500">Votre code planteur sera genere automatiquement.</p>
+                <Select value={form.cooperative_code} onValueChange={(v) => handleChange('cooperative_code', v)}>
+                  <SelectTrigger data-testid="register-coop-input" className="bg-gray-800/50 border-gray-700 text-white">
+                    <SelectValue placeholder="Selectionnez la cooperative" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectItem value="none" className="text-gray-400 hover:bg-gray-700">Aucune / Independant</SelectItem>
+                    {cooperatives.map(c => (
+                      <SelectItem key={c.code} value={c.code} className="text-gray-200 hover:bg-gray-700">
+                        {c.name} ({c.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">Le code planteur sera genere automatiquement.</p>
               </div>
 
               {/* Village */}

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
+from pymongo import ReturnDocument
 import os
 from database import db, client
 from auth_models import UserCreate, UserLogin, Token, User, UserProfileUpdate
@@ -13,6 +14,34 @@ from slowapi.util import get_remote_address
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 security = HTTPBearer()
 limiter = Limiter(key_func=get_remote_address)
+
+
+async def generate_coop_code(department: str = "", coop_name: str = "") -> str:
+    """
+    Auto-generate a unique cooperative code.
+    Format: COOP-{DEPT_CODE}-{SEQUENCE}
+    DEPT_CODE = first 3 chars of department or coop_name (uppercase)
+    """
+    prefix = ""
+    if department:
+        prefix = department.replace("-", "").replace(" ", "")[:3].upper()
+    elif coop_name:
+        # Remove common words and take prefix
+        clean = coop_name.replace("COOP", "").replace("Coop", "").replace("coop", "").replace("-", "").replace(" ", "")
+        prefix = clean[:3].upper() if clean else "GEN"
+    
+    if not prefix:
+        prefix = "GEN"
+    
+    counter = await db.coop_code_counters.find_one_and_update(
+        {"prefix": prefix},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER
+    )
+    seq = counter.get("seq", 1)
+    
+    return f"COOP-{prefix}-{seq:03d}"
 
 
 def normalize_phone(phone: str) -> list:
@@ -57,7 +86,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user["_id"] = str(user["_id"])
     return user
 
-@router.post("/register", response_model=Token)
+@router.post("/register")
 async def register(user_data: UserCreate):
     import logging
     logger = logging.getLogger(__name__)
@@ -116,12 +145,15 @@ async def register(user_data: UserCreate):
             user_dict["supplier_company"] = None
             user_dict["products_offered"] = []
         elif user_data.user_type == "cooperative":
-            user_dict["coop_name"] = getattr(user_data, 'coop_name', None)
-            user_dict["coop_code"] = getattr(user_data, 'coop_code', None)
+            coop_name = getattr(user_data, 'coop_name', None) or user_data.full_name
+            dept = getattr(user_data, 'department', '') or getattr(user_data, 'headquarters_region', '') or ''
+            coop_code = await generate_coop_code(dept, coop_name)
+            user_dict["coop_name"] = coop_name
+            user_dict["coop_code"] = coop_code
             user_dict["registration_number"] = getattr(user_data, 'registration_number', None)
             user_dict["certifications"] = getattr(user_data, 'certifications', [])
             user_dict["headquarters_address"] = getattr(user_data, 'headquarters_address', None)
-            user_dict["headquarters_region"] = getattr(user_data, 'headquarters_region', None)
+            user_dict["headquarters_region"] = getattr(user_data, 'headquarters_region', None) or dept
             user_dict["commission_rate"] = getattr(user_data, 'commission_rate', 0.10)
             user_dict["orange_money_business"] = getattr(user_data, 'orange_money_business', None)
         elif user_data.user_type == "field_agent":
@@ -1182,3 +1214,26 @@ async def activate_agent_account(request: AgentActivationRequest):
             "child_labor_monitoring"
         ]
     }
+
+
+
+@router.get("/cooperatives")
+async def list_cooperatives():
+    """Public endpoint to list cooperatives for farmer registration forms."""
+    coops = await db.users.find(
+        {"user_type": "cooperative", "is_active": True},
+        {"_id": 0, "coop_code": 1, "coop_name": 1, "full_name": 1, "headquarters_region": 1}
+    ).to_list(200)
+    
+    result = []
+    for c in coops:
+        name = c.get("coop_name") or c.get("full_name", "")
+        code = c.get("coop_code", "")
+        if name and code:
+            result.append({
+                "code": code,
+                "name": name,
+                "region": c.get("headquarters_region", "")
+            })
+    
+    return {"cooperatives": result}

@@ -88,6 +88,8 @@ const Register = () => {
     userType: '',
     departement: '',
     zone: '',
+    // Cooperative fields
+    coopName: '',
     // ICI Data Fields for producers
     genre: '',
     dateNaissance: '',
@@ -97,6 +99,7 @@ const Register = () => {
     village: ''
   });
   const [acceptConditions, setAcceptConditions] = useState(false);
+  const [registrationResult, setRegistrationResult] = useState(null);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -144,6 +147,7 @@ const Register = () => {
         acceptedAt: new Date().toISOString(),
         departement: formData.departement,
         zone: formData.zone,
+        coop_name: formData.coopName || null,
         ...iciData
       }
     );
@@ -151,11 +155,19 @@ const Register = () => {
     setLoading(false);
 
     if (result.success) {
-      toast({
-        title: 'Compte créé avec succès!',
-        description: 'Bienvenue sur GreenLink'
-      });
-      navigate('/profile');
+      // Store registration result for cooperative code display
+      if (formData.userType === 'cooperative' && result.user?.coop_code) {
+        setRegistrationResult({
+          coopCode: result.user.coop_code,
+          coopName: result.user.coop_name || formData.coopName,
+        });
+      } else {
+        toast({
+          title: 'Compte cree avec succes!',
+          description: 'Bienvenue sur GreenLink'
+        });
+        navigate('/profile');
+      }
     } else {
       toast({
         title: 'Erreur',
@@ -169,6 +181,47 @@ const Register = () => {
   const showDepartmentSelection = ['producteur', 'cooperative'].includes(formData.userType);
 
   const canSubmit = formData.userType && formData.fullName && formData.identifier && formData.password && acceptConditions && acceptPrivacy;
+
+  // Cooperative registration success page
+  if (registrationResult) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#2d5a4d] via-[#235043] to-[#1a4038] flex items-center justify-center p-6">
+        <Card className="w-full max-w-md p-8 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#2d5a4d]/10 flex items-center justify-center">
+            <Shield className="w-10 h-10 text-[#2d5a4d]" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Cooperative creee !</h2>
+          <p className="text-gray-600 mb-6">
+            Bienvenue, {registrationResult.coopName}
+          </p>
+          <div className="bg-[#2d5a4d]/5 border-2 border-[#2d5a4d]/20 rounded-lg p-4 mb-6">
+            <p className="text-xs text-gray-500 mb-1">Votre code cooperative (auto-genere)</p>
+            <p className="text-2xl font-bold text-[#2d5a4d] tracking-widest" data-testid="register-coop-code">{registrationResult.coopCode}</p>
+            <p className="text-xs text-gray-500 mt-2">
+              Communiquez ce code a vos agents terrain pour rattacher les planteurs.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/cooperative/dashboard')}
+              className="flex-1"
+              data-testid="register-coop-dashboard-btn"
+            >
+              Mon tableau de bord
+            </Button>
+            <Button 
+              onClick={() => navigate('/profile')}
+              className="flex-1 bg-[#2d5a4d] hover:bg-[#235043] text-white"
+              data-testid="register-coop-profile-btn"
+            >
+              Completer mon profil
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2d5a4d] via-[#235043] to-[#1a4038] flex items-center justify-center p-6">
@@ -291,6 +344,31 @@ const Register = () => {
               
               <p className="text-xs text-gray-500">
                 51 départements producteurs de Côte d'Ivoire disponibles
+              </p>
+            </div>
+          )}
+
+          {/* Cooperative Name - Only for cooperatives */}
+          {formData.userType === 'cooperative' && (
+            <div className="space-y-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                <Users className="w-4 h-4 text-amber-600" />
+                Informations de la cooperative
+              </h3>
+              <div>
+                <Label className="text-xs text-gray-500 mb-1 block">Nom de la cooperative *</Label>
+                <Input
+                  type="text"
+                  placeholder="Ex: Cooperative des planteurs de Daloa"
+                  value={formData.coopName}
+                  onChange={(e) => setFormData({ ...formData, coopName: e.target.value })}
+                  className="text-sm"
+                  required
+                  data-testid="coop-name-input"
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Votre code cooperative sera genere automatiquement a la creation du compte.
               </p>
             </div>
           )}

@@ -72,6 +72,11 @@ export const AuthProvider = ({ children }) => {
           payload.village = additionalData.village;
         }
         
+        // Cooperative fields
+        if (additionalData.coop_name) {
+          payload.coop_name = additionalData.coop_name;
+        }
+        
         // ICI demographic fields for producers
         if (additionalData.genre) {
           payload.genre = additionalData.genre;
@@ -102,7 +107,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', access_token);
       
       console.log('[Auth] Registration successful, token saved');
-      return { success: true };
+      return { success: true, user: userData };
     } catch (error) {
       console.error('[Auth] Registration error:', error);
       console.error('[Auth] Error response:', error.response?.data);
