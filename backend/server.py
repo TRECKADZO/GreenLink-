@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 # Import routes
 from routes import features, content, contact, auth, marketplace, greenlink, payments, admin, cooperative
 from routes import cooperative_members, cooperative_parcels, cooperative_lots, cooperative_agents, cooperative_reports, cooperative_carbon_premiums
-from routes import admin_analytics
+from routes import admin_analytics, carbon_premiums
 from routes import tracking, analytics_advanced, notifications, subscriptions, carbon_sales, billing, sms
 from routes import premium_analytics, ici_analytics, ici_data_collection, ici_export
 from routes import pdf_reports, websocket_routes
@@ -135,6 +135,7 @@ app.include_router(cooperative_agents.router)
 app.include_router(cooperative_reports.router)
 from routes import cooperative_harvests
 app.include_router(cooperative_carbon_premiums.router)
+app.include_router(carbon_premiums.router)
 app.include_router(cooperative_harvests.router)
 app.include_router(tracking.router)
 app.include_router(analytics_advanced.router)

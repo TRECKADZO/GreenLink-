@@ -101,14 +101,7 @@ export const cooperativeApi = {
     return response.data;
   },
 
-  // Distributions
-  distributeLotPremiums: async (lotId) => {
-    const response = await axios.post(`${API}/lots/${lotId}/distribute`, {}, {
-      headers: getAuthHeader()
-    });
-    return response.data;
-  },
-
+  // Distributions (used by Soumissions Carbone)
   getLotContributors: async (lotId) => {
     const response = await axios.get(`${API}/lots/${lotId}/contributors`, {
       headers: getAuthHeader()

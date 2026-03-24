@@ -792,6 +792,12 @@ async def verify_parcel_by_agent(
         {"$set": update_data}
     )
 
+    # Check admissibility for carbon premium (only for verified parcels)
+    if v_status == "verified":
+        from routes.carbon_premiums import check_and_set_admissibility
+        farmer_id = str(parcel.get("farmer_id", ""))
+        await check_and_set_admissibility(parcel_id, carbon_score, farmer_id, area)
+
     status_labels = {"verified": "verifiee", "rejected": "rejetee", "needs_correction": "a corriger"}
 
     return {
