@@ -3,7 +3,7 @@ Cooperative Members Management Routes
 GreenLink Agritech - Côte d'Ivoire
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from fastapi.responses import StreamingResponse
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -16,6 +16,10 @@ from database import db
 from routes.auth import get_current_user
 from routes.cooperative import verify_cooperative, coop_id_query, CoopMemberCreate
 from routes.ussd import generate_farmer_code
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/cooperative", tags=["Cooperative Members"])
@@ -100,7 +104,9 @@ async def get_coop_members(
     }
 
 @router.post("/members")
+@limiter.limit("20/minute")
 async def create_coop_member(
+    request: Request,
     member: CoopMemberCreate,
     current_user: dict = Depends(get_current_user)
 ):

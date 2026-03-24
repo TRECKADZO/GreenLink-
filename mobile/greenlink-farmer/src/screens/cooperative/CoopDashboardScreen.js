@@ -181,6 +181,7 @@ export default function CoopDashboardScreen({ navigation }) {
             value={parcelles?.total || 0}
             label="Parcelles"
             color="#2196F3"
+            onPress={() => navigation.navigate('CoopParcels')}
           />
           <StatCard
             icon="leaf"
@@ -306,41 +307,40 @@ export default function CoopDashboardScreen({ navigation }) {
             color="#2196F3"
           />
           <QuickAction
-            icon="document-text"
-            label="Rapport EUDR"
-            onPress={() => navigation.navigate('CoopReports')}
+            icon="cube"
+            label="Ventes Groupees"
+            onPress={() => navigation.navigate('CoopLots')}
             color="#9C27B0"
           />
           <QuickAction
+            icon="wallet"
+            label="Distributions"
+            onPress={() => navigation.navigate('CoopDistributions')}
+            color="#FF9800"
+          />
+          <QuickAction
             icon="leaf"
-            label="Récoltes"
+            label="Recoltes"
             onPress={() => navigation.navigate('CoopHarvests')}
             color="#16a34a"
           />
           <QuickAction
-            icon="download"
-            label="Telecharger PDF"
-            onPress={async () => {
-              try {
-                Alert.alert('Telechargement', 'Generation du rapport PDF...');
-                await cooperativeApi.downloadEUDRPdf();
-              } catch (err) {
-                Alert.alert('Erreur', 'Impossible de telecharger le PDF');
-              }
-            }}
-            color="#FF5722"
+            icon="document-text"
+            label="Rapport EUDR"
+            onPress={() => navigation.navigate('CoopReports')}
+            color="#607D8B"
+          />
+          <QuickAction
+            icon="people"
+            label="Agents Terrain"
+            onPress={() => navigation.navigate('AgentList')}
+            color="#795548"
           />
           <QuickAction
             icon="cart"
             label="Marketplace"
             onPress={() => navigation.navigate('Marketplace')}
             color="#f59e0b"
-          />
-          <QuickAction
-            icon="receipt"
-            label="Mes Commandes"
-            onPress={() => navigation.navigate('Orders')}
-            color="#6366f1"
           />
         </View>
 

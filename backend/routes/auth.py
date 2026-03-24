@@ -283,31 +283,20 @@ async def login(request: Request, credentials: UserLogin):
             logger.error(f"Password verification exception for {credentials.identifier}: {e}")
             password_valid = False
     
-    # If password verification fails, check for known admin accounts with fallback
+    # If password verification fails using standard hash, try legacy migration
     if not password_valid:
-        # List of critical admin accounts with their known passwords for self-healing
-        # This is a deployment safety mechanism
-        ADMIN_RECOVERY_ACCOUNTS = {
-            "klenakan.eric@gmail.com": "474Treckadzo",
-            "admin@greenlink.ci": "admin123",
-        }
-        
-        user_email = user.get("email", "")
-        if user_email in ADMIN_RECOVERY_ACCOUNTS:
-            expected_password = ADMIN_RECOVERY_ACCOUNTS[user_email]
-            if credentials.password == expected_password:
-                # Self-heal: regenerate the password hash
-                logger.warning(f"[SELF-HEAL] Regenerating password hash for {user_email}")
-                new_hash = get_password_hash(expected_password)
-                await db.users.update_one(
-                    {"_id": user["_id"]},
-                    {"$set": {
-                        "hashed_password": new_hash,
-                        "password_healed_at": datetime.utcnow()
-                    }}
-                )
-                password_valid = True
-                logger.info(f"[SELF-HEAL] Password hash regenerated successfully for {user_email}")
+        # Check for plaintext password field (legacy migration)
+        legacy_password = user.get("password")
+        if legacy_password and credentials.password == legacy_password:
+            # Migrate: hash the password and remove the legacy field
+            logger.warning(f"[MIGRATION] Migrating legacy plaintext password for {credentials.identifier}")
+            new_hash = get_password_hash(credentials.password)
+            await db.users.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"hashed_password": new_hash}, "$unset": {"password": ""}}
+            )
+            password_valid = True
+            logger.info(f"[MIGRATION] Password hash migrated for {credentials.identifier}")
     
     if not password_valid:
         logger.warning(f"Password verification failed for: {credentials.identifier}")
@@ -641,88 +630,73 @@ async def reset_password(request: PasswordResetVerify):
 # ============= ADMIN PASSWORD HEALTH CHECK & REPAIR =============
 
 @router.get("/admin/password-health/{email}")
-async def check_password_health(email: str):
+async def check_password_health(email: str, current_user: dict = Depends(get_current_user)):
     """
-    Diagnostic endpoint to check password hash health for admin accounts.
-    Only works for known admin accounts.
+    Diagnostic endpoint to check password hash health.
+    Requires super_admin authentication.
     """
-    ADMIN_ACCOUNTS = ["klenakan.eric@gmail.com", "admin@greenlink.ci"]
-    
-    if email not in ADMIN_ACCOUNTS:
-        raise HTTPException(status_code=403, detail="Endpoint réservé aux comptes admin")
+    if current_user.get("user_type") not in ["super_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Acces reserve aux administrateurs")
     
     user = await db.users.find_one({"email": email})
     if not user:
-        return {"status": "error", "message": "Utilisateur non trouvé"}
+        return {"status": "error", "message": "Utilisateur non trouve"}
     
     has_hash = "hashed_password" in user and bool(user["hashed_password"])
     hash_format_valid = False
-    hash_prefix = None
     
     if has_hash:
         stored_hash = user["hashed_password"]
-        hash_prefix = stored_hash[:7] if len(stored_hash) > 7 else stored_hash
-        # Valid bcrypt hash starts with $2a$, $2b$, or $2y$ followed by cost factor
         hash_format_valid = stored_hash.startswith(("$2a$", "$2b$", "$2y$")) and len(stored_hash) >= 59
     
     return {
         "status": "ok" if has_hash and hash_format_valid else "needs_repair",
         "email": email,
-        "has_hashed_password": has_hash,  # Now returns True/False
+        "has_hashed_password": has_hash,
         "hash_format_valid": hash_format_valid,
-        "hash_prefix": hash_prefix,
-        "last_login": user.get("last_login"),
-        "password_healed_at": user.get("password_healed_at"),
         "user_type": user.get("user_type"),
         "is_active": user.get("is_active", True)
     }
 
 
 @router.post("/admin/repair-password")
-async def repair_admin_password(data: dict):
+async def repair_admin_password(data: dict, current_user: dict = Depends(get_current_user)):
     """
-    Emergency endpoint to repair admin password hash.
-    Requires the correct password to authenticate the repair.
+    Admin endpoint to repair a user's password hash.
+    Requires super_admin authentication and the new password.
     """
+    if current_user.get("user_type") not in ["super_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Acces reserve aux administrateurs")
+    
     email = data.get("email")
-    password = data.get("password")
+    new_password = data.get("new_password")
     
-    ADMIN_RECOVERY = {
-        "klenakan.eric@gmail.com": "474Treckadzo",
-        "admin@greenlink.ci": "admin123",
-    }
+    if not email or not new_password:
+        raise HTTPException(status_code=400, detail="Email et nouveau mot de passe requis")
     
-    if not email or not password:
-        raise HTTPException(status_code=400, detail="Email et mot de passe requis")
-    
-    if email not in ADMIN_RECOVERY:
-        raise HTTPException(status_code=403, detail="Endpoint réservé aux comptes admin")
-    
-    if password != ADMIN_RECOVERY[email]:
-        raise HTTPException(status_code=401, detail="Mot de passe incorrect")
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caracteres")
     
     user = await db.users.find_one({"email": email})
     if not user:
-        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        raise HTTPException(status_code=404, detail="Utilisateur non trouve")
     
-    # Generate new hash
-    new_hash = get_password_hash(password)
+    new_hash = get_password_hash(new_password)
     
-    # Update in database
-    result = await db.users.update_one(
+    await db.users.update_one(
         {"email": email},
         {"$set": {
             "hashed_password": new_hash,
-            "password_repaired_at": datetime.utcnow()
+            "password_repaired_at": datetime.utcnow(),
+            "repaired_by": str(current_user.get("_id"))
         }}
     )
     
-    logger.info(f"[PASSWORD REPAIR] Password hash repaired for {email}")
+    logger.info(f"[PASSWORD REPAIR] Password repaired for {email} by admin {current_user.get('email')}")
     
     return {
         "status": "success",
-        "message": f"Mot de passe réparé pour {email}",
-        "repaired_at": datetime.utcnow().isoformat()
+        "message": f"Mot de passe repare pour {email}"
     }
 
 

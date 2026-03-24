@@ -171,12 +171,21 @@ app.include_router(carbon_listings.router)
 app.include_router(quotes.router)
 app.include_router(rse_dashboard.router)
 
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '')
+if CORS_ORIGINS:
+    allowed_origins = [o.strip() for o in CORS_ORIGINS.split(',') if o.strip()]
+else:
+    allowed_origins = [
+        "https://harvest-validation.preview.emergentagent.com",
+        "http://localhost:3000",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allowed_origins,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
 )
 
 # Configure logging
