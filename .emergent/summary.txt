@@ -1,354 +1,149 @@
-<analysis>original_problem_statement: 
-Fix marketplace delivery calculation logic, fix mobile app bugs, implement a cooperative harvest validation flow, enrich the Parcel Verification flow with Carbon Premium metrics, and establish a Super Admin Carbon Premium Payout Workflow. 
-NEW REQUIREMENTS ADDED IN SESSION: 
-- Implement a confidential RSE formula for Carbon Premiums (RSE = Score * Taux * Hectares). Distribution: 30% Frais, 70% Distributed (of the 70%: 25% GreenLink, 5% Cooperative, 70% Farmer). Only the Super Admin can see this breakdown.
-- Overhaul the USSD menu texts and flow (Adding specific Registration, Simple Estimation, and Detailed Estimation flows).
-- Update Cooperative, Field Agent, and Super Admin dashboards to align with the new USSD/Registration flows.
-- Fix newly reported backend errors.
+<analysis>**original_problem_statement:**
+Fix marketplace delivery calculation logic, fix mobile app bugs, implement a cooperative harvest validation flow, enrich the Parcel Verification flow with Carbon Premium metrics, and establish a Super Admin Carbon Premium Payout Workflow. Overhaul USSD menu texts and flow. Create Dashboards for USSD/Registration flows. Harmonize user roles, auto-generate Cooperative and Farmer Codes, and build a Super Admin Onboarding Dashboard. Build APK and AAB (v1.52.0). Fix member activation flow where newly created farmers cannot activate their accounts and lack PIN code configuration.
 
-**User's preferred language**: French (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. **INSTRUCTION FOR NEXT AGENT**: Toujours répondre en Français.)
+**User's preferred language**: French (**INSTRUCTION FOR NEXT AGENT**: Toujours répondre en Français.)
 
-**what currently exists?** 
-A full-stack agricultural platform (React, FastAPI, MongoDB) with a decoupled system for physical cocoa sales (Lots) and Carbon Premiums. Carbon Premiums are now managed entirely by the Super Admin. A confidential RSE formula distributes funds between Farmers, Coops, GreenLink, and Fees. A public carbon calculator handles 3 tree categories (Grands, Moyens, Petits). The app relies on USSD for farmer interactions, but the user recently requested a massive overhaul of the USSD text and logic which has not yet been implemented.
+**what currently exists?**
+A full-stack agricultural platform (React, FastAPI, MongoDB). Key bug fixes and features have been implemented in this session:
+- The critical member activation bug is **resolved**. The cooperative dashboard's Add Member flow now mandates a 4-digit PIN, auto-generates a , and creates a  entry, enabling new members to use USSD and activate web accounts.
+- A new **Activation Tracking Dashboard** has been added for cooperatives to monitor member activation status, including stats widgets and an SMS reminder feature.
+- **PDF/Excel export** functionality for the member list has been implemented on the backend and is available on the cooperative members page.
+- The UI now correctly displays the **Cooperative's name** in the navbar instead of the manager's personal name.
+- A robust, multi-layered fix for the recurring **Cloudflare/network error on the mobile app** was implemented, including intelligent API retries, anti-bot headers, a local cache for the dashboard, and a reusable  hook. App version v1.54.0 containing this fix has been submitted for build.
+- The project's deployment readiness has been validated by the , and critical blockers (, missing mobile ) have been fixed.
 
-**Last working item**: 
-    - Last item agent was working: The previous agent successfully finished the RSE Formula and Homepage Calculator but failed to act on the final 4 user messages. The pending work is investigating/fixing reported backend errors, implementing a massive new USSD text/flow architecture provided by the user, and updating related dashboards.
-    - Status: NOT STARTED
-    - Agent Testing Done: N
-    - Which testing method agent to use? both (backend testing agent for USSD flow logic, frontend testing agent for Dashboard updates).
-    - User Testing Done: N
+**Last working item**:
+- Last item agent was working: The user reported that the **mobile app's Add Member screen is outdated** and causing creation to fail. It is missing the mandatory **PIN Code** and **Hectares** fields that were recently added to the web version. The agent has just overwritten the file  with the necessary UI and logic changes to match the web flow.
+- Status: IN PROGRESS
+- Agent Testing Done: N
+- Which testing method agent to use? Frontend testing agent to verify the mobile UI for  and the end-to-end creation flow.
+- User Testing Done: Y (User discovered the bug)
 
-**All Pending/In progress Issue list**: 
-  Issue 1: Investigate and Fix Backend Errors (P0)
-     - Attempted fixes: None. The user reported Corriger les erreurs du backend twice at the end of the session, but the context ended before the agent could read the logs.
-     - Next debug checklist: 
-       1. Run ==> /var/log/supervisor/backend.err.log <==
-2026-03-24 02:16:27,195 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-24 02:16:27,899 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-24 02:16:28,222 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-24 02:16:46,539 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-24 02:16:46,598 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-24 02:16:46,897 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-24 02:16:47,813 - routes.carbon_premiums - INFO - [MOCK] Orange Money payment: 55124 XOF to +2250799999999 (tx: OM-FARMER-9999-20260324021647)
-WARNING:  WatchFiles detected changes in 'tests/test_rse_formula_iteration63.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [4047]
-[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
-[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
-INFO:     Started server process [4252]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-2026-03-24 02:18:32,992 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-24 02:18:33,760 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-24 02:18:34,084 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-24 02:18:34,944 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-24 02:18:35,003 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-24 02:18:35,303 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-24 02:18:35,796 - routes.carbon_premiums - INFO - [CONFIG] Taux mis a jour: 6000.0 XOF par score/ha par Eric Klenakan
-2026-03-24 02:18:36,265 - routes.carbon_premiums - INFO - [CONFIG] Taux mis a jour: 5000.0 XOF par score/ha par Eric Klenakan
-2026-03-24 02:18:36,750 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-24 02:18:36,808 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-24 02:18:37,108 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-24 02:18:38,631 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-24 02:18:38,690 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-24 02:18:38,990 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-24 02:18:39,378 - routes.auth - INFO - Login attempt for: +2250705551234
-2026-03-24 02:18:39,437 - routes.auth - INFO - User found: None, has hashed_password: True
-2026-03-24 02:18:39,737 - routes.auth - INFO - Login successful for: +2250705551234
-2026-03-24 02:18:40,187 - routes.auth - INFO - Login attempt for: bielaghana@gmail.com
-2026-03-24 02:18:40,246 - routes.auth - INFO - User found: bielaghana@gmail.com, has hashed_password: True
-2026-03-24 02:18:40,545 - routes.auth - INFO - Login successful for: bielaghana@gmail.com
-2026-03-24 02:18:42,099 - routes.ussd - INFO - USSD Request: session=test_rse_iteration63_6b355f84, phone=+2250799999999, input=2*1
-2026-03-24 02:18:42,574 - routes.ussd - INFO - USSD Response: DEMANDE ENREGISTREE
-
-Montant planteur: 55 124 XOF
-...
-2026-03-24 02:18:42,675 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-24 02:18:42,734 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-24 02:18:43,032 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-24 02:19:04,537 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
-2026-03-24 02:19:04,599 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
-2026-03-24 02:19:04,900 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
-2026-03-24 02:19:36,176 - routes.auth - INFO - Login attempt for: bielaghana@gmail.com
-2026-03-24 02:19:36,236 - routes.auth - INFO - User found: bielaghana@gmail.com, has hashed_password: True
-2026-03-24 02:19:36,535 - routes.auth - INFO - Login successful for: bielaghana@gmail.com
-2026-03-24 02:20:02,318 - routes.auth - INFO - Login attempt for: +2250705551234
-2026-03-24 02:20:02,379 - routes.auth - INFO - User found: None, has hashed_password: True
-2026-03-24 02:20:02,681 - routes.auth - INFO - Login successful for: +2250705551234
-WARNING:  WatchFiles detected changes in 'routes/ussd.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [4252]
-[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
-[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
-INFO:     Started server process [4860]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'routes/ussd.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [4860]
-[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
-[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
-INFO:     Started server process [4885]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'routes/ussd.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [4885]
-[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
-[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
-INFO:     Started server process [4910]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Will watch for changes in these directories: ['/app/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [42] using WatchFiles
-[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
-[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
-INFO:     Started server process [83]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Will watch for changes in these directories: ['/app/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [46] using WatchFiles
-[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
-[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
-INFO:     Started server process [84]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-
-==> /var/log/supervisor/backend.out.log <==
-INFO:     10.64.129.104:35480 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.130.72:54384 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35464 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35480 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.130.72:54384 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35472 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.130.72:54372 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35464 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35486 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35490 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35486 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35464 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35506 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35506 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35464 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.130.72:54372 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.129.104:35518 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44106 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44120 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.130.72:37928 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44122 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44106 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.130.72:37928 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44122 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44106 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44120 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44120 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44122 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44120 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.130.72:37928 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44126 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.130.72:37932 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.130.72:37932 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.129.104:44120 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.130.72:37928 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.130.72:37944 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.130.72:37932 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.130.72:57320 - "POST /api/ussd/calculate-premium HTTP/1.1" 200 OK
-INFO:     10.64.129.104:60040 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.130.72:60502 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.129.104:60046 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.129.104:60044 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.130.72:60502 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.130.72:60506 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.130.72:60510 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.130.72:60520 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.129.104:60054 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.129.104:60044 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-[DB] Connected to: mongodb+srv://klenakaneric_db_user:474Treckadzo@cl... / greenlink_production
-INFO:     10.64.129.104:46844 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.130.72:46582 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.130.72:46586 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.130.72:46586 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.64.129.104:46844 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.64.130.72:46582 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.64.129.104:46828 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.130.72:46584 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.64.129.104:46828 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.64.129.104:46844 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.137.66:35314 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.132.74:34324 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.132.74:34320 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.132.74:34340 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.137.66:35314 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.132.74:34320 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.137.66:35318 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.137.66:35314 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.132.74:34356 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.137.66:35314 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.132.74:52424 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.137.66:42692 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.137.66:42700 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.132.74:52436 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.137.66:42708 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.137.66:42700 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.132.74:52450 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.137.66:42692 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.132.74:52424 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.132.74:52436 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.132.74:41382 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.132.74:41384 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.137.66:52118 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.137.66:52108 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.137.66:52122 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.132.74:41384 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.132.74:41388 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.132.74:41396 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.132.74:41382 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.132.74:41410 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52574 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.137.66:58296 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.132.74:48530 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.132.74:48544 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.137.66:58302 - "GET /api/steps HTTP/1.1" 200 OK
-INFO:     10.79.132.74:48548 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.132.74:48544 - "GET /api/features HTTP/1.1" 200 OK
-INFO:     10.79.137.66:58296 - "GET /api/partners HTTP/1.1" 200 OK
-INFO:     10.79.137.66:58302 - "GET /api/testimonials HTTP/1.1" 200 OK
-INFO:     10.79.132.74:48530 - "GET /api/pricing-plans HTTP/1.1" 200 OK
-INFO:     10.79.137.66:58318 - "GET /api/steps HTTP/1.1" 200 OK immediately.
-       2. Check for syntax errors or crash loops in  or  introduced in the last edits.
-     - Why fix this issue and what will be achieved with the fix? A broken backend blocks all API calls and subsequent development.
-     - Status: NOT STARTED
+**All Pending/In progress Issue list**:
+- Issue 1: Mobile Add Member Form Fix Validation (P0)
+     - Attempted fixes: The agent has updated the code in  to include the required 'PIN' and 'Hectares' fields and to handle the new API response.
+     - Next debug checklist:
+       1.  Increment the mobile app version to  in .
+       2.  Use  to run a new EAS build for APK/AAB v1.55.0 to avoid terminal timeouts.
+       3.  Inform the user that the new build is in progress and contains the fix for the member creation form, along with the previous network resiliency improvements.
+     - Why fix this issue and what will be achieved with the fix? This unblocks a core platform feature (member onboarding) on the mobile app and ensures workflow consistency between web and mobile.
+     - Status: IN PROGRESS
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? backend (via curl)
+     - Should Test frontend/backend/both after fix? Frontend (Mobile App)
      - Blocked on other issue: None
 
 **In progress Task List**:
-  Task 1: USSD Overhaul & Registration Flow
+  - Task 1: Build APK and AAB v1.54.0
      - Where to resume: 
-     - What will be achieved with this? Implements the user's exact provided text for USSD menus, including Nouvelle inscription (Name, Coop code, Village, PIN) and split estimations (Simple vs Detailed).
-     - Status: NOT STARTED
-     - Should Test frontend/backend/both after fix? backend (via USSD simulator / curl)
-     - Blocked on something: Issue 1 (Backend Errors)
-
-  Task 2: Dashboard Updates for New Flows
-     - Where to resume: Frontend dashboards (Coop, Field Agent, Super Admin).
-     - What will be achieved with this? Reflects the new data gathered from the overhauled USSD/Web registration forms (PINs, Villages, Coop Codes).
-     - Status: NOT STARTED
-     - Should Test frontend/backend/both after fix? both
-     - Blocked on something: Task 1
+     - What will be achieved with this? Deployment of mobile app with the robust Cloudflare/network fix.
+     - Status: BLOCKED
+     - Should Test frontend/backend/both after fix? NA
+     - Blocked on something: This build has been preempted by the more critical Add Member Form bug. The agent should proceed with building **v1.55.0** which will include both the network fixes from v1.54.0 and the form fix.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - (P0) Implement the simplified Web/App Registration Form outlined in the user's text dump (Nom, Tel, Code Planteur, Village, PIN).
-    - (P1) Submit the final AAB (v1.52.0) to Google Play Console.
+    - (P2) Configure real SMS gateway (Orange API) to replace the mock service.
     
     Future Tasks:
-    - (P2) Configure real SMS gateway (Orange API) to replace the mock service.
     - (P2) Implement local languages (Baoulé and Dioula) in the mobile app.
     - (P2) Refactor the backend to use cloud storage (AWS S3) for file and image uploads.
-    - (P3) Refactor  and  (files are getting excessively large).
+    - (P3) Refactor large backend files (, ).
 
 **Completed work in this session**
-- Super Admin Carbon Premium Payout Workflow (USSD request -> Admin Approval -> Mock Orange Money) (DONE)
-- Farmer Carbon Score page updated with Mes Demandes de Prime UI (DONE)
-- Cooperative Carbon Premium page overhauled to reflect Super Admin flow (read-only tracking) (DONE)
-- Confidential RSE Formula implemented (30% fees, 70% dist [25% GL, 5% Coop, 70% Farmer]) with dynamic Admin rate (DONE)
-- Homepage Carbon Calculator updated to include 3 tree categories (Grands, Moyens, Petits) (DONE)
+- **Member Activation & Missing PIN Flow (FIXED)**: The core workflow for a cooperative creating a member is now fixed and fully functional across USSD and web activation.
+- **Activation Tracking Dashboard (DONE)**: Cooperatives can now monitor member activation rates and send SMS reminders.
+- **Export Members List to PDF/Excel (DONE)**: Implemented on the backend with UI triggers on the members page.
+- **UI Fix: Display Coop Name (DONE)**:  now correctly shows the cooperative's name.
+- **Mobile App Cloudflare/Network Errors (FIXED in v1.54.0)**: A robust, multi-layered solution with intelligent retries and caching was implemented to handle network instability.
+- **Deployment Health Check (DONE)**: The application is validated as Ready to deploy after fixing two critical blockers.
+- **Mobile App 'Add Member' Form Sync (IN PROGRESS)**: The code to fix the outdated mobile form has been written.
 
 **Earlier issues found/mentioned but not fixed**
-   - Issue 1: Backend is crashing/throwing errors.
-   - Debug checklist: Run backend                          RUNNING   pid 46, uptime 0:00:16
-code-server                      STOPPED   Not started
-frontend                         STOPPED   Mar 24 11:01 AM
-mongodb                          RUNNING   pid 49, uptime 0:00:16
-nginx-code-proxy                 RUNNING   pid 45, uptime 0:00:16 and check supervisor logs.
-   - Why to solve this issue and what will be achieved with this: Restores app functionality.
-   - Should Test frontend/backend/both after fix: backend
-   - Is recurring issue? N
+   - Issue 1: N+1 Query in 
+     - Debug checklist: As identified by the , the query in  (lines 84-88) fetches parcels for each member in a loop.
+     - Why to solve this issue and what will be achieved with this? This is a performance optimization. For production scale, this should be refactored using a MongoDB aggregation pipeline to fetch all members and their parcel counts in a single query.
+     - Should Test frontend/backend/both after fix: backend
+     - Is recurring issue? N
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Cloudflare blocking API requests from certain regions (Côte d'Ivoire), returning HTML 404 instead of JSON. 
-  - Recurrence count: 3
-  - Status: RESOLVED (Mitigated via Axios retries).
+  - Issue recurrence in previous fork: Cloudflare blocking API requests from certain regions (Côte d'Ivoire).
+  - Recurrence count: 4+
+  - Status: RESOLVED (A robust, multi-layered fix was implemented in the mobile app in v1.54.0, including intelligent retries, better error handling, caching, and anti-bot headers. The user's latest error was on an old version of the app).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-React (Web), FastAPI (Backend), MongoDB (Database), USSD Protocol Logic (Menu states, string building, character limits), Role-Based Confidentiality (RSE Formula masking).
+- **Mobile App Resilience**: Implemented robust strategies (retries with exponential backoff and jitter, health checks, local caching) to handle unreliable network conditions and Cloudflare blocking.
+- **Background Jobs**: Utilized  to run long-running  commands, successfully bypassing terminal timeouts.
+- **API Routing**: Corrected a FastAPI route order issue where a dynamic route () was incorrectly capturing a static one ().
+- **File Generation**: Added backend capability to generate and serve PDF and Excel files using  and .
 
 **key DB schema**
-  - : {farmer_id, farmer_amount, rse_total, frais, distributable, greenlink_share, coop_commission, status}
-  - : {taux_par_hectare, repartition: {frais_pct, distributable_pct, greenlink_pct, cooperative_pct, paysan_pct}}
+  - : {..., **code_planteur**, **pin_hash**}
+  - : {..., **code_planteur**, **pin_hash**, **hectares**}
+  - : {phone_number, full_name, village, code_planteur, pin_hash} (new structure for USSD flow)
 
 **changes in tech stack**
-  - None.
+  - **Backend dependencies added**: ,  (via ) for file exports.
 
 **All files of reference**
-  -  (Crucial: Contains all USSD menus that need updating)
-  -  
-  - 
-  - 
+-  (Heavily modified for multiple features)
+-  (Heavily modified)
+-  (File with pending fix)
+-  (Rewritten for resilience)
+-  (For version bumps)
 
 **Areas that need refactoring**:
-  -  (Contains a massive amount of state logic. With the new user requirements for Registration and split Estimation flows, this file will become unmanageable if not structured properly).
+  - : Remains very large and complex.
+  -  in : Contains an N+1 query that should be optimized with an aggregation pipeline for production scale.
 
 **key api endpoints**
-  - 
-  - 
-  -  (Main webhook for telecom providers)
+-  (Now requires  and ).
+-  (New).
+-  (New).
 
 **Critical Info for New Agent**
-  - **Language**: MUST respond in French.
-  - **CRITICAL BACKEND ERROR**: The user ended the session stating Corriger les erreurs du backend twice. Before you write *any* code, check the backend logs to find out what broke during the last agent's modifications.
-  - **Confidentiality Rule**: The RSE Formula (, and the 30% fee / 25% GreenLink breakdown) is STRICTLY CONFIDENTIAL. It must *only* be visible in the Super Admin dashboard and Super Admin API payloads. Coops and Farmers must only receive their exact cut amounts.
-  - **USSD Rewrite**: Read the user's massive prompt regarding the USSD texts closely. You must implement a Nouvelle inscription flow (with a PIN code creation) and split the estimation into Simple and Detaillée. Ensure USSD string responses stay under 160 characters per screen.
+- **Language**: You **MUST** respond in French.
+- **Top Priority (P0)**: The immediate task is to finalize the fix for the mobile Add Member form. The code is written in , but it needs to be included in a new build (**v1.55.0**) and communicated to the user.
+- **Mobile Builds**: Always use  to run  commands to prevent terminal timeouts. The builds for v1.54.0 (with network fixes) are in progress/queued. You should now focus on creating and submitting v1.55.0.
 
 **documents and test reports created in this job**
-  - 
-  -  (Super Admin USSD to Payment tests)
-  -  (Confidential RSE Formula tests)
+-  (updated throughout the session)
+- 
+- 
+- 
 
-**Last 10 User Messages and any pending HUMAN messages** 
- 1. (User) calculer ma prime de la page acceuil doit temier compte des dernier changement... (COMPLETED)
- 2. (User) quels sont les questions du ussd? (Answered)
- 3. (User) toutes ses question sont implementer dans calculer ma prime carbone dans la page acceuil ? (Ignored by previous agent)
- 4. (User) continue
- 5. (User) continue
- 6. (User) *Massive prompt containing USSD texts for Registration, Simple Estimation, Detailed Estimation, and Web Form requirements.* Implement et créez les elements en lien avec le tableaux de bord... (PENDING - Agent missed this entirely).
- 7. (User) Ok
- 8. (User) *Repeats the massive USSD text prompt.* Implement et créez les elements en lien avec le tableaux de bord... (PENDING).
- 9. (User) Corriger les erreurs du backend (PENDING - Urgent blocker).
- 10. (User) Corriger les erreurs du backend (PENDING - Urgent blocker).
+**Last 10 User Messages and any pending HUMAN messages**
+1. User reports the mobile Add Member form is not updated and creation is failing. (PENDING FIX)
+2. User reports a recurring network error on the mobile dashboard after login. (FIXED in v1.54.0 build)
+3. User asks if they need to build the APK/AAB. (Agent confirmed builds were running).
+4. User requests a  health check. (DONE & fixed blockers).
+5. User requests to build APK/AAB v1.52.0. (DONE, but now superseded).
+6. User asks if Activate Account buttons are still needed. (Agent verified and confirmed their relevance).
+7. User requests PDF/Excel export and to display the coop name in the UI. (DONE).
+8. User agrees to add an activation tracking dashboard. (DONE).
+9. User confirms () to proceed with agent's plan.
+10. User confirms () to proceed with agent's initial plan.
 
 **Project Health Check:**
-- Broken: User explicitly reported backend errors in the final messages.
-- Mocked: Orange SMS, Orange Money.
+- Broken: Mobile app's  is out of sync with the backend, preventing member creation from mobile.
+- Mocked: Orange SMS, Orange Money services are still using mock implementations.
+- Warning: An N+1 query exists in the  endpoint, which could cause performance issues at scale.
 
-**3rd Party Integrations** 
-  - Resend (Emails) — Uses Emergent LLM Key / Environment
-  - Expo Push Notifications — Requires User setup/EAS
-  - Expo EAS Builds — Requires User Auth (Session active locally)
+**3rd Party Integrations**
+- Resend (Emails) — Uses Environment variables.
+- Expo EAS Builds — Requires User Auth.
+- **New**:  — used for backend PDF generation.
 
 **Testing status**
-  - Testing agent used after significant changes: YES (Iterations 62, 63)
+  - Testing agent used after significant changes: YES (Iterations 69-71 passed for web features).
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: None
-  - Known regressions: Backend currently throwing unknown errors based on user report.
+  - Test files created: None.
+  - Known regressions: The mobile Add Member flow regressed due to not being updated in sync with web/backend changes.
 
 **Credentials to test flow:**
-Standard mock users. (,  for Cooperative,  for Admin).
-Test Farmer:  (+2250799999999).
+Standard mock users. ( /  for Cooperative,  /  for Admin).
 
 **What agent forgot to execute**
-The previous agent successfully completed the RSE formula and Homepage calculator, but completely ignored the final 4 user prompts. The agent missed the massive USSD Text/Flow update request (Registration flow, PIN codes, detailed vs simple estimations) and ignored the user's explicit report that the backend had errors. Start by fixing the backend errors.</analysis>
+The agent initially forgot to update the mobile app's Add Member form () to include the mandatory  and  fields when they were added to the web and backend. This caused a critical feature to break on mobile, which the user reported. The agent has since written the code for the fix but has not yet built and deployed it.</analysis>

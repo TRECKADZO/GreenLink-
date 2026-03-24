@@ -72,7 +72,10 @@ export default function CoopMembersScreen({ navigation, route }) {
       setTotal(data.total || 0);
     } catch (error) {
       console.error('Error fetching members:', error);
-      Alert.alert('Erreur', 'Impossible de charger les membres');
+      // Retry silencieux au lieu d'un Alert bloquant
+      if (members.length === 0) {
+        setTimeout(() => fetchMembers(), 5000);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);

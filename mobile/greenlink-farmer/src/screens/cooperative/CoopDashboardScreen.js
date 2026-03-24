@@ -42,39 +42,76 @@ export default function CoopDashboardScreen({ navigation }) {
   const [dashboard, setDashboard] = useState(null);
   const [harvestStats, setHarvestStats] = useState(null);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  const fetchDashboard = useCallback(async () => {
+  const fetchDashboard = useCallback(async (silent = false) => {
     try {
-      setError(null);
-      const [dashData, harvestData] = await Promise.all([
-        cooperativeApi.getDashboard(),
-        cooperativeApi.getHarvests('en_attente').catch(() => ({ total: 0, harvests: [], stats: {} })),
-      ]);
+      if (!silent) setError(null);
+      
+      // Appels séquentiels au lieu de parallèles pour réduire la charge réseau
+      let dashData = null;
+      let harvestData = { total: 0, harvests: [], stats: {} };
+      
+      try {
+        dashData = await cooperativeApi.getDashboard();
+      } catch (e) {
+        console.warn('[Dashboard] getDashboard failed:', e.message);
+        throw e;
+      }
+      
+      try {
+        harvestData = await cooperativeApi.getHarvests('en_attente');
+      } catch (e) {
+        // Non bloquant - on continue avec les stats par défaut
+        console.warn('[Dashboard] getHarvests failed (non-blocking):', e.message);
+      }
+      
       setDashboard(dashData);
       setHarvestStats(harvestData);
+      setError(null);
+      setRetryCount(0);
     } catch (err) {
-      console.error('Error fetching dashboard:', err);
-      setError('Impossible de charger les donnees. Tirez vers le bas pour reessayer.');
+      console.error('[Dashboard] Error:', err.message);
+      if (!dashboard) {
+        // Seulement afficher l'erreur si on n'a pas de données en cache
+        setError('Connexion difficile. Tirez vers le bas pour reessayer.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [dashboard]);
 
   useEffect(() => {
     fetchDashboard();
-    // Safety timeout - stop loading after 20s even if API doesn't respond
+    
+    // Safety timeout étendu à 60s pour les réseaux lents
     const timeout = setTimeout(() => {
-      setLoading(false);
-      if (!dashboard) {
-        setError('Le serveur met trop de temps a repondre. Tirez vers le bas pour reessayer.');
+      if (loading) {
+        setLoading(false);
+        if (!dashboard) {
+          setError('Le serveur met du temps a repondre. Tirez vers le bas pour reessayer.');
+        }
       }
-    }, 20000);
+    }, 60000);
     return () => clearTimeout(timeout);
-  }, [fetchDashboard]);
+  }, []);
+
+  // Retry automatique silencieux toutes les 10 secondes si erreur (max 3 fois)
+  useEffect(() => {
+    if (error && !dashboard && retryCount < 3) {
+      const retryTimer = setTimeout(() => {
+        console.log(`[Dashboard] Auto-retry ${retryCount + 1}/3`);
+        setRetryCount(prev => prev + 1);
+        fetchDashboard(true);
+      }, 8000 + retryCount * 4000); // 8s, 12s, 16s
+      return () => clearTimeout(retryTimer);
+    }
+  }, [error, retryCount, dashboard]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    setRetryCount(0);
     fetchDashboard();
   }, [fetchDashboard]);
 
@@ -88,8 +125,13 @@ export default function CoopDashboardScreen({ navigation }) {
         <View style={styles.errorContainer}>
           <Ionicons name="cloud-offline" size={64} color={COLORS.gray} />
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchDashboard}>
-            <Text style={styles.retryButtonText}>Réessayer</Text>
+          {retryCount < 3 && (
+            <Text style={{ color: COLORS.gray, fontSize: 13, marginTop: 8, textAlign: 'center' }}>
+              Reconnexion automatique en cours ({retryCount + 1}/3)...
+            </Text>
+          )}
+          <TouchableOpacity style={styles.retryButton} onPress={() => { setRetryCount(0); fetchDashboard(); }}>
+            <Text style={styles.retryButtonText}>Reessayer maintenant</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

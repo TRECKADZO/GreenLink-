@@ -4,12 +4,12 @@
 export const CONFIG = {
   // API Backend - Uses EXPO_PUBLIC_API_URL from EAS build or falls back to hardcoded URL
   API_URL: process.env.EXPO_PUBLIC_API_URL 
-    || 'https://premium-payout-admin.preview.emergentagent.com',
+    || 'https://harvest-validation.preview.emergentagent.com',
   
   // Timeouts adaptés à la faible connectivité
-  REQUEST_TIMEOUT: 45000, // 45 secondes
-  RETRY_ATTEMPTS: 5,
-  RETRY_DELAY: 2000, // 2 secondes (progressif: 2s, 4s, 6s, 8s, 10s)
+  REQUEST_TIMEOUT: 45000, // 45 secondes pour reseaux lents CI
+  RETRY_ATTEMPTS: 6,     // 6 tentatives avec jitter pour Cloudflare
+  RETRY_DELAY: 2000,     // Base delay (avec jitter dans api.js)
   
   // Cache local
   CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 heures
