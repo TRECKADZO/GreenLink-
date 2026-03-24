@@ -120,6 +120,43 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 
 **Tests: 14/14 backend PASS, 100% frontend PASS (iteration 66)**
 
+### Phase 20 - Auto-Generation Code Cooperative (DONE - 24/03/2026)
+**Logique metier :**
+- Le code cooperative est auto-genere a l'inscription : `COOP-{DEPT}-{SEQ}` (ex: COOP-DAL-001)
+- PREFIX = 3 premieres lettres du departement ou du nom de la cooperative
+- Collection MongoDB `coop_code_counters` pour la sequence (comme `farmer_code_counters`)
+- Le code n'est JAMAIS saisi manuellement
+
+**Backend :**
+- `generate_coop_code()` dans auth.py
+- `POST /api/auth/register` pour cooperative: auto-genere coop_code, stocke coop_name et headquarters_region
+- `GET /api/auth/cooperatives` (public): liste des cooperatives actives avec code, nom, region
+- response_model=Token retire du register pour eviter les erreurs de serialisation Pydantic
+
+**Frontend Register.jsx :**
+- Champ "Nom de la cooperative" affiche quand user_type=cooperative
+- Page de succes cooperative affiche le code auto-genere en grand avec message de conservation
+- Boutons "Mon tableau de bord" et "Completer mon profil"
+
+**Frontend RegisterFarmerPage.jsx (inscription planteur) :**
+- Champ "Code cooperative" remplace par dropdown Select des cooperatives existantes
+- Charge les coops via GET /api/auth/cooperatives au montage
+- Option "Aucune / Independant" disponible
+- Affiche "nom (code)" pour chaque cooperative
+
+**Flux complet valide :**
+```
+Super Admin / Inscription → Cooperative creee → Code auto: COOP-DAL-001
+    ↓
+Cooperative crée ses agents terrain
+    ↓
+Agent terrain inscrit un planteur → Selectionne COOP-DAL-001 → Code planteur auto: GL-DAL-00001
+    ↓
+Planteur compose *144*88# → Reconnu par telephone → Menu complet
+```
+
+**Tests: 13/13 backend PASS, 100% frontend PASS (iteration 67)**
+
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Cooperative Gagnoa: bielaghana@gmail.com
