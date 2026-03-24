@@ -45,6 +45,11 @@ class CoopMemberUpdate(BaseModel):
     zone: Optional[str] = None
     is_active: Optional[bool] = None
 
+class LotContributor(BaseModel):
+    farmer_id: str
+    farmer_name: str
+    tonnage_kg: float
+
 class CoopLotCreate(BaseModel):
     lot_name: str
     target_tonnage: float
@@ -52,6 +57,7 @@ class CoopLotCreate(BaseModel):
     certification: Optional[str] = None
     min_carbon_score: float = 6.0
     description: Optional[str] = None
+    contributors: Optional[List[LotContributor]] = None
 
 class CoopPremiumDistribution(BaseModel):
     lot_id: str

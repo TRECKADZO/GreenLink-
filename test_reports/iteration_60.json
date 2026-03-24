@@ -1,0 +1,117 @@
+{
+  "summary": "Iteration 60 - Lot Creation with Explicit Contributors (2-Step Wizard). All 10 backend tests passed. Frontend 2-step wizard fully functional: Step 1 (lot info) → Step 2 (farmer selection with tonnage input). Contributors stored correctly with farmer_id, farmer_name, tonnage_kg. Total tonnage = sum of individual contributions.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "LotsPage Step 2 Modal",
+        "issues": ["React hydration warning: <tr> cannot be child of <span> in table tbody - cosmetic issue, doesn't affect functionality"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_lot_contributors_iteration60.py",
+    "/app/test_reports/pytest/pytest_lot_contributors_iteration60.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "POST /api/cooperative/lots correctly accepts optional 'contributors' array with farmer_id, farmer_name, tonnage_kg",
+    "GET /api/cooperative/lots/{lot_id}/contributors returns stored contributors with their explicit tonnage",
+    "Frontend 2-step wizard: Step 1 collects lot info, Step 2 shows active members with checkboxes and tonnage inputs",
+    "Summary bar in Step 2 shows live updates: selected count, total kg, progress vs target tonnage",
+    "LotContributor Pydantic model correctly defined in cooperative.py (line 48-51)",
+    "CoopLotCreate model accepts Optional[List[LotContributor]] for contributors (line 60)",
+    "Backend stores contributors array in lot document when provided, falls back to parcel-based logic otherwise"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_lot_contributors_iteration60.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "cooperative": {
+      "identifier": "+2250505000001",
+      "password": "coop2024",
+      "user_type": "cooperative"
+    }
+  },
+  "seed_data_creation": "Created test lots: 'Test Lot Full Flow' with 3 contributors (3000 kg total), 'TEST_E2E_Lot_*' with 3 contributors",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Lot creation with explicit contributors fully functional. 2-step wizard working: Step 1 (lot info) → Step 2 (farmer selection + tonnage). GET /api/cooperative/members returns active members for selection. POST /api/cooperative/lots accepts contributors array. GET /api/cooperative/lots/{id}/contributors returns stored contributors.",
+  "mocked_api_note": {
+    "Orange Money API": "MOCKED",
+    "Orange SMS API": "MOCKED"
+  },
+  "api_endpoints_tested": {
+    "authentication": {
+      "POST /api/auth/login (cooperative)": "PASS - Returns access_token"
+    },
+    "members": {
+      "GET /api/cooperative/members": "PASS - Returns list of members with id, full_name, status"
+    },
+    "lots_creation": {
+      "POST /api/cooperative/lots (with contributors)": "PASS - Creates lot with stored contributors",
+      "POST /api/cooperative/lots (without contributors)": "PASS - Falls back to parcel-based logic",
+      "POST /api/cooperative/lots (empty contributors)": "PASS - Falls back to parcel-based logic"
+    },
+    "lot_contributors": {
+      "GET /api/cooperative/lots/{id}/contributors": "PASS - Returns stored contributors with tonnage"
+    },
+    "lots_list": {
+      "GET /api/cooperative/lots": "PASS - Returns lots with contributors_count"
+    }
+  },
+  "frontend_features_verified": {
+    "lots_page": {
+      "create_lot_button": "PASS - data-testid='create-lot-btn'",
+      "lots_list_display": "PASS - Shows lot cards with contributors_count"
+    },
+    "create_lot_modal_step1": {
+      "title": "PASS - 'Créer un Lot de Vente'",
+      "progress_bar": "PASS - Shows 'Étape 1/2 — Informations du lot'",
+      "lot_name_input": "PASS - data-testid='lot-name-input'",
+      "target_tonnage_input": "PASS - data-testid='lot-tonnage-input'",
+      "product_type_select": "PASS - Dropdown with cacao, café, anacarde, hévéa",
+      "certification_select": "PASS - Dropdown with rainforest, utz, fairtrade, organic",
+      "min_carbon_score_input": "PASS - Default 6.0",
+      "description_textarea": "PASS - Optional field",
+      "next_button": "PASS - data-testid='go-step2-btn'"
+    },
+    "create_lot_modal_step2": {
+      "title": "PASS - 'Sélectionner les Agriculteurs'",
+      "progress_bar": "PASS - Shows 'Étape 2/2 — Sélectionnez les agriculteurs et saisissez leur tonnage'",
+      "summary_bar": "PASS - Shows selected count, total kg, progress vs target",
+      "farmer_list": "PASS - data-testid='farmer-selection-list'",
+      "farmer_checkboxes": "PASS - 7 active members displayed with checkboxes",
+      "tonnage_inputs": "PASS - Appears when farmer selected, accepts kg values",
+      "back_button": "PASS - Returns to Step 1",
+      "create_button": "PASS - data-testid='confirm-create-lot-btn', shows farmer count"
+    },
+    "lot_creation_flow": {
+      "form_validation": "PASS - Requires lot name and target tonnage for Step 2",
+      "contributor_validation": "PASS - Requires at least 1 farmer with tonnage > 0",
+      "success_toast": "PASS - Shows 'Lot créé avec X agriculteurs'",
+      "list_refresh": "PASS - New lot appears at top of list"
+    }
+  },
+  "test_data_verified": {
+    "lot_name": "Test Lot Full Flow",
+    "target_tonnage": "3 T",
+    "contributors_count": 3,
+    "contributors": [
+      {"name": "Yao Affoue", "tonnage_kg": 1000},
+      {"name": "Brou Kouame", "tonnage_kg": 1200},
+      {"name": "N Guessan Akissi", "tonnage_kg": 800}
+    ],
+    "total_tonnage_kg": 3000,
+    "estimated_tonnage_tonnes": 3.0
+  }
+}

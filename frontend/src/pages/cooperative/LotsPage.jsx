@@ -48,6 +48,13 @@ const LotsPage = () => {
     description: ''
   });
 
+  // Create lot wizard state
+  const [createStep, setCreateStep] = useState(1);
+  const [membersList, setMembersList] = useState([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [selectedContributors, setSelectedContributors] = useState({});
+  // selectedContributors = { memberId: { selected: true, tonnage_kg: 500, name: 'xxx' } }
+
   const [saleData, setSaleData] = useState({
     buyer_name: '',
     actual_tonnage: '',
@@ -102,31 +109,104 @@ const LotsPage = () => {
 
   const handleCreateLot = async (e) => {
     e.preventDefault();
+
+    // Build contributors array
+    const contributors = Object.entries(selectedContributors)
+      .filter(([_, v]) => v.selected && v.tonnage_kg > 0)
+      .map(([id, v]) => ({
+        farmer_id: id,
+        farmer_name: v.name,
+        tonnage_kg: parseFloat(v.tonnage_kg)
+      }));
+
+    if (contributors.length === 0) {
+      toast.error('Veuillez sélectionner au moins un agriculteur avec un tonnage');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const result = await cooperativeApi.createLot({
         ...newLot,
         target_tonnage: parseFloat(newLot.target_tonnage),
-        min_carbon_score: parseFloat(newLot.min_carbon_score)
+        min_carbon_score: parseFloat(newLot.min_carbon_score),
+        contributors
       });
-      toast.success(`Lot créé avec ${result.eligible_farmers} agriculteurs éligibles`);
+      toast.success(`Lot créé avec ${result.eligible_farmers} agriculteurs`);
       setShowCreateModal(false);
-      setNewLot({
-        lot_name: '',
-        target_tonnage: '',
-        product_type: 'cacao',
-        certification: '',
-        min_carbon_score: 6.0,
-        description: ''
-      });
+      resetCreateForm();
       fetchLots();
     } catch (error) {
-      console.error('Error creating lot:', error);
       toast.error(error.response?.data?.detail || 'Erreur lors de la création du lot');
     } finally {
       setSubmitting(false);
     }
   };
+
+  const resetCreateForm = () => {
+    setNewLot({
+      lot_name: '',
+      target_tonnage: '',
+      product_type: 'cacao',
+      certification: '',
+      min_carbon_score: 6.0,
+      description: ''
+    });
+    setCreateStep(1);
+    setSelectedContributors({});
+    setMembersList([]);
+  };
+
+  const openCreateModal = async () => {
+    resetCreateForm();
+    setShowCreateModal(true);
+  };
+
+  const goToStep2 = async () => {
+    if (!newLot.lot_name || !newLot.target_tonnage) {
+      toast.error('Veuillez remplir le nom et le tonnage cible');
+      return;
+    }
+    setLoadingMembers(true);
+    try {
+      const data = await cooperativeApi.getMembers();
+      const members = Array.isArray(data) ? data : (data.members || []);
+      setMembersList(members.filter(m => m.status === 'active'));
+    } catch (error) {
+      toast.error('Erreur lors du chargement des membres');
+    } finally {
+      setLoadingMembers(false);
+    }
+    setCreateStep(2);
+  };
+
+  const toggleContributor = (memberId, memberName) => {
+    setSelectedContributors(prev => ({
+      ...prev,
+      [memberId]: {
+        ...prev[memberId],
+        selected: !prev[memberId]?.selected,
+        name: memberName,
+        tonnage_kg: prev[memberId]?.tonnage_kg || ''
+      }
+    }));
+  };
+
+  const setContributorTonnage = (memberId, tonnage) => {
+    setSelectedContributors(prev => ({
+      ...prev,
+      [memberId]: {
+        ...prev[memberId],
+        tonnage_kg: tonnage
+      }
+    }));
+  };
+
+  const totalContributorsTonnage = Object.values(selectedContributors)
+    .filter(v => v.selected && v.tonnage_kg)
+    .reduce((sum, v) => sum + parseFloat(v.tonnage_kg || 0), 0);
+
+  const selectedCount = Object.values(selectedContributors).filter(v => v.selected).length;
 
   const handleFinalizeSale = async (e) => {
     e.preventDefault();
@@ -234,7 +314,7 @@ const LotsPage = () => {
                 <p className="text-sm text-gray-500">Gérez vos lots de vente collective</p>
               </div>
             </div>
-            <Button onClick={() => setShowCreateModal(true)} data-testid="create-lot-btn">
+            <Button onClick={openCreateModal} data-testid="create-lot-btn">
               <Plus className="h-4 w-4 mr-2" />
               Créer un Lot
             </Button>
@@ -449,7 +529,7 @@ const LotsPage = () => {
               <p className="text-gray-500 mb-4">
                 Créez un lot pour regrouper les récoltes de vos membres
               </p>
-              <Button onClick={() => setShowCreateModal(true)}>
+              <Button onClick={openCreateModal}>
                 <Plus className="h-4 w-4 mr-2" />
                 Créer un lot
               </Button>
@@ -458,25 +538,39 @@ const LotsPage = () => {
         )}
       </div>
 
-      {/* Create Lot Modal */}
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-lg" data-testid="create-lot-modal">
+      {/* Create Lot Modal - 2-Step Wizard */}
+      <Dialog open={showCreateModal} onOpenChange={(open) => { if (!open) resetCreateForm(); setShowCreateModal(open); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="create-lot-modal">
           <DialogHeader>
-            <DialogTitle>Créer un Lot de Vente</DialogTitle>
+            <DialogTitle>
+              {createStep === 1 ? 'Créer un Lot de Vente' : 'Sélectionner les Agriculteurs'}
+            </DialogTitle>
             <DialogDescription>
-              Regroupez les récoltes de vos membres pour une vente collective
+              {createStep === 1 
+                ? 'Étape 1/2 — Informations du lot' 
+                : `Étape 2/2 — Sélectionnez les agriculteurs et saisissez leur tonnage`
+              }
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCreateLot}>
-            <div className="space-y-4 py-4">
+
+          {/* Progress indicator */}
+          <div className="flex gap-2 mb-2">
+            <div className={`h-1.5 flex-1 rounded ${createStep >= 1 ? 'bg-green-600' : 'bg-gray-200'}`} />
+            <div className={`h-1.5 flex-1 rounded ${createStep >= 2 ? 'bg-green-600' : 'bg-gray-200'}`} />
+          </div>
+
+          {createStep === 1 ? (
+            /* STEP 1: Lot Details */
+            <div className="space-y-4 py-2">
               <div>
                 <Label htmlFor="lot_name">Nom du Lot *</Label>
                 <Input
                   id="lot_name"
                   value={newLot.lot_name}
                   onChange={(e) => setNewLot({...newLot, lot_name: e.target.value})}
-                  placeholder="Ex: Cacao Premium Février 2026"
+                  placeholder="Ex: Cacao Premium Mars 2026"
                   required
+                  data-testid="lot-name-input"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -490,6 +584,7 @@ const LotsPage = () => {
                     onChange={(e) => setNewLot({...newLot, target_tonnage: e.target.value})}
                     placeholder="50"
                     required
+                    data-testid="lot-tonnage-input"
                   />
                 </div>
                 <div>
@@ -548,19 +643,117 @@ const LotsPage = () => {
                   value={newLot.description}
                   onChange={(e) => setNewLot({...newLot, description: e.target.value})}
                   placeholder="Détails du lot..."
-                  rows={3}
+                  rows={2}
                 />
               </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
+                  Annuler
+                </Button>
+                <Button onClick={goToStep2} data-testid="go-step2-btn">
+                  Suivant — Sélectionner Agriculteurs
+                </Button>
+              </DialogFooter>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? 'Création...' : 'Créer le Lot'}
-              </Button>
-            </DialogFooter>
-          </form>
+          ) : (
+            /* STEP 2: Select Farmers + Tonnage */
+            <div className="space-y-4 py-2">
+              {loadingMembers ? (
+                <div className="py-8 text-center text-gray-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+                  Chargement des membres...
+                </div>
+              ) : (
+                <>
+                  {/* Summary bar */}
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-600">
+                        <Users className="inline h-4 w-4 mr-1" />
+                        <strong>{selectedCount}</strong> sélectionné(s)
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        <Scale className="inline h-4 w-4 mr-1" />
+                        <strong>{totalContributorsTonnage.toLocaleString()}</strong> kg total
+                      </span>
+                    </div>
+                    <Badge className={totalContributorsTonnage / 1000 >= parseFloat(newLot.target_tonnage || 0) ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}>
+                      {(totalContributorsTonnage / 1000).toFixed(1)}T / {newLot.target_tonnage}T cible
+                    </Badge>
+                  </div>
+
+                  {/* Farmer selection list */}
+                  <div className="border rounded-lg overflow-hidden max-h-[40vh] overflow-y-auto" data-testid="farmer-selection-list">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-gray-50 z-10">
+                        <tr className="text-left text-xs text-gray-500 border-b">
+                          <th className="py-2 px-3 w-10"></th>
+                          <th className="py-2 px-3">Agriculteur</th>
+                          <th className="py-2 px-3 text-right w-40">Tonnage (kg) *</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {membersList.map((member) => {
+                          const mid = member.id || member._id;
+                          const isSelected = selectedContributors[mid]?.selected;
+                          return (
+                            <tr 
+                              key={mid} 
+                              className={`border-b last:border-0 transition-colors ${isSelected ? 'bg-green-50' : 'hover:bg-gray-50'}`}
+                            >
+                              <td className="py-2 px-3">
+                                <input
+                                  type="checkbox"
+                                  checked={!!isSelected}
+                                  onChange={() => toggleContributor(mid, member.full_name)}
+                                  className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                  data-testid={`select-farmer-${mid}`}
+                                />
+                              </td>
+                              <td className="py-2 px-3 font-medium text-gray-900">
+                                {member.full_name}
+                              </td>
+                              <td className="py-2 px-3 text-right">
+                                {isSelected ? (
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={selectedContributors[mid]?.tonnage_kg || ''}
+                                    onChange={(e) => setContributorTonnage(mid, e.target.value)}
+                                    placeholder="0"
+                                    className="w-32 ml-auto text-right h-8"
+                                    data-testid={`tonnage-input-${mid}`}
+                                  />
+                                ) : (
+                                  <span className="text-gray-400">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setCreateStep(1)}>
+                  Retour
+                </Button>
+                <Button 
+                  onClick={handleCreateLot}
+                  disabled={submitting || selectedCount === 0 || totalContributorsTonnage === 0}
+                  className="bg-green-600 hover:bg-green-700"
+                  data-testid="confirm-create-lot-btn"
+                >
+                  {submitting ? 'Création...' : `Créer le Lot (${selectedCount} agriculteurs)`}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
