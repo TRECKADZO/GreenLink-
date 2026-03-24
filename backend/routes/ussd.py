@@ -693,14 +693,15 @@ async def test_ussd(phone: str = Query(..., description="Phone number to test"))
 # ============= USSD PRIME CARBONE *144*88# =============
 
 CARBON_QUESTIONS = [
-    {"key": "hectares", "text": "PRIME CARBONE *144*88#\n\nQuestion 1/8\nSurface de votre plantation (en hectares) ?\n\nEx: 3.5", "type": "number"},
-    {"key": "arbres_grands", "text": "Question 2/8\nCombien d'arbres grands (>8 metres) sur votre parcelle ?\n\nEx: 48", "type": "number"},
-    {"key": "culture", "text": "Question 3/8\nQuelle est votre culture principale ?\n\n1. Cacao\n2. Cafe\n3. Anacarde\n\nTapez 1, 2 ou 3:", "type": "choice"},
-    {"key": "engrais_chimique", "text": "Question 4/8\nUtilisez-vous des engrais chimiques ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
-    {"key": "brulage", "text": "Question 5/8\nFaites-vous le brulage sur vos parcelles ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
-    {"key": "compost", "text": "Question 6/8\nUtilisez-vous du compost organique ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
-    {"key": "agroforesterie", "text": "Question 7/8\nPratiquez-vous l'agroforesterie (arbres fruitiers, ombrage) ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
-    {"key": "couverture_sol", "text": "Question 8/8\nAvez-vous une couverture vegetale au sol (herbes, paillage) ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+    {"key": "hectares", "text": "PRIME CARBONE *144*88#\n\nQuestion 1/9\nSurface de votre plantation (en hectares) ?\n\nEx: 3.5", "type": "number"},
+    {"key": "arbres_grands", "text": "Question 2/9\nCombien d'arbres GRANDS (> 12 metres) sur votre parcelle ?\n\nEx: 20", "type": "number"},
+    {"key": "arbres_moyens", "text": "Question 3/9\nCombien d'arbres MOYENS (8-12 metres) ?\n\nEx: 30", "type": "number"},
+    {"key": "culture", "text": "Question 4/9\nQuelle est votre culture principale ?\n\n1. Cacao\n2. Cafe\n3. Anacarde\n\nTapez 1, 2 ou 3:", "type": "choice"},
+    {"key": "engrais_chimique", "text": "Question 5/9\nUtilisez-vous des engrais chimiques ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+    {"key": "brulage", "text": "Question 6/9\nFaites-vous le brulage sur vos parcelles ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+    {"key": "compost", "text": "Question 7/9\nUtilisez-vous du compost organique ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+    {"key": "agroforesterie", "text": "Question 8/9\nPratiquez-vous l'agroforesterie (arbres fruitiers, ombrage) ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
+    {"key": "couverture_sol", "text": "Question 9/9\nAvez-vous une couverture vegetale au sol (herbes, paillage) ?\n\n1. Oui\n2. Non\n\nTapez 1 ou 2:", "type": "yesno"},
 ]
 
 
@@ -733,15 +734,20 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     5. Prime per kg = (farmer_share_per_tonne * CO2_per_ha) / yield_per_ha
     """
     hectares = float(answers.get("hectares", 1))
-    arbres = int(answers.get("arbres_grands", 0))
-    arbres_par_ha = arbres / max(hectares, 0.1)
+    arbres_grands = int(answers.get("arbres_grands", 0))
+    arbres_moyens = int(answers.get("arbres_moyens", 0))
+    
+    # Weighted tree count using biomass coefficients
+    # Grands > 12m: x1.0, Moyens 8-12m: x0.7
+    weighted_trees = (arbres_grands * 1.0) + (arbres_moyens * 0.7)
+    arbres_par_ha = weighted_trees / max(hectares, 0.1)
 
     # === Calculate practice score (0-10) ===
     score = 4.0
-    if arbres_par_ha >= 60: score += 2.0
-    elif arbres_par_ha >= 40: score += 1.5
+    if arbres_par_ha >= 80: score += 2.0
+    elif arbres_par_ha >= 50: score += 1.5
     elif arbres_par_ha >= 20: score += 1.0
-    elif arbres_par_ha >= 10: score += 0.5
+    elif arbres_par_ha >= 5: score += 0.5
 
     if answers.get("engrais_chimique") == "oui": score -= 0.5
     else: score += 0.5
@@ -785,6 +791,8 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
         "score": round(score, 1),
         "prime_fcfa_kg": round(prime_fcfa_kg),
         "arbres_par_ha": round(arbres_par_ha),
+        "arbres_grands": arbres_grands,
+        "arbres_moyens": arbres_moyens,
         "prime_annuelle": round(prime_annuelle),
         "eligible": score >= 5.0,
         "hectares": hectares,

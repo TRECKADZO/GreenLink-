@@ -857,6 +857,14 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
     total_credits = sum([p.get("carbon_credits_earned", 0) for p in parcels])
     total_area = sum([p.get("area_hectares", 0) for p in parcels])
     total_trees = sum([p.get("nombre_arbres", 0) or 0 for p in parcels])
+    total_petits = sum([p.get("arbres_petits", 0) or 0 for p in parcels])
+    total_moyens = sum([p.get("arbres_moyens", 0) or 0 for p in parcels])
+    total_grands = sum([p.get("arbres_grands", 0) or 0 for p in parcels])
+    
+    # If no categories stored, assume all are moyens (backward compat)
+    if total_petits + total_moyens + total_grands == 0 and total_trees > 0:
+        total_moyens = total_trees
+    
     avg_shade = 0
     shade_count = 0
     for p in parcels:
@@ -871,10 +879,28 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
         for pr in (p.get("pratiques_ecologiques") or p.get("farming_practices") or []):
             all_practices.add(pr)
 
-    # Calculate breakdown components (averaged)
-    tree_density = total_trees / total_area if total_area > 0 else 0
-    tree_pts = 2.0 if tree_density >= 100 else 1.5 if tree_density >= 50 else 1.0 if tree_density >= 20 else 0.5 if tree_density >= 5 else 0
-    shade_pts = 2.0 if avg_shade >= 60 else 1.5 if avg_shade >= 40 else 1.0 if avg_shade >= 20 else 0.5 if avg_shade >= 10 else 0
+    # Calculate breakdown components using weighted biomass
+    COEFF_PETIT = 0.3
+    COEFF_MOYEN = 0.7
+    COEFF_GRAND = 1.0
+    weighted_trees = (total_petits * COEFF_PETIT) + (total_moyens * COEFF_MOYEN) + (total_grands * COEFF_GRAND)
+    weighted_density = weighted_trees / total_area if total_area > 0 else 0
+    tree_pts = 2.0 if weighted_density >= 80 else 1.5 if weighted_density >= 50 else 1.0 if weighted_density >= 20 else 0.5 if weighted_density >= 5 else 0
+    
+    # Shade with maturity bonus
+    total_categorized = total_petits + total_moyens + total_grands
+    mature_ratio = total_grands / total_categorized if total_categorized > 0 else 0
+    maturity_bonus = 0.3 * mature_ratio
+    shade_pts = 0
+    if avg_shade >= 60:
+        shade_pts = min(2.0 + maturity_bonus, 2.0)
+    elif avg_shade >= 40:
+        shade_pts = min(1.5 + maturity_bonus, 2.0)
+    elif avg_shade >= 20:
+        shade_pts = min(1.0 + maturity_bonus, 2.0)
+    elif avg_shade >= 10:
+        shade_pts = min(0.5 + maturity_bonus, 2.0)
+    
     practice_map = {"compostage": 0.5, "absence_pesticides": 0.5, "gestion_dechets": 0.5, "protection_cours_eau": 0.5, "agroforesterie": 0.5}
     practice_pts = sum(practice_map.get(p, 0) for p in all_practices)
     area_pts = 0.5 if total_area >= 5 else 0
@@ -885,11 +911,19 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
     # Build personalized recommendations
     recommendations = []
     if tree_pts < 2.0:
-        target = 100 if tree_density < 20 else 50
+        if total_grands < total_categorized * 0.3 and total_categorized > 0:
+            recommendations.append({
+                "type": "arbres_grands",
+                "title": "Favorisez les grands arbres (> 12m)",
+                "description": f"Seulement {total_grands} grands arbres sur {total_categorized} total. Les arbres matures stockent 3x plus de carbone.",
+                "potential_gain": round(min(2.0 - tree_pts, 1.0), 1),
+                "priority": "haute"
+            })
+        target = 80 if weighted_density < 20 else 50
         recommendations.append({
             "type": "arbres",
-            "title": "Plantez plus d'arbres",
-            "description": f"Densite actuelle: {int(tree_density)} arbres/ha. Visez {target}+ arbres/ha pour gagner +{2.0 - tree_pts:.1f} pts",
+            "title": "Augmentez la densite d'arbres ombragés",
+            "description": f"Densite ponderee: {int(weighted_density)}/ha (petits:{total_petits}, moyens:{total_moyens}, grands:{total_grands}). Visez {target}+ arbres ponderes/ha",
             "potential_gain": round(2.0 - tree_pts, 1),
             "priority": "haute" if tree_pts == 0 else "moyenne"
         })
@@ -913,7 +947,7 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
         recommendations.append({
             "type": "pratique",
             "title": f"Adoptez: {practice_labels.get(mp, mp)}",
-            "description": f"Cette pratique ecologique vous rapportera +0.5 pt sur votre score carbone",
+            "description": "Cette pratique ecologique vous rapportera +0.5 pt sur votre score carbone",
             "potential_gain": 0.5,
             "priority": "faible"
         })
@@ -928,6 +962,10 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
         "parcels_count": len(parcels),
         "total_area": round(total_area, 1),
         "total_trees": total_trees,
+        "arbres_petits": total_petits,
+        "arbres_moyens": total_moyens,
+        "arbres_grands": total_grands,
+        "weighted_density": round(weighted_density, 1),
         "avg_shade_cover": round(avg_shade, 1),
         "practices_count": len(all_practices),
         "practices_list": list(all_practices),
@@ -939,6 +977,14 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
             "surface": round(area_pts, 1),
             "max_possible": 10.0
         },
+        "arbre_categories": {
+            "petits_lt_8m": total_petits,
+            "moyens_8_12m": total_moyens,
+            "grands_gt_12m": total_grands,
+            "total": total_categorized,
+            "biomasse_ponderee": round(weighted_trees, 1),
+            "coefficients": {"petit": COEFF_PETIT, "moyen": COEFF_MOYEN, "grand": COEFF_GRAND}
+        },
         "recommendations": recommendations[:5],
         "parcels": [{
             "id": str(p["_id"]),
@@ -947,6 +993,9 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
             "carbon_score": p.get("carbon_score", 0),
             "carbon_credits_earned": p.get("carbon_credits_earned", 0),
             "nombre_arbres": p.get("nombre_arbres", 0) or 0,
+            "arbres_petits": p.get("arbres_petits", 0) or 0,
+            "arbres_moyens": p.get("arbres_moyens", 0) or 0,
+            "arbres_grands": p.get("arbres_grands", 0) or 0,
             "couverture_ombragee": p.get("couverture_ombragee", 0) or 0,
             "pratiques_ecologiques": p.get("pratiques_ecologiques", []),
             "verification_status": p.get("verification_status", "pending"),

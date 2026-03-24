@@ -737,8 +737,24 @@ async def verify_parcel_by_agent(
 
     # Carbon premium fields
     nombre_arbres = data.get("nombre_arbres")
+    arbres_petits = data.get("arbres_petits")
+    arbres_moyens = data.get("arbres_moyens")
+    arbres_grands = data.get("arbres_grands")
+
     if nombre_arbres is not None:
         update_data["nombre_arbres"] = int(nombre_arbres)
+    if arbres_petits is not None:
+        update_data["arbres_petits"] = int(arbres_petits)
+    if arbres_moyens is not None:
+        update_data["arbres_moyens"] = int(arbres_moyens)
+    if arbres_grands is not None:
+        update_data["arbres_grands"] = int(arbres_grands)
+
+    # Auto-calculate total nombre_arbres from categories
+    if arbres_petits is not None or arbres_moyens is not None or arbres_grands is not None:
+        total_trees = int(arbres_petits or 0) + int(arbres_moyens or 0) + int(arbres_grands or 0)
+        update_data["nombre_arbres"] = total_trees
+        nombre_arbres = total_trees
 
     couverture_ombragee = data.get("couverture_ombragee")
     # Auto-calculate shade cover if not provided but tree count is available
@@ -762,7 +778,10 @@ async def verify_parcel_by_agent(
         couverture_ombragee=couverture_ombragee,
         pratiques=pratiques,
         area=area,
-        existing_practices=parcel.get("farming_practices", [])
+        existing_practices=parcel.get("farming_practices", []),
+        arbres_petits=arbres_petits,
+        arbres_moyens=arbres_moyens,
+        arbres_grands=arbres_grands,
     )
     update_data["carbon_score"] = carbon_score
     update_data["co2_captured_tonnes"] = round(area * carbon_score * 2.5, 2)
@@ -784,36 +803,63 @@ async def verify_parcel_by_agent(
     }
 
 
-def _calculate_verified_carbon_score(nombre_arbres, couverture_ombragee, pratiques, area, existing_practices=None):
+def _calculate_verified_carbon_score(nombre_arbres, couverture_ombragee, pratiques, area, existing_practices=None,
+                                     arbres_petits=None, arbres_moyens=None, arbres_grands=None):
     """
-    Recalculate carbon score using field-verified data.
+    Recalculate carbon score using field-verified data with tree height categories.
     Base score 3.0, max 10.0.
+    
+    Tree biomass weighting (based on allometric equations AGB ~ f(D^2 * H)):
+    - Petits (< 8m): coefficient 0.3 (young trees, low biomass)
+    - Moyens (8-12m): coefficient 0.7 (maturing trees, moderate biomass)
+    - Grands (> 12m): coefficient 1.0 (mature trees, full biomass)
     """
     score = 3.0
 
-    # Tree density bonus (0-2 pts)
-    if nombre_arbres and area > 0:
-        density = nombre_arbres / area
-        if density >= 100:
+    # Calculate weighted tree count using biomass coefficients
+    COEFF_PETIT = 0.3
+    COEFF_MOYEN = 0.7
+    COEFF_GRAND = 1.0
+
+    n_petits = int(arbres_petits or 0)
+    n_moyens = int(arbres_moyens or 0)
+    n_grands = int(arbres_grands or 0)
+    
+    # If only total nombre_arbres provided (backward compat), treat as moyens
+    total_from_categories = n_petits + n_moyens + n_grands
+    if nombre_arbres and total_from_categories == 0:
+        n_moyens = int(nombre_arbres)
+        total_from_categories = n_moyens
+
+    weighted_trees = (n_petits * COEFF_PETIT) + (n_moyens * COEFF_MOYEN) + (n_grands * COEFF_GRAND)
+
+    # Tree biomass bonus (0-2 pts) based on weighted density per hectare
+    if total_from_categories > 0 and area > 0:
+        weighted_density = weighted_trees / area
+        if weighted_density >= 80:
             score += 2.0
-        elif density >= 50:
+        elif weighted_density >= 50:
             score += 1.5
-        elif density >= 20:
+        elif weighted_density >= 20:
             score += 1.0
-        elif density >= 5:
+        elif weighted_density >= 5:
             score += 0.5
 
-    # Shade cover bonus (0-2 pts)
+    # Shade cover bonus (0-2 pts) - weighted by tree maturity
     if couverture_ombragee is not None:
         pct = float(couverture_ombragee)
+        # Bonus for having mature trees (grands > 12m) providing quality shade
+        mature_ratio = n_grands / total_from_categories if total_from_categories > 0 else 0
+        maturity_bonus = 0.3 * mature_ratio  # up to +0.3 bonus for having large trees
+        
         if pct >= 60:
-            score += 2.0
+            score += min(2.0 + maturity_bonus, 2.0)
         elif pct >= 40:
-            score += 1.5
+            score += min(1.5 + maturity_bonus, 2.0)
         elif pct >= 20:
-            score += 1.0
+            score += min(1.0 + maturity_bonus, 2.0)
         elif pct >= 10:
-            score += 0.5
+            score += min(0.5 + maturity_bonus, 2.0)
 
     # Ecological practices bonus (0-2.5 pts, 0.5 each)
     practice_scores = {

@@ -37,6 +37,12 @@ class ParcelVerificationUpdate(BaseModel):
     verified_gps_lng: Optional[float] = None
     verification_photos: Optional[List[str]] = []
     corrected_area_hectares: Optional[float] = None
+    nombre_arbres: Optional[int] = None
+    arbres_petits: Optional[int] = None
+    arbres_moyens: Optional[int] = None
+    arbres_grands: Optional[int] = None
+    couverture_ombragee: Optional[float] = None
+    pratiques_ecologiques: Optional[List[str]] = []
 
 
 @router.post("/members/{member_id}/parcels")
@@ -357,9 +363,38 @@ async def verify_parcel(
     if verification.corrected_area_hectares and verification.corrected_area_hectares != parcel.get("area_hectares"):
         update_data["area_hectares_declared"] = parcel.get("area_hectares")
         update_data["area_hectares"] = verification.corrected_area_hectares
-        new_carbon_score = round(min(9.5, 5.5 + (verification.corrected_area_hectares * 0.3)), 1)
-        update_data["carbon_score"] = new_carbon_score
-        update_data["co2_captured_tonnes"] = round(verification.corrected_area_hectares * new_carbon_score * 2.5, 2)
+
+    # Store tree categories
+    if verification.arbres_petits is not None:
+        update_data["arbres_petits"] = verification.arbres_petits
+    if verification.arbres_moyens is not None:
+        update_data["arbres_moyens"] = verification.arbres_moyens
+    if verification.arbres_grands is not None:
+        update_data["arbres_grands"] = verification.arbres_grands
+    if verification.nombre_arbres is not None:
+        update_data["nombre_arbres"] = verification.nombre_arbres
+    elif any(x is not None for x in [verification.arbres_petits, verification.arbres_moyens, verification.arbres_grands]):
+        update_data["nombre_arbres"] = (verification.arbres_petits or 0) + (verification.arbres_moyens or 0) + (verification.arbres_grands or 0)
+    if verification.couverture_ombragee is not None:
+        update_data["couverture_ombragee"] = verification.couverture_ombragee
+    if verification.pratiques_ecologiques:
+        update_data["pratiques_ecologiques"] = verification.pratiques_ecologiques
+
+    # Recalculate carbon score with tree categories
+    area = update_data.get("area_hectares", parcel.get("area_hectares", 0))
+    from routes.field_agent_dashboard import _calculate_verified_carbon_score
+    new_carbon_score = _calculate_verified_carbon_score(
+        nombre_arbres=update_data.get("nombre_arbres", parcel.get("nombre_arbres")),
+        couverture_ombragee=update_data.get("couverture_ombragee", parcel.get("couverture_ombragee")),
+        pratiques=update_data.get("pratiques_ecologiques", []),
+        area=area,
+        existing_practices=parcel.get("farming_practices", []),
+        arbres_petits=update_data.get("arbres_petits", parcel.get("arbres_petits")),
+        arbres_moyens=update_data.get("arbres_moyens", parcel.get("arbres_moyens")),
+        arbres_grands=update_data.get("arbres_grands", parcel.get("arbres_grands")),
+    )
+    update_data["carbon_score"] = new_carbon_score
+    update_data["co2_captured_tonnes"] = round(area * new_carbon_score * 2.5, 2)
     
     await db.parcels.update_one(
         {"_id": ObjectId(parcel_id)},

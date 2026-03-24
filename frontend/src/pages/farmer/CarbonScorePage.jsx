@@ -116,18 +116,18 @@ const CarbonScorePage = () => {
           {/* Breakdown */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-base">Decomposition du score</CardTitle>
+              <CardTitle className="text-base">Décomposition du score</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
                 { label: 'Base', value: breakdown.base || 3, max: 3, color: 'bg-gray-400', detail: 'Score initial' },
-                { label: 'Arbres', value: breakdown.arbres || 0, max: 2, color: 'bg-emerald-500', detail: `${data?.total_trees || 0} arbres` },
+                { label: 'Arbres', value: breakdown.arbres || 0, max: 2, color: 'bg-emerald-500', detail: `${data?.total_trees || 0} arbres (pondéré: ${data?.weighted_density || 0}/ha)` },
                 { label: 'Ombrage', value: breakdown.ombrage || 0, max: 2, color: 'bg-green-500', detail: `${data?.avg_shade_cover || 0}%` },
                 { label: 'Pratiques', value: breakdown.pratiques || 0, max: 2.5, color: 'bg-indigo-500', detail: `${data?.practices_count || 0}/5` },
                 { label: 'Surface', value: breakdown.surface || 0, max: 0.5, color: 'bg-amber-500', detail: `${data?.total_area || 0} ha` },
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center gap-3">
-                  <div className="w-20 text-sm">
+                  <div className="w-24 text-sm">
                     <p className="font-medium text-gray-700">{item.label}</p>
                     <p className="text-xs text-gray-400">{item.detail}</p>
                   </div>
@@ -146,6 +146,48 @@ const CarbonScorePage = () => {
                 <span className="font-bold text-gray-700">Total</span>
                 <span className={`text-xl font-extrabold ${threshold.color}`}>{score.toFixed(1)} / 10</span>
               </div>
+
+              {/* Tree categories visualization */}
+              {data?.arbre_categories && data.arbre_categories.total > 0 && (
+                <div className="mt-4 pt-4 border-t">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <TreePine className="h-4 w-4 text-emerald-600" />
+                    Répartition des arbres par taille (biomasse)
+                  </h4>
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="text-center p-3 rounded-lg bg-amber-50 border border-amber-200">
+                      <p className="text-2xl font-bold text-amber-600">{data.arbre_categories.petits_lt_8m}</p>
+                      <p className="text-xs text-amber-700 font-medium">Petits {'<'} 8m</p>
+                      <p className="text-[10px] text-gray-400">Coeff. x0.3</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-green-50 border border-green-200">
+                      <p className="text-2xl font-bold text-green-600">{data.arbre_categories.moyens_8_12m}</p>
+                      <p className="text-xs text-green-700 font-medium">Moyens 8-12m</p>
+                      <p className="text-[10px] text-gray-400">Coeff. x0.7</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                      <p className="text-2xl font-bold text-emerald-600">{data.arbre_categories.grands_gt_12m}</p>
+                      <p className="text-xs text-emerald-700 font-medium">Grands {'>'} 12m</p>
+                      <p className="text-[10px] text-gray-400">Coeff. x1.0</p>
+                    </div>
+                  </div>
+                  {/* Biomass bar */}
+                  <div className="flex h-3 rounded-full overflow-hidden bg-gray-100">
+                    {data.arbre_categories.petits_lt_8m > 0 && (
+                      <div className="bg-amber-400 h-full" style={{ flex: data.arbre_categories.petits_lt_8m }} />
+                    )}
+                    {data.arbre_categories.moyens_8_12m > 0 && (
+                      <div className="bg-green-500 h-full" style={{ flex: data.arbre_categories.moyens_8_12m }} />
+                    )}
+                    {data.arbre_categories.grands_gt_12m > 0 && (
+                      <div className="bg-emerald-600 h-full" style={{ flex: data.arbre_categories.grands_gt_12m }} />
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Biomasse pondérée : <strong className="text-emerald-700">{data.arbre_categories.biomasse_ponderee}</strong> (densité : {data.weighted_density}/ha)
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

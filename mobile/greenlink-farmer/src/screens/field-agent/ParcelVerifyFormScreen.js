@@ -40,18 +40,27 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
   const [gpsLoading, setGpsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Carbon premium fields
-  const [treeCount, setTreeCount] = useState('');
+  // Carbon premium fields - Tree height categories
+  const [treesPetits, setTreesPetits] = useState('');  // < 8m
+  const [treesMoyens, setTreesMoyens] = useState('');  // 8-12m
+  const [treesGrands, setTreesGrands] = useState('');  // > 12m
   const [shadeOverride, setShadeOverride] = useState('');
   const [selectedPractices, setSelectedPractices] = useState([]);
+
+  // Total trees from categories
+  const totalTrees = (parseInt(treesPetits) || 0) + (parseInt(treesMoyens) || 0) + (parseInt(treesGrands) || 0);
 
   // Auto-calculate shade cover from tree count and parcel area
   const CANOPY_M2_PER_TREE = 80; // average shade tree canopy ~80m²
   const parcelArea = correctedArea ? parseFloat(correctedArea) : (parcel?.superficie || 0);
-  const autoShadeCover = (treeCount && parcelArea > 0)
-    ? Math.min(((parseInt(treeCount) * CANOPY_M2_PER_TREE) / (parcelArea * 10000)) * 100, 100)
+  const autoShadeCover = (totalTrees > 0 && parcelArea > 0)
+    ? Math.min(((totalTrees * CANOPY_M2_PER_TREE) / (parcelArea * 10000)) * 100, 100)
     : 0;
   const effectiveShadeCover = shadeOverride !== '' ? parseFloat(shadeOverride) : autoShadeCover;
+
+  // Weighted biomass for preview
+  const weightedTrees = ((parseInt(treesPetits) || 0) * 0.3) + ((parseInt(treesMoyens) || 0) * 0.7) + ((parseInt(treesGrands) || 0) * 1.0);
+  const weightedDensity = parcelArea > 0 ? weightedTrees / parcelArea : 0;
 
   useEffect(() => {
     getLocation();
@@ -128,7 +137,10 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
         verification_status: status,
         verification_notes: notes.trim(),
         verification_photos: photos,
-        nombre_arbres: treeCount ? parseInt(treeCount) : null,
+        nombre_arbres: totalTrees > 0 ? totalTrees : null,
+        arbres_petits: treesPetits ? parseInt(treesPetits) : 0,
+        arbres_moyens: treesMoyens ? parseInt(treesMoyens) : 0,
+        arbres_grands: treesGrands ? parseInt(treesGrands) : 0,
         couverture_ombragee: effectiveShadeCover > 0 ? Math.round(effectiveShadeCover * 10) / 10 : null,
         pratiques_ecologiques: selectedPractices,
       };
@@ -283,32 +295,93 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
             <Text style={styles.carbonSectionTitle}>Indicateurs prime carbone</Text>
           </View>
 
-          {/* Tree Count */}
+          {/* Tree Categories - Height-based */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Decomptage des arbres</Text>
-            <TextInput
-              style={styles.input}
-              value={treeCount}
-              onChangeText={(val) => {
-                setTreeCount(val);
-                setShadeOverride('');
-              }}
-              placeholder="Nombre d'arbres observes sur la parcelle"
-              keyboardType="number-pad"
-              placeholderTextColor="#94a3b8"
-              testID="tree-count-input"
-            />
-            {treeCount !== '' && parcelArea > 0 && (
-              <Text style={styles.densityHint}>
-                Densite: {Math.round(parseInt(treeCount || 0) / parcelArea)} arbres/ha
-              </Text>
+            <Text style={styles.label}>Inventaire des arbres ombragés par taille</Text>
+            <Text style={styles.fieldHint}>
+              Classez les arbres selon leur hauteur estimée (méthode allométrique AGB)
+            </Text>
+            
+            {/* Petits < 8m */}
+            <View style={styles.treeCategoryRow}>
+              <View style={styles.treeCategoryLabel}>
+                <View style={[styles.treeCategoryDot, { backgroundColor: '#f59e0b' }]} />
+                <Text style={styles.treeCategoryText}>Petits {'<'} 8m</Text>
+                <Text style={styles.treeCategoryCoeff}>(x0.3)</Text>
+              </View>
+              <TextInput
+                style={styles.treeCategoryInput}
+                value={treesPetits}
+                onChangeText={(val) => { setTreesPetits(val); setShadeOverride(''); }}
+                placeholder="0"
+                keyboardType="number-pad"
+                placeholderTextColor="#94a3b8"
+                testID="trees-petits-input"
+              />
+            </View>
+
+            {/* Moyens 8-12m */}
+            <View style={styles.treeCategoryRow}>
+              <View style={styles.treeCategoryLabel}>
+                <View style={[styles.treeCategoryDot, { backgroundColor: '#10b981' }]} />
+                <Text style={styles.treeCategoryText}>Moyens 8-12m</Text>
+                <Text style={styles.treeCategoryCoeff}>(x0.7)</Text>
+              </View>
+              <TextInput
+                style={styles.treeCategoryInput}
+                value={treesMoyens}
+                onChangeText={(val) => { setTreesMoyens(val); setShadeOverride(''); }}
+                placeholder="0"
+                keyboardType="number-pad"
+                placeholderTextColor="#94a3b8"
+                testID="trees-moyens-input"
+              />
+            </View>
+
+            {/* Grands > 12m */}
+            <View style={styles.treeCategoryRow}>
+              <View style={styles.treeCategoryLabel}>
+                <View style={[styles.treeCategoryDot, { backgroundColor: '#059669' }]} />
+                <Text style={styles.treeCategoryText}>Grands {'>'} 12m</Text>
+                <Text style={styles.treeCategoryCoeff}>(x1.0)</Text>
+              </View>
+              <TextInput
+                style={styles.treeCategoryInput}
+                value={treesGrands}
+                onChangeText={(val) => { setTreesGrands(val); setShadeOverride(''); }}
+                placeholder="0"
+                keyboardType="number-pad"
+                placeholderTextColor="#94a3b8"
+                testID="trees-grands-input"
+              />
+            </View>
+
+            {/* Summary */}
+            {totalTrees > 0 && parcelArea > 0 && (
+              <View style={styles.treeSummaryCard}>
+                <View style={styles.treeSummaryRow}>
+                  <Text style={styles.treeSummaryLabel}>Total arbres</Text>
+                  <Text style={styles.treeSummaryValue}>{totalTrees}</Text>
+                </View>
+                <View style={styles.treeSummaryRow}>
+                  <Text style={styles.treeSummaryLabel}>Biomasse pondérée</Text>
+                  <Text style={[styles.treeSummaryValue, { color: '#059669' }]}>
+                    {weightedTrees.toFixed(1)} ({weightedDensity.toFixed(0)}/ha)
+                  </Text>
+                </View>
+                <View style={styles.treeSummaryBar}>
+                  <View style={[styles.treeSummarySegment, { flex: parseInt(treesPetits) || 0, backgroundColor: '#f59e0b' }]} />
+                  <View style={[styles.treeSummarySegment, { flex: parseInt(treesMoyens) || 0, backgroundColor: '#10b981' }]} />
+                  <View style={[styles.treeSummarySegment, { flex: parseInt(treesGrands) || 0, backgroundColor: '#059669' }]} />
+                </View>
+              </View>
             )}
           </View>
 
           {/* Shade Cover - Auto-calculated */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Couverture ombragee</Text>
-            {treeCount !== '' && parcelArea > 0 ? (
+            <Text style={styles.label}>Couverture ombragée</Text>
+            {totalTrees > 0 && parcelArea > 0 ? (
               <View>
                 <View style={styles.shadeAutoCard}>
                   <View style={styles.shadeAutoRow}>
@@ -319,7 +392,7 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
                     {autoShadeCover.toFixed(1)}%
                   </Text>
                   <Text style={styles.shadeAutoFormula}>
-                    {treeCount} arbres x 80m² canopee / {parcelArea} ha
+                    {totalTrees} arbres x 80m² canopée / {parcelArea} ha
                   </Text>
                   <View style={styles.shadeIndicator}>
                     <View style={[styles.shadeBar, { width: `${Math.min(autoShadeCover, 100)}%` }]} />
@@ -344,7 +417,7 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
                 </View>
                 {shadeOverride !== '' && (
                   <Text style={styles.shadeOverrideNote}>
-                    Valeur ajustee: {parseFloat(shadeOverride).toFixed(1)}% (auto: {autoShadeCover.toFixed(1)}%)
+                    Valeur ajustée: {parseFloat(shadeOverride).toFixed(1)}% (auto: {autoShadeCover.toFixed(1)}%)
                   </Text>
                 )}
               </View>
@@ -514,6 +587,20 @@ const styles = StyleSheet.create({
   practiceLabelActive: { color: '#1e293b', fontWeight: '600' },
   practiceHint: { fontSize: 11, color: '#94a3b8', marginTop: 6, marginLeft: 32, lineHeight: 15, fontStyle: 'italic' },
   practiceCount: { fontSize: 11, color: '#059669', fontWeight: '600', marginTop: 6 },
+  // Tree category styles
+  fieldHint: { fontSize: 11, color: '#94a3b8', marginBottom: 10, fontStyle: 'italic' },
+  treeCategoryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, paddingHorizontal: 10, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 6 },
+  treeCategoryLabel: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  treeCategoryDot: { width: 10, height: 10, borderRadius: 5 },
+  treeCategoryText: { fontSize: 13, fontWeight: '600', color: '#475569' },
+  treeCategoryCoeff: { fontSize: 10, color: '#94a3b8' },
+  treeCategoryInput: { width: 70, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 8, fontSize: 14, color: '#1e293b', backgroundColor: '#fff', textAlign: 'center' },
+  treeSummaryCard: { backgroundColor: '#f0fdf4', borderRadius: 10, padding: 12, marginTop: 8, borderWidth: 1, borderColor: '#d1fae5' },
+  treeSummaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  treeSummaryLabel: { fontSize: 12, color: '#64748b' },
+  treeSummaryValue: { fontSize: 13, fontWeight: '700', color: '#1e293b' },
+  treeSummaryBar: { flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden', marginTop: 6 },
+  treeSummarySegment: { height: '100%' },
 });
 
 export default ParcelVerifyFormScreen;
