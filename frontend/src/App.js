@@ -77,6 +77,7 @@ import CooperativeReportsPage from "./pages/cooperative/ReportsPage";
 import MemberParcelsPage from "./pages/cooperative/MemberParcelsPage";
 import ImportMembersPage from "./pages/cooperative/ImportMembersPage";
 import AdminCarbonApprovals from "./pages/admin/AdminCarbonApprovals";
+import CarbonPremiumsManagement from "./pages/admin/CarbonPremiumsManagement";
 import QuotesManagement from "./pages/admin/QuotesManagement";
 import AdminFarmerAssignment from "./pages/admin/AdminFarmerAssignment";
 import CreateCarbonListing from "./pages/rse/CreateCarbonListing";
@@ -193,6 +194,7 @@ function App() {
               <Route path="/admin/carbon-approvals" element={<AdminCarbonApprovals />} />
               <Route path="/admin/quotes" element={<QuotesManagement />} />
               <Route path="/admin/farmer-assignment" element={<AdminFarmerAssignment />} />
+              <Route path="/admin/carbon-premiums" element={<CarbonPremiumsManagement />} />
 
               {/* Carbon Auditor Routes */}
               <Route path="/auditor/dashboard" element={<AuditorDashboard />} />

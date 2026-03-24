@@ -380,28 +380,28 @@ SMS gratuit au 1234:
             first, second = inputs[0], inputs[1]
             
             if first == "2" and second == "1":
-                # Request payment
+                # Request carbon premium payment via Super Admin flow
                 if farmer_id:
-                    stats = await get_farmer_carbon_stats(farmer_id)
-                    if stats['pending'] > 0:
-                        response_text = f"""💳 DEMANDE PAIEMENT
+                    from routes.carbon_premiums import create_ussd_payment_request
+                    result = await create_ussd_payment_request(phone)
+                    if result.get("success"):
+                        response_text = f"""DEMANDE ENREGISTREE
 
-Montant: {format_xof(stats['pending'])}
+Montant planteur: {format_xof(result['farmer_amount'])}
+Commission coop (10%): {format_xof(result['coop_commission'])}
 
-Votre demande sera traitée
-par votre coopérative.
+Votre demande est envoyee
+au Super Admin pour validation.
 
-Délai: 48-72h ouvrées
+Vous recevrez une notification
+une fois le paiement effectue.
 
-SMS de confirmation
-envoyé à votre numéro.
-
-Merci!"""
+Ref: {result.get('request_id', '')[:8]}"""
                         continue_session = False
                     else:
-                        response_text = "Aucune prime disponible.\n\n0. Retour"
+                        response_text = f"{result.get('message', 'Erreur')}\n\n0. Retour"
                 else:
-                    response_text = "Erreur.\n\n0. Retour"
+                    response_text = "Numero non reconnu.\n\n0. Retour"
             
             elif first == "6" and second == "1":
                 # Change language
