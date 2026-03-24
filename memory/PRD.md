@@ -54,12 +54,31 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - `AddMemberParcelScreen.js` : accepte maintenant l'acces sans `memberId` pre-selectionne
   - Ajout d'un selecteur de membre avec recherche (Modal, FlatList, filtre par nom/village/telephone)
   - Coherent avec la version web `AddParcelPage.jsx` qui a aussi un dropdown de selection de membre
-- Backend POST /api/cooperative/members/{id}/parcels teste OK
-- Version web "/cooperative/parcels/new" verifiee OK (screenshot)
-- Version bumpee a v1.56.0 dans app.json
-- Builds EAS soumis:
-  - APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/e50bbfc1-4e63-4240-a479-f8f0b2b7c16b
-  - AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/7de0f793-e76d-4585-862e-53a9f3137ad1
+
+### Phase 29 - Audit Complet Coherence + Securite + Harmonisation (DONE - 24/03/2026)
+**Audit de securite - 6 failles corrigees:**
+- CRITIQUE: Suppression mots de passe admin hardcodes dans auth.py (lignes 289-294, 689-692)
+- CRITIQUE: Endpoints password-health et repair-password proteges par auth admin (Depends(get_current_user))
+- HAUTE: CORS passe de wildcard * a origins explicites (harvest-validation.preview.emergentagent.com, localhost:3000)
+- MOYENNE: Rate limiting ajoute sur creation de membre (20/min) dans cooperative_members.py
+- Migration legacy: mecanisme de migration des mots de passe en clair vers hash bcrypt
+
+**Harmonisation mobile/web - 5 ecrans ajoutes/corriges:**
+- CoopLotsScreen.js (NOUVEAU) - Liste des lots de vente avec filtres par statut
+- CoopDistributionsScreen.js (NOUVEAU) - Liste des distributions avec metriques
+- CoopParcelsScreen.js (NOUVEAU) - Liste des parcelles avec navigation vers ajout
+- CoopDashboardScreen.js - Actions rapides harmonisees avec le web (8 actions au lieu de 7)
+- BottomTabBar.js - Menu cooperative mis a jour avec nouveaux ecrans
+- AppContent.js - Fix mapping CoopLots (etait CoopReportsScreen, maintenant CoopLotsScreen)
+
+**Resultats tests iteration 73: 21/22 backend PASS (95.5%), 100% frontend PASS**
+- Securite: 6/6 tests PASS
+- Fonctionnel: 15/15 endpoints PASS
+- Frontend: Login, Dashboard, Members, Add Member modal tous PASS
+
+**Version mobile: v1.57.0**
+- APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/e50bbfc1-4e63-4240-a479-f8f0b2b7c16b (v1.56.0 soumis)
+- Builds v1.57.0 a soumettre apres validation utilisateur
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
