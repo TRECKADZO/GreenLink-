@@ -157,6 +157,31 @@ Planteur compose *144*88# → Reconnu par telephone → Menu complet
 
 **Tests: 13/13 backend PASS, 100% frontend PASS (iteration 67)**
 
+### Phase 21 - Audit Global + Dashboard Onboarding + Harmonisation (DONE - 24/03/2026)
+**Audit et corrections globales :**
+- Fix champ password: migration de `password` vers `hashed_password` dans toute la DB (greenlink_production, 92 users)
+- Fix login coop-test@greenlink.ci: reinitialisation mot de passe
+- Auto-generation codes coop pour les 6 cooperatives existantes sans code
+- Fix auth/register: suppression response_model=Token, passage `coop_name` dans payload
+- Verification que les 3 comptes de test se connectent: admin, bielaghana, coop-test ✅
+
+**Dashboard Onboarding Super Admin :**
+- Nouvel onglet "Onboarding" dans Centre de Donnees Strategiques (/admin/analytics)
+- Endpoint `GET /api/admin/analytics/onboarding` (admin only)
+- 4 cartes resumees: Cooperatives (21), Agents terrain (12), Producteurs (36), Total (92)
+- Entonnoir de conversion 6 etapes: Cooperatives → Agents → Membres → Parcelles → Verifiees → Demandes prime
+- Barres colorees avec pourcentages
+- Statistiques inscriptions USSD/Web
+- Tableau detail par cooperative: code, region, agents, membres, parcelles, verifiees, statut
+
+**Harmonisation :**
+- user_type coherent dans toute la DB: producteur, cooperative, field_agent, admin, acheteur, etc.
+- Champ `hashed_password` standardise pour tous les comptes
+- Tous les codes coop au format COOP-XXX-NNN
+- Endpoint public `GET /api/auth/cooperatives` pour les formulaires d'inscription
+
+**Tests: 12/12 backend PASS, 100% frontend PASS (iteration 68)**
+
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Cooperative Gagnoa: bielaghana@gmail.com
