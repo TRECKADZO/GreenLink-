@@ -136,6 +136,7 @@ app.include_router(cooperative_reports.router)
 from routes import cooperative_harvests
 app.include_router(cooperative_carbon_premiums.router)
 app.include_router(carbon_premiums.router)
+app.include_router(carbon_premiums.farmer_router)
 app.include_router(cooperative_harvests.router)
 app.include_router(tracking.router)
 app.include_router(analytics_advanced.router)

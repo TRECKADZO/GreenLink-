@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Leaf, TreePine, Sun, Recycle, Droplets, Sprout, Award, MapPin, Loader2 } from 'lucide-react';
+import { ArrowLeft, Leaf, TreePine, Sun, Recycle, Droplets, Sprout, Award, MapPin, Loader2, Clock, CheckCircle, Banknote, XCircle, Phone } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -34,20 +34,27 @@ const CarbonScorePage = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [premiumData, setPremiumData] = useState(null);
 
   useEffect(() => {
-    const fetchScore = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/greenlink/carbon/my-score`, { headers: getAuthHeader() });
-        const json = await res.json();
-        setData(json);
+        const [scoreRes, premiumRes] = await Promise.all([
+          fetch(`${API_URL}/api/greenlink/carbon/my-score`, { headers: getAuthHeader() }),
+          fetch(`${API_URL}/api/farmer/carbon-premiums/my-requests`, { headers: getAuthHeader() })
+        ]);
+        const scoreJson = await scoreRes.json();
+        setData(scoreJson);
+        if (premiumRes.ok) {
+          setPremiumData(await premiumRes.json());
+        }
       } catch (err) {
         toast.error('Erreur lors du chargement du score carbone');
       } finally {
         setLoading(false);
       }
     };
-    fetchScore();
+    fetchAll();
   }, []);
 
   if (loading) {
@@ -237,6 +244,89 @@ const CarbonScorePage = () => {
                 </Card>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Carbon Premium Requests */}
+        {premiumData && (
+          <div className="mt-6" data-testid="premium-requests-section">
+            <h2 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <Banknote className="h-4 w-4 text-emerald-600" />
+              Mes Demandes de Prime Carbone
+            </h2>
+            {premiumData.parcelles_admissibles > 0 && premiumData.peut_demander && (
+              <Card className="border-emerald-200 bg-emerald-50 mb-3">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-emerald-700" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-emerald-800">
+                      {premiumData.parcelles_admissibles} parcelle(s) admissible(s)
+                    </p>
+                    <p className="text-xs text-emerald-600">Composez *123*45# puis 2 &rarr; 1 pour demander votre prime</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {premiumData.requests?.length > 0 ? (
+              <div className="space-y-2">
+                {premiumData.requests.map((req) => {
+                  const statusMap = {
+                    pending: { label: 'En attente', icon: Clock, color: 'bg-amber-100 text-amber-800', border: 'border-amber-200' },
+                    approved: { label: 'Approuvee', icon: CheckCircle, color: 'bg-blue-100 text-blue-800', border: 'border-blue-200' },
+                    paid: { label: 'Payee', icon: Banknote, color: 'bg-emerald-100 text-emerald-800', border: 'border-emerald-200' },
+                    rejected: { label: 'Rejetee', icon: XCircle, color: 'bg-red-100 text-red-800', border: 'border-red-200' },
+                  };
+                  const cfg = statusMap[req.status] || statusMap.pending;
+                  const StatusIcon = cfg.icon;
+                  return (
+                    <Card key={req.id} className={`${cfg.border} border`} data-testid={`premium-request-${req.id}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge className={`${cfg.color} gap-1`}>
+                            <StatusIcon className="h-3 w-3" />{cfg.label}
+                          </Badge>
+                          <span className="text-xs text-gray-400">
+                            {req.requested_at ? new Date(req.requested_at).toLocaleDateString('fr-FR') : ''}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3 text-center">
+                          <div>
+                            <p className="text-lg font-bold text-emerald-700">{(req.farmer_amount || 0).toLocaleString('fr-FR')}</p>
+                            <p className="text-xs text-gray-500">XOF (votre part)</p>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold text-gray-600">{req.parcels_count}</p>
+                            <p className="text-xs text-gray-500">Parcelle(s)</p>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold text-blue-600">{req.average_carbon_score}/10</p>
+                            <p className="text-xs text-gray-500">Score moy.</p>
+                          </div>
+                        </div>
+                        {req.status === 'paid' && req.farmer_transaction_id && (
+                          <div className="mt-3 pt-2 border-t text-xs text-gray-500 flex items-center gap-2">
+                            <CheckCircle className="h-3 w-3 text-emerald-600" />
+                            Ref. Orange Money : <span className="font-mono font-medium text-gray-700">{req.farmer_transaction_id}</span>
+                            {req.paid_at && <span className="ml-auto">{new Date(req.paid_at).toLocaleDateString('fr-FR')}</span>}
+                          </div>
+                        )}
+                        {req.status === 'rejected' && req.rejection_reason && (
+                          <div className="mt-3 pt-2 border-t text-xs text-red-600">
+                            Motif : {req.rejection_reason}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-4 text-center text-sm text-gray-500">
+                  Aucune demande de prime. {score >= 6 ? 'Composez *123*45# (option 2→1) pour faire votre demande.' : `Score minimum requis : 6.0/10 (actuel : ${score.toFixed(1)})`}
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 

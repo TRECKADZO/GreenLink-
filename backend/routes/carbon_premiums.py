@@ -199,6 +199,51 @@ async def create_ussd_payment_request(phone_number: str):
     }
 
 
+# ============= FARMER ENDPOINTS =============
+
+farmer_router = APIRouter(prefix="/api/farmer/carbon-premiums", tags=["farmer-carbon-premiums"])
+
+
+@farmer_router.get("/my-requests")
+async def get_my_premium_requests(current_user: dict = Depends(get_current_user)):
+    """Farmer views their own carbon premium payment requests."""
+    farmer_id = str(current_user["_id"])
+
+    requests_list = await db.carbon_payment_requests.find(
+        {"farmer_id": farmer_id}
+    ).sort("requested_at", -1).to_list(50)
+
+    # Also get admissible parcels count
+    admissible = await db.parcels.count_documents({
+        "farmer_id": {"$in": [farmer_id, current_user["_id"]]},
+        "admissibilite_prime": "admissible"
+    })
+    has_pending = await db.carbon_payment_requests.count_documents({
+        "farmer_id": farmer_id,
+        "status": {"$in": ["pending", "approved"]}
+    })
+
+    return {
+        "parcelles_admissibles": admissible,
+        "peut_demander": admissible > 0 and has_pending == 0,
+        "requests": [{
+            "id": str(r["_id"]),
+            "status": r.get("status", ""),
+            "total_premium": r.get("total_premium", 0),
+            "farmer_amount": r.get("farmer_amount", 0),
+            "coop_commission": r.get("coop_commission", 0),
+            "parcels_count": r.get("parcels_count", 0),
+            "average_carbon_score": r.get("average_carbon_score", 0),
+            "requested_at": r["requested_at"].isoformat() if isinstance(r.get("requested_at"), datetime) else str(r.get("requested_at", "")),
+            "requested_via": r.get("requested_via", ""),
+            "validated_at": r.get("validated_at", "").isoformat() if isinstance(r.get("validated_at"), datetime) else str(r.get("validated_at", "")),
+            "paid_at": r.get("paid_at", "").isoformat() if isinstance(r.get("paid_at"), datetime) else str(r.get("paid_at", "")),
+            "farmer_transaction_id": r.get("farmer_transaction_id", ""),
+            "rejection_reason": r.get("rejection_reason", ""),
+        } for r in requests_list]
+    }
+
+
 # ============= SUPER ADMIN ENDPOINTS =============
 
 @router.get("/config")

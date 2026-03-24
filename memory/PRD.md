@@ -123,6 +123,13 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Orange Money: MOCK (logs uniquement). Transaction IDs generes.
 - Tests: 13/13 backend, 100% frontend (iteration 62)
 
+### Phase 17b - Vue Planteur Demandes Prime Carbone (DONE - 24/03/2026)
+- GET /api/farmer/carbon-premiums/my-requests: endpoint planteur pour voir ses demandes de prime
+- Retourne: parcelles_admissibles, peut_demander, liste des demandes avec statut/montant/transaction
+- Section "Mes Demandes de Prime Carbone" ajoutee a /farmer/carbon-score
+- Affiche: statut (en attente/approuvee/payee/rejetee), montant, ref Orange Money, instructions USSD
+- Message adaptatif si score < 6.0 ou si parcelle admissible disponible
+
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
@@ -149,3 +156,4 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - GET /api/admin/carbon-premiums/requests/{id}
 - PUT /api/admin/carbon-premiums/requests/{id}/validate (approve|reject)
 - PUT /api/admin/carbon-premiums/requests/{id}/pay (Orange Money MOCK)
+- GET /api/farmer/carbon-premiums/my-requests (farmer sees own requests)
