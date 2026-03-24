@@ -7,13 +7,14 @@ import {
   TrendingUp, FileText, Plus, ChevronRight,
   CheckCircle, Clock, AlertTriangle, Building2,
   Shield, Store, Home, UserCircle,
-  TreePine, Pencil, Save, X, Loader2, Target
+  TreePine, Pencil, Save, X, Loader2, Target, Smartphone
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import { NotificationCenter } from '../../components/NotificationCenter';
+import USSDSimulator from '../../components/USSDSimulator';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -108,6 +109,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showSimulator, setShowSimulator] = useState(false);
 
   const loadDashboard = async () => {
     try {
@@ -456,6 +458,18 @@ const Dashboard = () => {
                 </span>
                 <ChevronRight className="h-4 w-4 text-violet-700" />
               </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between bg-gray-800 border-gray-700 hover:bg-gray-700"
+                onClick={() => setShowSimulator(!showSimulator)}
+                data-testid="quick-action-ussd-simulator"
+              >
+                <span className="flex items-center text-emerald-400">
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  Simulateur USSD
+                </span>
+                <ChevronRight className="h-4 w-4 text-emerald-400" />
+              </Button>
             </CardContent>
           </Card>
 
@@ -670,6 +684,41 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* USSD Simulator Panel */}
+        {showSimulator && (
+          <div className="mt-6">
+            <Card className="bg-gray-900 border-gray-700">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <USSDSimulator title="Simulateur USSD *144*88#" onClose={() => setShowSimulator(false)} />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-white">Comment utiliser le simulateur</h3>
+                    <p className="text-sm text-gray-400">
+                      Ce simulateur reproduit l'experience USSD *144*88# telle que vos planteurs la vivent sur leur telephone.
+                      Utilisez-le pour former vos agents ou verifier les flux.
+                    </p>
+                    <div className="space-y-2 mt-4">
+                      {[
+                        { step: '1', text: 'Entrez le numero de telephone d\'un planteur existant ou nouveau' },
+                        { step: '2', text: 'Cliquez "Composer *144*88#" pour demarrer' },
+                        { step: '3', text: 'Utilisez les boutons rapides ou tapez votre reponse' },
+                        { step: '4', text: 'Testez l\'inscription, l\'estimation simple/detaillee, la demande de versement' },
+                      ].map((item) => (
+                        <div key={item.step} className="flex items-start gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center font-bold">{item.step}</span>
+                          <p className="text-sm text-gray-300">{item.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>

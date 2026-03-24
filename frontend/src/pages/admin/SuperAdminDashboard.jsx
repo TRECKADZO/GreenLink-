@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { analyticsApi } from '../../services/analyticsApi';
 import MarketplaceAnalyticsTab from '../../components/admin/MarketplaceAnalyticsTab';
+import USSDSimulator from '../../components/USSDSimulator';
 import { 
   BarChart3, Globe, Leaf, Users, DollarSign, 
   TrendingUp, FileText, Download, Building2,
@@ -295,7 +296,8 @@ const SuperAdminDashboard = () => {
             <TabsTrigger value="audit" className="data-[state=active]:bg-emerald-600">Audit & SSRTE</TabsTrigger>
             <TabsTrigger value="social" className="data-[state=active]:bg-emerald-600">Impact Social</TabsTrigger>
             <TabsTrigger value="market" className="data-[state=active]:bg-emerald-600">Marché & Commerce</TabsTrigger>
-            <TabsTrigger value="marketplace" className="data-[state=active]:bg-amber-600">Bourse Récoltes</TabsTrigger>
+            <TabsTrigger value="marketplace" className="data-[state=active]:bg-amber-600">Bourse Recoltes</TabsTrigger>
+            <TabsTrigger value="ussd" className="data-[state=active]:bg-violet-600">USSD</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW TAB */}
@@ -583,6 +585,35 @@ const SuperAdminDashboard = () => {
 
           <TabsContent value="marketplace">
             <MarketplaceAnalyticsTab />
+          </TabsContent>
+
+          <TabsContent value="ussd">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4">Simulateur USSD *144*88#</h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  Testez le flux USSD en temps reel. Entrez un numero de telephone existant ou nouveau pour simuler l'experience d'un planteur.
+                </p>
+                <USSDSimulator title="Simulateur Admin" />
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white mb-2">Guide des flux</h3>
+                <div className="space-y-3">
+                  {[
+                    { title: 'Inscription', desc: 'Option 2 → Nom → Code Coop → Village → PIN → Confirmation', color: 'border-violet-500/50 bg-violet-500/10' },
+                    { title: 'Estimation Simple', desc: 'Option 1 → Connexion → Estimer → Simple → 5 questions → Resultat', color: 'border-emerald-500/50 bg-emerald-500/10' },
+                    { title: 'Estimation Detaillee', desc: 'Option 1 → Connexion → Estimer → Detaillee → 9 questions → Resultat', color: 'border-blue-500/50 bg-blue-500/10' },
+                    { title: 'Demande Versement', desc: 'Menu principal → Option 2 → Confirmation → Envoi Super Admin', color: 'border-amber-500/50 bg-amber-500/10' },
+                    { title: 'Mon Profil', desc: 'Menu principal → Option 5 → Affiche nom, coop, parcelles, score', color: 'border-cyan-500/50 bg-cyan-500/10' },
+                  ].map((flow, i) => (
+                    <div key={i} className={`border rounded-lg p-3 ${flow.color}`}>
+                      <p className="text-sm font-medium text-white">{flow.title}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{flow.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
