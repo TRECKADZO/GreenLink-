@@ -139,6 +139,18 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Recherche + filtre par statut
 - Plus de bouton "Payer" direct (le Super Admin gere les paiements)
 
+### Phase 18 - Formule RSE Confidentielle (DONE - 24/03/2026)
+**Formule: RSE = Score x Taux_XOF x Hectares | 30% Frais, 70% Distribue (25% GreenLink, 5% Coop, 70% Paysan)**
+- Taux configurable par Super Admin via PUT /api/admin/carbon-premiums/config/rate (stocke en DB carbon_config)
+- Repartition: 30% frais, 70% distribue dont 25% GreenLink, 5% cooperative, 70% paysan
+- Formule CONFIDENTIELLE: visible uniquement dans le dashboard Super Admin
+- Super Admin: banniere RSE, ventilation financiere 5 cartes (RSE Total, Frais, GreenLink, Coop, Paysan), detail RSE par demande
+- Cooperative: voit uniquement Part planteur + Commission coop (5%), formule masquee
+- Planteur: voit uniquement son montant, formule masquee
+- USSD: ne montre que le montant paysan, pas de pourcentages
+- Backend cooperative_carbon_premiums.py mis a jour pour utiliser le taux dynamique
+- Tests: 13/13 backend, 100% frontend (iteration 63)
+
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
