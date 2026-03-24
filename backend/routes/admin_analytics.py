@@ -742,3 +742,97 @@ async def get_regions_analytics(current_user: dict = Depends(get_admin_user)):
         "regions": regions,
         "top_producing_regions": sorted(regions.items(), key=lambda x: x[1]['hectares'], reverse=True)[:5]
     }
+
+
+
+# ============= ONBOARDING FUNNEL =============
+
+@router.get("/onboarding")
+async def get_onboarding_stats(current_user: dict = Depends(get_current_user)):
+    """Super Admin Onboarding Dashboard - Funnel stats."""
+    if current_user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="Acces refuse")
+    
+    # Count by user_type
+    pipeline = [{"$group": {"_id": "$user_type", "count": {"$sum": 1}}}]
+    type_counts = {doc["_id"]: doc["count"] async for doc in db.users.aggregate(pipeline)}
+    
+    # Cooperatives with details
+    coops = await db.users.find(
+        {"user_type": "cooperative"},
+        {"_id": 1, "full_name": 1, "coop_name": 1, "coop_code": 1, "created_at": 1, "is_active": 1, "headquarters_region": 1}
+    ).to_list(200)
+    
+    coop_details = []
+    for c in coops:
+        coop_id = str(c["_id"])
+        # Count agents for this cooperative
+        agents = await db.users.count_documents({"user_type": "field_agent", "cooperative_id": coop_id})
+        # Count members
+        members = await db.coop_members.count_documents({"cooperative_id": coop_id})
+        # Count parcels
+        parcels = await db.parcels.count_documents({"cooperative_id": coop_id})
+        # Count verified parcels
+        verified = await db.parcels.count_documents({"cooperative_id": coop_id, "verification_status": "verified"})
+        
+        coop_details.append({
+            "id": coop_id,
+            "name": c.get("coop_name") or c.get("full_name", "?"),
+            "code": c.get("coop_code", "-"),
+            "region": c.get("headquarters_region", "-"),
+            "agents": agents,
+            "members": members,
+            "parcels": parcels,
+            "verified_parcels": verified,
+            "created_at": c.get("created_at").isoformat() if c.get("created_at") else None,
+            "is_active": c.get("is_active", True)
+        })
+    
+    # USSD registrations
+    ussd_regs = await db.ussd_registrations.count_documents({})
+    ussd_by_via = await db.ussd_registrations.aggregate([
+        {"$group": {"_id": "$registered_via", "count": {"$sum": 1}}}
+    ]).to_list(10)
+    via_counts = {doc["_id"]: doc["count"] for doc in ussd_by_via}
+    
+    # Carbon premium stats  
+    premium_requests = await db.carbon_premium_requests.count_documents({})
+    premium_approved = await db.carbon_premium_requests.count_documents({"status": "approved"})
+    premium_paid = await db.carbon_premium_requests.count_documents({"status": "paid"})
+    
+    # Total parcels and members
+    total_parcels = await db.parcels.count_documents({})
+    total_members = await db.coop_members.count_documents({})
+    total_verified = await db.parcels.count_documents({"verification_status": "verified"})
+    
+    # Funnel: Cooperative -> Agents -> Members -> Parcels -> Verified -> Premium Eligible
+    funnel = [
+        {"label": "Cooperatives", "count": type_counts.get("cooperative", 0), "color": "#10b981"},
+        {"label": "Agents terrain", "count": type_counts.get("field_agent", 0), "color": "#3b82f6"},
+        {"label": "Membres enregistres", "count": total_members + ussd_regs, "color": "#8b5cf6"},
+        {"label": "Parcelles declarees", "count": total_parcels, "color": "#f59e0b"},
+        {"label": "Parcelles verifiees", "count": total_verified, "color": "#06b6d4"},
+        {"label": "Demandes prime", "count": premium_requests, "color": "#ef4444"},
+    ]
+    
+    return {
+        "summary": {
+            "cooperatives": type_counts.get("cooperative", 0),
+            "agents": type_counts.get("field_agent", 0),
+            "producteurs": type_counts.get("producteur", 0),
+            "acheteurs": type_counts.get("acheteur", 0),
+            "fournisseurs": type_counts.get("fournisseur", 0),
+            "entreprises_rse": type_counts.get("entreprise_rse", 0),
+            "total_users": sum(type_counts.values()),
+            "ussd_registrations": ussd_regs,
+            "ussd_via": via_counts,
+            "total_members": total_members,
+            "total_parcels": total_parcels,
+            "verified_parcels": total_verified,
+            "premium_requests": premium_requests,
+            "premium_approved": premium_approved,
+            "premium_paid": premium_paid,
+        },
+        "funnel": funnel,
+        "cooperatives": sorted(coop_details, key=lambda x: -(x["members"] + x["agents"])),
+    }

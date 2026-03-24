@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { analyticsApi } from '../../services/analyticsApi';
 import MarketplaceAnalyticsTab from '../../components/admin/MarketplaceAnalyticsTab';
 import USSDSimulator from '../../components/USSDSimulator';
+import OnboardingDashboard from '../../components/admin/OnboardingDashboard';
 import { 
   BarChart3, Globe, Leaf, Users, DollarSign, 
   TrendingUp, FileText, Download, Building2,
@@ -298,6 +299,7 @@ const SuperAdminDashboard = () => {
             <TabsTrigger value="market" className="data-[state=active]:bg-emerald-600">Marché & Commerce</TabsTrigger>
             <TabsTrigger value="marketplace" className="data-[state=active]:bg-amber-600">Bourse Recoltes</TabsTrigger>
             <TabsTrigger value="ussd" className="data-[state=active]:bg-violet-600">USSD</TabsTrigger>
+            <TabsTrigger value="onboarding" className="data-[state=active]:bg-cyan-600">Onboarding</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW TAB */}
@@ -614,6 +616,10 @@ const SuperAdminDashboard = () => {
                 </div>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="onboarding">
+            <OnboardingDashboard />
           </TabsContent>
         </Tabs>
       </div>
