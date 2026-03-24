@@ -726,21 +726,26 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     """
     Calculate carbon premium from USSD answers.
     
-    Formula linked to the actual RSE distribution model:
-    1. RSE sale price per tonne CO2
-    2. Deduct 30% costs -> net amount (70%)
-    3. Farmer gets UP TO 70% of net, based on their practice score
-    4. CO2 sequestration per hectare depends on score (2-8 t/ha)
-    5. Prime per kg = (farmer_share_per_tonne * CO2_per_ha) / yield_per_ha
+    Uses tree height categories with allometric biomass coefficients:
+    - Grands (>12m): coef 1.0
+    - Moyens (8-12m): coef 0.7
+    - Petits (<8m): coef 0.3
+    
+    Formula linked to RSE distribution model:
+    RSE = score x taux x hectares
+    30% frais, 70% distribue (25% GreenLink, 5% Coop, 70% Paysan)
+    Farmer gets: 70% of 70% of RSE = 49%
     """
     hectares = float(answers.get("hectares", 1))
     arbres_grands = int(answers.get("arbres_grands", 0))
     arbres_moyens = int(answers.get("arbres_moyens", 0))
+    arbres_petits = int(answers.get("arbres_petits", 0))
     
-    # Weighted tree count using biomass coefficients
-    # Grands > 12m: x1.0, Moyens 8-12m: x0.7
-    weighted_trees = (arbres_grands * 1.0) + (arbres_moyens * 0.7)
+    # Weighted tree count using allometric biomass coefficients
+    # Grands > 12m: x1.0, Moyens 8-12m: x0.7, Petits <8m: x0.3
+    weighted_trees = (arbres_grands * 1.0) + (arbres_moyens * 0.7) + (arbres_petits * 0.3)
     arbres_par_ha = weighted_trees / max(hectares, 0.1)
+    total_trees = arbres_grands + arbres_moyens + arbres_petits
 
     # === Calculate practice score (0-10) ===
     score = 4.0
@@ -748,6 +753,11 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     elif arbres_par_ha >= 50: score += 1.5
     elif arbres_par_ha >= 20: score += 1.0
     elif arbres_par_ha >= 5: score += 0.5
+
+    # Bonus for large trees (>12m) - higher biomass/carbon sequestration
+    grands_ratio = arbres_grands / max(total_trees, 1)
+    if grands_ratio >= 0.5: score += 0.5
+    elif grands_ratio >= 0.3: score += 0.3
 
     if answers.get("engrais_chimique") == "oui": score -= 0.5
     else: score += 0.5
@@ -759,24 +769,25 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     if answers.get("agroforesterie") == "oui": score += 1.0
     if answers.get("couverture_sol") == "oui": score += 0.5
 
-    score = max(0, min(10, score))
+    score = max(0, min(10, round(score, 1)))
     score_ratio = score / 10.0
 
-    # === Distribution model (30% costs, 70% net) ===
+    # === RSE Distribution model ===
+    # 30% frais, 70% distribue (25% GreenLink, 5% Coop, 70% Paysan)
     FEES_RATE = 0.30
-    FARMER_MAX_SHARE = 0.70  # 70% du net
+    DISTRIBUTABLE_RATE = 0.70
+    FARMER_SHARE = 0.70  # 70% du distribue
 
     prix_rse_tonne = avg_rse_price
-    net_per_tonne = prix_rse_tonne * (1 - FEES_RATE)
-    max_farmer_per_tonne = net_per_tonne * FARMER_MAX_SHARE
-    actual_farmer_per_tonne = max_farmer_per_tonne * score_ratio
+    net_per_tonne = prix_rse_tonne * DISTRIBUTABLE_RATE
+    farmer_per_tonne = net_per_tonne * FARMER_SHARE * score_ratio
 
     # === CO2 sequestration depends on practices ===
     # Low score (0) -> 2 t CO2/ha, High score (10) -> 8 t CO2/ha
     co2_per_ha = 2 + score_ratio * 6
 
     # === Revenue per hectare for farmer ===
-    farmer_revenue_per_ha = actual_farmer_per_tonne * co2_per_ha
+    farmer_revenue_per_ha = farmer_per_tonne * co2_per_ha
 
     # === Prime per kg of production ===
     culture = answers.get("culture", "cacao")
@@ -793,6 +804,8 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
         "arbres_par_ha": round(arbres_par_ha),
         "arbres_grands": arbres_grands,
         "arbres_moyens": arbres_moyens,
+        "arbres_petits": arbres_petits,
+        "total_arbres": total_trees,
         "prime_annuelle": round(prime_annuelle),
         "eligible": score >= 5.0,
         "hectares": hectares,
@@ -943,7 +956,9 @@ async def calculate_premium_public(data: dict):
         # Build answers dict compatible with USSD calculator
         answers = {
             "hectares": hectares,
-            "arbres_grands": trees,
+            "arbres_grands": int(data.get("arbres_grands", 0)),
+            "arbres_moyens": int(data.get("arbres_moyens", 0)),
+            "arbres_petits": int(data.get("arbres_petits", 0)),
             "culture": culture,
             "engrais_chimique": "non" if "zero_pesticides" in practices else "oui",
             "brulage": "non",
@@ -978,6 +993,10 @@ async def calculate_premium_public(data: dict):
             "culture": result["culture"],
             "rendement_kg_ha": result["rendement_kg_ha"],
             "arbres_par_ha": result["arbres_par_ha"],
+            "arbres_grands": result.get("arbres_grands", 0),
+            "arbres_moyens": result.get("arbres_moyens", 0),
+            "arbres_petits": result.get("arbres_petits", 0),
+            "total_arbres": result.get("total_arbres", 0),
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

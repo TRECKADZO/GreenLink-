@@ -151,6 +151,15 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Backend cooperative_carbon_premiums.py mis a jour pour utiliser le taux dynamique
 - Tests: 13/13 backend, 100% frontend (iteration 63)
 
+### Phase 18b - Calculateur Prime Accueil mis a jour (DONE - 24/03/2026)
+- CarbonCalculator.jsx reecrit: 3 categories arbres (Grands >12m, Moyens 8-12m, Petits <8m)
+- Coefficients allometriques: Grands x1.0, Moyens x0.7, Petits x0.3
+- Bonus score pour ratio arbres grands >= 50% (+0.5) ou >= 30% (+0.3)
+- Backend calculate_ussd_carbon_premium mis a jour: arbres_petits ajoute
+- Endpoint /api/ussd/calculate-premium accepte arbres_grands, arbres_moyens, arbres_petits
+- Resultats: resume arbres par categorie + densite ponderee/ha
+- Formule RSE respectee (30% frais, 70% distribue)
+
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)

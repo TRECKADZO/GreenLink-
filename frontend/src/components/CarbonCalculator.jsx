@@ -12,7 +12,8 @@ import {
   X,
   CheckCircle,
   ArrowRight,
-  Loader2
+  Loader2,
+  Ruler
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -30,7 +31,9 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
   const [calculating, setCalculating] = useState(false);
   const [formData, setFormData] = useState({
     hectares: '',
-    trees: '',
+    arbres_grands: '',
+    arbres_moyens: '',
+    arbres_petits: '',
     practices: [],
     cropType: 'cacao'
   });
@@ -45,6 +48,8 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
     }));
   };
 
+  const totalTrees = (parseInt(formData.arbres_grands) || 0) + (parseInt(formData.arbres_moyens) || 0) + (parseInt(formData.arbres_petits) || 0);
+
   const calculatePremium = async () => {
     setCalculating(true);
     try {
@@ -53,7 +58,9 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hectares: parseFloat(formData.hectares) || 1,
-          trees: parseInt(formData.trees) || 0,
+          arbres_grands: parseInt(formData.arbres_grands) || 0,
+          arbres_moyens: parseInt(formData.arbres_moyens) || 0,
+          arbres_petits: parseInt(formData.arbres_petits) || 0,
           culture: formData.cropType,
           practices: formData.practices
         })
@@ -106,45 +113,94 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
         </div>
 
         <div className="p-6">
-          {/* Step 1: Basic Info */}
+          {/* Step 1: Basic Info + Tree Categories */}
           {step === 1 && (
             <div className="space-y-6">
               <h3 className="text-xl font-semibold text-gray-900">
                 Informations sur votre exploitation
               </h3>
               
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="hectares" className="text-gray-700">
-                    Surface cultivee (hectares)
-                  </Label>
-                  <Input
-                    id="hectares"
-                    type="number"
-                    placeholder="Ex: 5"
-                    value={formData.hectares}
-                    onChange={(e) => setFormData({...formData, hectares: e.target.value})}
-                    className="mt-1"
-                    min="0.1"
-                    step="0.1"
-                    data-testid="input-hectares"
-                  />
+              <div>
+                <Label htmlFor="hectares" className="text-gray-700">
+                  Surface cultivee (hectares)
+                </Label>
+                <Input
+                  id="hectares"
+                  type="number"
+                  placeholder="Ex: 5"
+                  value={formData.hectares}
+                  onChange={(e) => setFormData({...formData, hectares: e.target.value})}
+                  className="mt-1"
+                  min="0.1"
+                  step="0.1"
+                  data-testid="input-hectares"
+                />
+              </div>
+
+              {/* Tree Height Categories */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Ruler className="w-4 h-4 text-[#2d5a4d]" />
+                  <Label className="text-gray-700 font-medium">Arbres d'ombrage par taille</Label>
                 </div>
-                <div>
-                  <Label htmlFor="trees" className="text-gray-700">
-                    Nombre d'arbres d'ombrage
-                  </Label>
-                  <Input
-                    id="trees"
-                    type="number"
-                    placeholder="Ex: 200"
-                    value={formData.trees}
-                    onChange={(e) => setFormData({...formData, trees: e.target.value})}
-                    className="mt-1"
-                    min="0"
-                    data-testid="input-trees"
-                  />
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                    <div className="flex items-center gap-1 mb-2">
+                      <TreePine className="w-5 h-5 text-emerald-700" />
+                      <span className="text-xs font-semibold text-emerald-700">GRANDS</span>
+                    </div>
+                    <p className="text-[10px] text-emerald-600 mb-2">&gt; 12 metres</p>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={formData.arbres_grands}
+                      onChange={(e) => setFormData({...formData, arbres_grands: e.target.value})}
+                      className="h-9 text-center bg-white border-emerald-300"
+                      min="0"
+                      data-testid="input-arbres-grands"
+                    />
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <div className="flex items-center gap-1 mb-2">
+                      <TreePine className="w-4 h-4 text-amber-700" />
+                      <span className="text-xs font-semibold text-amber-700">MOYENS</span>
+                    </div>
+                    <p className="text-[10px] text-amber-600 mb-2">8 - 12 metres</p>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={formData.arbres_moyens}
+                      onChange={(e) => setFormData({...formData, arbres_moyens: e.target.value})}
+                      className="h-9 text-center bg-white border-amber-300"
+                      min="0"
+                      data-testid="input-arbres-moyens"
+                    />
+                  </div>
+                  <div className="bg-sky-50 border border-sky-200 rounded-xl p-3">
+                    <div className="flex items-center gap-1 mb-2">
+                      <TreePine className="w-3 h-3 text-sky-700" />
+                      <span className="text-xs font-semibold text-sky-700">PETITS</span>
+                    </div>
+                    <p className="text-[10px] text-sky-600 mb-2">&lt; 8 metres</p>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={formData.arbres_petits}
+                      onChange={(e) => setFormData({...formData, arbres_petits: e.target.value})}
+                      className="h-9 text-center bg-white border-sky-300"
+                      min="0"
+                      data-testid="input-arbres-petits"
+                    />
+                  </div>
                 </div>
+                {totalTrees > 0 && (
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Total: {totalTrees} arbres {formData.hectares ? `(${Math.round(totalTrees / Math.max(parseFloat(formData.hectares), 0.1))}/ha)` : ''}
+                  </p>
+                )}
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Les grands arbres sequestrent plus de carbone (coefficient x1.0 vs x0.7 et x0.3)
+                </p>
               </div>
 
               <div>
@@ -170,7 +226,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
               <Button 
                 onClick={() => setStep(2)}
                 className="w-full bg-[#2d5a4d] hover:bg-[#1a4038]"
-                disabled={!formData.hectares || !formData.trees}
+                disabled={!formData.hectares || totalTrees === 0}
                 data-testid="step1-next"
               >
                 Continuer
@@ -297,6 +353,31 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
+              {/* Tree Summary */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <TreePine className="w-4 h-4 text-[#2d5a4d]" />
+                  Vos arbres d'ombrage
+                </p>
+                <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                  <div className="bg-emerald-100 rounded-lg p-2">
+                    <p className="text-lg font-bold text-emerald-800">{result.arbres_grands || 0}</p>
+                    <p className="text-[10px] text-emerald-600">Grands (&gt;12m)</p>
+                  </div>
+                  <div className="bg-amber-100 rounded-lg p-2">
+                    <p className="text-lg font-bold text-amber-800">{result.arbres_moyens || 0}</p>
+                    <p className="text-[10px] text-amber-600">Moyens (8-12m)</p>
+                  </div>
+                  <div className="bg-sky-100 rounded-lg p-2">
+                    <p className="text-lg font-bold text-sky-800">{result.arbres_petits || 0}</p>
+                    <p className="text-[10px] text-sky-600">Petits (&lt;8m)</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Densite ponderee: {result.arbres_par_ha} arbres equivalents/ha
+                </p>
+              </div>
+
               {/* Stats */}
               <div className="grid grid-cols-2 gap-4">
                 <Card className="p-4 bg-green-50 border-green-200">
@@ -312,10 +393,10 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                 <Card className="p-4 bg-purple-50 border-purple-200">
                   <div className="flex items-center gap-2 mb-2">
                     <TreePine className="w-5 h-5 text-purple-600" />
-                    <span className="text-sm text-purple-700">Densite arbres</span>
+                    <span className="text-sm text-purple-700">Total arbres</span>
                   </div>
                   <p className="text-2xl font-bold text-purple-800">
-                    {result.arbres_par_ha} <span className="text-sm">/ha</span>
+                    {result.total_arbres} <span className="text-sm">arbres</span>
                   </p>
                 </Card>
                 
@@ -348,7 +429,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                   <p className="text-sm text-amber-800 font-medium mb-2">Pour ameliorer votre score :</p>
                   <ul className="text-sm text-amber-700 space-y-1">
-                    <li>- Plantez plus d'arbres d'ombrage</li>
+                    <li>- Plantez plus d'arbres d'ombrage (surtout des grands &gt; 12m)</li>
                     <li>- Pratiquez l'agroforesterie</li>
                     <li>- Utilisez du compost organique</li>
                     <li>- Evitez les pesticides chimiques</li>
