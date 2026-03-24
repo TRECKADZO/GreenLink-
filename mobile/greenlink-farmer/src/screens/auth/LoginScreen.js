@@ -29,8 +29,34 @@ const LoginScreen = ({ navigation }) => {
 
     setLoading(true);
     const result = await login(identifier, password);
+    
+    if (!result.success && result.isServerError) {
+      // Erreur serveur/Cloudflare — proposer un retry automatique
+      setLoading(false);
+      Alert.alert(
+        'Probleme de connexion',
+        result.error + '\n\nVoulez-vous reessayer automatiquement ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { 
+            text: 'Reessayer', 
+            onPress: async () => {
+              setLoading(true);
+              // Attendre 3 secondes avant le retry
+              await new Promise(r => setTimeout(r, 3000));
+              const retry = await login(identifier, password);
+              setLoading(false);
+              if (!retry.success) {
+                Alert.alert('Erreur', retry.error);
+              }
+            }
+          },
+        ]
+      );
+      return;
+    }
+    
     setLoading(false);
-
     if (!result.success) {
       Alert.alert('Erreur', result.error);
     }
@@ -127,8 +153,8 @@ const LoginScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('MemberActivation')}
           >
             <Text style={styles.memberActivationText}>
-              Membre d'une coopérative ?{' '}
-              <Text style={styles.memberActivationLink}>Activer mon compte</Text>
+              Inscrit par une cooperative ?{' '}
+              <Text style={styles.memberActivationLink}>Activer mon acces</Text>
             </Text>
           </TouchableOpacity>
 
@@ -139,7 +165,7 @@ const LoginScreen = ({ navigation }) => {
           >
             <Text style={styles.agentActivationText}>
               Agent terrain ?{' '}
-              <Text style={styles.agentActivationLink}>Activer mon compte agent</Text>
+              <Text style={styles.agentActivationLink}>Activer mon acces agent</Text>
             </Text>
           </TouchableOpacity>
         </View>

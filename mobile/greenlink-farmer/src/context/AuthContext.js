@@ -46,6 +46,12 @@ export const AuthProvider = ({ children }) => {
       console.log('[Auth] Login attempt with:', identifier);
       console.log('[Auth] API URL:', CONFIG.API_URL);
       
+      // Health check avant login — permet de détecter Cloudflare tôt
+      const healthy = await api.checkHealth();
+      if (!healthy) {
+        console.warn('[Auth] Server health check failed, trying login anyway...');
+      }
+      
       const response = await api.post('/auth/login', {
         identifier,
         password,
@@ -70,14 +76,13 @@ export const AuthProvider = ({ children }) => {
       console.error('[Auth] Error status:', error.response?.status);
       
       let errorMessage = 'Erreur de connexion';
+      let isServerError = false;
       
       if (error.response) {
-        // Server responded with an error status
         const status = error.response.status;
         const data = error.response.data;
         
         if (typeof data === 'object' && data !== null && data.detail) {
-          // Standard FastAPI error response
           if (typeof data.detail === 'string') {
             errorMessage = data.detail;
           } else if (Array.isArray(data.detail)) {
@@ -88,27 +93,29 @@ export const AuthProvider = ({ children }) => {
         } else if (status === 401) {
           errorMessage = 'Identifiant ou mot de passe incorrect';
         } else if (status === 403) {
-          errorMessage = 'Compte désactivé. Contactez votre coopérative.';
+          errorMessage = 'Compte desactive. Contactez votre cooperative.';
         } else if (status === 422) {
-          errorMessage = 'Veuillez vérifier les informations saisies';
+          errorMessage = 'Veuillez verifier les informations saisies';
         } else if (status === 429) {
-          errorMessage = 'Trop de tentatives. Patientez une minute avant de réessayer.';
-        } else if (status >= 500) {
-          errorMessage = 'Le serveur rencontre un problème. Réessayez dans quelques instants.';
-        } else if (status === 404) {
-          errorMessage = 'Le serveur est momentanement inaccessible. Fermez l\'application et reessayez dans 30 secondes.';
+          errorMessage = 'Trop de tentatives. Patientez une minute avant de reessayer.';
+        } else if (status >= 500 || status === 0) {
+          isServerError = true;
+          errorMessage = 'Probleme de connexion au serveur. Verifiez votre reseau et reessayez.';
         } else {
-          errorMessage = `Erreur (${status}). Vérifiez votre connexion et réessayez.`;
+          errorMessage = `Erreur (${status}). Verifiez votre connexion et reessayez.`;
         }
       } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        errorMessage = 'La connexion est trop lente. Vérifiez votre réseau et réessayez.';
+        isServerError = true;
+        errorMessage = 'La connexion est trop lente. Verifiez votre reseau et reessayez.';
       } else if (error.message?.includes('Network Error') || error.message?.includes('ERR_NETWORK')) {
-        errorMessage = 'Impossible de contacter le serveur. Vérifiez votre connexion internet.';
+        isServerError = true;
+        errorMessage = 'Impossible de contacter le serveur. Verifiez votre connexion internet.';
       }
       
       return {
         success: false,
         error: errorMessage,
+        isServerError,
       };
     }
   };

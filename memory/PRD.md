@@ -243,16 +243,18 @@ Etape 2 - Planteur compose *144*88#
 - Pages ActivateMember.jsx et ActivateAgent.jsx: titres mis a jour
 **Tests: Flux testes manuellement via curl (creation, check, activation, login) - tous OK**
 
-### Phase 25 - Build APK/AAB v1.52.0 (SUBMITTED - 24/03/2026)
-- Build AAB (production - Google Play Store) soumis sur EAS
-  - Build ID: fec6bd1f-095f-4213-9e76-0d225cb321f7
-  - URL: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/fec6bd1f-095f-4213-9e76-0d225cb321f7
-  - Version: v1.52.0, versionCode 48
-- Build APK (production-apk) soumis sur EAS
-  - Build ID: e8e985c2-703f-4560-a0e8-e12fb44ec312
-  - URL: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/e8e985c2-703f-4560-a0e8-e12fb44ec312
-- Statut: En file d'attente (limite de concurrence Expo, credits 100% utilises ce mois)
+### Phase 25 - Build APK/AAB v1.52.0 (DONE - 24/03/2026)
+- Build AAB v1.52.0 TERMINE: https://expo.dev/artifacts/eas/xsJmADLAugHnLwvRHoy3B2.aab
+- Build APK v1.52.0 TERMINE: e8e985c2-703f-4560-a0e8-e12fb44ec312
 
+### Phase 26 - Fix Cloudflare Mobile + Build v1.53.0 (DONE - 24/03/2026)
+- Rewrite api.js: User-Agent realiste, headers anti-cache, detection Cloudflare, retry avec jitter
+- Health check auto avant login, retry avec headers alternatifs
+- AuthContext.js: messages d'erreur specifiques, dialogue "Reessayer" pour erreurs serveur
+- Labels d'activation harmonises avec le web
+- Build AAB v1.53.0 EN COURS: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/889246bc-df07-4663-b25c-027e1c19f8d4
+
+## Backlog
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
 - P2: Stockage cloud AWS S3
