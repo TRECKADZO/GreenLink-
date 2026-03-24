@@ -84,6 +84,8 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 **Dashboard Super Admin mis a jour:**
 - Bouton "Inscriptions USSD/Web" dans les raccourcis strategiques
 
+**Tests: 15/15 backend PASS, 100% frontend PASS (iteration 64)**
+
 ### Phase 19b - Simulateur USSD Interactif (DONE - 24/03/2026)
 **Composant reutilisable `USSDSimulator.jsx` :**
 - Interface visuelle simulant un ecran de telephone (barre d'etat Orange CI, chat-like UI)
@@ -100,6 +102,23 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Formation des agents de cooperative a distance
 
 **Tests: 100% frontend PASS (iteration 65)**
+
+### Phase 19c - Corrections Logique Metier + Auto-Code Planteur (DONE - 24/03/2026)
+**Corrections appliquees :**
+- Bouton "Inscription Planteur" retire de la page d'accueil → Restaure "S'inscrire gratuitement" vers /register
+- Logique metier : les planteurs s'inscrivent uniquement via cooperative/agent terrain/USSD, jamais en auto-inscription web publique
+- Fix auth/register endpoint (erreur 500 Pydantic) : validateur email deplace de UserBase vers UserCreate uniquement
+- Inscription /register fonctionne maintenant pour tous les types : acheteur, cooperative, fournisseur, producteur, entreprise_rse
+
+**Auto-generation Code Planteur :**
+- Format: `GL-{PREFIX}-{SEQUENCE}` (ex: GL-DAL-00001, GL-COO-00003)
+- PREFIX = 3 premieres lettres du code cooperative ou du village, sinon "IND"
+- Collection MongoDB `farmer_code_counters` pour la sequence
+- Genere automatiquement a l'inscription USSD et Web
+- Affiche dans le message de confirmation USSD et la page de succes Web
+- Champ "Code planteur" supprime du formulaire → remplace par "Code cooperative (optionnel)"
+
+**Tests: 14/14 backend PASS, 100% frontend PASS (iteration 66)**
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
