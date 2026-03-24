@@ -5,7 +5,7 @@ import {
   Users, Plus, Search, Filter, CheckCircle, 
   Clock, Phone, MapPin, ChevronLeft, Eye,
   Upload, UserCheck, AlertCircle, Layers,
-  UserX, KeyRound, Send, Loader2
+  UserX, KeyRound, Send, Loader2, Download, FileSpreadsheet, FileText
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -49,6 +49,8 @@ const MembersPage = () => {
   const [createdMemberInfo, setCreatedMemberInfo] = useState(null);
   const [activationStats, setActivationStats] = useState(null);
   const [sendingReminder, setSendingReminder] = useState(null);
+  const [exporting, setExporting] = useState(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // Liste des 51 départements de Côte d'Ivoire
   const DEPARTEMENTS = [
@@ -158,6 +160,39 @@ const MembersPage = () => {
     }
   };
 
+  const handleExport = async (format) => {
+    setExporting(format);
+    setShowExportMenu(false);
+    try {
+      const API = process.env.REACT_APP_BACKEND_URL;
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams({ format });
+      if (statusFilter) params.append('status', statusFilter);
+      if (search) params.append('search', search);
+      
+      const response = await fetch(`${API}/api/cooperative/members/export?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Erreur export');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = format === 'xlsx' ? 'membres.xlsx' : 'membres.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(`Export ${format.toUpperCase()} téléchargé`);
+    } catch (error) {
+      toast.error('Erreur lors de l\'export');
+    } finally {
+      setExporting(null);
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     fetchMembers();
@@ -257,6 +292,38 @@ const MembersPage = () => {
               </div>
             </div>
             <div className="flex gap-2">
+              {/* Export dropdown */}
+              <div className="relative">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  disabled={!!exporting}
+                  data-testid="export-members-btn"
+                >
+                  {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                  Exporter
+                </Button>
+                {showExportMenu && (
+                  <div className="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-lg border z-10">
+                    <button
+                      className="w-full px-4 py-2.5 flex items-center gap-2 hover:bg-gray-50 text-sm text-left rounded-t-lg"
+                      onClick={() => handleExport('xlsx')}
+                      data-testid="export-xlsx-btn"
+                    >
+                      <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                      Excel (.xlsx)
+                    </button>
+                    <button
+                      className="w-full px-4 py-2.5 flex items-center gap-2 hover:bg-gray-50 text-sm text-left rounded-b-lg border-t"
+                      onClick={() => handleExport('pdf')}
+                      data-testid="export-pdf-btn"
+                    >
+                      <FileText className="h-4 w-4 text-red-600" />
+                      PDF
+                    </button>
+                  </div>
+                )}
+              </div>
               <Button variant="outline" onClick={() => navigate('/cooperative/members/import')}>
                 <Upload className="h-4 w-4 mr-2" />
                 Importer CSV

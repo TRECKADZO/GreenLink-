@@ -4,11 +4,13 @@ GreenLink Agritech - Côte d'Ivoire
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi.responses import StreamingResponse
 from typing import List, Optional
 from datetime import datetime, timezone
 from bson import ObjectId
 import hashlib
 import logging
+import io
 
 from database import db
 from routes.auth import get_current_user
@@ -307,6 +309,177 @@ async def get_activation_stats(
         "recent_activations": recent_list,
         "pending_activation": pending_list
     }
+
+
+@router.get("/members/export")
+async def export_members(
+    format: str = Query("xlsx", regex="^(xlsx|pdf)$"),
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Exporter la liste des membres en Excel ou PDF"""
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    coop_name = current_user.get("coop_name") or current_user.get("full_name", "Coopérative")
+    coop_code = current_user.get("coop_code", "")
+
+    query = coop_id_query(coop_id)
+    if status:
+        query["status"] = status
+    if search:
+        query["$or"] = [
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"phone_number": {"$regex": search}},
+            {"code_planteur": {"$regex": search, "$options": "i"}}
+        ]
+
+    members = await db.coop_members.find(query).sort("created_at", -1).to_list(1000)
+
+    rows = []
+    for m in members:
+        activated = bool(m.get("account_activated") or m.get("user_id"))
+        rows.append({
+            "Nom complet": m.get("full_name", ""),
+            "Téléphone": m.get("phone_number", ""),
+            "Village": m.get("village", ""),
+            "Département": m.get("department", ""),
+            "Code Planteur": m.get("code_planteur", ""),
+            "Statut": m.get("status", ""),
+            "Compte activé": "Oui" if activated else "Non",
+            "PIN USSD": "Oui" if m.get("pin_hash") else "Non",
+            "Hectares": m.get("hectares_approx", ""),
+            "CNI": m.get("cni_number", ""),
+            "Date création": m.get("created_at").strftime("%d/%m/%Y") if isinstance(m.get("created_at"), datetime) else str(m.get("created_at", ""))
+        })
+
+    if format == "xlsx":
+        return _export_xlsx(rows, coop_name, coop_code)
+    else:
+        return _export_pdf(rows, coop_name, coop_code)
+
+
+def _export_xlsx(rows, coop_name, coop_code):
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Membres"
+
+    # Header row
+    green_fill = PatternFill(start_color="2D5A4D", end_color="2D5A4D", fill_type="solid")
+    white_font = Font(color="FFFFFF", bold=True, size=11)
+    thin_border = Border(
+        left=Side(style="thin"), right=Side(style="thin"),
+        top=Side(style="thin"), bottom=Side(style="thin")
+    )
+
+    headers = list(rows[0].keys()) if rows else ["Nom complet", "Téléphone", "Village", "Code Planteur", "Statut", "Compte activé", "PIN USSD", "Hectares", "Date création"]
+
+    # Title row
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
+    title_cell = ws.cell(row=1, column=1, value=f"{coop_name} ({coop_code}) - Liste des Membres")
+    title_cell.font = Font(bold=True, size=14, color="2D5A4D")
+    title_cell.alignment = Alignment(horizontal="center")
+
+    # Date row
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
+    date_cell = ws.cell(row=2, column=1, value=f"Exporté le {datetime.now(timezone.utc).strftime('%d/%m/%Y à %H:%M')}")
+    date_cell.font = Font(italic=True, size=10, color="666666")
+    date_cell.alignment = Alignment(horizontal="center")
+
+    # Column headers
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col_idx, value=header)
+        cell.font = white_font
+        cell.fill = green_fill
+        cell.alignment = Alignment(horizontal="center")
+        cell.border = thin_border
+
+    # Data rows
+    for row_idx, row_data in enumerate(rows, 5):
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=row_data.get(header, ""))
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal="left")
+
+    # Auto-width columns
+    for col_idx, header in enumerate(headers, 1):
+        max_len = len(header)
+        for row_data in rows:
+            val = str(row_data.get(header, ""))
+            max_len = max(max_len, len(val))
+        ws.column_dimensions[chr(64 + col_idx) if col_idx <= 26 else 'A'].width = min(max_len + 4, 35)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"membres_{coop_code}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+def _export_pdf(rows, coop_name, coop_code):
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+    output = io.BytesIO()
+    doc = SimpleDocTemplate(output, pagesize=landscape(A4), leftMargin=10*mm, rightMargin=10*mm, topMargin=15*mm, bottomMargin=15*mm)
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("Title2", parent=styles["Title"], fontSize=16, textColor=colors.HexColor("#2D5A4D"))
+    subtitle_style = ParagraphStyle("Sub", parent=styles["Normal"], fontSize=9, textColor=colors.grey)
+
+    elements = []
+    elements.append(Paragraph(f"{coop_name} ({coop_code})", title_style))
+    elements.append(Paragraph(f"Liste des Membres - Exporté le {datetime.now(timezone.utc).strftime('%d/%m/%Y à %H:%M')}", subtitle_style))
+    elements.append(Spacer(1, 8*mm))
+
+    # Table headers (simplified for PDF)
+    pdf_headers = ["Nom", "Téléphone", "Village", "Code Planteur", "Activé", "PIN", "Hectares", "Date"]
+    pdf_keys = ["Nom complet", "Téléphone", "Village", "Code Planteur", "Compte activé", "PIN USSD", "Hectares", "Date création"]
+
+    table_data = [pdf_headers]
+    for row in rows:
+        table_data.append([str(row.get(k, ""))[:25] for k in pdf_keys])
+
+    if len(table_data) == 1:
+        table_data.append(["Aucun membre"] + [""] * (len(pdf_headers) - 1))
+
+    col_widths = [55*mm, 40*mm, 35*mm, 35*mm, 20*mm, 15*mm, 22*mm, 28*mm]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2D5A4D")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTSIZE", (0, 0), (-1, 0), 9),
+        ("FONTSIZE", (0, 1), (-1, -1), 8),
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F0F7F4")]),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 5*mm))
+    elements.append(Paragraph(f"Total: {len(rows)} membre(s)", subtitle_style))
+
+    doc.build(elements)
+    output.seek(0)
+
+    filename = f"membres_{coop_code}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.pdf"
+    return StreamingResponse(
+        output,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 
 @router.post("/members/{member_id}/send-reminder")

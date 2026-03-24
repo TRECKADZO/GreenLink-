@@ -200,7 +200,7 @@ const Navbar = () => {
                     <UserIcon className="w-4 h-4 text-[#2d5a4d]" />
                   </div>
                   <div className="text-left hidden sm:block">
-                    <p className="text-white font-medium text-sm">{user.full_name}</p>
+                    <p className="text-white font-medium text-sm">{user.user_type === 'cooperative' ? (user.coop_name || user.full_name) : user.full_name}</p>
                     <p className="text-white/60 text-xs">{getUserTypeLabel()}</p>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-white/70 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
@@ -213,7 +213,7 @@ const Navbar = () => {
                           <UserIcon className="w-6 h-6 text-[#2d5a4d]" />
                         </div>
                         <div>
-                          <p className="text-white font-semibold">{user.full_name}</p>
+                          <p className="text-white font-semibold">{user.user_type === 'cooperative' ? (user.coop_name || user.full_name) : user.full_name}</p>
                           <Badge className="bg-white/20 text-white text-xs mt-1">{getUserTypeLabel()}</Badge>
                         </div>
                       </div>
@@ -278,7 +278,7 @@ const Navbar = () => {
                     <UserIcon className="w-5 h-5 text-[#2d5a4d]" />
                   </div>
                   <div>
-                    <p className="text-white font-semibold text-sm">{user.full_name}</p>
+                    <p className="text-white font-semibold text-sm">{user.user_type === 'cooperative' ? (user.coop_name || user.full_name) : user.full_name}</p>
                     <Badge className="bg-white/15 text-white/80 text-xs mt-0.5">{getUserTypeLabel()}</Badge>
                   </div>
                 </div>
