@@ -325,6 +325,30 @@ export default function CoopDashboardScreen({ navigation }) {
             color="#16a34a"
           />
           <QuickAction
+            icon="stats-chart"
+            label="Suivi Activation"
+            onPress={() => navigation.navigate('ActivationStats')}
+            color="#00BCD4"
+          />
+          <QuickAction
+            icon="leaf"
+            label="Primes Carbone"
+            onPress={() => navigation.navigate('CarbonPremiums')}
+            color="#8BC34A"
+          />
+          <QuickAction
+            icon="body"
+            label="Suivi Agents"
+            onPress={() => navigation.navigate('AgentsProgress')}
+            color="#795548"
+          />
+          <QuickAction
+            icon="phone-portrait"
+            label="Inscriptions USSD"
+            onPress={() => navigation.navigate('USSDRegistrations')}
+            color="#673AB7"
+          />
+          <QuickAction
             icon="document-text"
             label="Rapport EUDR"
             onPress={() => navigation.navigate('CoopReports')}
@@ -334,7 +358,7 @@ export default function CoopDashboardScreen({ navigation }) {
             icon="people"
             label="Agents Terrain"
             onPress={() => navigation.navigate('AgentList')}
-            color="#795548"
+            color="#3F51B5"
           />
           <QuickAction
             icon="cart"

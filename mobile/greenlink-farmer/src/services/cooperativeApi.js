@@ -387,6 +387,35 @@ export const cooperativeApi = {
     const response = await api.get('/cooperative/harvests/summary');
     return response.data;
   },
+
+  // === Activation Stats ===
+  getActivationStats: async () => {
+    const response = await api.get('/cooperative/members/activation-stats');
+    return response.data;
+  },
+
+  sendActivationReminder: async (memberId) => {
+    const response = await api.post(`/cooperative/members/${memberId}/send-reminder`);
+    return response.data;
+  },
+
+  // === Carbon Premiums ===
+  getCarbonPremiums: async () => {
+    const response = await api.get('/cooperative/carbon-premiums/admin-requests');
+    return response.data;
+  },
+
+  // === Agents Progress ===
+  getAgentsProgress: async () => {
+    const response = await api.get('/cooperative/agents-progress');
+    return response.data;
+  },
+
+  // === USSD Registrations ===
+  getUSSDRegistrations: async () => {
+    const response = await api.get('/ussd/registrations');
+    return response.data;
+  },
 };
 
 export default cooperativeApi;

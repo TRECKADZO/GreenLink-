@@ -76,9 +76,33 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Fonctionnel: 15/15 endpoints PASS
 - Frontend: Login, Dashboard, Members, Add Member modal tous PASS
 
-**Version mobile: v1.57.0**
-- APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/e50bbfc1-4e63-4240-a479-f8f0b2b7c16b (v1.56.0 soumis)
-- Builds v1.57.0 a soumettre apres validation utilisateur
+**Version mobile: v1.58.0**
+- APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/addaa17d-338f-42b1-8837-4dbf6706da84
+- AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/d5494378-0135-4f0c-b8b0-87363d3d0b73
+
+### Phase 30 - Ecrans Mobile Manquants: Parite Complete Web/Mobile (DONE - 24/03/2026)
+**4 ecrans crees pour parite complete web/mobile:**
+1. ActivationStatsScreen.js - Taux d'activation, stats PIN/code, liste activees/en attente, envoi rappels SMS
+2. CarbonPremiumsScreen.js - Stats primes (en_attente, approuvees, payees), liste demandes avec score/CO2/montant
+3. AgentsProgressScreen.js - Resume global, progression par agent avec barre, details producteurs assignes (x/5)
+4. USSDRegistrationsScreen.js - Recherche par nom/tel/village, badges source (USSD/Web/Mobile), code planteur
+
+**API endpoints connectes:**
+- GET /api/cooperative/members/activation-stats (22 membres, 22.7% actives)
+- GET /api/cooperative/carbon-premiums/admin-requests (stats + liste demandes)
+- GET /api/cooperative/agents-progress (2 agents, 87% moyenne)
+- GET /api/ussd/registrations (33 inscriptions)
+
+**Navigation mise a jour:**
+- AppContent.js: 4 nouveaux Stack.Screen enregistres
+- CoopDashboardScreen.js: 12 actions rapides (4 ajoutees)
+- BottomTabBar.js: 14 items menu cooperative (4 ajoutes)
+- cooperativeApi.js: 4 nouvelles fonctions API ajoutees
+
+**Version v1.58.0 - Build complet avec:**
+- 8 nouveaux ecrans mobile (sessions 28-30)
+- 6 corrections securite
+- Harmonisation complete mobile/web
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
