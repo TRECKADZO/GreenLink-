@@ -114,12 +114,10 @@ async def create_coop_member(
     if existing:
         raise HTTPException(status_code=400, detail="Ce membre existe déjà dans la coopérative")
     
-    # Validate PIN code if provided
-    pin_hash = None
-    if member.pin_code:
-        if len(member.pin_code) != 4 or not member.pin_code.isdigit():
-            raise HTTPException(status_code=400, detail="Le code PIN doit être exactement 4 chiffres")
-        pin_hash = hash_pin(member.pin_code)
+    # Validate PIN code - OBLIGATOIRE
+    if not member.pin_code or len(member.pin_code) != 4 or not member.pin_code.isdigit():
+        raise HTTPException(status_code=400, detail="Le code PIN à 4 chiffres est obligatoire")
+    pin_hash = hash_pin(member.pin_code)
     
     # Auto-generate Code Planteur
     coop_code = current_user.get("coop_code", "")
@@ -135,6 +133,7 @@ async def create_coop_member(
         "cni_number": member.cni_number,
         "consent_given": member.consent_given,
         "consent_date": datetime.now(timezone.utc) if member.consent_given else None,
+        "hectares_approx": member.hectares,
         "status": "pending_validation",
         "is_active": True,
         "user_id": None,
@@ -156,6 +155,7 @@ async def create_coop_member(
         "code_planteur": farmer_code,
         "village": member.village,
         "pin_hash": pin_hash,
+        "hectares_approx": member.hectares,
         "user_type": "producteur",
         "registered_via": "cooperative_dashboard",
         "status": "active",
@@ -170,7 +170,7 @@ async def create_coop_member(
         "message": "Membre ajouté avec succès",
         "member_id": str(result.inserted_id),
         "code_planteur": farmer_code,
-        "pin_configured": pin_hash is not None
+        "pin_configured": True
     }
 
 @router.post("/members/import-csv")
@@ -249,6 +249,107 @@ async def import_members_csv(
         "errors": errors[:10],
         "total_errors": len(errors)
     }
+
+
+@router.get("/members/activation-stats")
+async def get_activation_stats(
+    current_user: dict = Depends(get_current_user)
+):
+    """Statistiques d'activation des membres de la coopérative"""
+    user_type = current_user.get("user_type")
+    if user_type in ("field_agent", "agent_terrain"):
+        coop_id = current_user.get("cooperative_id", "")
+    elif user_type in ("cooperative",):
+        coop_id = str(current_user["_id"])
+    elif user_type in ("admin", "super_admin"):
+        coop_id = str(current_user["_id"])
+    else:
+        raise HTTPException(status_code=403, detail="Accès réservé")
+
+    query = coop_id_query(coop_id)
+    all_members = await db.coop_members.find(query).to_list(500)
+
+    total = len(all_members)
+    activated = [m for m in all_members if m.get("account_activated") or m.get("user_id")]
+    pending = [m for m in all_members if not m.get("account_activated") and not m.get("user_id")]
+    pin_configured = [m for m in all_members if m.get("pin_hash")]
+    has_code = [m for m in all_members if m.get("code_planteur")]
+
+    activation_rate = round((len(activated) / total * 100), 1) if total > 0 else 0
+
+    recent = sorted(activated, key=lambda m: m.get("activation_date") or m.get("created_at") or datetime.min, reverse=True)[:5]
+    recent_list = [{
+        "id": str(m["_id"]),
+        "full_name": m.get("full_name", ""),
+        "phone_number": m.get("phone_number", ""),
+        "village": m.get("village", ""),
+        "activation_date": (m.get("activation_date") or m.get("created_at", "")).isoformat() if isinstance(m.get("activation_date") or m.get("created_at"), datetime) else str(m.get("activation_date") or m.get("created_at", ""))
+    } for m in recent]
+
+    pending_list = [{
+        "id": str(m["_id"]),
+        "full_name": m.get("full_name", ""),
+        "phone_number": m.get("phone_number", ""),
+        "village": m.get("village", ""),
+        "code_planteur": m.get("code_planteur", ""),
+        "pin_configured": bool(m.get("pin_hash")),
+        "created_at": m.get("created_at", "").isoformat() if isinstance(m.get("created_at"), datetime) else str(m.get("created_at", ""))
+    } for m in pending]
+
+    return {
+        "total_members": total,
+        "activated_count": len(activated),
+        "pending_count": len(pending),
+        "activation_rate": activation_rate,
+        "pin_configured_count": len(pin_configured),
+        "pin_missing_count": total - len(pin_configured),
+        "code_planteur_count": len(has_code),
+        "recent_activations": recent_list,
+        "pending_activation": pending_list
+    }
+
+
+@router.post("/members/{member_id}/send-reminder")
+async def send_activation_reminder(
+    member_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Envoyer un rappel SMS d'activation à un membre (MOCKED)"""
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+
+    member = await db.coop_members.find_one({
+        "_id": ObjectId(member_id),
+        **coop_id_query(coop_id)
+    })
+
+    if not member:
+        raise HTTPException(status_code=404, detail="Membre non trouvé")
+
+    if member.get("account_activated") or member.get("user_id"):
+        raise HTTPException(status_code=400, detail="Ce membre a déjà activé son compte")
+
+    coop_name = current_user.get("coop_name") or current_user.get("full_name", "Coopérative")
+    member_phone = member.get("phone_number", "")
+    member_name = member.get("full_name", "")
+
+    logger.info(f"[SMS MOCK] Rappel activation envoyé à {member_name} ({member_phone}): "
+                f"Bonjour {member_name}, votre coopérative {coop_name} vous invite à activer "
+                f"votre compte GreenLink. Composez *144*88# ou rendez-vous sur l'application.")
+
+    await db.coop_members.update_one(
+        {"_id": ObjectId(member_id)},
+        {"$set": {"last_reminder_sent": datetime.now(timezone.utc)},
+         "$inc": {"reminder_count": 1}}
+    )
+
+    return {
+        "message": f"Rappel SMS envoyé à {member_name} ({member_phone})",
+        "sms_sent": False,
+        "sms_mocked": True,
+        "note": "SMS simulé - passerelle Orange non configurée"
+    }
+
 
 @router.put("/members/{member_id}/validate")
 async def validate_member(

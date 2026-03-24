@@ -36,7 +36,8 @@ class CoopMemberCreate(BaseModel):
     zone: Optional[str] = None
     cni_number: Optional[str] = None
     consent_given: bool = True
-    pin_code: Optional[str] = None  # Code PIN 4 chiffres pour USSD
+    pin_code: str  # Code PIN 4 chiffres pour USSD - OBLIGATOIRE
+    hectares: Optional[float] = None  # Superficie approximative
 
 class CoopMemberUpdate(BaseModel):
     full_name: Optional[str] = None

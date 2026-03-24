@@ -4,7 +4,8 @@ import { cooperativeApi } from '../../services/cooperativeApi';
 import { 
   Users, Plus, Search, Filter, CheckCircle, 
   Clock, Phone, MapPin, ChevronLeft, Eye,
-  Upload, UserCheck, AlertCircle, Layers
+  Upload, UserCheck, AlertCircle, Layers,
+  UserX, KeyRound, Send, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -41,10 +42,13 @@ const MembersPage = () => {
     zone: '',
     cni_number: '',
     consent_given: true,
-    pin_code: ''
+    pin_code: '',
+    hectares: ''
   });
   const [submitting, setSubmitting] = useState(false);
   const [createdMemberInfo, setCreatedMemberInfo] = useState(null);
+  const [activationStats, setActivationStats] = useState(null);
+  const [sendingReminder, setSendingReminder] = useState(null);
 
   // Liste des 51 départements de Côte d'Ivoire
   const DEPARTEMENTS = [
@@ -129,7 +133,30 @@ const MembersPage = () => {
 
   useEffect(() => {
     fetchMembers();
+    loadActivationStats();
   }, [statusFilter]);
+
+  const loadActivationStats = async () => {
+    try {
+      const stats = await cooperativeApi.getActivationStats();
+      setActivationStats(stats);
+    } catch (error) {
+      console.error('Error fetching activation stats:', error);
+    }
+  };
+
+  const handleSendReminder = async (memberId, memberName) => {
+    setSendingReminder(memberId);
+    try {
+      await cooperativeApi.sendActivationReminder(memberId);
+      toast.success(`Rappel envoyé à ${memberName}`);
+      loadActivationStats();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de l\'envoi');
+    } finally {
+      setSendingReminder(null);
+    }
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -138,13 +165,16 @@ const MembersPage = () => {
 
   const handleAddMember = async (e) => {
     e.preventDefault();
-    if (newMember.pin_code && (newMember.pin_code.length !== 4 || !/^\d{4}$/.test(newMember.pin_code))) {
-      toast.error('Le code PIN doit être exactement 4 chiffres');
+    if (!newMember.pin_code || newMember.pin_code.length !== 4 || !/^\d{4}$/.test(newMember.pin_code)) {
+      toast.error('Le code PIN à 4 chiffres est obligatoire');
       return;
     }
     setSubmitting(true);
     try {
-      const result = await cooperativeApi.createMember(newMember);
+      const result = await cooperativeApi.createMember({
+        ...newMember,
+        hectares: newMember.hectares ? parseFloat(newMember.hectares) : null
+      });
       setShowAddModal(false);
       setCreatedMemberInfo({
         name: newMember.full_name,
@@ -160,7 +190,8 @@ const MembersPage = () => {
         zone: '',
         cni_number: '',
         consent_given: true,
-        pin_code: ''
+        pin_code: '',
+        hectares: ''
       });
       fetchMembers();
       toast.success('Membre ajouté avec succès');
@@ -283,6 +314,57 @@ const MembersPage = () => {
         </div>
       </div>
 
+      {/* Activation Stats Banner */}
+      {activationStats && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4" data-testid="activation-stats-banner">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="flex items-center gap-2 p-3 bg-white rounded-lg border">
+              <Users className="h-5 w-5 text-blue-600 flex-shrink-0" />
+              <div>
+                <p className="text-lg font-bold text-gray-900">{activationStats.total_members}</p>
+                <p className="text-xs text-gray-500">Total</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-white rounded-lg border border-green-200">
+              <UserCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
+              <div>
+                <p className="text-lg font-bold text-green-700">{activationStats.activated_count}</p>
+                <p className="text-xs text-gray-500">Activés</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-white rounded-lg border border-amber-200">
+              <UserX className="h-5 w-5 text-amber-600 flex-shrink-0" />
+              <div>
+                <p className="text-lg font-bold text-amber-700">{activationStats.pending_count}</p>
+                <p className="text-xs text-gray-500">Non activés</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-white rounded-lg border border-emerald-200">
+              <KeyRound className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+              <div>
+                <p className="text-lg font-bold text-emerald-700">{activationStats.pin_configured_count}</p>
+                <p className="text-xs text-gray-500">PIN USSD</p>
+              </div>
+            </div>
+            <div className="p-3 bg-white rounded-lg border">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-500">Taux d'activation</span>
+                <span className="font-semibold text-blue-700">{activationStats.activation_rate}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="h-2 rounded-full transition-all"
+                  style={{
+                    width: `${activationStats.activation_rate}%`,
+                    background: activationStats.activation_rate >= 75 ? '#16a34a' : activationStats.activation_rate >= 40 ? '#d97706' : '#dc2626'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Members List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         {loading ? (
@@ -329,6 +411,11 @@ const MembersPage = () => {
                         <p className="text-sm font-medium">Score: {member.score_carbone_moyen || 0}/10</p>
                       </div>
                       {getStatusBadge(member.status)}
+                      {!member.pin_configured && (
+                        <Badge variant="outline" className="text-xs text-orange-600 border-orange-300 hidden md:flex">
+                          <KeyRound className="h-3 w-3 mr-1" />Sans PIN
+                        </Badge>
+                      )}
                       <div className="flex gap-2">
                         <Button 
                           variant="outline" 
@@ -353,6 +440,23 @@ const MembersPage = () => {
                           >
                             <UserCheck className="h-4 w-4 mr-1" />
                             Valider
+                          </Button>
+                        )}
+                        {activationStats?.pending_activation?.some(p => p.id === member.id) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                            disabled={sendingReminder === member.id}
+                            onClick={() => handleSendReminder(member.id, member.full_name)}
+                            title="Envoyer un rappel SMS d'activation"
+                            data-testid={`reminder-btn-${member.id}`}
+                          >
+                            {sendingReminder === member.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
                           </Button>
                         )}
                       </div>
@@ -467,6 +571,19 @@ const MembersPage = () => {
                 />
               </div>
               <div>
+                <Label htmlFor="hectares">Superficie approximative (hectares)</Label>
+                <Input
+                  id="hectares"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={newMember.hectares}
+                  onChange={(e) => setNewMember({...newMember, hectares: e.target.value})}
+                  placeholder="Ex: 2.5"
+                  data-testid="member-hectares-input"
+                />
+              </div>
+              <div>
                 <Label htmlFor="cni_number">Numéro CNI (optionnel)</Label>
                 <Input
                   id="cni_number"
@@ -489,7 +606,7 @@ const MembersPage = () => {
                 </Label>
               </div>
               <div>
-                <Label htmlFor="pin_code">Code PIN USSD (4 chiffres)</Label>
+                <Label htmlFor="pin_code">Code PIN USSD (4 chiffres) *</Label>
                 <Input
                   id="pin_code"
                   type="password"
@@ -500,6 +617,7 @@ const MembersPage = () => {
                     setNewMember({...newMember, pin_code: v});
                   }}
                   placeholder="Ex: 1234"
+                  required
                   data-testid="member-pin-input"
                 />
                 <p className="text-xs text-gray-500 mt-1">

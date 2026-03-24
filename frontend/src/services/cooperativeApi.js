@@ -76,6 +76,20 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  getActivationStats: async () => {
+    const response = await axios.get(`${API}/members/activation-stats`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  sendActivationReminder: async (memberId) => {
+    const response = await axios.post(`${API}/members/${memberId}/send-reminder`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Lots Management
   getLots: async (status = null) => {
     const params = status ? { status } : {};

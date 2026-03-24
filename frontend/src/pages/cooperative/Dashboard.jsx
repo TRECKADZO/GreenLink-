@@ -7,7 +7,8 @@ import {
   TrendingUp, FileText, Plus, ChevronRight,
   CheckCircle, Clock, AlertTriangle, Building2,
   Shield, Store, Home, UserCircle,
-  TreePine, Pencil, Save, X, Loader2, Target, Smartphone
+  TreePine, Pencil, Save, X, Loader2, Target, Smartphone,
+  UserCheck, UserX, KeyRound, Send
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -110,6 +111,8 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showSimulator, setShowSimulator] = useState(false);
+  const [activationStats, setActivationStats] = useState(null);
+  const [sendingReminder, setSendingReminder] = useState(null);
 
   const loadDashboard = async () => {
     try {
@@ -123,8 +126,31 @@ const Dashboard = () => {
     }
   };
 
+  const loadActivationStats = async () => {
+    try {
+      const stats = await cooperativeApi.getActivationStats();
+      setActivationStats(stats);
+    } catch (error) {
+      console.error('Error fetching activation stats:', error);
+    }
+  };
+
+  const handleSendReminder = async (memberId, memberName) => {
+    setSendingReminder(memberId);
+    try {
+      await cooperativeApi.sendActivationReminder(memberId);
+      toast.success(`Rappel envoyé à ${memberName}`);
+      loadActivationStats();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de l\'envoi du rappel');
+    } finally {
+      setSendingReminder(null);
+    }
+  };
+
   useEffect(() => {
     loadDashboard();
+    loadActivationStats();
   }, []);
 
   if (loading) {
@@ -534,6 +560,128 @@ const Dashboard = () => {
           </Card>
 
           {/* Gestion des Parcelles - Section dédiée */}
+          
+          {/* Activation Tracking Widget */}
+          {activationStats && (
+            <Card className="lg:col-span-3 border-2 border-blue-200 bg-blue-50/20" data-testid="activation-widget">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <UserCheck className="h-5 w-5 text-blue-600" />
+                    Suivi des Activations
+                  </CardTitle>
+                  <CardDescription>
+                    Taux d'activation : {activationStats.activation_rate}% des membres ont activé leur compte
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/cooperative/members')}
+                >
+                  Voir tous les membres
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {/* Stats cards */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+                  <div className="text-center p-3 bg-white rounded-lg border border-blue-100">
+                    <Users className="h-6 w-6 mx-auto mb-1 text-blue-600" />
+                    <p className="text-xl font-bold text-gray-900" data-testid="activation-total">{activationStats.total_members}</p>
+                    <p className="text-xs text-gray-500">Total Membres</p>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-lg border border-green-200">
+                    <UserCheck className="h-6 w-6 mx-auto mb-1 text-green-600" />
+                    <p className="text-xl font-bold text-green-700" data-testid="activation-activated">{activationStats.activated_count}</p>
+                    <p className="text-xs text-gray-500">Activés</p>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-lg border border-amber-200">
+                    <UserX className="h-6 w-6 mx-auto mb-1 text-amber-600" />
+                    <p className="text-xl font-bold text-amber-700" data-testid="activation-pending">{activationStats.pending_count}</p>
+                    <p className="text-xs text-gray-500">En attente</p>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-lg border border-emerald-200">
+                    <KeyRound className="h-6 w-6 mx-auto mb-1 text-emerald-600" />
+                    <p className="text-xl font-bold text-emerald-700" data-testid="activation-pin">{activationStats.pin_configured_count}</p>
+                    <p className="text-xs text-gray-500">PIN configuré</p>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                    <p className="text-xl font-bold text-blue-700" data-testid="activation-code">{activationStats.code_planteur_count}</p>
+                    <p className="text-xs text-gray-500">Code Planteur</p>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="mb-5">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Progression des activations</span>
+                    <span className="font-medium text-blue-700">{activationStats.activation_rate}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className="h-3 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${activationStats.activation_rate}%`,
+                        background: activationStats.activation_rate >= 75 ? '#16a34a' : activationStats.activation_rate >= 40 ? '#d97706' : '#dc2626'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Pending members list */}
+                {activationStats.pending_activation?.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                      Membres en attente d'activation ({activationStats.pending_count})
+                    </h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {activationStats.pending_activation.slice(0, 5).map((m) => (
+                        <div key={m.id} className="flex items-center justify-between p-2 bg-white rounded-lg border" data-testid={`pending-member-${m.id}`}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                              <span className="text-amber-700 font-medium text-sm">{m.full_name?.charAt(0) || '?'}</span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{m.full_name}</p>
+                              <p className="text-xs text-gray-500">{m.phone_number} - {m.village}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {m.code_planteur && (
+                              <span className="text-xs font-mono text-green-700 bg-green-50 px-1.5 py-0.5 rounded">{m.code_planteur}</span>
+                            )}
+                            {!m.pin_configured && (
+                              <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">Sans PIN</Badge>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={sendingReminder === m.id}
+                              onClick={() => handleSendReminder(m.id, m.full_name)}
+                              title="Envoyer un rappel SMS"
+                              data-testid={`reminder-btn-${m.id}`}
+                            >
+                              {sendingReminder === m.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Send className="h-3.5 w-3.5 text-blue-600" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {activationStats.pending_count > 5 && (
+                      <Button variant="link" size="sm" className="mt-2" onClick={() => navigate('/cooperative/members')}>
+                        Voir les {activationStats.pending_count - 5} autres membres en attente...
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="lg:col-span-3 border-2 border-green-200 bg-green-50/30">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
