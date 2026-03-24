@@ -48,6 +48,19 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Mot de passe cooperative bielaghana@gmail.com reinitialise (474Treckadzo)
 **Tests: 11/11 backend PASS, 100% frontend PASS (iteration 72)**
 
+### Phase 28 - Fix Mobile "Ajouter Parcelle" Navigation + Build v1.56.0 (DONE - 24/03/2026)
+**Bug corrige : Bouton "Ajouter Parcelle" redirige vers Marketplace au lieu du formulaire**
+- `CoopDashboardScreen.js` : navigation corrigee de `'CoopMembers'` vers `'AddMemberParcel'`
+- `AddMemberParcelScreen.js` : accepte maintenant l'acces sans `memberId` pre-selectionne
+  - Ajout d'un selecteur de membre avec recherche (Modal, FlatList, filtre par nom/village/telephone)
+  - Coherent avec la version web `AddParcelPage.jsx` qui a aussi un dropdown de selection de membre
+- Backend POST /api/cooperative/members/{id}/parcels teste OK
+- Version web "/cooperative/parcels/new" verifiee OK (screenshot)
+- Version bumpee a v1.56.0 dans app.json
+- Builds EAS soumis:
+  - APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/e50bbfc1-4e63-4240-a479-f8f0b2b7c16b
+  - AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/7de0f793-e76d-4585-862e-53a9f3137ad1
+
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Cooperative Gagnoa: bielaghana@gmail.com / 474Treckadzo

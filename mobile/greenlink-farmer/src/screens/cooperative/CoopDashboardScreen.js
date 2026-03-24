@@ -302,7 +302,7 @@ export default function CoopDashboardScreen({ navigation }) {
           <QuickAction
             icon="map"
             label="Ajouter Parcelle"
-            onPress={() => navigation.navigate('CoopMembers')}
+            onPress={() => navigation.navigate('AddMemberParcel', {})}
             color="#2196F3"
           />
           <QuickAction
