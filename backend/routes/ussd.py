@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone
 from bson import ObjectId
+from pymongo import ReturnDocument
 import logging
 import hashlib
 
@@ -58,6 +59,34 @@ def get_session(sid: str) -> dict:
 
 def hash_pin(pin: str) -> str:
     return hashlib.sha256(pin.encode()).hexdigest()
+
+
+async def generate_farmer_code(coop_code: str = "", village: str = "") -> str:
+    """
+    Auto-generate a unique farmer code.
+    Format: GL-{PREFIX}-{SEQUENCE}
+    PREFIX = first 3 chars of coop_code or village (uppercase)
+    SEQUENCE = 5-digit zero-padded counter
+    """
+    prefix = ""
+    if coop_code and coop_code != "0":
+        prefix = coop_code.replace("-", "").replace(" ", "")[:3].upper()
+    elif village:
+        prefix = village.replace(" ", "")[:3].upper()
+    
+    if not prefix:
+        prefix = "IND"  # Independent farmer
+    
+    # Get next sequence number for this prefix
+    counter = await db.farmer_code_counters.find_one_and_update(
+        {"prefix": prefix},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER
+    )
+    seq = counter.get("seq", 1)
+    
+    return f"GL-{prefix}-{seq:05d}"
 
 
 async def find_farmer_by_phone(phone: str):
@@ -476,12 +505,15 @@ async def ussd_callback(request: USSDRequest):
             choice = inputs[-1] if inputs else ""
             if choice == "1":
                 d = session["data"]
+                # Auto-generate farmer code
+                farmer_code = await generate_farmer_code(d.get("reg_coop", ""), d.get("reg_village", ""))
                 # Save registration
                 reg_doc = {
                     "full_name": d["reg_name"],
                     "nom_complet": d["reg_name"],
                     "phone_number": phone,
                     "coop_code": d.get("reg_coop", ""),
+                    "code_planteur": farmer_code,
                     "village": d["reg_village"],
                     "pin_hash": hash_pin(d["reg_pin"]),
                     "user_type": "producteur",
@@ -496,11 +528,12 @@ async def ussd_callback(request: USSDRequest):
                 session["data"]["farmer_name"] = d["reg_name"]
                 
                 response_text = (
-                    "Inscription reussie !\n"
-                    "Vous pouvez maintenant\n"
-                    "estimer votre prime carbone.\n\n"
-                    "1. Commencer l'estimation\n"
-                    "0. Quitter"
+                    f"Inscription reussie !\n"
+                    f"Votre code planteur:\n"
+                    f"{farmer_code}\n\n"
+                    f"Conservez ce code.\n\n"
+                    f"1. Estimer ma prime carbone\n"
+                    f"0. Quitter"
                 )
             elif choice == "2":
                 session["state"] = "register_name"
@@ -1220,12 +1253,12 @@ async def get_ussd_registrations(limit: int = 50, skip: int = 0):
 async def register_farmer_web(data: dict):
     """
     Web/App registration form endpoint.
-    Fields: nom_complet, telephone, code_planteur, village, pin, hectares (optional), email (optional)
+    Code planteur auto-generated. Optional: cooperative_code (rattachement coop), hectares, email.
     """
     try:
         nom = data.get("nom_complet", "").strip()
         telephone = data.get("telephone", "").strip()
-        code_planteur = data.get("code_planteur", "").strip()
+        cooperative_code = data.get("cooperative_code", "").strip()
         village = data.get("village", "").strip()
         pin = data.get("pin", "").strip()
         hectares = data.get("hectares")
@@ -1245,12 +1278,15 @@ async def register_farmer_web(data: dict):
         if existing:
             raise HTTPException(status_code=409, detail="Ce numero de telephone est deja enregistre")
         
+        # Auto-generate farmer code
+        farmer_code = await generate_farmer_code(cooperative_code, village)
+        
         reg_doc = {
             "full_name": nom,
             "nom_complet": nom,
             "phone_number": telephone,
-            "coop_code": code_planteur,
-            "code_planteur": code_planteur,
+            "cooperative_code": cooperative_code,
+            "code_planteur": farmer_code,
             "village": village,
             "pin_hash": hash_pin(pin),
             "hectares_approx": float(hectares) if hectares else None,
@@ -1267,6 +1303,7 @@ async def register_farmer_web(data: dict):
             "success": True,
             "message": "Inscription reussie !",
             "farmer_id": str(result.inserted_id),
+            "code_planteur": farmer_code,
             "nom": nom,
             "telephone": telephone,
             "village": village

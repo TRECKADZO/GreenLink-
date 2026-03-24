@@ -30,7 +30,7 @@ const RegisterFarmerPage = () => {
   const [form, setForm] = useState({
     nom_complet: '',
     telephone: '',
-    code_planteur: '',
+    cooperative_code: '',
     village: '',
     village_custom: '',
     hectares: '',
@@ -76,7 +76,7 @@ const RegisterFarmerPage = () => {
         body: JSON.stringify({
           nom_complet: form.nom_complet,
           telephone: form.telephone,
-          code_planteur: form.code_planteur,
+          cooperative_code: form.cooperative_code,
           village: village,
           pin: form.pin,
           hectares: form.hectares ? parseFloat(form.hectares) : null,
@@ -118,6 +118,13 @@ const RegisterFarmerPage = () => {
                 <p className="text-sm text-gray-300"><span className="text-gray-500">Nom:</span> {successData?.nom}</p>
                 <p className="text-sm text-gray-300"><span className="text-gray-500">Telephone:</span> {successData?.telephone}</p>
                 <p className="text-sm text-gray-300"><span className="text-gray-500">Village:</span> {successData?.village}</p>
+                {successData?.code_planteur && (
+                  <div className="mt-2 p-3 bg-emerald-900/40 border border-emerald-500/30 rounded-lg">
+                    <p className="text-xs text-emerald-400 mb-1">Code Planteur (auto-genere)</p>
+                    <p className="text-lg font-bold text-emerald-300 tracking-wider" data-testid="register-success-farmer-code">{successData.code_planteur}</p>
+                    <p className="text-xs text-gray-400 mt-1">Conservez ce code, il est votre identifiant unique.</p>
+                  </div>
+                )}
               </div>
               <p className="text-sm text-emerald-400 mb-6">
                 Composez *144*88# pour estimer votre prime carbone directement depuis votre telephone.
@@ -199,18 +206,19 @@ const RegisterFarmerPage = () => {
                 />
               </div>
 
-              {/* Code planteur */}
+              {/* Code cooperative (optionnel) */}
               <div className="space-y-1.5">
                 <Label className="text-sm text-gray-300">
-                  <TreePine className="w-3.5 h-3.5 inline mr-1" /> Code planteur / N. membre coop
+                  <TreePine className="w-3.5 h-3.5 inline mr-1" /> Code cooperative (si rattache)
                 </Label>
                 <Input
                   data-testid="register-coop-input"
-                  placeholder="Optionnel mais recommande"
-                  value={form.code_planteur}
-                  onChange={(e) => handleChange('code_planteur', e.target.value)}
+                  placeholder="Optionnel - ex: COOP-DAL"
+                  value={form.cooperative_code}
+                  onChange={(e) => handleChange('cooperative_code', e.target.value)}
                   className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
                 />
+                <p className="text-xs text-gray-500">Votre code planteur sera genere automatiquement.</p>
               </div>
 
               {/* Village */}

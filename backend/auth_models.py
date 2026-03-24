@@ -37,13 +37,6 @@ class UserBase(BaseModel):
             return None
         return v
     
-    @validator('email')
-    def validate_contact(cls, v, values):
-        # At least one of phone_number or email must be provided
-        if v is None and values.get('phone_number') is None:
-            raise ValueError('Vous devez fournir un numéro de téléphone ou un email')
-        return v
-    
     @validator('user_type')
     def validate_user_type(cls, v):
         allowed_types = ['producteur', 'acheteur', 'entreprise_rse', 'fournisseur', 'cooperative', 'admin', 'field_agent', 'farmer', 'carbon_auditor']
@@ -78,6 +71,13 @@ class UserCreate(UserBase):
     def validate_password(cls, v):
         if len(v) < 6:
             raise ValueError('Le mot de passe doit contenir au moins 6 caractères')
+        return v
+    
+    @validator('email')
+    def validate_contact(cls, v, values):
+        # At least one of phone_number or email must be provided at registration
+        if v is None and values.get('phone_number') is None:
+            raise ValueError('Vous devez fournir un numéro de téléphone ou un email')
         return v
 
 class UserLogin(BaseModel):

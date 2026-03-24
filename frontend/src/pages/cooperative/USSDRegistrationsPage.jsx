@@ -151,7 +151,7 @@ const USSDRegistrationsPage = () => {
                       <th className="text-left py-3 px-4 font-medium text-gray-600">Nom complet</th>
                       <th className="text-left py-3 px-4 font-medium text-gray-600">Telephone</th>
                       <th className="text-left py-3 px-4 font-medium text-gray-600">Village</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Code Coop</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">Code Planteur</th>
                       <th className="text-left py-3 px-4 font-medium text-gray-600">Canal</th>
                       <th className="text-left py-3 px-4 font-medium text-gray-600">Date</th>
                     </tr>
@@ -171,7 +171,7 @@ const USSDRegistrationsPage = () => {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-gray-600">
-                          {r.coop_code || r.code_planteur || '-'}
+                          {r.code_planteur || r.coop_code || '-'}
                         </td>
                         <td className="py-3 px-4">
                           <Badge className={r.registered_via === 'ussd' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}>

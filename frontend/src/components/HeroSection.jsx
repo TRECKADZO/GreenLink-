@@ -59,11 +59,11 @@ const HeroSection = () => {
           <Button 
             size="lg" 
             variant="outline"
-            onClick={() => navigate('/farmer/inscription')}
+            onClick={() => navigate('/register')}
             className="border-white/30 text-white hover:bg-white/10 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg rounded-lg transition-all duration-300 w-full sm:w-auto"
             data-testid="register-btn"
           >
-            Inscription Planteur
+            S'inscrire gratuitement
           </Button>
         </div>
       </div>

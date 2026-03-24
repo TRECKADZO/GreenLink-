@@ -40,7 +40,7 @@ const FARMER_FORMS = [
 ];
 
 const AgentRegistrationForm = () => {
-  const [form, setForm] = useState({ nom_complet: '', telephone: '', code_planteur: '', village: '', pin: '', hectares: '' });
+  const [form, setForm] = useState({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' });
   const [submitting, setSubmitting] = useState(false);
   const [recentRegs, setRecentRegs] = useState([]);
 
@@ -73,8 +73,8 @@ const AgentRegistrationForm = () => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`${data.nom} inscrit avec succes !`);
-        setForm({ nom_complet: '', telephone: '', code_planteur: '', village: '', pin: '', hectares: '' });
+        toast.success(`${data.nom} inscrit ! Code: ${data.code_planteur}`);
+        setForm({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' });
         loadRecent();
       } else {
         toast.error(data.detail || 'Erreur');
@@ -94,7 +94,7 @@ const AgentRegistrationForm = () => {
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="agent-register-form">
             <Input placeholder="Nom complet *" value={form.nom_complet} onChange={e => handleChange('nom_complet', e.target.value)} data-testid="agent-reg-name" />
             <Input placeholder="Telephone *" value={form.telephone} onChange={e => handleChange('telephone', e.target.value)} data-testid="agent-reg-phone" />
-            <Input placeholder="Code planteur / coop" value={form.code_planteur} onChange={e => handleChange('code_planteur', e.target.value)} data-testid="agent-reg-coop" />
+            <Input placeholder="Code cooperative (optionnel)" value={form.cooperative_code} onChange={e => handleChange('cooperative_code', e.target.value)} data-testid="agent-reg-coop" />
             <Input placeholder="Village *" value={form.village} onChange={e => handleChange('village', e.target.value)} data-testid="agent-reg-village" />
             <Input placeholder="PIN 4 chiffres *" type="password" maxLength={4} value={form.pin} onChange={e => handleChange('pin', e.target.value.replace(/\D/g, '').slice(0, 4))} data-testid="agent-reg-pin" />
             <Input placeholder="Hectares (optionnel)" type="number" step="0.5" value={form.hectares} onChange={e => handleChange('hectares', e.target.value)} data-testid="agent-reg-hectares" />

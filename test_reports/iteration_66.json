@@ -1,0 +1,104 @@
+{
+  "summary": "Iteration 66 - 3 Bug Fixes Verified: 1) Homepage hero button restored to 'S'inscrire gratuitement' linking to /register (NOT /farmer/inscription). 2) POST /api/auth/register works for phone-only users (all user types: acheteur, cooperative, fournisseur, producteur, entreprise_rse) without Pydantic validation error. 3) POST /api/ussd/register-web auto-generates code_planteur in format GL-XXX-NNNNN. All 14 backend tests passed. Frontend verified: homepage button, /register page, /farmer/inscription form with cooperative_code field and auto-generation note, /cooperative/inscriptions table with Code Planteur column, Agent Terrain inscription form with 'Code cooperative (optionnel)' placeholder.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration66_fixes.py",
+    "/app/test_reports/pytest/pytest_iteration66_fixes.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "auth_models.py: email validator moved from UserBase to UserCreate only - fixes phone-only registration",
+    "auth_models.py: clean_empty_email pre-validator converts empty string to None before EmailStr validation",
+    "routes/ussd.py: generate_farmer_code() creates GL-{PREFIX}-{SEQUENCE} format using farmer_code_counters collection",
+    "routes/ussd.py: PREFIX is first 3 chars of coop_code (if provided) or village, defaults to 'IND' for independent",
+    "HeroSection.jsx: Button text is 'S'inscrire gratuitement' with onClick={() => navigate('/register')}",
+    "RegisterFarmerPage.jsx: cooperative_code field with placeholder 'Optionnel - ex: COOP-DAL'",
+    "RegisterFarmerPage.jsx: Note says 'Votre code planteur sera genere automatiquement.'",
+    "RegisterFarmerPage.jsx: Success page shows code_planteur with data-testid='register-success-farmer-code'",
+    "USSDRegistrationsPage.jsx: Table has 'Code Planteur' column showing GL-XXX-NNNNN codes",
+    "AgentTerrainDashboard.jsx: Registration form has 'Code cooperative (optionnel)' placeholder"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration66_fixes.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "admin": {
+      "identifier": "klenakan.eric@gmail.com",
+      "password": "474Treckadzo",
+      "user_type": "admin"
+    },
+    "cooperative": {
+      "identifier": "bielaghana@gmail.com",
+      "password": "474Treckadzo",
+      "user_type": "cooperative"
+    }
+  },
+  "seed_data_creation": "Multiple test registrations created during testing with auto-generated codes (GL-GAG-00001, GL-ABE-00001, GL-COO-00003, GL-DAL-00001, etc.)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "3 bug fixes verified: 1) Homepage hero button now says 'S'inscrire gratuitement' and links to /register. 2) auth/register endpoint works for phone-only users (email validator moved to UserCreate only). 3) code_planteur auto-generated in GL-XXX-NNNNN format via generate_farmer_code() in routes/ussd.py. The farmer_code_counters MongoDB collection tracks sequence numbers per prefix. Orange Money and SMS are MOCKED.",
+  "mocked_api_note": {
+    "Orange Money API": "MOCKED - payments logged but not actually processed",
+    "Orange SMS API": "MOCKED"
+  },
+  "api_endpoints_tested": {
+    "auth_register_phone_only": {
+      "POST /api/auth/register (acheteur phone-only)": "PASS - Returns token and user",
+      "POST /api/auth/register (cooperative phone-only)": "PASS - Returns token and user",
+      "POST /api/auth/register (fournisseur phone-only)": "PASS - Returns token and user",
+      "POST /api/auth/register (producteur phone-only)": "PASS - Returns token and user",
+      "POST /api/auth/register (entreprise_rse phone-only)": "PASS - Returns token and user",
+      "POST /api/auth/register (empty email string)": "PASS - Converts to None, works"
+    },
+    "ussd_web_registration": {
+      "POST /api/ussd/register-web (basic)": "PASS - Returns code_planteur in GL-XXX-NNNNN format",
+      "POST /api/ussd/register-web (with coop_code)": "PASS - Uses coop prefix (GL-COO-XXXXX)",
+      "POST /api/ussd/register-web (village only)": "PASS - Uses village prefix (GL-ABE-XXXXX)"
+    },
+    "ussd_callback_registration": {
+      "POST /api/ussd/callback (registration flow)": "PASS - Shows code_planteur after confirmation"
+    },
+    "registrations_list": {
+      "GET /api/ussd/registrations": "PASS - Returns list with code_planteur field"
+    }
+  },
+  "frontend_features_verified": {
+    "homepage_hero_button": {
+      "button_text": "PASS - 'S'inscrire gratuitement' (NOT 'Inscription Planteur')",
+      "button_link": "PASS - Navigates to /register (NOT /farmer/inscription)",
+      "data_testid": "register-btn"
+    },
+    "register_page": {
+      "url": "/register",
+      "user_type_selection": "PASS - Shows Producteur, Acheteur, Entreprise RSE, Fournisseur, Cooperative",
+      "phone_or_email_toggle": "PASS - Can choose Telephone or Email"
+    },
+    "farmer_inscription_page": {
+      "url": "/farmer/inscription",
+      "cooperative_code_field": "PASS - Label: 'Code cooperative (si rattache)', Placeholder: 'Optionnel - ex: COOP-DAL'",
+      "auto_generation_note": "PASS - 'Votre code planteur sera genere automatiquement.'",
+      "no_code_planteur_input": "PASS - No input field for code_planteur (it's auto-generated)"
+    },
+    "cooperative_inscriptions_page": {
+      "url": "/cooperative/inscriptions",
+      "code_planteur_column": "PASS - Table has 'Code Planteur' column",
+      "code_format": "PASS - Shows GL-XXX-NNNNN format (e.g., GL-GAG-00001, GL-ABE-00001)"
+    },
+    "agent_terrain_inscriptions": {
+      "url": "/agent/terrain (Inscriptions tab)",
+      "cooperative_code_placeholder": "PASS - 'Code cooperative (optionnel)'"
+    }
+  }
+}
