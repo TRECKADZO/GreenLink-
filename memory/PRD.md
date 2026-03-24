@@ -193,26 +193,34 @@ Planteur compose *144*88# → Reconnu par telephone → Menu complet
 
 ### Phase 22 - Fix Activation Membre + PIN USSD (DONE - 24/03/2026)
 **Bug P0 corrige : Activation impossible pour les membres crees par cooperative**
-- Ajout du champ `pin_code` (4 chiffres) au modele `CoopMemberCreate`
-- Auto-generation `code_planteur` (GL-XXX-NNNNN) lors de la creation manuelle d'un membre par la coop
+- PIN USSD rendu OBLIGATOIRE (4 chiffres) lors de la creation d'un membre par la cooperative
+- Champ hectares (superficie approximative) ajoute au formulaire de creation
+- Auto-generation `code_planteur` (GL-XXX-NNNNN) lors de la creation manuelle
 - Hashage SHA256 du PIN et stockage dans `coop_members.pin_hash`
 - Creation automatique d'une entree `ussd_registrations` pour reconnaissance USSD
 - `activate_member_account` copie le `code_planteur` du `coop_members` vers le nouveau user
 - Import CSV mis a jour avec meme logique (code_planteur + PIN + ussd_registrations)
-- Endpoint `GET /api/cooperative/members` enrichi: retourne `code_planteur` et `pin_configured`
-- Frontend MembersPage.jsx: champ PIN dans le modal d'ajout, dialogue de succes avec code planteur
-- Frontend: affichage du code planteur (badge vert) dans la liste des membres
+- Widget de suivi d'activations dans le Dashboard cooperative (stats, barre de progression, liste en attente)
+- Bandeau stats d'activation dans la page Membres (5 cartes + barre de progression)
+- Bouton "Rappel SMS" (MOCKED) pour relancer les membres en attente d'activation
+- Endpoint `GET /api/cooperative/members/activation-stats`
+- Endpoint `POST /api/cooperative/members/{id}/send-reminder` (MOCKED SMS)
 
-**Flux complet valide :**
+**Flux metier valide (tel que defini par l'utilisateur) :**
 ```
-Cooperative cree membre (nom, tel, village, PIN) → code_planteur auto: GL-COO-00004
-    ↓
-Membre active son compte (tel + mot de passe) → user cree avec code_planteur
-    ↓
-Fermier compose *144*88# → Reconnu par telephone → Menu complet USSD
+Etape 1 - Creation par humain de confiance (Coop/Agent/Admin)
+  → Collecte: nom, telephone, village, code coop, PIN 4 chiffres, hectares
+  → Systeme genere: Code Planteur unique (GL-DAL-00001)
+  → Stockage: coop_members + ussd_registrations
+
+Etape 2 - Planteur compose *144*88#
+  → Choisit "1. Je suis deja inscrit"
+  → Systeme reconnait son numero automatiquement
+  → Acces menu: estimer prime, demander versement, parcelles, etc.
+  (USSD = utilisation, pas creation de compte)
 ```
 
-**Tests: 10/10 backend PASS, 100% frontend PASS (iteration 69)**
+**Tests: 12/12 backend PASS, 100% frontend PASS (iteration 70)**
 
 ## Backlog (P0-P3)
 - P1: Soumettre AAB au Google Play Console
