@@ -95,6 +95,21 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - Vérification mobile: tous les endpoints testés, aucune erreur de connexion
 - Build APK v1.51.0: https://expo.dev/artifacts/eas/58ndnox8s58XwDDk2aJcFT.apk
 - Build AAB v1.51.0 (versionCode 42): https://expo.dev/artifacts/eas/4b9kgy4hp8HahFNYD6osSv.aab
+### Phase 16 - Calcul Prime Carbone avec Taille des Arbres (DONE - 24/03/2026)
+- Categorisation des arbres par hauteur (equations allometriques AGB):
+  - Petits (< 8m): coefficient biomasse x0.3
+  - Moyens (8-12m): coefficient biomasse x0.7
+  - Grands (> 12m): coefficient biomasse x1.0
+- Formule: biomasse_ponderee = somme(nombre x coefficient), densite_ponderee = biomasse/ha
+- Score carbone recalcule avec seuils ponderes (5, 20, 50, 80 arbres ponderes/ha)
+- Bonus maturite: arbres grands contribuent + a la qualite de l'ombrage
+- Compatibilite ascendante: parcelles anciennes avec seul nombre_arbres traitees comme moyens
+- Recommandations intelligentes: "Favorisez les grands arbres" quand grands < 30%
+- API enrichie: arbre_categories (petits_lt_8m, moyens_8_12m, grands_gt_12m, biomasse_ponderee, coefficients)
+- Mobile: 3 inputs categorises + resume biomasse ponderee
+- Web: Visualisation categories (3 cartes + barre proportionnelle biomasse)
+- USSD *144*88#: 9 questions (ajout arbres moyens 8-12m separe)
+
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)
