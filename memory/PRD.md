@@ -191,6 +191,29 @@ Planteur compose *144*88# → Reconnu par telephone → Menu complet
 ## APIs Mockees
 - Orange SMS, Orange Money
 
+### Phase 22 - Fix Activation Membre + PIN USSD (DONE - 24/03/2026)
+**Bug P0 corrige : Activation impossible pour les membres crees par cooperative**
+- Ajout du champ `pin_code` (4 chiffres) au modele `CoopMemberCreate`
+- Auto-generation `code_planteur` (GL-XXX-NNNNN) lors de la creation manuelle d'un membre par la coop
+- Hashage SHA256 du PIN et stockage dans `coop_members.pin_hash`
+- Creation automatique d'une entree `ussd_registrations` pour reconnaissance USSD
+- `activate_member_account` copie le `code_planteur` du `coop_members` vers le nouveau user
+- Import CSV mis a jour avec meme logique (code_planteur + PIN + ussd_registrations)
+- Endpoint `GET /api/cooperative/members` enrichi: retourne `code_planteur` et `pin_configured`
+- Frontend MembersPage.jsx: champ PIN dans le modal d'ajout, dialogue de succes avec code planteur
+- Frontend: affichage du code planteur (badge vert) dans la liste des membres
+
+**Flux complet valide :**
+```
+Cooperative cree membre (nom, tel, village, PIN) → code_planteur auto: GL-COO-00004
+    ↓
+Membre active son compte (tel + mot de passe) → user cree avec code_planteur
+    ↓
+Fermier compose *144*88# → Reconnu par telephone → Menu complet USSD
+```
+
+**Tests: 10/10 backend PASS, 100% frontend PASS (iteration 69)**
+
 ## Backlog (P0-P3)
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
@@ -200,6 +223,9 @@ Planteur compose *144*88# → Reconnu par telephone → Menu complet
 
 ## Key API Endpoints
 - POST /api/auth/login | register
+- POST /api/auth/activate-member-account (Activation compte membre coop)
+- POST /api/auth/check-member-phone/{phone} (Verification telephone membre)
+- POST /api/cooperative/members (Creation membre avec code_planteur + PIN)
 - POST /api/ussd/callback (Main USSD webhook - session-based state machine)
 - POST /api/ussd/carbon-calculator (Stateless USSD calculator)
 - POST /api/ussd/calculate-premium (Homepage public calculator)
