@@ -222,6 +222,16 @@ Etape 2 - Planteur compose *144*88#
 
 **Tests: 12/12 backend PASS, 100% frontend PASS (iteration 70)**
 
+### Phase 23 - Export PDF/Excel + Nom Cooperative (DONE - 24/03/2026)
+- Export Excel (.xlsx) et PDF des membres depuis la page Gestion des Membres
+- Tableau avec: Nom, Telephone, Village, Departement, Code Planteur, Statut, Compte active, PIN USSD, Hectares, CNI, Date creation
+- Excel: en-tete avec nom cooperative et code, colonnes stylisees (vert #2D5A4D)
+- PDF: format paysage A4, tableau colore avec alternance de lignes
+- Les filtres actifs (statut, recherche) sont appliques a l'export
+- Navbar: affiche le nom de la cooperative (coop_name) au lieu du nom personnel (full_name) quand une cooperative est connectee (desktop, dropdown, mobile)
+- Endpoint: `GET /api/cooperative/members/export?format=xlsx|pdf&status=xxx&search=xxx`
+**Tests: 11/11 backend PASS, 100% frontend PASS (iteration 71)**
+
 ## Backlog (P0-P3)
 - P1: Soumettre AAB au Google Play Console
 - P2: Passerelle SMS Orange (remplacer mock)
