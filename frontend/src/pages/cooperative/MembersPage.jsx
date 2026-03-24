@@ -40,9 +40,11 @@ const MembersPage = () => {
     department: '',
     zone: '',
     cni_number: '',
-    consent_given: true
+    consent_given: true,
+    pin_code: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [createdMemberInfo, setCreatedMemberInfo] = useState(null);
 
   // Liste des 51 départements de Côte d'Ivoire
   const DEPARTEMENTS = [
@@ -136,11 +138,20 @@ const MembersPage = () => {
 
   const handleAddMember = async (e) => {
     e.preventDefault();
+    if (newMember.pin_code && (newMember.pin_code.length !== 4 || !/^\d{4}$/.test(newMember.pin_code))) {
+      toast.error('Le code PIN doit être exactement 4 chiffres');
+      return;
+    }
     setSubmitting(true);
     try {
-      await cooperativeApi.createMember(newMember);
-      toast.success('Membre ajouté avec succès');
+      const result = await cooperativeApi.createMember(newMember);
       setShowAddModal(false);
+      setCreatedMemberInfo({
+        name: newMember.full_name,
+        phone: newMember.phone_number,
+        code_planteur: result.code_planteur,
+        pin_configured: result.pin_configured
+      });
       setNewMember({
         full_name: '',
         phone_number: '',
@@ -148,9 +159,11 @@ const MembersPage = () => {
         department: '',
         zone: '',
         cni_number: '',
-        consent_given: true
+        consent_given: true,
+        pin_code: ''
       });
       fetchMembers();
+      toast.success('Membre ajouté avec succès');
     } catch (error) {
       console.error('Error adding member:', error);
       toast.error(error.response?.data?.detail || 'Erreur lors de l\'ajout du membre');
@@ -290,7 +303,7 @@ const MembersPage = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900">{member.full_name}</h3>
-                        <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <div className="flex items-center gap-3 text-sm text-gray-500 flex-wrap">
                           <span className="flex items-center">
                             <Phone className="h-3 w-3 mr-1" />
                             {member.phone_number}
@@ -299,6 +312,11 @@ const MembersPage = () => {
                             <MapPin className="h-3 w-3 mr-1" />
                             {member.village}
                           </span>
+                          {member.code_planteur && (
+                            <span className="text-green-700 font-mono text-xs bg-green-50 px-1.5 py-0.5 rounded">
+                              {member.code_planteur}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -470,6 +488,24 @@ const MembersPage = () => {
                   Le membre consent à l'enregistrement de ses données
                 </Label>
               </div>
+              <div>
+                <Label htmlFor="pin_code">Code PIN USSD (4 chiffres)</Label>
+                <Input
+                  id="pin_code"
+                  type="password"
+                  maxLength={4}
+                  value={newMember.pin_code}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    setNewMember({...newMember, pin_code: v});
+                  }}
+                  placeholder="Ex: 1234"
+                  data-testid="member-pin-input"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Ce PIN permettra au planteur d'utiliser le service USSD *144*88#
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
@@ -480,6 +516,50 @@ const MembersPage = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Created Member Success Dialog */}
+      <Dialog open={!!createdMemberInfo} onOpenChange={() => setCreatedMemberInfo(null)}>
+        <DialogContent data-testid="member-created-success-modal">
+          <DialogHeader>
+            <DialogTitle className="text-green-700 flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" /> Membre enregistré avec succès
+            </DialogTitle>
+          </DialogHeader>
+          {createdMemberInfo && (
+            <div className="space-y-4 py-2">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                <p className="text-sm text-gray-600 mb-1">Code Planteur</p>
+                <p className="text-2xl font-bold text-green-800 tracking-wider" data-testid="created-member-code">
+                  {createdMemberInfo.code_planteur}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">Conservez ce code, il identifie le planteur</p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <p><span className="font-medium">Nom :</span> {createdMemberInfo.name}</p>
+                <p><span className="font-medium">Téléphone :</span> {createdMemberInfo.phone}</p>
+                <p>
+                  <span className="font-medium">PIN USSD :</span>{' '}
+                  {createdMemberInfo.pin_configured ? (
+                    <Badge variant="outline" className="text-green-700 border-green-300">Configuré</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-orange-700 border-orange-300">Non configuré</Badge>
+                  )}
+                </p>
+              </div>
+              {!createdMemberInfo.pin_configured && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                  Le planteur devra configurer son PIN lors de sa première connexion USSD (*144*88#).
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setCreatedMemberInfo(null)} data-testid="close-success-modal-btn">
+              Fermer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

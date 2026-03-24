@@ -5,16 +5,22 @@ GreenLink Agritech - Côte d'Ivoire
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
+import hashlib
 import logging
 
 from database import db
 from routes.auth import get_current_user
 from routes.cooperative import verify_cooperative, coop_id_query, CoopMemberCreate
+from routes.ussd import generate_farmer_code
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/cooperative", tags=["Cooperative Members"])
+
+
+def hash_pin(pin: str) -> str:
+    return hashlib.sha256(pin.encode()).hexdigest()
 
 
 @router.get("/members")
@@ -67,7 +73,9 @@ async def get_coop_members(
             "cni_number": m.get("cni_number", ""),
             "status": m.get("status", "active"),
             "is_active": m.get("is_active", True),
-            "created_at": m.get("created_at", datetime.utcnow()).isoformat() if isinstance(m.get("created_at"), datetime) else str(m.get("created_at", ""))
+            "code_planteur": m.get("code_planteur", ""),
+            "pin_configured": bool(m.get("pin_hash")),
+            "created_at": m.get("created_at", datetime.now(timezone.utc)).isoformat() if isinstance(m.get("created_at"), datetime) else str(m.get("created_at", ""))
         }
         
         # Get member's parcels by member_id AND user_id
@@ -94,7 +102,7 @@ async def create_coop_member(
     member: CoopMemberCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    """Ajouter un nouveau membre à la coopérative"""
+    """Ajouter un nouveau membre à la coopérative avec code planteur et PIN USSD"""
     verify_cooperative(current_user)
     coop_id = str(current_user["_id"])
     
@@ -106,6 +114,17 @@ async def create_coop_member(
     if existing:
         raise HTTPException(status_code=400, detail="Ce membre existe déjà dans la coopérative")
     
+    # Validate PIN code if provided
+    pin_hash = None
+    if member.pin_code:
+        if len(member.pin_code) != 4 or not member.pin_code.isdigit():
+            raise HTTPException(status_code=400, detail="Le code PIN doit être exactement 4 chiffres")
+        pin_hash = hash_pin(member.pin_code)
+    
+    # Auto-generate Code Planteur
+    coop_code = current_user.get("coop_code", "")
+    farmer_code = await generate_farmer_code(coop_code, member.village)
+    
     member_doc = {
         "coop_id": coop_id,
         "full_name": member.full_name,
@@ -115,21 +134,43 @@ async def create_coop_member(
         "zone": member.zone,
         "cni_number": member.cni_number,
         "consent_given": member.consent_given,
-        "consent_date": datetime.utcnow() if member.consent_given else None,
+        "consent_date": datetime.now(timezone.utc) if member.consent_given else None,
         "status": "pending_validation",
         "is_active": True,
         "user_id": None,
-        "created_at": datetime.utcnow(),
+        "code_planteur": farmer_code,
+        "pin_hash": pin_hash,
+        "created_at": datetime.now(timezone.utc),
         "created_by": current_user["_id"]
     }
     
     result = await db.coop_members.insert_one(member_doc)
     
-    logger.info(f"New coop member created: {member.full_name} for coop {coop_id}")
+    # Also create a ussd_registrations entry so USSD recognizes this farmer
+    ussd_reg = {
+        "full_name": member.full_name,
+        "nom_complet": member.full_name,
+        "phone_number": member.phone_number,
+        "coop_code": coop_code,
+        "cooperative_code": coop_code,
+        "code_planteur": farmer_code,
+        "village": member.village,
+        "pin_hash": pin_hash,
+        "user_type": "producteur",
+        "registered_via": "cooperative_dashboard",
+        "status": "active",
+        "coop_member_id": str(result.inserted_id),
+        "created_at": datetime.now(timezone.utc)
+    }
+    await db.ussd_registrations.insert_one(ussd_reg)
+    
+    logger.info(f"New coop member created: {member.full_name} for coop {coop_id}, code: {farmer_code}")
     
     return {
         "message": "Membre ajouté avec succès",
-        "member_id": str(result.inserted_id)
+        "member_id": str(result.inserted_id),
+        "code_planteur": farmer_code,
+        "pin_configured": pin_hash is not None
     }
 
 @router.post("/members/import-csv")
@@ -139,7 +180,8 @@ async def import_members_csv(
 ):
     """Import massif de membres via CSV"""
     verify_cooperative(current_user)
-    coop_id = current_user["_id"]
+    coop_id = str(current_user["_id"])
+    coop_code = current_user.get("coop_code", "")
     
     imported = 0
     errors = []
@@ -147,12 +189,20 @@ async def import_members_csv(
     for idx, member in enumerate(members_data):
         try:
             existing = await db.coop_members.find_one({
-                "coop_id": coop_id,
+                **coop_id_query(coop_id),
                 "phone_number": member.phone_number
             })
             if existing:
                 errors.append(f"Ligne {idx+1}: {member.phone_number} existe déjà")
                 continue
+            
+            # Auto-generate code planteur
+            farmer_code = await generate_farmer_code(coop_code, member.village)
+            
+            # Hash PIN if provided
+            pin_hash = None
+            if member.pin_code and len(member.pin_code) == 4 and member.pin_code.isdigit():
+                pin_hash = hash_pin(member.pin_code)
             
             member_doc = {
                 "coop_id": coop_id,
@@ -161,14 +211,33 @@ async def import_members_csv(
                 "village": member.village,
                 "cni_number": member.cni_number,
                 "consent_given": member.consent_given,
+                "code_planteur": farmer_code,
+                "pin_hash": pin_hash,
                 "status": "pending_validation",
                 "is_active": True,
-                "created_at": datetime.utcnow(),
+                "created_at": datetime.now(timezone.utc),
                 "created_by": current_user["_id"],
                 "import_batch": True
             }
             
-            await db.coop_members.insert_one(member_doc)
+            result = await db.coop_members.insert_one(member_doc)
+            
+            # Create USSD registration entry
+            await db.ussd_registrations.insert_one({
+                "full_name": member.full_name,
+                "nom_complet": member.full_name,
+                "phone_number": member.phone_number,
+                "coop_code": coop_code,
+                "code_planteur": farmer_code,
+                "village": member.village,
+                "pin_hash": pin_hash,
+                "user_type": "producteur",
+                "registered_via": "csv_import",
+                "status": "active",
+                "coop_member_id": str(result.inserted_id),
+                "created_at": datetime.now(timezone.utc)
+            })
+            
             imported += 1
             
         except Exception as e:
@@ -245,6 +314,8 @@ async def get_member_details(
         "status": member.get("status", ""),
         "is_active": member.get("is_active", True),
         "consent_given": member.get("consent_given", False),
+        "code_planteur": member.get("code_planteur", ""),
+        "pin_configured": bool(member.get("pin_hash")),
         "created_at": member.get("created_at", ""),
         "parcels": [{
             "id": str(p["_id"]),

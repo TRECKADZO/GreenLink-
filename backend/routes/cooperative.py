@@ -36,6 +36,7 @@ class CoopMemberCreate(BaseModel):
     zone: Optional[str] = None
     cni_number: Optional[str] = None
     consent_given: bool = True
+    pin_code: Optional[str] = None  # Code PIN 4 chiffres pour USSD
 
 class CoopMemberUpdate(BaseModel):
     full_name: Optional[str] = None

@@ -895,6 +895,8 @@ async def activate_member_account(request: MemberActivationRequest):
         "cooperative_id": str(member.get("coop_id")),
         "cooperative_name": coop_name,
         "coop_member_id": str(member.get("_id")),
+        # Code planteur auto-généré
+        "code_planteur": member.get("code_planteur"),
         # Données ICI si présentes
         "genre": member.get("genre"),
         "date_naissance": member.get("date_naissance"),
