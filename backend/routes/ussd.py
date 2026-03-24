@@ -388,7 +388,7 @@ SMS gratuit au 1234:
                         response_text = f"""DEMANDE ENREGISTREE
 
 Montant planteur: {format_xof(result['farmer_amount'])}
-Commission coop (10%): {format_xof(result['coop_commission'])}
+Commission coop: {format_xof(result['coop_commission'])}
 
 Votre demande est envoyee
 au Super Admin pour validation.

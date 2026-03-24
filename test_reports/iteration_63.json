@@ -1,0 +1,133 @@
+{
+  "summary": "Iteration 63 - RSE Formula Implementation Testing. All 13 backend tests passed. Frontend verified: Admin sees full RSE breakdown (FORMULE RSE CONFIDENTIELLE banner, 30% Frais, 70% Distribue: 25% GreenLink, 5% Coop, 70% Paysan), Config dialog allows rate change. Cooperative page correctly shows 5% commission (not 10%) and hides RSE formula. Farmer page hides RSE details, shows only their amount. Orange Money payments are MOCKED.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_rse_formula_iteration63.py",
+    "/app/test_reports/pytest/pytest_rse_formula_iteration63.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "GET /api/admin/carbon-premiums/config returns repartition with frais_pct=30, greenlink_pct=25, cooperative_pct=5, paysan_pct=70 and taux_par_hectare",
+    "PUT /api/admin/carbon-premiums/config/rate allows Super Admin to change taux_par_hectare",
+    "GET /api/admin/carbon-premiums/stats returns full RSE breakdown: total_rse, total_frais, total_greenlink, total_paye_planteurs, total_paye_cooperatives, taux_actuel",
+    "GET /api/admin/carbon-premiums/requests returns requests with rse_total, frais, greenlink_share, taux_par_hectare visible to Admin",
+    "GET /api/farmer/carbon-premiums/my-requests does NOT expose rse_total, frais, greenlink_share, taux_par_hectare (only farmer_amount)",
+    "GET /api/cooperative/carbon-premiums/admin-requests does NOT expose rse_total, frais, greenlink_share, taux_par_hectare (only farmer_amount and coop_commission)",
+    "GET /api/cooperative/carbon-premiums/members does NOT expose rate_per_hectare in summary",
+    "POST /api/ussd/callback (menu 2*1) creates request with RSE formula stored in DB but USSD response shows only farmer amount (no percentage breakdown)",
+    "Frontend Admin CarbonPremiumsManagement.jsx shows 'FORMULE RSE (CONFIDENTIELLE)' banner with full breakdown",
+    "Frontend Admin Config dialog allows changing taux_par_hectare with formula preview",
+    "Frontend Admin Financial breakdown shows RSE Total, Frais 30%, GreenLink 25%, Cooperatives 5%, Paysans 70%",
+    "Frontend Coop CarbonPremiumsPage.jsx shows only 2 columns (Part planteur + Commission coop), no RSE total",
+    "Frontend Coop banner says 'Votre cooperative recoit automatiquement 5% de commission' (not 10%)",
+    "Frontend Farmer CarbonScorePage.jsx shows only farmer_amount, no RSE formula details"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_rse_formula_iteration63.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "admin": {
+      "identifier": "klenakan.eric@gmail.com",
+      "password": "474Treckadzo",
+      "user_type": "admin"
+    },
+    "cooperative": {
+      "identifier": "bielaghana@gmail.com",
+      "password": "474Treckadzo",
+      "user_type": "cooperative"
+    },
+    "farmer": {
+      "identifier": "+2250705551234",
+      "password": "koffi2024",
+      "user_type": "producteur"
+    },
+    "ussd_test_phone": "+2250799999999"
+  },
+  "seed_data_creation": "No new seed data created. Tested with existing payment requests.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "RSE Formula implementation complete. Formula: RSE = score x taux_XOF x hectares. Repartition: 30% frais, 70% distribue (25% GreenLink, 5% Coop, 70% Paysan). Rate is stored in carbon_config collection (key='premium_rate'). Admin sees full breakdown, Coop/Farmer see only their amounts. Math verified: For score=7.5, area=3ha, taux=5000: RSE=112,500, frais=33,750, distributable=78,750, greenlink=19,688, coop=3,938, farmer=55,124. Orange Money payments are MOCKED.",
+  "mocked_api_note": {
+    "Orange Money API": "MOCKED - payments logged but not actually processed",
+    "Orange SMS API": "MOCKED"
+  },
+  "api_endpoints_tested": {
+    "config": {
+      "GET /api/admin/carbon-premiums/config": "PASS - Returns repartition with frais_pct=30, greenlink_pct=25, cooperative_pct=5, paysan_pct=70, taux_par_hectare",
+      "PUT /api/admin/carbon-premiums/config/rate": "PASS - Updates taux_par_hectare, rejects invalid values (0, negative)"
+    },
+    "stats": {
+      "GET /api/admin/carbon-premiums/stats": "PASS - Returns total_rse, total_frais, total_greenlink, total_paye_planteurs, total_paye_cooperatives, taux_actuel"
+    },
+    "admin_requests": {
+      "GET /api/admin/carbon-premiums/requests": "PASS - Returns rse_total, frais, greenlink_share, taux_par_hectare"
+    },
+    "farmer_confidentiality": {
+      "GET /api/farmer/carbon-premiums/my-requests": "PASS - Does NOT expose rse_total, frais, greenlink_share, taux_par_hectare"
+    },
+    "coop_confidentiality": {
+      "GET /api/cooperative/carbon-premiums/admin-requests": "PASS - Does NOT expose rse_total, frais, greenlink_share, taux_par_hectare",
+      "GET /api/cooperative/carbon-premiums/members": "PASS - Does NOT expose rate_per_hectare in summary"
+    },
+    "ussd": {
+      "POST /api/ussd/callback (text=2*1)": "PASS - Response does NOT show percentage breakdown"
+    },
+    "math_verification": {
+      "RSE formula math": "PASS - 30% frais, 70% distributable, 25% greenlink, 5% coop, 70% farmer verified"
+    }
+  },
+  "frontend_features_verified": {
+    "admin_carbon_premiums_page": {
+      "url": "/admin/carbon-premiums",
+      "rse_formula_banner": "PASS - Shows 'FORMULE RSE (CONFIDENTIELLE)' with RSE = Score x 5000 XOF x Hectares",
+      "percentage_badges": "PASS - Shows 30% Frais | 70% Distribue : 25% GreenLink, 5% Coop, 70% Paysan",
+      "financial_breakdown_cards": "PASS - Shows RSE Total, Frais (30%), GreenLink (25%), Cooperatives (5%), Paysans (70%)",
+      "config_button": "PASS - Opens dialog to change taux_par_hectare",
+      "config_dialog": "PASS - Shows repartition summary and formula preview"
+    },
+    "coop_carbon_premiums_page": {
+      "url": "/cooperative/carbon-premiums",
+      "rse_formula_hidden": "PASS - No FORMULE RSE banner",
+      "commission_5_percent": "PASS - Shows 'Commission coop (5%)' and '5% de commission'",
+      "columns_visible": "PASS - Shows Part planteur and Commission coop only",
+      "rse_details_hidden": "PASS - No RSE Total, no GreenLink share, no taux_par_hectare"
+    },
+    "farmer_carbon_score_page": {
+      "url": "/farmer/carbon-score",
+      "rse_formula_hidden": "PASS - No FORMULE RSE banner",
+      "farmer_amount_visible": "PASS - Shows XOF amounts",
+      "rse_details_hidden": "PASS - No RSE Total, no frais, no GreenLink share"
+    }
+  },
+  "rse_formula_verification": {
+    "formula": "RSE = score x taux_XOF x hectares",
+    "repartition": {
+      "frais": "30%",
+      "distributable": "70%",
+      "greenlink_of_distributable": "25%",
+      "coop_of_distributable": "5%",
+      "farmer_of_distributable": "70%"
+    },
+    "example_calculation": {
+      "inputs": "score=7.5, area=3ha, taux=5000",
+      "rse_total": 112500,
+      "frais": 33750,
+      "distributable": 78750,
+      "greenlink": 19688,
+      "coop": 3938,
+      "farmer": 55124
+    }
+  }
+}

@@ -1,6 +1,14 @@
 """
 Routes pour la Gestion des Primes Carbone - Super Admin
 Flux: Verification terrain -> Admissibilite -> Demande USSD -> Validation Admin -> Paiement Orange Money
+
+FORMULE RSE (CONFIDENTIELLE - Super Admin uniquement):
+RSE_total = score_carbone x taux_par_hectare x hectares
+- 30% -> Frais
+- 70% distribue:
+  - 25% -> GreenLink
+  - 5%  -> Cooperative
+  - 70% -> Paysan
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query
@@ -18,10 +26,42 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/admin/carbon-premiums", tags=["carbon-premiums"])
 
-# Configuration
+# Configuration par defaut (surchargee par la DB)
 ADMISSIBILITY_THRESHOLD = 6.0
-PREMIUM_RATE_PER_SCORE_PER_HA = 5000  # XOF per score point per hectare
-COOP_COMMISSION_RATE = 0.10  # 10%
+DEFAULT_RATE_PER_HA = 5000  # XOF, modifiable par Super Admin
+
+# Repartition RSE (confidentielle)
+FRAIS_RATE = 0.30          # 30% frais
+DISTRIBUTABLE_RATE = 0.70  # 70% distribue
+GREENLINK_SHARE = 0.25     # 25% du distribue -> GreenLink
+COOP_SHARE = 0.05          # 5% du distribue -> Cooperative
+FARMER_SHARE = 0.70        # 70% du distribue -> Paysan
+
+
+async def get_current_rate():
+    """Get the current taux_par_hectare from DB (set by Super Admin)."""
+    config = await db.carbon_config.find_one({"key": "premium_rate"})
+    if config:
+        return config.get("taux_par_hectare", DEFAULT_RATE_PER_HA)
+    return DEFAULT_RATE_PER_HA
+
+
+def calculate_premium_breakdown(score: float, area: float, taux: float):
+    """Calculate the full RSE breakdown for a parcel."""
+    rse_total = round(score * taux * area)
+    frais = round(rse_total * FRAIS_RATE)
+    distributable = rse_total - frais
+    greenlink = round(distributable * GREENLINK_SHARE)
+    coop = round(distributable * COOP_SHARE)
+    farmer = distributable - greenlink - coop  # remainder to farmer to avoid rounding issues
+    return {
+        "rse_total": rse_total,
+        "frais": frais,
+        "distributable": distributable,
+        "greenlink": greenlink,
+        "coop": coop,
+        "farmer": farmer
+    }
 
 
 def verify_admin(user: dict):
@@ -37,24 +77,29 @@ async def check_and_set_admissibility(parcel_id: str, carbon_score: float, farme
     is_admissible = carbon_score >= ADMISSIBILITY_THRESHOLD
     status = "admissible" if is_admissible else "non_admissible"
     
-    # Calculate potential premium
-    prime_estimee = round(carbon_score * PREMIUM_RATE_PER_SCORE_PER_HA * area_hectares) if is_admissible else 0
+    # Calculate farmer share only (formula hidden from farmer)
+    taux = await get_current_rate()
+    if is_admissible:
+        breakdown = calculate_premium_breakdown(carbon_score, area_hectares, taux)
+        prime_farmer = breakdown["farmer"]
+    else:
+        prime_farmer = 0
     
     await db.parcels.update_one(
         {"_id": ObjectId(parcel_id)},
         {"$set": {
             "admissibilite_prime": status,
-            "prime_estimee": prime_estimee,
+            "prime_estimee": prime_farmer,
             "admissibilite_date": datetime.utcnow()
         }}
     )
     
-    # Notify farmer
+    # Notify farmer (only show their share, no formula details)
     if is_admissible:
         notif = {
             "user_id": farmer_id,
             "title": "Prime Carbone - Admissible",
-            "message": f"Votre parcelle est admissible a la prime carbone (score {carbon_score}/10). Prime estimee: {prime_estimee:,.0f} XOF. Faites votre demande via *144*88#",
+            "message": f"Votre parcelle est admissible a la prime carbone (score {carbon_score}/10). Prime estimee: {prime_farmer:,.0f} XOF. Faites votre demande via *123*45#",
             "type": "carbon_admissible",
             "action_url": "/farmer/carbon-score",
             "created_at": datetime.utcnow(),
@@ -82,7 +127,7 @@ async def check_and_set_admissibility(parcel_id: str, carbon_score: float, farme
         "created_at": notif["created_at"].isoformat()
     })
     
-    return {"admissible": is_admissible, "prime_estimee": prime_estimee}
+    return {"admissible": is_admissible, "prime_estimee": prime_farmer}
 
 
 # ============= USSD PAYMENT REQUEST =============
@@ -114,24 +159,33 @@ async def create_ussd_payment_request(phone_number: str):
     if existing:
         return {"success": False, "message": "Vous avez deja une demande en cours de traitement"}
     
-    # Calculate total premium
-    total_premium = 0
+    # Calculate premium using RSE formula
+    taux = await get_current_rate()
+    total_rse = 0
+    total_frais = 0
+    total_greenlink = 0
+    total_coop = 0
+    total_farmer = 0
     parcels_detail = []
     for p in admissible_parcels:
         score = p.get("carbon_score", 0)
         area = p.get("area_hectares", 0)
-        prime = round(score * PREMIUM_RATE_PER_SCORE_PER_HA * area)
-        total_premium += prime
+        bd = calculate_premium_breakdown(score, area, taux)
+        total_rse += bd["rse_total"]
+        total_frais += bd["frais"]
+        total_greenlink += bd["greenlink"]
+        total_coop += bd["coop"]
+        total_farmer += bd["farmer"]
         parcels_detail.append({
             "parcel_id": str(p["_id"]),
             "village": p.get("village", p.get("location", "")),
             "area_hectares": area,
             "carbon_score": score,
-            "prime": prime
+            "prime": bd["farmer"]  # farmer sees only their share
         })
     
-    coop_commission = round(total_premium * COOP_COMMISSION_RATE)
-    farmer_amount = total_premium - coop_commission
+    coop_commission = total_coop
+    farmer_amount = total_farmer
     
     # Get cooperative info
     coop_id = user.get("cooperative_id", "")
@@ -143,7 +197,7 @@ async def create_ussd_payment_request(phone_number: str):
             coop_name = coop.get("full_name", coop.get("cooperative_name", ""))
             coop_phone = coop.get("phone_number", "")
     
-    # Create payment request
+    # Create payment request (stores full breakdown for Admin, farmer/coop only see their share)
     request_doc = {
         "farmer_id": farmer_id,
         "farmer_name": farmer_name,
@@ -155,9 +209,14 @@ async def create_ussd_payment_request(phone_number: str):
         "parcels_count": len(parcels_detail),
         "total_area_hectares": round(sum(p["area_hectares"] for p in parcels_detail), 2),
         "average_carbon_score": round(sum(p["carbon_score"] for p in parcels_detail) / len(parcels_detail), 1),
-        "total_premium": total_premium,
+        # Full RSE breakdown (Super Admin only)
+        "rse_total": total_rse,
+        "frais": total_frais,
+        "greenlink_share": total_greenlink,
+        "taux_par_hectare": taux,
+        # Visible shares
+        "total_premium": total_rse,
         "coop_commission": coop_commission,
-        "coop_commission_rate": COOP_COMMISSION_RATE,
         "farmer_amount": farmer_amount,
         "status": "pending",
         "requested_at": datetime.utcnow(),
@@ -194,8 +253,7 @@ async def create_ussd_payment_request(phone_number: str):
         "request_id": str(result.inserted_id),
         "message": f"Demande enregistree. Montant: {farmer_amount:,.0f} XOF. En attente de validation.",
         "farmer_amount": farmer_amount,
-        "coop_commission": coop_commission,
-        "total_premium": total_premium
+        "coop_commission": coop_commission
     }
 
 
@@ -229,9 +287,7 @@ async def get_my_premium_requests(current_user: dict = Depends(get_current_user)
         "requests": [{
             "id": str(r["_id"]),
             "status": r.get("status", ""),
-            "total_premium": r.get("total_premium", 0),
             "farmer_amount": r.get("farmer_amount", 0),
-            "coop_commission": r.get("coop_commission", 0),
             "parcels_count": r.get("parcels_count", 0),
             "average_carbon_score": r.get("average_carbon_score", 0),
             "requested_at": r["requested_at"].isoformat() if isinstance(r.get("requested_at"), datetime) else str(r.get("requested_at", "")),
@@ -248,14 +304,49 @@ async def get_my_premium_requests(current_user: dict = Depends(get_current_user)
 
 @router.get("/config")
 async def get_carbon_premium_config(current_user: dict = Depends(get_current_user)):
-    """Get current carbon premium configuration."""
+    """Get current carbon premium configuration (Super Admin only)."""
     verify_admin(current_user)
+    taux = await get_current_rate()
     return {
         "admissibility_threshold": ADMISSIBILITY_THRESHOLD,
-        "premium_rate_per_score_per_ha": PREMIUM_RATE_PER_SCORE_PER_HA,
-        "coop_commission_rate": COOP_COMMISSION_RATE,
-        "formula": "prime = score_carbone x 5,000 XOF x hectares"
+        "taux_par_hectare": taux,
+        "repartition": {
+            "frais_pct": FRAIS_RATE * 100,
+            "distributable_pct": DISTRIBUTABLE_RATE * 100,
+            "greenlink_pct": GREENLINK_SHARE * 100,
+            "cooperative_pct": COOP_SHARE * 100,
+            "paysan_pct": FARMER_SHARE * 100,
+        },
+        "formula": f"RSE = score x {taux:,.0f} XOF x hectares | 30% frais, 70% distribue (25% GreenLink, 5% Coop, 70% Paysan)"
     }
+
+
+class UpdateRateRequest(BaseModel):
+    taux_par_hectare: float
+
+
+@router.put("/config/rate")
+async def update_premium_rate(
+    data: UpdateRateRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update the taux_par_hectare (Super Admin only)."""
+    verify_admin(current_user)
+    if data.taux_par_hectare <= 0:
+        raise HTTPException(status_code=400, detail="Le taux doit etre positif")
+
+    await db.carbon_config.update_one(
+        {"key": "premium_rate"},
+        {"$set": {
+            "taux_par_hectare": data.taux_par_hectare,
+            "updated_at": datetime.utcnow(),
+            "updated_by": str(current_user["_id"]),
+            "updated_by_name": current_user.get("full_name", "Admin")
+        }},
+        upsert=True
+    )
+    logger.info(f"[CONFIG] Taux mis a jour: {data.taux_par_hectare} XOF par score/ha par {current_user.get('full_name')}")
+    return {"message": f"Taux mis a jour: {data.taux_par_hectare:,.0f} XOF/score/ha", "taux_par_hectare": data.taux_par_hectare}
 
 
 @router.get("/stats")
@@ -270,20 +361,29 @@ async def get_carbon_premium_stats(current_user: dict = Depends(get_current_user
     
     total_paid_farmers = sum(r.get("farmer_amount", 0) for r in paid_requests)
     total_paid_coops = sum(r.get("coop_commission", 0) for r in paid_requests)
+    total_greenlink = sum(r.get("greenlink_share", 0) for r in paid_requests)
+    total_frais = sum(r.get("frais", 0) for r in paid_requests)
+    total_rse = sum(r.get("rse_total", 0) for r in paid_requests)
     
     admissible_parcels = await db.parcels.count_documents({"admissibilite_prime": "admissible"})
     non_admissible = await db.parcels.count_documents({"admissibilite_prime": "non_admissible"})
+    
+    taux = await get_current_rate()
     
     return {
         "demandes_en_attente": pending,
         "demandes_approuvees": approved,
         "demandes_payees": len(paid_requests),
         "demandes_rejetees": rejected,
+        "total_rse": total_rse,
+        "total_frais": total_frais,
+        "total_greenlink": total_greenlink,
         "total_paye_planteurs": total_paid_farmers,
         "total_paye_cooperatives": total_paid_coops,
-        "total_distribue": total_paid_farmers + total_paid_coops,
+        "total_distribue": total_paid_farmers + total_paid_coops + total_greenlink,
         "parcelles_admissibles": admissible_parcels,
         "parcelles_non_admissibles": non_admissible,
+        "taux_actuel": taux,
     }
 
 
@@ -314,7 +414,12 @@ async def get_payment_requests(
             "parcels_count": r.get("parcels_count", 0),
             "total_area_hectares": r.get("total_area_hectares", 0),
             "average_carbon_score": r.get("average_carbon_score", 0),
-            "total_premium": r.get("total_premium", 0),
+            # Full RSE breakdown (Admin only)
+            "rse_total": r.get("rse_total", r.get("total_premium", 0)),
+            "frais": r.get("frais", 0),
+            "greenlink_share": r.get("greenlink_share", 0),
+            "taux_par_hectare": r.get("taux_par_hectare", 0),
+            "total_premium": r.get("rse_total", r.get("total_premium", 0)),
             "coop_commission": r.get("coop_commission", 0),
             "farmer_amount": r.get("farmer_amount", 0),
             "status": r.get("status", ""),
@@ -352,9 +457,13 @@ async def get_payment_request_detail(
         "parcels_count": req.get("parcels_count", 0),
         "total_area_hectares": req.get("total_area_hectares", 0),
         "average_carbon_score": req.get("average_carbon_score", 0),
-        "total_premium": req.get("total_premium", 0),
+        # Full RSE breakdown (Admin only)
+        "rse_total": req.get("rse_total", req.get("total_premium", 0)),
+        "frais": req.get("frais", 0),
+        "greenlink_share": req.get("greenlink_share", 0),
+        "taux_par_hectare": req.get("taux_par_hectare", 0),
+        "total_premium": req.get("rse_total", req.get("total_premium", 0)),
         "coop_commission": req.get("coop_commission", 0),
-        "coop_commission_rate": req.get("coop_commission_rate", 0),
         "farmer_amount": req.get("farmer_amount", 0),
         "status": req.get("status", ""),
         "requested_at": req["requested_at"].isoformat() if isinstance(req.get("requested_at"), datetime) else str(req.get("requested_at", "")),

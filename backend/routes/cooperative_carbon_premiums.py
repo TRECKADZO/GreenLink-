@@ -37,11 +37,13 @@ async def get_members_carbon_premiums(
     
     members = await db.coop_members.find(coop_id_query(coop_id)).to_list(1000)
     
-    RATE_PER_HECTARE = 50000
-    MIN_SCORE = 6.0
+    # Get dynamic rate from carbon_config
+    from routes.carbon_premiums import get_current_rate, calculate_premium_breakdown, ADMISSIBILITY_THRESHOLD
+    taux = await get_current_rate()
+    MIN_SCORE = ADMISSIBILITY_THRESHOLD
     
     premium_data = []
-    total_premium = 0
+    total_farmer_premium = 0
     total_eligible_hectares = 0
     
     for member in members:
@@ -56,16 +58,14 @@ async def get_members_carbon_premiums(
         
         member_total_area = 0
         member_avg_score = 0
-        member_premium = 0
+        member_farmer_premium = 0
         audited_parcels = 0
-        parcels_detail = []
         
         for parcel in parcels:
-            parcel_id = str(parcel["_id"])
             area = parcel.get("area_hectares", 0)
             
             audit = await db.carbon_audits.find_one({
-                "parcel_id": parcel_id,
+                "parcel_id": str(parcel["_id"]),
                 "recommendation": "approved"
             })
             
@@ -73,23 +73,11 @@ async def get_members_carbon_premiums(
                 carbon_score = audit.get("carbon_score", 0)
                 
                 if carbon_score >= MIN_SCORE:
-                    parcel_premium = area * RATE_PER_HECTARE * (carbon_score / 10)
-                    
-                    if carbon_score >= 8:
-                        parcel_premium *= 1.2
-                    
-                    member_premium += parcel_premium
+                    bd = calculate_premium_breakdown(carbon_score, area, taux)
+                    member_farmer_premium += bd["farmer"]
                     member_total_area += area
                     member_avg_score += carbon_score
                     audited_parcels += 1
-                    
-                    parcels_detail.append({
-                        "parcel_id": parcel_id,
-                        "location": parcel.get("location"),
-                        "area_hectares": area,
-                        "carbon_score": carbon_score,
-                        "premium_xof": round(parcel_premium)
-                    })
         
         if audited_parcels > 0:
             member_avg_score = round(member_avg_score / audited_parcels, 1)
@@ -102,13 +90,12 @@ async def get_members_carbon_premiums(
             "superficie_totale": round(member_total_area, 2),
             "average_score": member_avg_score,
             "audited_parcels": audited_parcels,
-            "premium_xof": round(member_premium),
-            "premium_eur": round(member_premium / 655.957, 2),
-            "parcels": parcels_detail,
+            "premium_xof": round(member_farmer_premium),
+            "premium_eur": round(member_farmer_premium / 655.957, 2),
             "payment_status": "pending"
         })
         
-        total_premium += member_premium
+        total_farmer_premium += member_farmer_premium
         total_eligible_hectares += member_total_area
     
     premium_data.sort(key=lambda x: x["premium_xof"], reverse=True)
@@ -119,9 +106,7 @@ async def get_members_carbon_premiums(
             "total_members": len(members),
             "eligible_members": len([m for m in premium_data if m["premium_xof"] > 0]),
             "superficie_totale": round(total_eligible_hectares, 2),
-            "total_premium_xof": round(total_premium),
-            "total_premium_eur": round(total_premium / 655.957, 2),
-            "rate_per_hectare": RATE_PER_HECTARE,
+            "total_premium_xof": round(total_farmer_premium),
             "min_score_required": MIN_SCORE
         }
     }

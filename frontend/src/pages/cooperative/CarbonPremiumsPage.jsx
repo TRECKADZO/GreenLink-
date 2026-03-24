@@ -135,7 +135,7 @@ const CarbonPremiumsPage = () => {
                   <ArrowRight className="h-3 w-3" />
                   <Badge className="bg-emerald-800/50 text-emerald-300 border-emerald-600/30">5. Paiement Orange Money</Badge>
                 </div>
-                <p className="text-xs text-emerald-200/50 mt-2">Votre cooperative recoit automatiquement 10% de commission sur chaque paiement.</p>
+                <p className="text-xs text-emerald-200/50 mt-2">Votre cooperative recoit automatiquement 5% de commission sur chaque paiement valide.</p>
               </div>
             </div>
           </CardContent>
@@ -182,7 +182,7 @@ const CarbonPremiumsPage = () => {
                 <div className="p-2 bg-purple-500/20 rounded-lg"><TrendingUp className="h-5 w-5 text-purple-400" /></div>
                 <div>
                   <p className="text-2xl font-bold text-purple-400" data-testid="stat-coop-commission">{formatXOF(stats.total_commissions_coop)}</p>
-                  <p className="text-xs text-gray-400">Commission coop (10%)</p>
+                  <p className="text-xs text-gray-400">Commission coop (5%)</p>
                 </div>
               </div>
             </CardContent>
@@ -243,7 +243,7 @@ const CarbonPremiumsPage = () => {
                           <span className="flex items-center gap-1"><Leaf className="h-3 w-3" />Score: {req.average_carbon_score}/10</span>
                           <span className="text-xs uppercase">{req.requested_via}</span>
                         </div>
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                           <div className="bg-gray-700/30 rounded-lg p-2 text-center">
                             <p className="text-emerald-400 font-bold">{formatXOF(req.farmer_amount)}</p>
                             <p className="text-[10px] text-gray-500">Part planteur</p>
@@ -251,10 +251,6 @@ const CarbonPremiumsPage = () => {
                           <div className="bg-gray-700/30 rounded-lg p-2 text-center">
                             <p className="text-purple-400 font-bold">{formatXOF(req.coop_commission)}</p>
                             <p className="text-[10px] text-gray-500">Commission coop</p>
-                          </div>
-                          <div className="bg-gray-700/30 rounded-lg p-2 text-center">
-                            <p className="text-white font-bold">{formatXOF(req.total_premium)}</p>
-                            <p className="text-[10px] text-gray-500">Prime totale</p>
                           </div>
                         </div>
                         {req.status === 'paid' && req.farmer_transaction_id && (
