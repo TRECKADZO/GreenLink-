@@ -27,6 +27,7 @@ const getAuthHeader = () => {
 const MENU_ITEMS = [
   { id: 'dashboard', label: 'Tableau de bord', icon: Activity, color: 'text-emerald-600' },
   { id: 'farmers', label: 'Mes Agriculteurs', icon: Users, color: 'text-cyan-600' },
+  { id: 'inscriptions', label: 'Inscriptions', icon: UserPlus, color: 'text-violet-600' },
   { id: 'search', label: 'Recherche planteur', icon: Search, color: 'text-gray-600' },
 ];
 
@@ -37,6 +38,98 @@ const FARMER_FORMS = [
   { id: 'photos', label: 'Photos geolocalisees', desc: 'Photos terrain avec position GPS', icon: Camera, color: 'bg-purple-50 text-purple-700 border-purple-200' },
   { id: 'register', label: 'Enregistrement membre', desc: 'Inscrire ce producteur comme membre', icon: UserPlus, color: 'bg-blue-50 text-blue-700 border-blue-200' },
 ];
+
+const AgentRegistrationForm = () => {
+  const [form, setForm] = useState({ nom_complet: '', telephone: '', code_planteur: '', village: '', pin: '', hectares: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [recentRegs, setRecentRegs] = useState([]);
+
+  const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const loadRecent = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/ussd/registrations?limit=10`, { headers: getAuthHeader() });
+      if (res.ok) {
+        const data = await res.json();
+        setRecentRegs(data.registrations || []);
+      }
+    } catch { /* silent */ }
+  };
+
+  React.useEffect(() => { loadRecent(); }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.nom_complet || !form.telephone || !form.village || !form.pin || form.pin.length !== 4) {
+      toast.error('Remplissez tous les champs obligatoires (nom, tel, village, PIN 4 chiffres)');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/ussd/register-web`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`${data.nom} inscrit avec succes !`);
+        setForm({ nom_complet: '', telephone: '', code_planteur: '', village: '', pin: '', hectares: '' });
+        loadRecent();
+      } else {
+        toast.error(data.detail || 'Erreur');
+      }
+    } catch { toast.error('Erreur reseau'); } finally { setSubmitting(false); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-violet-600" /> Inscrire un planteur
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="agent-register-form">
+            <Input placeholder="Nom complet *" value={form.nom_complet} onChange={e => handleChange('nom_complet', e.target.value)} data-testid="agent-reg-name" />
+            <Input placeholder="Telephone *" value={form.telephone} onChange={e => handleChange('telephone', e.target.value)} data-testid="agent-reg-phone" />
+            <Input placeholder="Code planteur / coop" value={form.code_planteur} onChange={e => handleChange('code_planteur', e.target.value)} data-testid="agent-reg-coop" />
+            <Input placeholder="Village *" value={form.village} onChange={e => handleChange('village', e.target.value)} data-testid="agent-reg-village" />
+            <Input placeholder="PIN 4 chiffres *" type="password" maxLength={4} value={form.pin} onChange={e => handleChange('pin', e.target.value.replace(/\D/g, '').slice(0, 4))} data-testid="agent-reg-pin" />
+            <Input placeholder="Hectares (optionnel)" type="number" step="0.5" value={form.hectares} onChange={e => handleChange('hectares', e.target.value)} data-testid="agent-reg-hectares" />
+            <div className="sm:col-span-2">
+              <Button type="submit" disabled={submitting} className="w-full bg-violet-600 hover:bg-violet-700" data-testid="agent-reg-submit">
+                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Inscription...</> : <><UserPlus className="w-4 h-4 mr-2" />Inscrire le planteur</>}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {recentRegs.length > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-gray-500">Dernieres inscriptions</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {recentRegs.slice(0, 5).map((r, i) => (
+                <div key={i} className="px-4 py-2.5 flex items-center justify-between text-sm" data-testid={`agent-recent-reg-${i}`}>
+                  <div>
+                    <span className="font-medium text-gray-800">{r.full_name || r.nom_complet}</span>
+                    <span className="text-gray-400 ml-2">{r.phone_number}</span>
+                  </div>
+                  <span className="text-xs text-gray-400">{r.village} - {r.registered_via}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
 
 const AgentTerrainDashboard = () => {
   const navigate = useNavigate();
@@ -476,6 +569,10 @@ const AgentTerrainDashboard = () => {
                   </Card>
                 )}
               </div>
+            )}
+
+            {tab === 'inscriptions' && (
+              <AgentRegistrationForm />
             )}
           </div>
         </div>

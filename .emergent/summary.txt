@@ -1,140 +1,354 @@
-<analysis>**original_problem_statement**: 
-Fix marketplace delivery calculation logic, fix mobile app bugs (login connection errors, image regressions, password reset, parcel mapping to cooperatives, harvest declarations bugs, unit conversion), and implement a cooperative harvest validation flow.
+<analysis>original_problem_statement: 
+Fix marketplace delivery calculation logic, fix mobile app bugs, implement a cooperative harvest validation flow, enrich the Parcel Verification flow with Carbon Premium metrics, and establish a Super Admin Carbon Premium Payout Workflow. 
+NEW REQUIREMENTS ADDED IN SESSION: 
+- Implement a confidential RSE formula for Carbon Premiums (RSE = Score * Taux * Hectares). Distribution: 30% Frais, 70% Distributed (of the 70%: 25% GreenLink, 5% Cooperative, 70% Farmer). Only the Super Admin can see this breakdown.
+- Overhaul the USSD menu texts and flow (Adding specific Registration, Simple Estimation, and Detailed Estimation flows).
+- Update Cooperative, Field Agent, and Super Admin dashboards to align with the new USSD/Registration flows.
+- Fix newly reported backend errors.
 
-PRODUCT REQUIREMENTS:
-- All variable names and JSON response keys must be unified in French across the stack.
-- Suppliers must have options to set specific delivery rules (fixed, by zone/distance, by quantity, with a free shipping threshold).
-- Push notifications and emails must contain correct unit measures for agricultural products.
-- Mobile UI must be strictly bug-free, specifically handling API errors gracefully instead of generic connection errors.
-
-**User's preferred language**: French (INSTRUCT next agent to respond in the user's preferred language only)
+**User's preferred language**: French (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. **INSTRUCTION FOR NEXT AGENT**: Toujours répondre en Français.)
 
 **what currently exists?** 
-A full-stack agricultural platform (React web, FastAPI backend, React Native mobile, MongoDB). In this session, the agent successfully implemented a 3-model Marketplace Delivery System for suppliers, fixed rate limiting and non-JSON proxy errors causing Erreur de connexion on mobile, fixed image regressions in the Checkout flow, implemented robust phone number normalization for password resets, mapped farmer parcels properly to cooperative dashboards, fixed multiple crashes in the harvest declaration flow, and built a cooperative harvest validation dashboard. Multiple EAS builds were generated up to v1.40.1.
+A full-stack agricultural platform (React, FastAPI, MongoDB) with a decoupled system for physical cocoa sales (Lots) and Carbon Premiums. Carbon Premiums are now managed entirely by the Super Admin. A confidential RSE formula distributes funds between Farmers, Coops, GreenLink, and Fees. A public carbon calculator handles 3 tree categories (Grands, Moyens, Petits). The app relies on USSD for farmer interactions, but the user recently requested a massive overhaul of the USSD text and logic which has not yet been implemented.
 
 **Last working item**: 
-    - Last item agent was working: Investigating the unit conversion logic (tonnes vs kg) for Harvest Declarations. The user complained that an email receipt showed 2.0 kg instead of 2000 kg when they selected 2 tonnes in the mobile app.
-    - Status: IN PROGRESS
+    - Last item agent was working: The previous agent successfully finished the RSE Formula and Homepage Calculator but failed to act on the final 4 user messages. The pending work is investigating/fixing reported backend errors, implementing a massive new USSD text/flow architecture provided by the user, and updating related dashboards.
+    - Status: NOT STARTED
     - Agent Testing Done: N
-    - Which testing method agent to use? backend testing agent or curl for backend logic verification + python -c to verify the database and email template inputs. 
+    - Which testing method agent to use? both (backend testing agent for USSD flow logic, frontend testing agent for Dashboard updates).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
-  Issue 1: Harvest quantity unit conversion failing in emails/backend (P0)
-     - Attempted fixes: Agent grepped  to see the unit selector code (, , ) but context ended before the backend fix or email logic could be patched.
-     - Next debug checklist: Check  (specifically the  endpoint) and where the email/notification is sent. Ensure the converted  is passed to the email template/notification system, rather than the raw un-multiplied . Also double-check  to ensure the correct unit string is being sent in the API payload.
-     - Why fix this issue and what will be achieved with the fix? Fixes severe data inaccuracies where farmers declare massive harvests (tonnes) but receive receipts for tiny amounts (kg), eroding trust.
-     - Status: IN PROGRESS
+  Issue 1: Investigate and Fix Backend Errors (P0)
+     - Attempted fixes: None. The user reported Corriger les erreurs du backend twice at the end of the session, but the context ended before the agent could read the logs.
+     - Next debug checklist: 
+       1. Run ==> /var/log/supervisor/backend.err.log <==
+2026-03-24 02:16:27,195 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-24 02:16:27,899 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-24 02:16:28,222 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-24 02:16:46,539 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-24 02:16:46,598 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-24 02:16:46,897 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-24 02:16:47,813 - routes.carbon_premiums - INFO - [MOCK] Orange Money payment: 55124 XOF to +2250799999999 (tx: OM-FARMER-9999-20260324021647)
+WARNING:  WatchFiles detected changes in 'tests/test_rse_formula_iteration63.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4047]
+[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
+[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
+INFO:     Started server process [4252]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+2026-03-24 02:18:32,992 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-24 02:18:33,760 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-24 02:18:34,084 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-24 02:18:34,944 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-24 02:18:35,003 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-24 02:18:35,303 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-24 02:18:35,796 - routes.carbon_premiums - INFO - [CONFIG] Taux mis a jour: 6000.0 XOF par score/ha par Eric Klenakan
+2026-03-24 02:18:36,265 - routes.carbon_premiums - INFO - [CONFIG] Taux mis a jour: 5000.0 XOF par score/ha par Eric Klenakan
+2026-03-24 02:18:36,750 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-24 02:18:36,808 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-24 02:18:37,108 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-24 02:18:38,631 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-24 02:18:38,690 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-24 02:18:38,990 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-24 02:18:39,378 - routes.auth - INFO - Login attempt for: +2250705551234
+2026-03-24 02:18:39,437 - routes.auth - INFO - User found: None, has hashed_password: True
+2026-03-24 02:18:39,737 - routes.auth - INFO - Login successful for: +2250705551234
+2026-03-24 02:18:40,187 - routes.auth - INFO - Login attempt for: bielaghana@gmail.com
+2026-03-24 02:18:40,246 - routes.auth - INFO - User found: bielaghana@gmail.com, has hashed_password: True
+2026-03-24 02:18:40,545 - routes.auth - INFO - Login successful for: bielaghana@gmail.com
+2026-03-24 02:18:42,099 - routes.ussd - INFO - USSD Request: session=test_rse_iteration63_6b355f84, phone=+2250799999999, input=2*1
+2026-03-24 02:18:42,574 - routes.ussd - INFO - USSD Response: DEMANDE ENREGISTREE
+
+Montant planteur: 55 124 XOF
+...
+2026-03-24 02:18:42,675 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-24 02:18:42,734 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-24 02:18:43,032 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-24 02:19:04,537 - routes.auth - INFO - Login attempt for: klenakan.eric@gmail.com
+2026-03-24 02:19:04,599 - routes.auth - INFO - User found: klenakan.eric@gmail.com, has hashed_password: True
+2026-03-24 02:19:04,900 - routes.auth - INFO - Login successful for: klenakan.eric@gmail.com
+2026-03-24 02:19:36,176 - routes.auth - INFO - Login attempt for: bielaghana@gmail.com
+2026-03-24 02:19:36,236 - routes.auth - INFO - User found: bielaghana@gmail.com, has hashed_password: True
+2026-03-24 02:19:36,535 - routes.auth - INFO - Login successful for: bielaghana@gmail.com
+2026-03-24 02:20:02,318 - routes.auth - INFO - Login attempt for: +2250705551234
+2026-03-24 02:20:02,379 - routes.auth - INFO - User found: None, has hashed_password: True
+2026-03-24 02:20:02,681 - routes.auth - INFO - Login successful for: +2250705551234
+WARNING:  WatchFiles detected changes in 'routes/ussd.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4252]
+[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
+[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
+INFO:     Started server process [4860]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'routes/ussd.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4860]
+[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
+[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
+INFO:     Started server process [4885]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'routes/ussd.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4885]
+[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
+[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
+INFO:     Started server process [4910]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [42] using WatchFiles
+[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
+[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
+INFO:     Started server process [83]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [46] using WatchFiles
+[OrangeMoney] Credentials absentes -> mode MOCK actif. Renseignez ORANGE_MONEY_CLIENT_ID, ORANGE_MONEY_CLIENT_SECRET et ORANGE_MERCHANT_KEY dans .env pour activer le mode production.
+[OrangeSMS] Credentials absentes -> mode MOCK. Renseignez ORANGE_SMS_CLIENT_ID et ORANGE_SMS_CLIENT_SECRET dans .env.
+INFO:     Started server process [84]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+==> /var/log/supervisor/backend.out.log <==
+INFO:     10.64.129.104:35480 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.130.72:54384 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35464 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35480 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.130.72:54384 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35472 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.130.72:54372 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35464 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35486 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35490 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35486 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35464 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35506 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35506 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35464 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.130.72:54372 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.129.104:35518 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44106 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44120 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.130.72:37928 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44122 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44106 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.130.72:37928 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44122 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44106 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44120 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44120 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44122 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44120 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.130.72:37928 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44126 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.130.72:37932 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.130.72:37932 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.129.104:44120 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.130.72:37928 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.130.72:37944 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.130.72:37932 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.130.72:57320 - "POST /api/ussd/calculate-premium HTTP/1.1" 200 OK
+INFO:     10.64.129.104:60040 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.130.72:60502 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.129.104:60046 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.129.104:60044 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.130.72:60502 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.130.72:60506 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.130.72:60510 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.130.72:60520 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.129.104:60054 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.129.104:60044 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+[DB] Connected to: mongodb+srv://klenakaneric_db_user:474Treckadzo@cl... / greenlink_production
+INFO:     10.64.129.104:46844 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.130.72:46582 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.130.72:46586 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.130.72:46586 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.64.129.104:46844 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.64.130.72:46582 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.64.129.104:46828 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.130.72:46584 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.64.129.104:46828 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.64.129.104:46844 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.79.137.66:35314 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.79.132.74:34324 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.79.132.74:34320 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.79.132.74:34340 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.79.137.66:35314 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.79.132.74:34320 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.79.137.66:35318 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.79.137.66:35314 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.79.132.74:34356 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.79.137.66:35314 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.79.132.74:52424 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.79.137.66:42692 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.79.137.66:42700 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.79.132.74:52436 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.79.137.66:42708 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.79.137.66:42700 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.79.132.74:52450 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.79.137.66:42692 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.79.132.74:52424 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.79.132.74:52436 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.79.132.74:41382 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.79.132.74:41384 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.79.137.66:52118 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.79.137.66:52108 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.79.137.66:52122 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.79.132.74:41384 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.79.132.74:41388 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.79.132.74:41396 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.79.132.74:41382 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.79.132.74:41410 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52574 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.79.137.66:58296 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.79.132.74:48530 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.79.132.74:48544 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.79.137.66:58302 - "GET /api/steps HTTP/1.1" 200 OK
+INFO:     10.79.132.74:48548 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.79.132.74:48544 - "GET /api/features HTTP/1.1" 200 OK
+INFO:     10.79.137.66:58296 - "GET /api/partners HTTP/1.1" 200 OK
+INFO:     10.79.137.66:58302 - "GET /api/testimonials HTTP/1.1" 200 OK
+INFO:     10.79.132.74:48530 - "GET /api/pricing-plans HTTP/1.1" 200 OK
+INFO:     10.79.137.66:58318 - "GET /api/steps HTTP/1.1" 200 OK immediately.
+       2. Check for syntax errors or crash loops in  or  introduced in the last edits.
+     - Why fix this issue and what will be achieved with the fix? A broken backend blocks all API calls and subsequent development.
+     - Status: NOT STARTED
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? backend
+     - Should Test frontend/backend/both after fix? backend (via curl)
      - Blocked on other issue: None
 
 **In progress Task List**:
-  Task 1: Unit conversion in Harvest Email Notifications (P0)
-     - Where to resume: Investigate  near . The backend claims to convert  to , but the email notification payload might be using the raw value.
-     - What will be achieved with this? Accurate email receipts and push notifications for declared harvests.
-     - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? backend
-     - Blocked on something: None
+  Task 1: USSD Overhaul & Registration Flow
+     - Where to resume: 
+     - What will be achieved with this? Implements the user's exact provided text for USSD menus, including Nouvelle inscription (Name, Coop code, Village, PIN) and split estimations (Simple vs Detailed).
+     - Status: NOT STARTED
+     - Should Test frontend/backend/both after fix? backend (via USSD simulator / curl)
+     - Blocked on something: Issue 1 (Backend Errors)
+
+  Task 2: Dashboard Updates for New Flows
+     - Where to resume: Frontend dashboards (Coop, Field Agent, Super Admin).
+     - What will be achieved with this? Reflects the new data gathered from the overhauled USSD/Web registration forms (PINs, Villages, Coop Codes).
+     - Status: NOT STARTED
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on something: Task 1
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - (P1) Submit the final AAB to Google Play Console.
+    - (P0) Implement the simplified Web/App Registration Form outlined in the user's text dump (Nom, Tel, Code Planteur, Village, PIN).
+    - (P1) Submit the final AAB (v1.52.0) to Google Play Console.
     
     Future Tasks:
     - (P2) Configure real SMS gateway (Orange API) to replace the mock service.
     - (P2) Implement local languages (Baoulé and Dioula) in the mobile app.
     - (P2) Refactor the backend to use cloud storage (AWS S3) for file and image uploads.
+    - (P3) Refactor  and  (files are getting excessively large).
 
 **Completed work in this session**
-- Marketplace Supplier Delivery Settings (Fixed fees, zones, quantity, free threshold) (DONE)
-- Fixed Mobile Login Erreur de connexion by handling non-JSON proxy responses and formatting Rate Limiter JSON (DONE)
-- Fixed Missing Product Images in Mobile Checkout Summary (DONE)
-- Fixed Forgot Password flow for phone numbers (added normalization for 07XX, +225, etc., and exposed simulation code to UI) (DONE)
-- Fixed Parcel mappings between Farmers and Cooperatives ( -> ) (DONE)
-- Auto-link existing parcels to user ID upon registration/activation (DONE)
-- Fixed Harvest Declaration selection bug (using  instead of ) (DONE)
-- Fixed Harvest Declaration crash (payload mismatches  vs  and ObjectId serialization) (DONE)
-- Implemented Cooperative Harvest Dashboard and Validation Flow (DONE)
-- EAS APK Builds generated (v1.39.3, v1.39.4, v1.39.5, v1.39.7, v1.39.8, v1.39.9, v1.40.0, v1.40.1) (DONE)
+- Super Admin Carbon Premium Payout Workflow (USSD request -> Admin Approval -> Mock Orange Money) (DONE)
+- Farmer Carbon Score page updated with Mes Demandes de Prime UI (DONE)
+- Cooperative Carbon Premium page overhauled to reflect Super Admin flow (read-only tracking) (DONE)
+- Confidential RSE Formula implemented (30% fees, 70% dist [25% GL, 5% Coop, 70% Farmer]) with dynamic Admin rate (DONE)
+- Homepage Carbon Calculator updated to include 3 tree categories (Grands, Moyens, Petits) (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-   None. All previous user complaints in the session were addressed and shipped.
+   - Issue 1: Backend is crashing/throwing errors.
+   - Debug checklist: Run backend                          RUNNING   pid 46, uptime 0:00:16
+code-server                      STOPPED   Not started
+frontend                         STOPPED   Mar 24 11:01 AM
+mongodb                          RUNNING   pid 49, uptime 0:00:16
+nginx-code-proxy                 RUNNING   pid 45, uptime 0:00:16 and check supervisor logs.
+   - Why to solve this issue and what will be achieved with this: Restores app functionality.
+   - Should Test frontend/backend/both after fix: backend
+   - Is recurring issue? N
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: None
-  - Recurrence count: 0
-  - Status: RESOLVED
+  - Issue recurrence in previous fork: Cloudflare blocking API requests from certain regions (Côte d'Ivoire), returning HTML 404 instead of JSON. 
+  - Recurrence count: 3
+  - Status: RESOLVED (Mitigated via Axios retries).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-React (Web), React Native (Mobile Expo EAS), FastAPI (Backend), MongoDB (Database), Expo Push Notifications, Resend (Emails).
+React (Web), FastAPI (Backend), MongoDB (Database), USSD Protocol Logic (Menu states, string building, character limits), Role-Based Confidentiality (RSE Formula masking).
 
 **key DB schema**
-  - : {parcel_id, quantity_kg, quality_grade, price_per_kg, payment_status, payment_method, statut}
-  - : {phone_number, full_name, coop_id, user_id}
-  - : {farmer_id, membre_id, superficie, localisation, id}
+  - : {farmer_id, farmer_amount, rse_total, frais, distributable, greenlink_share, coop_commission, status}
+  - : {taux_par_hectare, repartition: {frais_pct, distributable_pct, greenlink_pct, cooperative_pct, paysan_pct}}
 
 **changes in tech stack**
   - None.
 
 **All files of reference**
-  -  (Currently investigating for unit conversion logic)
-  -  (New file for coop harvest validation)
-  -  (Current focus for harvest payload)
-  -  (Contains robust  function that MUST be used for phone queries)
+  -  (Crucial: Contains all USSD menus that need updating)
+  -  
+  - 
   - 
 
 **Areas that need refactoring**:
-  -  is getting excessively large (900+ lines). It handles general dashboard endpoints, parcels, and harvests. It should eventually be split into dedicated  and  routes.
+  -  (Contains a massive amount of state logic. With the new user requirements for Registration and split Estimation flows, this file will become unmanageable if not structured properly).
 
 **key api endpoints**
   - 
   - 
-  - 
-  - 
-  - 
+  -  (Main webhook for telecom providers)
 
 **Critical Info for New Agent**
   - **Language**: MUST respond in French.
-  - **Phone Normalization**: Always use the  helper function in  when looking up users by phone. Users enter , , etc. Exact string matching will fail.
-  - **Key Naming**: Be very careful mapping mobile JS object keys to the Backend Pydantic models. The backend mostly returns French (, ) while mobile might sometimes still look for English (, ).
+  - **CRITICAL BACKEND ERROR**: The user ended the session stating Corriger les erreurs du backend twice. Before you write *any* code, check the backend logs to find out what broke during the last agent's modifications.
+  - **Confidentiality Rule**: The RSE Formula (, and the 30% fee / 25% GreenLink breakdown) is STRICTLY CONFIDENTIAL. It must *only* be visible in the Super Admin dashboard and Super Admin API payloads. Coops and Farmers must only receive their exact cut amounts.
+  - **USSD Rewrite**: Read the user's massive prompt regarding the USSD texts closely. You must implement a Nouvelle inscription flow (with a PIN code creation) and split the estimation into Simple and Detaillée. Ensure USSD string responses stay under 160 characters per screen.
 
 **documents and test reports created in this job**
   - 
-  - 
+  -  (Super Admin USSD to Payment tests)
+  -  (Confidential RSE Formula tests)
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. (User) La quantité est de 2 tonnes et non 2kg. Assurez-vous que les choix est unité de mesure soit respectées (PENDING - Agent investigating conversion).
- 2. (User) C est vous l'expert et vous comprenez bien le projet (COMPLETED).
- 3. (User) Où va les récoltes déclarées par l'agriculteur ? Au bien membre d une coopératives ou non (COMPLETED).
- 4. (User) La Déclaration de récolte echoue et fait planter l application [Screenshot] (COMPLETED).
- 5. (User) J ai pas La possibilité de sélection une parcelles ou 2 en particulier. Tous sont sélectionnées en même temps [Screenshot] (COMPLETED).
- 6. (User) Les parcelles dans planteurs ne est pas miss a jour automatiquement dans le compte coopérative... [Screenshot] (COMPLETED).
- 7. (User) Vérifier aussi le changement de mot de passe lorsque l'inscription est fait avec un numéro de téléphone car il ne fonctionne pas aussi (COMPLETED).
- 8. (User) Le changement de mot de passe ne fonctionne pas sur mobile (COMPLETED).
- 9. (User) Les images des produits n apparaît pas. Pourtant cette erreur avait deja été corrigé... [Screenshot] (COMPLETED).
- 10. (User) Corriger toutes les erreurs de connexion [Screenshot] (COMPLETED).
+ 1. (User) calculer ma prime de la page acceuil doit temier compte des dernier changement... (COMPLETED)
+ 2. (User) quels sont les questions du ussd? (Answered)
+ 3. (User) toutes ses question sont implementer dans calculer ma prime carbone dans la page acceuil ? (Ignored by previous agent)
+ 4. (User) continue
+ 5. (User) continue
+ 6. (User) *Massive prompt containing USSD texts for Registration, Simple Estimation, Detailed Estimation, and Web Form requirements.* Implement et créez les elements en lien avec le tableaux de bord... (PENDING - Agent missed this entirely).
+ 7. (User) Ok
+ 8. (User) *Repeats the massive USSD text prompt.* Implement et créez les elements en lien avec le tableaux de bord... (PENDING).
+ 9. (User) Corriger les erreurs du backend (PENDING - Urgent blocker).
+ 10. (User) Corriger les erreurs du backend (PENDING - Urgent blocker).
 
 **Project Health Check:**
-- Broken: Email notifications for harvest declarations (Unit conversion not applying correctly to the text).
+- Broken: User explicitly reported backend errors in the final messages.
 - Mocked: Orange SMS, Orange Money.
 
 **3rd Party Integrations** 
   - Resend (Emails) — Uses Emergent LLM Key / Environment
-  - Expo Push Notifications — Requires User setup/EAS.
-  - Expo EAS Builds — Requires User Auth (Session active locally).
+  - Expo Push Notifications — Requires User setup/EAS
+  - Expo EAS Builds — Requires User Auth (Session active locally)
 
 **Testing status**
-  - Testing agent used after significant changes: YES (iteration 55 for delivery system)
+  - Testing agent used after significant changes: YES (Iterations 62, 63)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None
-  - Known regressions: None currently (Fixed the Checkout image regression).
+  - Known regressions: Backend currently throwing unknown errors based on user report.
 
 **Credentials to test flow:**
-Standard mock users. (,  for farmer).
+Standard mock users. (,  for Cooperative,  for Admin).
+Test Farmer:  (+2250799999999).
 
 **What agent forgot to execute**
-The agent realized the problem with the unit conversion displaying 2.0 kg instead of 2000 kg in the email, and checked the mobile code  for the unit options (, , ), but context ran out before the backend conversion logic in  or the email template could be fixed. Start here.</analysis>
+The previous agent successfully completed the RSE formula and Homepage calculator, but completely ignored the final 4 user prompts. The agent missed the massive USSD Text/Flow update request (Registration flow, PIN codes, detailed vs simple estimations) and ignored the user's explicit report that the backend had errors. Start by fixing the backend errors.</analysis>

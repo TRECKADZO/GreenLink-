@@ -1,0 +1,327 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '../../components/ui/select';
+import { toast } from 'sonner';
+import {
+  UserPlus, Phone, MapPin, Leaf, Lock, ArrowLeft,
+  CheckCircle, Loader2, TreePine
+} from 'lucide-react';
+import Navbar from '../../components/Navbar';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+const VILLAGES = [
+  'Daloa', 'Soubre', 'Abengourou', 'Gagnoa', 'Divo', 'San Pedro',
+  'Abidjan', 'Bouake', 'Yamoussoukro', 'Man', 'Korhogo', 'Issia',
+  'Oume', 'Lakota', 'Sinfra', 'Vavoua', 'Duékoué', 'Guiglo', 'Autre'
+];
+
+const RegisterFarmerPage = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [successData, setSuccessData] = useState(null);
+  const [form, setForm] = useState({
+    nom_complet: '',
+    telephone: '',
+    code_planteur: '',
+    village: '',
+    village_custom: '',
+    hectares: '',
+    pin: '',
+    pin_confirm: '',
+    email: ''
+  });
+
+  const handleChange = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!form.nom_complet || form.nom_complet.length < 2) {
+      toast.error('Nom complet requis (min 2 caracteres)');
+      return;
+    }
+    if (!form.telephone || form.telephone.length < 8) {
+      toast.error('Numero de telephone requis');
+      return;
+    }
+    if (!form.village && !form.village_custom) {
+      toast.error('Village requis');
+      return;
+    }
+    if (!form.pin || form.pin.length !== 4 || !/^\d{4}$/.test(form.pin)) {
+      toast.error('Code PIN a 4 chiffres requis');
+      return;
+    }
+    if (form.pin !== form.pin_confirm) {
+      toast.error('Les codes PIN ne correspondent pas');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const village = form.village === 'Autre' ? form.village_custom : form.village;
+      const res = await fetch(`${API_URL}/api/ussd/register-web`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nom_complet: form.nom_complet,
+          telephone: form.telephone,
+          code_planteur: form.code_planteur,
+          village: village,
+          pin: form.pin,
+          hectares: form.hectares ? parseFloat(form.hectares) : null,
+          email: form.email || null
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        setSuccess(true);
+        setSuccessData(data);
+        toast.success('Inscription reussie !');
+      } else {
+        toast.error(data.detail || 'Erreur lors de l\'inscription');
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion au serveur');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-gray-950 to-gray-950">
+        <Navbar />
+        <div className="max-w-lg mx-auto px-4 pt-24 pb-12">
+          <Card className="bg-gray-900/80 border-emerald-500/30 backdrop-blur-sm">
+            <CardContent className="p-8 text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                <CheckCircle className="w-10 h-10 text-emerald-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Inscription reussie !</h2>
+              <p className="text-gray-400 mb-6">
+                Bienvenue {successData?.nom}, votre compte GreenLink a ete cree.
+              </p>
+              <div className="bg-gray-800/50 rounded-lg p-4 mb-6 text-left space-y-2">
+                <p className="text-sm text-gray-300"><span className="text-gray-500">Nom:</span> {successData?.nom}</p>
+                <p className="text-sm text-gray-300"><span className="text-gray-500">Telephone:</span> {successData?.telephone}</p>
+                <p className="text-sm text-gray-300"><span className="text-gray-500">Village:</span> {successData?.village}</p>
+              </div>
+              <p className="text-sm text-emerald-400 mb-6">
+                Composez *144*88# pour estimer votre prime carbone directement depuis votre telephone.
+              </p>
+              <div className="flex gap-3">
+                <Button 
+                  data-testid="register-success-home-btn"
+                  onClick={() => navigate('/')}
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800"
+                >
+                  Accueil
+                </Button>
+                <Button 
+                  data-testid="register-success-estimate-btn"
+                  onClick={() => navigate('/')}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <Leaf className="w-4 h-4 mr-2" />
+                  Estimer ma prime
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-gray-950 to-gray-950">
+      <Navbar />
+      <div className="max-w-lg mx-auto px-4 pt-24 pb-12">
+        <button
+          data-testid="register-back-btn"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Retour
+        </button>
+
+        <Card className="bg-gray-900/80 border-emerald-500/30 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <UserPlus className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <CardTitle className="text-xl text-white">Creer mon compte GreenLink</CardTitle>
+                <p className="text-sm text-gray-400">Inscription planteur - rapide et gratuite</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Nom complet */}
+              <div className="space-y-1.5">
+                <Label className="text-sm text-gray-300">Nom complet *</Label>
+                <Input
+                  data-testid="register-name-input"
+                  placeholder="Ex: Kouadio Jean"
+                  value={form.nom_complet}
+                  onChange={(e) => handleChange('nom_complet', e.target.value)}
+                  className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              {/* Telephone */}
+              <div className="space-y-1.5">
+                <Label className="text-sm text-gray-300">
+                  <Phone className="w-3.5 h-3.5 inline mr-1" /> Numero de telephone *
+                </Label>
+                <Input
+                  data-testid="register-phone-input"
+                  placeholder="+225 07 XX XX XX XX"
+                  value={form.telephone}
+                  onChange={(e) => handleChange('telephone', e.target.value)}
+                  className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              {/* Code planteur */}
+              <div className="space-y-1.5">
+                <Label className="text-sm text-gray-300">
+                  <TreePine className="w-3.5 h-3.5 inline mr-1" /> Code planteur / N. membre coop
+                </Label>
+                <Input
+                  data-testid="register-coop-input"
+                  placeholder="Optionnel mais recommande"
+                  value={form.code_planteur}
+                  onChange={(e) => handleChange('code_planteur', e.target.value)}
+                  className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              {/* Village */}
+              <div className="space-y-1.5">
+                <Label className="text-sm text-gray-300">
+                  <MapPin className="w-3.5 h-3.5 inline mr-1" /> Village / Localite *
+                </Label>
+                <Select value={form.village} onValueChange={(v) => handleChange('village', v)}>
+                  <SelectTrigger data-testid="register-village-select" className="bg-gray-800/50 border-gray-700 text-white">
+                    <SelectValue placeholder="Selectionnez votre localite" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    {VILLAGES.map(v => (
+                      <SelectItem key={v} value={v} className="text-gray-200 hover:bg-gray-700">{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.village === 'Autre' && (
+                  <Input
+                    data-testid="register-village-custom-input"
+                    placeholder="Tapez votre village"
+                    value={form.village_custom}
+                    onChange={(e) => handleChange('village_custom', e.target.value)}
+                    className="mt-2 bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+                  />
+                )}
+              </div>
+
+              {/* Hectares */}
+              <div className="space-y-1.5">
+                <Label className="text-sm text-gray-300">
+                  <Leaf className="w-3.5 h-3.5 inline mr-1" /> Hectares de cacao (approximatif)
+                </Label>
+                <Input
+                  data-testid="register-hectares-input"
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  placeholder="Ex: 4.5"
+                  value={form.hectares}
+                  onChange={(e) => handleChange('hectares', e.target.value)}
+                  className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              {/* PIN */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm text-gray-300">
+                    <Lock className="w-3.5 h-3.5 inline mr-1" /> Code PIN *
+                  </Label>
+                  <Input
+                    data-testid="register-pin-input"
+                    type="password"
+                    maxLength={4}
+                    placeholder="4 chiffres"
+                    value={form.pin}
+                    onChange={(e) => handleChange('pin', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm text-gray-300">Confirmer PIN *</Label>
+                  <Input
+                    data-testid="register-pin-confirm-input"
+                    type="password"
+                    maxLength={4}
+                    placeholder="4 chiffres"
+                    value={form.pin_confirm}
+                    onChange={(e) => handleChange('pin_confirm', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+
+              {/* Email (optionnel) */}
+              <div className="space-y-1.5">
+                <Label className="text-sm text-gray-300">Email (optionnel)</Label>
+                <Input
+                  data-testid="register-email-input"
+                  type="email"
+                  placeholder="email@exemple.com"
+                  value={form.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <Button
+                data-testid="register-submit-btn"
+                type="submit"
+                disabled={loading}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12 text-base mt-4"
+              >
+                {loading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Inscription en cours...</>
+                ) : (
+                  <><UserPlus className="w-4 h-4 mr-2" /> Valider mon inscription</>
+                )}
+              </Button>
+
+              <p className="text-xs text-gray-500 text-center mt-3">
+                En vous inscrivant, vous acceptez les conditions d'utilisation de GreenLink Agritech.
+                Votre code PIN securise vos demandes de versement.
+              </p>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default RegisterFarmerPage;

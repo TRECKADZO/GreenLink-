@@ -422,6 +422,18 @@ const Dashboard = () => {
               </Button>
               <Button 
                 variant="outline" 
+                className="w-full justify-between bg-violet-50 border-violet-200 hover:bg-violet-100"
+                onClick={() => navigate('/cooperative/inscriptions')}
+                data-testid="quick-action-inscriptions-ussd"
+              >
+                <span className="flex items-center text-violet-700">
+                  <UserCircle className="h-4 w-4 mr-2" />
+                  Inscriptions USSD/Web
+                </span>
+                <ChevronRight className="h-4 w-4 text-violet-700" />
+              </Button>
+              <Button 
+                variant="outline" 
                 className="w-full justify-between bg-orange-50 border-orange-200 hover:bg-orange-100"
                 onClick={() => navigate('/marketplace')}
                 data-testid="quick-action-marketplace-intrants"

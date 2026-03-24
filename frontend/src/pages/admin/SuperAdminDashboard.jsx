@@ -267,6 +267,14 @@ const SuperAdminDashboard = () => {
               <span className="text-sm text-slate-300 group-hover:text-white">Approbation Carbone</span>
             </button>
             <button
+              onClick={() => navigate('/cooperative/inscriptions')}
+              className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-violet-600/20 rounded-lg transition text-left group"
+              data-testid="admin-inscriptions-ussd-btn"
+            >
+              <Users className="w-5 h-5 text-violet-400 group-hover:text-violet-300" />
+              <span className="text-sm text-slate-300 group-hover:text-white">Inscriptions USSD/Web</span>
+            </button>
+            <button
               onClick={() => navigate('/carbon-marketplace')}
               className="flex items-center gap-2 p-3 bg-slate-700/50 hover:bg-emerald-600/20 rounded-lg transition text-left group"
             >

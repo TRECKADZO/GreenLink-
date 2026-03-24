@@ -36,6 +36,7 @@ import USSDCarbonCalculator from "./pages/farmer/USSDCarbonCalculator";
 import CarbonPaymentsDashboard from "./pages/farmer/CarbonPaymentsDashboard";
 import MyHarvestsPage from "./pages/farmer/MyHarvestsPage";
 import CarbonScorePage from "./pages/farmer/CarbonScorePage";
+import RegisterFarmerPage from "./pages/farmer/RegisterFarmerPage";
 
 // Buyer Routes
 import BuyerDashboard from "./pages/buyer/Dashboard";
@@ -88,6 +89,7 @@ import CarbonPremiumsPage from "./pages/cooperative/CarbonPremiumsPage";
 import CarbonSubmissionsPage from "./pages/cooperative/CarbonSubmissionsPage";
 import ParcelsVerificationPage from "./pages/cooperative/ParcelsVerificationPage";
 import AgentProgressPage from "./pages/cooperative/AgentProgressPage";
+import USSDRegistrationsPage from "./pages/cooperative/USSDRegistrationsPage";
 
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
@@ -156,6 +158,7 @@ function App() {
               <Route path="/farmer/carbon-payments" element={<CarbonPaymentsDashboard />} />
               <Route path="/farmer/my-harvests" element={<MyHarvestsPage />} />
               <Route path="/farmer/carbon-score" element={<CarbonScorePage />} />
+              <Route path="/farmer/inscription" element={<RegisterFarmerPage />} />
               <Route path="/carbon-payments" element={<CarbonPaymentsDashboard />} />
 
               {/* Buyer/Acheteur Routes */}
@@ -224,6 +227,7 @@ function App() {
               <Route path="/cooperative/agents" element={<FieldAgentsPage />} />
               <Route path="/cooperative/field-agents" element={<FieldAgentsPage />} />
               <Route path="/cooperative/agents-progress" element={<AgentProgressPage />} />
+              <Route path="/cooperative/inscriptions" element={<USSDRegistrationsPage />} />
 
               {/* SSRTE Agent Routes */}
               <Route path="/ssrte/dashboard" element={<SSRTEAgentDashboard />} />

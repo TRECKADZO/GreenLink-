@@ -1,0 +1,158 @@
+{
+  "summary": "Iteration 64 - USSD Menu Overhaul Testing. All 15 backend tests passed. Frontend verified: Farmer registration page (/farmer/inscription) has all form fields, Cooperative dashboard has 'Inscriptions USSD/Web' button, Cooperative inscriptions page (/cooperative/inscriptions) shows table with USSD/Web registrations, Agent Terrain dashboard has inscriptions tab with registration form. Orange Money and SMS are MOCKED.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ussd_menu_overhaul_iteration64.py",
+    "/app/test_reports/pytest/pytest_ussd_menu_overhaul_iteration64.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "USSD Welcome menu shows 3 options: 1. Je suis deja inscrit, 2. Nouvelle inscription, 3. Aide / Infos, 0. Quitter",
+    "USSD Recognition: existing farmer (+2250799999999) gets main menu with 6 options (Estimer, Versement, Parcelles, Conseils, Profil, Aide)",
+    "USSD Registration flow: 4 steps (name, coop code, village, PIN) + confirmation screen with summary",
+    "USSD Simple estimation: 5 questions (hectares, arbres >8m, engrais, brulage, age cacaoyers) then result with prime annuelle",
+    "USSD Detailed estimation: 9 questions (hectares, grands >12m, moyens 8-12m, petits <8m, engrais, brulage, compost, agroforesterie, couverture sol) then result with detailed tree breakdown",
+    "USSD Estimation result shows options: 1. Demander versement, 2. Refaire estimation, 3. Retour menu, 0. Quitter",
+    "POST /api/ussd/register-web validates: nom_complet (min 2 chars), telephone (min 8 chars), village (min 2 chars), pin (exactly 4 digits)",
+    "POST /api/ussd/register-web returns 409 for duplicate phone numbers",
+    "POST /api/ussd/register-web returns 400 for invalid PIN (not 4 digits or non-numeric)",
+    "GET /api/ussd/registrations returns {registrations: [], total: int} with fields: full_name, phone_number, village, coop_code, registered_via (ussd/web), created_at",
+    "POST /api/ussd/calculate-premium returns score, prime_annuelle, prime_fcfa_kg, eligible, arbres_par_ha, co2_par_ha",
+    "Frontend /farmer/inscription has all form fields with data-testid attributes",
+    "Frontend /cooperative/dashboard has 'Inscriptions USSD/Web' button in Quick Actions",
+    "Frontend /cooperative/inscriptions shows stats (Total, Via USSD, Via Web) and table with Canal badges",
+    "Frontend /agent/terrain has Inscriptions tab with registration form and recent inscriptions list"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ussd_menu_overhaul_iteration64.py"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "admin": {
+      "identifier": "klenakan.eric@gmail.com",
+      "password": "474Treckadzo",
+      "user_type": "admin"
+    },
+    "cooperative": {
+      "identifier": "bielaghana@gmail.com",
+      "password": "474Treckadzo",
+      "user_type": "cooperative"
+    },
+    "test_farmer_phone": "+2250799999999"
+  },
+  "seed_data_creation": "Multiple test registrations created via USSD and Web during testing (Test Planteur USSD, Test Web Planteur, First Planteur, etc.)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "USSD Menu Overhaul complete. USSD uses session-based state machine (not stateless). Each call to /api/ussd/callback uses same sessionId to maintain state. States: welcome -> register_name -> register_coop -> register_village -> register_pin -> register_confirm -> register_done. For estimation: main_menu -> estimation_type -> est_simple_q0..q4 -> est_result (or est_detailed_q0..q8 -> est_result). Web registration at /farmer/inscription, cooperative registrations at /cooperative/inscriptions, agent registration at /agent/terrain (Inscriptions tab). Orange Money and SMS are MOCKED.",
+  "mocked_api_note": {
+    "Orange Money API": "MOCKED - payments logged but not actually processed",
+    "Orange SMS API": "MOCKED"
+  },
+  "api_endpoints_tested": {
+    "ussd_callback": {
+      "POST /api/ussd/callback (welcome)": "PASS - Shows 3 options menu",
+      "POST /api/ussd/callback (text=1)": "PASS - Existing farmer gets 6-option main menu",
+      "POST /api/ussd/callback (text=2)": "PASS - Starts registration flow",
+      "POST /api/ussd/callback (registration flow)": "PASS - 4 steps + confirmation",
+      "POST /api/ussd/callback (simple estimation)": "PASS - 5 questions then result",
+      "POST /api/ussd/callback (detailed estimation)": "PASS - 9 questions then result with tree breakdown",
+      "POST /api/ussd/callback (text=3)": "PASS - Shows help/contact info"
+    },
+    "web_registration": {
+      "POST /api/ussd/register-web (valid)": "PASS - Returns success with farmer_id",
+      "POST /api/ussd/register-web (duplicate phone)": "PASS - Returns 409",
+      "POST /api/ussd/register-web (invalid PIN 3 digits)": "PASS - Returns 400",
+      "POST /api/ussd/register-web (invalid PIN 5 digits)": "PASS - Returns 400",
+      "POST /api/ussd/register-web (non-numeric PIN)": "PASS - Returns 400"
+    },
+    "registrations": {
+      "GET /api/ussd/registrations": "PASS - Returns list with total",
+      "GET /api/ussd/registrations?limit=5": "PASS - Respects limit parameter"
+    },
+    "calculator": {
+      "POST /api/ussd/calculate-premium (basic)": "PASS - Returns score, prime_annuelle, eligible",
+      "POST /api/ussd/calculate-premium (all practices)": "PASS - Higher score with good practices",
+      "POST /api/ussd/calculate-premium (poor practices)": "PASS - Lower score without practices"
+    }
+  },
+  "frontend_features_verified": {
+    "homepage": {
+      "url": "/",
+      "inscription_planteur_button": "PASS - Visible on homepage",
+      "calculator_section": "PASS - Visible"
+    },
+    "farmer_registration_page": {
+      "url": "/farmer/inscription",
+      "page_title": "PASS - 'Creer mon compte GreenLink'",
+      "form_fields": {
+        "register-name-input": "PASS - Visible",
+        "register-phone-input": "PASS - Visible",
+        "register-coop-input": "PASS - Visible",
+        "register-village-select": "PASS - Dropdown with all villages",
+        "register-hectares-input": "PASS - Visible",
+        "register-pin-input": "PASS - Visible",
+        "register-pin-confirm-input": "PASS - Visible",
+        "register-email-input": "PASS - Visible",
+        "register-submit-btn": "PASS - Visible"
+      }
+    },
+    "cooperative_dashboard": {
+      "url": "/cooperative/dashboard",
+      "inscriptions_ussd_web_button": "PASS - Visible in Quick Actions"
+    },
+    "cooperative_inscriptions_page": {
+      "url": "/cooperative/inscriptions",
+      "page_title": "PASS - 'Inscriptions Planteurs'",
+      "page_subtitle": "PASS - 'Inscriptions via USSD et formulaire web'",
+      "stats_cards": "PASS - Total inscriptions, Via USSD, Via Web",
+      "search_input": "PASS - Visible",
+      "table_columns": "PASS - Nom complet, Telephone, Village, Code Coop, Canal, Date",
+      "canal_badges": "PASS - USSD (blue) and Web (purple) badges"
+    },
+    "agent_terrain_dashboard": {
+      "url": "/agent/terrain",
+      "inscriptions_menu": "PASS - Visible in sidebar",
+      "inscriptions_tab": {
+        "form_title": "PASS - 'Inscrire un planteur'",
+        "form_fields": "PASS - Nom complet, Telephone, Code planteur/coop, Village, PIN, Hectares",
+        "submit_button": "PASS - 'Inscrire le planteur'",
+        "recent_inscriptions": "PASS - Shows list with village and channel"
+      }
+    }
+  },
+  "ussd_flow_verification": {
+    "welcome_menu": {
+      "options": ["1. Je suis deja inscrit", "2. Nouvelle inscription", "3. Aide / Infos", "0. Quitter"],
+      "verified": true
+    },
+    "main_menu_for_existing_farmer": {
+      "options": ["1. Estimer ma prime carbone", "2. Demander le versement", "3. Mes parcelles et historique", "4. Conseils agroforestiers", "5. Mon profil", "6. Aide / Contact", "0. Quitter"],
+      "verified": true
+    },
+    "registration_flow": {
+      "steps": ["Etape 1/4: Nom et prenom", "Etape 2/4: Code planteur/coop", "Etape 3/4: Village", "Etape 4/4: PIN 4 chiffres", "Confirmation avec resume"],
+      "verified": true
+    },
+    "simple_estimation": {
+      "questions": ["Q1: Hectares", "Q2: Arbres >8m", "Q3: Engrais (oui/non)", "Q4: Brulage (oui/non)", "Q5: Age cacaoyers (3 choices)"],
+      "result_shows": ["Prime annuelle en FCFA", "Score /10", "Options: Versement, Refaire, Retour, Quitter"],
+      "verified": true
+    },
+    "detailed_estimation": {
+      "questions": ["Q1: Hectares", "Q2: Arbres grands >12m", "Q3: Arbres moyens 8-12m", "Q4: Arbres petits <8m", "Q5: Engrais", "Q6: Brulage", "Q7: Compost", "Q8: Agroforesterie", "Q9: Couverture sol"],
+      "result_shows": ["Prime annuelle en FCFA", "Score /10", "Tree breakdown (grands, moyens, petits)", "Options: Versement, Refaire, Retour, Quitter"],
+      "verified": true
+    }
+  }
+}
