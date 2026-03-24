@@ -86,9 +86,13 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 ## APIs Mockees
 - Orange SMS, Orange Money
 
-### Phase 15 - Vérification Mobile + Builds v1.51.0 (DONE - 24/03/2026)
-- Vérification complète des erreurs de connexion mobile: tous les endpoints testés (login, register, forgot-password, dashboard, parcels, harvests, carbon score, cooperative, marketplace)
-- Gestion d'erreurs robuste: retry progressif (5 tentatives, 2-10s), messages spécifiques par type d'erreur, fallback cache offline
+### Phase 15 - Formulaire Création Lot avec Sélection Agriculteurs + Builds v1.51.0 (DONE - 24/03/2026)
+- Formulaire création lot revu en wizard 2 étapes:
+  - Étape 1: Infos lot (nom, tonnage cible, type produit, certification, score carbone min, description)
+  - Étape 2: Sélection agriculteurs avec checkbox + saisie tonnage individuel (kg), barre résumé temps réel
+- Backend: CoopLotCreate accepte `contributors[]` avec farmer_id, farmer_name, tonnage_kg
+- Backend: get_lot_contributors et distribute_lot_premiums utilisent les contributeurs stockés
+- Vérification mobile: tous les endpoints testés, aucune erreur de connexion
 - Build APK v1.51.0: https://expo.dev/artifacts/eas/58ndnox8s58XwDDk2aJcFT.apk
 - Build AAB v1.51.0 (versionCode 42): https://expo.dev/artifacts/eas/4b9kgy4hp8HahFNYD6osSv.aab
 - P1: Soumettre AAB au Google Play Console
