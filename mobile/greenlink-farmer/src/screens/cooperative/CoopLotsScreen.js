@@ -129,7 +129,9 @@ export default function CoopLotsScreen({ navigation }) {
           <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Lots de Vente</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity onPress={() => navigation.navigate('CreateLot')} style={styles.backButton} data-testid="create-lot-button">
+          <Ionicons name="add-circle" size={28} color={COLORS.primary} />
+        </TouchableOpacity>
       </View>
 
       {/* Filter Tabs */}
@@ -160,8 +162,15 @@ export default function CoopLotsScreen({ navigation }) {
             <Ionicons name="cube-outline" size={50} color="#ccc" />
             <Text style={styles.emptyText}>Aucun lot de vente</Text>
             <Text style={styles.emptySubtext}>
-              Les lots seront affiches ici une fois crees depuis la version web
+              Creez votre premier lot pour regrouper les recoltes de vos producteurs
             </Text>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 16, backgroundColor: COLORS.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 }}
+              onPress={() => navigation.navigate('CreateLot')}
+            >
+              <Ionicons name="add" size={18} color="#fff" />
+              <Text style={{ color: '#fff', fontWeight: '600' }}>Nouveau lot</Text>
+            </TouchableOpacity>
           </View>
         }
       />
