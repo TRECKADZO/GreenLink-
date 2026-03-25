@@ -201,17 +201,7 @@ async def get_carbon_payments_dashboard(
         "distribution_model": {
             "price_per_tonne_xof": price_per_tonne_xof,
             "price_per_tonne_usd": round(price_per_tonne_usd, 2),
-            "fees_rate": "30%",
-            "gross_annual_xof": round(annual_gross_xof, 0),
-            "fees_annual_xof": round(annual_gross_xof * 0.30, 0),
-            "net_annual_xof": round(annual_net_xof, 0),
-            "farmer_share_rate": f"{FARMER_SHARE_RATE * 100:.0f}%",
-            "farmer_annual_xof": round(annual_farmer_share_xof, 0),
-            "greenlink_share_rate": "25%",
-            "greenlink_annual_xof": round(annual_greenlink_xof, 0),
-            "coop_share_rate": f"{COOPERATIVE_SHARE_RATE * 100:.0f}%",
-            "coop_annual_xof": round(annual_coop_xof, 0),
-            "payment_method": "Via Coopérative",
+            "payment_method": "Via Cooperative",
             "payment_frequency": "Trimestriel"
         },
         "premium_details": premium_data

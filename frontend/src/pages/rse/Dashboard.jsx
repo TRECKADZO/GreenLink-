@@ -537,16 +537,9 @@ www.greenlink-agritech.com
               </div>
             </div>
             <div className="flex h-8 rounded-full overflow-hidden mb-4">
-              <div className="bg-slate-600 flex items-center justify-center" style={{width: '30%'}}>
-                <span className="text-white text-xs font-bold">30%</span>
+              <div className="bg-emerald-600 flex items-center justify-center" style={{width: '100%'}}>
+                <span className="text-white text-xs font-bold">Credits carbone vendus</span>
               </div>
-              <div className="bg-emerald-600 flex items-center justify-center" style={{width: '49%'}}>
-                <span className="text-white text-xs font-bold">70% Agri</span>
-              </div>
-              <div className="bg-blue-500 flex items-center justify-center" style={{width: '17.5%'}}>
-                <span className="text-white text-xs">GL</span>
-              </div>
-              <div className="bg-amber-500 flex items-center justify-center" style={{width: '3.5%'}} />
             </div>
           </Card>
         )}

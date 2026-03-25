@@ -602,19 +602,13 @@ async def get_carbon_dashboard(
             "total_revenue_usd": round(total_sales_usd, 2),
             "total_revenue_xof": round(total_sales_usd * USD_TO_XOF, 0),
             "total_tonnes_sold": round(total_sold_tonnes, 2),
-            "by_status": sales_by_status,
-            "greenlink_margin_estimate_usd": round(total_sales_usd * GREENLINK_MARGIN_RATE * (1 - 0.30), 2)  # After costs
+            "by_status": sales_by_status
         },
         "distributions": {
             "pending": pending_distributions,
             "paid": paid_distributions
         },
         "market_pricing_usd": pricing_info,
-        "business_model": {
-            "greenlink_margin_rate": f"{GREENLINK_MARGIN_RATE * 100}%",
-            "farmer_share_rate": f"{FARMER_SHARE_RATE * 100}%",
-            "usd_to_xof": USD_TO_XOF
-        }
     }
 
 

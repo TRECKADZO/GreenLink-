@@ -144,11 +144,8 @@ async def get_my_listings(current_user: dict = Depends(get_current_user)):
             l["created_at"] = l["created_at"].isoformat()
         if isinstance(l.get("updated_at"), datetime):
             l["updated_at"] = l["updated_at"].isoformat()
-        # Add premium breakdown if approved
-        if l.get("status") == "approved" and l.get("price_per_tonne"):
-            l["premium_distribution"] = calculate_premium_distribution(
-                l["price_per_tonne"], l["quantity_tonnes_co2"]
-            )
+        # Ne PAS exposer premium_distribution aux non-admins
+        l.pop("premium_distribution", None)
 
     return listings
 
@@ -373,9 +370,12 @@ async def update_carbon_price(
 @router.get("/simulate-premium")
 async def simulate_premium(
     quantity_tonnes: float = Query(..., gt=0),
-    price_per_tonne: Optional[float] = None
+    price_per_tonne: Optional[float] = None,
+    current_user: dict = Depends(get_current_user)
 ):
-    """Simuler la répartition des primes pour une quantité donnée"""
+    """Simuler la répartition des primes — Admin uniquement"""
+    if current_user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="Acces reserve a l'administration")
     if not price_per_tonne:
         config = await db.carbon_config.find_one({"key": "default_price"})
         price_per_tonne = config.get("value", 15000) if config else 15000
@@ -415,12 +415,6 @@ async def get_carbon_listing_stats():
         "total_tonnes_approved": totals.get("total_tonnes", 0),
         "total_value_approved": totals.get("total_value", 0),
         "default_price_per_tonne": default_price,
-        "distribution_model": {
-            "fees_rate": "30%",
-            "farmer_share": "70% du net",
-            "greenlink_share": "25% du net",
-            "coop_share": "5% du net"
-        }
     }
 
 

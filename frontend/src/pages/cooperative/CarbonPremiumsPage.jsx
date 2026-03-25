@@ -243,14 +243,10 @@ const CarbonPremiumsPage = () => {
                           <span className="flex items-center gap-1"><Leaf className="h-3 w-3" />Score: {req.average_carbon_score}/10</span>
                           <span className="text-xs uppercase">{req.requested_via}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <div className="bg-gray-700/30 rounded-lg p-2 text-center">
                             <p className="text-emerald-400 font-bold">{formatXOF(req.farmer_amount)}</p>
-                            <p className="text-[10px] text-gray-500">Part planteur</p>
-                          </div>
-                          <div className="bg-gray-700/30 rounded-lg p-2 text-center">
-                            <p className="text-purple-400 font-bold">{formatXOF(req.coop_commission)}</p>
-                            <p className="text-[10px] text-gray-500">Commission coop</p>
+                            <p className="text-[10px] text-gray-500">Montant planteur</p>
                           </div>
                         </div>
                         {req.status === 'paid' && req.farmer_transaction_id && (

@@ -56,7 +56,7 @@ const FAQPage = () => {
       id: 6,
       category: 'carbon',
       question: "Comment est répartie la vente des crédits carbone ?",
-      answer: "La répartition du revenu brut est transparente :\n\n• **27%** - Coûts (audits Verra, vérifications terrain, buffer permanence)\n• **~55%** - Redistribué aux **planteurs** (75% du net)\n• **~15%** - Marge **GreenLink** (20% du net)\n• **~3%** - Part des **coopératives** (5% du net)\n\n**Total = 100%** du revenu brut"
+      answer: "Les revenus issus de la vente des credits carbone sont repartis de maniere equitable entre les differents acteurs de la chaine de valeur.\n\nLe montant exact de votre prime depend de votre score carbone et de la surface de vos parcelles. Utilisez le calculateur *144*88# pour estimer votre prime.\n\nPour toute question sur la repartition, contactez votre cooperative ou l'equipe GreenLink."
     },
     {
       id: 7,
