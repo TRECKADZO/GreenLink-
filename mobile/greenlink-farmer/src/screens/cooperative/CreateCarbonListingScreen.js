@@ -226,7 +226,7 @@ export default function CreateCarbonListingScreen({ navigation }) {
       <View style={styles.infoBox}>
         <Ionicons name="information-circle" size={18} color="#0ea5e9" />
         <Text style={styles.infoBoxText}>
-          Le Super Admin fixera le prix par tonne apres validation. La repartition : 70% agriculteurs, 25% GreenLink, 5% cooperative (sur le montant net apres 30% de frais).
+          Le Super Admin fixera le prix par tonne apres validation. Repartition des revenus : 30% frais de service, puis sur les 70% restants : 70% agriculteurs, 25% GreenLink, 5% cooperative.
         </Text>
       </View>
 
