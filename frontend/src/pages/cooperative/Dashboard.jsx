@@ -113,6 +113,7 @@ const Dashboard = () => {
   const [showSimulator, setShowSimulator] = useState(false);
   const [activationStats, setActivationStats] = useState(null);
   const [sendingReminder, setSendingReminder] = useState(null);
+  const [simulatorMembers, setSimulatorMembers] = useState([]);
 
   const loadDashboard = async () => {
     try {
@@ -132,6 +133,21 @@ const Dashboard = () => {
       setActivationStats(stats);
     } catch (error) {
       console.error('Error fetching activation stats:', error);
+    }
+  };
+
+  const loadSimulatorMembers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/cooperative/members?limit=200`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSimulatorMembers((data.members || []).filter(m => m.phone_number));
+      }
+    } catch (error) {
+      console.error('Error fetching members for simulator:', error);
     }
   };
 
@@ -487,7 +503,10 @@ const Dashboard = () => {
               <Button 
                 variant="outline" 
                 className="w-full justify-between bg-gray-800 border-gray-700 hover:bg-gray-700"
-                onClick={() => setShowSimulator(!showSimulator)}
+                onClick={() => {
+                  setShowSimulator(!showSimulator);
+                  if (!showSimulator && simulatorMembers.length === 0) loadSimulatorMembers();
+                }}
                 data-testid="quick-action-ussd-simulator"
               >
                 <span className="flex items-center text-emerald-400">
@@ -841,7 +860,7 @@ const Dashboard = () => {
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
-                    <USSDSimulator title="Simulateur USSD *144*88#" onClose={() => setShowSimulator(false)} />
+                    <USSDSimulator title="Simulateur USSD *144*88#" onClose={() => setShowSimulator(false)} members={simulatorMembers} />
                   </div>
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-white">Comment utiliser le simulateur</h3>
@@ -851,7 +870,7 @@ const Dashboard = () => {
                     </p>
                     <div className="space-y-2 mt-4">
                       {[
-                        { step: '1', text: 'Entrez le numero de telephone d\'un planteur existant ou nouveau' },
+                        { step: '1', text: 'Selectionnez un de vos membres dans la liste' },
                         { step: '2', text: 'Cliquez "Composer *144*88#" pour demarrer' },
                         { step: '3', text: 'Utilisez les boutons rapides ou tapez votre reponse' },
                         { step: '4', text: 'Testez l\'inscription, l\'estimation simple/detaillee, la demande de versement' },

@@ -4,20 +4,21 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import {
   Smartphone, Send, RotateCcw, Phone, Signal,
-  Battery, Wifi, ChevronLeft
+  Battery, Wifi, ChevronLeft, Users, Search
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const USSDSimulator = ({ title = "Simulateur USSD", onClose }) => {
+const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => {
   const [sessionId] = useState(() => `sim_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
-  const [phoneNumber, setPhoneNumber] = useState('+2250700000000');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [started, setStarted] = useState(false);
   const [history, setHistory] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState(sessionId);
+  const [memberSearch, setMemberSearch] = useState('');
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -107,6 +108,17 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose }) => {
     }
   }
 
+  const hasMembersList = members && members.length > 0;
+  const filteredMembers = hasMembersList
+    ? members.filter(m => {
+        const search = memberSearch.toLowerCase();
+        return (m.full_name || '').toLowerCase().includes(search) ||
+               (m.phone_number || '').includes(search) ||
+               (m.village || '').toLowerCase().includes(search) ||
+               (m.code_planteur || '').toLowerCase().includes(search);
+      })
+    : [];
+
   if (!started) {
     return (
       <Card className="bg-gray-900 border-gray-700 max-w-sm mx-auto" data-testid="ussd-simulator">
@@ -123,27 +135,85 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose }) => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-center py-4">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
-              <Phone className="w-8 h-8 text-emerald-400" />
+          <div className="text-center py-3">
+            <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
+              <Phone className="w-7 h-7 text-emerald-400" />
             </div>
             <p className="text-sm text-gray-300 mb-1">Simulez l'experience USSD</p>
-            <p className="text-xs text-gray-500">Testez le flux *144*88# comme un planteur</p>
+            <p className="text-xs text-gray-500">
+              {hasMembersList ? 'Selectionnez un membre pour tester le flux *144*88#' : 'Testez le flux *144*88# comme un planteur'}
+            </p>
           </div>
-          <div className="space-y-2">
-            <label className="text-xs text-gray-400">Numero de telephone du planteur</label>
-            <Input
-              data-testid="ussd-sim-phone-input"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="+2250700000000"
-              className="bg-gray-800 border-gray-600 text-white text-center text-lg tracking-wider"
-            />
-          </div>
+
+          {hasMembersList ? (
+            <div className="space-y-2">
+              <label className="text-xs text-gray-400 flex items-center gap-1">
+                <Users className="w-3 h-3" /> Selectionnez un membre ({members.length})
+              </label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-500" />
+                <Input
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  placeholder="Rechercher nom, tel, village..."
+                  className="bg-gray-800 border-gray-600 text-white text-sm pl-8 h-9"
+                  data-testid="ussd-sim-member-search"
+                />
+              </div>
+              <div className="max-h-48 overflow-y-auto space-y-1 rounded-lg">
+                {filteredMembers.slice(0, 20).map((m, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setPhoneNumber(m.phone_number || '');
+                      setMemberSearch('');
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                      phoneNumber === m.phone_number
+                        ? 'bg-emerald-600/30 border border-emerald-500/50 text-emerald-300'
+                        : 'bg-gray-800/50 hover:bg-gray-800 text-gray-300 border border-transparent'
+                    }`}
+                    data-testid={`ussd-sim-member-${i}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium truncate">{m.full_name}</span>
+                      {m.code_planteur && <span className="text-[10px] text-gray-500 ml-1">{m.code_planteur}</span>}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-gray-500">{m.phone_number || 'Pas de tel'}</span>
+                      {m.village && <span className="text-[10px] text-gray-600">- {m.village}</span>}
+                    </div>
+                  </button>
+                ))}
+                {filteredMembers.length === 0 && (
+                  <p className="text-xs text-gray-500 text-center py-3">Aucun membre trouve</p>
+                )}
+              </div>
+              {phoneNumber && (
+                <div className="bg-emerald-900/30 border border-emerald-700/30 rounded-lg px-3 py-2">
+                  <p className="text-xs text-emerald-400">Membre selectionne :</p>
+                  <p className="text-sm text-white font-mono">{phoneNumber}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label className="text-xs text-gray-400">Numero de telephone du planteur</label>
+              <Input
+                data-testid="ussd-sim-phone-input"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+2250700000000"
+                className="bg-gray-800 border-gray-600 text-white text-center text-lg tracking-wider"
+              />
+            </div>
+          )}
+
           <Button 
             data-testid="ussd-sim-start-btn"
             onClick={handleStart}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+            disabled={!phoneNumber || phoneNumber.length < 8}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
           >
             <Phone className="w-4 h-4 mr-2" /> Composer *144*88#
           </Button>
