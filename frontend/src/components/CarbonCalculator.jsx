@@ -13,7 +13,8 @@ import {
   CheckCircle,
   ArrowRight,
   Loader2,
-  Ruler
+  Ruler,
+  Award
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -424,6 +425,58 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                   </p>
                 </Card>
               </div>
+
+              {/* ARS 1000 Compliance */}
+              {result.ars_level && (
+                <div className={`rounded-xl p-4 border ${
+                  result.ars_level === 'Or' ? 'bg-yellow-50 border-yellow-300' :
+                  result.ars_level === 'Argent' ? 'bg-slate-50 border-slate-300' :
+                  result.ars_level === 'Bronze' ? 'bg-orange-50 border-orange-300' :
+                  'bg-red-50 border-red-200'
+                }`} data-testid="ars-section">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Award className={`w-5 h-5 ${
+                        result.ars_level === 'Or' ? 'text-yellow-600' :
+                        result.ars_level === 'Argent' ? 'text-slate-500' :
+                        result.ars_level === 'Bronze' ? 'text-orange-600' :
+                        'text-red-500'
+                      }`} />
+                      <span className="text-sm font-semibold text-gray-800">Conformite ARS 1000</span>
+                    </div>
+                    <Badge className={`px-2 py-0.5 text-xs font-bold ${
+                      result.ars_level === 'Or' ? 'bg-yellow-200 text-yellow-800' :
+                      result.ars_level === 'Argent' ? 'bg-slate-200 text-slate-700' :
+                      result.ars_level === 'Bronze' ? 'bg-orange-200 text-orange-800' :
+                      'bg-red-200 text-red-700'
+                    }`} data-testid="ars-badge">
+                      {result.ars_level}
+                    </Badge>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                    <div 
+                      className={`h-2.5 rounded-full transition-all duration-1000 ${
+                        result.ars_level === 'Or' ? 'bg-yellow-500' :
+                        result.ars_level === 'Argent' ? 'bg-slate-400' :
+                        result.ars_level === 'Bronze' ? 'bg-orange-400' :
+                        'bg-red-400'
+                      }`}
+                      style={{ width: `${Math.min(result.ars_pct, 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-gray-500 mb-2">
+                    <span>{result.ars_pct}%</span>
+                    <div className="flex gap-3">
+                      <span>Bronze 30%</span>
+                      <span>Argent 55%</span>
+                      <span>Or 80%</span>
+                    </div>
+                  </div>
+                  {result.ars_conseil && (
+                    <p className="text-xs text-gray-600 italic">{result.ars_conseil}</p>
+                  )}
+                </div>
+              )}
 
               {!result.eligible && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
