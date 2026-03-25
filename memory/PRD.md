@@ -99,10 +99,19 @@ Plateforme agricole full-stack pour la gestion des cooperatives cacao en Cote d'
 - BottomTabBar.js: 14 items menu cooperative (4 ajoutes)
 - cooperativeApi.js: 4 nouvelles fonctions API ajoutees
 
-**Version v1.58.0 - Build complet avec:**
-- 8 nouveaux ecrans mobile (sessions 28-30)
-- 6 corrections securite
-- Harmonisation complete mobile/web
+### Phase 31 - Fix Definitif 404 Login Mobile + Build v1.59.0 (DONE - 24/03/2026)
+**Bug recurrent: "Request failed with status code 404" sur l'ecran de login mobile**
+Cause probable: Le cache-buster `?_t=timestamp` ajoute aux requetes POST causait un mauvais routage par le proxy/CDN Kubernetes.
+
+3 corrections appliquees:
+1. api.js: cache-buster `_t=` retire des POST (garde uniquement pour GET)
+2. api.js: retry automatique sur 404 (2 tentatives, comme pour les 5xx)
+3. AuthContext.js: fallback login avec URL directe sans intercepteurs si 404 persiste
+4. AuthContext.js: message 404 = "Service temporairement indisponible" (plus de message Axios brut)
+
+Builds v1.59.0:
+- APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/73caa5ff-1567-4609-ae5f-4cec0d3c1de0
+- AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/33f4cb56-6286-4c06-8738-11000400a22b
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo

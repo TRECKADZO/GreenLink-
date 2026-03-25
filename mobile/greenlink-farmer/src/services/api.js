@@ -35,9 +35,11 @@ axiosInstance.interceptors.request.use(
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
     }
-    // Ajouter un timestamp pour contourner le cache proxy
-    const separator = config.url.includes('?') ? '&' : '?';
-    config.url = `${config.url}${separator}_t=${Date.now()}`;
+    // N'ajouter le cache-buster que pour les requêtes GET (les POST/PUT/DELETE n'en ont pas besoin)
+    if (config.method === 'get') {
+      const separator = config.url.includes('?') ? '&' : '?';
+      config.url = `${config.url}${separator}_t=${Date.now()}`;
+    }
     
     console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
     return config;
@@ -106,6 +108,8 @@ axiosInstance.interceptors.response.use(
       isCloudflare ||
       // Erreurs serveur 5xx
       (status >= 500) ||
+      // Erreur 404 transitoire (proxy/CDN mal routé)
+      (status === 404 && currentRetry < 2) ||
       // Erreur 0 (connexion échouée)
       (status === 0)
     );

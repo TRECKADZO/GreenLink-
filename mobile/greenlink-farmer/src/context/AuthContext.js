@@ -46,16 +46,42 @@ export const AuthProvider = ({ children }) => {
       console.log('[Auth] Login attempt with:', identifier);
       console.log('[Auth] API URL:', CONFIG.API_URL);
       
-      // Health check avant login — permet de détecter Cloudflare tôt
+      // Health check avant login
       const healthy = await api.checkHealth();
       if (!healthy) {
         console.warn('[Auth] Server health check failed, trying login anyway...');
       }
       
-      const response = await api.post('/auth/login', {
-        identifier,
-        password,
-      });
+      // Tentative de login principale
+      let response;
+      try {
+        response = await api.post('/auth/login', {
+          identifier,
+          password,
+        });
+      } catch (loginError) {
+        const errStatus = loginError.response?.status;
+        // Si 404 : le proxy/CDN a mal route — retry avec URL directe sans intercepteurs
+        if (errStatus === 404 || (loginError.message && loginError.message.includes('404'))) {
+          console.warn('[Auth] 404 on login — retrying with direct URL...');
+          await new Promise(r => setTimeout(r, 2000));
+          const axios = require('axios').default;
+          response = await axios.post(
+            CONFIG.API_URL + '/api/auth/login',
+            { identifier, password },
+            {
+              timeout: 15000,
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'User-Agent': 'GreenLinkAgritech/1.58 Mobile',
+              },
+            }
+          );
+        } else {
+          throw loginError;
+        }
+      }
       
       console.log('[Auth] Login response received');
       
@@ -94,6 +120,9 @@ export const AuthProvider = ({ children }) => {
           errorMessage = 'Identifiant ou mot de passe incorrect';
         } else if (status === 403) {
           errorMessage = 'Compte desactive. Contactez votre cooperative.';
+        } else if (status === 404) {
+          isServerError = true;
+          errorMessage = 'Service temporairement indisponible. Veuillez reessayer dans quelques instants.';
         } else if (status === 422) {
           errorMessage = 'Veuillez verifier les informations saisies';
         } else if (status === 429) {
