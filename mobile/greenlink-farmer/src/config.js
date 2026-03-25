@@ -4,7 +4,7 @@
 export const CONFIG = {
   // API Backend - Uses EXPO_PUBLIC_API_URL from EAS build or falls back to hardcoded URL
   API_URL: process.env.EXPO_PUBLIC_API_URL 
-    || 'https://mobile-harmonize.preview.emergentagent.com',
+    || 'https://ivory-coast-deploy.preview.emergentagent.com',
   
   // Timeouts adaptes a la FAIBLE connectivite en Cote d'Ivoire (2G/3G)
   REQUEST_TIMEOUT: 60000, // 60 secondes — les reseaux 2G/3G en CI sont tres lents
