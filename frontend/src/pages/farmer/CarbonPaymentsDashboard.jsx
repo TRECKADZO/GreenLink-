@@ -4,7 +4,8 @@ import {
   Leaf, Wallet, TrendingUp, Calendar,
   Clock, CheckCircle, AlertCircle, RefreshCw,
   TreeDeciduous, Coins, Phone, ArrowRight,
-  Smartphone, ShoppingBag, Banknote, Sparkles
+  Smartphone, ShoppingBag, Banknote, Sparkles,
+  Award
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -47,7 +48,12 @@ const CarbonPaymentsDashboard = () => {
   });
 
   useEffect(() => {
-    fetchDashboardData();
+    if (token) {
+      fetchDashboardData();
+    } else {
+      setLoading(false);
+      setShowCalculator(true);
+    }
   }, [token]);
 
   const fetchDashboardData = async () => {
@@ -138,7 +144,10 @@ const CarbonPaymentsDashboard = () => {
     );
   }
 
-  if (error) {
+  if (error && !token) {
+    // Pas connecté — on affiche directement le calculateur sans bloquer
+    // Le code continue vers le render principal
+  } else if (error && token) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50" data-testid="error-state">
         <div className="text-center">
@@ -383,6 +392,59 @@ const CarbonPaymentsDashboard = () => {
                   {primeResult.conseil}
                 </p>
               </div>
+
+              {/* ARS 1000 Compliance */}
+              {primeResult.ars_level && (
+                <div className={`mt-4 rounded-xl p-4 border ${
+                  primeResult.ars_level === 'Or' ? 'bg-yellow-50 border-yellow-300' :
+                  primeResult.ars_level === 'Argent' ? 'bg-slate-50 border-slate-300' :
+                  primeResult.ars_level === 'Bronze' ? 'bg-orange-50 border-orange-300' :
+                  'bg-red-50 border-red-200'
+                }`} data-testid="ars-result">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Award className={`w-5 h-5 ${
+                        primeResult.ars_level === 'Or' ? 'text-yellow-600' :
+                        primeResult.ars_level === 'Argent' ? 'text-slate-500' :
+                        primeResult.ars_level === 'Bronze' ? 'text-orange-600' :
+                        'text-red-500'
+                      }`} />
+                      <span className="text-sm font-semibold text-gray-800">Conformite ARS 1000</span>
+                    </div>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${
+                      primeResult.ars_level === 'Or' ? 'bg-yellow-200 text-yellow-800' :
+                      primeResult.ars_level === 'Argent' ? 'bg-slate-200 text-slate-700' :
+                      primeResult.ars_level === 'Bronze' ? 'bg-orange-200 text-orange-800' :
+                      'bg-red-200 text-red-700'
+                    }`} data-testid="ars-level-badge">
+                      {primeResult.ars_level}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                    <div 
+                      className={`h-2.5 rounded-full transition-all duration-1000 ${
+                        primeResult.ars_level === 'Or' ? 'bg-yellow-500' :
+                        primeResult.ars_level === 'Argent' ? 'bg-slate-400' :
+                        primeResult.ars_level === 'Bronze' ? 'bg-orange-400' :
+                        'bg-red-400'
+                      }`}
+                      style={{ width: `${Math.min(primeResult.ars_pct, 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-gray-500 mb-2">
+                    <span>{primeResult.ars_pct}%</span>
+                    <div className="flex gap-3">
+                      <span>Bronze 30%</span>
+                      <span>Argent 55%</span>
+                      <span>Or 80%</span>
+                    </div>
+                  </div>
+                  {primeResult.ars_conseil && (
+                    <p className="text-xs text-gray-600 italic">{primeResult.ars_conseil}</p>
+                  )}
+                </div>
+              )}
+
               <p className="text-xs text-gray-500 text-center mt-3">
                 {primeResult.arbres_par_ha} arbres/ha, {primeResult.hectares} ha, score carbone {primeResult.score_carbone} t CO2/ha/an
               </p>

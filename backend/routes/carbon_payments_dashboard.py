@@ -198,12 +198,6 @@ async def get_carbon_payments_dashboard(
             }
             for p in carbon_payments[:10]
         ],
-        "distribution_model": {
-            "price_per_tonne_xof": price_per_tonne_xof,
-            "price_per_tonne_usd": round(price_per_tonne_usd, 2),
-            "payment_method": "Via Cooperative",
-            "payment_frequency": "Trimestriel"
-        },
         "premium_details": premium_data
     }
 
@@ -536,7 +530,47 @@ async def calculer_ma_prime(data: MaPrimeRequest):
     total_yield_kg = data.hectares * yield_kg_per_ha
     prime_par_kg = round(farmer_share / total_yield_kg) if total_yield_kg > 0 else 0
 
-    # 7. Projection annuelle
+    # 7. Calcul ARS 1000
+    ars_pct = 0
+    # Arbres d'ombrage >8m
+    if trees_per_ha >= 40:
+        ars_pct += 25
+    elif trees_per_ha >= 20:
+        ars_pct += 15
+    elif trees_per_ha >= 10:
+        ars_pct += 8
+    # Pas d'engrais chimique
+    if not data.engrais_chimique:
+        ars_pct += 20
+    # Pas de brulage
+    if not data.brulage:
+        ars_pct += 20
+    # Residus au sol
+    if data.residus_au_sol:
+        ars_pct += 10
+    # Plantes de couverture
+    if data.plantes_couverture:
+        ars_pct += 10
+    # Diversite arbres
+    if data.especes_arbres >= 5:
+        ars_pct += 15
+    elif data.especes_arbres >= 3:
+        ars_pct += 8
+
+    if ars_pct >= 80:
+        ars_level = "Or"
+        ars_conseil = "Excellent ! Niveau Or ARS 1000. Vos pratiques sont exemplaires."
+    elif ars_pct >= 55:
+        ars_level = "Argent"
+        ars_conseil = "Bon niveau Argent ARS 1000. Augmentez la diversite et les arbres pour atteindre l'Or."
+    elif ars_pct >= 30:
+        ars_level = "Bronze"
+        ars_conseil = "Niveau Bronze ARS 1000. Plantez plus d'arbres et arretez le brulage pour passer au niveau Argent."
+    else:
+        ars_level = "Non conforme"
+        ars_conseil = "Pas encore conforme ARS 1000. Commencez par planter des arbres d'ombrage et arreter le brulage."
+
+    # 8. Projection annuelle
     return {
         "prime_par_kg_fcfa": prime_par_kg,
         "prime_annuelle_fcfa": round(farmer_share),
@@ -546,7 +580,10 @@ async def calculer_ma_prime(data: MaPrimeRequest):
         "arbres_par_ha": trees_per_ha,
         "score_carbone": round(co2_rate, 1),
         "rendement_kg_ha": yield_kg_per_ha,
-        "conseil": _generer_conseil(data, co2_rate, trees_per_ha)
+        "conseil": _generer_conseil(data, co2_rate, trees_per_ha),
+        "ars_level": ars_level,
+        "ars_pct": min(ars_pct, 100),
+        "ars_conseil": ars_conseil
     }
 
 
