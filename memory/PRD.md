@@ -133,6 +133,24 @@ Parametres reseau adaptes CI (2G/3G):
 - Fallback login: 60s timeout + 3s pause avant retry
 - LoginScreen: 3 niveaux de retry avec messages adaptes ("reseau lent", "deplacez-vous en zone WiFi")
 
+### Phase 33 - Nouveaux Ecrans Mobile + Securite Formules (DONE - 25/03/2026)
+
+5 nouveaux ecrans mobiles crees:
+1. AddAgentScreen — Formulaire creation agent terrain (nom, telephone, zone, email, villages)
+2. CreateLotScreen — Wizard 2 etapes (infos lot + selection agriculteurs contributeurs)
+3. CarbonSubmissionsScreen — Liste soumissions credits carbone avec stats
+4. CreateCarbonListingScreen — Wizard 3 etapes (type/standard, details projet, impact/soumission)
+5. Navigation corrigee: AgentListScreen pointe vers AddAgent au lieu de AgentActivation
+
+Securite formules de repartition (CONFIDENTIEL — Super Admin uniquement):
+- Mobile: texte de repartition supprime de CreateCarbonListingScreen
+- Web: pourcentages supprimes de FAQPage, rse/Dashboard, CarbonPremiumsPage
+- Backend API: distribution_model supprime de /stats, /dashboard; simulate-premium protege admin-only
+
+Builds v1.61.0 (finaux):
+- APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/4d00346f-8072-4c6f-9b86-21451110e9c1
+- AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/c5011a8f-cc1f-4577-9382-b677c5cdb6c5
+
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Cooperative Gagnoa: bielaghana@gmail.com / 474Treckadzo
