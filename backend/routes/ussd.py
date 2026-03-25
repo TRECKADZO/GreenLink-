@@ -1658,21 +1658,25 @@ async def ussd_carbon_calculator(request: USSDRequest):
         
         if result["eligible"]:
             result_text = (
-                f"VOTRE PRIME CARBONE\n\n"
+                f"PRIME CARBONE + ARS 1000\n\n"
                 f"Score: {result['score']}/10\n"
                 f"Arbres/ha: {result['arbres_par_ha']}\n"
                 f"CO2: {result['co2_par_ha']}t/ha\n\n"
                 f"Prime estimee:\n"
                 f"{result['prime_annuelle']:,.0f} FCFA/an\n"
                 f"({result['prime_fcfa_kg']} FCFA/kg)\n\n"
+                f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                f"{result['ars_conseil']}\n\n"
                 f"Inscrivez-vous sur GreenLink\n"
                 f"Tel: 07 87 76 10 23"
             )
         else:
             result_text = (
-                f"ESTIMATION\n\n"
+                f"ESTIMATION + ARS 1000\n\n"
                 f"Score: {result['score']}/10\n"
                 f"(Minimum requis: 5/10)\n\n"
+                f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                f"{result['ars_conseil']}\n\n"
                 f"Ameliorez votre score:\n"
                 f"- Plus d'arbres d'ombrage\n"
                 f"- Arretez le brulage\n"
@@ -1746,6 +1750,9 @@ async def calculate_premium_public(data: dict):
             "arbres_moyens": result.get("arbres_moyens", 0),
             "arbres_petits": result.get("arbres_petits", 0),
             "total_arbres": result.get("total_arbres", 0),
+            "ars_level": result.get("ars_level", ""),
+            "ars_pct": result.get("ars_pct", 0),
+            "ars_conseil": result.get("ars_conseil", ""),
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
