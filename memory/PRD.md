@@ -165,6 +165,26 @@ Implementation complete de la norme ARS 1000 (Norme Africaine Cacao Durable):
 
 **Certifications ARS ajoutees:** CreateLotScreen, CreateCarbonListingScreen, LotsPage (ARS 1000-1/2/3)
 
+### Phase 35 - Mise a jour Homepage ARS 1000 + Fix Sections Vides (DONE - 25/03/2026)
+
+**Page d'accueil mise a jour:**
+- Hero: Badge "ARS 1000 Ready" ajoute (style dore, distinct des badges EUDR et Carbone)
+- Hero: Sous-titre mentionne "EUDR, SSRTE/ICI & ARS 1000"
+- Features: Nouvelle carte "Conformite ARS 1000" avec badge jaune et description complete
+- 8 cartes fonctionnalites au total (vs 7 precedemment)
+
+**Bug corrige: Sections Features et HowItWorks vides**
+- Cause: API /api/features et /api/steps retournent [] (tableau vide, truthy en JS), ecrasant les mockFeatures
+- Fix: Verification `data && data.length > 0` avant de remplacer les donnees mock
+- Impact: Les 8 cartes Features et 3 etapes HowItWorks s'affichent maintenant correctement
+
+**Simulateur USSD verifie fonctionnel:**
+- /farmer/prime-carbone fonctionne correctement
+- Clic "Composer *144*88#" → Question 1/9 s'affiche
+- Backend /api/ussd/calculate-premium retourne score, eligible, ars_level, ars_pct
+
+**Tests iteration 74: 100% backend (9/9), 100% frontend**
+
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
