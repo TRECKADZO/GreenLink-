@@ -46,11 +46,8 @@ export const AuthProvider = ({ children }) => {
       console.log('[Auth] Login attempt with:', identifier);
       console.log('[Auth] API URL:', CONFIG.API_URL);
       
-      // Health check avant login
-      const healthy = await api.checkHealth();
-      if (!healthy) {
-        console.warn('[Auth] Server health check failed, trying login anyway...');
-      }
+      // PAS de health check avant login — reduit les requetes reseau
+      // et evite de declencher la protection anti-bot de Cloudflare
       
       // Tentative de login principale
       let response;
@@ -61,23 +58,30 @@ export const AuthProvider = ({ children }) => {
         });
       } catch (loginError) {
         const errStatus = loginError.response?.status;
-        // Si 404 : le proxy/CDN a mal route — retry avec URL directe sans intercepteurs
-        if (errStatus === 404 || (loginError.message && loginError.message.includes('404'))) {
-          console.warn('[Auth] 404 on login — retrying with direct URL...');
+        console.warn('[Auth] Login failed with status:', errStatus, loginError.message);
+        
+        // Si erreur reseau OU 404/5xx : retry avec axios direct (sans intercepteurs)
+        if (!loginError.response || errStatus === 404 || errStatus >= 500 || errStatus === 0) {
+          console.warn('[Auth] Retrying with direct axios (no interceptors)...');
           await new Promise(r => setTimeout(r, 2000));
-          const axios = require('axios').default;
-          response = await axios.post(
-            CONFIG.API_URL + '/api/auth/login',
-            { identifier, password },
-            {
-              timeout: 15000,
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'User-Agent': 'GreenLinkAgritech/1.58 Mobile',
-              },
-            }
-          );
+          try {
+            const directAxios = require('axios').default;
+            response = await directAxios.post(
+              CONFIG.API_URL + '/api/auth/login',
+              { identifier, password },
+              {
+                timeout: 20000,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                },
+              }
+            );
+          } catch (fallbackError) {
+            console.error('[Auth] Fallback also failed:', fallbackError.message);
+            // Propager l'erreur originale qui a un meilleur contexte
+            throw loginError;
+          }
         } else {
           throw loginError;
         }
@@ -98,7 +102,6 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error('[Auth] Login error:', error.message);
-      console.error('[Auth] Error response:', error.response?.data);
       console.error('[Auth] Error status:', error.response?.status);
       
       let errorMessage = 'Erreur de connexion';
@@ -112,7 +115,8 @@ export const AuthProvider = ({ children }) => {
           if (typeof data.detail === 'string') {
             errorMessage = data.detail;
           } else if (Array.isArray(data.detail)) {
-            errorMessage = data.detail.map(e => e.msg || e).join('\n');
+            // Erreur Pydantic validation — montrer un message utile
+            errorMessage = 'Veuillez verifier les informations saisies';
           } else {
             errorMessage = JSON.stringify(data.detail);
           }

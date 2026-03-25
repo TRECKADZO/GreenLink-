@@ -31,23 +31,26 @@ const LoginScreen = ({ navigation }) => {
     const result = await login(identifier, password);
     
     if (!result.success && result.isServerError) {
-      // Erreur serveur/Cloudflare — proposer un retry automatique
+      // Erreur serveur/réseau — proposer un retry automatique avec delai
       setLoading(false);
       Alert.alert(
         'Probleme de connexion',
-        result.error + '\n\nVoulez-vous reessayer automatiquement ?',
+        result.error + '\n\nVoulez-vous reessayer ?',
         [
           { text: 'Annuler', style: 'cancel' },
           { 
             text: 'Reessayer', 
             onPress: async () => {
               setLoading(true);
-              // Attendre 3 secondes avant le retry
-              await new Promise(r => setTimeout(r, 3000));
+              // Attendre 5 secondes avant le retry (laisser Cloudflare se calmer)
+              await new Promise(r => setTimeout(r, 5000));
               const retry = await login(identifier, password);
               setLoading(false);
               if (!retry.success) {
-                Alert.alert('Erreur', retry.error);
+                Alert.alert(
+                  'Connexion impossible',
+                  retry.error + '\n\nSi le probleme persiste, verifiez votre connexion internet ou reessayez plus tard.'
+                );
               }
             }
           },

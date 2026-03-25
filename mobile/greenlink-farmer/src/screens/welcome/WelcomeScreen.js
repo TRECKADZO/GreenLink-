@@ -10,6 +10,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const { width } = Dimensions.get('window');
@@ -207,7 +208,7 @@ const WelcomeScreen = ({ navigation }) => {
               <Text style={styles.contactPhone}>📞 +225 07 87 76 10 23</Text>
             </View>
 
-            <Text style={styles.versionText}>Version 1.59.0</Text>
+            <Text style={styles.versionText}>Version {Constants.expoConfig?.version || '1.61.0'}</Text>
           </View>
 
         </ScrollView>

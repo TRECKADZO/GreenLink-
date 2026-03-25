@@ -7,8 +7,8 @@ export const CONFIG = {
     || 'https://mobile-harmonize.preview.emergentagent.com',
   
   // Timeouts adaptés à la faible connectivité
-  REQUEST_TIMEOUT: 45000, // 45 secondes pour reseaux lents CI
-  RETRY_ATTEMPTS: 6,     // 6 tentatives avec jitter pour Cloudflare
+  REQUEST_TIMEOUT: 30000, // 30 secondes (45 etait excessif)
+  RETRY_ATTEMPTS: 3,     // 3 tentatives max (6 declenchait le rate-limit Cloudflare)
   RETRY_DELAY: 2000,     // Base delay (avec jitter dans api.js)
   
   // Cache local
