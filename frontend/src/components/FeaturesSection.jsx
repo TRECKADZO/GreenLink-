@@ -49,6 +49,13 @@ const mockFeatures = [
     badgeColor: 'bg-slate-100 text-slate-700'
   },
   {
+    icon: 'Award',
+    title: 'Conformité ARS 1000',
+    description: 'Norme Africaine pour le Cacao Durable : évaluez votre niveau Bronze, Argent ou Or via USSD et recevez des recommandations personnalisées',
+    badge: 'ARS 1000',
+    badgeColor: 'bg-yellow-100 text-yellow-700'
+  },
+  {
     icon: 'FileText',
     title: 'Rapports & Analytics',
     description: 'Tableaux de bord en temps réel, export de données, rapports de conformité et analyses de performance par région',
@@ -63,7 +70,7 @@ const FeaturesSection = () => {
   useEffect(() => {
     const fetchFeatures = async () => {
       const data = await api.getFeatures();
-      if (data) {
+      if (data && data.length > 0) {
         setFeatures(data);
       }
       setLoading(false);

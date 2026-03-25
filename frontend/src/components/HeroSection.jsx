@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Sprout, ArrowRight, Leaf, Shield } from 'lucide-react';
+import { Sprout, ArrowRight, Leaf, Shield, Award } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import CarbonCalculator from './CarbonCalculator';
@@ -30,7 +30,7 @@ const HeroSection = () => {
         
         <p className="text-sm sm:text-lg lg:text-xl text-white/90 text-center max-w-4xl mb-6 sm:mb-8 leading-relaxed px-2">
           Coopératives, producteurs et auditeurs : gérez vos parcelles, recevez des primes carbone 
-          sur Orange Money et assurez la conformité EUDR & SSRTE/ICI.
+          sur Orange Money et assurez la conformité EUDR, SSRTE/ICI & ARS 1000.
         </p>
 
         {/* Quick stats */}
@@ -42,6 +42,10 @@ const HeroSection = () => {
           <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
             <Leaf className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
             <span className="text-white font-medium text-xs sm:text-base">Traçabilité Carbone</span>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#d4a574]/20 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 border border-[#d4a574]/30">
+            <Award className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4a574]" />
+            <span className="text-white font-medium text-xs sm:text-base">ARS 1000 Ready</span>
           </div>
         </div>
         

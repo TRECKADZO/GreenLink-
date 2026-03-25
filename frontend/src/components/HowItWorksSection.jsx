@@ -32,7 +32,7 @@ const HowItWorksSection = () => {
   useEffect(() => {
     const fetchSteps = async () => {
       const data = await api.getSteps();
-      if (data) {
+      if (data && data.length > 0) {
         setSteps(data);
       }
     };
