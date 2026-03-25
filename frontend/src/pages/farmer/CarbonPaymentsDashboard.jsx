@@ -459,7 +459,7 @@ const CarbonPaymentsDashboard = () => {
             <CardContent className="p-6">
               <h3 className="font-semibold text-lg mb-2">Demander un versement</h3>
               <p className="text-sm text-amber-100 mb-4">
-                Ta prime sera versée via ta coopérative sur Orange Money le jour même
+                Ta prime sera versée sur Orange Money le jour même
               </p>
               <button
                 onClick={handleRequestPayment}
