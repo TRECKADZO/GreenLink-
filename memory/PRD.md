@@ -113,6 +113,19 @@ Builds v1.59.0:
 - APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/73caa5ff-1567-4609-ae5f-4cec0d3c1de0
 - AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/33f4cb56-6286-4c06-8738-11000400a22b
 
+### Phase 32 - Fix Definitif Cloudflare/Login Mobile v1.61.0 (DONE - 25/03/2026)
+**Bug recurrent: Erreur "Probleme de connexion" persistante sur mobile en Cote d'Ivoire**
+Causes racines identifiees et corrigees:
+1. CRITIQUE: Le retry Cloudflare ajoutait `?_t=timestamp` aux POST, causant 404 proxy → Supprime
+2. CRITIQUE: Health check pre-login = requete supplementaire declenchant rate-limit Cloudflare → Supprime
+3. HAUTE: Faux User-Agent navigateur declenchait la detection bot Cloudflare → Remplace par User-Agent honnete
+4. MOYENNE: 6 retries rapides = rate-limit garanti → Reduit a 3 avec delais plus longs
+5. Fallback login ameliore: retry automatique avec axios direct (sans intercepteurs) sur 404/5xx/reseau
+6. Version dynamique via Constants.expoConfig dans WelcomeScreen
+
+Build v1.61.0:
+- APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/ef1a2150-828b-43fd-a735-1bc810c0f51a
+
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
 - Cooperative Gagnoa: bielaghana@gmail.com / 474Treckadzo
