@@ -24,7 +24,7 @@ import time
 from datetime import datetime, timedelta
 
 # Base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://harvest-validation.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://mobile-harmonize.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 CREDENTIALS = {

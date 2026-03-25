@@ -182,15 +182,16 @@ const WelcomeScreen = ({ navigation }) => {
           </View>
 
 
-          {/* USSD Access Banner */}
+          {/* USSD Access Banner — masque temporairement (fonctionnalite conservee)
           <View style={styles.ussdBanner}>
             <Text style={styles.ussdIcon}>📱</Text>
             <View style={styles.ussdContent}>
-              <Text style={styles.ussdTitle}>Accès sans internet</Text>
+              <Text style={styles.ussdTitle}>Acces sans internet</Text>
               <Text style={styles.ussdCode}>*144*88#</Text>
-              <Text style={styles.ussdSubtitle}>Disponible en français</Text>
+              <Text style={styles.ussdSubtitle}>Disponible en francais</Text>
             </View>
           </View>
+          */}
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -206,7 +207,7 @@ const WelcomeScreen = ({ navigation }) => {
               <Text style={styles.contactPhone}>📞 +225 07 87 76 10 23</Text>
             </View>
 
-            <Text style={styles.versionText}>Version 1.16.0</Text>
+            <Text style={styles.versionText}>Version 1.59.0</Text>
           </View>
 
         </ScrollView>
