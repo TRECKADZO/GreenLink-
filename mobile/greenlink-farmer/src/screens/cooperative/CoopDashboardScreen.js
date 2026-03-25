@@ -337,6 +337,12 @@ export default function CoopDashboardScreen({ navigation }) {
             color="#8BC34A"
           />
           <QuickAction
+            icon="earth"
+            label="Credits Carbone"
+            onPress={() => navigation.navigate('CarbonSubmissions')}
+            color="#059669"
+          />
+          <QuickAction
             icon="body"
             label="Suivi Agents"
             onPress={() => navigation.navigate('AgentsProgress')}
