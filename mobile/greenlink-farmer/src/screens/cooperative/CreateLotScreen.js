@@ -17,6 +17,9 @@ const PRODUCT_TYPES = [
 
 const CERTIFICATIONS = [
   { key: '', label: 'Aucune' },
+  { key: 'ARS 1000-1', label: 'ARS 1000-1' },
+  { key: 'ARS 1000-2', label: 'ARS 1000-2' },
+  { key: 'ARS 1000-3', label: 'ARS 1000-3' },
   { key: 'fairtrade', label: 'Fairtrade' },
   { key: 'rainforest', label: 'Rainforest Alliance' },
   { key: 'utz', label: 'UTZ' },

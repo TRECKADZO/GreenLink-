@@ -545,6 +545,9 @@ const LotsPage = () => {
                       <SelectValue placeholder="Sélectionner" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="ARS 1000-1">ARS 1000-1</SelectItem>
+                      <SelectItem value="ARS 1000-2">ARS 1000-2</SelectItem>
+                      <SelectItem value="ARS 1000-3">ARS 1000-3</SelectItem>
                       <SelectItem value="rainforest">Rainforest Alliance</SelectItem>
                       <SelectItem value="utz">UTZ Certified</SelectItem>
                       <SelectItem value="fairtrade">Fairtrade</SelectItem>

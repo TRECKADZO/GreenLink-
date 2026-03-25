@@ -200,9 +200,6 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     - Grands (>12m): coef 1.0
     - Moyens (8-12m): coef 0.7
     - Petits (<8m): coef 0.3
-    
-    RSE = score x taux x hectares
-    30% frais, 70% distribue (25% GreenLink, 5% Coop, 70% Paysan)
     """
     hectares = float(answers.get("hectares", 1))
     arbres_grands = int(answers.get("arbres_grands", 0))
@@ -245,21 +242,18 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     score = max(0, min(10, round(score, 1)))
     score_ratio = score / 10.0
 
-    FEES_RATE = 0.30
-    DISTRIBUTABLE_RATE = 0.70
-    FARMER_SHARE = 0.70
-
     prix_rse_tonne = avg_rse_price
-    net_per_tonne = prix_rse_tonne * DISTRIBUTABLE_RATE
-    farmer_per_tonne = net_per_tonne * FARMER_SHARE * score_ratio
-
     co2_per_ha = 2 + score_ratio * 6
-    farmer_revenue_per_ha = farmer_per_tonne * co2_per_ha
+    # Prime simplifiee (sans details de repartition)
+    prime_par_ha = prix_rse_tonne * co2_per_ha * 0.49  # Part nette planteur
+    prime_annuelle = prime_par_ha * hectares
 
     culture = answers.get("culture", "cacao")
     rendement_kg_ha = {"cacao": 700, "cafe": 500, "anacarde": 400}.get(culture, 600)
-    prime_fcfa_kg = farmer_revenue_per_ha / max(rendement_kg_ha, 1)
-    prime_annuelle = farmer_revenue_per_ha * hectares
+    prime_fcfa_kg = prime_par_ha / max(rendement_kg_ha, 1)
+
+    # Calcul niveau ARS 1000
+    ars_result = calculate_ars_level(answers)
 
     return {
         "score": round(score, 1),
@@ -275,7 +269,157 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
         "culture": culture,
         "rendement_kg_ha": rendement_kg_ha,
         "co2_par_ha": round(co2_per_ha, 1),
+        "ars_level": ars_result["level"],
+        "ars_pct": ars_result["pct"],
+        "ars_conseil": ars_result["conseil"],
     }
+
+
+# ============= ARS 1000 COMPLIANCE ENGINE =============
+
+def calculate_ars_level(answers: dict) -> dict:
+    """
+    Calcule le niveau de conformite ARS 1000 (Bronze/Argent/Or)
+    Base sur les criteres: agroforesterie, brulage, engrais, tracabilite
+    """
+    hectares = float(answers.get("hectares", 0))
+    arbres_grands = int(answers.get("arbres_grands", 0))
+    arbres_total = int(answers.get("arbres_total", arbres_grands + int(answers.get("arbres_moyens", 0)) + int(answers.get("arbres_petits", 0))))
+    arbres_par_ha = arbres_total / max(hectares, 0.1) if hectares > 0 else 0
+    arbres_grands_par_ha = arbres_grands / max(hectares, 0.1) if hectares > 0 else 0
+
+    pct = 0
+    details = []
+
+    # Critere 1: Agroforesterie (35 points max)
+    if arbres_par_ha >= 60:
+        pct += 35
+        details.append("Agroforesterie: Excellent")
+    elif arbres_par_ha >= 40:
+        pct += 25
+        details.append("Agroforesterie: Bon")
+    elif arbres_par_ha >= 20:
+        pct += 15
+        details.append("Agroforesterie: Acceptable")
+    elif arbres_par_ha >= 10:
+        pct += 8
+        details.append("Agroforesterie: Insuffisant")
+    else:
+        details.append("Agroforesterie: Non conforme")
+
+    # Critere 2: Arbres grands >8m (15 points)
+    if arbres_grands_par_ha >= 30:
+        pct += 15
+    elif arbres_grands_par_ha >= 15:
+        pct += 10
+    elif arbres_grands_par_ha >= 5:
+        pct += 5
+
+    # Critere 3: Pas de brulage (20 points)
+    if answers.get("brulage") == "non":
+        pct += 20
+        details.append("Brulage: Non (conforme)")
+    else:
+        details.append("Brulage: Oui (non conforme ARS)")
+
+    # Critere 4: Gestion engrais (10 points)
+    if answers.get("engrais") == "non":
+        pct += 10
+    elif answers.get("engrais") == "oui":
+        pct += 5  # Utilisation raisonnee
+
+    # Critere 5: Pratiques complementaires (20 points)
+    if answers.get("compost") == "oui": pct += 7
+    if answers.get("agroforesterie") == "oui": pct += 7
+    if answers.get("couverture_sol") == "oui": pct += 6
+
+    pct = min(pct, 100)
+
+    # Determiner le niveau
+    if pct >= 80:
+        level = "Or"
+        conseil = "Felicitations ! Vous etes au niveau Or ARS 1000."
+    elif pct >= 55:
+        level = "Argent"
+        manque = 80 - pct
+        arbres_manquants = max(0, int((40 - arbres_par_ha) * max(hectares, 1)))
+        if arbres_manquants > 0:
+            conseil = f"Plantez {arbres_manquants} arbres supplementaires pour viser le niveau Or."
+        else:
+            conseil = f"Arretez le brulage et utilisez le compost pour atteindre le niveau Or."
+    elif pct >= 30:
+        level = "Bronze"
+        conseil = "Plantez plus d'arbres ombres et arretez le brulage pour passer au niveau Argent."
+    else:
+        level = "Non conforme"
+        conseil = "Commencez par planter au moins 20 arbres/ha et arreter le brulage."
+
+    return {"level": level, "pct": pct, "details": details, "conseil": conseil}
+
+
+async def save_ars_data(farmer_id: str, answers: dict, result: dict, phone: str, farmer_name: str, coop_name: str):
+    """Sauvegarder les donnees ARS 1000 du planteur et notifier l'admin"""
+    now = datetime.now(timezone.utc)
+    arbres_total = int(answers.get("arbres_grands", 0)) + int(answers.get("arbres_moyens", 0)) + int(answers.get("arbres_petits", 0))
+
+    ars_doc = {
+        "farmer_id": farmer_id,
+        "farmer_name": farmer_name,
+        "phone": phone,
+        "coop_name": coop_name,
+        "hectares": float(answers.get("hectares", 0)),
+        "arbres_total": arbres_total,
+        "arbres_grands": int(answers.get("arbres_grands", 0)),
+        "arbres_moyens": int(answers.get("arbres_moyens", 0)),
+        "arbres_petits": int(answers.get("arbres_petits", 0)),
+        "engrais": answers.get("engrais", answers.get("engrais_chimique", "non")),
+        "brulage": answers.get("brulage", "non"),
+        "compost": answers.get("compost", "non"),
+        "agroforesterie": answers.get("agroforesterie", "non"),
+        "couverture_sol": answers.get("couverture_sol", "non"),
+        "age_cacaoyers": answers.get("age_cacaoyers", ""),
+        "score_carbone": result.get("score", 0),
+        "prime_estimee": result.get("prime_annuelle", 0),
+        "ars_level": result.get("ars_level", ""),
+        "ars_pct": result.get("ars_pct", 0),
+        "ars_conseil": result.get("ars_conseil", ""),
+        "updated_at": now,
+    }
+
+    existing = await db.ars_farmer_data.find_one({"farmer_id": farmer_id})
+    if existing:
+        await db.ars_farmer_data.update_one({"farmer_id": farmer_id}, {"$set": ars_doc})
+    else:
+        ars_doc["created_at"] = now
+        await db.ars_farmer_data.insert_one(ars_doc)
+
+    logger.info(f"ARS data saved for farmer {farmer_id}: level={result.get('ars_level')}")
+
+
+async def notify_admin_ars_update(farmer_id: str, farmer_name: str, phone: str, coop_name: str, field: str, value, ars_result: dict):
+    """Enregistrer une notification admin lors de la mise a jour ARS"""
+    field_labels = {
+        "hectares": "Hectares cacao",
+        "arbres_total": "Arbres ombres total",
+        "arbres_grands": "Arbres > 8 metres",
+        "engrais": "Engrais chimique",
+        "brulage": "Brulage residus",
+    }
+    await db.admin_notifications.insert_one({
+        "type": "ars_update",
+        "farmer_id": farmer_id,
+        "farmer_name": farmer_name,
+        "phone": phone,
+        "coop_name": coop_name,
+        "field_updated": field_labels.get(field, field),
+        "new_value": value,
+        "ars_level": ars_result["level"],
+        "ars_pct": ars_result["pct"],
+        "message": f"{farmer_name} ({coop_name}) a mis a jour: {field_labels.get(field, field)} = {value}. Niveau ARS: {ars_result['level']} ({ars_result['pct']}%)",
+        "read": False,
+        "created_at": datetime.now(timezone.utc)
+    })
+    logger.info(f"Admin notification created for ARS update: {farmer_name} - {field}")
 
 
 # ============= MAIN USSD ENDPOINT (*144*88#) =============
@@ -331,14 +475,14 @@ async def ussd_callback(request: USSDRequest):
                     
                     coop_label = f" ({coop})" if coop else ""
                     response_text = (
-                        f"GreenLink Agritech\n"
+                        f"GreenLink Agritech - ARS 1000\n"
                         f"Bonjour {name}{coop_label}\n\n"
-                        f"1. Estimer ma prime carbone\n"
-                        f"2. Demander le versement\n"
-                        f"3. Mes parcelles et historique\n"
-                        f"4. Conseils agroforestiers\n"
-                        f"5. Mon profil\n"
-                        f"6. Aide / Contact\n"
+                        f"1. Prime carbone + conformite ARS\n"
+                        f"2. Mes donnees ARS 1000\n"
+                        f"3. Conseils pratiques ARS\n"
+                        f"4. Demander paiement prime\n"
+                        f"5. Mes parcelles\n"
+                        f"6. Mon profil\n"
                         f"0. Quitter"
                     )
                 else:
@@ -421,14 +565,14 @@ async def ussd_callback(request: USSDRequest):
                 session["data"]["coop_name"] = coop
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"GreenLink Agritech\n"
+                    f"GreenLink Agritech - ARS 1000\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Estimer ma prime carbone\n"
-                    f"2. Demander le versement\n"
-                    f"3. Mes parcelles et historique\n"
-                    f"4. Conseils agroforestiers\n"
-                    f"5. Mon profil\n"
-                    f"6. Aide / Contact\n"
+                    f"1. Prime carbone + conformite ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils pratiques ARS\n"
+                    f"4. Demander paiement prime\n"
+                    f"5. Mes parcelles\n"
+                    f"6. Mon profil\n"
                     f"0. Quitter"
                 )
             else:
@@ -567,17 +711,61 @@ async def ussd_callback(request: USSDRequest):
             choice = inputs[-1] if inputs else ""
             
             if choice == "1":
-                # Estimation prime carbone -> choix simple/detaillee
+                # Prime carbone + conformite ARS -> choix simple/detaillee
                 session["state"] = "estimation_type"
                 response_text = (
-                    "Estimation Prime Carbone\n\n"
+                    "Prime Carbone + Conformite ARS\n\n"
                     "1. Estimation simple (rapide)\n"
                     "2. Estimation detaillee\n"
                     "0. Retour"
                 )
                 
             elif choice == "2":
-                # Demander versement prime
+                # Mes donnees ARS 1000
+                farmer_id = data.get("farmer_id", "")
+                session["state"] = "ars_data_menu"
+                if farmer_id:
+                    ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id})
+                    if ars_data:
+                        session["data"]["has_ars_data"] = True
+                        response_text = (
+                            "MES DONNEES ARS 1000\n\n"
+                            "1. Voir mes donnees actuelles\n"
+                            "2. Mettre a jour mes donnees\n"
+                            "3. Generer rapport pour coop\n"
+                            "4. Conseils pour mon niveau\n"
+                            "0. Retour menu principal"
+                        )
+                    else:
+                        session["data"]["has_ars_data"] = False
+                        response_text = (
+                            "MES DONNEES ARS 1000\n\n"
+                            "Aucune donnee enregistree.\n"
+                            "Faites d'abord une estimation\n"
+                            "(choix 1 du menu)\n"
+                            "pour creer votre profil ARS.\n\n"
+                            "1. Faire une estimation\n"
+                            "0. Retour"
+                        )
+                else:
+                    response_text = "Profil non reconnu.\n\n0. Retour"
+                    session["state"] = "main_menu"
+
+            elif choice == "3":
+                # Conseils pratiques ARS 1000
+                session["state"] = "ars_conseils_menu"
+                response_text = (
+                    "CONSEILS PRATIQUES ARS 1000\n\n"
+                    "1. Agroforesterie\n"
+                    "2. Lutte contre le brulage\n"
+                    "3. Gestion des engrais\n"
+                    "4. Tracabilite\n"
+                    "5. Recommandations perso.\n"
+                    "0. Retour menu principal"
+                )
+                
+            elif choice == "4":
+                # Demander paiement prime
                 farmer_id = data.get("farmer_id", "")
                 if farmer_id:
                     from routes.carbon_premiums import create_ussd_payment_request
@@ -599,8 +787,8 @@ async def ussd_callback(request: USSDRequest):
                     response_text = "Profil non reconnu.\n\n0. Retour"
                     session["state"] = "main_menu"
                     
-            elif choice == "3":
-                # Mes parcelles et historique
+            elif choice == "5":
+                # Mes parcelles
                 farmer_id = data.get("farmer_id", "")
                 if farmer_id:
                     parcels = await get_farmer_parcels(farmer_id)
@@ -621,27 +809,16 @@ async def ussd_callback(request: USSDRequest):
                     response_text = "Profil non reconnu.\n\n0. Retour"
                 session["state"] = "parcels_view"
                 
-            elif choice == "4":
-                # Conseils agroforestiers
-                response_text = (
-                    "Conseils Agroforestiers\n\n"
-                    "- Plantez des arbres d'ombrage\n"
-                    "  (acajou, fromager)\n"
-                    "- Utilisez du compost\n"
-                    "- Evitez le brulage\n"
-                    "- Couvrez le sol\n\n"
-                    "Plus de conseils:\n"
-                    "Tel: 07 87 76 10 23\n\n"
-                    "0. Retour"
-                )
-                session["state"] = "advice_view"
-                
-            elif choice == "5":
+            elif choice == "6":
                 # Mon profil
                 name = data.get("farmer_name", "Planteur")
                 coop = data.get("coop_name", "Non renseigne")
                 farmer_id = data.get("farmer_id", "")
                 stats = await get_farmer_carbon_stats(farmer_id) if farmer_id else {}
+                
+                # Check ARS level
+                ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id}) if farmer_id else None
+                ars_label = f"Niveau ARS: {ars_data['ars_level']} ({ars_data['ars_pct']}%)\n" if ars_data else ""
                 
                 response_text = (
                     f"Mon Profil\n\n"
@@ -650,22 +827,11 @@ async def ussd_callback(request: USSDRequest):
                     f"Tel: {phone}\n"
                     f"Parcelles: {stats.get('parcels_count', 0)}\n"
                     f"Surface: {stats.get('total_area', 0)} ha\n"
-                    f"Score: {stats.get('avg_score', 0)}/10\n\n"
+                    f"Score: {stats.get('avg_score', 0)}/10\n"
+                    f"{ars_label}\n"
                     f"0. Retour"
                 )
                 session["state"] = "profile_view"
-                
-            elif choice == "6":
-                # Aide / Contact
-                response_text = (
-                    "Aide GreenLink\n\n"
-                    "Tel: 07 87 76 10 23\n"
-                    "Canada: +1 514 475-7340\n\n"
-                    "Composez *144*88# pour\n"
-                    "estimer votre prime.\n\n"
-                    "0. Retour"
-                )
-                session["state"] = "help_view"
                 
             elif choice == "0":
                 response_text = "Merci d'avoir utilise GreenLink.\nA bientot !"
@@ -676,12 +842,12 @@ async def ussd_callback(request: USSDRequest):
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
                     f"Option invalide.\n\n"
-                    f"1. Estimer ma prime carbone\n"
-                    f"2. Demander le versement\n"
-                    f"3. Mes parcelles\n"
-                    f"4. Conseils\n"
-                    f"5. Mon profil\n"
-                    f"6. Aide\n"
+                    f"1. Prime carbone + ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils ARS\n"
+                    f"4. Demander paiement\n"
+                    f"5. Mes parcelles\n"
+                    f"6. Mon profil\n"
                     f"0. Quitter"
                 )
 
@@ -786,13 +952,19 @@ async def ussd_callback(request: USSDRequest):
                         session["data"]["est_result"] = result
                         session["state"] = "est_result"
                         
+                        # Sauvegarder les donnees ARS pour ce planteur
+                        farmer_id = data.get("farmer_id", "")
+                        if farmer_id:
+                            await save_ars_data(farmer_id, answers, result, phone, data.get("farmer_name", ""), data.get("coop_name", ""))
+                        
                         response_text = (
-                            f"Estimation Prime Carbone\n\n"
+                            f"Prime Carbone + ARS 1000\n\n"
                             f"Hectares: {result['hectares']} ha\n"
                             f"Arbres >8m: {result['arbres_grands']}\n"
-                            f"Score: {result['score']}/10\n\n"
-                            f"Prime estimee:\n"
-                            f"{format_xof(result['prime_annuelle'])} / an\n\n"
+                            f"Score: {result['score']}/10\n"
+                            f"Prime: {format_xof(result['prime_annuelle'])}/an\n\n"
+                            f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                            f"{result['ars_conseil']}\n\n"
                             f"1. Demander le versement\n"
                             f"2. Refaire l'estimation\n"
                             f"3. Retour menu\n"
@@ -842,15 +1014,21 @@ async def ussd_callback(request: USSDRequest):
                         session["data"]["est_result"] = result
                         session["state"] = "est_result"
                         
+                        # Sauvegarder les donnees ARS pour ce planteur
+                        farmer_id = data.get("farmer_id", "")
+                        if farmer_id:
+                            await save_ars_data(farmer_id, answers, result, phone, data.get("farmer_name", ""), data.get("coop_name", ""))
+                        
                         response_text = (
-                            f"Estimation Prime Carbone\n\n"
+                            f"Prime Carbone + ARS 1000\n\n"
                             f"Hectares: {result['hectares']} ha\n"
                             f"Grands >12m: {result['arbres_grands']}\n"
                             f"Moyens 8-12m: {result['arbres_moyens']}\n"
                             f"Petits <8m: {result['arbres_petits']}\n"
-                            f"Score: {result['score']}/10\n\n"
-                            f"Prime estimee:\n"
-                            f"{format_xof(result['prime_annuelle'])} / an\n\n"
+                            f"Score: {result['score']}/10\n"
+                            f"Prime: {format_xof(result['prime_annuelle'])}/an\n\n"
+                            f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                            f"{result['ars_conseil']}\n\n"
                             f"1. Demander le versement\n"
                             f"2. Refaire l'estimation\n"
                             f"3. Retour menu\n"
@@ -903,19 +1081,442 @@ async def ussd_callback(request: USSDRequest):
                 coop = data.get("coop_name", "")
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"GreenLink Agritech\n"
+                    f"GreenLink Agritech - ARS 1000\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Estimer ma prime carbone\n"
-                    f"2. Demander le versement\n"
-                    f"3. Mes parcelles\n"
-                    f"4. Conseils\n"
-                    f"5. Mon profil\n"
-                    f"6. Aide\n"
+                    f"1. Prime carbone + ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils ARS\n"
+                    f"4. Demander paiement\n"
+                    f"5. Mes parcelles\n"
+                    f"6. Mon profil\n"
                     f"0. Quitter"
                 )
             else:
                 response_text = "Merci !\nComposez *144*88# pour revenir."
                 continue_session = False
+
+        # ==============================
+        # STATE: ARS DATA MENU
+        # ==============================
+        elif state == "ars_data_menu":
+            choice = inputs[-1] if inputs else ""
+            farmer_id = data.get("farmer_id", "")
+
+            if choice == "1" and data.get("has_ars_data"):
+                # Voir mes donnees actuelles
+                ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id}) if farmer_id else None
+                if ars_data:
+                    updated = ars_data.get("updated_at", ars_data.get("created_at", ""))
+                    updated_str = updated.strftime("%d/%m/%Y") if hasattr(updated, 'strftime') else str(updated)[:10]
+                    response_text = (
+                        f"VOS DONNEES ARS 1000\n"
+                        f"(maj: {updated_str})\n\n"
+                        f"Hectares: {ars_data.get('hectares', '-')} ha\n"
+                        f"Arbres total: {ars_data.get('arbres_total', '-')}\n"
+                        f"Arbres >8m: {ars_data.get('arbres_grands', '-')}\n"
+                        f"Engrais: {'Oui' if ars_data.get('engrais') == 'oui' else 'Non'}\n"
+                        f"Brulage: {'Oui' if ars_data.get('brulage') == 'oui' else 'Non'}\n"
+                        f"Niveau ARS: {ars_data.get('ars_level', '-')} ({ars_data.get('ars_pct', 0)}%)\n\n"
+                        f"1. Mettre a jour\n"
+                        f"2. Generer rapport coop\n"
+                        f"0. Retour"
+                    )
+                else:
+                    response_text = "Aucune donnee trouvee.\n\n1. Faire estimation\n0. Retour"
+                session["state"] = "ars_data_view"
+
+            elif choice == "2" and data.get("has_ars_data"):
+                # Mise a jour donnees
+                session["state"] = "ars_update_menu"
+                response_text = (
+                    "MISE A JOUR ARS 1000\n\n"
+                    "1. Hectares de cacao\n"
+                    "2. Nombre total arbres\n"
+                    "3. Arbres > 8 metres\n"
+                    "4. Engrais (Oui/Non)\n"
+                    "5. Brulage (Oui/Non)\n"
+                    "0. Annuler"
+                )
+
+            elif choice == "3" and data.get("has_ars_data"):
+                # Generer rapport
+                ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id}) if farmer_id else None
+                name = data.get("farmer_name", "Planteur")
+                if ars_data:
+                    response_text = (
+                        f"RAPPORT ARS 1000\n"
+                        f"Planteur: {name}\n"
+                        f"Niveau: {ars_data.get('ars_level', '-')}\n"
+                        f"Score: {ars_data.get('ars_pct', 0)}%\n\n"
+                        f"Rapport transmis a votre\n"
+                        f"cooperative.\n\n"
+                        f"0. Retour"
+                    )
+                    # Notify cooperative
+                    await db.ars_reports.insert_one({
+                        "farmer_id": farmer_id,
+                        "farmer_name": name,
+                        "phone": phone,
+                        "coop_name": data.get("coop_name", ""),
+                        "ars_level": ars_data.get("ars_level"),
+                        "ars_pct": ars_data.get("ars_pct"),
+                        "data": {k: v for k, v in ars_data.items() if k not in ("_id", "farmer_id")},
+                        "created_at": datetime.now(timezone.utc)
+                    })
+                else:
+                    response_text = "Aucune donnee.\n\n0. Retour"
+                session["state"] = "ars_data_menu"
+
+            elif choice == "4" and data.get("has_ars_data"):
+                # Conseils personnalises
+                ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id}) if farmer_id else None
+                if ars_data:
+                    conseil = ars_data.get("ars_conseil", "Continuez vos bonnes pratiques.")
+                    level = ars_data.get("ars_level", "Bronze")
+                    pct = ars_data.get("ars_pct", 0)
+                    response_text = (
+                        f"RECOMMANDATIONS ARS 1000\n\n"
+                        f"Votre niveau: {level} ({pct}%)\n\n"
+                        f"{conseil}\n\n"
+                        f"0. Retour"
+                    )
+                else:
+                    response_text = "Aucune donnee.\n\n0. Retour"
+                session["state"] = "ars_data_menu"
+
+            elif choice == "1" and not data.get("has_ars_data"):
+                # Rediriger vers estimation
+                session["state"] = "estimation_type"
+                response_text = (
+                    "Prime Carbone + Conformite ARS\n\n"
+                    "1. Estimation simple (rapide)\n"
+                    "2. Estimation detaillee\n"
+                    "0. Retour"
+                )
+
+            elif choice == "0":
+                session["state"] = "main_menu"
+                name = data.get("farmer_name", "Planteur")
+                coop_label = f" ({data.get('coop_name', '')})" if data.get('coop_name') else ""
+                response_text = (
+                    f"GreenLink Agritech - ARS 1000\n"
+                    f"Bonjour {name}{coop_label}\n\n"
+                    f"1. Prime carbone + ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils ARS\n"
+                    f"4. Demander paiement\n"
+                    f"5. Mes parcelles\n"
+                    f"6. Mon profil\n"
+                    f"0. Quitter"
+                )
+            else:
+                response_text = "Option invalide.\n\n0. Retour"
+                session["state"] = "ars_data_menu"
+
+        # ==============================
+        # STATE: ARS DATA VIEW (sub-actions)
+        # ==============================
+        elif state == "ars_data_view":
+            choice = inputs[-1] if inputs else ""
+            if choice == "1":
+                session["state"] = "ars_update_menu"
+                response_text = (
+                    "MISE A JOUR ARS 1000\n\n"
+                    "1. Hectares de cacao\n"
+                    "2. Nombre total arbres\n"
+                    "3. Arbres > 8 metres\n"
+                    "4. Engrais (Oui/Non)\n"
+                    "5. Brulage (Oui/Non)\n"
+                    "0. Annuler"
+                )
+            elif choice == "2":
+                # Rapport -> redirect to ars_data_menu choice 3
+                session["state"] = "ars_data_menu"
+                session["data"]["has_ars_data"] = True
+            else:
+                session["state"] = "ars_data_menu"
+                session["data"]["has_ars_data"] = True
+                response_text = (
+                    "MES DONNEES ARS 1000\n\n"
+                    "1. Voir mes donnees\n"
+                    "2. Mettre a jour\n"
+                    "3. Generer rapport coop\n"
+                    "4. Conseils personnalises\n"
+                    "0. Retour menu principal"
+                )
+
+        # ==============================
+        # STATE: ARS UPDATE MENU
+        # ==============================
+        elif state == "ars_update_menu":
+            choice = inputs[-1] if inputs else ""
+            farmer_id = data.get("farmer_id", "")
+
+            if choice in ("1", "2", "3"):
+                field_map = {"1": "hectares", "2": "arbres_total", "3": "arbres_grands"}
+                labels = {"1": "hectares de cacao", "2": "arbres ombrages total", "3": "arbres > 8 metres"}
+                examples = {"1": "4.5", "2": "250", "3": "180"}
+                session["data"]["ars_update_field"] = field_map[choice]
+                session["state"] = "ars_update_value"
+                response_text = f"Entrez le nombre de\n{labels[choice]} :\n(ex: {examples[choice]})"
+
+            elif choice in ("4", "5"):
+                field_map = {"4": "engrais", "5": "brulage"}
+                labels = {"4": "engrais chimique", "5": "brulage des residus"}
+                session["data"]["ars_update_field"] = field_map[choice]
+                session["state"] = "ars_update_yesno"
+                response_text = f"Utilisez-vous le\n{labels[choice]} ?\n\n1. Oui\n2. Non"
+
+            elif choice == "0":
+                session["state"] = "ars_data_menu"
+                session["data"]["has_ars_data"] = True
+                response_text = (
+                    "MES DONNEES ARS 1000\n\n"
+                    "1. Voir mes donnees\n"
+                    "2. Mettre a jour\n"
+                    "3. Generer rapport coop\n"
+                    "4. Conseils personnalises\n"
+                    "0. Retour menu principal"
+                )
+            else:
+                response_text = "Option invalide.\n\n0. Retour"
+
+        elif state == "ars_update_value":
+            value = inputs[-1] if inputs else ""
+            field = data.get("ars_update_field", "")
+            farmer_id = data.get("farmer_id", "")
+            try:
+                num_val = float(value)
+                if num_val < 0: raise ValueError
+                # Update in DB
+                update_doc = {field: num_val, "updated_at": datetime.now(timezone.utc)}
+                await db.ars_farmer_data.update_one(
+                    {"farmer_id": farmer_id},
+                    {"$set": update_doc},
+                    upsert=True
+                )
+                # Recalculate ARS level
+                ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id})
+                if ars_data:
+                    ars_answers = {
+                        "hectares": ars_data.get("hectares", 0),
+                        "arbres_grands": ars_data.get("arbres_grands", 0),
+                        "arbres_total": ars_data.get("arbres_total", 0),
+                        "brulage": ars_data.get("brulage", "non"),
+                        "engrais": ars_data.get("engrais", "non"),
+                    }
+                    ars_result = calculate_ars_level(ars_answers)
+                    await db.ars_farmer_data.update_one(
+                        {"farmer_id": farmer_id},
+                        {"$set": {"ars_level": ars_result["level"], "ars_pct": ars_result["pct"], "ars_conseil": ars_result["conseil"]}}
+                    )
+                    # Notify admin
+                    await notify_admin_ars_update(farmer_id, data.get("farmer_name", ""), phone, data.get("coop_name", ""), field, num_val, ars_result)
+
+                    response_text = (
+                        f"Donnee mise a jour !\n"
+                        f"Niveau ARS: {ars_result['level']} ({ars_result['pct']}%)\n\n"
+                        f"1. Continuer mise a jour\n"
+                        f"2. Voir mes donnees\n"
+                        f"0. Retour menu"
+                    )
+                else:
+                    response_text = "Erreur.\n\n0. Retour"
+                session["state"] = "ars_update_done"
+            except ValueError:
+                response_text = "Valeur invalide.\nEntrez un nombre (ex: 4.5)"
+
+        elif state == "ars_update_yesno":
+            choice = inputs[-1] if inputs else ""
+            field = data.get("ars_update_field", "")
+            farmer_id = data.get("farmer_id", "")
+            if choice in ("1", "2"):
+                val = "oui" if choice == "1" else "non"
+                await db.ars_farmer_data.update_one(
+                    {"farmer_id": farmer_id},
+                    {"$set": {field: val, "updated_at": datetime.now(timezone.utc)}},
+                    upsert=True
+                )
+                # Recalculate
+                ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id})
+                if ars_data:
+                    ars_answers = {
+                        "hectares": ars_data.get("hectares", 0),
+                        "arbres_grands": ars_data.get("arbres_grands", 0),
+                        "arbres_total": ars_data.get("arbres_total", 0),
+                        "brulage": ars_data.get("brulage", "non"),
+                        "engrais": ars_data.get("engrais", "non"),
+                    }
+                    ars_result = calculate_ars_level(ars_answers)
+                    await db.ars_farmer_data.update_one(
+                        {"farmer_id": farmer_id},
+                        {"$set": {"ars_level": ars_result["level"], "ars_pct": ars_result["pct"], "ars_conseil": ars_result["conseil"]}}
+                    )
+                    await notify_admin_ars_update(farmer_id, data.get("farmer_name", ""), phone, data.get("coop_name", ""), field, val, ars_result)
+
+                    response_text = (
+                        f"Donnee mise a jour !\n"
+                        f"Niveau ARS: {ars_result['level']} ({ars_result['pct']}%)\n\n"
+                        f"1. Continuer mise a jour\n"
+                        f"2. Voir mes donnees\n"
+                        f"0. Retour menu"
+                    )
+                else:
+                    response_text = "Erreur.\n\n0. Retour"
+                session["state"] = "ars_update_done"
+            else:
+                response_text = "Tapez 1 pour Oui, 2 pour Non"
+
+        elif state == "ars_update_done":
+            choice = inputs[-1] if inputs else ""
+            if choice == "1":
+                session["state"] = "ars_update_menu"
+                response_text = (
+                    "MISE A JOUR ARS 1000\n\n"
+                    "1. Hectares de cacao\n"
+                    "2. Nombre total arbres\n"
+                    "3. Arbres > 8 metres\n"
+                    "4. Engrais (Oui/Non)\n"
+                    "5. Brulage (Oui/Non)\n"
+                    "0. Annuler"
+                )
+            elif choice == "2":
+                session["state"] = "ars_data_menu"
+                session["data"]["has_ars_data"] = True
+                response_text = (
+                    "MES DONNEES ARS 1000\n\n"
+                    "1. Voir mes donnees\n"
+                    "2. Mettre a jour\n"
+                    "3. Generer rapport coop\n"
+                    "4. Conseils personnalises\n"
+                    "0. Retour menu principal"
+                )
+            else:
+                session["state"] = "main_menu"
+                name = data.get("farmer_name", "Planteur")
+                coop_label = f" ({data.get('coop_name', '')})" if data.get('coop_name') else ""
+                response_text = (
+                    f"GreenLink Agritech - ARS 1000\n"
+                    f"Bonjour {name}{coop_label}\n\n"
+                    f"1. Prime carbone + ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils ARS\n"
+                    f"4. Demander paiement\n"
+                    f"5. Mes parcelles\n"
+                    f"6. Mon profil\n"
+                    f"0. Quitter"
+                )
+
+        # ==============================
+        # STATE: ARS CONSEILS MENU
+        # ==============================
+        elif state == "ars_conseils_menu":
+            choice = inputs[-1] if inputs else ""
+            if choice == "1":
+                farmer_id = data.get("farmer_id", "")
+                ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id}) if farmer_id else None
+                arbres_ha = round(ars_data.get("arbres_total", 0) / max(ars_data.get("hectares", 1), 0.1)) if ars_data else 0
+                response_text = (
+                    "AGROFORESTERIE (ARS 1000)\n\n"
+                    "Plantez au moins 40 arbres\n"
+                    "ombres par hectare.\n"
+                    "Arbres recommandes: acajou,\n"
+                    "fromager, kapokier, iroko.\n"
+                    "Objectif Or: 60 arbres/ha\n\n"
+                    f"Votre situation: {arbres_ha} arbres/ha\n\n"
+                    "0. Retour conseils"
+                )
+                session["state"] = "ars_conseil_view"
+            elif choice == "2":
+                response_text = (
+                    "LUTTE CONTRE LE BRULAGE\n\n"
+                    "Le brulage est interdit pour\n"
+                    "les niveaux Argent et Or ARS.\n\n"
+                    "Alternatives:\n"
+                    "- Paillage des residus\n"
+                    "- Compostage\n"
+                    "- Enfouissement vert\n\n"
+                    "0. Retour conseils"
+                )
+                session["state"] = "ars_conseil_view"
+            elif choice == "3":
+                response_text = (
+                    "GESTION ENGRAIS (ARS 1000)\n\n"
+                    "- Engrais recommandes CCC\n"
+                    "- Dose max: 300 kg/ha/an\n"
+                    "- Preferez le compost pour\n"
+                    "  atteindre le niveau Or\n"
+                    "- Evitez les pesticides\n"
+                    "  non homologues\n\n"
+                    "0. Retour conseils"
+                )
+                session["state"] = "ars_conseil_view"
+            elif choice == "4":
+                response_text = (
+                    "TRACABILITE (ARS 1000-2)\n\n"
+                    "- Enregistrez toutes vos\n"
+                    "  parcelles avec code planteur\n"
+                    "- Gardez preuves: photos,\n"
+                    "  contrats coop\n"
+                    "- Mettez a jour vos donnees\n"
+                    "  chaque campagne\n"
+                    "- Geolocalisation des\n"
+                    "  parcelles recommandee\n\n"
+                    "0. Retour conseils"
+                )
+                session["state"] = "ars_conseil_view"
+            elif choice == "5":
+                # Recommandations personnalisees
+                farmer_id = data.get("farmer_id", "")
+                ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id}) if farmer_id else None
+                if ars_data:
+                    conseil = ars_data.get("ars_conseil", "Continuez vos bonnes pratiques.")
+                    level = ars_data.get("ars_level", "-")
+                    pct = ars_data.get("ars_pct", 0)
+                    response_text = (
+                        f"VOS RECOMMANDATIONS\n\n"
+                        f"Niveau actuel: {level} ({pct}%)\n\n"
+                        f"{conseil}\n\n"
+                        f"0. Retour conseils"
+                    )
+                else:
+                    response_text = (
+                        "Faites d'abord une estimation\n"
+                        "(choix 1 du menu principal)\n"
+                        "pour obtenir des conseils\n"
+                        "personnalises.\n\n"
+                        "0. Retour"
+                    )
+                session["state"] = "ars_conseil_view"
+            elif choice == "0":
+                session["state"] = "main_menu"
+                name = data.get("farmer_name", "Planteur")
+                coop_label = f" ({data.get('coop_name', '')})" if data.get('coop_name') else ""
+                response_text = (
+                    f"GreenLink Agritech - ARS 1000\n"
+                    f"Bonjour {name}{coop_label}\n\n"
+                    f"1. Prime carbone + ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils ARS\n"
+                    f"4. Demander paiement\n"
+                    f"5. Mes parcelles\n"
+                    f"6. Mon profil\n"
+                    f"0. Quitter"
+                )
+            else:
+                response_text = "Option invalide.\n\n0. Retour"
+
+        elif state == "ars_conseil_view":
+            session["state"] = "ars_conseils_menu"
+            response_text = (
+                "CONSEILS PRATIQUES ARS 1000\n\n"
+                "1. Agroforesterie\n"
+                "2. Lutte contre le brulage\n"
+                "3. Gestion des engrais\n"
+                "4. Tracabilite\n"
+                "5. Recommandations perso.\n"
+                "0. Retour menu principal"
+            )
 
         # ==============================
         # STATE: SUB-VIEWS (parcels, advice, profile, help)
@@ -928,14 +1529,14 @@ async def ussd_callback(request: USSDRequest):
                 coop = data.get("coop_name", "")
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"GreenLink Agritech\n"
+                    f"GreenLink Agritech - ARS 1000\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Estimer ma prime carbone\n"
-                    f"2. Demander le versement\n"
-                    f"3. Mes parcelles\n"
-                    f"4. Conseils\n"
-                    f"5. Mon profil\n"
-                    f"6. Aide\n"
+                    f"1. Prime carbone + ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils ARS\n"
+                    f"4. Demander paiement\n"
+                    f"5. Mes parcelles\n"
+                    f"6. Mon profil\n"
                     f"0. Quitter"
                 )
             else:

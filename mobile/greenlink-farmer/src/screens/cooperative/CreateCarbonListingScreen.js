@@ -17,6 +17,9 @@ const CREDIT_TYPES = [
 ];
 
 const STANDARDS = [
+  { key: 'ARS 1000-1', label: 'ARS 1000-1', desc: 'Norme Africaine Cacao Durable - Exigences generales' },
+  { key: 'ARS 1000-2', label: 'ARS 1000-2', desc: 'Norme Africaine - Tracabilite ferme a export' },
+  { key: 'ARS 1000-3', label: 'ARS 1000-3', desc: 'Norme Africaine - Bonnes pratiques agricoles' },
   { key: 'Verra VCS', label: 'Verra VCS', desc: 'Le plus utilise mondialement' },
   { key: 'Gold Standard', label: 'Gold Standard', desc: 'Co-benefices sociaux' },
   { key: 'Plan Vivo', label: 'Plan Vivo', desc: 'Communautes rurales' },
