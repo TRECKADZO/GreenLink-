@@ -1,157 +1,122 @@
-<analysis>**original_problem_statement:**
-The user's initial high-level goals were to fix various platform issues, including marketplace logic, mobile bugs, and implementing new workflows. Over the session, the requests became more specific:
-1.  Fix a critical mobile bug where the Add Member form was outdated and causing creation to fail.
-2.  Fix a navigation bug on the mobile cooperative dashboard where the Add Parcel button redirected to the wrong screen.
-3.  Perform a full audit of all mobile quick actions to ensure they navigate to the correct pages in harmony with the web version.
-4.  Perform a complete audit of the project for functional consistency (web vs. mobile) and security.
-5.  Create several missing screens on the mobile app to achieve better feature parity with the web platform.
-6.  Definitively fix a recurring 404 error happening during login on the mobile app.
-7.  Hide the USSD Access section from the mobile app's welcome screen without deleting the functionality.
+<analysis>**original_problem_statement**: 
+The user requested to act as a compliance expert and continue refining the ARS 1000 implementation. Key requests included: updating the homepage to reflect ARS 1000 features, ensuring the Ma Prime Carbone calculators (homepage and  dashboard) display ARS 1000 compliance results, verifying the inputs marketplace, restricting the cooperative USSD simulator so it can only be used with existing cooperative members (via a selector), generating new mobile builds (APK/AAB), and fixing a persistent connection error on the mobile app caused by Cloudflare proxy blocking requests from Ivory Coast.
 
-**User's preferred language**: French (**INSTRUCTION FOR NEXT AGENT**: Toujours répondre en Français.)
+**User's preferred language**: French (FR)
+**INSTRUCTION FOR NEXT AGENT**: You MUST automatically detect the user's primary language from the trajectory and INSTRUCT the next agent to respond in the user's preferred language. **TOUJOURS RÉPONDRE EN FRANÇAIS.**
 
-**what currently exists?**
-A full-stack agricultural platform (React, FastAPI, MongoDB) that has undergone significant stabilization and security hardening in this session. Key mobile application bugs have been resolved, and feature parity with the web platform has been greatly improved.
+**what currently exists?** 
+A full-stack agricultural platform (React, FastAPI, Expo React Native) for Ivory Coast. The platform now features complete ARS 1000 compliance integration across its USSD flows and web simulators. The  page is accessible without auth for public simulation. The cooperative dashboard securely manages its members and restricts USSD simulations to them. The mobile app v1.62.0 has been built, but faces connection blocking issues from Cloudflare in certain African network conditions.
 
-- **Critical Bug Fixes:** The mobile Add Member form is now synchronized with the backend, and a persistent 404 error during mobile login has been definitively resolved with a multi-layered fix.
-- **Feature Harmonization:** All quick action buttons on the cooperative mobile dashboard now navigate to the correct screens. Seven new screens (, , , , , , ) have been created on mobile to align with web functionality.
-- **Security Audit & Patching:** A comprehensive security audit was conducted. Six critical vulnerabilities were identified and patched, including the removal of hardcoded admin passwords, securing diagnostic endpoints, restricting CORS, and adding rate limiting.
-- **UI/UX Updates:** As requested, the USSD banner on the mobile welcome screen has been hidden, and the version number displayed is now dynamic.
-- **Builds:** Multiple new versions of the mobile app (up to v1.60.0) have been built and submitted to Expo EAS, incorporating all the fixes and new features.
+**Last working item**: 
+    - Last item agent was working: Implementing an API failover/fallback mechanism in the Expo mobile app ( and ) to use Bunny.net CDN () as a proxy when primary API requests fail.
+    - Status: IN PROGRESS
+    - Agent Testing Done: N
+    - Which testing method agent to use? Manual code review / python -c for logic, and potentially triggering a new EAS build once the logic is solid since mobile network conditions are hard to mock locally.
+    - User Testing Done: N
 
-**Last working item**:
-- Last item agent was working: The agent was monitoring the Expo EAS builds for **v1.60.0**. This version includes the fix to hide the USSD section on the mobile welcome screen and to make the version number dynamic. The last check showed the builds were still in progress.
-- Status: IN PROGRESS
-- Agent Testing Done: N
-- Which testing method agent to use? Manual testing by user once builds are complete. The agent's task is to monitor the build status and notify the user.
-- User Testing Done: N
-
-**All Pending/In progress Issue list**:
-- There are no pending issues. The agent has addressed all user requests from this session.
-
-**In progress Task List**:
-  - Task 1: Monitor EAS Builds v1.60.0 (P0)
-     - Where to resume: The agent was monitoring the build status via  or by checking the  session logs. The builds are queued or in progress.
-     - What will be achieved with this? Confirmation that the latest builds (APK and AAB) containing all recent fixes are complete and ready for the user to download and test.
+**All Pending/In progress Issue list**: 
+  Issue 1: Mobile App Connection Error / Cloudflare Block (P0)
+     - Attempted fixes: Agent previously increased timeouts and added retries, but Cloudflare still drops requests. Currently implementing an Axios interceptor failover mechanism to a Bunny CDN proxy.
+     - Next debug checklist: Edit  to add  and  to catch network errors and retry the request using the fallback URL.
+     - Why fix this issue and what will be achieved with the fix? It is a critical blocker for users in Ivory Coast. Fixing it ensures mobile app usability in poor network conditions.
      - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? NA (Waiting for build completion)
-     - Blocked on something: Expo EAS build queue.
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Frontend (Mobile codebase logic).
+     - Blocked on other issue: None.
+
+**In progress Task List**: 
+  None (All other tasks completed, only the P0 issue above remains).
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - (P2) Configure the real Orange SMS gateway to replace the current mock service.
+    - (P2) Configure the real Orange CI / MTN SMS gateway to replace the current mock service for USSD.
     
     Future Tasks:
     - (P2) Implement local languages (Baoulé and Dioula) in the mobile app.
     - (P2) Refactor the backend to use a cloud storage solution (e.g., AWS S3) for file and image uploads.
-    - (P3) Refactor large backend files for better maintainability (e.g., , ).
-    - (P3) Optimize the  endpoint to fix the N+1 query issue using a MongoDB aggregation pipeline.
+    - (P3) Refactor large backend files for better maintainability (e.g.,  is >1900 lines).
+    - (P3) Optimize the  endpoint to fix the N+1 query issue.
 
 **Completed work in this session**
-- **Definitive 404 Login Error Fix (v1.59.0)**: Implemented a robust, multi-layered solution to fix the recurring 404 error on mobile login by removing cache-busters from POSTs, adding 404 retries, and a fallback URL mechanism.
-- **Critical Security Audit & Hardening (v1.57.0)**: Found and fixed 6 major security flaws, including removing hardcoded passwords, securing diagnostic endpoints, and adding rate limiting.
-- **Mobile/Web Feature Harmonization (v1.57.0 & v1.58.0)**: Audited all mobile quick actions, corrected navigation, and created 7 new screens (, , , , , , ) to align mobile features with the web platform.
-- **Mobile Add Parcel Navigation Fix (v1.56.0)**: Corrected the quick action button on the mobile dashboard and improved the destination form.
-- **Mobile Add Member Form Fix (v1.55.0)**: Updated the outdated mobile form to include the required PIN and Hectares fields.
-- **USSD Banner Hidden (v1.60.0)**: Hid the USSD section on the mobile welcome screen as requested.
-- **Dynamic Mobile Version (v1.60.0)**: Updated the welcome screen to display the app version dynamically.
+- Homepage updated with ARS 1000 badges, features cards, and corrected API mocks (DONE)
+- CarbonCalculator on the homepage and  updated to display ARS 1000 results (score, progress bar, advice) (DONE)
+-  page made accessible without authentication to act as a public tool (DONE)
+- Removed sensitive  data from  response for security (DONE)
+- Cooperative USSD Simulator restricted to cooperative members only via a dynamic dropdown selector () (DONE)
+- Verified and validated Input Marketplace UI () (DONE)
+- Generated Expo EAS builds (APK and AAB) for version 1.62.0 (DONE)
+- Modified payment text to remove via ta cooperative on the carbon payments page (DONE)
+- Clarified USSD registration logic to the user (DONE)
 
 **Earlier issues found/mentioned but not fixed**
    - Issue 1: N+1 Query in 
-     - Debug checklist: The query in  fetches parcels for each member in a loop. It should be refactored using a MongoDB aggregation pipeline.
-     - Why to solve this issue and what will be achieved with this? This is a crucial performance optimization for production scale.
-     - Should Test frontend/backend/both after fix: backend
-     - Is recurring issue? N
-   - Issue 2: Web  for Auth Tokens
-     - Debug checklist: The security audit noted the web app uses , which is vulnerable to XSS.
-     - Why to solve this issue and what will be achieved with this? Enhance security by preventing token theft. The fix involves migrating to  cookies.
-     - Should Test frontend/backend/both after fix: both
-     - Is recurring issue? N
+   - Issue 2: Web  used for Auth Tokens (XSS vulnerability).
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Cloudflare/proxy blocking API requests from certain regions, manifesting as 404 or network errors on mobile.
-  - Recurrence count: 5+
-  - Status: RESOLVED (A definitive, multi-layered fix was implemented in the mobile app in v1.59.0, including removing cache-busters from POST requests, adding 404 retries, and a URL fallback. This should prevent future recurrence).
+  - Issue recurrence in previous fork: Mobile Login / Cloudflare 403 block.
+  - Recurrence count: 7+
+  - Status: IN PROGRESS (Agent is shifting strategy from timeouts to using Bunny CDN as a proxy failover in Axios).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Security Hardening**: Removed hardcoded credentials, secured diagnostic endpoints with admin-only access, restricted CORS origins, and added rate limiting.
-- **Mobile App Resilience**: Enhanced error handling with automatic retries for 404 errors and a direct URL fallback mechanism for the critical login flow.
-- **Request Management**: Modified client-side API logic to prevent cache-busting query parameters from being added to POST/PUT requests, resolving a key proxy/CDN issue.
-- **Feature Parity**: Systematically added new screens and corrected navigation flows on the mobile app to match the web platform's capabilities.
+- **API Failover Strategy:** Utilizing Axios interceptors in the Expo React Native app to catch network failures (Cloudflare blocks) and automatically retry the request against a secondary proxy URL (Bunny CDN).
+- **ARS 1000 Scoring:** Displayed extensively across all simulators now (Bronze/Argent/Or compliance).
 
 **key DB schema**
-  - : {..., **code_planteur**, **pin_hash**, is_active}
-  - : {..., **code_planteur**, **pin_hash**, **hectares**}
-  - : {phone_number, full_name, village, code_planteur, pin_hash}
+  - : {phone_number, full_name, coop_id, village} (Used for populating the USSD simulator dropdown).
 
 **changes in tech stack**
-- None.
+- Introduction of Bunny.net CDN URL as a fallback proxy for the mobile app API requests.
 
 **All files of reference**
--  (Security patches)
--  (CORS security patch)
--  (Rate-limiting patch)
--  (Definitive 404 error fix)
--  (Login fallback logic)
--  (Harmonized quick actions)
--  (Hid USSD banner)
--  (Version now at 1.60.0)
+-  (Target for Axios failover interceptor implementation)
+-  (Target for )
+- 
+- 
+- 
 
 **Areas that need refactoring**:
-  -  in : Contains an N+1 query that will cause performance bottlenecks at scale.
-  - Web app token storage in  should be refactored to use  cookies to mitigate XSS risks.
+- : The file is too large and handles state management, SMS responses, and calculations.
 
 **key api endpoints**
--  (Now more resilient to proxy/network issues)
--  (Now requires admin authentication)
--  (Now has rate limiting)
+- 
+- 
 
 **Critical Info for New Agent**
-- **Language**: You **MUST** respond in French.
-- **Top Priority (P0)**: The immediate task is to monitor the status of the **v1.60.0** mobile builds. The user is waiting for them. Once the builds are complete, inform the user with the direct links to the build pages on Expo.dev.
-  - APK Build URL: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/f74be0ee-12c0-49ce-b3d4-6823ada437e9
-  - AAB Build URL: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/fe99d9e3-1bc5-4655-a54e-a264f364f010
-- **Context**: The platform is significantly more stable and secure after this session. All user-reported bugs have been fixed. The focus was on stabilizing the mobile app, harmonizing its features with the web, and patching critical security holes.
+- **Language:** Respond in French.
+- **Priority:** The user wants you (acting as the expert) to prevent the Cloudflare connection error shown in their screenshot. You must finish the implementation in the mobile app's  using  as a fallback proxy URL in the Axios error interceptor.
+- The cooperative simulator now dynamically loads members; ensure you don't break this if you touch the dashboard.
 
 **documents and test reports created in this job**
--  (updated multiple times)
 - 
-- 
+-  (Updated with Phase 35)
 
-**Last 10 User Messages and any pending HUMAN messages**
-1.  **Request**: Hide the USSD section on the mobile welcome screen. (Completed)
-2.  **Confirmation**: User says Continue while agent monitors build. (In Progress)
-3.  **Request**: Full audit of functional consistency and security. (Completed)
-4.  **Request**: Verify all mobile quick actions are correct. (Completed)
-5.  **Bug Report**: Add Parcel button on mobile redirects incorrectly. (Completed)
-6.  **Confirmation**: User says Continue after a fix.
-7.  **Bug Report**: A definitive fix for the mobile login 404 error is needed. (Completed)
-8.  **Request**: Submit build v1.57.0 and create missing mobile screens. (Completed)
-9.  **Confirmation**: User says Oui to approve a plan.
-10. **Request**: The agent should confirm the plan with . (Completed)
+**Last 10 User Messages and any pending HUMAN messages** 
+1. **Question:** Explain if being registered as a member means automatic USSD registration. What are the steps?
+2. **Agent Action:** Explained the 3 database collections checked and the 2 paths (via coop or via direct USSD).
+3. **User Message:** Shared a screenshot showing Bunny CDN proxy alternatives for API.
+4. **Agent Action:** Advised on Bunny.net vs Cloudflare Workers for proxy API in West Africa.
+5. **Pending Request (LATEST):** C est vous l expert pour éviter ce type d erreur comme sur l image (You are the expert to avoid this type of error like in the image).
 
 **Project Health Check:**
-- Broken: None. All critical reported bugs have been fixed.
-- Mocked: Orange SMS and Orange Money services still use mock implementations.
-- Warning: An N+1 query exists in . The web app uses insecure  for token storage.
+- Broken: Mobile app connections in Ivory Coast (due to Cloudflare blocking).
+- Mocked: Orange SMS/Money.
 
 **3rd Party Integrations**
 - Resend (Emails) — Uses Environment variables.
 - Expo EAS Builds — Requires User Auth.
--  — Used for backend PDF generation.
+- Bunny CDN — Used as static/API proxy.
 
 **Testing status**
-  - Testing agent used after significant changes: YES (Iteration 72 for member creation; Iteration 73 for the full security/functional audit, which passed 21/22 tests).
+  - Testing agent used after significant changes: YES
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None.
-  - Known regressions: None currently. All reported regressions have been fixed and validated.
+  - Known regressions: None.
 
 **Credentials to test flow:**
-- Cooperative:  / 
 - Admin:  / 
 
 **What agent forgot to execute**
-- Nothing. All user requests and critical findings from this session have been addressed and implemented.</analysis>
+- The agent recognized the Cloudflare proxy issue and planned the Axios failover implementation in  but ran out of context before actually executing the file edits.</analysis>

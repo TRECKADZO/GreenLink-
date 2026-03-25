@@ -16,7 +16,7 @@ import os
 import time
 import random
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ivory-coast-deploy.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ars1000-compliance.preview.emergentagent.com')
 
 # Test credentials
 COOP_EMAIL = "bielaghana@gmail.com"
