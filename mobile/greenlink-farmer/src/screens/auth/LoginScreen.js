@@ -42,15 +42,36 @@ const LoginScreen = ({ navigation }) => {
             text: 'Reessayer', 
             onPress: async () => {
               setLoading(true);
-              // Attendre 5 secondes avant le retry (laisser Cloudflare se calmer)
+              // Attendre 5 secondes avant le retry (laisser le reseau se stabiliser)
               await new Promise(r => setTimeout(r, 5000));
               const retry = await login(identifier, password);
-              setLoading(false);
-              if (!retry.success) {
+              if (!retry.success && retry.isServerError) {
+                setLoading(false);
+                // 2eme echec — proposer un dernier essai avec message adapte
                 Alert.alert(
-                  'Connexion impossible',
-                  retry.error + '\n\nSi le probleme persiste, verifiez votre connexion internet ou reessayez plus tard.'
+                  'Connexion difficile',
+                  'Le reseau semble tres lent.\n\nConseil : deplacez-vous vers une zone avec meilleure couverture reseau, ou connectez-vous en WiFi.\n\nVoulez-vous faire un dernier essai ?',
+                  [
+                    { text: 'Annuler', style: 'cancel' },
+                    {
+                      text: 'Dernier essai',
+                      onPress: async () => {
+                        setLoading(true);
+                        await new Promise(r => setTimeout(r, 8000));
+                        const lastTry = await login(identifier, password);
+                        setLoading(false);
+                        if (!lastTry.success) {
+                          Alert.alert('Erreur', lastTry.error);
+                        }
+                      }
+                    }
+                  ]
                 );
+              } else {
+                setLoading(false);
+                if (!retry.success) {
+                  Alert.alert('Erreur', retry.error);
+                }
               }
             }
           },

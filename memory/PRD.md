@@ -124,7 +124,14 @@ Causes racines identifiees et corrigees:
 6. Version dynamique via Constants.expoConfig dans WelcomeScreen
 
 Build v1.61.0:
-- APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/ef1a2150-828b-43fd-a735-1bc810c0f51a
+- APK (build final avec optimisations reseau lent): https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/6edf80b4-87c3-4e4c-a747-ab896cb3f075
+
+Parametres reseau adaptes CI (2G/3G):
+- Timeout: 60s (au lieu de 45s) — reseaux tres lents en zone rurale
+- Retries: 4 avec delais progressifs 3s/6s/9s/12s (plus de jitter aleatoire)
+- Timeout retry: ECONNABORTED detecte et retente automatiquement
+- Fallback login: 60s timeout + 3s pause avant retry
+- LoginScreen: 3 niveaux de retry avec messages adaptes ("reseau lent", "deplacez-vous en zone WiFi")
 
 ## Credentials
 - Admin: klenakan.eric@gmail.com / 474Treckadzo

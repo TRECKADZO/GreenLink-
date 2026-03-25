@@ -63,11 +63,11 @@ function isCloudflareResponse(error) {
   return false;
 }
 
-// Jitter aléatoire pour éviter les patterns détectés comme bot
+// Delai progressif avec jitter — adapte aux reseaux lents CI
 function getRetryDelay(attempt) {
-  const baseDelay = 1500;
-  const jitter = Math.random() * 1000;
-  return baseDelay * attempt + jitter;
+  const baseDelay = 3000; // 3s base — laisser le temps au reseau 2G/3G
+  const jitter = Math.random() * 2000; // 0-2s aleatoire
+  return baseDelay * attempt + jitter; // 3s, 6s, 9s, 12s (progressif)
 }
 
 // Intercepteur de réponse avec retry simple et robuste
@@ -89,10 +89,10 @@ axiosInstance.interceptors.response.use(
       console.warn(`[API] Cloudflare block detected (${status}) for ${config.url}, retry ${currentRetry}/${maxRetries}`);
     }
     
-    // Conditions de retry — SIMPLIFIEES pour eviter les faux positifs
+    // Conditions de retry — adaptees faible connectivite CI
     const shouldRetry = (
-      // Erreur réseau (pas de réponse du tout)
-      (!error.response && (error.message?.includes('Network') || error.message?.includes('timeout'))) ||
+      // Erreur réseau (pas de réponse du tout) — frequent en 2G/3G
+      (!error.response && (error.message?.includes('Network') || error.message?.includes('timeout') || error.code === 'ECONNABORTED')) ||
       // Cloudflare HTML response
       isCloudflare ||
       // Erreurs serveur 5xx
@@ -101,7 +101,7 @@ axiosInstance.interceptors.response.use(
       (status === 0)
     );
     // NOTE: On ne retente PAS les 404 — un 404 signifie que l'URL n'existe pas
-    // Le cache-buster sur POST causait des 404 en boucle
+    // Le cache-buster sur POST causait des 404 en boucle auparavant
     
     if (currentRetry < maxRetries && shouldRetry) {
       config._retry = currentRetry + 1;
@@ -143,7 +143,7 @@ async function checkServerHealth() {
   
   try {
     const response = await axios.get(CONFIG.API_URL + '/api/health', {
-      timeout: 10000,
+      timeout: 15000, // 15s — assez pour 2G/3G sans bloquer longtemps
       headers: {
         'Accept': 'application/json',
       },

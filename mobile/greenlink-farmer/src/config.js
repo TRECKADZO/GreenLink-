@@ -6,10 +6,10 @@ export const CONFIG = {
   API_URL: process.env.EXPO_PUBLIC_API_URL 
     || 'https://mobile-harmonize.preview.emergentagent.com',
   
-  // Timeouts adaptés à la faible connectivité
-  REQUEST_TIMEOUT: 30000, // 30 secondes (45 etait excessif)
-  RETRY_ATTEMPTS: 3,     // 3 tentatives max (6 declenchait le rate-limit Cloudflare)
-  RETRY_DELAY: 2000,     // Base delay (avec jitter dans api.js)
+  // Timeouts adaptes a la FAIBLE connectivite en Cote d'Ivoire (2G/3G)
+  REQUEST_TIMEOUT: 60000, // 60 secondes — les reseaux 2G/3G en CI sont tres lents
+  RETRY_ATTEMPTS: 4,     // 4 tentatives — suffisant sans declencher Cloudflare
+  RETRY_DELAY: 3000,     // 3s base delay (avec jitter dans api.js) — espace les requetes
   
   // Cache local
   CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 heures

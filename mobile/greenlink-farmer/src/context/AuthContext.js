@@ -63,14 +63,14 @@ export const AuthProvider = ({ children }) => {
         // Si erreur reseau OU 404/5xx : retry avec axios direct (sans intercepteurs)
         if (!loginError.response || errStatus === 404 || errStatus >= 500 || errStatus === 0) {
           console.warn('[Auth] Retrying with direct axios (no interceptors)...');
-          await new Promise(r => setTimeout(r, 2000));
+          await new Promise(r => setTimeout(r, 3000)); // 3s pause — laisser le reseau se stabiliser
           try {
             const directAxios = require('axios').default;
             response = await directAxios.post(
               CONFIG.API_URL + '/api/auth/login',
               { identifier, password },
               {
-                timeout: 20000,
+                timeout: 60000, // 60s — meme timeout que l'instance principale (reseaux lents CI)
                 headers: {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
