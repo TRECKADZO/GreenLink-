@@ -60,27 +60,43 @@ export const AuthProvider = ({ children }) => {
         const errStatus = loginError.response?.status;
         console.warn('[Auth] Login failed with status:', errStatus, loginError.message);
         
-        // Si erreur reseau OU 404/5xx : retry avec axios direct (sans intercepteurs)
+        // Si erreur reseau OU 404/5xx : retry avec axios direct via CDN fallback
         if (!loginError.response || errStatus === 404 || errStatus >= 500 || errStatus === 0) {
-          console.warn('[Auth] Retrying with direct axios (no interceptors)...');
-          await new Promise(r => setTimeout(r, 3000)); // 3s pause — laisser le reseau se stabiliser
-          try {
-            const directAxios = require('axios').default;
-            response = await directAxios.post(
-              CONFIG.API_URL + '/api/auth/login',
-              { identifier, password },
-              {
-                timeout: 60000, // 60s — meme timeout que l'instance principale (reseaux lents CI)
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
-                },
-              }
-            );
-          } catch (fallbackError) {
-            console.error('[Auth] Fallback also failed:', fallbackError.message);
-            // Propager l'erreur originale qui a un meilleur contexte
-            throw loginError;
+          console.warn('[Auth] Retrying login via CDN fallback...');
+          await new Promise(r => setTimeout(r, 2000));
+          
+          // Essayer d'abord via le proxy CDN Bunny (contourne Cloudflare)
+          const fallbackURL = CONFIG.FALLBACK_API_URL;
+          const urls = fallbackURL 
+            ? [fallbackURL + '/api/auth/login', CONFIG.API_URL + '/api/auth/login']
+            : [CONFIG.API_URL + '/api/auth/login'];
+          
+          let lastErr = loginError;
+          for (const url of urls) {
+            try {
+              console.log(`[Auth] Trying fallback: ${url}`);
+              const directAxios = require('axios').default;
+              response = await directAxios.post(
+                url,
+                { identifier, password },
+                {
+                  timeout: 60000,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                  },
+                }
+              );
+              console.log(`[Auth] Fallback success via ${url}`);
+              break; // Succes, on sort de la boucle
+            } catch (fallbackError) {
+              console.error(`[Auth] Fallback failed (${url}):`, fallbackError.message);
+              lastErr = fallbackError;
+              response = null;
+            }
+          }
+          if (!response) {
+            throw lastErr;
           }
         } else {
           throw loginError;

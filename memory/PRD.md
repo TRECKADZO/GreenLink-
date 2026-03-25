@@ -195,6 +195,28 @@ Implementation complete de la norme ARS 1000 (Norme Africaine Cacao Durable):
 ## APIs Mockees
 - Orange SMS, Orange Money
 
+### Phase 36 - Failover CDN Bunny Mobile v1.63.0 (DONE - 25/03/2026)
+**Bug P0 corrige: Erreur connexion mobile Cloudflare en Cote d'Ivoire**
+
+Mecanisme de failover automatique implemente dans l'app mobile:
+1. `config.js`: Ajout `FALLBACK_API_URL: 'https://greenlink-cdn.b-cdn.net'`, retries reduits a 3 (avant failover)
+2. `api.js`: Intercepteur Axios avec failover intelligent:
+   - 3 retries sur URL primaire avec delais progressifs (3s/6s/9s + jitter)
+   - Si tous echouent (reseau/Cloudflare/5xx/403) → bascule auto vers CDN Bunny
+   - Tracking d'etat: apres 2 echecs primaires consecutifs, prefere CDN
+   - Re-test periodique du primaire apres 10 requetes CDN reussies
+   - Detection Cloudflare: HTML/403/cf- headers
+3. `AuthContext.js`: Login fallback ameliore:
+   - Essaie d'abord CDN Bunny puis URL primaire en cascade
+   - Messages d'erreur adaptes reseau lent CI
+
+**Flux de failover:**
+Requete → URL primaire (3 retries) → ECHEC → CDN Bunny (3 retries) → Reponse
+Si CDN OK: les requetes suivantes utilisent CDN directement
+Re-test primaire toutes les 10 requetes pour recovery automatique
+
+**Version mobile: v1.63.0** (build EAS a generer par l'utilisateur)
+
 ## Backlog
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)

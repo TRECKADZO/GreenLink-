@@ -6,9 +6,13 @@ export const CONFIG = {
   API_URL: process.env.EXPO_PUBLIC_API_URL 
     || 'https://ars1000-compliance.preview.emergentagent.com',
   
+  // Proxy CDN Bunny — contourne Cloudflare quand l'URL principale est bloquee
+  // Ce proxy relaie les requetes vers le backend sans passer par Cloudflare
+  FALLBACK_API_URL: 'https://greenlink-cdn.b-cdn.net',
+  
   // Timeouts adaptes a la FAIBLE connectivite en Cote d'Ivoire (2G/3G)
   REQUEST_TIMEOUT: 60000, // 60 secondes — les reseaux 2G/3G en CI sont tres lents
-  RETRY_ATTEMPTS: 4,     // 4 tentatives — suffisant sans declencher Cloudflare
+  RETRY_ATTEMPTS: 3,     // 3 tentatives sur URL primaire avant fallback CDN
   RETRY_DELAY: 3000,     // 3s base delay (avec jitter dans api.js) — espace les requetes
   
   // Cache local

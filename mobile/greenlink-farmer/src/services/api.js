@@ -3,10 +3,62 @@ import { Platform } from 'react-native';
 import { CONFIG } from '../config';
 
 // User-Agent honnete — les faux User-Agent de navigateur DECLENCHENT Cloudflare
-const MOBILE_USER_AGENT = `GreenLinkAgritech/1.60 ${Platform.OS}`;
+const MOBILE_USER_AGENT = `GreenLinkAgritech/1.62 ${Platform.OS}`;
 
-// Instance axios avec headers minimaux et honnetes
-// IMPORTANT: Moins de headers custom = moins de suspicion Cloudflare
+// === GESTION FAILOVER CDN ===
+// Si l'URL primaire (Cloudflare) echoue, on bascule automatiquement sur le proxy Bunny CDN.
+// Le CDN relaie les requetes vers le meme backend, mais sans passer par Cloudflare.
+let preferFallback = false;
+let fallbackSuccessCount = 0;
+let primaryFailCount = 0;
+const FALLBACK_THRESHOLD = 2;     // Apres 2 echecs primaires consecutifs, preferer le fallback
+const PRIMARY_RECHECK_AFTER = 10; // Re-tester le primaire apres 10 requetes CDN reussies
+
+function getActiveBaseURL() {
+  if (preferFallback && CONFIG.FALLBACK_API_URL) {
+    return CONFIG.FALLBACK_API_URL + '/api';
+  }
+  return CONFIG.API_URL + '/api';
+}
+
+function getFallbackBaseURL() {
+  if (CONFIG.FALLBACK_API_URL) {
+    return CONFIG.FALLBACK_API_URL + '/api';
+  }
+  return null;
+}
+
+function onPrimarySuccess() {
+  primaryFailCount = 0;
+  if (preferFallback) {
+    console.log('[API] Primary recovered — switching back from CDN');
+    preferFallback = false;
+    fallbackSuccessCount = 0;
+  }
+}
+
+function onPrimaryFail() {
+  primaryFailCount++;
+  if (primaryFailCount >= FALLBACK_THRESHOLD && CONFIG.FALLBACK_API_URL) {
+    if (!preferFallback) {
+      console.warn(`[API] Primary failed ${primaryFailCount}x — switching to CDN fallback`);
+    }
+    preferFallback = true;
+  }
+}
+
+function onFallbackSuccess() {
+  fallbackSuccessCount++;
+  // Periodiquement re-tester le primaire pour voir s'il est redevenu accessible
+  if (fallbackSuccessCount >= PRIMARY_RECHECK_AFTER) {
+    console.log('[API] Re-testing primary URL after CDN streak...');
+    preferFallback = false;
+    fallbackSuccessCount = 0;
+    primaryFailCount = 0;
+  }
+}
+
+// === INSTANCE AXIOS PRINCIPALE ===
 const axiosInstance = axios.create({
   baseURL: CONFIG.API_URL + '/api',
   timeout: CONFIG.REQUEST_TIMEOUT,
@@ -19,31 +71,34 @@ const axiosInstance = axios.create({
 // Token d'authentification
 let authToken = null;
 
-// État de santé du serveur
+// Etat de sante du serveur
 let serverHealthy = true;
 let lastHealthCheck = 0;
-const HEALTH_CHECK_INTERVAL = 30000; // 30 secondes entre les checks
+const HEALTH_CHECK_INTERVAL = 30000;
 
-// Intercepteur pour ajouter le token
+// Intercepteur request — ajoute token + adapte baseURL selon failover
 axiosInstance.interceptors.request.use(
   (config) => {
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
     }
-    // AUCUN cache-buster sur les URLs — le proxy/CDN peut mal router les requetes avec query params
-    console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
+    // Adapter l'URL de base selon l'etat du failover
+    // Sauf si c'est deja un retry fallback (marqué _useFallback)
+    if (!config._useFallback) {
+      config.baseURL = getActiveBaseURL();
+    }
+    console.log(`[API] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Détecter si la réponse est du Cloudflare/HTML au lieu de JSON
+// Detecter si la reponse est du Cloudflare/HTML au lieu de JSON
 function isCloudflareResponse(error) {
   if (!error.response) return false;
   const data = error.response.data;
   const contentType = error.response.headers?.['content-type'] || '';
   
-  // Réponse HTML au lieu de JSON
   if (typeof data === 'string' && (
     data.includes('<!DOCTYPE') || 
     data.includes('<html') || 
@@ -55,7 +110,6 @@ function isCloudflareResponse(error) {
     return true;
   }
   
-  // Content-Type HTML quand on attend du JSON
   if (contentType.includes('text/html')) {
     return true;
   }
@@ -63,17 +117,35 @@ function isCloudflareResponse(error) {
   return false;
 }
 
-// Delai progressif avec jitter — adapte aux reseaux lents CI
-function getRetryDelay(attempt) {
-  const baseDelay = 3000; // 3s base — laisser le temps au reseau 2G/3G
-  const jitter = Math.random() * 2000; // 0-2s aleatoire
-  return baseDelay * attempt + jitter; // 3s, 6s, 9s, 12s (progressif)
+// Detecter si c'est une erreur reseau/Cloudflare qui merite un failover CDN
+function isFailoverCandidate(error) {
+  const status = error.response?.status;
+  return (
+    !error.response && (error.message?.includes('Network') || error.message?.includes('timeout') || error.code === 'ECONNABORTED') ||
+    isCloudflareResponse(error) ||
+    status === 403 ||
+    status >= 500 ||
+    status === 0
+  );
 }
 
-// Intercepteur de réponse avec retry simple et robuste
+// Delai progressif avec jitter
+function getRetryDelay(attempt) {
+  const baseDelay = 3000;
+  const jitter = Math.random() * 2000;
+  return baseDelay * attempt + jitter;
+}
+
+// === INTERCEPTEUR REPONSE avec RETRY + FAILOVER CDN ===
 axiosInstance.interceptors.response.use(
   (response) => {
     serverHealthy = true;
+    // Tracker le succes selon l'URL utilisee
+    if (response.config._useFallback) {
+      onFallbackSuccess();
+    } else {
+      onPrimarySuccess();
+    }
     return response;
   },
   async (error) => {
@@ -86,37 +158,50 @@ axiosInstance.interceptors.response.use(
     const status = error.response?.status;
     
     if (isCloudflare) {
-      console.warn(`[API] Cloudflare block detected (${status}) for ${config.url}, retry ${currentRetry}/${maxRetries}`);
+      console.warn(`[API] Cloudflare block (${status}) for ${config.url}, retry ${currentRetry}/${maxRetries}`);
     }
     
-    // Conditions de retry — adaptees faible connectivite CI
+    // Conditions de retry sur l'URL courante
     const shouldRetry = (
-      // Erreur réseau (pas de réponse du tout) — frequent en 2G/3G
       (!error.response && (error.message?.includes('Network') || error.message?.includes('timeout') || error.code === 'ECONNABORTED')) ||
-      // Cloudflare HTML response
       isCloudflare ||
-      // Erreurs serveur 5xx
       (status >= 500) ||
-      // Erreur 0 (connexion échouée)
       (status === 0)
     );
-    // NOTE: On ne retente PAS les 404 — un 404 signifie que l'URL n'existe pas
-    // Le cache-buster sur POST causait des 404 en boucle auparavant
     
+    // Retry sur la meme URL (primaire ou fallback)
     if (currentRetry < maxRetries && shouldRetry) {
       config._retry = currentRetry + 1;
       const delay = getRetryDelay(config._retry);
-      
       console.log(`[API] Retry ${config._retry}/${maxRetries} in ${Math.round(delay)}ms`);
       await new Promise(resolve => setTimeout(resolve, delay));
+      return axiosInstance(config);
+    }
+    
+    // === FAILOVER CDN ===
+    // Si tous les retries sur l'URL primaire sont epuises ET qu'on n'a pas encore tente le fallback
+    const fallbackURL = getFallbackBaseURL();
+    if (fallbackURL && !config._useFallback && isFailoverCandidate(error)) {
+      console.warn('[API] All retries exhausted on primary — trying CDN fallback:', fallbackURL);
+      onPrimaryFail();
       
-      // IMPORTANT: NE PAS modifier l'URL sur les retries
-      // Les cache-busters et modifications d'URL causent des 404 proxy
+      // Reset retry counter pour le fallback
+      config._retry = 0;
+      config._useFallback = true;
+      config.baseURL = fallbackURL;
+      
+      // Petit delai avant le fallback
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       return axiosInstance(config);
     }
     
-    // Tous les retries épuisés — formatter le message d'erreur
+    // Si on etait deja sur le fallback et ca a echoue aussi
+    if (config._useFallback && shouldRetry) {
+      console.error('[API] CDN fallback also failed');
+    }
+    
+    // Tous les retries et le fallback epuises — formatter le message d'erreur
     if (!error.response) {
       serverHealthy = false;
       error.response = {
@@ -134,7 +219,7 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-// Vérifier la santé du serveur (endpoint léger)
+// Verifier la sante du serveur (endpoint leger)
 async function checkServerHealth() {
   const now = Date.now();
   if (now - lastHealthCheck < HEALTH_CHECK_INTERVAL && serverHealthy) {
@@ -142,15 +227,15 @@ async function checkServerHealth() {
   }
   
   try {
-    const response = await axios.get(CONFIG.API_URL + '/api/health', {
-      timeout: 15000, // 15s — assez pour 2G/3G sans bloquer longtemps
-      headers: {
-        'Accept': 'application/json',
-      },
+    // Essayer l'URL active (primaire ou CDN selon l'etat)
+    const activeURL = preferFallback ? CONFIG.FALLBACK_API_URL : CONFIG.API_URL;
+    const response = await axios.get(activeURL + '/api/health', {
+      timeout: 15000,
+      headers: { 'Accept': 'application/json' },
     });
     serverHealthy = response.status === 200;
     lastHealthCheck = now;
-    console.log('[API] Health check:', serverHealthy ? 'OK' : 'FAIL');
+    console.log('[API] Health check:', serverHealthy ? 'OK' : 'FAIL', `(${activeURL})`);
     return serverHealthy;
   } catch (e) {
     console.warn('[API] Health check failed:', e.message);
@@ -167,6 +252,7 @@ export const api = {
   
   checkHealth: checkServerHealth,
   isServerHealthy: () => serverHealthy,
+  isUsingFallback: () => preferFallback,
   
   get: (url, config) => axiosInstance.get(url, config),
   post: (url, data, config) => axiosInstance.post(url, data, config),
@@ -174,13 +260,13 @@ export const api = {
   delete: (url, config) => axiosInstance.delete(url, config),
 };
 
-// API spécifiques pour les producteurs
+// API specifiques pour les producteurs
 export const farmerApi = {
   // Parcelles
   getParcels: () => api.get('/greenlink/parcels/my-parcels'),
   createParcel: (data) => api.post('/greenlink/parcels', data),
   
-  // Récoltes
+  // Recoltes
   getHarvests: (params) => api.get(`/greenlink/harvests/my-harvests${params || ''}`),
   createHarvest: (data) => api.post('/greenlink/harvests', data),
   
