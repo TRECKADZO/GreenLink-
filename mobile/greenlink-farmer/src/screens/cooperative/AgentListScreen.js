@@ -79,7 +79,7 @@ const AgentListScreen = ({ navigation, route }) => {
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.title}>Agents terrain</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('AgentActivation')} data-testid="add-agent-button">
+        <TouchableOpacity onPress={() => navigation.navigate('AddAgent')} data-testid="add-agent-button">
           <Ionicons name="add-circle" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -104,7 +104,7 @@ const AgentListScreen = ({ navigation, route }) => {
             <Text style={styles.emptyText}>Creez un agent terrain pour commencer</Text>
             <TouchableOpacity
               style={styles.emptyBtn}
-              onPress={() => navigation.navigate('AgentActivation')}
+              onPress={() => navigation.navigate('AddAgent')}
             >
               <Ionicons name="add" size={18} color="#fff" />
               <Text style={styles.emptyBtnText}>Nouvel agent</Text>

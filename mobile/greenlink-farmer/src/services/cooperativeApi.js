@@ -73,6 +73,11 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  createAgent: async (agentData) => {
+    const response = await api.post('/cooperative/agents', agentData);
+    return response.data;
+  },
+
   getAssignedFarmers: async (agentId) => {
     const response = await api.get(`/cooperative/agents/${agentId}/assigned-farmers`);
     return response.data;

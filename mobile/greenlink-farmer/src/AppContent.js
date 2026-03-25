@@ -88,6 +88,7 @@ const AddMemberParcelScreen = safeRequire(() => require('./screens/cooperative/A
 const CoopReportsScreen = safeRequire(() => require('./screens/cooperative/CoopReportsScreen'), 'CoopReportsScreen');
 const CoopHarvestsScreen = safeRequire(() => require('./screens/cooperative/CoopHarvestsScreen'), 'CoopHarvestsScreen');
 const AgentListScreen = safeRequire(() => require('./screens/cooperative/AgentListScreen'), 'AgentListScreen');
+const AddAgentScreen = safeRequire(() => require('./screens/cooperative/AddAgentScreen'), 'AddAgentScreen');
 const AssignFarmersScreen = safeRequire(() => require('./screens/cooperative/AssignFarmersScreen'), 'AssignFarmersScreen');
 const CoopLotsScreen = safeRequire(() => require('./screens/cooperative/CoopLotsScreen'), 'CoopLotsScreen');
 const CoopDistributionsScreen = safeRequire(() => require('./screens/cooperative/CoopDistributionsScreen'), 'CoopDistributionsScreen');
@@ -189,6 +190,7 @@ function AppNavigator() {
       <Stack.Screen name="CoopReports" component={CoopReportsScreen} />
       <Stack.Screen name="CoopHarvests" component={CoopHarvestsScreen} />
       <Stack.Screen name="AgentList" component={AgentListScreen} />
+      <Stack.Screen name="AddAgent" component={AddAgentScreen} />
       <Stack.Screen name="AssignFarmers" component={AssignFarmersScreen} />
       <Stack.Screen name="CoopLots" component={CoopLotsScreen} />
       <Stack.Screen name="CoopDistributions" component={CoopDistributionsScreen} />
