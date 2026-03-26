@@ -33,6 +33,7 @@ Plateforme agricole complète (React + FastAPI + Expo React Native + MongoDB) po
 - Phase 1-37: Construction complète de la plateforme
 - Phase 38: Moteur USSD offline mobile, simplification API, module SSRTE
 - Phase 39 (26/03/2026): Changement shortcode *144*88# → *144*99# (115 occurrences, tests 100% réussis)
+- Phase 40 (26/03/2026): Mise à jour version v1.68.0 → v1.69.0, préparation builds APK/AAB
 
 ## Backlog Priorisé
 
