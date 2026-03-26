@@ -43,11 +43,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (identifier, password) => {
     try {
-      console.log('[Auth] Login attempt with:', identifier);
-      console.log('[Auth] Using CDN-first strategy');
+      console.log('[Auth] Login with:', identifier);
+      console.log('[Auth] Racing 3 URLs: Worker CF + CDN Bunny + Direct');
       
-      // RACING PARALLELE: essayer CDN + Direct en meme temps
-      // Le premier qui repond gagne — optimise pour les reseaux CI
+      // RACING sur les 3 URLs en parallele
       let response;
       try {
         response = await api.racePost('/auth/login', {
@@ -55,21 +54,21 @@ export const AuthProvider = ({ children }) => {
           password,
         });
       } catch (raceError) {
-        console.warn('[Auth] Race login failed:', raceError.message);
+        console.warn('[Auth] Race failed:', raceError.message);
         
-        // Dernier recours: tentative sequentielle directe
+        // Dernier recours: tentative sequentielle sur toutes les URLs
         const errStatus = raceError.response?.status;
         if (!raceError.response || errStatus === 404 || errStatus >= 500 || errStatus === 0) {
-          console.warn('[Auth] Last resort: sequential direct attempts...');
+          console.warn('[Auth] Last resort: sequential...');
           await new Promise(r => setTimeout(r, 1500));
           
-          const urls = [
-            (CONFIG.FALLBACK_API_URL || '') + '/api/auth/login',
+          const allUrls = [
             CONFIG.API_URL + '/api/auth/login',
-          ].filter(u => u && !u.startsWith('/'));
+            ...(CONFIG.FALLBACK_URLS || []).map(u => u + '/api/auth/login'),
+          ];
           
           let lastErr = raceError;
-          for (const url of urls) {
+          for (const url of allUrls) {
             try {
               console.log(`[Auth] Trying: ${url}`);
               const directAxios = require('axios').default;

@@ -2,13 +2,19 @@
 // Optimisée pour faible connectivité en Côte d'Ivoire
 
 export const CONFIG = {
-  // API Backend - Uses EXPO_PUBLIC_API_URL from EAS build or falls back to hardcoded URL
-  API_URL: process.env.EXPO_PUBLIC_API_URL 
-    || 'https://ars1000-compliance.preview.emergentagent.com',
+  // API Backend — Priorite: Worker Cloudflare du client (pas de blocage CI)
+  // Fallback: CDN Bunny, puis URL directe Emergent
+  API_URL: 'https://api.greenlink-agritech.com',
   
-  // Proxy CDN Bunny — contourne Cloudflare quand l'URL principale est bloquee
-  // Ce proxy relaie les requetes vers le backend sans passer par Cloudflare
+  // Fallbacks (dans l'ordre de priorite)
+  FALLBACK_URLS: [
+    'https://greenlink-cdn.b-cdn.net',
+    'https://ars1000-compliance.preview.emergentagent.com',
+  ],
+  
+  // Legacy — garde pour compatibilite
   FALLBACK_API_URL: 'https://greenlink-cdn.b-cdn.net',
+  DIRECT_API_URL: 'https://ars1000-compliance.preview.emergentagent.com',
   
   // Timeouts optimises pour failover rapide en Cote d'Ivoire
   REQUEST_TIMEOUT: 30000, // 30s par requete (au lieu de 60s — failover plus rapide)
