@@ -478,6 +478,18 @@ const Dashboard = () => {
               </Button>
               <Button 
                 variant="outline" 
+                className="w-full justify-between bg-red-50 border-red-200 hover:bg-red-100"
+                onClick={() => navigate('/cooperative/ssrte')}
+                data-testid="quick-action-ssrte-alerts"
+              >
+                <span className="flex items-center text-red-700">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  SSRTE / Alertes ICI
+                </span>
+                <ChevronRight className="h-4 w-4 text-red-700" />
+              </Button>
+              <Button 
+                variant="outline" 
                 className="w-full justify-between bg-orange-50 border-orange-200 hover:bg-orange-100"
                 onClick={() => navigate('/marketplace')}
                 data-testid="quick-action-marketplace-intrants"

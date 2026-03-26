@@ -64,7 +64,7 @@ const CooperativeSSRTEDashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('new-visit');
+  const [activeTab, setActiveTab] = useState('ussd-alerts');
   const [members, setMembers] = useState([]);
   const [visits, setVisits] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,6 +73,9 @@ const CooperativeSSRTEDashboard = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [offlineVisits, setOfflineVisits] = useState([]);
   const [syncing, setSyncing] = useState(false);
+  const [ussdResponses, setUssdResponses] = useState([]);
+  const [ussdStats, setUssdStats] = useState({ total: 0, conforme: 0, alerte_ici: 0 });
+  const [ussdFilter, setUssdFilter] = useState('all');
 
   // Form state for new SSRTE visit
   const [visitForm, setVisitForm] = useState({
@@ -151,8 +154,8 @@ const CooperativeSSRTEDashboard = () => {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || user.user_type !== 'cooperative') {
-      toast.error('Accès refusé', { description: 'Réservé aux coopératives' });
+    if (!user || (user.user_type !== 'cooperative' && user.user_type !== 'admin')) {
+      toast.error('Accès refusé', { description: 'Réservé aux coopératives et administrateurs' });
       navigate('/');
       return;
     }
@@ -162,12 +165,15 @@ const CooperativeSSRTEDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [membersRes, visitsRes] = await Promise.all([
+      const [membersRes, visitsRes, ussdRes] = await Promise.all([
         apiClient.get('/api/cooperative/members'),
-        apiClient.get('/api/ici-data/ssrte/visits?limit=50')
+        apiClient.get('/api/ici-data/ssrte/visits?limit=50'),
+        apiClient.get('/api/ussd/ssrte/responses').catch(() => ({ data: { stats: { total: 0, conforme: 0, alerte_ici: 0 }, responses: [] } }))
       ]);
       setMembers(membersRes.data.members || []);
       setVisits(visitsRes.data.visits || []);
+      setUssdResponses(ussdRes.data.responses || []);
+      setUssdStats(ussdRes.data.stats || { total: 0, conforme: 0, alerte_ici: 0 });
       
       // Save members locally for offline use
       localStorage.setItem('ssrte_members_cache', JSON.stringify(membersRes.data.members || []));
@@ -480,7 +486,7 @@ const CooperativeSSRTEDashboard = () => {
           )}
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Card className="bg-slate-900 border-slate-800">
               <CardContent className="p-4">
                 <Users className="w-5 h-5 text-blue-400 mb-2" />
@@ -506,11 +512,16 @@ const CooperativeSSRTEDashboard = () => {
             </Card>
             <Card className="bg-slate-900 border-slate-800">
               <CardContent className="p-4">
+                <Phone className="w-5 h-5 text-yellow-400 mb-2" />
+                <p className="text-2xl font-bold text-white">{ussdStats.alerte_ici}</p>
+                <p className="text-xs text-slate-400">Alertes USSD ICI</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-slate-900 border-slate-800">
+              <CardContent className="p-4">
                 <CheckCircle2 className="w-5 h-5 text-purple-400 mb-2" />
-                <p className="text-2xl font-bold text-white">
-                  {visits.filter(v => v.support_fourni?.length > 0).length}
-                </p>
-                <p className="text-xs text-slate-400">Avec support</p>
+                <p className="text-2xl font-bold text-white">{ussdStats.conforme}</p>
+                <p className="text-xs text-slate-400">Conformes USSD</p>
               </CardContent>
             </Card>
           </div>
@@ -518,6 +529,10 @@ const CooperativeSSRTEDashboard = () => {
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="bg-slate-900 border-slate-800">
+              <TabsTrigger value="ussd-alerts" className="data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400" data-testid="tab-ussd-alerts">
+                <Bell className="w-4 h-4 mr-2" />
+                Alertes USSD ({ussdStats.alerte_ici})
+              </TabsTrigger>
               <TabsTrigger value="new-visit" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">
                 <Plus className="w-4 h-4 mr-2" />
                 Nouvelle Visite
@@ -527,6 +542,171 @@ const CooperativeSSRTEDashboard = () => {
                 Historique ({visits.length})
               </TabsTrigger>
             </TabsList>
+
+            {/* Tab: USSD Alerts */}
+            <TabsContent value="ussd-alerts" className="mt-6" data-testid="ussd-alerts-tab-content">
+              <div className="space-y-6">
+                {/* USSD Stats Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card 
+                    className={`border cursor-pointer transition-all ${ussdFilter === 'all' ? 'bg-slate-800 border-slate-500 ring-1 ring-slate-500' : 'bg-slate-900 border-slate-800 hover:border-slate-600'}`}
+                    onClick={() => setUssdFilter('all')}
+                  >
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="p-3 bg-blue-500/20 rounded-xl">
+                        <Phone className="w-6 h-6 text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-white">{ussdStats.total}</p>
+                        <p className="text-xs text-slate-400">Total reponses USSD</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card 
+                    className={`border cursor-pointer transition-all ${ussdFilter === 'alerte_ici' ? 'bg-red-950/50 border-red-500/50 ring-1 ring-red-500/50' : 'bg-slate-900 border-slate-800 hover:border-red-800'}`}
+                    onClick={() => setUssdFilter('alerte_ici')}
+                  >
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="p-3 bg-red-500/20 rounded-xl">
+                        <AlertTriangle className="w-6 h-6 text-red-400" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-red-400">{ussdStats.alerte_ici}</p>
+                        <p className="text-xs text-slate-400">Alertes ICI (non scolarises)</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card 
+                    className={`border cursor-pointer transition-all ${ussdFilter === 'conforme' ? 'bg-green-950/50 border-green-500/50 ring-1 ring-green-500/50' : 'bg-slate-900 border-slate-800 hover:border-green-800'}`}
+                    onClick={() => setUssdFilter('conforme')}
+                  >
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="p-3 bg-green-500/20 rounded-xl">
+                        <CheckCircle2 className="w-6 h-6 text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-green-400">{ussdStats.conforme}</p>
+                        <p className="text-xs text-slate-400">Situation conforme</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Alerts List */}
+                <Card className="bg-slate-900 border-slate-800">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-white text-lg flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-yellow-400" />
+                        Reponses SSRTE via USSD *144*99#
+                      </CardTitle>
+                      <Badge className="bg-slate-700 text-slate-300">
+                        {ussdFilter === 'all' ? ussdResponses.length : ussdResponses.filter(r => r.statut === ussdFilter).length} resultats
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {ussdResponses.length === 0 ? (
+                      <div className="text-center py-12" data-testid="ussd-alerts-empty">
+                        <Phone className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                        <p className="text-slate-500 text-lg">Aucune reponse USSD SSRTE</p>
+                        <p className="text-slate-600 text-sm mt-1">
+                          Les alertes apparaitront ici quand vos planteurs utiliseront le menu SSRTE *144*99# option 6
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3" data-testid="ussd-alerts-list">
+                        {ussdResponses
+                          .filter(r => ussdFilter === 'all' || r.statut === ussdFilter)
+                          .map((response, index) => (
+                          <div
+                            key={response.farmer_id || index}
+                            className={`p-4 rounded-lg border transition-colors ${
+                              response.statut === 'alerte_ici'
+                                ? 'bg-red-950/30 border-red-500/30'
+                                : 'bg-slate-800/50 border-slate-700/50'
+                            }`}
+                            data-testid={`ussd-alert-item-${index}`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${
+                                  response.statut === 'alerte_ici' ? 'bg-red-500/20' : 'bg-green-500/20'
+                                }`}>
+                                  {response.statut === 'alerte_ici' 
+                                    ? <AlertTriangle className="w-4 h-4 text-red-400" />
+                                    : <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                  }
+                                </div>
+                                <div>
+                                  <p className="text-white font-medium">
+                                    {response.farmer_name || 'Planteur inconnu'}
+                                  </p>
+                                  <p className="text-xs text-slate-400 flex items-center gap-2">
+                                    <Phone className="w-3 h-3" />
+                                    {response.phone || 'N/A'}
+                                    {response.coop_name && (
+                                      <span className="ml-2 text-slate-500">| {response.coop_name}</span>
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge 
+                                  className={response.statut === 'alerte_ici' 
+                                    ? 'bg-red-500 text-white' 
+                                    : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                  }
+                                  data-testid={`ussd-alert-badge-${index}`}
+                                >
+                                  {response.statut === 'alerte_ici' ? 'ALERTE ICI' : 'CONFORME'}
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 gap-4 mt-3 pt-3 border-t border-slate-700/50">
+                              <div>
+                                <p className="text-xs text-slate-500">Enfants age scolaire</p>
+                                <p className="font-medium text-white">
+                                  {response.enfants_age_scolaire ? 'Oui' : 'Non'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-500">Scolarises</p>
+                                <p className={`font-medium ${
+                                  response.scolarises === false ? 'text-red-400' : 
+                                  response.scolarises === true ? 'text-green-400' : 'text-slate-500'
+                                }`}>
+                                  {response.scolarises === true ? 'Oui' : response.scolarises === false ? 'Non' : 'N/A'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-500">Derniere MAJ</p>
+                                <p className="font-medium text-slate-300 text-sm">
+                                  {response.updated_at 
+                                    ? new Date(response.updated_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                                    : 'N/A'
+                                  }
+                                </p>
+                              </div>
+                            </div>
+
+                            {response.statut === 'alerte_ici' && (
+                              <div className="mt-3 p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                                <p className="text-xs text-red-300 flex items-center gap-1">
+                                  <AlertTriangle className="w-3 h-3" />
+                                  Action requise : Contacter le planteur pour accompagnement ICI (scolarisation)
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
             {/* Tab: New Visit */}
             <TabsContent value="new-visit" className="mt-6">

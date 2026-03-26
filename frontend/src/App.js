@@ -90,6 +90,7 @@ import CarbonSubmissionsPage from "./pages/cooperative/CarbonSubmissionsPage";
 import ParcelsVerificationPage from "./pages/cooperative/ParcelsVerificationPage";
 import AgentProgressPage from "./pages/cooperative/AgentProgressPage";
 import USSDRegistrationsPage from "./pages/cooperative/USSDRegistrationsPage";
+import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
@@ -228,6 +229,7 @@ function App() {
               <Route path="/cooperative/field-agents" element={<FieldAgentsPage />} />
               <Route path="/cooperative/agents-progress" element={<AgentProgressPage />} />
               <Route path="/cooperative/inscriptions" element={<USSDRegistrationsPage />} />
+              <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
 
               {/* SSRTE Agent Routes */}
               <Route path="/ssrte/dashboard" element={<SSRTEAgentDashboard />} />
