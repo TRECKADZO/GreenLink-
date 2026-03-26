@@ -2,7 +2,7 @@
   "expo": {
     "name": "GreenLink Agritech",
     "slug": "greenlink-farmer",
-    "version": "1.65.0",
+    "version": "1.66.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -72,14 +72,6 @@
         "expo-camera",
         {
           "cameraPermission": "GreenLink a besoin d'acc\u00e9der \u00e0 la cam\u00e9ra pour photographier vos parcelles."
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "cameraPermission": "GreenLink a besoin de la cam\u00e9ra pour prendre des photos de vos parcelles.",
-          "photosPermission": false,
-          "microphonePermission": false
         }
       ],
       "./plugins/removeMediaPermissions",
