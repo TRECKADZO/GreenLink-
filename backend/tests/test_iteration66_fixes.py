@@ -245,7 +245,7 @@ class TestUSSDCallbackRegistration:
         # Step 1: Welcome menu
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": ""
         })
@@ -256,7 +256,7 @@ class TestUSSDCallbackRegistration:
         # Step 2: Select option 2 (Nouvelle inscription)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2"
         })
@@ -267,7 +267,7 @@ class TestUSSDCallbackRegistration:
         # Step 3: Enter name
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test USSD Planteur"
         })
@@ -278,7 +278,7 @@ class TestUSSDCallbackRegistration:
         # Step 4: Enter coop code (0 for none)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test USSD Planteur*0"
         })
@@ -289,7 +289,7 @@ class TestUSSDCallbackRegistration:
         # Step 5: Enter village
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test USSD Planteur*0*Gagnoa"
         })
@@ -300,7 +300,7 @@ class TestUSSDCallbackRegistration:
         # Step 6: Enter PIN
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test USSD Planteur*0*Gagnoa*1234"
         })
@@ -311,7 +311,7 @@ class TestUSSDCallbackRegistration:
         # Step 7: Confirm registration
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test USSD Planteur*0*Gagnoa*1234*1"
         })

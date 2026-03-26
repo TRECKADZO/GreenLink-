@@ -176,7 +176,7 @@ if CORS_ORIGINS:
     allowed_origins = [o.strip() for o in CORS_ORIGINS.split(',') if o.strip()]
 else:
     allowed_origins = [
-        "https://ars1000-compliance.preview.emergentagent.com",
+        "https://ussd-shortcode-fix.preview.emergentagent.com",
         "http://localhost:3000",
     ]
 

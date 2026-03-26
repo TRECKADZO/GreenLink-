@@ -36,7 +36,7 @@ class TestUSSDWelcomeMenu:
         session_id = f"test_welcome_{uuid.uuid4().hex[:8]}"
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250700000001",
             "text": ""
         })
@@ -72,7 +72,7 @@ class TestUSSDRecognition:
         # First call - welcome menu
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": ""
         })
@@ -81,7 +81,7 @@ class TestUSSDRecognition:
         # Second call - select "Deja inscrit" (option 1)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1"
         })
@@ -120,7 +120,7 @@ class TestUSSDRegistrationFlow:
         # Step 0: Welcome menu
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": ""
         })
@@ -129,7 +129,7 @@ class TestUSSDRegistrationFlow:
         # Step 1: Select "Nouvelle inscription" (option 2)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2"
         })
@@ -141,7 +141,7 @@ class TestUSSDRegistrationFlow:
         # Step 2: Enter name
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test Planteur USSD"
         })
@@ -153,7 +153,7 @@ class TestUSSDRegistrationFlow:
         # Step 3: Enter coop code (or 0 for none)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test Planteur USSD*COOP123"
         })
@@ -165,7 +165,7 @@ class TestUSSDRegistrationFlow:
         # Step 4: Enter village
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test Planteur USSD*COOP123*Daloa"
         })
@@ -177,7 +177,7 @@ class TestUSSDRegistrationFlow:
         # Step 5: Enter PIN
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test Planteur USSD*COOP123*Daloa*1234"
         })
@@ -191,7 +191,7 @@ class TestUSSDRegistrationFlow:
         # Step 6: Confirm registration
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": unique_phone,
             "text": "2*Test Planteur USSD*COOP123*Daloa*1234*1"
         })
@@ -213,7 +213,7 @@ class TestUSSDSimpleEstimation:
         # Start with existing farmer
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": ""
         })
@@ -222,7 +222,7 @@ class TestUSSDSimpleEstimation:
         # Select "Deja inscrit"
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1"
         })
@@ -231,7 +231,7 @@ class TestUSSDSimpleEstimation:
         # Select "Estimer ma prime carbone" (option 1)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1*1"
         })
@@ -244,7 +244,7 @@ class TestUSSDSimpleEstimation:
         # Select "Estimation simple" (option 1)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1*1*1"
         })
@@ -257,7 +257,7 @@ class TestUSSDSimpleEstimation:
         # Answer Q1: 5 hectares
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1*1*1*5"
         })
@@ -270,7 +270,7 @@ class TestUSSDSimpleEstimation:
         # Answer Q2: 100 arbres
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1*1*1*5*100"
         })
@@ -283,7 +283,7 @@ class TestUSSDSimpleEstimation:
         # Answer Q3: Non (2)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1*1*1*5*100*2"
         })
@@ -296,7 +296,7 @@ class TestUSSDSimpleEstimation:
         # Answer Q4: Non (2)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1*1*1*5*100*2*2"
         })
@@ -309,7 +309,7 @@ class TestUSSDSimpleEstimation:
         # Answer Q5: 5-15 ans (2)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1*1*1*5*100*2*2*2"
         })
@@ -334,7 +334,7 @@ class TestUSSDDetailedEstimation:
         # Start with existing farmer
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": ""
         })
@@ -343,7 +343,7 @@ class TestUSSDDetailedEstimation:
         # Select "Deja inscrit"
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1"
         })
@@ -352,7 +352,7 @@ class TestUSSDDetailedEstimation:
         # Select "Estimer ma prime carbone" (option 1)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1*1"
         })
@@ -361,7 +361,7 @@ class TestUSSDDetailedEstimation:
         # Select "Estimation detaillee" (option 2)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1*1*2"
         })
@@ -378,7 +378,7 @@ class TestUSSDDetailedEstimation:
             text_so_far = "1*1*2*" + "*".join(answers[:i+1])
             response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
                 "sessionId": session_id,
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": TEST_FARMER_PHONE,
                 "text": text_so_far
             })
@@ -415,7 +415,7 @@ class TestUSSDEstimationResultOptions:
         # Step 0: Welcome menu
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": ""
         })
@@ -424,7 +424,7 @@ class TestUSSDEstimationResultOptions:
         # Step 1: Select "Deja inscrit"
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1"
         })
@@ -433,7 +433,7 @@ class TestUSSDEstimationResultOptions:
         # Step 2: Select "Estimer ma prime carbone"
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1"
         })
@@ -442,7 +442,7 @@ class TestUSSDEstimationResultOptions:
         # Step 3: Select "Estimation simple"
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "1"
         })
@@ -453,7 +453,7 @@ class TestUSSDEstimationResultOptions:
         for answer in answers:
             response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
                 "sessionId": session_id,
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": TEST_FARMER_PHONE,
                 "text": answer
             })
@@ -695,7 +695,7 @@ class TestUSSDHelpOption:
         # Welcome menu
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250700000002",
             "text": ""
         })
@@ -704,7 +704,7 @@ class TestUSSDHelpOption:
         # Select Aide (option 3)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250700000002",
             "text": "3"
         })

@@ -163,7 +163,7 @@ export default function AddCoopMemberScreen({ navigation }) {
               />
             </View>
             <Text style={styles.fieldHint}>
-              Ce PIN permet au planteur d'utiliser le USSD *144*88#
+              Ce PIN permet au planteur d'utiliser le USSD *144*99#
             </Text>
           </View>
 
@@ -222,7 +222,7 @@ export default function AddCoopMemberScreen({ navigation }) {
             <Ionicons name="information-circle" size={20} color="#2196F3" />
             <Text style={styles.infoText}>
               Un Code Planteur unique sera genere automatiquement.
-              Le membre pourra utiliser le USSD *144*88# avec son PIN.
+              Le membre pourra utiliser le USSD *144*99# avec son PIN.
             </Text>
           </View>
 

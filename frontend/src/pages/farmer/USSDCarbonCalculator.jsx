@@ -47,7 +47,7 @@ const USSDCarbonCalculator = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: sid || sessionId,
-          serviceCode: '*144*88#',
+          serviceCode: '*144*99#',
           phoneNumber: '+2250700000000',
           text: newText
         })
@@ -65,7 +65,7 @@ const USSDCarbonCalculator = () => {
         setSessionActive(false);
       }
     } catch {
-      setScreen('Erreur de connexion.\nReessayez *144*88#');
+      setScreen('Erreur de connexion.\nReessayez *144*99#');
       setSessionActive(false);
     } finally {
       setLoading(false);
@@ -111,7 +111,7 @@ const USSDCarbonCalculator = () => {
         {/* Titre */}
         <div className="text-center mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Prime Carbone USSD</h1>
-          <p className="text-white/70 text-sm sm:text-base">Composez *144*88# pour calculer votre prime</p>
+          <p className="text-white/70 text-sm sm:text-base">Composez *144*99# pour calculer votre prime</p>
         </div>
 
         {/* How it works */}
@@ -122,7 +122,7 @@ const USSDCarbonCalculator = () => {
               <div className="w-8 h-8 bg-[#d4a574] rounded-full flex items-center justify-center mx-auto mb-1">
                 <Phone className="w-4 h-4 text-[#2d5a4d]" />
               </div>
-              <p className="text-white/80 text-xs">1. Composez *144*88#</p>
+              <p className="text-white/80 text-xs">1. Composez *144*99#</p>
             </div>
             <div className="p-2">
               <div className="w-8 h-8 bg-[#d4a574] rounded-full flex items-center justify-center mx-auto mb-1">
@@ -167,7 +167,7 @@ const USSDCarbonCalculator = () => {
 
               {/* USSD Header */}
               <div className="bg-orange-500 px-4 py-2.5 flex items-center justify-between">
-                <span className="text-white font-bold text-sm">*144*88#</span>
+                <span className="text-white font-bold text-sm">*144*99#</span>
                 {sessionActive && (
                   <span className="text-white/80 text-xs bg-white/20 px-2 py-0.5 rounded-full">
                     {step}/8
@@ -186,7 +186,7 @@ const USSDCarbonCalculator = () => {
                     <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
                       <Phone className="w-8 h-8 text-orange-600" />
                     </div>
-                    <p className="text-gray-900 font-bold mb-1">*144*88#</p>
+                    <p className="text-gray-900 font-bold mb-1">*144*99#</p>
                     <p className="text-gray-500 text-sm mb-4">Calculateur Prime Carbone</p>
                     <Button 
                       onClick={startSession}
@@ -194,7 +194,7 @@ const USSDCarbonCalculator = () => {
                       data-testid="start-ussd-btn"
                     >
                       <Phone className="w-4 h-4 mr-2" />
-                      Composer *144*88#
+                      Composer *144*99#
                     </Button>
                   </div>
                 ) : loading ? (
@@ -279,7 +279,7 @@ const USSDCarbonCalculator = () => {
         {/* Info bottom */}
         <div className="mt-6 text-center">
           <p className="text-white/50 text-xs">
-            Simulation USSD - En production, composez *144*88# depuis tout telephone
+            Simulation USSD - En production, composez *144*99# depuis tout telephone
           </p>
           <p className="text-white/40 text-xs mt-1">
             Gratuit - Fonctionne sans internet - Disponible 24h/24

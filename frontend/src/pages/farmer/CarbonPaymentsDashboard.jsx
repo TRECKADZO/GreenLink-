@@ -18,7 +18,7 @@ import {
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const STEPS = [
-  { num: 1, icon: Phone, text: "Compose *144*88# (gratuit)", color: "bg-emerald-500" },
+  { num: 1, icon: Phone, text: "Compose *144*99# (gratuit)", color: "bg-emerald-500" },
   { num: 2, icon: Sparkles, text: "Réponds à 8 questions simples", color: "bg-blue-500" },
   { num: 3, icon: Leaf, text: "Reçois ta prime carbone estimée", color: "bg-teal-500" },
   { num: 4, icon: ShoppingBag, text: "Vends ton cacao à un acheteur responsable", color: "bg-amber-500" },

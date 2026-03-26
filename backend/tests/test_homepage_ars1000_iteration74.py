@@ -118,7 +118,7 @@ class TestUSSDCarbonCalculatorAPI:
         """Test starting a new USSD carbon calculator session"""
         payload = {
             "sessionId": "test_session_001",
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250700000000",
             "text": ""
         }
@@ -142,7 +142,7 @@ class TestUSSDCarbonCalculatorAPI:
         session_id = "test_session_002"
         payload = {
             "sessionId": session_id,
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250700000000",
             "text": ""
         }

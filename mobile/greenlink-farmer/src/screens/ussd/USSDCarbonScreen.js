@@ -81,7 +81,7 @@ const USSDCarbonScreen = () => {
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>*144*88#</Text>
+          <Text style={styles.headerTitle}>*144*99#</Text>
           <Text style={styles.headerSub}>Prime Carbone</Text>
         </View>
         {sessionActive && (
@@ -103,7 +103,7 @@ const USSDCarbonScreen = () => {
               <View style={styles.howIcon}>
                 <Ionicons name="call" size={18} color={COLORS.primary} />
               </View>
-              <Text style={styles.howText}>Composez{'\n'}*144*88#</Text>
+              <Text style={styles.howText}>Composez{'\n'}*144*99#</Text>
             </View>
             <View style={styles.howStep}>
               <View style={styles.howIcon}>
@@ -126,7 +126,7 @@ const USSDCarbonScreen = () => {
           <View style={styles.ussdHeader}>
             <Ionicons name="cellular" size={14} color="#fff" />
             <Text style={styles.ussdOperator}>Orange CI</Text>
-            <Text style={styles.ussdCode}>*144*88#</Text>
+            <Text style={styles.ussdCode}>*144*99#</Text>
           </View>
 
           <ScrollView
@@ -146,7 +146,7 @@ const USSDCarbonScreen = () => {
                 </Text>
                 <TouchableOpacity style={styles.startBtn} onPress={startSession} data-testid="start-ussd-btn">
                   <Ionicons name="call" size={20} color="#fff" />
-                  <Text style={styles.startBtnText}>Composer *144*88#</Text>
+                  <Text style={styles.startBtnText}>Composer *144*99#</Text>
                 </TouchableOpacity>
                 <Text style={styles.offlineNote}>Fonctionne sans internet</Text>
               </View>
@@ -192,7 +192,7 @@ const USSDCarbonScreen = () => {
       </KeyboardAvoidingView>
 
       <Text style={styles.footerText}>
-        Calcul 100% local - En production, composez *144*88# depuis tout telephone
+        Calcul 100% local - En production, composez *144*99# depuis tout telephone
       </Text>
     </SafeAreaView>
   );

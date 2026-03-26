@@ -56,13 +56,13 @@ const FAQPage = () => {
       id: 6,
       category: 'carbon',
       question: "Comment est répartie la vente des crédits carbone ?",
-      answer: "Les revenus issus de la vente des credits carbone sont repartis de maniere equitable entre les differents acteurs de la chaine de valeur.\n\nLe montant exact de votre prime depend de votre score carbone et de la surface de vos parcelles. Utilisez le calculateur *144*88# pour estimer votre prime.\n\nPour toute question sur la repartition, contactez votre cooperative ou l'equipe GreenLink."
+      answer: "Les revenus issus de la vente des credits carbone sont repartis de maniere equitable entre les differents acteurs de la chaine de valeur.\n\nLe montant exact de votre prime depend de votre score carbone et de la surface de vos parcelles. Utilisez le calculateur *144*99# pour estimer votre prime.\n\nPour toute question sur la repartition, contactez votre cooperative ou l'equipe GreenLink."
     },
     {
       id: 7,
       category: 'carbon',
       question: "Quelle prime carbone puis-je recevoir comme planteur ?",
-      answer: "La prime carbone depend de vos pratiques agricoles et de votre score carbone (0 a 10).\n\n**Votre score determine le montant de votre prime :**\n- Score 5/10 (moyen) : ~44 FCFA/kg de cacao\n- Score 8/10 (bon) : ~69 FCFA/kg\n- Score 9.5/10 (excellent) : ~92 FCFA/kg\n\nPlus vos pratiques sont durables (arbres d'ombrage, pas de brulage, compost, agroforesterie), plus votre prime est elevee !\n\nUtilisez le calculateur *144*88# pour estimer votre prime."
+      answer: "La prime carbone depend de vos pratiques agricoles et de votre score carbone (0 a 10).\n\n**Votre score determine le montant de votre prime :**\n- Score 5/10 (moyen) : ~44 FCFA/kg de cacao\n- Score 8/10 (bon) : ~69 FCFA/kg\n- Score 9.5/10 (excellent) : ~92 FCFA/kg\n\nPlus vos pratiques sont durables (arbres d'ombrage, pas de brulage, compost, agroforesterie), plus votre prime est elevee !\n\nUtilisez le calculateur *144*99# pour estimer votre prime."
     },
     {
       id: 8,

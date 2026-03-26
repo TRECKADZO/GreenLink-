@@ -13,7 +13,7 @@ import { processUSSD, processSSRTE } from '../../services/ussdOfflineEngine';
  * Utilisable par: cooperatives, agents terrain
  * 
  * Mode "demo" : simule exactement ce que voit un agriculteur
- * quand il compose *144*88# sur son telephone basique
+ * quand il compose *144*99# sur son telephone basique
  */
 const USSDFullSimulatorScreen = () => {
   const navigation = useNavigation();
@@ -160,7 +160,7 @@ const USSDFullSimulatorScreen = () => {
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>{title}</Text>
           <Text style={styles.headerSub}>
-            {memberName ? `Pour: ${memberName}` : 'Simulation *144*88#'}
+            {memberName ? `Pour: ${memberName}` : 'Simulation *144*99#'}
           </Text>
         </View>
         <View style={styles.offlineBadge}>
@@ -174,7 +174,7 @@ const USSDFullSimulatorScreen = () => {
         <View style={styles.agentBanner}>
           <Ionicons name="information-circle" size={18} color="#2563eb" />
           <Text style={styles.agentBannerText}>
-            Montrez a l'agriculteur comment utiliser *144*88# sur son telephone. 
+            Montrez a l'agriculteur comment utiliser *144*99# sur son telephone. 
             Cette demo reproduit exactement le flux USSD.
           </Text>
         </View>
@@ -188,7 +188,7 @@ const USSDFullSimulatorScreen = () => {
               <Ionicons name="cellular" size={12} color="#333" />
               <Text style={styles.statusOperator}>Orange CI</Text>
             </View>
-            <Text style={styles.statusCode}>*144*88#</Text>
+            <Text style={styles.statusCode}>*144*99#</Text>
           </View>
 
           {/* Conversation history */}
@@ -207,12 +207,12 @@ const USSDFullSimulatorScreen = () => {
                 <Text style={styles.emptyDesc}>
                   {mode === 'agent' 
                     ? "Appuyez sur 'Demarrer' pour montrer a l'agriculteur comment fonctionne le calcul de prime carbone par USSD."
-                    : "Testez le flux USSD *144*88# comme si vous etiez sur un telephone basique. Aucune connexion internet requise."
+                    : "Testez le flux USSD *144*99# comme si vous etiez sur un telephone basique. Aucune connexion internet requise."
                   }
                 </Text>
                 <TouchableOpacity style={styles.startBtn} onPress={startSession} data-testid="start-full-sim-btn">
                   <Ionicons name="play" size={18} color="#fff" />
-                  <Text style={styles.startBtnText}>Demarrer *144*88#</Text>
+                  <Text style={styles.startBtnText}>Demarrer *144*99#</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -288,7 +288,7 @@ const USSDFullSimulatorScreen = () => {
 
       <Text style={styles.footer}>
         {mode === 'agent' 
-          ? 'Demo formation — Reproduit le flux *144*88# reel'
+          ? 'Demo formation — Reproduit le flux *144*99# reel'
           : 'Simulation locale — Aucune donnee envoyee au serveur'}
       </Text>
     </SafeAreaView>

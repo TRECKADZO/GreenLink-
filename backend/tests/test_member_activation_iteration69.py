@@ -101,7 +101,7 @@ class TestMemberActivationFlow:
             f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": f"test_session_{int(time.time())}",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": TEST_PHONE,
                 "text": "1"  # Option 1: "Je suis deja inscrit"
             }
@@ -394,7 +394,7 @@ class TestUSSDRecognition:
             f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": f"ussd_test_{int(time.time())}",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": test_phone,
                 "text": "1"  # "Je suis deja inscrit"
             }

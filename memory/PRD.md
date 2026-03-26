@@ -180,7 +180,7 @@ Implementation complete de la norme ARS 1000 (Norme Africaine Cacao Durable):
 
 **Simulateur USSD verifie fonctionnel:**
 - /farmer/prime-carbone fonctionne correctement
-- Clic "Composer *144*88#" → Question 1/9 s'affiche
+- Clic "Composer *144*99#" → Question 1/9 s'affiche
 - Backend /api/ussd/calculate-premium retourne score, eligible, ars_level, ars_pct
 
 **Tests iteration 74: 100% backend (9/9), 100% frontend**
@@ -226,9 +226,9 @@ Re-test primaire toutes les 10 requetes pour recovery automatique
 
 ### Phase 37 - Simulateur USSD Offline v1.65.0 (DONE - 26/03/2026)
 **3 problemes resolus:**
-1. **Fix USSDCarbonScreen** — Le calculateur *144*88# agriculteurs ne fonctionnait pas (import casse + dependance API backend). Remplace par moteur 100% offline.
+1. **Fix USSDCarbonScreen** — Le calculateur *144*99# agriculteurs ne fonctionnait pas (import casse + dependance API backend). Remplace par moteur 100% offline.
 2. **Simulateur USSD Cooperative** — Nouveau bouton "Simulateur USSD" dans le dashboard coop.
-3. **Demo USSD Agent Terrain** — Nouveau bouton "Demo USSD *144*88#" dans le dashboard agent terrain.
+3. **Demo USSD Agent Terrain** — Nouveau bouton "Demo USSD *144*99#" dans le dashboard agent terrain.
 
 **Architecture:**
 - `ussdOfflineEngine.js`: Moteur stateless reproduisant la logique backend (9 questions, scoring, ARS 1000)

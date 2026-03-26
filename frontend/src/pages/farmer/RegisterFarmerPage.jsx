@@ -142,7 +142,7 @@ const RegisterFarmerPage = () => {
                 )}
               </div>
               <p className="text-sm text-emerald-400 mb-6">
-                Composez *144*88# pour estimer votre prime carbone directement depuis votre telephone.
+                Composez *144*99# pour estimer votre prime carbone directement depuis votre telephone.
               </p>
               <div className="flex gap-3">
                 <Button 

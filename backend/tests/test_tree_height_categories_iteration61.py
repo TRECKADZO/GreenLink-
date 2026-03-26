@@ -248,7 +248,7 @@ class TestUSSDCarbonQuestions:
         # Test first question (hectares)
         response = requests.post(f"{BASE_URL}/api/ussd/carbon-calculator", json={
             "sessionId": "test_session_q1",
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250700000000",
             "text": ""
         })
@@ -264,7 +264,7 @@ class TestUSSDCarbonQuestions:
         """Test that question 2 asks for grands arbres (>12m)"""
         response = requests.post(f"{BASE_URL}/api/ussd/carbon-calculator", json={
             "sessionId": "test_session_q2",
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250700000000",
             "text": "3.5"  # Answer to Q1 (hectares)
         })
@@ -282,7 +282,7 @@ class TestUSSDCarbonQuestions:
         """Test that question 3 asks for moyens arbres (8-12m)"""
         response = requests.post(f"{BASE_URL}/api/ussd/carbon-calculator", json={
             "sessionId": "test_session_q3",
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250700000000",
             "text": "3.5*20"  # Answers: Q1=3.5ha, Q2=20 grands
         })
@@ -304,7 +304,7 @@ class TestUSSDCarbonQuestions:
         
         response = requests.post(f"{BASE_URL}/api/ussd/carbon-calculator", json={
             "sessionId": "test_session_full",
-            "serviceCode": "*144*88#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250700000000",
             "text": answers
         })

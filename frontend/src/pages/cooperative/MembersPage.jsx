@@ -688,7 +688,7 @@ const MembersPage = () => {
                   data-testid="member-pin-input"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Ce PIN permettra au planteur d'utiliser le service USSD *144*88#
+                  Ce PIN permettra au planteur d'utiliser le service USSD *144*99#
                 </p>
               </div>
             </div>
@@ -735,7 +735,7 @@ const MembersPage = () => {
               </div>
               {!createdMemberInfo.pin_configured && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                  Le planteur devra configurer son PIN lors de sa première connexion USSD (*144*88#).
+                  Le planteur devra configurer son PIN lors de sa première connexion USSD (*144*99#).
                 </div>
               )}
             </div>

@@ -1,6 +1,6 @@
 """
 USSD Carbon Calculator API Tests
-Tests for /api/ussd/carbon-calculator endpoint - *144*88#
+Tests for /api/ussd/carbon-calculator endpoint - *144*99#
 
 This module tests:
 1. Initial session (empty text returns Q1)
@@ -26,7 +26,7 @@ class TestUSSDCarbonCalculatorAPI:
             f"{BASE_URL}/api/ussd/carbon-calculator",
             json={
                 "sessionId": "pytest_initial_1",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": "+2250700000000",
                 "text": ""
             }
@@ -51,7 +51,7 @@ class TestUSSDCarbonCalculatorAPI:
             f"{BASE_URL}/api/ussd/carbon-calculator",
             json={
                 "sessionId": "pytest_full_flow",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": "+2250700000000",
                 "text": "5*48*1*2*2*1*1*1"
             }
@@ -88,7 +88,7 @@ class TestUSSDCarbonCalculatorAPI:
             f"{BASE_URL}/api/ussd/carbon-calculator",
             json={
                 "sessionId": "pytest_partial",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": "+2250700000000",
                 "text": "5*48"
             }
@@ -111,7 +111,7 @@ class TestUSSDCarbonCalculatorAPI:
             f"{BASE_URL}/api/ussd/carbon-calculator",
             json={
                 "sessionId": "pytest_invalid",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": "+2250700000000",
                 "text": "abc"
             }
@@ -131,7 +131,7 @@ class TestUSSDCarbonCalculatorAPI:
             f"{BASE_URL}/api/ussd/carbon-calculator",
             json={
                 "sessionId": "pytest_invalid_middle",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": "+2250700000000",
                 "text": "5*48*5"  # 5 is invalid for culture (expects 1,2,3)
             }
@@ -150,7 +150,7 @@ class TestUSSDCarbonCalculatorAPI:
             f"{BASE_URL}/api/ussd/carbon-calculator",
             json={
                 "sessionId": "pytest_cafe",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": "+2250700000000",
                 "text": "3*30*2*1*1*2*2*2"  # 3ha, 30 trees, cafe, yes chem, yes burn, no compost, no agroforest, no cover
             }
@@ -170,7 +170,7 @@ class TestUSSDCarbonCalculatorAPI:
             f"{BASE_URL}/api/ussd/carbon-calculator",
             json={
                 "sessionId": "pytest_anacarde",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": "+2250700000000",
                 "text": "2*20*3*2*2*1*1*1"  # 2ha, 20 trees, anacarde, no chem, no burn, yes compost, yes agroforest, yes cover
             }
@@ -190,7 +190,7 @@ class TestUSSDCarbonCalculatorAPI:
             f"{BASE_URL}/api/ussd/carbon-calculator",
             json={
                 "sessionId": "pytest_low_score",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": "+2250700000000",
                 "text": "1*5*1*1*1*2*2*2"  # 1ha, 5 trees, cacao, yes chem, yes burn, no compost, no agroforest, no cover
             }
@@ -213,7 +213,7 @@ class TestUSSDCarbonCalculatorAPI:
             f"{BASE_URL}/api/ussd/carbon-calculator",
             json={
                 "sessionId": "pytest_single",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": "+2250700000000",
                 "text": "5"
             }
@@ -238,7 +238,7 @@ class TestUSSDCarbonCalculatorAPI:
                 f"{BASE_URL}/api/ussd/carbon-calculator",
                 json={
                     "sessionId": f"pytest_progression_{i}",
-                    "serviceCode": "*144*88#",
+                    "serviceCode": "*144*99#",
                     "phoneNumber": "+2250700000000",
                     "text": accumulated_text
                 }

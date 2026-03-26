@@ -11,7 +11,7 @@ et fonctionne en mode MOCK quand les credentials sont absents.
 Configuration requise dans .env:
 - USSD_GATEWAY_URL: URL de base de la passerelle
 - USSD_GATEWAY_API_KEY: Clé d'authentification
-- USSD_GATEWAY_SERVICE_CODE: Code USSD enregistré (ex: *144*88#)
+- USSD_GATEWAY_SERVICE_CODE: Code USSD enregistré (ex: *144*99#)
 - USSD_GATEWAY_PROVIDER: Fournisseur (orange, africastalking, infobip)
 """
 
@@ -31,7 +31,7 @@ class USSDGatewayService:
     def __init__(self):
         self.gateway_url = os.environ.get("USSD_GATEWAY_URL", "")
         self.api_key = os.environ.get("USSD_GATEWAY_API_KEY", "")
-        self.service_code = os.environ.get("USSD_GATEWAY_SERVICE_CODE", "*144*88#")
+        self.service_code = os.environ.get("USSD_GATEWAY_SERVICE_CODE", "*144*99#")
         self.provider = os.environ.get("USSD_GATEWAY_PROVIDER", "orange").lower()
 
         self.is_configured = bool(self.gateway_url and self.api_key)

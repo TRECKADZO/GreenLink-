@@ -40,7 +40,7 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: currentSessionId,
-          serviceCode: '*144*88#',
+          serviceCode: '*144*99#',
           phoneNumber: phoneNumber,
           text: text
         })
@@ -141,7 +141,7 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
             </div>
             <p className="text-sm text-gray-300 mb-1">Simulez l'experience USSD</p>
             <p className="text-xs text-gray-500">
-              {hasMembersList ? 'Selectionnez un membre pour tester le flux *144*88#' : 'Testez le flux *144*88# comme un planteur'}
+              {hasMembersList ? 'Selectionnez un membre pour tester le flux *144*99#' : 'Testez le flux *144*99# comme un planteur'}
             </p>
           </div>
 
@@ -215,7 +215,7 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
             disabled={!phoneNumber || phoneNumber.length < 8}
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
           >
-            <Phone className="w-4 h-4 mr-2" /> Composer *144*88#
+            <Phone className="w-4 h-4 mr-2" /> Composer *144*99#
           </Button>
         </CardContent>
       </Card>
@@ -230,7 +230,7 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
           <Signal className="w-3 h-3" />
           <span>Orange CI</span>
         </div>
-        <span className="font-mono">*144*88#</span>
+        <span className="font-mono">*144*99#</span>
         <div className="flex items-center gap-1.5">
           <Wifi className="w-3 h-3" />
           <Battery className="w-3 h-3" />

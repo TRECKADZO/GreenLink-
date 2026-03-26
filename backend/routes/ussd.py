@@ -1,6 +1,6 @@
 """
 USSD Gateway Integration for GreenLink Agritech
-Code: *144*88#
+Code: *144*99#
 
 Flux:
 1. Menu accueil -> Deja inscrit / Nouvelle inscription / Aide
@@ -422,7 +422,7 @@ async def notify_admin_ars_update(farmer_id: str, farmer_name: str, phone: str, 
     logger.info(f"Admin notification created for ARS update: {farmer_name} - {field}")
 
 
-# ============= MAIN USSD ENDPOINT (*144*88#) =============
+# ============= MAIN USSD ENDPOINT (*144*99#) =============
 
 @router.post("/callback")
 async def ussd_callback(request: USSDRequest):
@@ -1281,7 +1281,7 @@ async def ussd_callback(request: USSDRequest):
                     f"0. Quitter"
                 )
             else:
-                response_text = "Merci !\nComposez *144*88# pour revenir."
+                response_text = "Merci !\nComposez *144*99# pour revenir."
                 continue_session = False
 
         # ==============================
@@ -1769,7 +1769,7 @@ async def ussd_callback(request: USSDRequest):
         }
 
 
-# ============= CARBON CALCULATOR (stateless, for *144*88#) =============
+# ============= CARBON CALCULATOR (stateless, for *144*99#) =============
 
 @router.post("/carbon-calculator")
 async def ussd_carbon_calculator(request: USSDRequest):
@@ -1784,7 +1784,7 @@ async def ussd_carbon_calculator(request: USSDRequest):
         
         # All questions for stateless mode (9 questions)
         QUESTIONS = [
-            {"key": "hectares", "text": "PRIME CARBONE *144*88#\n\nQuestion 1/9\nSurface plantation (hectares) ?\n\nEx: 3.5", "type": "number"},
+            {"key": "hectares", "text": "PRIME CARBONE *144*99#\n\nQuestion 1/9\nSurface plantation (hectares) ?\n\nEx: 3.5", "type": "number"},
             {"key": "arbres_grands", "text": "Question 2/9\nArbres GRANDS (> 12m) ?\n\nEx: 20", "type": "number"},
             {"key": "arbres_moyens", "text": "Question 3/9\nArbres MOYENS (8-12m) ?\n\nEx: 30", "type": "number"},
             {"key": "arbres_petits", "text": "Question 4/9\nArbres PETITS (< 8m) ?\n\nEx: 10", "type": "number"},
@@ -1891,7 +1891,7 @@ async def ussd_carbon_calculator(request: USSDRequest):
         logger.error(f"Carbon Calculator USSD Error: {str(e)}")
         return {
             "session_id": request.sessionId,
-            "text": "END Erreur. Reessayez *144*88#",
+            "text": "END Erreur. Reessayez *144*99#",
             "continue_session": False,
             "error": str(e),
         }
@@ -1977,7 +1977,7 @@ async def handle_incoming_sms(request: SMSRequest):
         if message.startswith("SOLDE"):
             if farmer_id:
                 stats = await get_farmer_carbon_stats(farmer_id)
-                response = f"GreenLink - SOLDE\n{farmer_name}\nPrime disponible: {format_xof(stats['pending'])}\nDeja recu: {format_xof(stats['total_received'])}\nScore: {stats['avg_score']}/10\n\nComposez *144*88# pour plus"
+                response = f"GreenLink - SOLDE\n{farmer_name}\nPrime disponible: {format_xof(stats['pending'])}\nDeja recu: {format_xof(stats['total_received'])}\nScore: {stats['avg_score']}/10\n\nComposez *144*99# pour plus"
             else:
                 response = "GreenLink: Numero non reconnu. Contactez votre cooperative."
         elif message.startswith("PRIME"):
@@ -1987,9 +1987,9 @@ async def handle_incoming_sms(request: SMSRequest):
             else:
                 response = "GreenLink: Numero non reconnu."
         elif message.startswith("AIDE"):
-            response = "GreenLink - AIDE\nSMS au 1234:\nSOLDE, PRIME, AIDE\n\nComposez *144*88#\nTel: 07 87 76 10 23"
+            response = "GreenLink - AIDE\nSMS au 1234:\nSOLDE, PRIME, AIDE\n\nComposez *144*99#\nTel: 07 87 76 10 23"
         else:
-            response = "GreenLink: Commande non reconnue.\nEnvoyez SOLDE, PRIME ou AIDE\nOu composez *144*88#"
+            response = "GreenLink: Commande non reconnue.\nEnvoyez SOLDE, PRIME ou AIDE\nOu composez *144*99#"
         
         await db.sms_logs.insert_one({
             "direction": "incoming",
@@ -2121,7 +2121,7 @@ async def test_ussd(phone: str = Query(..., description="Phone number to test"))
     """Test USSD simulation."""
     test_request = USSDRequest(
         sessionId=f"test_{datetime.now(timezone.utc).timestamp()}",
-        serviceCode="*144*88#",
+        serviceCode="*144*99#",
         phoneNumber=phone,
         text=""
     )

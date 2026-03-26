@@ -860,18 +860,18 @@ const Dashboard = () => {
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
-                    <USSDSimulator title="Simulateur USSD *144*88#" onClose={() => setShowSimulator(false)} members={simulatorMembers} />
+                    <USSDSimulator title="Simulateur USSD *144*99#" onClose={() => setShowSimulator(false)} members={simulatorMembers} />
                   </div>
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-white">Comment utiliser le simulateur</h3>
                     <p className="text-sm text-gray-400">
-                      Ce simulateur reproduit l'experience USSD *144*88# telle que vos planteurs la vivent sur leur telephone.
+                      Ce simulateur reproduit l'experience USSD *144*99# telle que vos planteurs la vivent sur leur telephone.
                       Utilisez-le pour former vos agents ou verifier les flux.
                     </p>
                     <div className="space-y-2 mt-4">
                       {[
                         { step: '1', text: 'Selectionnez un de vos membres dans la liste' },
-                        { step: '2', text: 'Cliquez "Composer *144*88#" pour demarrer' },
+                        { step: '2', text: 'Cliquez "Composer *144*99#" pour demarrer' },
                         { step: '3', text: 'Utilisez les boutons rapides ou tapez votre reponse' },
                         { step: '4', text: 'Testez l\'inscription, l\'estimation simple/detaillee, la demande de versement' },
                       ].map((item) => (

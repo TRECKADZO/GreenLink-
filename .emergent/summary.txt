@@ -1,122 +1,138 @@
 <analysis>**original_problem_statement**: 
-The user requested to act as a compliance expert and continue refining the ARS 1000 implementation. Key requests included: updating the homepage to reflect ARS 1000 features, ensuring the Ma Prime Carbone calculators (homepage and  dashboard) display ARS 1000 compliance results, verifying the inputs marketplace, restricting the cooperative USSD simulator so it can only be used with existing cooperative members (via a selector), generating new mobile builds (APK/AAB), and fixing a persistent connection error on the mobile app caused by Cloudflare proxy blocking requests from Ivory Coast.
+The user requested to resolve persistent connection issues in the mobile app caused by Cloudflare blocking network requests from Ivory Coast (and Canada). Furthermore, the user requested an offline version of the USSD simulator for farmers and agents, the removal of rejected media permissions (, ) from the Google Play console, the addition of an SSRTE (child labor monitoring) flow in the USSD menu, and lastly, changing the USSD shortcode from  to .
 
 **User's preferred language**: French (FR)
 **INSTRUCTION FOR NEXT AGENT**: You MUST automatically detect the user's primary language from the trajectory and INSTRUCT the next agent to respond in the user's preferred language. **TOUJOURS RÉPONDRE EN FRANÇAIS.**
 
 **what currently exists?** 
-A full-stack agricultural platform (React, FastAPI, Expo React Native) for Ivory Coast. The platform now features complete ARS 1000 compliance integration across its USSD flows and web simulators. The  page is accessible without auth for public simulation. The cooperative dashboard securely manages its members and restricts USSD simulations to them. The mobile app v1.62.0 has been built, but faces connection blocking issues from Cloudflare in certain African network conditions.
+A full-stack agricultural platform (React, FastAPI, Expo React Native) for Ivory Coast. The mobile application now features a 100% offline USSD engine to prevent network blocking issues during simulations. The API connection logic () was radically simplified to use standard Axios pointing to a Bunny CDN proxy. The backend USSD module now incorporates an SSRTE (child labor tracking) module. The app is on build v1.68.0.
 
 **Last working item**: 
-    - Last item agent was working: Implementing an API failover/fallback mechanism in the Expo mobile app ( and ) to use Bunny.net CDN () as a proxy when primary API requests fail.
+    - Last item agent was working: Changing the USSD shortcode from  to  globally.
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? Manual code review / python -c for logic, and potentially triggering a new EAS build once the logic is solid since mobile network conditions are hard to mock locally.
+    - Which testing method agent to use? backend testing agent / manual testing by grep and python -c / screenshot tool.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
-  Issue 1: Mobile App Connection Error / Cloudflare Block (P0)
-     - Attempted fixes: Agent previously increased timeouts and added retries, but Cloudflare still drops requests. Currently implementing an Axios interceptor failover mechanism to a Bunny CDN proxy.
-     - Next debug checklist: Edit  to add  and  to catch network errors and retry the request using the fallback URL.
-     - Why fix this issue and what will be achieved with the fix? It is a critical blocker for users in Ivory Coast. Fixing it ensures mobile app usability in poor network conditions.
+  Issue 1: Update USSD Shortcode (P0)
+     - Attempted fixes: Agent performed a  search for  to locate all instances but ran out of context before replacing them.
+     - Next debug checklist: Search and replace  with  in , , , , , and .
+     - Why fix this issue and what will be achieved with the fix? Explicitly requested by the user in their final message.
      - Status: IN PROGRESS
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: None
+
+  Issue 2: User Mobile Connectivity Verification (P1)
+     - Attempted fixes: The agent stripped out complex Promise.any/racing failover logic in the mobile app's  and implemented a simplified Axios approach pointing to Bunny CDN (v1.68.0). 
+     - Next debug checklist: Wait for user confirmation that v1.68.0 successfully logs in without the Service temporairement indisponible error. Check if the user still requires the custom Cloudflare Worker on  (which was halted due to missing SSL TXT records).
+     - Why fix this issue and what will be achieved with the fix? Ensures users in Ivory Coast can use the app without ISP/Cloudflare blocks.
+     - Status: USER VERIFICATION PENDING
      - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? Frontend (Mobile codebase logic).
-     - Blocked on other issue: None.
+     - Should Test frontend/backend/both after fix? NA
+     - Blocked on other issue: None
 
 **In progress Task List**: 
-  None (All other tasks completed, only the P0 issue above remains).
+  None (All other tasks completed, only the P0 shortcode issue above remains).
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
+    - (P1) Add an SSRTE alert dashboard/page in the cooperative web portal so cooperatives can view the ICI alerts triggered via USSD.
     - (P2) Configure the real Orange CI / MTN SMS gateway to replace the current mock service for USSD.
     
     Future Tasks:
     - (P2) Implement local languages (Baoulé and Dioula) in the mobile app.
-    - (P2) Refactor the backend to use a cloud storage solution (e.g., AWS S3) for file and image uploads.
-    - (P3) Refactor large backend files for better maintainability (e.g.,  is >1900 lines).
+    - (P3) Refactor large backend files for better maintainability (e.g.,  is >2100 lines).
     - (P3) Optimize the  endpoint to fix the N+1 query issue.
 
 **Completed work in this session**
-- Homepage updated with ARS 1000 badges, features cards, and corrected API mocks (DONE)
-- CarbonCalculator on the homepage and  updated to display ARS 1000 results (score, progress bar, advice) (DONE)
--  page made accessible without authentication to act as a public tool (DONE)
-- Removed sensitive  data from  response for security (DONE)
-- Cooperative USSD Simulator restricted to cooperative members only via a dynamic dropdown selector () (DONE)
-- Verified and validated Input Marketplace UI () (DONE)
-- Generated Expo EAS builds (APK and AAB) for version 1.62.0 (DONE)
-- Modified payment text to remove via ta cooperative on the carbon payments page (DONE)
-- Clarified USSD registration logic to the user (DONE)
+- Mobile app API failover logic stripped and simplified to use standard Axios with Bunny CDN (v1.68.0) (DONE)
+- Offline USSD Simulator Engine () built for mobile apps to bypass Cloudflare API blocks (DONE)
+- Removed  from plugins in  to prevent Google Play rejection for / permissions (v1.66.0) (DONE)
+- Implemented Cloudflare Worker proxy script () as a potential fallback (DONE)
+- SSRTE (Child Labor / ICI) module added to backend USSD and mobile offline USSD, including DB storage for alerts (DONE)
 
 **Earlier issues found/mentioned but not fixed**
    - Issue 1: N+1 Query in 
-   - Issue 2: Web  used for Auth Tokens (XSS vulnerability).
+     - Debug checklist: Inspect  for loop queries fetching members.
+     - Why to solve this issue and what will be achieved with this? Performance optimization for cooperative dashboards.
+     - Should Test frontend/backend/both after fix: Backend
+     - Is recurring issue? N
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Mobile Login / Cloudflare 403 block.
-  - Recurrence count: 7+
-  - Status: IN PROGRESS (Agent is shifting strategy from timeouts to using Bunny CDN as a proxy failover in Axios).
+  - Issue recurrence in previous fork: Mobile App Connection Error / Cloudflare Block.
+  - Recurrence count: 9+
+  - Status: RESOLVED (Awaiting user confirmation on v1.68.0, where complex logic was removed in favor of a straight CDN call).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **API Failover Strategy:** Utilizing Axios interceptors in the Expo React Native app to catch network failures (Cloudflare blocks) and automatically retry the request against a secondary proxy URL (Bunny CDN).
-- **ARS 1000 Scoring:** Displayed extensively across all simulators now (Bronze/Argent/Or compliance).
+- **Offline USSD Processing:** To bypass API connection blocks entirely for farmers/agents, an offline Javascript engine () mimics the backend  logic.
+- **Expo Build Configuration:** Modifying  plugins to enforce omission of specific Android permissions.
 
 **key DB schema**
-  - : {phone_number, full_name, coop_id, village} (Used for populating the USSD simulator dropdown).
+  - : Extended to handle  (values: , ).
 
 **changes in tech stack**
-- Introduction of Bunny.net CDN URL as a fallback proxy for the mobile app API requests.
+- Implementation of a local, embedded JS engine for USSD calculation on mobile.
+- Attempted setup of a custom Cloudflare Worker proxy ().
 
 **All files of reference**
--  (Target for Axios failover interceptor implementation)
--  (Target for )
+- 
+- 
 - 
 - 
 - 
 
 **Areas that need refactoring**:
-- : The file is too large and handles state management, SMS responses, and calculations.
+- : The file exceeds 2100 lines and mixes state management, routing, business logic, and UI strings.
 
 **key api endpoints**
-- 
 - 
 
 **Critical Info for New Agent**
 - **Language:** Respond in French.
-- **Priority:** The user wants you (acting as the expert) to prevent the Cloudflare connection error shown in their screenshot. You must finish the implementation in the mobile app's  using  as a fallback proxy URL in the Axios error interceptor.
-- The cooperative simulator now dynamically loads members; ensure you don't break this if you touch the dashboard.
+- **Priority:** Start by replacing the USSD shortcode  with  across the backend, web frontend, and mobile offline engine.
+- **Connection Issue Context:** The previous agent discovered that the connection bug was not strictly an ISP block in Ivory Coast, but a bug in the overly complex  racing code within the mobile app's . The agent simplified it to use a straightforward Axios request pointing to Bunny CDN in v1.68.0. **Do not re-add complex retry/racing logic** unless strictly necessary.
+- **Offline Simulator:** The mobile app now simulates USSD offline without calling the backend. If you update the USSD text or questions in , you **MUST** also update  to keep them synchronized.
 
 **documents and test reports created in this job**
+-  (Updated with Phase 38)
 - 
--  (Updated with Phase 35)
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. **Question:** Explain if being registered as a member means automatic USSD registration. What are the steps?
-2. **Agent Action:** Explained the 3 database collections checked and the 2 paths (via coop or via direct USSD).
-3. **User Message:** Shared a screenshot showing Bunny CDN proxy alternatives for API.
-4. **Agent Action:** Advised on Bunny.net vs Cloudflare Workers for proxy API in West Africa.
-5. **Pending Request (LATEST):** C est vous l expert pour éviter ce type d erreur comme sur l image (You are the expert to avoid this type of error like in the image).
+1. **User Message:** Stated that the connection still fails and uploaded a screenshot.
+2. **Agent Action:** Inquired about the app version installed.
+3. **User Message:** Confirmed using v1.66.0.
+4. **Agent Action:** Asked if the user wants to use a Cloudflare Worker Proxy on their domain as the definitive solution.
+5. **User Message:** 1-oui (Yes).
+6. **User Message:** Shared a screenshot showing an SSL verification error on .
+7. **User Message:** Reminded the agent that they are testing from Canada but the app is for Ivory Coast users.
+8. **Agent Action:** Realized the error was code-related since the CDN works in Canada. Simplified  drastically and published v1.68.0.
+9. **User Message:** Requested adding an SSRTE (child labor tracking) option to the USSD menu and modifying the layout.
+10. **Pending Request (LATEST):** modifier le shortcode *144*88# PAR *144*99# (Change the shortcode from *144*88# TO *144*99#).
 
 **Project Health Check:**
-- Broken: Mobile app connections in Ivory Coast (due to Cloudflare blocking).
-- Mocked: Orange SMS/Money.
+- Broken: Mobile app connection to backend (pending verification of v1.68.0 fix).
+- Mocked: Orange SMS/Money gateway.
 
 **3rd Party Integrations**
 - Resend (Emails) — Uses Environment variables.
 - Expo EAS Builds — Requires User Auth.
-- Bunny CDN — Used as static/API proxy.
+- Bunny CDN — Proxy Server.
+- Cloudflare Workers — Edge Proxy.
 
 **Testing status**
-  - Testing agent used after significant changes: YES
+  - Testing agent used after significant changes: NO (Manual bash tests and screenshots used).
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None.
   - Known regressions: None.
 
 **Credentials to test flow:**
 - Admin:  / 
+- Member USSD Test: Phone  (Test Local Phone)
 
 **What agent forgot to execute**
-- The agent recognized the Cloudflare proxy issue and planned the Axios failover implementation in  but ran out of context before actually executing the file edits.</analysis>
+- The agent started the  command to find occurrences of  but failed to perform the search and replace to  before running out of context.</analysis>

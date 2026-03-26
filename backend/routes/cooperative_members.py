@@ -514,7 +514,7 @@ async def send_activation_reminder(
 
     logger.info(f"[SMS MOCK] Rappel activation envoyé à {member_name} ({member_phone}): "
                 f"Bonjour {member_name}, votre coopérative {coop_name} vous invite à activer "
-                f"votre compte GreenLink. Composez *144*88# ou rendez-vous sur l'application.")
+                f"votre compte GreenLink. Composez *144*99# ou rendez-vous sur l'application.")
 
     await db.coop_members.update_one(
         {"_id": ObjectId(member_id)},

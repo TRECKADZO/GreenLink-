@@ -250,7 +250,7 @@ const FieldAgentDashboard = ({ navigation }) => {
                 <Ionicons name="phone-portrait" size={28} color="#ea580c" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.ctaTitle}>Demo USSD *144*88#</Text>
+                <Text style={styles.ctaTitle}>Demo USSD *144*99#</Text>
                 <Text style={styles.ctaDesc}>
                   Montrez aux agriculteurs comment utiliser le USSD pour calculer leur prime carbone
                 </Text>

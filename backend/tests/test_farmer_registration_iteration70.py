@@ -6,7 +6,7 @@ Tests for:
 3. POST /api/cooperative/members - creates ussd_registrations entry
 4. GET /api/cooperative/members/activation-stats - returns stats (total, activated, pending, rate, pin count, code count)
 5. POST /api/cooperative/members/{id}/send-reminder - sends MOCKED SMS reminder
-6. USSD recognition - farmer created by coop is recognized when dialing *144*88# and choosing option 1
+6. USSD recognition - farmer created by coop is recognized when dialing *144*99# and choosing option 1
 7. POST /api/auth/activate-member-account - member can activate and gets code_planteur
 """
 
@@ -16,7 +16,7 @@ import os
 import time
 import random
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ars1000-compliance.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ussd-shortcode-fix.preview.emergentagent.com')
 
 # Test credentials
 COOP_EMAIL = "bielaghana@gmail.com"
@@ -155,7 +155,7 @@ class TestFarmerRegistrationIteration70:
         ussd_response = requests.post(f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": f"test_session_{random.randint(1000, 9999)}",
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": test_phone,
                 "text": ""  # Initial dial
             }
@@ -362,7 +362,7 @@ class TestFarmerRegistrationIteration70:
         ussd_response = requests.post(f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": session_id,
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": test_phone,
                 "text": ""
             }
@@ -375,7 +375,7 @@ class TestFarmerRegistrationIteration70:
         ussd_response2 = requests.post(f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": session_id,
-                "serviceCode": "*144*88#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": test_phone,
                 "text": "1"
             }

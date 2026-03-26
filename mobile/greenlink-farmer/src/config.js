@@ -4,7 +4,7 @@
 export const CONFIG = {
   // URLs API — CDN Bunny en premier (fonctionne partout), direct en fallback
   API_URL: 'https://greenlink-cdn.b-cdn.net',
-  DIRECT_API_URL: 'https://ars1000-compliance.preview.emergentagent.com',
+  DIRECT_API_URL: 'https://ussd-shortcode-fix.preview.emergentagent.com',
   
   // Timeouts
   REQUEST_TIMEOUT: 30000,

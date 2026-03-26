@@ -188,7 +188,7 @@ const WelcomeScreen = ({ navigation }) => {
             <Text style={styles.ussdIcon}>📱</Text>
             <View style={styles.ussdContent}>
               <Text style={styles.ussdTitle}>Acces sans internet</Text>
-              <Text style={styles.ussdCode}>*144*88#</Text>
+              <Text style={styles.ussdCode}>*144*99#</Text>
               <Text style={styles.ussdSubtitle}>Disponible en francais</Text>
             </View>
           </View>

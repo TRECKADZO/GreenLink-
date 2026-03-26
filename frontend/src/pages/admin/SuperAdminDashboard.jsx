@@ -592,7 +592,7 @@ const SuperAdminDashboard = () => {
           <TabsContent value="ussd">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-lg font-semibold text-white mb-4">Simulateur USSD *144*88#</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Simulateur USSD *144*99#</h3>
                 <p className="text-sm text-slate-400 mb-4">
                   Testez le flux USSD en temps reel. Entrez un numero de telephone existant ou nouveau pour simuler l'experience d'un planteur.
                 </p>
