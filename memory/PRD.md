@@ -215,7 +215,14 @@ Requete → URL primaire (3 retries) → ECHEC → CDN Bunny (3 retries) → Rep
 Si CDN OK: les requetes suivantes utilisent CDN directement
 Re-test primaire toutes les 10 requetes pour recovery automatique
 
-**Version mobile: v1.63.0** (build EAS a generer par l'utilisateur)
+**Version mobile: v1.63.0**
+- APK: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/6ef478cd-8d78-4f9b-8142-600df3907dd0
+- AAB: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/c239d687-68d8-4d3b-b3a4-75e37e57145c
+
+**Bunny CDN Pull Zone configuree (ID: 5574593):**
+- Origin: ars1000-compliance.preview.emergentagent.com
+- POST autorise, SSL verifie, cookies actives, cache desactive pour API
+- Teste OK: health, login, carbon calc, admin stats — tous via CDN
 
 ## Backlog
 - P2: Passerelle SMS Orange (remplacer mock)
