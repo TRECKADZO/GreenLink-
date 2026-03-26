@@ -44,62 +44,50 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     try {
       console.log('[Auth] Login attempt with:', identifier);
-      console.log('[Auth] API URL:', CONFIG.API_URL);
+      console.log('[Auth] Using CDN-first strategy');
       
-      // PAS de health check avant login — reduit les requetes reseau
-      // et evite de declencher la protection anti-bot de Cloudflare
-      
-      // Tentative de login principale
+      // RACING PARALLELE: essayer CDN + Direct en meme temps
+      // Le premier qui repond gagne — optimise pour les reseaux CI
       let response;
       try {
-        response = await api.post('/auth/login', {
+        response = await api.racePost('/auth/login', {
           identifier,
           password,
         });
-      } catch (loginError) {
-        const errStatus = loginError.response?.status;
-        console.warn('[Auth] Login failed with status:', errStatus, loginError.message);
+      } catch (raceError) {
+        console.warn('[Auth] Race login failed:', raceError.message);
         
-        // Si erreur reseau OU 404/5xx : retry avec axios direct via CDN fallback
-        if (!loginError.response || errStatus === 404 || errStatus >= 500 || errStatus === 0) {
-          console.warn('[Auth] Retrying login via CDN fallback...');
-          await new Promise(r => setTimeout(r, 2000));
+        // Dernier recours: tentative sequentielle directe
+        const errStatus = raceError.response?.status;
+        if (!raceError.response || errStatus === 404 || errStatus >= 500 || errStatus === 0) {
+          console.warn('[Auth] Last resort: sequential direct attempts...');
+          await new Promise(r => setTimeout(r, 1500));
           
-          // Essayer d'abord via le proxy CDN Bunny (contourne Cloudflare)
-          const fallbackURL = CONFIG.FALLBACK_API_URL;
-          const urls = fallbackURL 
-            ? [fallbackURL + '/api/auth/login', CONFIG.API_URL + '/api/auth/login']
-            : [CONFIG.API_URL + '/api/auth/login'];
+          const urls = [
+            (CONFIG.FALLBACK_API_URL || '') + '/api/auth/login',
+            CONFIG.API_URL + '/api/auth/login',
+          ].filter(u => u && !u.startsWith('/'));
           
-          let lastErr = loginError;
+          let lastErr = raceError;
           for (const url of urls) {
             try {
-              console.log(`[Auth] Trying fallback: ${url}`);
+              console.log(`[Auth] Trying: ${url}`);
               const directAxios = require('axios').default;
-              response = await directAxios.post(
-                url,
-                { identifier, password },
-                {
-                  timeout: 60000,
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                  },
-                }
-              );
-              console.log(`[Auth] Fallback success via ${url}`);
-              break; // Succes, on sort de la boucle
-            } catch (fallbackError) {
-              console.error(`[Auth] Fallback failed (${url}):`, fallbackError.message);
-              lastErr = fallbackError;
+              response = await directAxios.post(url, { identifier, password }, {
+                timeout: 30000,
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              });
+              console.log(`[Auth] Success via ${url}`);
+              break;
+            } catch (err) {
+              console.error(`[Auth] Failed (${url}):`, err.message);
+              lastErr = err;
               response = null;
             }
           }
-          if (!response) {
-            throw lastErr;
-          }
+          if (!response) throw lastErr;
         } else {
-          throw loginError;
+          throw raceError;
         }
       }
       

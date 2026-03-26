@@ -3,64 +3,61 @@ import { Platform } from 'react-native';
 import { CONFIG } from '../config';
 
 // User-Agent honnete — les faux User-Agent de navigateur DECLENCHENT Cloudflare
-const MOBILE_USER_AGENT = `GreenLinkAgritech/1.62 ${Platform.OS}`;
+const MOBILE_USER_AGENT = `GreenLinkAgritech/1.63 ${Platform.OS}`;
 
 // === GESTION FAILOVER CDN ===
-// Si l'URL primaire (Cloudflare) echoue, on bascule automatiquement sur le proxy Bunny CDN.
-// Le CDN relaie les requetes vers le meme backend, mais sans passer par Cloudflare.
-let preferFallback = false;
-let fallbackSuccessCount = 0;
-let primaryFailCount = 0;
-const FALLBACK_THRESHOLD = 2;     // Apres 2 echecs primaires consecutifs, preferer le fallback
-const PRIMARY_RECHECK_AFTER = 10; // Re-tester le primaire apres 10 requetes CDN reussies
+// STRATEGIE: CDN en PREMIER car Cloudflare bloque les reseaux mobiles CI
+// Si le CDN echoue, on bascule sur l'URL directe (fallback)
+let preferPrimary = false; // false = CDN d'abord (defaut)
+let cdnConsecutiveFails = 0;
+let primaryConsecutiveFails = 0;
+const SWITCH_THRESHOLD = 3;
 
 function getActiveBaseURL() {
-  if (preferFallback && CONFIG.FALLBACK_API_URL) {
-    return CONFIG.FALLBACK_API_URL + '/api';
+  if (preferPrimary) {
+    return CONFIG.API_URL + '/api';
+  }
+  // Par defaut: CDN d'abord (contourne Cloudflare)
+  return (CONFIG.FALLBACK_API_URL || CONFIG.API_URL) + '/api';
+}
+
+function getAlternateBaseURL() {
+  if (preferPrimary) {
+    return (CONFIG.FALLBACK_API_URL || CONFIG.API_URL) + '/api';
   }
   return CONFIG.API_URL + '/api';
 }
 
-function getFallbackBaseURL() {
-  if (CONFIG.FALLBACK_API_URL) {
-    return CONFIG.FALLBACK_API_URL + '/api';
-  }
-  return null;
-}
-
-function onPrimarySuccess() {
-  primaryFailCount = 0;
-  if (preferFallback) {
-    console.log('[API] Primary recovered — switching back from CDN');
-    preferFallback = false;
-    fallbackSuccessCount = 0;
+function onActiveSuccess() {
+  if (preferPrimary) {
+    primaryConsecutiveFails = 0;
+  } else {
+    cdnConsecutiveFails = 0;
   }
 }
 
-function onPrimaryFail() {
-  primaryFailCount++;
-  if (primaryFailCount >= FALLBACK_THRESHOLD && CONFIG.FALLBACK_API_URL) {
-    if (!preferFallback) {
-      console.warn(`[API] Primary failed ${primaryFailCount}x — switching to CDN fallback`);
+function onActiveFail() {
+  if (preferPrimary) {
+    primaryConsecutiveFails++;
+    if (primaryConsecutiveFails >= SWITCH_THRESHOLD && CONFIG.FALLBACK_API_URL) {
+      console.warn('[API] Primary failed too many times, switching to CDN');
+      preferPrimary = false;
+      primaryConsecutiveFails = 0;
     }
-    preferFallback = true;
-  }
-}
-
-function onFallbackSuccess() {
-  fallbackSuccessCount++;
-  // Periodiquement re-tester le primaire pour voir s'il est redevenu accessible
-  if (fallbackSuccessCount >= PRIMARY_RECHECK_AFTER) {
-    console.log('[API] Re-testing primary URL after CDN streak...');
-    preferFallback = false;
-    fallbackSuccessCount = 0;
-    primaryFailCount = 0;
+  } else {
+    cdnConsecutiveFails++;
+    if (cdnConsecutiveFails >= SWITCH_THRESHOLD) {
+      console.warn('[API] CDN failed too many times, switching to primary');
+      preferPrimary = true;
+      cdnConsecutiveFails = 0;
+    }
   }
 }
 
 // === INSTANCE AXIOS PRINCIPALE ===
 const axiosInstance = axios.create({
-  baseURL: CONFIG.API_URL + '/api',
+  // CDN par defaut pour contourner Cloudflare
+  baseURL: (CONFIG.FALLBACK_API_URL || CONFIG.API_URL) + '/api',
   timeout: CONFIG.REQUEST_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
@@ -71,20 +68,17 @@ const axiosInstance = axios.create({
 // Token d'authentification
 let authToken = null;
 
-// Etat de sante du serveur
+// Etat de sante
 let serverHealthy = true;
-let lastHealthCheck = 0;
-const HEALTH_CHECK_INTERVAL = 30000;
 
-// Intercepteur request — ajoute token + adapte baseURL selon failover
+// Intercepteur request
 axiosInstance.interceptors.request.use(
   (config) => {
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
     }
-    // Adapter l'URL de base selon l'etat du failover
-    // Sauf si c'est deja un retry fallback (marqué _useFallback)
-    if (!config._useFallback) {
+    // Utiliser l'URL active (CDN ou primaire) sauf si deja en mode fallback
+    if (!config._useAlternate) {
       config.baseURL = getActiveBaseURL();
     }
     console.log(`[API] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
@@ -93,32 +87,22 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Detecter si la reponse est du Cloudflare/HTML au lieu de JSON
+// Detecter reponse Cloudflare/HTML
 function isCloudflareResponse(error) {
   if (!error.response) return false;
   const data = error.response.data;
   const contentType = error.response.headers?.['content-type'] || '';
-  
   if (typeof data === 'string' && (
-    data.includes('<!DOCTYPE') || 
-    data.includes('<html') || 
-    data.includes('cloudflare') ||
-    data.includes('cf-') ||
-    data.includes('Attention Required') ||
-    data.includes('Just a moment')
-  )) {
-    return true;
-  }
-  
-  if (contentType.includes('text/html')) {
-    return true;
-  }
-  
+    data.includes('<!DOCTYPE') || data.includes('<html') ||
+    data.includes('cloudflare') || data.includes('cf-') ||
+    data.includes('Attention Required') || data.includes('Just a moment')
+  )) return true;
+  if (contentType.includes('text/html')) return true;
   return false;
 }
 
-// Detecter si c'est une erreur reseau/Cloudflare qui merite un failover CDN
-function isFailoverCandidate(error) {
+// Erreur qui merite un failover vers l'URL alternative
+function shouldFailover(error) {
   const status = error.response?.status;
   return (
     !error.response && (error.message?.includes('Network') || error.message?.includes('timeout') || error.code === 'ECONNABORTED') ||
@@ -131,77 +115,69 @@ function isFailoverCandidate(error) {
 
 // Delai progressif avec jitter
 function getRetryDelay(attempt) {
-  const baseDelay = 3000;
-  const jitter = Math.random() * 2000;
+  const baseDelay = 2000; // 2s base (reduit de 3s)
+  const jitter = Math.random() * 1500;
   return baseDelay * attempt + jitter;
 }
 
-// === INTERCEPTEUR REPONSE avec RETRY + FAILOVER CDN ===
+// === INTERCEPTEUR REPONSE ===
 axiosInstance.interceptors.response.use(
   (response) => {
     serverHealthy = true;
-    // Tracker le succes selon l'URL utilisee
-    if (response.config._useFallback) {
-      onFallbackSuccess();
+    if (response.config._useAlternate) {
+      // L'alternative a fonctionne -> inverser la preference
+      preferPrimary = !preferPrimary;
+      console.log(`[API] Alternate success — switching default to ${preferPrimary ? 'primary' : 'CDN'}`);
     } else {
-      onPrimarySuccess();
+      onActiveSuccess();
     }
     return response;
   },
   async (error) => {
     const config = error.config;
     if (!config) return Promise.reject(error);
-    
+
     const currentRetry = config._retry || 0;
     const maxRetries = CONFIG.RETRY_ATTEMPTS;
     const isCloudflare = isCloudflareResponse(error);
     const status = error.response?.status;
-    
+
     if (isCloudflare) {
-      console.warn(`[API] Cloudflare block (${status}) for ${config.url}, retry ${currentRetry}/${maxRetries}`);
+      console.warn(`[API] Cloudflare block (${status}) on ${config.baseURL}${config.url}`);
     }
-    
-    // Conditions de retry sur l'URL courante
-    const shouldRetry = (
+
+    // Conditions de retry
+    const canRetry = (
       (!error.response && (error.message?.includes('Network') || error.message?.includes('timeout') || error.code === 'ECONNABORTED')) ||
       isCloudflare ||
       (status >= 500) ||
       (status === 0)
     );
-    
-    // Retry sur la meme URL (primaire ou fallback)
-    if (currentRetry < maxRetries && shouldRetry) {
+
+    // Retry sur l'URL courante (max 2 tentatives)
+    if (currentRetry < maxRetries && canRetry) {
       config._retry = currentRetry + 1;
       const delay = getRetryDelay(config._retry);
       console.log(`[API] Retry ${config._retry}/${maxRetries} in ${Math.round(delay)}ms`);
       await new Promise(resolve => setTimeout(resolve, delay));
       return axiosInstance(config);
     }
-    
-    // === FAILOVER CDN ===
-    // Si tous les retries sur l'URL primaire sont epuises ET qu'on n'a pas encore tente le fallback
-    const fallbackURL = getFallbackBaseURL();
-    if (fallbackURL && !config._useFallback && isFailoverCandidate(error)) {
-      console.warn('[API] All retries exhausted on primary — trying CDN fallback:', fallbackURL);
-      onPrimaryFail();
-      
-      // Reset retry counter pour le fallback
+
+    // === FAILOVER vers l'URL ALTERNATIVE ===
+    const alternateURL = getAlternateBaseURL();
+    if (alternateURL && !config._useAlternate && shouldFailover(error)) {
+      console.warn(`[API] Switching to alternate: ${alternateURL}`);
+      onActiveFail();
+
       config._retry = 0;
-      config._useFallback = true;
-      config.baseURL = fallbackURL;
-      
-      // Petit delai avant le fallback
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      config._useAlternate = true;
+      config.baseURL = alternateURL;
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
       return axiosInstance(config);
     }
-    
-    // Si on etait deja sur le fallback et ca a echoue aussi
-    if (config._useFallback && shouldRetry) {
-      console.error('[API] CDN fallback also failed');
-    }
-    
-    // Tous les retries et le fallback epuises — formatter le message d'erreur
+
+    // Tout a echoue
     if (!error.response) {
       serverHealthy = false;
       error.response = {
@@ -211,81 +187,109 @@ axiosInstance.interceptors.response.use(
     } else if (isCloudflare) {
       serverHealthy = false;
       error.response.data = {
-        detail: 'Le serveur est temporairement inaccessible. Veuillez patienter quelques instants et reessayer.'
+        detail: 'Le serveur est temporairement inaccessible. Veuillez patienter et reessayer.'
       };
     }
-    
+
     return Promise.reject(error);
   }
 );
 
-// Verifier la sante du serveur (endpoint leger)
-async function checkServerHealth() {
-  const now = Date.now();
-  if (now - lastHealthCheck < HEALTH_CHECK_INTERVAL && serverHealthy) {
-    return serverHealthy;
+// === RACING: Essayer les deux URLs en parallele ===
+// Utilise pour les operations critiques (login, premiere requete)
+async function raceRequest(method, url, data = null, extraConfig = {}) {
+  const urls = [
+    (CONFIG.FALLBACK_API_URL || CONFIG.API_URL) + '/api' + url,
+    CONFIG.API_URL + '/api' + url,
+  ];
+  // Deduplicate si FALLBACK == primary
+  const uniqueUrls = [...new Set(urls)];
+
+  if (uniqueUrls.length === 1) {
+    // Pas de CDN, requete simple
+    if (method === 'post') return axiosInstance.post(url, data, extraConfig);
+    return axiosInstance.get(url, extraConfig);
   }
-  
+
+  const makeRequest = (baseUrl) => {
+    const reqConfig = {
+      ...extraConfig,
+      timeout: 30000, // 30s pour le racing
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+        ...(extraConfig.headers || {}),
+      },
+    };
+    if (method === 'post') {
+      return axios.post(baseUrl, data, reqConfig);
+    }
+    return axios.get(baseUrl, reqConfig);
+  };
+
+  // Lancer les deux en parallele, prendre le premier qui reussit
   try {
-    // Essayer l'URL active (primaire ou CDN selon l'etat)
-    const activeURL = preferFallback ? CONFIG.FALLBACK_API_URL : CONFIG.API_URL;
+    const result = await Promise.any(uniqueUrls.map(u => makeRequest(u)));
+    console.log(`[API] Race winner: ${result.config?.url || 'unknown'}`);
+    serverHealthy = true;
+    return result;
+  } catch (aggregateError) {
+    // Tous ont echoue
+    console.error('[API] All race URLs failed');
+    serverHealthy = false;
+    const lastError = aggregateError.errors?.[0] || aggregateError;
+    throw lastError;
+  }
+}
+
+// Health check via l'URL active
+async function checkServerHealth() {
+  try {
+    const activeURL = getActiveBaseURL().replace('/api', '');
     const response = await axios.get(activeURL + '/api/health', {
       timeout: 15000,
       headers: { 'Accept': 'application/json' },
     });
     serverHealthy = response.status === 200;
-    lastHealthCheck = now;
-    console.log('[API] Health check:', serverHealthy ? 'OK' : 'FAIL', `(${activeURL})`);
+    console.log('[API] Health:', serverHealthy ? 'OK' : 'FAIL');
     return serverHealthy;
   } catch (e) {
-    console.warn('[API] Health check failed:', e.message);
+    console.warn('[API] Health failed:', e.message);
     serverHealthy = false;
-    lastHealthCheck = now;
     return false;
   }
 }
 
 export const api = {
-  setToken: (token) => {
-    authToken = token;
-  },
-  
+  setToken: (token) => { authToken = token; },
   checkHealth: checkServerHealth,
   isServerHealthy: () => serverHealthy,
-  isUsingFallback: () => preferFallback,
-  
+  isUsingCDN: () => !preferPrimary,
+
   get: (url, config) => axiosInstance.get(url, config),
   post: (url, data, config) => axiosInstance.post(url, data, config),
   put: (url, data, config) => axiosInstance.put(url, data, config),
   delete: (url, config) => axiosInstance.delete(url, config),
+
+  // Racing pour operations critiques
+  racePost: (url, data, config) => raceRequest('post', url, data, config),
+  raceGet: (url, config) => raceRequest('get', url, null, config),
 };
 
-// API specifiques pour les producteurs
+// API specifiques producteurs
 export const farmerApi = {
-  // Parcelles
   getParcels: () => api.get('/greenlink/parcels/my-parcels'),
   createParcel: (data) => api.post('/greenlink/parcels', data),
-  
-  // Recoltes
   getHarvests: (params) => api.get(`/greenlink/harvests/my-harvests${params || ''}`),
   createHarvest: (data) => api.post('/greenlink/harvests', data),
-  
-  // Dashboard
   getDashboard: () => api.get('/greenlink/farmer/dashboard'),
-  
-  // Paiements
   getPaymentRequests: () => api.get('/greenlink/payments/my-requests'),
   createPaymentRequest: (data) => api.post('/greenlink/payments/request', data),
-  
-  // SMS / Notifications
   getSmsHistory: () => api.get('/greenlink/sms/history'),
   getNotifications: () => api.get('/greenlink/notifications'),
   markNotificationRead: (id) => api.put(`/greenlink/notifications/${id}/read`),
-  
-  // Score carbone
   getCarbonScore: () => api.get('/greenlink/carbon/my-score'),
-  
-  // Device registration for push notifications
   registerDevice: (data) => api.post('/greenlink/notifications/register-device', data),
   unregisterDevice: (token) => api.delete(`/greenlink/notifications/unregister-device?push_token=${token}`),
 };

@@ -224,6 +224,19 @@ Re-test primaire toutes les 10 requetes pour recovery automatique
 - POST autorise, SSL verifie, cookies actives, cache desactive pour API
 - Teste OK: health, login, carbon calc, admin stats — tous via CDN
 
+### Phase 37 - Simulateur USSD Offline v1.65.0 (DONE - 26/03/2026)
+**3 problemes resolus:**
+1. **Fix USSDCarbonScreen** — Le calculateur *144*88# agriculteurs ne fonctionnait pas (import casse + dependance API backend). Remplace par moteur 100% offline.
+2. **Simulateur USSD Cooperative** — Nouveau bouton "Simulateur USSD" dans le dashboard coop.
+3. **Demo USSD Agent Terrain** — Nouveau bouton "Demo USSD *144*88#" dans le dashboard agent terrain.
+
+**Architecture:**
+- `ussdOfflineEngine.js`: Moteur stateless reproduisant la logique backend (9 questions, scoring, ARS 1000)
+- `USSDCarbonScreen.js`: Ecran agriculteur offline (clavier numerique)
+- `USSDFullSimulatorScreen.js`: Ecran complet (historique chat, mode coop/agent)
+- Calculs valides: Score=8.3, ARS=Bronze 52% (identique backend)
+- Build APK v1.65.0: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/a08b3faf-5ccb-4471-8d89-576ddba19109
+
 ## Backlog
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)

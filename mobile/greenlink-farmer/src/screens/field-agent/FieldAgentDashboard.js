@@ -244,6 +244,20 @@ const FieldAgentDashboard = ({ navigation }) => {
               <Ionicons name="chevron-forward" size={22} color="#059669" />
             </TouchableOpacity>
 
+            {/* CTA: Demo USSD Agent */}
+            <TouchableOpacity style={[styles.ctaCard, { borderColor: '#fed7aa' }]} onPress={() => navigation.navigate('USSDFullSimulator', { mode: 'agent' })}>
+              <View style={[styles.ctaIcon, { backgroundColor: '#fed7aa' }]}>
+                <Ionicons name="phone-portrait" size={28} color="#ea580c" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.ctaTitle}>Demo USSD *144*88#</Text>
+                <Text style={styles.ctaDesc}>
+                  Montrez aux agriculteurs comment utiliser le USSD pour calculer leur prime carbone
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="#ea580c" />
+            </TouchableOpacity>
+
             {/* Risk Distribution */}
             {risk_distribution && Object.keys(risk_distribution).length > 0 && (
               <View style={styles.card}>

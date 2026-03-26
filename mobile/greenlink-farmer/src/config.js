@@ -10,10 +10,10 @@ export const CONFIG = {
   // Ce proxy relaie les requetes vers le backend sans passer par Cloudflare
   FALLBACK_API_URL: 'https://greenlink-cdn.b-cdn.net',
   
-  // Timeouts adaptes a la FAIBLE connectivite en Cote d'Ivoire (2G/3G)
-  REQUEST_TIMEOUT: 60000, // 60 secondes — les reseaux 2G/3G en CI sont tres lents
-  RETRY_ATTEMPTS: 3,     // 3 tentatives sur URL primaire avant fallback CDN
-  RETRY_DELAY: 3000,     // 3s base delay (avec jitter dans api.js) — espace les requetes
+  // Timeouts optimises pour failover rapide en Cote d'Ivoire
+  REQUEST_TIMEOUT: 30000, // 30s par requete (au lieu de 60s — failover plus rapide)
+  RETRY_ATTEMPTS: 2,     // 2 tentatives par URL avant failover vers l'alternative
+  RETRY_DELAY: 2000,     // 2s base delay — failover rapide
   
   // Cache local
   CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 heures

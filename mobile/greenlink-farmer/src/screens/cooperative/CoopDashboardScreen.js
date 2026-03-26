@@ -372,6 +372,12 @@ export default function CoopDashboardScreen({ navigation }) {
             onPress={() => navigation.navigate('Marketplace')}
             color="#f59e0b"
           />
+          <QuickAction
+            icon="call"
+            label="Simulateur USSD"
+            onPress={() => navigation.navigate('USSDFullSimulator', { mode: 'cooperative' })}
+            color="#f97316"
+          />
         </View>
 
         {/* Lots Summary */}

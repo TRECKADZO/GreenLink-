@@ -121,6 +121,7 @@ const AuditFormScreen = safeRequire(() => require('./screens/auditor/AuditFormSc
 // USSD
 const USSDSimulatorScreen = safeRequire(() => require('./screens/ussd/USSDSimulatorScreen'), 'USSDSimulatorScreen');
 const USSDCarbonScreen = safeRequire(() => require('./screens/ussd/USSDCarbonScreen'), 'USSDCarbonScreen');
+const USSDFullSimulatorScreen = safeRequire(() => require('./screens/ussd/USSDFullSimulatorScreen'), 'USSDFullSimulatorScreen');
 
 // Messaging
 const MessagingScreen = safeRequire(() => require('./screens/messaging/MessagingScreen'), 'MessagingScreen');
@@ -225,6 +226,7 @@ function AppNavigator() {
       
       <Stack.Screen name="USSDSimulator" component={USSDSimulatorScreen} />
       <Stack.Screen name="USSDCarbon" component={USSDCarbonScreen} />
+      <Stack.Screen name="USSDFullSimulator" component={USSDFullSimulatorScreen} />
       <Stack.Screen name="AuditHistory" component={AuditorDashboardScreen} />
       
       <Stack.Screen name="Messaging" component={MessagingScreen} />
