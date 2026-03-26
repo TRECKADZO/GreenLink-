@@ -44,51 +44,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     try {
       console.log('[Auth] Login with:', identifier);
-      console.log('[Auth] Racing 3 URLs: Worker CF + CDN Bunny + Direct');
       
-      // RACING sur les 3 URLs en parallele
-      let response;
-      try {
-        response = await api.racePost('/auth/login', {
-          identifier,
-          password,
-        });
-      } catch (raceError) {
-        console.warn('[Auth] Race failed:', raceError.message);
-        
-        // Dernier recours: tentative sequentielle sur toutes les URLs
-        const errStatus = raceError.response?.status;
-        if (!raceError.response || errStatus === 404 || errStatus >= 500 || errStatus === 0) {
-          console.warn('[Auth] Last resort: sequential...');
-          await new Promise(r => setTimeout(r, 1500));
-          
-          const allUrls = [
-            CONFIG.API_URL + '/api/auth/login',
-            ...(CONFIG.FALLBACK_URLS || []).map(u => u + '/api/auth/login'),
-          ];
-          
-          let lastErr = raceError;
-          for (const url of allUrls) {
-            try {
-              console.log(`[Auth] Trying: ${url}`);
-              const directAxios = require('axios').default;
-              response = await directAxios.post(url, { identifier, password }, {
-                timeout: 30000,
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-              });
-              console.log(`[Auth] Success via ${url}`);
-              break;
-            } catch (err) {
-              console.error(`[Auth] Failed (${url}):`, err.message);
-              lastErr = err;
-              response = null;
-            }
-          }
-          if (!response) throw lastErr;
-        } else {
-          throw raceError;
-        }
-      }
+      // Utilise api.login() qui essaie CDN puis Direct sequentiellement
+      const response = await api.login(identifier, password);
       
       console.log('[Auth] Login response received');
       
