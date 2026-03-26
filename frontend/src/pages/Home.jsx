@@ -1,6 +1,7 @@
 import React from 'react';
 import HeroSection from '../components/HeroSection';
 import FeaturesSection from '../components/FeaturesSection';
+import REDDSection from '../components/REDDSection';
 import HowItWorksSection from '../components/HowItWorksSection';
 import CropsSection from '../components/CropsSection';
 import PartnersSection from '../components/PartnersSection';
@@ -14,6 +15,7 @@ const Home = () => {
     <div className="min-h-screen bg-white">
       <HeroSection />
       <FeaturesSection />
+      <REDDSection />
       <HowItWorksSection />
       <CropsSection />
       <PartnersSection />

@@ -153,6 +153,28 @@ const HomeScreen = ({ navigation }) => {
             </View>
           </View>
         </TouchableOpacity>
+
+        {/* Score REDD+ */}
+        <TouchableOpacity 
+          style={styles.reddScore}
+          onPress={() => navigation.navigate('USSDCarbon')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.reddScoreRow}>
+            <View style={styles.reddIcon}>
+              <Text style={{ fontSize: 20 }}>{'🌿'}</Text>
+            </View>
+            <View style={styles.reddInfo}>
+              <Text style={styles.reddLabel}>Score REDD+</Text>
+              <Text style={styles.reddHint}>
+                21 pratiques evaluees - Programme Tai / BMC
+              </Text>
+            </View>
+            <View style={styles.reddBadge}>
+              <Text style={styles.reddBadgeText}>Nouveau</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Stats rapides */}
@@ -222,6 +244,15 @@ const HomeScreen = ({ navigation }) => {
           subtitle={`Score: ${dashboard?.score_carbone_moyen?.toFixed(1) || '0'}/10`}
           icon="🌱"
           onPress={() => navigation.navigate('MyCarbonScore')}
+        />
+        
+        <MenuItem
+          number="5b"
+          title="Pratiques REDD+"
+          subtitle="Guide des 21 pratiques eligibles"
+          icon="🌿"
+          onPress={() => navigation.navigate('USSDFullSimulator')}
+          highlight={true}
         />
         
         <MenuItem
@@ -404,6 +435,52 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.lg,
     fontWeight: 'bold',
     color: COLORS.primary,
+  },
+  // REDD+ Score Card
+  reddScore: {
+    backgroundColor: '#ecfdf5',
+    borderRadius: 16,
+    padding: SPACING.md,
+    marginTop: SPACING.sm,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  reddScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reddIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#d1fae5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  reddInfo: {
+    flex: 1,
+  },
+  reddLabel: {
+    fontSize: FONTS.sizes.sm,
+    fontWeight: '700',
+    color: '#064e3b',
+    marginBottom: 2,
+  },
+  reddHint: {
+    fontSize: FONTS.sizes.xs,
+    color: '#6b7280',
+  },
+  reddBadge: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  reddBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '700',
   },
 });
 

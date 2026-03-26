@@ -23,6 +23,27 @@ const MRVDashboard = () => {
   const [farmers, setFarmers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const downloadPDF = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/redd/pdf/mrv-report`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `GreenLink_MRV_REDD_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Rapport PDF telecharge');
+    } catch (err) {
+      toast.error('Erreur lors du telechargement PDF');
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -108,9 +129,14 @@ const MRVDashboard = () => {
                 <p className="text-xs text-slate-400">Monitoring, Rapportage, Verification</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={fetchData} className="border-slate-700 text-slate-300 hover:bg-slate-800" data-testid="mrv-refresh">
-              <RefreshCcw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} /> Actualiser
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={downloadPDF} className="border-emerald-600 text-emerald-400 hover:bg-emerald-500/10" data-testid="mrv-download-pdf">
+                <Download className={`w-4 h-4 mr-1`} /> Export PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={fetchData} className="border-slate-700 text-slate-300 hover:bg-slate-800" data-testid="mrv-refresh">
+                <RefreshCcw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} /> Actualiser
+              </Button>
+            </div>
           </div>
 
           {loading || !summary ? (

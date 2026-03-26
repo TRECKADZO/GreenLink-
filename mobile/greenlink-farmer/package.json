@@ -1,6 +1,6 @@
 {
   "name": "greenlink-farmer",
-  "version": "1.69.0",
+  "version": "1.70.0",
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",

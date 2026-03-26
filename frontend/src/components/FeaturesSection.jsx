@@ -7,16 +7,23 @@ import { getIconComponent } from '../utils/iconMapper';
 // Fallback mock data
 const mockFeatures = [
   {
+    icon: 'TreePine',
+    title: 'REDD+ & Credits Carbone',
+    description: 'Alignement avec les pratiques REDD+ reconnues (Programme Tai, BMC, FCPF). Score REDD+ sur 10 avec 21 pratiques evaluees et export MRV.',
+    badge: 'REDD+',
+    badgeColor: 'bg-emerald-100 text-emerald-700'
+  },
+  {
     icon: 'Leaf',
-    title: 'Audits Carbone Certifiés',
-    description: 'Auditeurs indépendants évaluent vos parcelles pour la certification carbone et l\'éligibilité aux primes environnementales',
+    title: 'Audits Carbone Certifies',
+    description: "Auditeurs independants evaluent vos parcelles pour la certification carbone et l'eligibilite aux primes environnementales",
     badge: 'GreenLink',
     badgeColor: 'bg-emerald-100 text-emerald-700'
   },
   {
     icon: 'Wallet',
     title: 'Primes Carbone',
-    description: 'Recevez des paiements Orange Money basés sur votre score carbone : jusqu\'à 60 000 XOF/ha pour les meilleures pratiques',
+    description: "Recevez des paiements Orange Money bases sur votre score carbone : jusqu'a 60 000 XOF/ha pour les meilleures pratiques",
     badge: 'Nouveau',
     badgeColor: 'bg-amber-100 text-amber-700'
   },
@@ -29,36 +36,36 @@ const mockFeatures = [
   },
   {
     icon: 'Shield',
-    title: 'Conformité SSRTE/ICI',
-    description: 'Outils pour les coopératives et agents de terrain pour le monitoring du travail des enfants selon les standards ICI',
+    title: 'Conformite SSRTE/ICI',
+    description: "Outils pour les cooperatives et agents de terrain pour le monitoring du travail des enfants selon les standards ICI",
     badge: 'ICI',
     badgeColor: 'bg-blue-100 text-blue-700'
   },
   {
-    icon: 'Award',
-    title: 'Badges Auditeurs',
-    description: 'Système de gamification pour récompenser les auditeurs les plus performants : Débutant, Bronze, Argent, Or, Platine',
-    badge: 'Gamification',
-    badgeColor: 'bg-purple-100 text-purple-700'
-  },
-  {
-    icon: 'Building2',
-    title: 'Gestion Coopérative',
-    description: 'Dashboard complet pour gérer membres, parcelles, primes et conformité EUDR avec export CSV et rapports PDF',
-    badge: 'Pro',
-    badgeColor: 'bg-slate-100 text-slate-700'
+    icon: 'BarChart3',
+    title: 'MRV & Rapports PDF',
+    description: 'Monitoring, Rapportage et Verification en temps reel. Export PDF professionnel pour le programme juridictionnel Tai et le BMC.',
+    badge: 'MRV',
+    badgeColor: 'bg-teal-100 text-teal-700'
   },
   {
     icon: 'Award',
-    title: 'Conformité ARS 1000',
-    description: 'Norme Africaine pour le Cacao Durable : évaluez votre niveau Bronze, Argent ou Or via USSD et recevez des recommandations personnalisées',
+    title: 'Conformite ARS 1000',
+    description: "Norme Africaine pour le Cacao Durable : evaluez votre niveau Bronze, Argent ou Or via USSD et recevez des recommandations personnalisees",
     badge: 'ARS 1000',
     badgeColor: 'bg-yellow-100 text-yellow-700'
   },
   {
+    icon: 'Building2',
+    title: 'Gestion Cooperative',
+    description: "Dashboard complet pour gerer membres, parcelles, primes et conformite EUDR avec export CSV et rapports PDF",
+    badge: 'Pro',
+    badgeColor: 'bg-slate-100 text-slate-700'
+  },
+  {
     icon: 'FileText',
     title: 'Rapports & Analytics',
-    description: 'Tableaux de bord en temps réel, export de données, rapports de conformité et analyses de performance par région',
+    description: 'Tableaux de bord en temps reel, export de donnees, rapports de conformite et analyses de performance par region',
     badge: null
   }
 ];
