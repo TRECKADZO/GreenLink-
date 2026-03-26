@@ -482,7 +482,8 @@ async def ussd_callback(request: USSDRequest):
                         f"3. Conseils pratiques ARS\n"
                         f"4. Demander paiement prime\n"
                         f"5. Mes parcelles\n"
-                        f"6. Mon profil\n"
+                        f"6. SSRTE - Travail des enfants\n"
+                        f"7. Mon profil\n"
                         f"0. Quitter"
                     )
                 else:
@@ -572,7 +573,8 @@ async def ussd_callback(request: USSDRequest):
                     f"3. Conseils pratiques ARS\n"
                     f"4. Demander paiement prime\n"
                     f"5. Mes parcelles\n"
-                    f"6. Mon profil\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
                     f"0. Quitter"
                 )
             else:
@@ -810,7 +812,19 @@ async def ussd_callback(request: USSDRequest):
                 session["state"] = "parcels_view"
                 
             elif choice == "6":
-                # Mon profil
+                # SSRTE - Travail des enfants (ICI)
+                session["state"] = "ssrte_q1"
+                response_text = (
+                    f"SSRTE - Lutte contre le travail des enfants (ICI)\n\n"
+                    f"Question 1/2\n"
+                    f"Avez-vous des enfants en age scolaire sur votre parcelle ?\n\n"
+                    f"1. Oui\n"
+                    f"2. Non\n\n"
+                    f"0. Retour"
+                )
+                
+            elif choice == "7":
+                # Mon profil (ancien 6)
                 name = data.get("farmer_name", "Planteur")
                 coop = data.get("coop_name", "Non renseigne")
                 farmer_id = data.get("farmer_id", "")
@@ -847,9 +861,183 @@ async def ussd_callback(request: USSDRequest):
                     f"3. Conseils ARS\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
-                    f"6. Mon profil\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
                     f"0. Quitter"
                 )
+
+
+        # ==============================
+        # STATE: SSRTE - Travail des enfants (ICI)
+        # ==============================
+        elif state == "ssrte_q1":
+            choice = inputs[-1] if inputs else ""
+            if choice == "1":
+                # Oui, enfants en age scolaire
+                session["state"] = "ssrte_q2"
+                session["data"]["ssrte_enfants_scolaires"] = True
+                response_text = (
+                    f"SSRTE - Question 2/2\n\n"
+                    f"Sont-ils scolarises ?\n\n"
+                    f"1. Oui\n"
+                    f"2. Non\n\n"
+                    f"0. Retour"
+                )
+            elif choice == "2":
+                # Non, pas d'enfants en age scolaire
+                session["data"]["ssrte_enfants_scolaires"] = False
+                session["data"]["ssrte_scolarises"] = None
+                # Sauvegarder dans la BDD
+                farmer_id = data.get("farmer_id", "")
+                if farmer_id:
+                    await db.ssrte_responses.update_one(
+                        {"farmer_id": farmer_id},
+                        {"$set": {
+                            "farmer_id": farmer_id,
+                            "phone": phone,
+                            "farmer_name": data.get("farmer_name", ""),
+                            "coop_id": data.get("coop_id", ""),
+                            "coop_name": data.get("coop_name", ""),
+                            "enfants_age_scolaire": False,
+                            "scolarises": None,
+                            "statut": "conforme",
+                            "source": "ussd",
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        }},
+                        upsert=True,
+                    )
+                response_text = (
+                    f"Merci pour votre reponse.\n\n"
+                    f"Aucune action SSRTE requise.\n\n"
+                    f"0. Retour au menu"
+                )
+                session["state"] = "ssrte_done"
+            elif choice == "0":
+                session["state"] = "main_menu"
+                name = data.get("farmer_name", "Planteur")
+                coop = data.get("coop_name", "")
+                coop_label = f" ({coop})" if coop else ""
+                response_text = (
+                    f"GreenLink Agritech - ARS 1000\n"
+                    f"Bonjour {name}{coop_label}\n\n"
+                    f"1. Prime carbone + conformite ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils pratiques ARS\n"
+                    f"4. Demander paiement prime\n"
+                    f"5. Mes parcelles\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
+                    f"0. Quitter"
+                )
+            else:
+                response_text = (
+                    f"Option invalide.\n\n"
+                    f"Avez-vous des enfants en age scolaire ?\n"
+                    f"1. Oui\n"
+                    f"2. Non\n\n"
+                    f"0. Retour"
+                )
+
+        elif state == "ssrte_q2":
+            choice = inputs[-1] if inputs else ""
+            farmer_id = data.get("farmer_id", "")
+            if choice == "1":
+                # Oui, scolarises -> conforme
+                session["data"]["ssrte_scolarises"] = True
+                if farmer_id:
+                    await db.ssrte_responses.update_one(
+                        {"farmer_id": farmer_id},
+                        {"$set": {
+                            "farmer_id": farmer_id,
+                            "phone": phone,
+                            "farmer_name": data.get("farmer_name", ""),
+                            "coop_id": data.get("coop_id", ""),
+                            "coop_name": data.get("coop_name", ""),
+                            "enfants_age_scolaire": True,
+                            "scolarises": True,
+                            "statut": "conforme",
+                            "source": "ussd",
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        }},
+                        upsert=True,
+                    )
+                response_text = (
+                    f"Merci pour votre reponse.\n\n"
+                    f"Situation conforme.\n"
+                    f"Continuez a soutenir la scolarite\n"
+                    f"de vos enfants.\n\n"
+                    f"0. Retour au menu"
+                )
+                session["state"] = "ssrte_done"
+            elif choice == "2":
+                # Non, pas scolarises -> alerte ICI
+                session["data"]["ssrte_scolarises"] = False
+                if farmer_id:
+                    await db.ssrte_responses.update_one(
+                        {"farmer_id": farmer_id},
+                        {"$set": {
+                            "farmer_id": farmer_id,
+                            "phone": phone,
+                            "farmer_name": data.get("farmer_name", ""),
+                            "coop_id": data.get("coop_id", ""),
+                            "coop_name": data.get("coop_name", ""),
+                            "enfants_age_scolaire": True,
+                            "scolarises": False,
+                            "statut": "alerte_ici",
+                            "source": "ussd",
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        }},
+                        upsert=True,
+                    )
+                response_text = (
+                    f"Merci pour votre reponse.\n\n"
+                    f"Nous vous mettons en relation\n"
+                    f"avec votre cooperative pour un\n"
+                    f"accompagnement SSRTE de l'ICI.\n\n"
+                    f"Votre cooperative sera informee.\n\n"
+                    f"0. Retour au menu"
+                )
+                session["state"] = "ssrte_done"
+            elif choice == "0":
+                session["state"] = "ssrte_q1"
+                response_text = (
+                    f"SSRTE - Lutte contre le travail des enfants (ICI)\n\n"
+                    f"Question 1/2\n"
+                    f"Avez-vous des enfants en age scolaire sur votre parcelle ?\n\n"
+                    f"1. Oui\n"
+                    f"2. Non\n\n"
+                    f"0. Retour"
+                )
+            else:
+                response_text = (
+                    f"Option invalide.\n\n"
+                    f"Sont-ils scolarises ?\n"
+                    f"1. Oui\n"
+                    f"2. Non\n\n"
+                    f"0. Retour"
+                )
+
+        elif state == "ssrte_done":
+            choice = inputs[-1] if inputs else ""
+            if choice == "0":
+                session["state"] = "main_menu"
+                name = data.get("farmer_name", "Planteur")
+                coop = data.get("coop_name", "")
+                coop_label = f" ({coop})" if coop else ""
+                response_text = (
+                    f"GreenLink Agritech - ARS 1000\n"
+                    f"Bonjour {name}{coop_label}\n\n"
+                    f"1. Prime carbone + conformite ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils pratiques ARS\n"
+                    f"4. Demander paiement prime\n"
+                    f"5. Mes parcelles\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
+                    f"0. Quitter"
+                )
+            else:
+                response_text = "Appuyez 0 pour retourner au menu."
 
         # ==============================
         # STATE: PAYMENT CONFIRM
@@ -1088,7 +1276,8 @@ async def ussd_callback(request: USSDRequest):
                     f"3. Conseils ARS\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
-                    f"6. Mon profil\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
                     f"0. Quitter"
                 )
             else:
@@ -1206,7 +1395,8 @@ async def ussd_callback(request: USSDRequest):
                     f"3. Conseils ARS\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
-                    f"6. Mon profil\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
                     f"0. Quitter"
                 )
             else:
@@ -1403,7 +1593,8 @@ async def ussd_callback(request: USSDRequest):
                     f"3. Conseils ARS\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
-                    f"6. Mon profil\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
                     f"0. Quitter"
                 )
 
@@ -1500,7 +1691,8 @@ async def ussd_callback(request: USSDRequest):
                     f"3. Conseils ARS\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
-                    f"6. Mon profil\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
                     f"0. Quitter"
                 )
             else:
@@ -1536,7 +1728,8 @@ async def ussd_callback(request: USSDRequest):
                     f"3. Conseils ARS\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
-                    f"6. Mon profil\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
                     f"0. Quitter"
                 )
             else:
@@ -1933,3 +2126,35 @@ async def test_ussd(phone: str = Query(..., description="Phone number to test"))
         text=""
     )
     return await ussd_callback(test_request)
+
+
+# ==============================
+# SSRTE API - Consultation des reponses
+# ==============================
+@router.get("/ssrte/responses")
+async def get_ssrte_responses(coop_id: str = Query(None), statut: str = Query(None)):
+    """Consulter les reponses SSRTE des agriculteurs."""
+    query = {}
+    if coop_id:
+        query["coop_id"] = coop_id
+    if statut:
+        query["statut"] = statut
+    
+    responses = await db.ssrte_responses.find(query, {"_id": 0}).sort("updated_at", -1).to_list(500)
+    
+    stats = {
+        "total": len(responses),
+        "conforme": sum(1 for r in responses if r.get("statut") == "conforme"),
+        "alerte_ici": sum(1 for r in responses if r.get("statut") == "alerte_ici"),
+    }
+    
+    return {"stats": stats, "responses": responses}
+
+
+@router.get("/ssrte/alerts")
+async def get_ssrte_alerts():
+    """Consulter les alertes SSRTE (enfants non scolarises)."""
+    alerts = await db.ssrte_responses.find(
+        {"statut": "alerte_ici"}, {"_id": 0}
+    ).sort("updated_at", -1).to_list(200)
+    return {"count": len(alerts), "alerts": alerts}

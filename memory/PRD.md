@@ -237,6 +237,22 @@ Re-test primaire toutes les 10 requetes pour recovery automatique
 - Calculs valides: Score=8.3, ARS=Bronze 52% (identique backend)
 - Build APK v1.65.0: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/a08b3faf-5ccb-4471-8d89-576ddba19109
 
+### Phase 38 - SSRTE Travail des enfants + Fix connexion mobile (DONE - 26/03/2026)
+**1. SSRTE ajoute au menu USSD (backend + mobile offline):**
+- Nouvelle option "6. SSRTE - Travail des enfants (ICI)" dans le menu principal
+- "Mon profil" deplace de 6 a 7
+- Flux: Q1 (enfants age scolaire?) → Q2 (scolarises?) → resultat (conforme/alerte ICI)
+- Sauvegarde en BDD collection `ssrte_responses` avec upsert par farmer_id
+- APIs: GET `/api/ussd/ssrte/responses` et `/api/ussd/ssrte/alerts`
+- Moteur offline mobile `ussdOfflineEngine.js` mis a jour avec `processSSRTE()`
+- `USSDFullSimulatorScreen.js` mis a jour avec menu principal (Carbone + SSRTE)
+
+**2. Fix connexion mobile (v1.68.0):**
+- `api.js` reecrit en version ultra-simple: Axios basique, CDN Bunny en premier
+- `api.login()` sequentiel: CDN → Direct (pas de racing complexe)
+- `config.js`: API_URL = CDN Bunny, DIRECT_API_URL = Emergent
+- APK v1.68.0: https://expo.dev/artifacts/eas/k2ArWGX9FoCxWJqM21mVeV.apk
+
 ## Backlog
 - P2: Passerelle SMS Orange (remplacer mock)
 - P2: Langues locales (Baoule, Dioula)

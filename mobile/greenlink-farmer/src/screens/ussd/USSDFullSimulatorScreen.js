@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS, SPACING } from '../../config';
-import { processUSSD } from '../../services/ussdOfflineEngine';
+import { processUSSD, processSSRTE } from '../../services/ussdOfflineEngine';
 
 /**
  * Simulateur USSD Interactif — 100% Offline
@@ -27,47 +27,101 @@ const USSDFullSimulatorScreen = () => {
   const [sessionActive, setSessionActive] = useState(false);
   const [step, setStep] = useState(0);
   const [result, setResult] = useState(null);
+  const [currentFlow, setCurrentFlow] = useState(null); // 'carbon' | 'ssrte' | null (menu)
   const scrollRef = useRef(null);
 
   const title = mode === 'agent' 
     ? 'Demo USSD Agent Terrain' 
     : 'Simulateur USSD Cooperative';
 
+  const MAIN_MENU_TEXT = 
+    'GreenLink Agritech - ARS 1000\n\n' +
+    '1. Prime carbone + conformite ARS\n' +
+    '2. SSRTE - Travail des enfants (ICI)\n\n' +
+    '0. Quitter';
+
   const startSession = () => {
     setHistory([]);
     setTextHistory('');
     setResult(null);
     setInputValue('');
+    setCurrentFlow(null);
 
-    const response = processUSSD('');
-    setHistory([{ type: 'system', text: response.text }]);
-    setStep(response.step);
-    setSessionActive(response.continue_session);
+    setHistory([{ type: 'system', text: MAIN_MENU_TEXT }]);
+    setStep(0);
+    setSessionActive(true);
   };
 
   const handleSend = () => {
     const val = inputValue.trim();
     if (!val) return;
 
-    // Ajouter la reponse utilisateur a l'historique
     setHistory(prev => [...prev, { type: 'user', text: val }]);
 
-    const newText = textHistory ? `${textHistory}*${val}` : val;
-    const response = processUSSD(newText);
+    // Menu principal
+    if (!currentFlow) {
+      if (val === '1') {
+        setCurrentFlow('carbon');
+        setTextHistory('');
+        const response = processUSSD('');
+        setHistory(prev => [...prev, { type: 'system', text: response.text }]);
+        setStep(response.step);
+        setSessionActive(response.continue_session);
+      } else if (val === '2') {
+        setCurrentFlow('ssrte');
+        setTextHistory('');
+        const response = processSSRTE('');
+        setHistory(prev => [...prev, { type: 'system', text: response.text }]);
+        setStep(response.step);
+        setSessionActive(response.continue_session);
+      } else if (val === '0') {
+        setSessionActive(false);
+        setHistory(prev => [...prev, { type: 'system', text: 'Session terminee. Merci.' }]);
+      } else {
+        setHistory(prev => [...prev, { type: 'system', text: 'Option invalide.\n\n' + MAIN_MENU_TEXT }]);
+      }
+      setInputValue('');
+      return;
+    }
 
-    // Ajouter la reponse systeme
-    setHistory(prev => [...prev, { type: 'system', text: response.text }]);
-    setStep(response.step);
-    setInputValue('');
+    // Flux carbone
+    if (currentFlow === 'carbon') {
+      const newText = textHistory ? `${textHistory}*${val}` : val;
+      const response = processUSSD(newText);
+      setHistory(prev => [...prev, { type: 'system', text: response.text }]);
+      setStep(response.step);
+      setInputValue('');
+      if (response.result) setResult(response.result);
+      if (response.continue_session) {
+        setTextHistory(newText);
+      } else {
+        setTextHistory('');
+        setSessionActive(false);
+      }
+      return;
+    }
 
-    if (response.result) setResult(response.result);
-
-    if (response.continue_session) {
-      setTextHistory(newText);
-      setSessionActive(true);
-    } else {
-      setTextHistory('');
-      setSessionActive(false);
+    // Flux SSRTE
+    if (currentFlow === 'ssrte') {
+      const newText = textHistory ? `${textHistory}*${val}` : val;
+      const response = processSSRTE(newText);
+      setHistory(prev => [...prev, { type: 'system', text: response.text }]);
+      setStep(response.step);
+      setInputValue('');
+      if (response.ssrteResult) setResult(response.ssrteResult);
+      if (response.goBack) {
+        // Retour au menu
+        setCurrentFlow(null);
+        setTextHistory('');
+        setHistory(prev => [...prev, { type: 'system', text: MAIN_MENU_TEXT }]);
+        setSessionActive(true);
+      } else if (response.continue_session) {
+        setTextHistory(newText);
+      } else {
+        setTextHistory('');
+        setSessionActive(false);
+      }
+      return;
     }
   };
 

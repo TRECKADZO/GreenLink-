@@ -249,3 +249,114 @@ export function processUSSD(textInput = '') {
 }
 
 export { QUESTIONS, calculateCarbonPremium, calculateArsLevel };
+
+// ==============================
+// SSRTE Offline Engine
+// ==============================
+const SSRTE_QUESTIONS = [
+  {
+    key: 'enfants_scolaires',
+    text: 'SSRTE - Lutte contre le travail des enfants (ICI)\n\nQuestion 1/2\nAvez-vous des enfants en age scolaire sur votre parcelle ?\n\n1. Oui\n2. Non\n\n0. Retour',
+    type: 'yesno',
+  },
+  {
+    key: 'scolarises',
+    text: 'SSRTE - Question 2/2\n\nSont-ils scolarises ?\n\n1. Oui\n2. Non\n\n0. Retour',
+    type: 'yesno',
+  },
+];
+
+/**
+ * Traite le flux SSRTE offline
+ * @param {string} textInput - Texte accumule
+ * @returns {object} Reponse SSRTE
+ */
+export function processSSRTE(textInput = '') {
+  const inputs = textInput ? textInput.split('*').filter(s => s !== '') : [];
+  const numAnswers = inputs.length;
+
+  if (numAnswers === 0) {
+    return {
+      text: SSRTE_QUESTIONS[0].text,
+      continue_session: true,
+      step: 1,
+      total_steps: 2,
+    };
+  }
+
+  // Q1: Enfants en age scolaire?
+  const q1 = inputs[0];
+  if (q1 === '0') {
+    return { text: 'RETOUR', continue_session: false, step: 0, goBack: true };
+  }
+  if (q1 !== '1' && q1 !== '2') {
+    return {
+      text: 'Reponse invalide.\n\n' + SSRTE_QUESTIONS[0].text,
+      continue_session: true,
+      step: 1,
+      total_steps: 2,
+    };
+  }
+
+  const hasChildren = q1 === '1';
+
+  // Si "Non" -> conforme, fin
+  if (!hasChildren) {
+    return {
+      text: 'Merci pour votre reponse.\n\nAucune action SSRTE requise.\n\n0. Retour au menu',
+      continue_session: false,
+      step: 3,
+      total_steps: 2,
+      ssrteResult: { enfants_age_scolaire: false, scolarises: null, statut: 'conforme' },
+    };
+  }
+
+  // Q2: Scolarises?
+  if (numAnswers === 1) {
+    return {
+      text: SSRTE_QUESTIONS[1].text,
+      continue_session: true,
+      step: 2,
+      total_steps: 2,
+    };
+  }
+
+  const q2 = inputs[1];
+  if (q2 === '0') {
+    return {
+      text: SSRTE_QUESTIONS[0].text,
+      continue_session: true,
+      step: 1,
+      total_steps: 2,
+    };
+  }
+  if (q2 !== '1' && q2 !== '2') {
+    return {
+      text: 'Reponse invalide.\n\n' + SSRTE_QUESTIONS[1].text,
+      continue_session: true,
+      step: 2,
+      total_steps: 2,
+    };
+  }
+
+  const isSchooled = q2 === '1';
+
+  if (isSchooled) {
+    return {
+      text: 'Merci pour votre reponse.\n\nSituation conforme.\nContinuez a soutenir la scolarite\nde vos enfants.\n\n0. Retour au menu',
+      continue_session: false,
+      step: 3,
+      total_steps: 2,
+      ssrteResult: { enfants_age_scolaire: true, scolarises: true, statut: 'conforme' },
+    };
+  }
+
+  return {
+    text: 'Merci pour votre reponse.\n\nNous vous mettons en relation\navec votre cooperative pour un\naccompagnement SSRTE de l\'ICI.\n\nVotre cooperative sera informee.\n\n0. Retour au menu',
+    continue_session: false,
+    step: 3,
+    total_steps: 2,
+    ssrteResult: { enfants_age_scolaire: true, scolarises: false, statut: 'alerte_ici' },
+  };
+}
+
