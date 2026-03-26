@@ -6,15 +6,18 @@
  */
 
 const QUESTIONS = [
-  { key: 'hectares', text: 'PRIME CARBONE *144*99#\n\nQuestion 1/9\nSurface plantation (hectares) ?\n\nEx: 3.5', type: 'number' },
-  { key: 'arbres_grands', text: 'Question 2/9\nArbres GRANDS (> 12m) ?\n\nEx: 20', type: 'number' },
-  { key: 'arbres_moyens', text: 'Question 3/9\nArbres MOYENS (8-12m) ?\n\nEx: 30', type: 'number' },
-  { key: 'arbres_petits', text: 'Question 4/9\nArbres PETITS (< 8m) ?\n\nEx: 10', type: 'number' },
-  { key: 'culture', text: 'Question 5/9\nCulture principale ?\n\n1. Cacao\n2. Cafe\n3. Anacarde', type: 'choice' },
-  { key: 'engrais', text: 'Question 6/9\nEngrais chimiques ?\n\n1. Oui\n2. Non', type: 'yesno' },
-  { key: 'brulage', text: 'Question 7/9\nBrulage des residus ?\n\n1. Oui\n2. Non', type: 'yesno' },
-  { key: 'compost', text: 'Question 8/9\nCompost organique ?\n\n1. Oui\n2. Non', type: 'yesno' },
-  { key: 'agroforesterie', text: 'Question 9/9\nAgroforesterie ?\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'hectares', text: 'PRIME CARBONE *144*99#\n\nQuestion 1/12\nSurface plantation (hectares) ?\n\nEx: 3.5', type: 'number' },
+  { key: 'arbres_grands', text: 'Question 2/12\nArbres GRANDS (> 12m) ?\n\nEx: 20', type: 'number' },
+  { key: 'arbres_moyens', text: 'Question 3/12\nArbres MOYENS (8-12m) ?\n\nEx: 30', type: 'number' },
+  { key: 'arbres_petits', text: 'Question 4/12\nArbres PETITS (< 8m) ?\n\nEx: 10', type: 'number' },
+  { key: 'culture', text: 'Question 5/12\nCulture principale ?\n\n1. Cacao\n2. Cafe\n3. Anacarde', type: 'choice' },
+  { key: 'engrais', text: 'Question 6/12\nEngrais chimiques ?\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'brulage', text: 'Question 7/12\nBrulage des residus ?\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'compost', text: 'Question 8/12\nCompost organique ?\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'agroforesterie', text: 'Question 9/12\nAgroforesterie ?\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'biochar', text: 'REDD+ Question 10/12\nBiochar ?\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'zero_deforestation', text: 'REDD+ Question 11/12\nEngagement zero deforestation ?\n(Pas d\'extension sur foret)\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'reboisement', text: 'REDD+ Question 12/12\nReboisement actif ?\n\n1. Oui\n2. Non', type: 'yesno' },
 ];
 
 function parseAnswer(question, raw) {
@@ -66,6 +69,11 @@ function calculateCarbonPremium(answers) {
   if (answers.compost === 'oui') score += 1.0;
   if (answers.agroforesterie === 'oui') score += 1.0;
 
+  // REDD+ bonus
+  if (answers.biochar === 'oui') score += 0.3;
+  if (answers.zero_deforestation === 'oui') score += 0.3;
+  if (answers.reboisement === 'oui') score += 0.4;
+
   // Age des cacaoyers — defaut "mature" comme le backend
   const age = answers.age_cacaoyers || 'mature';
   if (age === 'mature') score += 0.5;
@@ -86,6 +94,26 @@ function calculateCarbonPremium(answers) {
 
   const arsResult = calculateArsLevel(answers, hectares, arbresGrands, totalTrees);
 
+  // REDD+ score calculation
+  let reddScore = 0;
+  const reddPractices = [];
+  if (answers.agroforesterie === 'oui') { reddScore += 1.5; reddPractices.push('Agroforesterie'); }
+  if (answers.compost === 'oui') { reddScore += 1.0; reddPractices.push('Compost'); }
+  if (answers.brulage === 'non') { reddScore += 1.0; reddPractices.push('Zero brulage'); }
+  if (answers.engrais === 'non') { reddScore += 0.5; reddPractices.push('Zero engrais'); }
+  if (answers.biochar === 'oui') { reddScore += 0.5; reddPractices.push('Biochar'); }
+  if (answers.zero_deforestation === 'oui') { reddScore += 1.0; reddPractices.push('Zero deforestation'); }
+  if (answers.reboisement === 'oui') { reddScore += 0.5; reddPractices.push('Reboisement'); }
+  if (arbresParHa >= 60) reddScore += 1.5;
+  else if (arbresParHa >= 30) reddScore += 1.0;
+  else if (arbresParHa >= 15) reddScore += 0.5;
+  reddScore = Math.min(Math.round(reddScore * 10) / 10, 10);
+  let reddLevel = 'Non conforme';
+  if (reddScore >= 8) reddLevel = 'Excellence';
+  else if (reddScore >= 6) reddLevel = 'Avance';
+  else if (reddScore >= 4) reddLevel = 'Intermediaire';
+  else if (reddScore >= 2) reddLevel = 'Debutant';
+
   return {
     score: Math.round(score * 10) / 10,
     prime_fcfa_kg: Math.round(primeFcfaKg),
@@ -103,6 +131,9 @@ function calculateCarbonPremium(answers) {
     ars_level: arsResult.level,
     ars_pct: arsResult.pct,
     ars_conseil: arsResult.conseil,
+    redd_score: reddScore,
+    redd_level: reddLevel,
+    redd_practices: reddPractices,
   };
 }
 

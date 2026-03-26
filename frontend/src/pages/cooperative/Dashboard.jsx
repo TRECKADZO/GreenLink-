@@ -490,6 +490,18 @@ const Dashboard = () => {
               </Button>
               <Button 
                 variant="outline" 
+                className="w-full justify-between bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
+                onClick={() => navigate('/cooperative/mrv')}
+                data-testid="quick-action-mrv-redd"
+              >
+                <span className="flex items-center text-emerald-700">
+                  <Leaf className="h-4 w-4 mr-2" />
+                  MRV REDD+ / Pratiques
+                </span>
+                <ChevronRight className="h-4 w-4 text-emerald-700" />
+              </Button>
+              <Button 
+                variant="outline" 
                 className="w-full justify-between bg-orange-50 border-orange-200 hover:bg-orange-100"
                 onClick={() => navigate('/marketplace')}
                 data-testid="quick-action-marketplace-intrants"

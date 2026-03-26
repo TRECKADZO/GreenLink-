@@ -91,6 +91,8 @@ import ParcelsVerificationPage from "./pages/cooperative/ParcelsVerificationPage
 import AgentProgressPage from "./pages/cooperative/AgentProgressPage";
 import USSDRegistrationsPage from "./pages/cooperative/USSDRegistrationsPage";
 import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
+import MRVDashboard from "./pages/cooperative/MRVDashboard";
+import REDDGuidePage from "./pages/REDDGuidePage";
 
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
@@ -230,6 +232,8 @@ function App() {
               <Route path="/cooperative/agents-progress" element={<AgentProgressPage />} />
               <Route path="/cooperative/inscriptions" element={<USSDRegistrationsPage />} />
               <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
+              <Route path="/cooperative/mrv" element={<MRVDashboard />} />
+              <Route path="/guide-redd" element={<REDDGuidePage />} />
 
               {/* SSRTE Agent Routes */}
               <Route path="/ssrte/dashboard" element={<SSRTEAgentDashboard />} />

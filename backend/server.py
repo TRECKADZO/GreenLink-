@@ -34,7 +34,8 @@ from routes import coverage_zones  # Coverage zones for cooperatives
 from routes import harvest_marketplace  # Harvest Marketplace for producers/coops
 from routes import buyer_dashboard  # Buyer Dashboard
 from routes import messaging  # Secure Messaging System
-from routes import marketplace_analytics  # Advanced Marketplace Analytics
+from routes import marketplace_analytics
+from routes import redd  # REDD+ MRV routes  # Advanced Marketplace Analytics
 from routes import agent_search  # Agent Terrain - Recherche sécurisée
 from routes import carbon_listings  # Carbon Credit Listings - Soumission/Approbation
 from routes import quotes  # Gestion des Devis pour abonnements fournisseurs
@@ -170,6 +171,7 @@ app.include_router(agent_search.router)
 app.include_router(carbon_listings.router)
 app.include_router(quotes.router)
 app.include_router(rse_dashboard.router)
+app.include_router(redd.router)
 
 CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '')
 if CORS_ORIGINS:

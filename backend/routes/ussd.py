@@ -170,6 +170,10 @@ CARBON_QUESTIONS_DETAILED = [
     {"key": "compost", "text": "Utilisez-vous du compost organique ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "agroforesterie", "text": "Pratiquez-vous l'agroforesterie ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "couverture_sol", "text": "Avez-vous une couverture vegetale au sol ?\n1. Oui\n2. Non", "type": "yesno"},
+    # REDD+ additional questions
+    {"key": "biochar", "text": "REDD+ - Utilisez-vous du biochar ?\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "zero_deforestation", "text": "REDD+ - Engagement zero deforestation ?\n(Pas d'extension sur foret)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "reboisement", "text": "REDD+ - Faites-vous du reboisement ?\n1. Oui\n2. Non", "type": "yesno"},
 ]
 
 
@@ -234,6 +238,11 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     if answers.get("agroforesterie") == "oui": score += 1.0
     if answers.get("couverture_sol") == "oui": score += 0.5
 
+    # REDD+ bonus
+    if answers.get("biochar") == "oui": score += 0.3
+    if answers.get("zero_deforestation") == "oui": score += 0.3
+    if answers.get("reboisement") == "oui": score += 0.4
+
     # Age bonus
     age = answers.get("age_cacaoyers", "mature")
     if age == "mature": score += 0.5
@@ -255,6 +264,51 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     # Calcul niveau ARS 1000
     ars_result = calculate_ars_level(answers)
 
+    # REDD+ level calculation
+    redd_bonus = 0
+    redd_practices = []
+    if answers.get("agroforesterie") == "oui":
+        redd_bonus += 1.5
+        redd_practices.append("Agroforesterie")
+    if answers.get("compost") == "oui":
+        redd_bonus += 1.0
+        redd_practices.append("Compost")
+    if answers.get("couverture_sol") == "oui":
+        redd_bonus += 0.5
+        redd_practices.append("Couverture sol")
+    if answers.get("brulage") == "non":
+        redd_bonus += 1.0
+        redd_practices.append("Zero brulage")
+    if answers.get("engrais") == "non" or answers.get("engrais_chimique") == "non":
+        redd_bonus += 0.5
+        redd_practices.append("Zero engrais")
+    if answers.get("biochar") == "oui":
+        redd_bonus += 0.5
+        redd_practices.append("Biochar")
+    if answers.get("zero_deforestation") == "oui":
+        redd_bonus += 1.0
+        redd_practices.append("Zero deforestation")
+    if answers.get("reboisement") == "oui":
+        redd_bonus += 0.5
+        redd_practices.append("Reboisement")
+    if arbres_par_ha >= 60:
+        redd_bonus += 1.5
+    elif arbres_par_ha >= 30:
+        redd_bonus += 1.0
+    elif arbres_par_ha >= 15:
+        redd_bonus += 0.5
+    redd_score = min(round(redd_bonus, 1), 10)
+    if redd_score >= 8:
+        redd_level = "Excellence"
+    elif redd_score >= 6:
+        redd_level = "Avance"
+    elif redd_score >= 4:
+        redd_level = "Intermediaire"
+    elif redd_score >= 2:
+        redd_level = "Debutant"
+    else:
+        redd_level = "Non conforme"
+
     return {
         "score": round(score, 1),
         "prime_fcfa_kg": round(prime_fcfa_kg),
@@ -272,6 +326,9 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
         "ars_level": ars_result["level"],
         "ars_pct": ars_result["pct"],
         "ars_conseil": ars_result["conseil"],
+        "redd_score": redd_score,
+        "redd_level": redd_level,
+        "redd_practices": redd_practices,
     }
 
 
@@ -383,6 +440,13 @@ async def save_ars_data(farmer_id: str, answers: dict, result: dict, phone: str,
         "ars_level": result.get("ars_level", ""),
         "ars_pct": result.get("ars_pct", 0),
         "ars_conseil": result.get("ars_conseil", ""),
+        # REDD+ data
+        "biochar": answers.get("biochar", "non"),
+        "zero_deforestation": answers.get("zero_deforestation", "non"),
+        "reboisement": answers.get("reboisement", "non"),
+        "redd_score": result.get("redd_score", 0),
+        "redd_level": result.get("redd_level", ""),
+        "redd_practices": result.get("redd_practices", []),
         "updated_at": now,
     }
 
@@ -1152,6 +1216,7 @@ async def ussd_callback(request: USSDRequest):
                             f"Score: {result['score']}/10\n"
                             f"Prime: {format_xof(result['prime_annuelle'])}/an\n\n"
                             f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                            f"Niveau REDD+: {result.get('redd_level', 'N/A')} ({result.get('redd_score', 0)}/10)\n"
                             f"{result['ars_conseil']}\n\n"
                             f"1. Demander le versement\n"
                             f"2. Refaire l'estimation\n"
@@ -1216,6 +1281,7 @@ async def ussd_callback(request: USSDRequest):
                             f"Score: {result['score']}/10\n"
                             f"Prime: {format_xof(result['prime_annuelle'])}/an\n\n"
                             f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                            f"Niveau REDD+: {result.get('redd_level', 'N/A')} ({result.get('redd_score', 0)}/10)\n"
                             f"{result['ars_conseil']}\n\n"
                             f"1. Demander le versement\n"
                             f"2. Refaire l'estimation\n"
