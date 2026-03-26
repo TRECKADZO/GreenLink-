@@ -1,15 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from './ui/card';
-import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 import { TreePine, Leaf, Shield, Sprout, FileCheck, ChevronRight } from 'lucide-react';
 
 const reddHighlights = [
-  { icon: TreePine, title: 'Agroforesterie', desc: 'Systemes multi-strates, arbres d\'ombrage 30-50%', bonus: '+25 000 FCFA/ha', color: 'emerald' },
-  { icon: Shield, title: 'Zero-Deforestation', desc: 'Intensification durable, protection forets classees', bonus: '+12 000 FCFA/ha', color: 'blue' },
-  { icon: Sprout, title: 'Gestion Sols', desc: 'Compostage, biochar, couverture vegetale', bonus: '+10 000 FCFA/ha', color: 'amber' },
-  { icon: FileCheck, title: 'MRV & Tracabilite', desc: 'GPS parcelles, conformite EUDR, rapports PDF', bonus: 'Eligibilite REDD+', color: 'violet' },
+  { icon: TreePine, title: 'Agroforesterie', desc: 'Systemes multi-strates, arbres d\'ombrage 30-50%', color: 'emerald' },
+  { icon: Shield, title: 'Zero-Deforestation', desc: 'Intensification durable, protection forets classees', color: 'blue' },
+  { icon: Sprout, title: 'Gestion Sols', desc: 'Compostage, biochar, couverture vegetale', color: 'amber' },
+  { icon: FileCheck, title: 'MRV & Tracabilite', desc: 'GPS parcelles, conformite EUDR, rapports PDF', color: 'violet' },
 ];
 
 const colorMap = {
@@ -58,10 +58,7 @@ const REDDSection = () => {
                   <Icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-1">{item.title}</h3>
-                <p className="text-sm text-gray-600 mb-3">{item.desc}</p>
-                <Badge className="bg-white/80 text-gray-700 text-xs border border-gray-200">
-                  {item.bonus}
-                </Badge>
+                <p className="text-sm text-gray-600">{item.desc}</p>
               </Card>
             );
           })}
