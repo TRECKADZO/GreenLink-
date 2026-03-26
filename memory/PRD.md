@@ -4,7 +4,7 @@
 Plateforme agricole complète (React + FastAPI + Expo React Native + MongoDB) pour la Côte d'Ivoire. Gestion des primes carbone cacao, traçabilité EUDR, conformité ARS 1000, et suivi SSRTE/ICI via USSD.
 
 ## Architecture
-- **Backend**: FastAPI (Python) + MongoDB
+- **Backend**: FastAPI (Python) + MongoDB Atlas
 - **Frontend**: React (Vite) + Shadcn UI
 - **Mobile**: Expo React Native
 - **Proxy CDN**: Bunny CDN
@@ -19,6 +19,7 @@ Plateforme agricole complète (React + FastAPI + Expo React Native + MongoDB) po
 - Calculateur carbone USSD (backend + frontend + mobile offline)
 - Simulateur USSD complet avec moteur offline (`ussdOfflineEngine.js`)
 - Module SSRTE/ICI (travail des enfants) dans USSD
+- **Tableau de bord SSRTE/ICI alertes USSD** dans portail coopérative (nouveau)
 - Marketplace produits agricoles
 - Page FAQ
 - Dashboard agent terrain
@@ -32,17 +33,19 @@ Plateforme agricole complète (React + FastAPI + Expo React Native + MongoDB) po
 ## Phases Complétées (Résumé)
 - Phase 1-37: Construction complète de la plateforme
 - Phase 38: Moteur USSD offline mobile, simplification API, module SSRTE
-- Phase 39 (26/03/2026): Changement shortcode *144*88# → *144*99# (115 occurrences, tests 100% réussis)
-- Phase 40 (26/03/2026): Mise à jour version v1.68.0 → v1.69.0, préparation builds APK/AAB
+- Phase 39 (26/03/2026): Changement shortcode *144*88# → *144*99# (115 occurrences, tests 100%)
+- Phase 40 (26/03/2026): Mise à jour version v1.68.0 → v1.69.0
+- Phase 41 (26/03/2026): Tableau de bord SSRTE/ICI alertes USSD (route /cooperative/ssrte, 3 onglets, filtres, tests 100%)
 
 ## Backlog Priorisé
 
 ### P0 (Critique)
 - ~~Changement shortcode *144*88# → *144*99#~~ ✅ FAIT
+- ~~Tableau de bord SSRTE alertes ICI~~ ✅ FAIT
 
 ### P1 (Important)
-- Vérification connexion mobile v1.68.0 (en attente confirmation utilisateur)
-- Tableau de bord SSRTE alertes ICI dans portail coopérative web
+- Vérification connexion mobile v1.69.0 (en attente confirmation utilisateur)
+- Lancer builds APK et AAB v1.69.0
 
 ### P2 (Moyen)
 - Configurer passerelle SMS réelle Orange CI / MTN (remplacer mock)
