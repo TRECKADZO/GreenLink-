@@ -1029,12 +1029,9 @@ async def ussd_callback(request: USSDRequest):
                             "2. Estimation detaillee\n"
                             "0. Retour"
                         )
-                        # Skip redd_score_view state
-                        await save_session(session_id, session)
-                        return {"response": response_text, "continue": True}
                 else:
                     response_text = "Profil non reconnu.\n\n0. Retour"
-                session["state"] = "redd_score_view"
+                    session["state"] = "redd_score_view"
             elif choice == "3":
                 # Comment ameliorer son score REDD+
                 session["state"] = "redd_improve"
