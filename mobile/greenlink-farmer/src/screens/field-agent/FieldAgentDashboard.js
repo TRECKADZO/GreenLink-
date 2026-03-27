@@ -9,7 +9,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Loader } from '../../components/UI';
 import { MainLayout } from '../../components/navigation';
-import { COLORS, SPACING, API_URL } from '../../config';
+import { COLORS, SPACING } from '../../config';
+import { api } from '../../services/api';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -39,14 +40,9 @@ const FieldAgentDashboard = ({ navigation }) => {
         const cached = await getCachedData('field_agent_dashboard');
         if (cached) { setData(cached); setLoading(false); return; }
       }
-      const res = await fetch(`${API_URL}/api/field-agent/dashboard`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const result = await res.json();
-        setData(result);
-        await cacheData('field_agent_dashboard', result);
-      }
+      const res = await api.get('/field-agent/dashboard');
+      setData(res.data);
+      await cacheData('field_agent_dashboard', res.data);
     } catch (e) {
       const cached = await getCachedData('field_agent_dashboard');
       if (cached) setData(cached);
@@ -55,13 +51,8 @@ const FieldAgentDashboard = ({ navigation }) => {
 
   const fetchMyFarmers = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/field-agent/my-farmers`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const result = await res.json();
-        setMyFarmers(result.farmers || []);
-      }
+      const res = await api.get('/field-agent/my-farmers');
+      setMyFarmers(res.data.farmers || []);
     } catch (e) { console.error('Error fetching farmers:', e); }
   }, [token]);
 
@@ -83,11 +74,8 @@ const FieldAgentDashboard = ({ navigation }) => {
     setSearching(true);
     setSearchResult(null);
     try {
-      const res = await fetch(`${API_URL}/api/agent/search?phone=${encodeURIComponent(phone.trim())}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const d = await res.json();
-      if (d.found) { setSearchResult(d.farmer); }
+      const res = await api.get(`/agent/search`, { params: { phone: phone.trim() } });
+      if (res.data.found) { setSearchResult(res.data.farmer); }
       else { Alert.alert('Non trouve', 'Aucun planteur avec ce numero'); }
     } catch { Alert.alert('Erreur', 'Erreur reseau'); }
     setSearching(false);

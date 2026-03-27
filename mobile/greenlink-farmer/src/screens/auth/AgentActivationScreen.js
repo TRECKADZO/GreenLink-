@@ -13,7 +13,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/UI';
-import { COLORS, FONTS, SPACING, API_URL } from '../../config';
+import { COLORS, FONTS, SPACING } from '../../config';
+import { api } from '../../services/api';
 
 const AgentActivationScreen = ({ navigation }) => {
   const { login } = useAuth();
@@ -38,8 +39,8 @@ const AgentActivationScreen = ({ navigation }) => {
         formattedPhone = '+225' + formattedPhone;
       }
 
-      const response = await fetch(`${API_URL}/api/auth/check-agent-phone/${encodeURIComponent(formattedPhone)}`);
-      const data = await response.json();
+      const response = await api.get(`/auth/check-agent-phone/${encodeURIComponent(formattedPhone)}`);
+      const data = response.data;
 
       if (data.can_activate) {
         setAgentInfo(data);
@@ -82,18 +83,13 @@ const AgentActivationScreen = ({ navigation }) => {
         formattedPhone = '+225' + formattedPhone;
       }
 
-      const response = await fetch(`${API_URL}/api/auth/activate-agent-account`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone_number: formattedPhone,
-          password: password,
-        }),
+      const response = await api.post('/auth/activate-agent-account', {
+        phone_number: formattedPhone,
+        password: password,
       });
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.access_token) {
         // Auto-login et redirection vers le dashboard
         await login(data.access_token, data.user);
         Alert.alert(
@@ -113,7 +109,8 @@ const AgentActivationScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error activating account:', error);
-      Alert.alert('Erreur', 'Impossible d\'activer le compte. Réessayez.');
+      const msg = error.data?.detail || 'Impossible d\'activer le compte. Réessayez.';
+      Alert.alert('Erreur', msg);
     } finally {
       setLoading(false);
     }

@@ -8,7 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { useAuth } from '../../context/AuthContext';
-import { COLORS, SPACING, API_URL } from '../../config';
+import { COLORS, SPACING } from '../../config';
+import { api } from '../../services/api';
 
 const EMPTY_CHILD = { prenom: '', sexe: 'Garcon', age: 0, scolarise: false, travaille_exploitation: false };
 
@@ -67,13 +68,8 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
       // Try online
       const netInfo = await NetInfo.fetch();
       if (netInfo.isConnected && token) {
-        const resp = await fetch(`${API_URL}/api/field-agent/my-farmers`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          setMyFarmers(data.farmers || []);
-        }
+        const resp = await api.get('/field-agent/my-farmers');
+        setMyFarmers(resp.data.farmers || []);
       } else {
         // Load from cache
         const cached = await AsyncStorage.getItem('assignedFarmers');
@@ -101,12 +97,9 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
       // Try online first
       const netInfo = await NetInfo.fetch();
       if (netInfo.isConnected && token) {
-        const resp = await fetch(`${API_URL}/api/ici-data/farmers/${farmerId}/ici-profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data && !data.message) {
+        const resp = await api.get(`/ici-data/farmers/${farmerId}/ici-profile`);
+        const data = resp.data;
+        if (data && !data.message) {
             setForm(prev => ({
               ...prev,
               taille_menage: data.taille_menage || prev.taille_menage,
@@ -121,7 +114,6 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
             }));
             // Cache for offline
             await AsyncStorage.setItem(`ici_profile_${farmerId}`, JSON.stringify(data));
-          }
         }
       } else {
         // Load from cache
@@ -191,21 +183,12 @@ const FarmerICIFormScreen = ({ navigation, route }) => {
       };
       const netInfo = await NetInfo.fetch();
       if (netInfo.isConnected && token) {
-        const resp = await fetch(`${API_URL}/api/ici-data/farmers/${farmerId}/ici-profile`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(cleanForm),
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          await AsyncStorage.setItem(`ici_profile_${farmerId}`, JSON.stringify(cleanForm));
-          Alert.alert('Succes', `Fiche ICI sauvegardee. Risque: ${data.niveau_risque || 'N/A'}`,
-            [{ text: 'OK', onPress: () => navigation.goBack() }]
-          );
-        } else {
-          const err = await resp.json();
-          Alert.alert('Erreur', err.detail || 'Erreur serveur');
-        }
+        const resp = await api.post(`/ici-data/farmers/${farmerId}/ici-profile`, cleanForm);
+        const data = resp.data;
+        await AsyncStorage.setItem(`ici_profile_${farmerId}`, JSON.stringify(cleanForm));
+        Alert.alert('Succes', `Fiche ICI sauvegardee. Risque: ${data.niveau_risque || 'N/A'}`,
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
       } else {
         // Save offline
         await AsyncStorage.setItem(`ici_profile_${farmerId}`, JSON.stringify(cleanForm));
@@ -540,5 +523,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: '600', color: '#64748b', marginTop: 12 },
   emptySubtitle: { fontSize: 13, color: '#94a3b8', marginTop: 4, textAlign: 'center' },
 });
+
+export default FarmerICIFormScreen;
 
 export default FarmerICIFormScreen;

@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { API_URL } from '../../config';
+import { api } from '../../services/api';
 
 let Location = null;
 try { Location = require('expo-location'); } catch (e) {}
@@ -152,24 +152,13 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
         body.corrected_area_hectares = parseFloat(correctedArea);
       }
 
-      const res = await fetch(`${API_URL}/api/field-agent/parcels/${parcel.id}/verify`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(body),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        Alert.alert('Verification enregistree', data.message, [
-          { text: 'OK', onPress: () => {
-            if (onVerified) onVerified();
-            navigation.goBack();
-          }}
-        ]);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        Alert.alert('Erreur', err.detail || 'Impossible de sauvegarder');
-      }
+      const res = await api.put(`/field-agent/parcels/${parcel.id}/verify`, body);
+      Alert.alert('Verification enregistree', res.data.message, [
+        { text: 'OK', onPress: () => {
+          if (onVerified) onVerified();
+          navigation.goBack();
+        }}
+      ]);
     } catch (e) {
       Alert.alert('Erreur', 'Erreur reseau');
     } finally {

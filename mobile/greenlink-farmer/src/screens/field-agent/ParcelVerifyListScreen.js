@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { API_URL } from '../../config';
+import { api } from '../../services/api';
 
 const STATUS_TABS = [
   { id: 'pending', label: 'A verifier', color: '#f59e0b' },
@@ -33,15 +33,9 @@ const ParcelVerifyListScreen = ({ navigation }) => {
   const fetchParcels = useCallback(async () => {
     try {
       const statusParam = activeTab === 'all' ? 'all' : activeTab;
-      const res = await fetch(
-        `${API_URL}/api/field-agent/parcels-to-verify?status_filter=${statusParam}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setParcels(data.parcels || []);
-        setStats(data.stats || {});
-      }
+      const res = await api.get('/field-agent/parcels-to-verify', { params: { status_filter: statusParam } });
+      setParcels(res.data.parcels || []);
+      setStats(res.data.stats || {});
     } catch (e) {
       console.warn('Fetch parcels error:', e);
     } finally {

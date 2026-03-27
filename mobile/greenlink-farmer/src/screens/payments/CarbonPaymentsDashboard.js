@@ -13,7 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Button, Loader, EmptyState } from '../../components/UI';
-import { COLORS, FONTS, SPACING, API_URL } from '../../config';
+import { COLORS, FONTS, SPACING } from '../../config';
+import { api } from '../../services/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -36,15 +37,9 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
         }
       }
 
-      const response = await fetch(`${API_URL}/api/carbon-payments/dashboard`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-        await cacheData('carbon_payments_dashboard', result);
-      }
+      const response = await api.get('/carbon-payments/dashboard');
+      setData(response.data);
+      await cacheData('carbon_payments_dashboard', response.data);
     } catch (error) {
       console.error('Error fetching carbon dashboard:', error);
       const cached = await getCachedData('carbon_payments_dashboard');
@@ -75,29 +70,13 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
           onPress: async () => {
             setRequestingPayment(true);
             try {
-              const response = await fetch(`${API_URL}/api/carbon-payments/request-payment`, {
-                method: 'POST',
-                headers: { 
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                }
-              });
-              
-              if (response.ok) {
-                const result = await response.json();
-                Alert.alert('Succès', result.message || 'Votre demande a été envoyée');
-                fetchDashboard();
-              } else {
-                let errMsg = 'Impossible de créer la demande';
-                try {
-                  const errData = await response.json();
-                  errMsg = errData.detail || errData.message || errMsg;
-                } catch (e) {}
-                Alert.alert('Erreur', errMsg);
-              }
+              const response = await api.post('/carbon-payments/request-payment');
+              Alert.alert('Succès', response.data.message || 'Votre demande a été envoyée');
+              fetchDashboard();
             } catch (error) {
               console.error('Payment request error:', error);
-              Alert.alert('Erreur', 'Erreur de connexion. Vérifiez votre accès internet.');
+              const errMsg = error.data?.detail || error.data?.message || 'Erreur de connexion. Vérifiez votre accès internet.';
+              Alert.alert('Erreur', errMsg);
             } finally {
               setRequestingPayment(false);
             }

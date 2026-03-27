@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIn
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { API_URL } from '../../config';
+import { api } from '../../services/api';
 
 const FORMS = [
   { id: 'ici', label: 'Fiche ICI', desc: 'Evaluation initiale: famille, enfants, education, pratiques', icon: 'document-text', color: '#8b5cf6', bg: '#8b5cf620', screen: 'FarmerICIForm' },
@@ -38,36 +38,24 @@ const FarmerProfileScreen = ({ navigation, route }) => {
 
   const loadHistory = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/ici-data/farmers/${farmer?.id}/history`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) setHistory(await res.json());
+      const res = await api.get(`/ici-data/farmers/${farmer?.id}/history`);
+      setHistory(res.data);
     } catch {}
   };
 
   const loadReddHistory = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/redd/tracking/visits?farmer_id=${farmer?.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setReddVisits(data.visits || []);
-      }
+      const res = await api.get(`/redd/tracking/visits`, { params: { farmer_id: farmer?.id } });
+      setReddVisits(res.data.visits || []);
     } catch {}
   };
 
   const refreshFarmerData = async () => {
     try {
       setRefreshing(true);
-      const res = await fetch(`${API_URL}/api/field-agent/my-farmers`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const updated = (data.farmers || []).find(f => f.id === farmer.id);
-        if (updated) setFarmerData(updated);
-      }
+      const res = await api.get('/field-agent/my-farmers');
+      const updated = (res.data.farmers || []).find(f => f.id === farmer.id);
+      if (updated) setFarmerData(updated);
     } catch (e) {
       console.error('Refresh error:', e);
     } finally {

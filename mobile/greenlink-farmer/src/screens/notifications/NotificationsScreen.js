@@ -12,7 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Loader, EmptyState } from '../../components/UI';
-import { COLORS, FONTS, SPACING, API_URL } from '../../config';
+import { COLORS, FONTS, SPACING } from '../../config';
+import { api } from '../../services/api';
 
 const NotificationsScreen = ({ navigation }) => {
   const { token } = useAuth();
@@ -33,15 +34,9 @@ const NotificationsScreen = ({ navigation }) => {
         }
       }
 
-      const response = await fetch(`${API_URL}/api/notifications/history?limit=100`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-        await cacheData('notifications', data.notifications || []);
-      }
+      const response = await api.get('/notifications/history', { params: { limit: 100 } });
+      setNotifications(response.data.notifications || []);
+      await cacheData('notifications', response.data.notifications || []);
     } catch (error) {
       console.error('Error loading notifications:', error);
       const cached = await getCachedData('notifications');
@@ -63,10 +58,7 @@ const NotificationsScreen = ({ navigation }) => {
 
   const markAsRead = async (id) => {
     try {
-      await fetch(`${API_URL}/api/notifications/history/${id}/read`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      await api.put(`/notifications/history/${id}/read`);
       setNotifications(notifications.map(n => 
         n._id === id ? { ...n, read: true } : n
       ));
@@ -77,10 +69,7 @@ const NotificationsScreen = ({ navigation }) => {
 
   const markAllAsRead = async () => {
     try {
-      await fetch(`${API_URL}/api/notifications/history/read-all`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      await api.put('/notifications/history/read-all');
       setNotifications(notifications.map(n => ({ ...n, read: true })));
       Alert.alert('Succès', 'Toutes les notifications ont été marquées comme lues');
     } catch (error) {

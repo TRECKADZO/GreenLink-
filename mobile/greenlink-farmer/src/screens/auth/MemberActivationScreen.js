@@ -13,7 +13,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/UI';
-import { COLORS, FONTS, SPACING, API_URL } from '../../config';
+import { COLORS, FONTS, SPACING } from '../../config';
+import { api } from '../../services/api';
 
 const MemberActivationScreen = ({ navigation }) => {
   const { login } = useAuth();
@@ -40,8 +41,8 @@ const MemberActivationScreen = ({ navigation }) => {
         formattedPhone = '+225' + formattedPhone;
       }
 
-      const response = await fetch(`${API_URL}/api/auth/check-member-phone/${encodeURIComponent(formattedPhone)}`);
-      const data = await response.json();
+      const response = await api.get(`/auth/check-member-phone/${encodeURIComponent(formattedPhone)}`);
+      const data = response.data;
 
       if (data.can_activate) {
         setMemberInfo(data);
@@ -85,37 +86,29 @@ const MemberActivationScreen = ({ navigation }) => {
         formattedPhone = '+225' + formattedPhone;
       }
 
-      const response = await fetch(`${API_URL}/api/auth/activate-member-account`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone_number: formattedPhone,
-          password: password,
-        }),
+      const response = await api.post('/auth/activate-member-account', {
+        phone_number: formattedPhone,
+        password: password,
       });
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert(
-          'Succès!',
-          data.message,
-          [
-            {
-              text: 'Continuer',
-              onPress: () => {
-                // Connexion automatique
-                login(data.access_token, data.user);
-              },
+      Alert.alert(
+        'Succès!',
+        data.message,
+        [
+          {
+            text: 'Continuer',
+            onPress: () => {
+              // Connexion automatique
+              login(data.access_token, data.user);
+            },
             },
           ]
         );
-      } else {
-        Alert.alert('Erreur', data.detail || 'Activation échouée');
-      }
     } catch (error) {
       console.error('Error activating account:', error);
-      Alert.alert('Erreur', 'Impossible d\'activer le compte. Réessayez.');
+      const msg = error.data?.detail || 'Impossible d\'activer le compte. Réessayez.';
+      Alert.alert('Erreur', msg);
     } finally {
       setLoading(false);
     }

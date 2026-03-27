@@ -20,7 +20,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
-import { COLORS, FONTS, SPACING, API_URL } from '../../config';
+import { COLORS, FONTS, SPACING } from '../../config';
+import { api } from '../../services/api';
 
 const FarmerSearchScreen = ({ navigation }) => {
   const { token, user } = useAuth();
@@ -58,20 +59,14 @@ const FarmerSearchScreen = ({ navigation }) => {
     }
     setSyncing(true);
     try {
-      const res = await fetch(`${API_URL}/api/agent/sync/download`, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 30000,
+      const res = await api.get('/agent/sync/download');
+      await cacheData('zone_farmers', {
+        farmers: res.data.farmers,
+        sync_time: res.data.sync_timestamp,
       });
-      if (res.ok) {
-        const data = await res.json();
-        await cacheData('zone_farmers', {
-          farmers: data.farmers,
-          sync_time: data.sync_timestamp,
-        });
-        setCachedFarmers(data.farmers || []);
-        setLastSync(data.sync_timestamp);
-        Alert.alert('Synchronisation', `${data.farmers_count} planteurs téléchargés`);
-      }
+      setCachedFarmers(res.data.farmers || []);
+      setLastSync(res.data.sync_timestamp);
+      Alert.alert('Synchronisation', `${res.data.farmers_count} planteurs téléchargés`);
     } catch (e) {
       Alert.alert('Erreur', 'Impossible de synchroniser. Réessayez.');
     } finally {
@@ -112,18 +107,9 @@ const FarmerSearchScreen = ({ navigation }) => {
     if (isOnline) {
       // Recherche en ligne
       try {
-        const res = await fetch(
-          `${API_URL}/api/agent/search?phone=${encodeURIComponent(phone.trim())}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (res.status === 403) {
-          Alert.alert('Accès refusé', 'Seuls les agents terrain autorisés peuvent effectuer cette recherche.');
-          setSearching(false);
-          return;
-        }
-        const data = await res.json();
-        if (data.found) {
-          setFarmer(data.farmer);
+        const res = await api.get('/agent/search', { params: { phone: phone.trim() } });
+        if (res.data.found) {
+          setFarmer(res.data.farmer);
         } else {
           // Fallback: cache local
           const local = searchLocally(phone.trim());
@@ -134,6 +120,11 @@ const FarmerSearchScreen = ({ navigation }) => {
           }
         }
       } catch (e) {
+        if (e.status === 403) {
+          Alert.alert('Accès refusé', 'Seuls les agents terrain autorisés peuvent effectuer cette recherche.');
+          setSearching(false);
+          return;
+        }
         // Réseau échoué → cache local
         const local = searchLocally(phone.trim());
         if (local.length > 0) {

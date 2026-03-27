@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { API_URL } from '../../config';
+import { api } from '../../services/api';
 
 let Location = null;
 try { Location = require('expo-location'); } catch (e) {}
@@ -55,13 +55,8 @@ const ParcelVerificationScreen = ({ navigation, route }) => {
   const loadParcels = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/api/field-agent/farmer-parcels/${farmerId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setParcels(data.parcels || data || []);
-      }
+      const res = await api.get(`/field-agent/farmer-parcels/${farmerId}`);
+      setParcels(res.data.parcels || res.data || []);
     } catch (e) {
       console.warn('Load parcels error:', e);
     } finally {
@@ -89,20 +84,10 @@ const ParcelVerificationScreen = ({ navigation, route }) => {
         gps_coordinates: location || null,
       };
 
-      const res = await fetch(`${API_URL}/api/field-agent/farmer-parcels/${farmerId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(parcelData),
-      });
-
-      if (res.ok) {
-        Alert.alert('Parcelle declaree', 'La parcelle a ete enregistree avec succes.', [
-          { text: 'OK', onPress: () => { setShowForm(false); resetForm(); loadParcels(); } }
-        ]);
-      } else {
-        const d = await res.json().catch(() => ({}));
-        Alert.alert('Erreur', d.detail || 'Impossible de sauvegarder la parcelle');
-      }
+      const res = await api.post(`/field-agent/farmer-parcels/${farmerId}`, parcelData);
+      Alert.alert('Parcelle declaree', 'La parcelle a ete enregistree avec succes.', [
+        { text: 'OK', onPress: () => { setShowForm(false); resetForm(); loadParcels(); } }
+      ]);
     } catch {
       Alert.alert('Erreur', 'Erreur reseau');
     } finally {

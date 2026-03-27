@@ -6,7 +6,7 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 ## Architecture
 - **Backend**: FastAPI (Python) + MongoDB Atlas (`greenlink_production`)
 - **Frontend**: React (Vite) + Shadcn UI
-- **Mobile**: Expo React Native v1.73.0
+- **Mobile**: Expo React Native v1.73.1
 - **Proxy CDN**: Bunny CDN (frontend uniquement, NE proxy PAS les routes /api)
 
 ## Shortcode USSD: `*144*99#` (14 questions)
