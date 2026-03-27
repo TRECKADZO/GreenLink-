@@ -6,7 +6,7 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 ## Architecture
 - **Backend**: FastAPI (Python) + MongoDB Atlas (`greenlink_production`)
 - **Frontend**: React (Vite) + Shadcn UI
-- **Mobile**: Expo React Native v1.71.0
+- **Mobile**: Expo React Native v1.72.2
 - **Proxy CDN**: Bunny CDN (frontend uniquement, NE proxy PAS les routes /api)
 
 ## Shortcode USSD: `*144*99#` (14 questions)
@@ -45,6 +45,12 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - Score REDD+ -> REDDGuide (etait USSDCarbon)
 - Pratiques REDD+ -> REDDGuide (etait USSDFullSimulator)
 - Fiche REDD+ accessible depuis FieldAgentDashboard
+
+### Bug Fix Mobile v1.72.2 (27 Mars 2026)
+- **Cause racine**: Ligne corrompue `creen;` (fragment de `HomeScreen;`) à la fin de `HomeScreen.js` (ligne 488)
+- **Effet**: Erreur de syntaxe JS → Metro bundler échoue → `safeRequire` attrape l'erreur → "Écran indisponible - HomeScreen n'a pas pu être chargé"
+- **Fix**: Suppression de la ligne corrompue
+- **Build**: EAS v1.72.2 soumis
 
 ## Backlog
 

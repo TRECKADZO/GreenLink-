@@ -182,7 +182,7 @@ if CORS_ORIGINS:
     allowed_origins = [o.strip() for o in CORS_ORIGINS.split(',') if o.strip()]
 else:
     allowed_origins = [
-        "https://redd-mrvdash.preview.emergentagent.com",
+        "https://redd-crash-hotfix.preview.emergentagent.com",
         "http://localhost:3000",
     ]
 
