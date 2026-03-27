@@ -22,7 +22,7 @@ export const CONFIG = {
 };
 
 // Named export for backward compatibility with screens importing { API_URL }
-export const API_URL = CONFIG.API_URL;
+export const API_URL = CONFIG.DIRECT_API_URL;
 
 
 export const COLORS = {

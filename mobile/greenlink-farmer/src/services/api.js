@@ -26,33 +26,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Intercepteur reponse — retry simple + fallback URL directe
+// Intercepteur reponse — retry sur URL directe (le CDN ne proxy pas /api)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const config = error.config;
     if (!config) return Promise.reject(error);
 
-    // Ne pas retry si c'est une erreur metier (401, 403, 422, etc.)
-    // Mais permettre le fallback pour 404 (CDN ne proxy pas /api)
     const status = error.response?.status;
-    if (status && status < 500 && status !== 0 && status !== 404) {
+    if (status && status < 500 && status !== 0) {
       return Promise.reject(error);
     }
 
-    // Retry 1 fois sur la meme URL
+    // Retry 1 fois sur la meme URL directe
     if (!config._retried) {
       config._retried = true;
       await new Promise(r => setTimeout(r, 2000));
-      return api(config);
-    }
-
-    // Si on etait sur le CDN, essayer l'URL directe
-    if (!config._triedFallback && config.baseURL === PRIMARY_URL) {
-      console.log('[API] CDN failed, trying direct URL');
-      config._triedFallback = true;
-      config._retried = false;
-      config.baseURL = FALLBACK_URL;
       return api(config);
     }
 
@@ -69,33 +58,33 @@ const apiService = {
   put: (url, data, cfg) => api.put(url, data, cfg),
   delete: (url, cfg) => api.delete(url, cfg),
 
-  // Login special — essaie URL directe puis CDN
+  // Login — essaie l'URL directe avec retries (le CDN ne proxy pas /api)
   login: async (identifier, password) => {
     const payload = { identifier, password };
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+    const MAX_RETRIES = 3;
+    const TIMEOUTS = [15000, 30000, 45000];
+    let lastError = null;
 
-    // Essai 1: URL directe (prioritaire)
-    try {
-      console.log('[API] Login via direct:', PRIMARY_URL);
-      const res = await axios.post(PRIMARY_URL + '/auth/login', payload, {
-        timeout: 30000, headers,
-      });
-      return res;
-    } catch (e1) {
-      console.warn('[API] Direct login failed:', e1.message);
+    for (let i = 0; i < MAX_RETRIES; i++) {
+      try {
+        console.log(`[API] Login attempt ${i + 1}/${MAX_RETRIES} via:`, PRIMARY_URL);
+        const res = await axios.post(PRIMARY_URL + '/auth/login', payload, {
+          timeout: TIMEOUTS[i], headers,
+        });
+        return res;
+      } catch (err) {
+        console.warn(`[API] Login attempt ${i + 1} failed:`, err.message);
+        lastError = err;
+        if (err.response && err.response.status < 500 && err.response.status !== 0) {
+          throw err;
+        }
+        if (i < MAX_RETRIES - 1) {
+          await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+        }
+      }
     }
-
-    // Essai 2: CDN Bunny (fallback)
-    try {
-      console.log('[API] Login via CDN:', FALLBACK_URL);
-      const res = await axios.post(FALLBACK_URL + '/auth/login', payload, {
-        timeout: 30000, headers,
-      });
-      return res;
-    } catch (e2) {
-      console.warn('[API] CDN login failed:', e2.message);
-      throw e2;
-    }
+    throw lastError;
   },
 };
 
