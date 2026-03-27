@@ -16,7 +16,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { cooperativeApi } from '../../services/cooperativeApi';
-import { farmerApi } from '../../services/api';
+import { api } from '../../services/api';
 
 const OFFLINE_REDD_VISITS_KEY = 'offline_redd_visits';
 
@@ -210,7 +210,7 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
     try {
       const netInfo = await NetInfo.fetch();
       if (netInfo.isConnected) {
-        await farmerApi.post('/redd/tracking/visit', visitData);
+        await api.post('/redd/tracking/visit', visitData);
         Alert.alert(
           'Succes',
           'La fiche de suivi REDD+ a ete enregistree.',

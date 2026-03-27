@@ -157,7 +157,7 @@ const HomeScreen = ({ navigation }) => {
         {/* Score REDD+ */}
         <TouchableOpacity 
           style={styles.reddScore}
-          onPress={() => navigation.navigate('USSDCarbon')}
+          onPress={() => navigation.navigate('REDDGuide')}
           activeOpacity={0.85}
         >
           <View style={styles.reddScoreRow}>
@@ -284,7 +284,7 @@ const HomeScreen = ({ navigation }) => {
           title="*144*99# Prime Carbone"
           subtitle="Calculez votre prime en 60s"
           icon="📞"
-          onPress={() => navigation.navigate('USSDCarbon')}
+          onPress={() => navigation.navigate('REDDGuide')}
           highlight={true}
         />
         
