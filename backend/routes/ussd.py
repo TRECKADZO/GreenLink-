@@ -554,6 +554,7 @@ async def ussd_callback(request: USSDRequest):
                         f"5. Mes parcelles\n"
                         f"6. SSRTE - Travail des enfants\n"
                         f"7. Mon profil\n"
+                        f"8. REDD+ Pratiques durables\n"
                         f"0. Quitter"
                     )
                 else:
@@ -645,6 +646,7 @@ async def ussd_callback(request: USSDRequest):
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -916,6 +918,41 @@ async def ussd_callback(request: USSDRequest):
                     f"0. Retour"
                 )
                 session["state"] = "profile_view"
+
+            elif choice == "8":
+                # REDD+ Pratiques durables
+                farmer_id = data.get("farmer_id", "")
+                session["state"] = "redd_menu"
+                
+                # Check REDD+ data
+                redd_data = None
+                if farmer_id:
+                    ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id})
+                    if ars_data and ars_data.get("score_redd"):
+                        redd_data = ars_data
+                
+                if redd_data:
+                    redd_score = redd_data.get("score_redd", 0)
+                    redd_level = redd_data.get("redd_level", "Non evalue")
+                    response_text = (
+                        f"REDD+ PRATIQUES DURABLES\n\n"
+                        f"Votre score REDD+: {redd_score}/10\n"
+                        f"Niveau: {redd_level}\n\n"
+                        f"1. Guide des pratiques\n"
+                        f"2. Mon score detaille\n"
+                        f"3. Comment ameliorer\n"
+                        f"0. Retour menu principal"
+                    )
+                else:
+                    response_text = (
+                        f"REDD+ PRATIQUES DURABLES\n\n"
+                        f"Aucune evaluation REDD+.\n"
+                        f"Faites une estimation (choix 1)\n"
+                        f"pour obtenir votre score.\n\n"
+                        f"1. Guide des pratiques\n"
+                        f"2. Faire une estimation\n"
+                        f"0. Retour menu principal"
+                    )
                 
             elif choice == "0":
                 response_text = "Merci d'avoir utilise GreenLink.\nA bientot !"
@@ -933,11 +970,192 @@ async def ussd_callback(request: USSDRequest):
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
                     f"0. Quitter"
                 )
 
 
         # ==============================
+
+        # ==============================
+        # STATE: REDD+ Menu
+        # ==============================
+        elif state == "redd_menu":
+            choice = inputs[-1] if inputs else ""
+            if choice == "1":
+                # Guide des pratiques REDD+
+                session["state"] = "redd_guide"
+                response_text = (
+                    "GUIDE REDD+ (5 categories)\n\n"
+                    "1. Agroforesterie\n"
+                    "   Arbres + cultures\n"
+                    "2. Zero-deforestation\n"
+                    "   Protection des forets\n"
+                    "3. Gestion sols\n"
+                    "   Compost, biochar, couverture\n"
+                    "4. Restauration\n"
+                    "   Reboisement, bois-energie\n"
+                    "5. Tracabilite\n"
+                    "   GPS, ARS 1000, MRV\n\n"
+                    "0. Retour"
+                )
+            elif choice == "2":
+                farmer_id = data.get("farmer_id", "")
+                if farmer_id:
+                    ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id})
+                    if ars_data and ars_data.get("score_redd"):
+                        practices = []
+                        if ars_data.get("agroforesterie"): practices.append("Agroforesterie")
+                        if ars_data.get("compost"): practices.append("Compost")
+                        if ars_data.get("biochar"): practices.append("Biochar")
+                        if ars_data.get("zero_deforestation"): practices.append("Zero-deforestation")
+                        if ars_data.get("reboisement"): practices.append("Reboisement")
+                        if ars_data.get("couverture_sol"): practices.append("Couverture sol")
+                        plist = "\n".join(f"  - {p}" for p in practices) if practices else "  Aucune pratique validee"
+                        response_text = (
+                            f"MON SCORE REDD+ DETAILLE\n\n"
+                            f"Score: {ars_data.get('score_redd', 0)}/10\n"
+                            f"Niveau: {ars_data.get('redd_level', 'N/A')}\n\n"
+                            f"Pratiques validees:\n{plist}\n\n"
+                            f"0. Retour"
+                        )
+                    else:
+                        # Redirect to estimation
+                        session["state"] = "estimation_type"
+                        response_text = (
+                            "Aucune donnee REDD+.\n"
+                            "Faites une estimation:\n\n"
+                            "1. Estimation simple\n"
+                            "2. Estimation detaillee\n"
+                            "0. Retour"
+                        )
+                        # Skip redd_score_view state
+                        await save_session(session_id, session)
+                        return {"response": response_text, "continue": True}
+                else:
+                    response_text = "Profil non reconnu.\n\n0. Retour"
+                session["state"] = "redd_score_view"
+            elif choice == "3":
+                # Comment ameliorer son score REDD+
+                session["state"] = "redd_improve"
+                response_text = (
+                    "AMELIORER VOTRE SCORE REDD+\n\n"
+                    "Actions a fort impact:\n"
+                    "1. Planter des arbres d'ombrage\n"
+                    "   (+1.5 pts)\n"
+                    "2. Arreter le brulage\n"
+                    "   (+1.0 pt)\n"
+                    "3. Faire du compost\n"
+                    "   (+1.0 pt)\n"
+                    "4. S'engager zero deforestation\n"
+                    "   (+0.3 pt REDD+)\n"
+                    "5. Reboiser les zones degradees\n"
+                    "   (+0.4 pt REDD+)\n\n"
+                    "0. Retour"
+                )
+            elif choice == "0":
+                session["state"] = "main_menu"
+                name = data.get("farmer_name", "Planteur")
+                coop = data.get("coop_name", "")
+                coop_label = f" ({coop})" if coop else ""
+                response_text = (
+                    f"GreenLink Agritech - ARS 1000\n"
+                    f"Bonjour {name}{coop_label}\n\n"
+                    f"1. Prime carbone + conformite ARS\n"
+                    f"2. Mes donnees ARS 1000\n"
+                    f"3. Conseils pratiques ARS\n"
+                    f"4. Demander paiement prime\n"
+                    f"5. Mes parcelles\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
+                    f"0. Quitter"
+                )
+            else:
+                response_text = "Option invalide.\n\n1. Guide\n2. Score\n3. Ameliorer\n0. Retour"
+
+        # REDD+ sub-states (guide, score, improve -> back to redd_menu)
+        elif state in ("redd_guide", "redd_score_view", "redd_improve"):
+            choice = inputs[-1] if inputs else ""
+            if choice == "0":
+                session["state"] = "redd_menu"
+                farmer_id = data.get("farmer_id", "")
+                redd_data = None
+                if farmer_id:
+                    ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id})
+                    if ars_data and ars_data.get("score_redd"):
+                        redd_data = ars_data
+                if redd_data:
+                    response_text = (
+                        f"REDD+ PRATIQUES DURABLES\n\n"
+                        f"Score: {redd_data.get('score_redd', 0)}/10\n"
+                        f"Niveau: {redd_data.get('redd_level', 'N/A')}\n\n"
+                        f"1. Guide des pratiques\n"
+                        f"2. Mon score detaille\n"
+                        f"3. Comment ameliorer\n"
+                        f"0. Retour menu principal"
+                    )
+                else:
+                    response_text = (
+                        f"REDD+ PRATIQUES DURABLES\n\n"
+                        f"1. Guide des pratiques\n"
+                        f"2. Faire une estimation\n"
+                        f"0. Retour menu principal"
+                    )
+            elif state == "redd_guide" and choice in ("1", "2", "3", "4", "5"):
+                guides = {
+                    "1": (
+                        "AGROFORESTERIE\n\n"
+                        "Associer arbres + cacaoyers:\n"
+                        "- 30-50% couverture d'ombre\n"
+                        "- Plusieurs niveaux de vegetation\n"
+                        "- Enrichir avec arbres fruitiers\n\n"
+                        "Impact: +1.5 pts au score\n\n"
+                        "0. Retour guide"
+                    ),
+                    "2": (
+                        "ZERO-DEFORESTATION\n\n"
+                        "Ne pas defricher de foret:\n"
+                        "- Intensifier sur la meme surface\n"
+                        "- Restaurer les parcelles degradees\n"
+                        "- Proteger les forets classees\n\n"
+                        "Impact: +0.3 pt REDD+\n\n"
+                        "0. Retour guide"
+                    ),
+                    "3": (
+                        "GESTION DES SOLS\n\n"
+                        "- Compost organique (+1.0 pt)\n"
+                        "- Biochar au sol (+0.3 pt)\n"
+                        "- Couverture vegetale (+0.5 pt)\n"
+                        "- Pas de brulage (+0.5 pt)\n"
+                        "- Pas d'engrais chimique (+0.5 pt)\n\n"
+                        "0. Retour guide"
+                    ),
+                    "4": (
+                        "RESTAURATION\n\n"
+                        "- Reboiser les zones degradees\n"
+                        "  (+0.4 pt REDD+)\n"
+                        "- Plantations bois-energie\n"
+                        "- Proteger les bords de riviere\n"
+                        "- Valoriser les residus agricoles\n\n"
+                        "0. Retour guide"
+                    ),
+                    "5": (
+                        "TRACABILITE\n\n"
+                        "- Cartographier vos parcelles (GPS)\n"
+                        "- Obtenir la certification ARS 1000\n"
+                        "- Participer au suivi MRV\n"
+                        "- Respecter les normes sociales\n\n"
+                        "0. Retour guide"
+                    ),
+                }
+                response_text = guides.get(choice, "Option invalide.\n\n0. Retour")
+                session["state"] = "redd_guide"
+            else:
+                response_text = "Option invalide.\n\n0. Retour"
+                session["state"] = "redd_menu"
+
+
         # STATE: SSRTE - Travail des enfants (ICI)
         # ==============================
         elif state == "ssrte_q1":
@@ -997,6 +1215,7 @@ async def ussd_callback(request: USSDRequest):
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1104,6 +1323,7 @@ async def ussd_callback(request: USSDRequest):
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1350,6 +1570,7 @@ async def ussd_callback(request: USSDRequest):
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1469,6 +1690,7 @@ async def ussd_callback(request: USSDRequest):
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1667,6 +1889,7 @@ async def ussd_callback(request: USSDRequest):
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
                     f"0. Quitter"
                 )
 
@@ -1765,6 +1988,7 @@ async def ussd_callback(request: USSDRequest):
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1802,6 +2026,7 @@ async def ussd_callback(request: USSDRequest):
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
+                    f"8. REDD+ Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
