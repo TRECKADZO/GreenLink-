@@ -251,7 +251,7 @@ const HomeScreen = ({ navigation }) => {
           title="Pratiques REDD+"
           subtitle="Guide des 21 pratiques eligibles"
           icon="🌿"
-          onPress={() => navigation.navigate('USSDFullSimulator')}
+          onPress={() => navigation.navigate('REDDGuide')}
           highlight={true}
         />
         
@@ -485,3 +485,4 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+creen;

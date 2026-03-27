@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ussd-shortcode-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://redd-mrvdash.preview.emergentagent.com')
 
 # Test credentials
 SUPPLIER_EMAIL = "testfournisseur@test.com"

@@ -123,6 +123,10 @@ const USSDSimulatorScreen = safeRequire(() => require('./screens/ussd/USSDSimula
 const USSDCarbonScreen = safeRequire(() => require('./screens/ussd/USSDCarbonScreen'), 'USSDCarbonScreen');
 const USSDFullSimulatorScreen = safeRequire(() => require('./screens/ussd/USSDFullSimulatorScreen'), 'USSDFullSimulatorScreen');
 
+// REDD+
+const REDDGuideScreen = safeRequire(() => require('./screens/redd/REDDGuideScreen'), 'REDDGuideScreen');
+const REDDTrackingFormScreen = safeRequire(() => require('./screens/redd/REDDTrackingFormScreen'), 'REDDTrackingFormScreen');
+
 // Messaging
 const MessagingScreen = safeRequire(() => require('./screens/messaging/MessagingScreen'), 'MessagingScreen');
 const ChatScreen = safeRequire(() => require('./screens/messaging/ChatScreen'), 'ChatScreen');
@@ -228,6 +232,9 @@ function AppNavigator() {
       <Stack.Screen name="USSDCarbon" component={USSDCarbonScreen} />
       <Stack.Screen name="USSDFullSimulator" component={USSDFullSimulatorScreen} />
       <Stack.Screen name="AuditHistory" component={AuditorDashboardScreen} />
+      
+      <Stack.Screen name="REDDGuide" component={REDDGuideScreen} />
+      <Stack.Screen name="REDDTrackingForm" component={REDDTrackingFormScreen} />
       
       <Stack.Screen name="Messaging" component={MessagingScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />

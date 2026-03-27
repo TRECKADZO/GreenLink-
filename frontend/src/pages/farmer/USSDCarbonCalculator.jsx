@@ -126,15 +126,42 @@ const USSDCarbonCalculator = () => {
             </div>
             <div className="p-2">
               <div className="w-8 h-8 bg-[#d4a574] rounded-full flex items-center justify-center mx-auto mb-1">
-                <span className="text-[#2d5a4d] font-bold text-sm">8</span>
+                <span className="text-[#2d5a4d] font-bold text-sm">9</span>
               </div>
-              <p className="text-white/80 text-xs">2. Repondez a 8 questions</p>
+              <p className="text-white/80 text-xs">2. Repondez a 9 questions</p>
             </div>
             <div className="p-2">
               <div className="w-8 h-8 bg-[#d4a574] rounded-full flex items-center justify-center mx-auto mb-1">
                 <span className="text-[#2d5a4d] font-bold text-xs">FCFA</span>
               </div>
-              <p className="text-white/80 text-xs">3. Recevez votre prime/kg</p>
+              <p className="text-white/80 text-xs">3. Recevez votre estimation</p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Notions importantes */}
+        <Card className="p-4 mb-6 bg-white/10 border-white/20 backdrop-blur-sm" data-testid="concepts-card">
+          <h3 className="text-white font-semibold text-sm mb-3">Notions importantes</h3>
+          <div className="space-y-2 text-xs text-white/80">
+            <div className="flex gap-2">
+              <span className="text-emerald-400 font-bold min-w-[20px]">1.</span>
+              <p><strong className="text-white">Score Carbone</strong> : Evalue vos pratiques agricoles sur 10. Plus votre score est eleve, plus votre prime est importante.</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-emerald-400 font-bold min-w-[20px]">2.</span>
+              <p><strong className="text-white">Agroforesterie</strong> : Association arbres + cultures. Les arbres stockent le carbone et ameliorent la biodiversite.</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-emerald-400 font-bold min-w-[20px]">3.</span>
+              <p><strong className="text-white">ARS 1000</strong> : Norme Africaine pour le Cacao Durable (Bronze, Argent, Or). Certifie la qualite de vos pratiques.</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-emerald-400 font-bold min-w-[20px]">4.</span>
+              <p><strong className="text-white">REDD+</strong> : Programme de reduction des emissions liees a la deforestation. Recompense les bonnes pratiques environnementales.</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-emerald-400 font-bold min-w-[20px]">5.</span>
+              <p><strong className="text-white">Compost</strong> : Engrais naturel qui ameliore la fertilite du sol tout en stockant du carbone durablement.</p>
             </div>
           </div>
         </Card>

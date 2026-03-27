@@ -1850,15 +1850,15 @@ async def ussd_carbon_calculator(request: USSDRequest):
         
         # All questions for stateless mode (9 questions)
         QUESTIONS = [
-            {"key": "hectares", "text": "PRIME CARBONE *144*99#\n\nQuestion 1/9\nSurface plantation (hectares) ?\n\nEx: 3.5", "type": "number"},
-            {"key": "arbres_grands", "text": "Question 2/9\nArbres GRANDS (> 12m) ?\n\nEx: 20", "type": "number"},
-            {"key": "arbres_moyens", "text": "Question 3/9\nArbres MOYENS (8-12m) ?\n\nEx: 30", "type": "number"},
-            {"key": "arbres_petits", "text": "Question 4/9\nArbres PETITS (< 8m) ?\n\nEx: 10", "type": "number"},
-            {"key": "culture", "text": "Question 5/9\nCulture principale ?\n\n1. Cacao\n2. Cafe\n3. Anacarde", "type": "choice"},
-            {"key": "engrais", "text": "Question 6/9\nEngrais chimiques ?\n\n1. Oui\n2. Non", "type": "yesno"},
-            {"key": "brulage", "text": "Question 7/9\nBrulage des residus ?\n\n1. Oui\n2. Non", "type": "yesno"},
-            {"key": "compost", "text": "Question 8/9\nCompost organique ?\n\n1. Oui\n2. Non", "type": "yesno"},
-            {"key": "agroforesterie", "text": "Question 9/9\nAgroforesterie ?\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "hectares", "text": "PRIME CARBONE *144*99#\n\nQuestion 1/9\nSurface plantation (hectares) ?\nLa superficie de votre exploitation determine le potentiel de sequestration carbone.\n\nEx: 3.5", "type": "number"},
+            {"key": "arbres_grands", "text": "Question 2/9\nArbres GRANDS (> 12m) ?\nLes grands arbres stockent plus de carbone et offrent un meilleur ombrage.\n\nEx: 20", "type": "number"},
+            {"key": "arbres_moyens", "text": "Question 3/9\nArbres MOYENS (8-12m) ?\nLes arbres moyens contribuent a la biodiversite et a la couverture.\n\nEx: 30", "type": "number"},
+            {"key": "arbres_petits", "text": "Question 4/9\nArbres PETITS (< 8m) ?\nLes jeunes arbres representent le potentiel futur de stockage carbone.\n\nEx: 10", "type": "number"},
+            {"key": "culture", "text": "Question 5/9\nCulture principale ?\nChaque culture a un potentiel different de sequestration carbone.\n\n1. Cacao\n2. Cafe\n3. Anacarde", "type": "choice"},
+            {"key": "engrais", "text": "Question 6/9\nEngrais chimiques ?\nLes engrais chimiques augmentent les emissions de gaz a effet de serre.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "brulage", "text": "Question 7/9\nBrulage des residus ?\nLe brulage libere du CO2 et detruit la matiere organique du sol.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "compost", "text": "Question 8/9\nCompost organique ?\nLe compost ameliore la fertilite du sol et stocke du carbone durablement.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "agroforesterie", "text": "Question 9/9\nAgroforesterie ?\nL'agroforesterie associe arbres et cultures pour maximiser le stockage carbone.\n\n1. Oui\n2. Non", "type": "yesno"},
         ]
         
         if num_answers == 0:
@@ -1919,12 +1919,11 @@ async def ussd_carbon_calculator(request: USSDRequest):
             result_text = (
                 f"PRIME CARBONE + ARS 1000\n\n"
                 f"Score: {result['score']}/10\n"
-                f"Arbres/ha: {result['arbres_par_ha']}\n"
-                f"CO2: {result['co2_par_ha']}t/ha\n\n"
+                f"Arbres/ha: {result['arbres_par_ha']}\n\n"
                 f"Prime estimee:\n"
                 f"{result['prime_annuelle']:,.0f} FCFA/an\n"
                 f"({result['prime_fcfa_kg']} FCFA/kg)\n\n"
-                f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                f"Niveau ARS: {result['ars_level']}\n"
                 f"{result['ars_conseil']}\n\n"
                 f"Inscrivez-vous sur GreenLink\n"
                 f"Tel: 07 87 76 10 23"
@@ -1934,7 +1933,7 @@ async def ussd_carbon_calculator(request: USSDRequest):
                 f"ESTIMATION + ARS 1000\n\n"
                 f"Score: {result['score']}/10\n"
                 f"(Minimum requis: 5/10)\n\n"
-                f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                f"Niveau ARS: {result['ars_level']}\n"
                 f"{result['ars_conseil']}\n\n"
                 f"Ameliorez votre score:\n"
                 f"- Plus d'arbres d'ombrage\n"

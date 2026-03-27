@@ -16,7 +16,7 @@ import os
 import time
 import random
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ussd-shortcode-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://redd-mrvdash.preview.emergentagent.com')
 
 # Test credentials
 COOP_EMAIL = "bielaghana@gmail.com"

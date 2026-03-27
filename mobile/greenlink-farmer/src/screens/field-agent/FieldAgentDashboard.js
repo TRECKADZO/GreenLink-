@@ -258,6 +258,20 @@ const FieldAgentDashboard = ({ navigation }) => {
               <Ionicons name="chevron-forward" size={22} color="#ea580c" />
             </TouchableOpacity>
 
+            {/* CTA: Fiche REDD+ */}
+            <TouchableOpacity style={[styles.ctaCard, { borderColor: '#bbf7d0' }]} onPress={() => navigation.navigate('REDDTrackingForm')}>
+              <View style={[styles.ctaIcon, { backgroundColor: '#d1fae5' }]}>
+                <Ionicons name="leaf" size={28} color="#059669" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.ctaTitle}>Fiche de suivi REDD+</Text>
+                <Text style={styles.ctaDesc}>
+                  Verifiez les pratiques REDD+ des producteurs (21 criteres)
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="#059669" />
+            </TouchableOpacity>
+
             {/* Risk Distribution */}
             {risk_distribution && Object.keys(risk_distribution).length > 0 && (
               <View style={styles.card}>

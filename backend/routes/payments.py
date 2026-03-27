@@ -59,7 +59,7 @@ async def initiate_payment(
     merchant_reference = f"GL_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8].upper()}"
     
     # Get base URL from environment or request
-    base_url = os.environ.get('BASE_URL', 'https://ussd-shortcode-fix.preview.emergentagent.com')
+    base_url = os.environ.get('BASE_URL', 'https://redd-mrvdash.preview.emergentagent.com')
     
     return_url = f"{base_url}/payment/return?ref={merchant_reference}"
     cancel_url = f"{base_url}/payment/cancel?ref={merchant_reference}"

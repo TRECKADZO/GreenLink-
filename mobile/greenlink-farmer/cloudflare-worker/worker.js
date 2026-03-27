@@ -11,7 +11,7 @@
  * 4. DNS: Ajouter un enregistrement AAAA pour "api" pointant vers 100::1 (proxy ON)
  */
 
-const BACKEND_URL = 'https://ussd-shortcode-fix.preview.emergentagent.com';
+const BACKEND_URL = 'https://redd-mrvdash.preview.emergentagent.com';
 
 export default {
   async fetch(request) {
