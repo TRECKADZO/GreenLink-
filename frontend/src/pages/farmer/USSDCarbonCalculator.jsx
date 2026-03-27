@@ -126,9 +126,9 @@ const USSDCarbonCalculator = () => {
             </div>
             <div className="p-2">
               <div className="w-8 h-8 bg-[#d4a574] rounded-full flex items-center justify-center mx-auto mb-1">
-                <span className="text-[#2d5a4d] font-bold text-sm">9</span>
+                <span className="text-[#2d5a4d] font-bold text-xs">14</span>
               </div>
-              <p className="text-white/80 text-xs">2. Repondez a 9 questions</p>
+              <p className="text-white/80 text-xs">2. Repondez a 14 questions</p>
             </div>
             <div className="p-2">
               <div className="w-8 h-8 bg-[#d4a574] rounded-full flex items-center justify-center mx-auto mb-1">
@@ -162,6 +162,22 @@ const USSDCarbonCalculator = () => {
             <div className="flex gap-2">
               <span className="text-emerald-400 font-bold min-w-[20px]">5.</span>
               <p><strong className="text-white">Compost</strong> : Engrais naturel qui ameliore la fertilite du sol tout en stockant du carbone durablement.</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-emerald-400 font-bold min-w-[20px]">6.</span>
+              <p><strong className="text-white">Couverture vegetale</strong> : Plantes basses entre les arbres qui protegent le sol contre l'erosion et stockent du carbone.</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-emerald-400 font-bold min-w-[20px]">7.</span>
+              <p><strong className="text-white">Biochar</strong> : Charbon vegetal incorpore au sol. Stocke le carbone pendant des centaines d'annees et enrichit la terre.</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-emerald-400 font-bold min-w-[20px]">8.</span>
+              <p><strong className="text-white">Zero-Deforestation</strong> : Engagement a ne pas couper la foret pour agrandir les parcelles. Critique pour le programme REDD+.</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-emerald-400 font-bold min-w-[20px]">9.</span>
+              <p><strong className="text-white">Reboisement</strong> : Plantation de nouveaux arbres forestiers pour restaurer les zones degradees et capter du CO2.</p>
             </div>
           </div>
         </Card>

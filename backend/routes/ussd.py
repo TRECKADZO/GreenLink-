@@ -155,8 +155,14 @@ async def get_farmer_payments(farmer_id: str) -> list:
 CARBON_QUESTIONS_SIMPLE = [
     {"key": "hectares", "text": "Estimation Prime Carbone\n\nCombien d'hectares de cacao avez-vous ?\n(ex: 3 ou 5.5)\nTapez le nombre", "type": "number"},
     {"key": "arbres_grands", "text": "Nombre d'arbres ombres > 8 metres ?\n(ex: 120)\nTapez le nombre", "type": "number"},
-    {"key": "engrais", "text": "Utilisez-vous de l'engrais ?\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "engrais", "text": "Utilisez-vous de l'engrais chimique ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "brulage", "text": "Pratiquez-vous le brulage des residus ?\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "compost", "text": "Utilisez-vous du compost organique ?\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "agroforesterie", "text": "Pratiquez-vous l'agroforesterie ?\n(arbres + cultures ensemble)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "couverture_sol", "text": "Couverture vegetale au sol ?\n(plantes basses entre les arbres)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "biochar", "text": "REDD+ - Utilisez-vous du biochar ?\n(charbon vegetal dans le sol)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "zero_deforestation", "text": "REDD+ - Engagement zero deforestation ?\n(Pas d'extension sur foret)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "reboisement", "text": "REDD+ - Faites-vous du reboisement ?\n(Plantation de nouveaux arbres)\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "age_cacaoyers", "text": "Age moyen de vos cacaoyers ?\n1. Moins de 5 ans\n2. 5 a 15 ans\n3. Plus de 15 ans", "type": "choice3"},
 ]
 
@@ -170,10 +176,10 @@ CARBON_QUESTIONS_DETAILED = [
     {"key": "compost", "text": "Utilisez-vous du compost organique ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "agroforesterie", "text": "Pratiquez-vous l'agroforesterie ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "couverture_sol", "text": "Avez-vous une couverture vegetale au sol ?\n1. Oui\n2. Non", "type": "yesno"},
-    # REDD+ additional questions
-    {"key": "biochar", "text": "REDD+ - Utilisez-vous du biochar ?\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "biochar", "text": "REDD+ - Utilisez-vous du biochar ?\n(charbon vegetal dans le sol)\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "zero_deforestation", "text": "REDD+ - Engagement zero deforestation ?\n(Pas d'extension sur foret)\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "reboisement", "text": "REDD+ - Faites-vous du reboisement ?\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "age_cacaoyers", "text": "Age moyen de vos cacaoyers ?\n1. Moins de 5 ans\n2. 5 a 15 ans\n3. Plus de 15 ans", "type": "choice3"},
 ]
 
 
@@ -1848,17 +1854,22 @@ async def ussd_carbon_calculator(request: USSDRequest):
         inputs = text_input.split("*") if text_input else []
         num_answers = len(inputs)
         
-        # All questions for stateless mode (9 questions)
+        # All questions for stateless mode (14 questions)
         QUESTIONS = [
-            {"key": "hectares", "text": "PRIME CARBONE *144*99#\n\nQuestion 1/9\nSurface plantation (hectares) ?\nLa superficie de votre exploitation determine le potentiel de sequestration carbone.\n\nEx: 3.5", "type": "number"},
-            {"key": "arbres_grands", "text": "Question 2/9\nArbres GRANDS (> 12m) ?\nLes grands arbres stockent plus de carbone et offrent un meilleur ombrage.\n\nEx: 20", "type": "number"},
-            {"key": "arbres_moyens", "text": "Question 3/9\nArbres MOYENS (8-12m) ?\nLes arbres moyens contribuent a la biodiversite et a la couverture.\n\nEx: 30", "type": "number"},
-            {"key": "arbres_petits", "text": "Question 4/9\nArbres PETITS (< 8m) ?\nLes jeunes arbres representent le potentiel futur de stockage carbone.\n\nEx: 10", "type": "number"},
-            {"key": "culture", "text": "Question 5/9\nCulture principale ?\nChaque culture a un potentiel different de sequestration carbone.\n\n1. Cacao\n2. Cafe\n3. Anacarde", "type": "choice"},
-            {"key": "engrais", "text": "Question 6/9\nEngrais chimiques ?\nLes engrais chimiques augmentent les emissions de gaz a effet de serre.\n\n1. Oui\n2. Non", "type": "yesno"},
-            {"key": "brulage", "text": "Question 7/9\nBrulage des residus ?\nLe brulage libere du CO2 et detruit la matiere organique du sol.\n\n1. Oui\n2. Non", "type": "yesno"},
-            {"key": "compost", "text": "Question 8/9\nCompost organique ?\nLe compost ameliore la fertilite du sol et stocke du carbone durablement.\n\n1. Oui\n2. Non", "type": "yesno"},
-            {"key": "agroforesterie", "text": "Question 9/9\nAgroforesterie ?\nL'agroforesterie associe arbres et cultures pour maximiser le stockage carbone.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "hectares", "text": "PRIME CARBONE *144*99#\n\nQuestion 1/14\nSurface plantation (hectares) ?\nLa superficie de votre exploitation determine le potentiel de sequestration carbone.\n\nEx: 3.5", "type": "number"},
+            {"key": "arbres_grands", "text": "Question 2/14\nArbres GRANDS (> 12m) ?\nLes grands arbres stockent plus de carbone et offrent un meilleur ombrage.\n\nEx: 20", "type": "number"},
+            {"key": "arbres_moyens", "text": "Question 3/14\nArbres MOYENS (8-12m) ?\nLes arbres moyens contribuent a la biodiversite et a la couverture.\n\nEx: 30", "type": "number"},
+            {"key": "arbres_petits", "text": "Question 4/14\nArbres PETITS (< 8m) ?\nLes jeunes arbres representent le potentiel futur de stockage carbone.\n\nEx: 10", "type": "number"},
+            {"key": "culture", "text": "Question 5/14\nCulture principale ?\nChaque culture a un potentiel different de sequestration carbone.\n\n1. Cacao\n2. Cafe\n3. Anacarde", "type": "choice"},
+            {"key": "engrais", "text": "Question 6/14\nEngrais chimiques ?\nLes engrais chimiques augmentent les emissions de gaz a effet de serre.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "brulage", "text": "Question 7/14\nBrulage des residus ?\nLe brulage libere du CO2 et detruit la matiere organique du sol.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "compost", "text": "Question 8/14\nCompost organique ?\nLe compost ameliore la fertilite du sol et stocke du carbone durablement.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "agroforesterie", "text": "Question 9/14\nAgroforesterie ?\nL'agroforesterie associe arbres et cultures pour maximiser le stockage carbone.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "couverture_sol", "text": "Question 10/14\nCouverture vegetale au sol ?\nLes plantes basses entre les arbres protegent le sol et stockent du carbone.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "biochar", "text": "REDD+ Question 11/14\nBiochar (charbon vegetal) ?\nLe biochar est du bois carbonise melange au sol pour stocker le carbone durablement.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "zero_deforestation", "text": "REDD+ Question 12/14\nEngagement zero deforestation ?\nVous vous engagez a ne pas couper de foret pour agrandir vos parcelles.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "reboisement", "text": "REDD+ Question 13/14\nReboisement actif ?\nVous plantez de nouveaux arbres forestiers pour restaurer les zones degradees.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "age_cacaoyers", "text": "Question 14/14\nAge moyen de vos cacaoyers ?\nLes cacaoyers matures stockent plus de carbone que les jeunes plants.\n\n1. Moins de 5 ans\n2. 5 a 15 ans\n3. Plus de 15 ans", "type": "choice3"},
         ]
         
         if num_answers == 0:

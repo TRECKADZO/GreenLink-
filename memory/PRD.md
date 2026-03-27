@@ -9,7 +9,7 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - **Mobile**: Expo React Native v1.71.0
 - **Proxy CDN**: Bunny CDN (frontend uniquement, NE proxy PAS les routes /api)
 
-## Shortcode USSD: `*144*99#`
+## Shortcode USSD: `*144*99#` (14 questions)
 
 ## Fix Critique v1.71.0
 - **Cause du bug "donnees introuvables"** : Le Bunny CDN retourne 404 pour les routes `/api/`. Fix: URL directe en priorite, CDN en fallback.
