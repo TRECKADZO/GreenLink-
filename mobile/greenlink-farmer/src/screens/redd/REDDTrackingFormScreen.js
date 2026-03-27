@@ -26,10 +26,10 @@ const REDD_CATEGORIES = [
     title: 'Agroforesterie',
     color: '#059669',
     practices: [
-      { code: 'AGF1', name: "Arbres d'ombrage (30-50%)" },
-      { code: 'AGF2', name: 'Systeme multi-strates' },
-      { code: 'AGF3', name: 'Enrichissement parcelles' },
-      { code: 'AGF4', name: 'Transition vers ombrage' },
+      { code: 'AGF1', name: "Arbres d'ombrage (30-50%)", hint: "Verifiez si 30 a 50% de la parcelle est couverte par des arbres. Comptez les grands arbres au-dessus des cacaoyers." },
+      { code: 'AGF2', name: 'Systeme multi-strates', hint: "Y a-t-il plusieurs niveaux de vegetation ? Herbes au sol, cacaoyers au milieu, grands arbres en haut." },
+      { code: 'AGF3', name: 'Enrichissement parcelles', hint: "Le producteur a-t-il plante de nouveaux arbres fruitiers ou forestiers recemment ?" },
+      { code: 'AGF4', name: 'Transition vers ombrage', hint: "Si la parcelle etait en plein soleil, a-t-il commence a planter des arbres d'ombrage ?" },
     ],
   },
   {
@@ -37,10 +37,10 @@ const REDD_CATEGORIES = [
     title: 'Zero-Deforestation',
     color: '#2563eb',
     practices: [
-      { code: 'ZD1', name: 'Intensification durable' },
-      { code: 'ZD2', name: 'Engagement zero deforestation' },
-      { code: 'ZD3', name: 'Restauration degradees' },
-      { code: 'ZD4', name: 'Protection forets classees' },
+      { code: 'ZD1', name: 'Intensification durable', hint: "Produit-il plus sur la meme surface sans defricher ? Ex: taille, engrais bio, nouvelles varietes." },
+      { code: 'ZD2', name: 'Engagement zero deforestation', hint: "S'est-il engage a ne plus couper de foret pour agrandir ses parcelles ?" },
+      { code: 'ZD3', name: 'Restauration degradees', hint: "Y a-t-il des parcelles abandonnees qu'il est en train de replanter ou restaurer ?" },
+      { code: 'ZD4', name: 'Protection forets classees', hint: "Les parcelles sont-elles eloignees des forets classees ? Respecte-t-il les limites protegees ?" },
     ],
   },
   {
@@ -48,11 +48,11 @@ const REDD_CATEGORIES = [
     title: 'Gestion Sols',
     color: '#d97706',
     practices: [
-      { code: 'SOL1', name: 'Paillage et compostage' },
-      { code: 'SOL2', name: 'Biochar' },
-      { code: 'SOL3', name: 'Couverture vegetale' },
-      { code: 'SOL4', name: 'Gestion integree ravageurs' },
-      { code: 'SOL5', name: 'Taille et elagage sanitaire' },
+      { code: 'SOL1', name: 'Paillage et compostage', hint: "Y a-t-il des tas de compost ou du paillage (feuilles mortes, cosses) au pied des arbres ?" },
+      { code: 'SOL2', name: 'Biochar', hint: "Utilise-t-il du charbon vegetal (bois brule sans flamme) melange a la terre pour enrichir le sol ?" },
+      { code: 'SOL3', name: 'Couverture vegetale', hint: "Le sol est-il couvert par des plantes basses entre les arbres ? Pas de sol nu visible." },
+      { code: 'SOL4', name: 'Gestion integree ravageurs', hint: "Lutte-t-il contre les maladies sans produits chimiques dangereux ? Ex: piegeage, produits naturels." },
+      { code: 'SOL5', name: 'Taille et elagage sanitaire', hint: "Les cacaoyers sont-ils bien tailles ? Les branches mortes ou malades sont-elles coupees ?" },
     ],
   },
   {
@@ -60,10 +60,10 @@ const REDD_CATEGORIES = [
     title: 'Restauration',
     color: '#0d9488',
     practices: [
-      { code: 'REST1', name: 'Reboisement' },
-      { code: 'REST2', name: 'Plantations bois-energie' },
-      { code: 'REST3', name: 'Protection zones ripariennes' },
-      { code: 'REST4', name: 'Valorisation residus agricoles' },
+      { code: 'REST1', name: 'Reboisement', hint: "A-t-il plante de nouveaux arbres forestiers ou aide des jeunes pousses naturelles a grandir ?" },
+      { code: 'REST2', name: 'Plantations bois-energie', hint: "Y a-t-il des arbres plantes pour le bois de chauffage afin d'eviter de couper la foret ?" },
+      { code: 'REST3', name: 'Protection zones ripariennes', hint: "Les bords de cours d'eau sont-ils proteges avec de la vegetation ? Pas de culture au bord de l'eau." },
+      { code: 'REST4', name: 'Valorisation residus agricoles', hint: "Les dechets de recolte sont-ils reutilises comme compost au lieu d'etre brules ?" },
     ],
   },
   {
@@ -71,10 +71,10 @@ const REDD_CATEGORIES = [
     title: 'Tracabilite',
     color: '#7c3aed',
     practices: [
-      { code: 'TRAC1', name: 'GPS parcelles' },
-      { code: 'TRAC2', name: 'Safeguards sociaux' },
-      { code: 'TRAC3', name: 'Monitoring MRV' },
-      { code: 'TRAC4', name: 'Certification ARS 1000' },
+      { code: 'TRAC1', name: 'GPS parcelles', hint: "Les parcelles ont-elles ete cartographiees avec un GPS ? Les polygones sont-ils enregistres ?" },
+      { code: 'TRAC2', name: 'Safeguards sociaux', hint: "Pas de travail d'enfants ni travail force. Conditions de travail correctes pour tous." },
+      { code: 'TRAC3', name: 'Monitoring MRV', hint: "Participe-t-il au suivi regulier (Mesure, Reporting, Verification) de ses pratiques ?" },
+      { code: 'TRAC4', name: 'Certification ARS 1000', hint: "Est-il certifie ou en cours de certification ARS 1000 (norme africaine cacao durable) ?" },
     ],
   },
 ];
@@ -365,6 +365,7 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
                   <Ionicons name={icon} size={22} color={color} />
                   <View style={styles.practiceInfo}>
                     <Text style={styles.practiceName}>{practice.name}</Text>
+                    {practice.hint && <Text style={styles.practiceHint}>{practice.hint}</Text>}
                     <Text style={[styles.practiceStatus, { color }]}>{getStatusLabel(practice.code)}</Text>
                   </View>
                   <Text style={styles.practiceCode}>{practice.code}</Text>
@@ -514,6 +515,7 @@ const styles = StyleSheet.create({
   practiceItemNonConforme: { backgroundColor: '#450a0a' },
   practiceInfo: { flex: 1, marginLeft: 10 },
   practiceName: { color: '#fff', fontSize: 13, fontWeight: '500' },
+  practiceHint: { color: '#94a3b8', fontSize: 11, marginTop: 2, lineHeight: 15 },
   practiceStatus: { fontSize: 11, marginTop: 1 },
   practiceCode: { color: '#475569', fontSize: 10, fontWeight: '600' },
   textArea: {

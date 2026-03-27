@@ -14,10 +14,10 @@ const REDD_CATEGORIES = [
     color: '#059669',
     bgColor: '#d1fae5',
     practices: [
-      { code: 'AGF1', name: "Arbres d'ombrage (30-50% couverture)" },
-      { code: 'AGF2', name: 'Systeme agroforestier multi-strates' },
-      { code: 'AGF3', name: 'Enrichissement parcelles' },
-      { code: 'AGF4', name: 'Transition plein soleil vers ombrage' },
+      { code: 'AGF1', name: "Arbres d'ombrage (30-50% couverture)", hint: "Verifiez si 30 a 50% de la parcelle est couverte par des arbres. Comptez les grands arbres visibles au-dessus des cacaoyers." },
+      { code: 'AGF2', name: 'Systeme agroforestier multi-strates', hint: "Y a-t-il plusieurs niveaux de vegetation ? Ex: herbes au sol, cacaoyers au milieu, grands arbres en haut." },
+      { code: 'AGF3', name: 'Enrichissement parcelles', hint: "Le producteur a-t-il plante de nouveaux arbres fruitiers ou forestiers dans sa parcelle recemment ?" },
+      { code: 'AGF4', name: 'Transition plein soleil vers ombrage', hint: "Si la parcelle etait en plein soleil, le producteur a-t-il commence a planter des arbres d'ombrage ?" },
     ],
   },
   {
@@ -26,10 +26,10 @@ const REDD_CATEGORIES = [
     color: '#2563eb',
     bgColor: '#dbeafe',
     practices: [
-      { code: 'ZD1', name: 'Intensification durable' },
-      { code: 'ZD2', name: 'Engagement zero deforestation' },
-      { code: 'ZD3', name: 'Restauration parcelles degradees' },
-      { code: 'ZD4', name: 'Protection forets classees' },
+      { code: 'ZD1', name: 'Intensification durable', hint: "Le producteur produit-il plus sur la meme surface sans defricher de nouvelles forets ? Ex: taille, engrais bio." },
+      { code: 'ZD2', name: 'Engagement zero deforestation', hint: "Le producteur s'est-il engage a ne plus couper de foret pour agrandir ses parcelles ?" },
+      { code: 'ZD3', name: 'Restauration parcelles degradees', hint: "Y a-t-il des parcelles abandonnees que le producteur est en train de replanter ou restaurer ?" },
+      { code: 'ZD4', name: 'Protection forets classees', hint: "Les parcelles sont-elles eloignees des forets classees ? Le producteur respecte-t-il les limites protegees ?" },
     ],
   },
   {
@@ -38,11 +38,11 @@ const REDD_CATEGORIES = [
     color: '#d97706',
     bgColor: '#fef3c7',
     practices: [
-      { code: 'SOL1', name: 'Paillage et compostage' },
-      { code: 'SOL2', name: 'Biochar' },
-      { code: 'SOL3', name: 'Couverture vegetale' },
-      { code: 'SOL4', name: 'Gestion integree ravageurs' },
-      { code: 'SOL5', name: 'Taille et elagage sanitaire' },
+      { code: 'SOL1', name: 'Paillage et compostage', hint: "Y a-t-il des tas de compost ou du paillage (feuilles mortes, cosses de cacao) au pied des arbres ?" },
+      { code: 'SOL2', name: 'Biochar', hint: "Le producteur utilise-t-il du charbon vegetal melange a la terre pour enrichir le sol ?" },
+      { code: 'SOL3', name: 'Couverture vegetale', hint: "Le sol est-il couvert par des plantes basses entre les arbres (pas de sol nu) ? Ex: legumineuses, herbes." },
+      { code: 'SOL4', name: 'Gestion integree ravageurs', hint: "Le producteur lutte-t-il contre les maladies sans produits chimiques dangereux ? Ex: piegeage, taille sanitaire." },
+      { code: 'SOL5', name: 'Taille et elagage sanitaire', hint: "Les cacaoyers sont-ils bien tailles ? Les branches mortes ou malades sont-elles coupees ?" },
     ],
   },
   {
@@ -51,10 +51,10 @@ const REDD_CATEGORIES = [
     color: '#0d9488',
     bgColor: '#ccfbf1',
     practices: [
-      { code: 'REST1', name: 'Reboisement et regeneration assistee' },
-      { code: 'REST2', name: 'Plantations bois-energie' },
-      { code: 'REST3', name: 'Protection zones ripariennes' },
-      { code: 'REST4', name: 'Valorisation residus agricoles' },
+      { code: 'REST1', name: 'Reboisement et regeneration assistee', hint: "Le producteur a-t-il plante de nouveaux arbres forestiers ou aide des jeunes pousses a grandir ?" },
+      { code: 'REST2', name: 'Plantations bois-energie', hint: "Y a-t-il des arbres plantes pour le bois de chauffage afin d'eviter de couper la foret ?" },
+      { code: 'REST3', name: 'Protection zones ripariennes', hint: "Les bords de cours d'eau sont-ils proteges avec de la vegetation ? Pas de culture au bord de l'eau." },
+      { code: 'REST4', name: 'Valorisation residus agricoles', hint: "Les dechets de recolte sont-ils reutilises comme compost au lieu d'etre brules ?" },
     ],
   },
   {
@@ -63,10 +63,10 @@ const REDD_CATEGORIES = [
     color: '#7c3aed',
     bgColor: '#ede9fe',
     practices: [
-      { code: 'TRAC1', name: 'Enregistrement GPS parcelles' },
-      { code: 'TRAC2', name: 'Safeguards sociaux' },
-      { code: 'TRAC3', name: 'Monitoring MRV' },
-      { code: 'TRAC4', name: 'Certification ARS 1000' },
+      { code: 'TRAC1', name: 'Enregistrement GPS parcelles', hint: "Les parcelles ont-elles ete cartographiees avec un GPS ? Les polygones sont-ils enregistres ?" },
+      { code: 'TRAC2', name: 'Safeguards sociaux', hint: "Pas de travail d'enfants ni de travail force. Les travailleurs ont-ils des conditions correctes ?" },
+      { code: 'TRAC3', name: 'Monitoring MRV', hint: "Le producteur participe-t-il au suivi regulier (Mesure, Reporting, Verification) de ses pratiques ?" },
+      { code: 'TRAC4', name: 'Certification ARS 1000', hint: "Le producteur est-il certifie ou en cours de certification ARS 1000 (norme africaine cacao durable) ?" },
     ],
   },
 ];
@@ -332,7 +332,7 @@ const REDDTrackingPage = () => {
                       <button
                         key={p.code}
                         onClick={() => togglePractice(p.code)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all text-sm ${
+                        className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left transition-all text-sm ${
                           status === 'conforme' ? 'bg-emerald-50 border border-emerald-200' :
                           status === 'non_conforme' ? 'bg-red-50 border border-red-200' :
                           'bg-gray-50 border border-gray-100 hover:bg-gray-100'
@@ -340,14 +340,17 @@ const REDDTrackingPage = () => {
                         data-testid={`practice-${p.code}`}
                       >
                         {status === 'conforme' ? (
-                          <Check className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                          <Check className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                         ) : status === 'non_conforme' ? (
-                          <X className="w-5 h-5 text-red-500 flex-shrink-0" />
+                          <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                         ) : (
-                          <Minus className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                          <Minus className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                         )}
-                        <span className="flex-1">{p.name}</span>
-                        <span className="text-[10px] text-gray-400 font-mono">{p.code}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium block">{p.name}</span>
+                          {p.hint && <span className="text-[11px] text-gray-400 block mt-0.5 leading-tight">{p.hint}</span>}
+                        </div>
+                        <span className="text-[10px] text-gray-400 font-mono flex-shrink-0 mt-0.5">{p.code}</span>
                       </button>
                     );
                   })}
