@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../services/api';
-import { CONFIG } from '../config';
 
 const AuthContext = createContext();
 
@@ -24,18 +23,18 @@ export const AuthProvider = ({ children }) => {
         setUser(JSON.parse(storedUser));
         api.setToken(storedToken);
         
-        // Vérifier si le token est encore valide
+        // Verifier si le token est encore valide (silencieux)
         try {
           const response = await api.get('/auth/me');
           setUser(response.data);
           await SecureStore.setItemAsync('user', JSON.stringify(response.data));
         } catch (error) {
-          // Token invalide, on garde les données locales pour le mode offline
-          console.log('Token validation failed, using cached data');
+          // Token invalide ou offline — garder les donnees locales
+          console.log('[Auth] Token validation failed, using cached data');
         }
       }
     } catch (error) {
-      console.error('Error loading auth:', error);
+      console.error('[Auth] Error loading auth:', error);
     } finally {
       setLoading(false);
     }
@@ -44,11 +43,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     try {
       console.log('[Auth] Login with:', identifier);
-      
-      // Utilise api.login() qui essaie CDN puis Direct sequentiellement
       const response = await api.login(identifier, password);
-      
-      console.log('[Auth] Login response received');
       
       const { access_token, user: userData } = response.data;
       
@@ -62,62 +57,49 @@ export const AuthProvider = ({ children }) => {
       console.log('[Auth] Login successful');
       return { success: true };
     } catch (error) {
-      console.error('[Auth] Login error:', error.message);
-      console.error('[Auth] Error status:', error.response?.status);
+      console.error('[Auth] Login error:', error.message, 'type:', error.type);
       
       let errorMessage = 'Erreur de connexion';
       let isServerError = false;
       
-      if (error.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-        
-        if (typeof data === 'object' && data !== null && data.detail) {
-          if (typeof data.detail === 'string') {
-            errorMessage = data.detail;
-          } else if (Array.isArray(data.detail)) {
-            // Erreur Pydantic validation — montrer un message utile
-            errorMessage = 'Veuillez verifier les informations saisies';
-          } else {
-            errorMessage = JSON.stringify(data.detail);
-          }
-        } else if (status === 401) {
+      const status = error.status || error.response?.status;
+      const data = error.data || error.response?.data;
+      
+      if (status) {
+        if (status === 401) {
           errorMessage = 'Identifiant ou mot de passe incorrect';
         } else if (status === 403) {
           errorMessage = 'Compte desactive. Contactez votre cooperative.';
-        } else if (status === 404) {
-          isServerError = true;
-          errorMessage = 'Service temporairement indisponible. Veuillez reessayer dans quelques instants.';
         } else if (status === 422) {
           errorMessage = 'Veuillez verifier les informations saisies';
         } else if (status === 429) {
           errorMessage = 'Trop de tentatives. Patientez une minute avant de reessayer.';
-        } else if (status >= 500 || status === 0) {
+        } else if (status >= 500) {
           isServerError = true;
-          errorMessage = 'Probleme de connexion au serveur. Verifiez votre reseau et reessayez.';
-        } else {
-          errorMessage = `Erreur (${status}). Verifiez votre connexion et reessayez.`;
+          errorMessage = 'Le serveur rencontre un probleme. Reessayez dans quelques instants.';
         }
-      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        // Detail du backend
+        if (data?.detail && typeof data.detail === 'string') {
+          errorMessage = data.detail;
+        }
+      } else if (error.type === 'timeout') {
         isServerError = true;
-        errorMessage = 'La connexion est trop lente. Verifiez votre reseau et reessayez.';
-      } else if (error.message?.includes('Network Error') || error.message?.includes('ERR_NETWORK')) {
+        errorMessage = 'Impossible de joindre le serveur. Verifiez votre connexion internet et reessayez.';
+      } else if (error.type === 'network') {
         isServerError = true;
-        errorMessage = 'Impossible de contacter le serveur. Verifiez votre connexion internet.';
+        errorMessage = 'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.';
+      } else {
+        isServerError = true;
+        errorMessage = 'Impossible de se connecter au serveur. Verifiez votre connexion internet.';
       }
       
-      return {
-        success: false,
-        error: errorMessage,
-        isServerError,
-      };
+      return { success: false, error: errorMessage, isServerError };
     }
   };
 
   const register = async (data) => {
     try {
       console.log('[Auth] Register attempt:', data.full_name, data.user_type);
-      console.log('[Auth] API URL:', CONFIG.API_URL);
       
       const response = await api.post('/auth/register', {
         ...data,
@@ -128,8 +110,6 @@ export const AuthProvider = ({ children }) => {
           acceptedAt: new Date().toISOString(),
         },
       });
-      
-      console.log('[Auth] Register response received');
       
       const { access_token, user: userData } = response.data;
       
@@ -144,58 +124,34 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error('[Auth] Register error:', error.message);
-      console.error('[Auth] Error response:', error.response?.data);
-      console.error('[Auth] Error status:', error.response?.status);
       
       let errorMessage = "Erreur d'inscription";
+      const status = error.status || error.response?.status;
+      const data = error.data || error.response?.data;
+      const backendError = data?.detail;
       
-      if (error.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-        const backendError = data?.detail;
-        
-        if (backendError) {
-          if (Array.isArray(backendError)) {
-            const messages = backendError.map(err => {
-              const msg = err.msg || '';
-              return msg.replace('Value error, ', '');
-            });
-            errorMessage = messages.join('\n');
-          } else if (typeof backendError === 'string') {
-            const normalizedError = backendError.toLowerCase();
-            
-            if (normalizedError.includes('téléphone') || 
-                normalizedError.includes('telephone') || 
-                normalizedError.includes('phone') ||
-                normalizedError.includes('numéro')) {
-              errorMessage = 'Ce numéro de téléphone est déjà enregistré. Connectez-vous ou utilisez un autre numéro.';
-            } else if (normalizedError.includes('email') || normalizedError.includes('mail')) {
-              errorMessage = 'Cet email est déjà enregistré. Connectez-vous ou utilisez un autre email.';
-            } else if (normalizedError.includes('mot de passe') || normalizedError.includes('password')) {
-              errorMessage = 'Le mot de passe doit contenir au moins 6 caractères.';
-            } else {
-              errorMessage = backendError;
-            }
+      if (backendError) {
+        if (Array.isArray(backendError)) {
+          errorMessage = backendError.map(err => (err.msg || '').replace('Value error, ', '')).join('\n');
+        } else if (typeof backendError === 'string') {
+          const norm = backendError.toLowerCase();
+          if (norm.includes('telephone') || norm.includes('phone') || norm.includes('numero')) {
+            errorMessage = 'Ce numero est deja enregistre. Connectez-vous ou utilisez un autre numero.';
+          } else if (norm.includes('email') || norm.includes('mail')) {
+            errorMessage = 'Cet email est deja enregistre. Connectez-vous ou utilisez un autre email.';
           } else {
-            errorMessage = JSON.stringify(backendError);
+            errorMessage = backendError;
           }
-        } else if (status === 422) {
-          errorMessage = 'Veuillez vérifier les informations saisies. Tous les champs obligatoires doivent être remplis.';
-        } else if (status === 429) {
-          errorMessage = 'Trop de tentatives. Patientez une minute avant de réessayer.';
-        } else if (status >= 500) {
-          errorMessage = 'Le serveur rencontre un problème. Réessayez dans quelques instants.';
         }
-      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        errorMessage = 'La connexion est trop lente. Vérifiez votre réseau et réessayez.';
-      } else if (error.message?.includes('Network Error') || error.message?.includes('ERR_NETWORK')) {
-        errorMessage = 'Impossible de contacter le serveur. Vérifiez votre connexion internet.';
+      } else if (status === 422) {
+        errorMessage = 'Veuillez verifier les informations saisies.';
+      } else if (status >= 500) {
+        errorMessage = 'Le serveur rencontre un probleme. Reessayez dans quelques instants.';
+      } else if (error.type === 'timeout' || error.type === 'network') {
+        errorMessage = 'Impossible de se connecter au serveur. Verifiez votre connexion internet.';
       }
       
-      return {
-        success: false,
-        error: errorMessage,
-      };
+      return { success: false, error: errorMessage };
     }
   };
 
@@ -216,7 +172,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.detail || 'Erreur de mise à jour',
+        error: error.data?.detail || error.message || 'Erreur de mise a jour',
       };
     }
   };

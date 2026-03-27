@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS, FONTS, SPACING } from '../../config';
-import axios from 'axios';
-import { API_URL } from '../../config';
+import { api } from '../../services/api';
 
 const AuditorDashboardScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -21,7 +20,7 @@ const AuditorDashboardScreen = ({ navigation }) => {
 
   const fetchDashboard = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/carbon-auditor/dashboard/${user?.id}`);
+      const response = await api.get(`/carbon-auditor/dashboard/${user?.id}`);
       setDashboard(response.data);
     } catch (error) {
       console.error('Error fetching auditor dashboard:', error);

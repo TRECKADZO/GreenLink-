@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS, SPACING } from '../../config';
-import axios from 'axios';
-import { API_URL } from '../../config';
+import { api } from '../../services/api';
 
 const AuditorMissionScreen = ({ navigation, route }) => {
   const { missionId } = route.params;
@@ -26,7 +25,7 @@ const AuditorMissionScreen = ({ navigation, route }) => {
 
   const fetchMissionParcels = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/carbon-auditor/mission/${missionId}/parcels`);
+      const response = await api.get(`/carbon-auditor/mission/${missionId}/parcels`);
       setMission(response.data);
       setParcels(response.data.parcels || []);
     } catch (error) {

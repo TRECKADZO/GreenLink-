@@ -1,18 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
- * Hook résilient pour les appels API en Côte d'Ivoire
- * - Retry automatique silencieux (3 tentatives avec délai croissant)
- * - Safety timeout étendu (60s au lieu de 20s)
- * - Cache local : si des données existent, l'erreur est masquée
- * - Appels séquentiels pour réduire la charge réseau
+ * Hook resilient pour les appels API
+ * Les retries reseau sont geres par le client API (3 tentatives, 20/40/60s)
+ * Ce hook gere: chargement initial, pull-to-refresh, cache local
  */
-export function useResilientFetch(fetchFn, { autoRetry = true, maxRetries = 3, safetyTimeout = 60000 } = {}) {
+export function useResilientFetch(fetchFn, { safetyTimeout = 90000 } = {}) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
   const mountedRef = useRef(true);
 
   const execute = useCallback(async (silent = false) => {
@@ -22,12 +19,14 @@ export function useResilientFetch(fetchFn, { autoRetry = true, maxRetries = 3, s
       if (mountedRef.current) {
         setData(result);
         setError(null);
-        setRetryCount(0);
       }
     } catch (err) {
       console.warn('[ResilientFetch] Error:', err.message);
       if (mountedRef.current && !data) {
-        setError('Connexion difficile. Tirez vers le bas pour reessayer.');
+        const msg = err.type === 'network'
+          ? 'Pas de connexion internet. Tirez vers le bas pour reessayer.'
+          : 'Impossible de charger les donnees. Tirez vers le bas pour reessayer.';
+        setError(msg);
       }
     } finally {
       if (mountedRef.current) {
@@ -37,51 +36,32 @@ export function useResilientFetch(fetchFn, { autoRetry = true, maxRetries = 3, s
     }
   }, [fetchFn, data]);
 
-  // Initial fetch + safety timeout
   useEffect(() => {
     execute();
     const timeout = setTimeout(() => {
       if (mountedRef.current && loading) {
         setLoading(false);
         if (!data) {
-          setError('Le serveur met du temps a repondre. Tirez vers le bas pour reessayer.');
+          setError('Impossible de charger les donnees. Tirez vers le bas pour reessayer.');
         }
       }
     }, safetyTimeout);
-    return () => { clearTimeout(timeout); };
+    return () => clearTimeout(timeout);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => { mountedRef.current = false; };
   }, []);
 
-  // Auto-retry silencieux
-  useEffect(() => {
-    if (autoRetry && error && !data && retryCount < maxRetries) {
-      const delay = 8000 + retryCount * 4000;
-      const timer = setTimeout(() => {
-        if (mountedRef.current) {
-          console.log(`[ResilientFetch] Auto-retry ${retryCount + 1}/${maxRetries}`);
-          setRetryCount(prev => prev + 1);
-          execute(true);
-        }
-      }, delay);
-      return () => clearTimeout(timer);
-    }
-  }, [error, retryCount, data, autoRetry, maxRetries, execute]);
-
   const refresh = useCallback(() => {
     setRefreshing(true);
-    setRetryCount(0);
     execute();
   }, [execute]);
 
   const retry = useCallback(() => {
-    setRetryCount(0);
     setLoading(true);
     execute();
   }, [execute]);
 
-  return { data, loading, refreshing, error, retryCount, maxRetries, refresh, retry };
+  return { data, loading, refreshing, error, refresh, retry };
 }

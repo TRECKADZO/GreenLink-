@@ -74,7 +74,7 @@ export default function CoopDashboardScreen({ navigation }) {
       console.error('[Dashboard] Error:', err.message);
       if (!dashboard) {
         // Seulement afficher l'erreur si on n'a pas de données en cache
-        setError('Connexion difficile. Tirez vers le bas pour reessayer.');
+        setError('Impossible de charger le tableau de bord. Tirez vers le bas pour reessayer.');
       }
     } finally {
       setLoading(false);
@@ -90,7 +90,7 @@ export default function CoopDashboardScreen({ navigation }) {
       if (loading) {
         setLoading(false);
         if (!dashboard) {
-          setError('Le serveur met du temps a repondre. Tirez vers le bas pour reessayer.');
+          setError('Impossible de charger le tableau de bord. Tirez vers le bas pour reessayer.');
         }
       }
     }, 60000);

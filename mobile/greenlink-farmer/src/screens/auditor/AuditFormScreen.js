@@ -16,8 +16,7 @@ import * as Location from 'expo-location';
 import NetInfo from '@react-native-community/netinfo';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS, SPACING } from '../../config';
-import axios from 'axios';
-import { API_URL } from '../../config';
+import { api } from '../../services/api';
 import { auditOfflineService } from '../../services/auditOffline';
 
 const AuditFormScreen = ({ navigation, route }) => {
@@ -236,8 +235,8 @@ const AuditFormScreen = ({ navigation, route }) => {
       }
 
       // Submit online
-      const response = await axios.post(
-        `${API_URL}/api/carbon-auditor/audit/submit?auditor_id=${user.id}&mission_id=${missionId}`,
+      const response = await api.post(
+        `/carbon-auditor/audit/submit?auditor_id=${user.id}&mission_id=${missionId}`,
         {
           ...auditData,
           photos: photos.map(p => p.uri)

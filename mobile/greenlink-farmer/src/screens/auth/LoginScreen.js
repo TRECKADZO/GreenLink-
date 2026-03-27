@@ -29,35 +29,19 @@ const LoginScreen = ({ navigation }) => {
 
     setLoading(true);
     const result = await login(identifier, password);
-    
-    if (!result.success && result.isServerError) {
-      // Erreur serveur/réseau — proposer un retry automatique
-      setLoading(false);
-      Alert.alert(
-        'Probleme de connexion',
-        result.error + '\n\nVoulez-vous reessayer ?',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { 
-            text: 'Reessayer', 
-            onPress: async () => {
-              setLoading(true);
-              await new Promise(r => setTimeout(r, 2000));
-              const retry = await login(identifier, password);
-              setLoading(false);
-              if (!retry.success) {
-                Alert.alert('Erreur', retry.error);
-              }
-            }
-          },
-        ]
-      );
-      return;
-    }
-    
     setLoading(false);
+    
     if (!result.success) {
-      Alert.alert('Erreur', result.error);
+      Alert.alert(
+        result.isServerError ? 'Connexion impossible' : 'Erreur',
+        result.error,
+        result.isServerError
+          ? [
+              { text: 'OK', style: 'cancel' },
+              { text: 'Reessayer', onPress: () => handleLogin() },
+            ]
+          : [{ text: 'OK' }]
+      );
     }
   };
 

@@ -2,14 +2,11 @@
 // Optimisée pour faible connectivité en Côte d'Ivoire
 
 export const CONFIG = {
-  // URLs API — CDN Bunny en premier (fonctionne partout), direct en fallback
-  API_URL: 'https://greenlink-cdn.b-cdn.net',
+  // URL unique vers le backend — pas de fallback CDN
   DIRECT_API_URL: 'https://redd-crash-hotfix.preview.emergentagent.com',
   
-  // Timeouts
-  REQUEST_TIMEOUT: 30000,
-  RETRY_ATTEMPTS: 2,
-  RETRY_DELAY: 2000,
+  // Timeouts geres directement par le client API (20s/40s/60s)
+  REQUEST_TIMEOUT: 20000,
   
   // Cache local
   CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 heures
@@ -21,7 +18,7 @@ export const CONFIG = {
   PAGE_SIZE: 10,
 };
 
-// Named export for backward compatibility with screens importing { API_URL }
+// Export direct — utilise partout dans l'app
 export const API_URL = CONFIG.DIRECT_API_URL;
 
 
