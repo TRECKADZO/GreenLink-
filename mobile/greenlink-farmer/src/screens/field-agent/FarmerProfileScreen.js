@@ -461,7 +461,7 @@ const FarmerProfileScreen = ({ navigation, route }) => {
                     </View>
                     <View style={{ paddingHorizontal: 12, paddingBottom: 10 }}>
                       <View style={{ flexDirection: 'row', gap: 12 }}>
-                        <Text style={{ fontSize: 11, color: '#64748b' }}>{v.total_verified || 0}/{v.total_checked || 0} conformes</Text>
+                        <Text style={{ fontSize: 11, color: '#64748b' }}>{v.total_conforme || v.total_verified || 0}/{v.total_checked || 0} conformes</Text>
                         <Text style={{ fontSize: 11, color: '#64748b' }}>{v.conformity_pct || 0}% conformite</Text>
                       </View>
                       {v.suivi_requis && (

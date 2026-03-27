@@ -484,7 +484,7 @@ const REDDTrackingPage = () => {
                   </div>
                   <div className="flex gap-4 text-xs text-gray-500">
                     <span>{new Date(v.date_visite).toLocaleDateString('fr-FR')}</span>
-                    <span>{v.total_verified}/{v.total_checked} conformes</span>
+                    <span>{v.total_conforme || v.total_verified || 0}/{v.total_checked} conformes</span>
                     <span>{v.conformity_pct}%</span>
                   </div>
                 </Card>
