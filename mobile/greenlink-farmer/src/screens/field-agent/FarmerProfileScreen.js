@@ -8,6 +8,7 @@ import { API_URL } from '../../config';
 const FORMS = [
   { id: 'ici', label: 'Fiche ICI', desc: 'Evaluation initiale: famille, enfants, education, pratiques', icon: 'document-text', color: '#8b5cf6', bg: '#8b5cf620', screen: 'FarmerICIForm' },
   { id: 'ssrte', label: 'Visite SSRTE', desc: 'Visite terrain: observation travail enfants, risques, remediation', icon: 'clipboard', color: '#06b6d4', bg: '#06b6d420', screen: 'SSRTEVisitForm' },
+  { id: 'redd', label: 'Fiche REDD+', desc: 'Verification des 21 pratiques REDD+ (agroforesterie, sols, tracabilite)', icon: 'leaf', color: '#059669', bg: '#05966920', screen: 'REDDTrackingForm' },
   { id: 'parcels', label: 'Declaration parcelles', desc: 'GPS, superficie, type de culture', icon: 'map', color: '#f59e0b', bg: '#f59e0b20', screen: 'ParcelVerification' },
   { id: 'photos', label: 'Photos geolocalisees', desc: 'Photos terrain avec position GPS', icon: 'camera', color: '#ec4899', bg: '#ec489920', screen: 'GeoPhoto' },
   { id: 'register', label: 'Enregistrement membre', desc: 'Inscrire comme membre cooperative', icon: 'person-add', color: '#10b981', bg: '#10b98120', screen: 'AddCoopMember' },
@@ -21,6 +22,7 @@ const FarmerProfileScreen = ({ navigation, route }) => {
   const [history, setHistory] = useState(null);
   const [historyTab, setHistoryTab] = useState('ssrte');
   const [expandedVisit, setExpandedVisit] = useState(null);
+  const [reddVisits, setReddVisits] = useState([]);
 
   // Refresh farmer data on focus
   useEffect(() => {
@@ -28,6 +30,7 @@ const FarmerProfileScreen = ({ navigation, route }) => {
       if (farmer?.id) {
         refreshFarmerData();
         loadHistory();
+        loadReddHistory();
       }
     });
     return unsubscribe;
@@ -39,6 +42,18 @@ const FarmerProfileScreen = ({ navigation, route }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) setHistory(await res.json());
+    } catch {}
+  };
+
+  const loadReddHistory = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/redd/tracking/visits?farmer_id=${farmer?.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReddVisits(data.visits || []);
+      }
     } catch {}
   };
 
@@ -274,14 +289,21 @@ const FarmerProfileScreen = ({ navigation, route }) => {
               onPress={() => setHistoryTab('ssrte')}
             >
               <Ionicons name="clipboard" size={14} color={historyTab === 'ssrte' ? '#0891b2' : '#94a3b8'} />
-              <Text style={[styles.historyTabText, historyTab === 'ssrte' && { color: '#0891b2' }]}>Visites SSRTE</Text>
+              <Text style={[styles.historyTabText, historyTab === 'ssrte' && { color: '#0891b2' }]}>SSRTE</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.historyTab, historyTab === 'ici' && styles.historyTabActive]}
               onPress={() => setHistoryTab('ici')}
             >
               <Ionicons name="document-text" size={14} color={historyTab === 'ici' ? '#7c3aed' : '#94a3b8'} />
-              <Text style={[styles.historyTabText, historyTab === 'ici' && { color: '#7c3aed' }]}>Profil ICI</Text>
+              <Text style={[styles.historyTabText, historyTab === 'ici' && { color: '#7c3aed' }]}>ICI</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.historyTab, historyTab === 'redd' && styles.historyTabActive]}
+              onPress={() => setHistoryTab('redd')}
+            >
+              <Ionicons name="leaf" size={14} color={historyTab === 'redd' ? '#059669' : '#94a3b8'} />
+              <Text style={[styles.historyTabText, historyTab === 'redd' && { color: '#059669' }]}>REDD+</Text>
             </TouchableOpacity>
           </View>
 
@@ -409,6 +431,50 @@ const FarmerProfileScreen = ({ navigation, route }) => {
                 </View>
               ) : (
                 <Text style={styles.emptyText}>Aucun profil ICI enregistre</Text>
+              )}
+            </View>
+          )}
+
+          {/* REDD+ Tab */}
+          {historyTab === 'redd' && (
+            <View>
+              {reddVisits.length > 0 ? reddVisits.map((v, i) => {
+                const levelColors = { Excellence: '#059669', Avance: '#2563eb', Intermediaire: '#f59e0b', Debutant: '#f97316', 'Non conforme': '#ef4444' };
+                const lColor = levelColors[v.redd_level] || '#94a3b8';
+                return (
+                  <View key={i} style={[styles.visitCard, { borderLeftWidth: 3, borderLeftColor: lColor }]}>
+                    <View style={styles.visitHeader}>
+                      <View style={[styles.riskDot, { backgroundColor: lColor }]} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.visitDate}>
+                          {v.date_visite ? new Date(v.date_visite).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                        </Text>
+                        <Text style={styles.visitAgent}>{v.agent_name || 'Agent'}</Text>
+                      </View>
+                      <View style={{ alignItems: 'center', marginRight: 8 }}>
+                        <Text style={{ fontSize: 16, fontWeight: '800', color: lColor }}>{v.redd_score || 0}</Text>
+                        <Text style={{ fontSize: 9, color: '#94a3b8' }}>/10</Text>
+                      </View>
+                      <View style={[styles.riskBadge, { backgroundColor: lColor + '20', borderColor: lColor + '40' }]}>
+                        <Text style={[styles.riskBadgeText, { color: lColor }]}>{v.redd_level}</Text>
+                      </View>
+                    </View>
+                    <View style={{ paddingHorizontal: 12, paddingBottom: 10 }}>
+                      <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <Text style={{ fontSize: 11, color: '#64748b' }}>{v.total_verified || 0}/{v.total_checked || 0} conformes</Text>
+                        <Text style={{ fontSize: 11, color: '#64748b' }}>{v.conformity_pct || 0}% conformite</Text>
+                      </View>
+                      {v.suivi_requis && (
+                        <View style={[styles.followUpBadge, { marginTop: 6 }]}>
+                          <Ionicons name="alert-circle" size={14} color="#f59e0b" />
+                          <Text style={styles.followUpText}>Suivi requis</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
+              }) : (
+                <Text style={styles.emptyText}>Aucune fiche REDD+ enregistree</Text>
               )}
             </View>
           )}

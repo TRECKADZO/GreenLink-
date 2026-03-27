@@ -30,9 +30,11 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - Guide REDD+ (21 pratiques, 5 categories) - Web + Mobile
 - Dashboard MRV REDD+ + Export PDF professionnel
 - **Fiche de suivi REDD+ agents terrain** (NEW):
+  - Flux: Agent terrain → Selection agriculteur → Fiche REDD+ (comme ICI/SSRTE)
   - Backend: `/api/redd/tracking/` (visit, visits, stats, practices-list)
   - Frontend Web: `/redd/tracking` (formulaire, historique, statistiques)
-  - Mobile: `REDDTrackingFormScreen` + `REDDGuideScreen` enregistres dans navigation
+  - Mobile: `REDDTrackingFormScreen` accessible via `FarmerProfileScreen`
+  - Onglet historique REDD+ dans le profil agriculteur (mobile)
 - Section REDD+ page d'accueil web + mobile
 
 ### SSRTE/ICI
