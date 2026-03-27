@@ -90,6 +90,7 @@ async def root():
     return {"message": "Hello World"}
 
 @api_router.get("/health")
+@api_router.head("/health")
 async def health_check():
     return {"status": "ok", "service": "greenlink-api"}
 
