@@ -1,7 +1,7 @@
 # GreenLink Agritech - PRD
 
-## Problème Original
-Plateforme agricole complète (React + FastAPI + Expo React Native + MongoDB) pour la Côte d'Ivoire.
+## Probleme Original
+Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pour la Cote d'Ivoire.
 
 ## Architecture
 - **Backend**: FastAPI (Python) + MongoDB Atlas (`greenlink_production`)
@@ -12,30 +12,68 @@ Plateforme agricole complète (React + FastAPI + Expo React Native + MongoDB) po
 ## Shortcode USSD: `*144*99#`
 
 ## Fix Critique v1.71.0
-- **Cause du bug "données introuvables"** : Le Bunny CDN (`greenlink-cdn.b-cdn.net`) retourne 404 pour toutes les routes `/api/`. L'intercepteur mobile ne faisait le fallback que pour les erreurs >= 500, donc les 404 du CDN bloquaient toutes les requêtes données après login.
-- **Fix** : URL directe (`DIRECT_API_URL`) maintenant en priorité, CDN en fallback. L'intercepteur gère aussi les 404 pour le fallback.
+- **Cause du bug "donnees introuvables"** : Le Bunny CDN retourne 404 pour les routes `/api/`. Fix: URL directe en priorite, CDN en fallback.
 
-## Ce qui est implémenté
+## Ce qui est implemente
+
+### Core
 - Auth JWT, Dashboards (cooperative, admin, farmer, agent)
-- Calculateur carbone USSD (12 questions dont 3 REDD+)
-- Guide REDD+ (21 pratiques, 5 catégories)
-- Dashboard MRV REDD+ + Export PDF professionnel
-- SSRTE/ICI alertes USSD
-- Section REDD+ page d'accueil web + mobile
-- Conformité EUDR & ARS 1000
 - Marketplace, FAQ, Notifications
+- Conformite EUDR & ARS 1000
+
+### USSD / Carbon
+- Calculateur carbone USSD (9 questions avec explications des concepts)
+- Resultats USSD: Score, Prime estimee, Niveau ARS (sans formules ni pourcentages)
+- Section "Notions importantes" sur la page web du calculateur
+
+### REDD+
+- Guide REDD+ (21 pratiques, 5 categories) - Web + Mobile
+- Dashboard MRV REDD+ + Export PDF professionnel
+- **Fiche de suivi REDD+ agents terrain** (NEW):
+  - Backend: `/api/redd/tracking/` (visit, visits, stats, practices-list)
+  - Frontend Web: `/redd/tracking` (formulaire, historique, statistiques)
+  - Mobile: `REDDTrackingFormScreen` + `REDDGuideScreen` enregistres dans navigation
+- Section REDD+ page d'accueil web + mobile
+
+### SSRTE/ICI
+- SSRTE/ICI alertes USSD
+- Dashboard SSRTE cooperatives
+
+### Mobile Navigation (Corrige)
+- Score REDD+ -> REDDGuide (etait USSDCarbon)
+- Pratiques REDD+ -> REDDGuide (etait USSDFullSimulator)
+- Fiche REDD+ accessible depuis FieldAgentDashboard
 
 ## Backlog
-### P1
-- Vérifier que v1.71.0 résout le problème de données sur mobile
+
 ### P2
-- Configurer Bunny CDN pour proxyer les routes /api (ou utiliser uniquement l'URL directe)
-- Passerelle SMS Orange CI / MTN
-- Langues locales (Baoulé/Dioula)
+- Configurer passerelle SMS reelle Orange CI / MTN (actuellement MOCK)
+- Langues locales (Baoule/Dioula) dans l'app mobile
+
 ### P3
 - Refactoriser ussd.py (>2200 lignes)
 - Optimiser get_coop_members (N+1)
 
 ## Credentials
 - Admin: `klenakan.eric@gmail.com` / `474Treckadzo`
-- Test farmer: `+2250707070707` (KINDA YABRE, 6 parcelles, 18 ha)
+- Test farmer: `+2250707070707`
+
+## API Endpoints Cles
+- `POST /api/ussd/carbon-calculator` - Calculateur USSD
+- `GET /api/redd/mrv/summary` - MRV Dashboard
+- `GET /api/redd/mrv/export-pdf` - Export PDF
+- `GET /api/redd/tracking/practices-list` - 21 pratiques REDD+
+- `POST /api/redd/tracking/visit` - Creer fiche de suivi
+- `GET /api/redd/tracking/visits` - Historique fiches
+- `GET /api/redd/tracking/stats` - Statistiques suivi
+- `GET /api/ussd/ssrte/responses` - Alertes SSRTE
+
+## Fichiers Cles
+- `/app/backend/routes/redd_tracking.py` - API fiche de suivi REDD+
+- `/app/backend/routes/redd.py` - API MRV REDD+
+- `/app/backend/routes/ussd.py` - Moteur USSD (>2200 lignes)
+- `/app/frontend/src/pages/farmer/USSDCarbonCalculator.jsx` - Calculateur web
+- `/app/frontend/src/pages/cooperative/REDDTrackingPage.jsx` - Suivi REDD+ web
+- `/app/mobile/greenlink-farmer/src/screens/redd/REDDGuideScreen.js`
+- `/app/mobile/greenlink-farmer/src/screens/redd/REDDTrackingFormScreen.js`
+- `/app/mobile/greenlink-farmer/src/AppContent.js` - Navigation mobile
