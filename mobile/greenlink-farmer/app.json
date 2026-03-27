@@ -2,7 +2,7 @@
   "expo": {
     "name": "GreenLink Agritech",
     "slug": "greenlink-farmer",
-    "version": "1.70.0",
+    "version": "1.71.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

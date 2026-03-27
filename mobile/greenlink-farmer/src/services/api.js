@@ -2,10 +2,11 @@ import axios from 'axios';
 import { CONFIG } from '../config';
 
 // URLs dans l'ordre de priorite
-const PRIMARY_URL = CONFIG.API_URL + '/api';
-const FALLBACK_URL = CONFIG.DIRECT_API_URL + '/api';
+// Le CDN ne proxy pas les routes /api, donc utiliser l'URL directe en priorite
+const PRIMARY_URL = CONFIG.DIRECT_API_URL + '/api';
+const FALLBACK_URL = CONFIG.API_URL + '/api';
 
-// Instance Axios simple — CDN Bunny en premier
+// Instance Axios simple — URL directe en premier
 const api = axios.create({
   baseURL: PRIMARY_URL,
   timeout: CONFIG.REQUEST_TIMEOUT || 30000,
@@ -32,9 +33,10 @@ api.interceptors.response.use(
     const config = error.config;
     if (!config) return Promise.reject(error);
 
-    // Ne pas retry si c'est une erreur metier (401, 422, etc.)
+    // Ne pas retry si c'est une erreur metier (401, 403, 422, etc.)
+    // Mais permettre le fallback pour 404 (CDN ne proxy pas /api)
     const status = error.response?.status;
-    if (status && status < 500 && status !== 0) {
+    if (status && status < 500 && status !== 0 && status !== 404) {
       return Promise.reject(error);
     }
 
@@ -67,31 +69,31 @@ const apiService = {
   put: (url, data, cfg) => api.put(url, data, cfg),
   delete: (url, cfg) => api.delete(url, cfg),
 
-  // Login special — essaie les 2 URLs directement
+  // Login special — essaie URL directe puis CDN
   login: async (identifier, password) => {
     const payload = { identifier, password };
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
 
-    // Essai 1: CDN Bunny
+    // Essai 1: URL directe (prioritaire)
     try {
-      console.log('[API] Login via CDN:', PRIMARY_URL);
+      console.log('[API] Login via direct:', PRIMARY_URL);
       const res = await axios.post(PRIMARY_URL + '/auth/login', payload, {
         timeout: 30000, headers,
       });
       return res;
     } catch (e1) {
-      console.warn('[API] CDN login failed:', e1.message);
+      console.warn('[API] Direct login failed:', e1.message);
     }
 
-    // Essai 2: URL directe
+    // Essai 2: CDN Bunny (fallback)
     try {
-      console.log('[API] Login via direct:', FALLBACK_URL);
+      console.log('[API] Login via CDN:', FALLBACK_URL);
       const res = await axios.post(FALLBACK_URL + '/auth/login', payload, {
         timeout: 30000, headers,
       });
       return res;
     } catch (e2) {
-      console.warn('[API] Direct login failed:', e2.message);
+      console.warn('[API] CDN login failed:', e2.message);
       throw e2;
     }
   },
