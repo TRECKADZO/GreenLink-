@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import Navbar from '../../components/Navbar';
@@ -73,9 +73,14 @@ const REDD_CATEGORIES = [
 
 const REDDTrackingPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const paramFarmerName = searchParams.get('farmer') || '';
+  const paramFarmerPhone = searchParams.get('phone') || '';
+  const paramFarmerId = searchParams.get('id') || '';
   const [tab, setTab] = useState('form');
-  const [farmerName, setFarmerName] = useState('');
-  const [farmerPhone, setFarmerPhone] = useState('');
+  const [farmerName, setFarmerName] = useState(paramFarmerName);
+  const [farmerPhone, setFarmerPhone] = useState(paramFarmerPhone);
+  const [farmerId] = useState(paramFarmerId);
   const [superficie, setSuperficie] = useState('');
   const [arbres, setArbres] = useState('');
   const [practiceStatuses, setPracticeStatuses] = useState({});
@@ -165,7 +170,7 @@ const REDDTrackingPage = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          farmer_id: `web_${Date.now()}`,
+          farmer_id: farmerId || `web_${Date.now()}`,
           farmer_name: farmerName,
           farmer_phone: farmerPhone,
           practices_verified,
