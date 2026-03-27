@@ -7,6 +7,7 @@
  */
 import { Platform } from 'react-native';
 import { CONFIG } from '../config';
+import { checkRealConnectivity } from '../hooks/useNetworkStatus';
 
 // URL unique vers le backend (pas de fallback CDN)
 const BASE_URL = CONFIG.DIRECT_API_URL + '/api';
@@ -17,7 +18,7 @@ let authToken = null;
 // User-Agent realiste selon la plateforme
 const USER_AGENT = Platform.OS === 'ios'
   ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1'
-  : 'Mozilla/5.0 (Linux; Android 14; SM-A546B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36';
+  : 'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36';
 
 // Headers qui imitent un vrai navigateur mobile
 function getHeaders(extraHeaders = {}) {
@@ -26,7 +27,7 @@ function getHeaders(extraHeaders = {}) {
     'Content-Type': 'application/json',
     'User-Agent': USER_AGENT,
     'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.5',
-    'Cache-Control': 'no-cache',
+    'Cache-Control': 'no-cache, no-store',
     'Pragma': 'no-cache',
     ...extraHeaders,
   };
@@ -45,8 +46,7 @@ class ApiError extends Error {
     this.name = 'ApiError';
     this.status = status;
     this.data = data;
-    this.type = type; // 'timeout' | 'network' | 'abort' | 'http' | 'unknown'
-    // Compat Axios : certains screens lisent error.response
+    this.type = type; // 'timeout' | 'network' | 'offline' | 'http' | 'unknown'
     this.response = status ? { status, data } : undefined;
   }
 }
@@ -71,6 +71,31 @@ async function fetchWithTimeout(url, options, timeoutMs) {
   }
 }
 
+/**
+ * Classifier l'erreur avec verification reelle de connectivite
+ * Ne jamais conclure "pas d'internet" sans verifier NetInfo
+ */
+async function classifyError(err) {
+  if (err instanceof ApiError) return err;
+
+  // Timeout (AbortController)
+  if (err.name === 'AbortError') {
+    return new ApiError('Le serveur met du temps a repondre', 0, null, 'timeout');
+  }
+
+  // TypeError fetch = potentielle erreur reseau, MAIS verifier d'abord
+  if (err.name === 'TypeError') {
+    const connectivity = await checkRealConnectivity();
+    if (!connectivity.isConnected) {
+      return new ApiError('Pas de connexion internet', 0, null, 'offline');
+    }
+    // Internet OK mais fetch a echoue = probleme serveur/DNS/SSL, pas "no internet"
+    return new ApiError('Impossible de joindre le serveur', 0, null, 'network');
+  }
+
+  return new ApiError(err.message || 'Erreur inconnue', 0, null, 'unknown');
+}
+
 // ========================
 // Requete avec retry + backoff exponentiel
 // ========================
@@ -90,7 +115,6 @@ async function requestWithRetry(url, options = {}) {
 
       const response = await fetchWithTimeout(url, options, timeout);
 
-      // Reponse HTTP recue (meme si erreur 4xx/5xx)
       const contentType = response.headers?.get('content-type') || '';
       let data;
       if (contentType.includes('application/json')) {
@@ -100,13 +124,12 @@ async function requestWithRetry(url, options = {}) {
       }
 
       if (response.ok) {
-        if (__DEV__) console.log(`[API] ${response.status} OK ${url}`);
+        if (__DEV__) console.log(`[API] ${response.status} OK`);
         return { data, status: response.status };
       }
 
-      // Erreur HTTP 4xx — ne pas retry (erreur client)
+      // 4xx — ne pas retry (erreur client)
       if (response.status >= 400 && response.status < 500) {
-        if (__DEV__) console.warn(`[API] ${response.status} ${url}`, data);
         throw new ApiError(
           typeof data?.detail === 'string' ? data.detail : `Erreur ${response.status}`,
           response.status,
@@ -115,44 +138,34 @@ async function requestWithRetry(url, options = {}) {
         );
       }
 
-      // Erreur HTTP 5xx — retry
-      if (__DEV__) console.warn(`[API] ${response.status} serveur, retry...`, url);
+      // 5xx — retry
+      if (__DEV__) console.warn(`[API] ${response.status} serveur, retry...`);
       lastError = new ApiError(`Erreur serveur ${response.status}`, response.status, data, 'http');
 
     } catch (err) {
-      // AbortError = timeout
-      if (err.name === 'AbortError') {
-        if (__DEV__) console.warn(`[API] Timeout ${timeout / 1000}s ${url} (tentative ${attempt + 1})`);
-        lastError = new ApiError('Timeout', 0, null, 'timeout');
-      }
-      // Erreur reseau (pas de response du tout)
-      else if (err.name === 'TypeError' && (err.message?.includes('Network') || err.message?.includes('fetch'))) {
-        if (__DEV__) console.warn(`[API] Network error ${url}:`, err.message);
-        lastError = new ApiError('Erreur reseau', 0, null, 'network');
-      }
-      // Erreur HTTP 4xx lancee par le bloc ci-dessus — ne pas retry
-      else if (err instanceof ApiError && err.type === 'http' && err.status >= 400 && err.status < 500) {
+      // 4xx deja classifiee — ne pas retry
+      if (err instanceof ApiError && err.type === 'http' && err.status >= 400 && err.status < 500) {
         throw err;
       }
-      // Autre erreur
-      else if (!(err instanceof ApiError)) {
-        if (__DEV__) console.warn(`[API] Error ${url}:`, err.message);
-        lastError = new ApiError(err.message || 'Erreur inconnue', 0, null, 'unknown');
-      } else {
-        lastError = err;
+      // Classifier avec verification reelle
+      lastError = await classifyError(err);
+      if (__DEV__) console.warn(`[API] Tentative ${attempt + 1} echouee: ${lastError.type} — ${lastError.message}`);
+
+      // Si vraiment offline, pas la peine de retry
+      if (lastError.type === 'offline') {
+        throw lastError;
       }
     }
 
-    // Backoff exponentiel avant le retry (sauf derniere tentative)
+    // Backoff avant retry (sauf derniere tentative)
     if (attempt < MAX_RETRIES - 1) {
-      const delay = 2000 * (attempt + 1); // 2s, 4s
+      const delay = 2000 * (attempt + 1);
       if (__DEV__) console.log(`[API] Attente ${delay / 1000}s avant tentative ${attempt + 2}...`);
       await new Promise(r => setTimeout(r, delay));
     }
   }
 
-  // Toutes les tentatives echouees
-  if (__DEV__) console.error(`[API] Echec definitif apres ${MAX_RETRIES} tentatives:`, lastError?.message);
+  if (__DEV__) console.error(`[API] Echec definitif apres ${MAX_RETRIES} tentatives`);
   throw lastError;
 }
 
@@ -229,7 +242,7 @@ const apiService = {
       'Content-Type': 'application/json',
       'User-Agent': USER_AGENT,
       'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.5',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-cache, no-store',
       'Pragma': 'no-cache',
     };
 
@@ -263,14 +276,14 @@ const apiService = {
         if (err instanceof ApiError && err.type === 'http' && err.status >= 400 && err.status < 500) {
           throw err;
         }
-        if (err.name === 'AbortError') {
-          lastError = new ApiError('Timeout', 0, null, 'timeout');
-        } else if (!(err instanceof ApiError)) {
-          lastError = new ApiError(err.message || 'Erreur reseau', 0, null, 'network');
-        } else {
-          lastError = err;
+        // Classifier avec verification reelle de connectivite
+        lastError = await classifyError(err);
+        if (__DEV__) console.warn(`[API] Login tentative ${attempt + 1} echouee: ${lastError.type} — ${lastError.message}`);
+
+        // Si vraiment offline, pas la peine de retry
+        if (lastError.type === 'offline') {
+          throw lastError;
         }
-        if (__DEV__) console.warn(`[API] Login tentative ${attempt + 1} echouee:`, lastError.type, lastError.message);
       }
 
       if (attempt < MAX_RETRIES - 1) {

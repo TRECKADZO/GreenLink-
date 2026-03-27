@@ -11,11 +11,13 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { Button, Divider } from '../../components/UI';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
+  const { checkConnectivity } = useNetworkStatus();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,16 +34,21 @@ const LoginScreen = ({ navigation }) => {
     setLoading(false);
     
     if (!result.success) {
-      Alert.alert(
-        result.isServerError ? 'Connexion impossible' : 'Erreur',
-        result.error,
-        result.isServerError
-          ? [
-              { text: 'OK', style: 'cancel' },
-              { text: 'Reessayer', onPress: () => handleLogin() },
-            ]
-          : [{ text: 'OK' }]
-      );
+      if (result.isServerError) {
+        // Verification reelle avant d'afficher le message
+        const connectivity = await checkConnectivity();
+        const title = connectivity.isConnected ? 'Serveur injoignable' : 'Pas de connexion';
+        const message = connectivity.isConnected
+          ? 'Le serveur ne repond pas. Reessayez dans quelques instants.'
+          : 'Verifiez votre WiFi ou donnees mobiles.';
+        
+        Alert.alert(title, message, [
+          { text: 'OK', style: 'cancel' },
+          { text: 'Reessayer', onPress: () => handleLogin() },
+        ]);
+      } else {
+        Alert.alert('Erreur', result.error);
+      }
     }
   };
 

@@ -84,13 +84,16 @@ export const AuthProvider = ({ children }) => {
         }
       } else if (error.type === 'timeout') {
         isServerError = true;
-        errorMessage = 'Impossible de joindre le serveur. Verifiez votre connexion internet et reessayez.';
-      } else if (error.type === 'network') {
+        errorMessage = 'Le serveur met du temps a repondre. Reessayez dans quelques instants.';
+      } else if (error.type === 'offline') {
         isServerError = true;
         errorMessage = 'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.';
+      } else if (error.type === 'network') {
+        isServerError = true;
+        errorMessage = 'Impossible de joindre le serveur. Reessayez dans quelques instants.';
       } else {
         isServerError = true;
-        errorMessage = 'Impossible de se connecter au serveur. Verifiez votre connexion internet.';
+        errorMessage = 'Impossible de se connecter. Reessayez dans quelques instants.';
       }
       
       return { success: false, error: errorMessage, isServerError };
