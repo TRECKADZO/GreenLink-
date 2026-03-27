@@ -86,7 +86,7 @@ const USSDCarbonScreen = () => {
         </View>
         {sessionActive && (
           <View style={styles.stepBadge}>
-            <Text style={styles.stepText}>{step}/9</Text>
+            <Text style={styles.stepText}>{step}/14</Text>
           </View>
         )}
         <View style={styles.offlineBadge}>
@@ -107,9 +107,9 @@ const USSDCarbonScreen = () => {
             </View>
             <View style={styles.howStep}>
               <View style={styles.howIcon}>
-                <Text style={{ fontWeight: 'bold', color: COLORS.primary, fontSize: 14 }}>9</Text>
+                <Text style={{ fontWeight: 'bold', color: COLORS.primary, fontSize: 14 }}>14</Text>
               </View>
-              <Text style={styles.howText}>9 questions{'\n'}simples</Text>
+              <Text style={styles.howText}>14 questions{'\n'}simples</Text>
             </View>
             <View style={styles.howStep}>
               <View style={styles.howIcon}>
@@ -142,7 +142,7 @@ const USSDCarbonScreen = () => {
                 </View>
                 <Text style={styles.welcomeTitle}>Calculateur Prime Carbone</Text>
                 <Text style={styles.welcomeDesc}>
-                  Repondez a 9 questions simples pour connaitre votre prime carbone estimee en FCFA/kg
+                  Repondez a 14 questions simples pour connaitre votre prime carbone estimee en FCFA/kg
                 </Text>
                 <TouchableOpacity style={styles.startBtn} onPress={startSession} data-testid="start-ussd-btn">
                   <Ionicons name="call" size={20} color="#fff" />

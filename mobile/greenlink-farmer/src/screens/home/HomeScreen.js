@@ -284,7 +284,7 @@ const HomeScreen = ({ navigation }) => {
           title="*144*99# Prime Carbone"
           subtitle="Calculez votre prime en 60s"
           icon="📞"
-          onPress={() => navigation.navigate('REDDGuide')}
+          onPress={() => navigation.navigate('USSDCarbon')}
           highlight={true}
         />
         
