@@ -525,5 +525,3 @@ const styles = StyleSheet.create({
 });
 
 export default FarmerICIFormScreen;
-
-export default FarmerICIFormScreen;
