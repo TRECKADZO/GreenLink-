@@ -123,35 +123,43 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
   };
 
   const togglePractice = (code, category) => {
+    // No longer used - kept for compatibility
+  };
+
+  const setStatus = (code, status) => {
     setPracticeStatuses(prev => {
-      const current = prev[code];
-      if (!current || current === 'non_evalue') return { ...prev, [code]: 'conforme' };
-      if (current === 'conforme') return { ...prev, [code]: 'non_conforme' };
-      return { ...prev, [code]: 'non_evalue' };
+      if (prev[code] === status) return { ...prev, [code]: undefined };
+      return { ...prev, [code]: status };
     });
   };
 
   const getStatusIcon = (code) => {
     const status = practiceStatuses[code];
     if (status === 'conforme') return { icon: 'checkmark-circle', color: '#10b981' };
+    if (status === 'partiellement') return { icon: 'alert-circle', color: '#f59e0b' };
     if (status === 'non_conforme') return { icon: 'close-circle', color: '#ef4444' };
+    if (status === 'non_applicable') return { icon: 'remove-circle', color: '#64748b' };
     return { icon: 'ellipse-outline', color: '#64748b' };
   };
 
   const getStatusLabel = (code) => {
     const status = practiceStatuses[code];
     if (status === 'conforme') return 'Conforme';
+    if (status === 'partiellement') return 'Partiellement';
     if (status === 'non_conforme') return 'Non conforme';
+    if (status === 'non_applicable') return 'N/A';
     return 'Non evalue';
   };
 
   const computeSummary = () => {
-    let total = 0, verified = 0;
+    let conforme = 0, partiel = 0, nonConforme = 0;
     Object.values(practiceStatuses).forEach(s => {
-      if (s !== 'non_evalue') total++;
-      if (s === 'conforme') verified++;
+      if (s === 'conforme') conforme++;
+      else if (s === 'partiellement') partiel++;
+      else if (s === 'non_conforme') nonConforme++;
     });
-    return { total, verified, pct: total > 0 ? Math.round(verified / total * 100) : 0 };
+    const total = conforme + partiel + nonConforme;
+    return { conforme, partiel, nonConforme, total, pct: total > 0 ? Math.round((conforme + partiel * 0.5) / total * 100) : 0 };
   };
 
   const saveVisit = async () => {
@@ -160,7 +168,7 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
       return;
     }
 
-    const evaluated = Object.entries(practiceStatuses).filter(([_, s]) => s !== 'non_evalue');
+    const evaluated = Object.entries(practiceStatuses).filter(([_, s]) => s && s !== 'non_applicable');
     if (evaluated.length === 0) {
       Alert.alert('Erreur', 'Veuillez evaluer au moins une pratique');
       return;
@@ -172,7 +180,7 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
     for (const cat of REDD_CATEGORIES) {
       for (const p of cat.practices) {
         const status = practiceStatuses[p.code];
-        if (status && status !== 'non_evalue') {
+        if (status && status !== 'non_applicable') {
           practices_verified.push({
             code: p.code,
             name: p.name,
@@ -322,16 +330,30 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
           </View>
         </View>
 
+        {/* Legend */}
+        <View style={styles.legendCard}>
+          <View style={styles.legendRow}>
+            <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#10b981' }]} /><Text style={styles.legendText}>Conforme</Text></View>
+            <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} /><Text style={styles.legendText}>Partiel</Text></View>
+            <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} /><Text style={styles.legendText}>Non conf.</Text></View>
+            <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#64748b' }]} /><Text style={styles.legendText}>N/A</Text></View>
+          </View>
+        </View>
+
         {/* Summary */}
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>{summary.verified}</Text>
+              <Text style={styles.summaryValue}>{summary.conforme}</Text>
               <Text style={styles.summaryLabel}>Conformes</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryValue, { color: '#f59e0b' }]}>{summary.total - summary.verified}</Text>
-              <Text style={styles.summaryLabel}>Non conformes</Text>
+              <Text style={[styles.summaryValue, { color: '#f59e0b' }]}>{summary.partiel}</Text>
+              <Text style={styles.summaryLabel}>Partiels</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryValue, { color: '#ef4444' }]}>{summary.nonConforme}</Text>
+              <Text style={styles.summaryLabel}>Non conf.</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={[styles.summaryValue, { color: '#3b82f6' }]}>{summary.pct}%</Text>
@@ -351,25 +373,53 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
             </View>
             {cat.practices.map((practice) => {
               const { icon, color } = getStatusIcon(practice.code);
+              const status = practiceStatuses[practice.code];
               return (
-                <TouchableOpacity
+                <View
                   key={practice.code}
                   style={[
                     styles.practiceItem,
-                    practiceStatuses[practice.code] === 'conforme' && styles.practiceItemConforme,
-                    practiceStatuses[practice.code] === 'non_conforme' && styles.practiceItemNonConforme,
+                    status === 'conforme' && styles.practiceItemConforme,
+                    status === 'partiellement' && styles.practiceItemPartiel,
+                    status === 'non_conforme' && styles.practiceItemNonConforme,
+                    status === 'non_applicable' && styles.practiceItemNA,
                   ]}
-                  onPress={() => togglePractice(practice.code, cat.id)}
-                  activeOpacity={0.7}
                 >
-                  <Ionicons name={icon} size={22} color={color} />
-                  <View style={styles.practiceInfo}>
-                    <Text style={styles.practiceName}>{practice.name}</Text>
-                    {practice.hint && <Text style={styles.practiceHint}>{practice.hint}</Text>}
-                    <Text style={[styles.practiceStatus, { color }]}>{getStatusLabel(practice.code)}</Text>
+                  <View style={styles.practiceTopRow}>
+                    <Ionicons name={icon} size={20} color={color} />
+                    <View style={styles.practiceInfo}>
+                      <Text style={styles.practiceName}>{practice.name}</Text>
+                      {practice.hint && <Text style={styles.practiceHint}>{practice.hint}</Text>}
+                    </View>
+                    <Text style={styles.practiceCode}>{practice.code}</Text>
                   </View>
-                  <Text style={styles.practiceCode}>{practice.code}</Text>
-                </TouchableOpacity>
+                  <View style={styles.statusButtons}>
+                    <TouchableOpacity
+                      style={[styles.statusBtn, status === 'conforme' && styles.statusBtnConforme]}
+                      onPress={() => setStatus(practice.code, 'conforme')}
+                    >
+                      <Text style={[styles.statusBtnText, status === 'conforme' && styles.statusBtnTextActive]}>Conforme</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.statusBtn, status === 'partiellement' && styles.statusBtnPartiel]}
+                      onPress={() => setStatus(practice.code, 'partiellement')}
+                    >
+                      <Text style={[styles.statusBtnText, status === 'partiellement' && styles.statusBtnTextActive]}>Partiel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.statusBtn, status === 'non_conforme' && styles.statusBtnNonConforme]}
+                      onPress={() => setStatus(practice.code, 'non_conforme')}
+                    >
+                      <Text style={[styles.statusBtnText, status === 'non_conforme' && styles.statusBtnTextActive]}>Non conf.</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.statusBtn, status === 'non_applicable' && styles.statusBtnNA]}
+                      onPress={() => setStatus(practice.code, 'non_applicable')}
+                    >
+                      <Text style={[styles.statusBtnText, status === 'non_applicable' && styles.statusBtnTextActive]}>N/A</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               );
             })}
           </View>
@@ -504,20 +554,64 @@ const styles = StyleSheet.create({
   catTitle: { fontSize: 15, fontWeight: '700' },
   catCount: { color: '#94a3b8', fontSize: 13 },
   practiceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#1e293b',
     padding: 12,
     borderRadius: 8,
     marginBottom: 6,
   },
+  practiceTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
   practiceItemConforme: { backgroundColor: '#064e3b' },
+  practiceItemPartiel: { backgroundColor: '#422006' },
   practiceItemNonConforme: { backgroundColor: '#450a0a' },
+  practiceItemNA: { backgroundColor: '#1e293b', opacity: 0.6 },
   practiceInfo: { flex: 1, marginLeft: 10 },
   practiceName: { color: '#fff', fontSize: 13, fontWeight: '500' },
   practiceHint: { color: '#94a3b8', fontSize: 11, marginTop: 2, lineHeight: 15 },
   practiceStatus: { fontSize: 11, marginTop: 1 },
   practiceCode: { color: '#475569', fontSize: 10, fontWeight: '600' },
+  statusButtons: {
+    flexDirection: 'row',
+    gap: 5,
+    marginTop: 8,
+    marginLeft: 30,
+  },
+  statusBtn: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: '#334155',
+    alignItems: 'center',
+  },
+  statusBtnConforme: { backgroundColor: '#059669' },
+  statusBtnPartiel: { backgroundColor: '#d97706' },
+  statusBtnNonConforme: { backgroundColor: '#dc2626' },
+  statusBtnNA: { backgroundColor: '#475569' },
+  statusBtnText: { color: '#94a3b8', fontSize: 10, fontWeight: '600' },
+  statusBtnTextActive: { color: '#fff' },
+  legendCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: { color: '#94a3b8', fontSize: 11 },
   textArea: {
     backgroundColor: '#1e293b',
     borderRadius: 10,

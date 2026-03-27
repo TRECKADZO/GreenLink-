@@ -69,30 +69,33 @@ async def create_redd_tracking_visit(
     for p in practices_verified:
         cat = p.get("category", "autre")
         if cat not in categories:
-            categories[cat] = {"verified": 0, "total": 0}
+            categories[cat] = {"verified": 0, "partial": 0, "non_conforme": 0, "total": 0}
         categories[cat]["total"] += 1
         if p.get("status") == "conforme":
             categories[cat]["verified"] += 1
+        elif p.get("status") == "partiellement":
+            categories[cat]["partial"] += 1
+        elif p.get("status") == "non_conforme":
+            categories[cat]["non_conforme"] += 1
 
-    total_verified = sum(1 for p in practices_verified if p.get("status") == "conforme")
-    total_checked = len(practices_verified)
-    conformity_pct = round(total_verified / max(total_checked, 1) * 100)
+    total_conforme = sum(1 for p in practices_verified if p.get("status") == "conforme")
+    total_partiel = sum(1 for p in practices_verified if p.get("status") == "partiellement")
+    total_non_conforme = sum(1 for p in practices_verified if p.get("status") == "non_conforme")
+    total_checked = total_conforme + total_partiel + total_non_conforme
+    conformity_pct = round((total_conforme + total_partiel * 0.5) / max(total_checked, 1) * 100)
 
     # REDD+ score estimation
     redd_score = 0
     for p in practices_verified:
-        if p.get("status") == "conforme":
-            cat = p.get("category", "")
-            if cat == "agroforesterie":
-                redd_score += 0.75
-            elif cat == "zero_deforestation":
-                redd_score += 0.5
-            elif cat == "gestion_sols":
-                redd_score += 0.5
-            elif cat == "restauration":
-                redd_score += 0.375
-            elif cat == "tracabilite":
-                redd_score += 0.25
+        status = p.get("status", "")
+        if status == "non_applicable":
+            continue
+        cat = p.get("category", "")
+        weight = {"agroforesterie": 0.75, "zero_deforestation": 0.5, "gestion_sols": 0.5, "restauration": 0.375, "tracabilite": 0.25}.get(cat, 0.3)
+        if status == "conforme":
+            redd_score += weight
+        elif status == "partiellement":
+            redd_score += weight * 0.5
     redd_score = min(round(redd_score, 1), 10)
 
     if redd_score >= 8:
@@ -117,7 +120,9 @@ async def create_redd_tracking_visit(
         "date_visite": data.get("date_visite") or datetime.now(timezone.utc).isoformat(),
         "practices_verified": practices_verified,
         "total_checked": total_checked,
-        "total_verified": total_verified,
+        "total_conforme": total_conforme,
+        "total_partiel": total_partiel,
+        "total_non_conforme": total_non_conforme,
         "conformity_pct": conformity_pct,
         "redd_score": redd_score,
         "redd_level": redd_level,
@@ -144,7 +149,8 @@ async def create_redd_tracking_visit(
             "score_redd": redd_score,
             "redd_level": redd_level,
             "last_redd_visit": datetime.now(timezone.utc).isoformat(),
-            "redd_practices_verified": total_verified,
+            "redd_practices_conforme": total_conforme,
+            "redd_practices_partiel": total_partiel,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }},
         upsert=False
@@ -156,6 +162,9 @@ async def create_redd_tracking_visit(
         "redd_score": redd_score,
         "redd_level": redd_level,
         "conformity_pct": conformity_pct,
+        "total_conforme": total_conforme,
+        "total_partiel": total_partiel,
+        "total_non_conforme": total_non_conforme,
     }
 
 

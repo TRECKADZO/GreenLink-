@@ -122,21 +122,25 @@ const REDDTrackingPage = () => {
   };
 
   const togglePractice = (code) => {
+    setPracticeStatuses(prev => ({ ...prev, [code]: prev[code] === 'conforme' ? 'non_evalue' : 'conforme' }));
+  };
+
+  const setStatus = (code, status) => {
     setPracticeStatuses(prev => {
-      const current = prev[code];
-      if (!current || current === 'non_evalue') return { ...prev, [code]: 'conforme' };
-      if (current === 'conforme') return { ...prev, [code]: 'non_conforme' };
-      return { ...prev, [code]: 'non_evalue' };
+      if (prev[code] === status) return { ...prev, [code]: undefined };
+      return { ...prev, [code]: status };
     });
   };
 
   const computeSummary = () => {
-    let total = 0, verified = 0;
+    let conforme = 0, partiel = 0, nonConforme = 0;
     Object.values(practiceStatuses).forEach(s => {
-      if (s !== 'non_evalue') total++;
-      if (s === 'conforme') verified++;
+      if (s === 'conforme') conforme++;
+      else if (s === 'partiellement') partiel++;
+      else if (s === 'non_conforme') nonConforme++;
     });
-    return { total, verified, pct: total > 0 ? Math.round(verified / total * 100) : 0 };
+    const total = conforme + partiel + nonConforme;
+    return { conforme, partiel, nonConforme, total, pct: total > 0 ? Math.round((conforme + partiel * 0.5) / total * 100) : 0 };
   };
 
   const handleSubmit = async () => {
@@ -144,7 +148,7 @@ const REDDTrackingPage = () => {
       alert('Veuillez entrer le nom du producteur');
       return;
     }
-    const evaluated = Object.entries(practiceStatuses).filter(([_, s]) => s !== 'non_evalue');
+    const evaluated = Object.entries(practiceStatuses).filter(([_, s]) => s && s !== 'non_applicable');
     if (evaluated.length === 0) {
       alert('Veuillez evaluer au moins une pratique');
       return;
@@ -155,7 +159,7 @@ const REDDTrackingPage = () => {
     for (const cat of REDD_CATEGORIES) {
       for (const p of cat.practices) {
         const status = practiceStatuses[p.code];
-        if (status && status !== 'non_evalue') {
+        if (status && status !== 'non_applicable') {
           practices_verified.push({ code: p.code, name: p.name, category: cat.id, status });
         }
       }
@@ -297,15 +301,29 @@ const REDDTrackingPage = () => {
               </div>
             </Card>
 
+            {/* Legend */}
+            <Card className="p-3 bg-gray-50 border-gray-200">
+              <div className="flex flex-wrap gap-3 justify-center text-xs">
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-500" /> Conforme</span>
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500" /> Partiellement</span>
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500" /> Non conforme</span>
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-gray-300" /> Non applicable</span>
+              </div>
+            </Card>
+
             {/* Summary */}
             <Card className="p-4 bg-gray-900 text-white">
               <div className="flex justify-around text-center">
                 <div>
-                  <p className="text-2xl font-bold text-emerald-400">{summary.verified}</p>
+                  <p className="text-2xl font-bold text-emerald-400">{summary.conforme}</p>
                   <p className="text-xs text-gray-400">Conformes</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-amber-400">{summary.total - summary.verified}</p>
+                  <p className="text-2xl font-bold text-amber-400">{summary.partiel}</p>
+                  <p className="text-xs text-gray-400">Partiels</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-red-400">{summary.nonConforme}</p>
                   <p className="text-xs text-gray-400">Non conformes</p>
                 </div>
                 <div>
@@ -325,33 +343,72 @@ const REDDTrackingPage = () => {
                     {cat.practices.filter(p => practiceStatuses[p.code] === 'conforme').length}/{cat.practices.length}
                   </span>
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {cat.practices.map(p => {
                     const status = practiceStatuses[p.code];
                     return (
-                      <button
+                      <div
                         key={p.code}
-                        onClick={() => togglePractice(p.code)}
-                        className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left transition-all text-sm ${
-                          status === 'conforme' ? 'bg-emerald-50 border border-emerald-200' :
-                          status === 'non_conforme' ? 'bg-red-50 border border-red-200' :
-                          'bg-gray-50 border border-gray-100 hover:bg-gray-100'
+                        className={`px-3 py-3 rounded-lg border transition-all text-sm ${
+                          status === 'conforme' ? 'bg-emerald-50 border-emerald-200' :
+                          status === 'partiellement' ? 'bg-amber-50 border-amber-200' :
+                          status === 'non_conforme' ? 'bg-red-50 border-red-200' :
+                          status === 'non_applicable' ? 'bg-gray-100 border-gray-200 opacity-60' :
+                          'bg-white border-gray-100'
                         }`}
                         data-testid={`practice-${p.code}`}
                       >
-                        {status === 'conforme' ? (
-                          <Check className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                        ) : status === 'non_conforme' ? (
-                          <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <Minus className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <span className="font-medium block">{p.name}</span>
-                          {p.hint && <span className="text-[11px] text-gray-400 block mt-0.5 leading-tight">{p.hint}</span>}
+                        <div className="flex items-start gap-2 mb-2">
+                          <span className="text-[10px] text-gray-400 font-mono mt-0.5 flex-shrink-0">{p.code}</span>
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium block text-gray-800">{p.name}</span>
+                            {p.hint && <span className="text-[11px] text-gray-400 block mt-0.5 leading-tight">{p.hint}</span>}
+                          </div>
                         </div>
-                        <span className="text-[10px] text-gray-400 font-mono flex-shrink-0 mt-0.5">{p.code}</span>
-                      </button>
+                        <div className="flex gap-1.5 ml-7">
+                          <button
+                            onClick={() => setStatus(p.code, 'conforme')}
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${
+                              status === 'conforme'
+                                ? 'bg-emerald-600 text-white shadow-sm'
+                                : 'bg-gray-100 text-gray-500 hover:bg-emerald-100 hover:text-emerald-700'
+                            }`}
+                          >
+                            Conforme
+                          </button>
+                          <button
+                            onClick={() => setStatus(p.code, 'partiellement')}
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${
+                              status === 'partiellement'
+                                ? 'bg-amber-500 text-white shadow-sm'
+                                : 'bg-gray-100 text-gray-500 hover:bg-amber-100 hover:text-amber-700'
+                            }`}
+                          >
+                            Partiel
+                          </button>
+                          <button
+                            onClick={() => setStatus(p.code, 'non_conforme')}
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${
+                              status === 'non_conforme'
+                                ? 'bg-red-500 text-white shadow-sm'
+                                : 'bg-gray-100 text-gray-500 hover:bg-red-100 hover:text-red-700'
+                            }`}
+                          >
+                            Non conforme
+                          </button>
+                          <button
+                            onClick={() => setStatus(p.code, 'non_applicable')}
+                            className={`py-1.5 px-2 rounded-md text-xs font-medium transition-all ${
+                              status === 'non_applicable'
+                                ? 'bg-gray-500 text-white shadow-sm'
+                                : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                            }`}
+                            title="Non applicable"
+                          >
+                            N/A
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
