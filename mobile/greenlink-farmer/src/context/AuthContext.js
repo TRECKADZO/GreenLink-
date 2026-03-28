@@ -159,6 +159,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    // 1. Flush le pool de connexions OkHttp AVANT de supprimer le token
+    await api.flushConnections();
+    // 2. Nettoyer l'auth
     await SecureStore.deleteItemAsync('token');
     await SecureStore.deleteItemAsync('user');
     setToken(null);
