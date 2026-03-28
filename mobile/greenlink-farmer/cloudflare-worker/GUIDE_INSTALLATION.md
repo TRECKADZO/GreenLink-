@@ -64,7 +64,7 @@ Telephone (CI) --> api.greenlink-agritech.com (votre Cloudflare)
                    Cloudflare Worker
                           |
                           v
-           ars1000-compliance.preview.emergentagent.com (backend)
+                greenlink-agritech.com (backend)
 ```
 
 Avantage : Votre domaine, vos regles Cloudflare. Pas de blocage reseau ivoirien.
