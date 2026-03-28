@@ -52,6 +52,13 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - **Fix**: Suppression de la ligne corrompue
 - **Build**: EAS v1.72.2 soumis
 
+### Mobile Network Refactor v1.75.0 (28 Mars 2026)
+- **`api.js`**: Client API utilisant `fetch` + `AbortController`, timeouts progressifs (25s/45s/65s), 3 retries avec backoff exponentiel, headers anti-Cloudflare, `Connection: keep-alive`, methode `flushConnections()` pour reset du pool OkHttp
+- **`useNetworkStatus.js`**: Hook reseau avec `NetInfo.addEventListener` temps reel + GET `/api/health` check, throttle 3s, `resetNetworkState()` pour logout
+- **`AuthContext.js`**: Logout complet — SecureStore cleanup, reset state React, flush connexions OkHttp via `Connection: close`
+- **`LoginScreen.js`**: Pre-check connectivite avant login, messages d'erreur nuances (offline / timeout / serveur / http)
+- **Objectif**: Corriger le bug de re-connexion apres logout sur Android (connexions OkHttp stales + Cloudflare Bot Fight Mode)
+
 ## Backlog
 
 ### P2

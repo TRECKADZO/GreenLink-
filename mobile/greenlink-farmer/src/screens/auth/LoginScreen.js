@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -11,39 +11,55 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { Button, Divider } from '../../components/UI';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
+  const { checkConnectivity } = useNetworkStatus();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!identifier || !password) {
+  const handleLogin = useCallback(async () => {
+    if (!identifier.trim() || !password.trim()) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs');
       return;
     }
 
     setLoading(true);
-    const result = await login(identifier, password);
+
+    // 1. Verifier la connectivite avant de tenter le login
+    const connectivity = await checkConnectivity();
+    if (!connectivity.isConnected) {
+      setLoading(false);
+      Alert.alert(
+        'Pas de connexion',
+        'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // 2. Tenter le login
+    const result = await login(identifier.trim(), password);
     setLoading(false);
     
     if (!result.success) {
-      Alert.alert(
-        result.isServerError ? 'Connexion impossible' : 'Erreur',
-        result.error,
-        result.isServerError
-          ? [
-              { text: 'Annuler', style: 'cancel' },
-              { text: 'Reessayer', onPress: () => handleLogin() },
-            ]
-          : [{ text: 'OK' }]
-      );
+      // Messages nuances selon le type d'erreur
+      const title = result.isServerError ? 'Connexion impossible' : 'Erreur';
+      const buttons = result.isServerError
+        ? [
+            { text: 'Annuler', style: 'cancel' },
+            { text: 'Reessayer', onPress: () => handleLogin() },
+          ]
+        : [{ text: 'OK' }];
+
+      Alert.alert(title, result.error, buttons);
     }
-  };
+  }, [identifier, password, login, checkConnectivity]);
 
   return (
     <KeyboardAvoidingView 
@@ -51,30 +67,28 @@ const LoginScreen = ({ navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Back button */}
         <TouchableOpacity 
           style={styles.backButton} 
           onPress={() => navigation.navigate('Welcome')}
+          data-testid="login-back-button"
         >
           <Text style={styles.backButtonText}>← Accueil</Text>
         </TouchableOpacity>
         
-        {/* Logo et titre */}
         <View style={styles.header}>
           <Text style={styles.logo}>🌱</Text>
           <Text style={styles.title}>GreenLink Agritech</Text>
           <Text style={styles.subtitle}>Agriculture durable</Text>
         </View>
 
-        {/* Formulaire */}
         <View style={styles.form}>
           <Text style={styles.welcome}>Bienvenue !</Text>
           <Text style={styles.instruction}>
-            Entrez votre numéro de téléphone ou email pour vous connecter.
+            Entrez votre numero de telephone ou email pour vous connecter.
           </Text>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Téléphone ou Email</Text>
+            <Text style={styles.label}>Telephone ou Email</Text>
             <TextInput
               style={styles.input}
               value={identifier}
@@ -84,6 +98,7 @@ const LoginScreen = ({ navigation }) => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              data-testid="login-identifier-input"
             />
           </View>
 
@@ -97,10 +112,12 @@ const LoginScreen = ({ navigation }) => {
                 placeholder="••••••••"
                 placeholderTextColor={COLORS.gray[400]}
                 secureTextEntry={!showPassword}
+                data-testid="login-password-input"
               />
               <TouchableOpacity 
                 style={styles.eyeButton}
                 onPress={() => setShowPassword(!showPassword)}
+                data-testid="login-toggle-password"
               >
                 <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
               </TouchableOpacity>
@@ -110,8 +127,9 @@ const LoginScreen = ({ navigation }) => {
           <TouchableOpacity 
             style={styles.forgotPassword}
             onPress={() => navigation.navigate('ForgotPassword')}
+            data-testid="login-forgot-password"
           >
-            <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
+            <Text style={styles.forgotPasswordText}>Mot de passe oublie ?</Text>
           </TouchableOpacity>
 
           <Button
@@ -119,21 +137,23 @@ const LoginScreen = ({ navigation }) => {
             onPress={handleLogin}
             loading={loading}
             style={styles.loginButton}
+            data-testid="login-submit-button"
           />
 
           <Divider />
 
           <Text style={styles.noAccount}>Pas encore de compte ?</Text>
           <Button
-            title="Créer un compte"
+            title="Creer un compte"
             variant="outline"
             onPress={() => navigation.navigate('Register')}
+            data-testid="login-register-button"
           />
 
-          {/* Member Activation Button */}
           <TouchableOpacity 
             style={styles.memberActivationButton}
             onPress={() => navigation.navigate('MemberActivation')}
+            data-testid="login-member-activation"
           >
             <Text style={styles.memberActivationText}>
               Inscrit par une cooperative ?{' '}
@@ -141,10 +161,10 @@ const LoginScreen = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* Agent Activation Button */}
           <TouchableOpacity 
             style={styles.agentActivationButton}
             onPress={() => navigation.navigate('AgentActivation')}
+            data-testid="login-agent-activation"
           >
             <Text style={styles.agentActivationText}>
               Agent terrain ?{' '}
@@ -153,10 +173,9 @@ const LoginScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Agriculture durable en Côte d'Ivoire
+            Agriculture durable en Cote d'Ivoire
           </Text>
         </View>
       </ScrollView>

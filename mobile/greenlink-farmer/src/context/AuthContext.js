@@ -164,14 +164,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    // 1. Flush le pool de connexions OkHttp AVANT de supprimer le token
-    await api.flushConnections();
-    // 2. Nettoyer l'auth
-    await SecureStore.deleteItemAsync('token');
-    await SecureStore.deleteItemAsync('user');
+    try {
+      // 1. Nettoyer les donnees stockees
+      await SecureStore.deleteItemAsync('token');
+      await SecureStore.deleteItemAsync('user');
+    } catch (e) {
+      console.warn('[Auth] SecureStore cleanup error:', e);
+    }
+
+    // 2. Reset l'etat React
     setToken(null);
     setUser(null);
-    api.setToken(null);
+
+    // 3. Flush les connexions OkHttp stales (envoie Connection: close)
+    // api.flushConnections() clear aussi le token interne
+    await api.flushConnections();
+
+    console.log('[Auth] Logout complet — token, user, connexions reset');
   };
 
   const updateProfile = async (data) => {

@@ -199,6 +199,29 @@ const api = {
   getBaseUrl: () => BASE_URL,
   healthCheck,
 
+  // Flush les connexions OkHttp stales (appele au logout)
+  // Envoie un GET /health avec Connection: close pour forcer la fermeture du pool
+  flushConnections: async () => {
+    authToken = null;
+    try {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 5000);
+      await fetch(BASE_URL + '/health', {
+        method: 'GET',
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Connection': 'close',
+          'Cache-Control': 'no-store',
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      if (__DEV__) console.log('[API] Connexions flushed (Connection: close)');
+    } catch {
+      if (__DEV__) console.log('[API] Flush connexions — ignore erreur');
+    }
+  },
+
   get: (url, cfg = {}) => {
     let finalUrl = buildUrl(url);
     if (cfg.params) {
