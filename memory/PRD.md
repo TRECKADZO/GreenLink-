@@ -53,11 +53,20 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - **Build**: EAS v1.72.2 soumis
 
 ### Mobile Network Refactor v1.75.0 (28 Mars 2026)
-- **`api.js`**: Client API utilisant `fetch` + `AbortController`, timeouts progressifs (25s/45s/65s), 3 retries avec backoff exponentiel, headers anti-Cloudflare, `Connection: keep-alive`, methode `flushConnections()` pour reset du pool OkHttp
-- **`useNetworkStatus.js`**: Hook reseau avec `NetInfo.addEventListener` temps reel + GET `/api/health` check, throttle 3s, `resetNetworkState()` pour logout
-- **`AuthContext.js`**: Logout complet — SecureStore cleanup, reset state React, flush connexions OkHttp via `Connection: close`
-- **`LoginScreen.js`**: Pre-check connectivite avant login, messages d'erreur nuances (offline / timeout / serveur / http)
-- **Objectif**: Corriger le bug de re-connexion apres logout sur Android (connexions OkHttp stales + Cloudflare Bot Fight Mode)
+- Remplace par v1.76.0
+
+### Mobile Network Refactor v1.76.0 (28 Mars 2026)
+- **Principe v1.76** : Ne JAMAIS faire confiance a `NetInfo.isInternetReachable` pour les messages d'erreur
+- **`useRealConnectionStatus.js`** (NOUVEAU) : Hook reseau communaute 2025-2026
+  - NetInfo.addEventListener comme trigger rapide uniquement (debounce 800ms)
+  - Verification reelle : HEAD /api/health (8s) → fallback HEAD https://1.1.1.1 (5s)
+  - `checkNow()` : verification immediate, `resetAndRecheck()` : post-logout
+- **`api.js`** : Plus de `import NetInfo` — classifyNetworkError utilise un vrai HEAD ping vers 1.1.1.1
+  - healthCheck() utilise HEAD (plus rapide, pas de body)
+  - Timeouts progressifs 25s/45s/65s, 3 retries avec backoff
+  - flushConnections() envoie HEAD avec Connection: close pour reset OkHttp
+- **`AuthContext.js`** : Utilise useRealConnectionStatus, appelle resetAndRecheck() au logout
+- **`LoginScreen.js`** : Pre-check via checkNow() avant login, messages nuances (offline/serveur/timeout)
 
 ## Backlog
 

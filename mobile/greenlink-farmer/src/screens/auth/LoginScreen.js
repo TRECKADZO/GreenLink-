@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
@@ -11,13 +11,13 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { useRealConnectionStatus } from '../../hooks/useRealConnectionStatus';
 import { Button, Divider } from '../../components/UI';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
-  const { checkConnectivity } = useNetworkStatus();
+  const { checkNow } = useRealConnectionStatus();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -31,9 +31,9 @@ const LoginScreen = ({ navigation }) => {
 
     setLoading(true);
 
-    // 1. Verifier la connectivite avant de tenter le login
-    const connectivity = await checkConnectivity();
-    if (!connectivity.isConnected) {
+    // 1. Pre-check connectivite via vrai HEAD ping (pas NetInfo seul)
+    const connectivity = await checkNow();
+    if (!connectivity.isOnline) {
       setLoading(false);
       Alert.alert(
         'Pas de connexion',
@@ -42,13 +42,24 @@ const LoginScreen = ({ navigation }) => {
       );
       return;
     }
+    if (!connectivity.isServerReachable) {
+      setLoading(false);
+      Alert.alert(
+        'Serveur indisponible',
+        'Le serveur est temporairement indisponible. Reessayez dans quelques instants.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Reessayer', onPress: () => handleLogin() },
+        ]
+      );
+      return;
+    }
 
     // 2. Tenter le login
     const result = await login(identifier.trim(), password);
     setLoading(false);
-    
+
     if (!result.success) {
-      // Messages nuances selon le type d'erreur
       const title = result.isServerError ? 'Connexion impossible' : 'Erreur';
       const buttons = result.isServerError
         ? [
@@ -59,22 +70,22 @@ const LoginScreen = ({ navigation }) => {
 
       Alert.alert(title, result.error, buttons);
     }
-  }, [identifier, password, login, checkConnectivity]);
+  }, [identifier, password, login, checkNow]);
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <TouchableOpacity 
-          style={styles.backButton} 
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => navigation.navigate('Welcome')}
           data-testid="login-back-button"
         >
           <Text style={styles.backButtonText}>← Accueil</Text>
         </TouchableOpacity>
-        
+
         <View style={styles.header}>
           <Text style={styles.logo}>🌱</Text>
           <Text style={styles.title}>GreenLink Agritech</Text>
@@ -114,7 +125,7 @@ const LoginScreen = ({ navigation }) => {
                 secureTextEntry={!showPassword}
                 data-testid="login-password-input"
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.eyeButton}
                 onPress={() => setShowPassword(!showPassword)}
                 data-testid="login-toggle-password"
@@ -124,7 +135,7 @@ const LoginScreen = ({ navigation }) => {
             </View>
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.forgotPassword}
             onPress={() => navigation.navigate('ForgotPassword')}
             data-testid="login-forgot-password"
@@ -150,7 +161,7 @@ const LoginScreen = ({ navigation }) => {
             data-testid="login-register-button"
           />
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.memberActivationButton}
             onPress={() => navigation.navigate('MemberActivation')}
             data-testid="login-member-activation"
@@ -161,7 +172,7 @@ const LoginScreen = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.agentActivationButton}
             onPress={() => navigation.navigate('AgentActivation')}
             data-testid="login-agent-activation"

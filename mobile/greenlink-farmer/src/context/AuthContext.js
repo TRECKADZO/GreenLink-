@@ -1,6 +1,7 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../services/api';
+import { useRealConnectionStatus } from '../hooks/useRealConnectionStatus';
 
 const AuthContext = createContext();
 
@@ -8,6 +9,9 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Hook reseau v1.76 — vrai ping, pas NetInfo.isInternetReachable
+  const { checkNow, resetAndRecheck } = useRealConnectionStatus();
 
   useEffect(() => {
     loadStoredAuth();
@@ -17,19 +21,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const storedToken = await SecureStore.getItemAsync('token');
       const storedUser = await SecureStore.getItemAsync('user');
-      
+
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
         api.setToken(storedToken);
-        
+
         // Verifier si le token est encore valide (silencieux)
         try {
           const response = await api.get('/auth/me');
           setUser(response.data);
           await SecureStore.setItemAsync('user', JSON.stringify(response.data));
         } catch (error) {
-          // Token invalide ou offline — garder les donnees locales
           console.log('[Auth] Token validation failed, using cached data');
         }
       }
@@ -40,32 +43,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (identifier, password) => {
+  const login = useCallback(async (identifier, password) => {
     try {
       console.log('[Auth] Login with:', identifier);
       const response = await api.login(identifier, password);
-      
+
       const { access_token, user: userData } = response.data;
-      
+
       await SecureStore.setItemAsync('token', access_token);
       await SecureStore.setItemAsync('user', JSON.stringify(userData));
-      
+
       setToken(access_token);
       setUser(userData);
       api.setToken(access_token);
-      
+
       console.log('[Auth] Login successful');
       return { success: true };
     } catch (error) {
       console.error('[Auth] Login error:', error.message, 'type:', error.type);
-      
+
       let errorMessage = 'Erreur de connexion';
       let isServerError = false;
-      
+
       const status = error.status || error.response?.status;
       const data = error.data || error.response?.data;
-      
+
       if (status) {
+        // Erreur HTTP avec code — pas besoin de check reseau
         if (status === 401) {
           errorMessage = 'Identifiant ou mot de passe incorrect';
         } else if (status === 403) {
@@ -82,33 +86,36 @@ export const AuthProvider = ({ children }) => {
           errorMessage = data.detail;
         }
       } else {
-        // Pas de status HTTP — verifier NetInfo avant de conclure
+        // Pas de status HTTP — erreur reseau
+        // Utiliser le type deja classifie par api.js (qui fait un vrai ping)
         isServerError = true;
-        try {
-          const NetInfo = require('@react-native-community/netinfo').default;
-          const netState = await NetInfo.fetch();
-          if (!netState.isConnected || netState.isInternetReachable === false) {
+        if (error.type === 'offline') {
+          errorMessage = 'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.';
+        } else if (error.type === 'timeout') {
+          errorMessage = 'Le serveur met du temps a repondre. Reessayez dans quelques instants.';
+        } else if (error.type === 'server') {
+          errorMessage = 'Impossible de joindre le serveur. Reessayez dans quelques instants.';
+        } else {
+          // Dernier recours : vrai check via le hook
+          const connectivity = await checkNow();
+          if (!connectivity.isOnline) {
             errorMessage = 'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.';
-          } else if (error.type === 'timeout') {
-            errorMessage = 'Le serveur met du temps a repondre. Reessayez dans quelques instants.';
+          } else if (!connectivity.isServerReachable) {
+            errorMessage = 'Le serveur est temporairement indisponible. Reessayez bientot.';
           } else {
-            errorMessage = 'Impossible de joindre le serveur. Reessayez dans quelques instants.';
+            errorMessage = 'Erreur de connexion inattendue. Reessayez.';
           }
-        } catch {
-          errorMessage = error.type === 'timeout'
-            ? 'Le serveur met du temps a repondre. Reessayez dans quelques instants.'
-            : 'Impossible de se connecter. Reessayez dans quelques instants.';
         }
       }
-      
+
       return { success: false, error: errorMessage, isServerError };
     }
-  };
+  }, [checkNow]);
 
   const register = async (data) => {
     try {
       console.log('[Auth] Register attempt:', data.full_name, data.user_type);
-      
+
       const response = await api.post('/auth/register', {
         ...data,
         user_type: data.user_type || 'producteur',
@@ -118,26 +125,25 @@ export const AuthProvider = ({ children }) => {
           acceptedAt: new Date().toISOString(),
         },
       });
-      
+
       const { access_token, user: userData } = response.data;
-      
+
       await SecureStore.setItemAsync('token', access_token);
       await SecureStore.setItemAsync('user', JSON.stringify(userData));
-      
+
       setToken(access_token);
       setUser(userData);
       api.setToken(access_token);
-      
+
       console.log('[Auth] Registration successful');
       return { success: true };
     } catch (error) {
       console.error('[Auth] Register error:', error.message);
-      
+
       let errorMessage = "Erreur d'inscription";
-      const status = error.status || error.response?.status;
       const data = error.data || error.response?.data;
       const backendError = data?.detail;
-      
+
       if (backendError) {
         if (Array.isArray(backendError)) {
           errorMessage = backendError.map(err => (err.msg || '').replace('Value error, ', '')).join('\n');
@@ -151,37 +157,35 @@ export const AuthProvider = ({ children }) => {
             errorMessage = backendError;
           }
         }
-      } else if (status === 422) {
-        errorMessage = 'Veuillez verifier les informations saisies.';
-      } else if (status >= 500) {
-        errorMessage = 'Le serveur rencontre un probleme. Reessayez dans quelques instants.';
-      } else if (error.type === 'timeout' || error.type === 'network') {
+      } else if (error.type === 'timeout' || error.type === 'offline' || error.type === 'server') {
         errorMessage = 'Impossible de se connecter au serveur. Verifiez votre connexion internet.';
       }
-      
+
       return { success: false, error: errorMessage };
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
-      // 1. Nettoyer les donnees stockees
       await SecureStore.deleteItemAsync('token');
       await SecureStore.deleteItemAsync('user');
     } catch (e) {
       console.warn('[Auth] SecureStore cleanup error:', e);
     }
 
-    // 2. Reset l'etat React
+    // Reset l'etat React
     setToken(null);
     setUser(null);
 
-    // 3. Flush les connexions OkHttp stales (envoie Connection: close)
-    // api.flushConnections() clear aussi le token interne
+    // Flush les connexions OkHttp stales (Connection: close)
     await api.flushConnections();
 
-    console.log('[Auth] Logout complet — token, user, connexions reset');
-  };
+    // Force un recheck immediat du statut reseau reel
+    // Evite le faux "Serveur injoignable" au prochain login
+    await resetAndRecheck();
+
+    console.log('[Auth] Logout complet — token, connexions, reseau reset');
+  }, [resetAndRecheck]);
 
   const updateProfile = async (data) => {
     try {

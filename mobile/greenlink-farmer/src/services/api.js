@@ -1,22 +1,22 @@
 /**
- * Client API v1.75 — fetch + AbortController
- * 
- * - fetch moderne (pas XHR)
- * - Connection: keep-alive
+ * Client API v1.76 — fetch + AbortController (sans NetInfo dans le classifieur)
+ *
+ * Changements v1.76 vs v1.75 :
+ * - classifyNetworkError utilise un vrai HEAD ping au lieu de NetInfo.isInternetReachable
+ * - healthCheck utilise HEAD (plus rapide, pas de body)
+ * - login() ne consulte plus NetInfo directement
  * - Timeouts progressifs 25s / 45s / 65s
  * - 3 retries avec backoff exponentiel
- * - Headers mobile complets (anti Cloudflare)
- * - Classification d'erreur via NetInfo (pas de faux "pas d'internet")
+ * - Headers mobile realistes (anti Cloudflare)
+ * - flushConnections() pour reset OkHttp au logout
  */
 import { Platform } from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
 import { CONFIG } from '../config';
 
 const BASE_URL = CONFIG.DIRECT_API_URL + '/api';
+const FALLBACK_PING_URL = 'https://1.1.1.1';
 
 let authToken = null;
-
-// Compteur de requetes pour debug
 let requestId = 0;
 
 const USER_AGENT = Platform.OS === 'ios'
@@ -39,7 +39,7 @@ function getHeaders(extra = {}) {
 }
 
 // ========================
-// ApiError — types: timeout | offline | server | http | unknown
+// ApiError — types: timeout | offline | server | http
 // ========================
 class ApiError extends Error {
   constructor(message, status, data, type) {
@@ -69,8 +69,8 @@ async function fetchT(url, options, timeoutMs) {
 }
 
 // ========================
-// Classifier une erreur reseau avec NetInfo
-// JAMAIS afficher "pas d'internet" sans verification reelle
+// Classifier une erreur reseau avec un VRAI PING
+// Plus de NetInfo.isInternetReachable ici — ping reel uniquement
 // ========================
 async function classifyNetworkError(err) {
   if (err instanceof ApiError) return err;
@@ -83,35 +83,42 @@ async function classifyNetworkError(err) {
     );
   }
 
-  // TypeError = erreur reseau fetch — VERIFIER NetInfo avant de conclure
-  let netConnected = true;
+  // TypeError = erreur reseau fetch
+  // Verifier avec un vrai HEAD ping vers un service fiable
   try {
-    const state = await NetInfo.fetch();
-    netConnected = state.isConnected && state.isInternetReachable !== false;
-  } catch {}
-
-  if (!netConnected) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    await fetch(FALLBACK_PING_URL, {
+      method: 'HEAD',
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    // Internet fonctionne → probleme cote serveur
+    return new ApiError(
+      'Impossible de joindre le serveur pour le moment.',
+      0, null, 'server'
+    );
+  } catch {
+    // Meme le fallback echoue → vraisemblablement hors-ligne
     return new ApiError(
       'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.',
       0, null, 'offline'
     );
   }
-
-  // Internet OK mais fetch a echoue → probleme serveur/reseau intermediaire
-  return new ApiError(
-    'Impossible de joindre le serveur pour le moment.',
-    0, null, 'server'
-  );
 }
 
 // ========================
-// Test de connectivite reel (GET /api/health)
+// Health check reel (HEAD /api/health — rapide, pas de body)
 // ========================
-async function healthCheck(timeoutMs = 10000) {
+async function healthCheck(timeoutMs = 8000) {
   try {
     const res = await fetchT(BASE_URL + '/health', {
-      method: 'GET',
-      headers: { 'User-Agent': USER_AGENT, 'Cache-Control': 'no-store' },
+      method: 'HEAD',
+      headers: {
+        'User-Agent': USER_AGENT,
+        'Cache-Control': 'no-store',
+        'Pragma': 'no-cache',
+      },
     }, timeoutMs);
     return { ok: res.status < 500, status: res.status };
   } catch {
@@ -161,13 +168,12 @@ async function requestWithRetry(url, options = {}) {
       lastError = new ApiError(`Erreur serveur ${res.status}`, res.status, data, 'server');
 
     } catch (err) {
-      // 4xx deja classifiee — propager
       if (err instanceof ApiError && err.type === 'http') throw err;
 
       lastError = await classifyNetworkError(err);
       if (__DEV__) console.warn(`[API #${rid}] ${i + 1}/${RETRIES}: ${lastError.type} — ${lastError.message}`);
 
-      // Offline confirme — pas la peine de retry
+      // Offline confirme → pas la peine de retry
       if (lastError.type === 'offline') throw lastError;
     }
 
@@ -200,14 +206,14 @@ const api = {
   healthCheck,
 
   // Flush les connexions OkHttp stales (appele au logout)
-  // Envoie un GET /health avec Connection: close pour forcer la fermeture du pool
+  // HEAD /health avec Connection: close force la fermeture du pool
   flushConnections: async () => {
     authToken = null;
     try {
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), 5000);
       await fetch(BASE_URL + '/health', {
-        method: 'GET',
+        method: 'HEAD',
         headers: {
           'User-Agent': USER_AGENT,
           'Connection': 'close',
@@ -218,7 +224,7 @@ const api = {
       clearTimeout(id);
       if (__DEV__) console.log('[API] Connexions flushed (Connection: close)');
     } catch {
-      if (__DEV__) console.log('[API] Flush connexions — ignore erreur');
+      if (__DEV__) console.log('[API] Flush — ignore erreur');
     }
   },
 
@@ -261,29 +267,22 @@ const api = {
   },
 
   // ========================
-  // LOGIN — health check d'abord, puis POST
+  // LOGIN — health check HEAD d'abord, puis POST
+  // Plus de NetInfo.fetch() ici — le vrai check passe par healthCheck()
   // ========================
   login: async (identifier, password) => {
-    // 1. Health check rapide pour verifier que le serveur repond
+    // 1. Health check rapide (HEAD 8s)
     if (__DEV__) console.log('[API] Login: health check prealable...');
-    const health = await healthCheck(10000);
+    const health = await healthCheck(8000);
     if (!health.ok) {
-      // Verifier si c'est un probleme internet ou serveur
-      const state = await NetInfo.fetch();
-      if (!state.isConnected || state.isInternetReachable === false) {
-        throw new ApiError(
-          'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.',
-          0, null, 'offline'
-        );
-      }
-      if (__DEV__) console.log('[API] Health check echoue mais internet OK — on tente quand meme');
+      if (__DEV__) console.log('[API] Health check echoue — on tente quand meme le POST');
     }
 
     // 2. POST login avec retries
     const url = BASE_URL + '/auth/login';
     const body = JSON.stringify({ identifier, password });
     const headers = getHeaders();
-    delete headers['Authorization']; // Pas de token pour login
+    delete headers['Authorization'];
 
     let lastError = null;
     for (let i = 0; i < RETRIES; i++) {
@@ -299,17 +298,14 @@ const api = {
           return { data, status: res.status };
         }
 
-        // 429 — stop
         if (res.status === 429) {
           throw new ApiError('Trop de tentatives. Patientez une minute.', 429, data, 'http');
         }
 
-        // 4xx — stop
         if (res.status >= 400 && res.status < 500) {
           throw new ApiError(data?.detail || `Erreur ${res.status}`, res.status, data, 'http');
         }
 
-        // 5xx — retry
         lastError = new ApiError(`Erreur serveur ${res.status}`, res.status, data, 'server');
       } catch (err) {
         if (err instanceof ApiError && err.type === 'http') throw err;
