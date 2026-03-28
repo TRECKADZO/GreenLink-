@@ -134,7 +134,7 @@ async function classifyError(err) {
 // ========================
 // Request avec retry (fetch classique pour les appels authentifies)
 // ========================
-const RETRY_TIMEOUTS = [15000, 30000, 45000];
+const RETRY_TIMEOUTS = [25000, 45000, 65000];
 const MAX_RETRIES = 3;
 
 async function requestWithRetry(url, options = {}) {
@@ -253,6 +253,14 @@ const apiService = {
         if (result.ok) {
           if (__DEV__) console.log('[API] Login OK via XHR');
           return { data: result.data, status: result.status };
+        }
+
+        // 429 Rate limit — stop immédiat, pas de retry
+        if (result.status === 429) {
+          throw new ApiError(
+            'Trop de tentatives. Patientez une minute.',
+            429, result.data, 'http'
+          );
         }
 
         // 4xx — erreur client (mauvais mot de passe, etc.)

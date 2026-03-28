@@ -78,22 +78,27 @@ export const AuthProvider = ({ children }) => {
           isServerError = true;
           errorMessage = 'Le serveur rencontre un probleme. Reessayez dans quelques instants.';
         }
-        // Detail du backend
         if (data?.detail && typeof data.detail === 'string') {
           errorMessage = data.detail;
         }
-      } else if (error.type === 'timeout') {
-        isServerError = true;
-        errorMessage = 'Le serveur met du temps a repondre. Reessayez dans quelques instants.';
-      } else if (error.type === 'offline') {
-        isServerError = true;
-        errorMessage = 'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.';
-      } else if (error.type === 'network') {
-        isServerError = true;
-        errorMessage = 'Impossible de joindre le serveur. Reessayez dans quelques instants.';
       } else {
+        // Pas de status HTTP — verifier NetInfo avant de conclure
         isServerError = true;
-        errorMessage = 'Impossible de se connecter. Reessayez dans quelques instants.';
+        try {
+          const NetInfo = require('@react-native-community/netinfo').default;
+          const netState = await NetInfo.fetch();
+          if (!netState.isConnected || netState.isInternetReachable === false) {
+            errorMessage = 'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.';
+          } else if (error.type === 'timeout') {
+            errorMessage = 'Le serveur met du temps a repondre. Reessayez dans quelques instants.';
+          } else {
+            errorMessage = 'Impossible de joindre le serveur. Reessayez dans quelques instants.';
+          }
+        } catch {
+          errorMessage = error.type === 'timeout'
+            ? 'Le serveur met du temps a repondre. Reessayez dans quelques instants.'
+            : 'Impossible de se connecter. Reessayez dans quelques instants.';
+        }
       }
       
       return { success: false, error: errorMessage, isServerError };

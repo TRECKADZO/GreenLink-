@@ -247,7 +247,7 @@ async def register(user_data: UserCreate):
         )
 
 @router.post("/login", response_model=Token)
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")
 async def login(request: Request, credentials: UserLogin):
     logger.info(f"Login attempt for: {credentials.identifier}")
     
