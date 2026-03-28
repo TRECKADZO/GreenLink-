@@ -3,7 +3,7 @@
 
 export const CONFIG = {
   // URL unique vers le backend — pas de fallback CDN
-  DIRECT_API_URL: 'https://api.greenlink-agritech.com',
+  DIRECT_API_URL: 'https://greenlink-api-proxy.klenakan-eric.workers.dev',
   
   // Timeouts geres directement par le client API (20s/40s/60s)
   REQUEST_TIMEOUT: 20000,
