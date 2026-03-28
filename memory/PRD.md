@@ -68,6 +68,11 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - **`AuthContext.js`** : Utilise useRealConnectionStatus, appelle resetAndRecheck() au logout
 - **`LoginScreen.js`** : Pre-check via checkNow() avant login, messages nuances (offline/serveur/timeout)
 
+### Configuration URLs stables v1.76 (28 Mars 2026)
+- Remplace toutes les URLs hardcodees `preview.emergentagent.com` par `https://api.greenlink-agritech.com` (Cloudflare Worker proxy permanent)
+- Fichiers mis a jour : `eas.json` (3 profiles), `config.js`, `GeolocationService.js`
+- Le Worker Cloudflare (`cloudflare-worker/worker.js`) garde l'URL backend comme cible proxy (mise a jour manuelle cote Cloudflare)
+
 ## Backlog
 
 ### P2
