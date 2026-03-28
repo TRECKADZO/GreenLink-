@@ -1,14 +1,12 @@
 /**
- * Client API centralise — SOLUTION ANTI OKHTTP STALE CONNECTIONS
+ * Client API v1.75 — fetch + AbortController
  * 
- * Probleme: Sur Android, fetch() utilise OkHttp qui garde un pool de connexions.
- * Apres logout, les connexions deviennent perimes (fermes cote serveur) mais
- * OkHttp essaie de les reutiliser → TypeError "Network request failed".
- * 
- * Solution:
- *  1. Login via XMLHttpRequest (pool HTTP independant de fetch/OkHttp)
- *  2. Connection: close sur toutes les requetes (pas de keep-alive)
- *  3. Flush du pool au logout
+ * - fetch moderne (pas XHR)
+ * - Connection: keep-alive
+ * - Timeouts progressifs 25s / 45s / 65s
+ * - 3 retries avec backoff exponentiel
+ * - Headers mobile complets (anti Cloudflare)
+ * - Classification d'erreur via NetInfo (pas de faux "pas d'internet")
  */
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
@@ -18,28 +16,30 @@ const BASE_URL = CONFIG.DIRECT_API_URL + '/api';
 
 let authToken = null;
 
-const USER_AGENT = Platform.OS === 'ios'
-  ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1'
-  : 'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36';
+// Compteur de requetes pour debug
+let requestId = 0;
 
-function getHeaders(extraHeaders = {}) {
-  const headers = {
+const USER_AGENT = Platform.OS === 'ios'
+  ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
+  : 'Mozilla/5.0 (Linux; Android 14; SM-S918B Build/UP1A.231005.007) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.165 Mobile Safari/537.36';
+
+function getHeaders(extra = {}) {
+  const h = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
     'User-Agent': USER_AGENT,
-    'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.7',
-    'Cache-Control': 'no-cache',
-    'Connection': 'close', // CRITIQUE: empeche OkHttp de garder des connexions perimes
-    ...extraHeaders,
+    'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Cache-Control': 'no-cache, no-store',
+    'Pragma': 'no-cache',
+    'Connection': 'keep-alive',
+    ...extra,
   };
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
-  }
-  return headers;
+  if (authToken) h['Authorization'] = `Bearer ${authToken}`;
+  return h;
 }
 
 // ========================
-// ApiError
+// ApiError — types: timeout | offline | server | http | unknown
 // ========================
 class ApiError extends Error {
   constructor(message, status, data, type) {
@@ -53,121 +53,129 @@ class ApiError extends Error {
 }
 
 // ========================
-// XMLHttpRequest wrapper — independant du pool OkHttp
-// Utilise pour le login (le call le plus critique)
+// fetch + AbortController timeout
 // ========================
-function xhrRequest(method, url, headers, body, timeoutMs) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
-    xhr.timeout = timeoutMs;
-    xhr.withCredentials = true;
-
-    // Set headers
-    Object.entries(headers).forEach(([key, value]) => {
-      try { xhr.setRequestHeader(key, value); } catch (e) {}
-    });
-
-    xhr.onload = () => {
-      let data;
-      try {
-        data = JSON.parse(xhr.responseText);
-      } catch {
-        data = xhr.responseText;
-      }
-      resolve({
-        ok: xhr.status >= 200 && xhr.status < 300,
-        status: xhr.status,
-        data,
-      });
-    };
-
-    xhr.onerror = () => {
-      reject(new ApiError('Erreur reseau', 0, null, 'network'));
-    };
-
-    xhr.ontimeout = () => {
-      reject(new ApiError('Le serveur met du temps a repondre', 0, null, 'timeout'));
-    };
-
-    xhr.send(body || null);
-  });
-}
-
-// ========================
-// fetch avec timeout + Connection: close
-// ========================
-async function fetchWithTimeout(url, options, timeoutMs) {
+async function fetchT(url, options, timeoutMs) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    return response;
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return res;
   } catch (err) {
-    clearTimeout(timer);
+    clearTimeout(id);
     throw err;
   }
 }
 
 // ========================
-// Classification d'erreur
+// Classifier une erreur reseau avec NetInfo
+// JAMAIS afficher "pas d'internet" sans verification reelle
 // ========================
-async function classifyError(err) {
+async function classifyNetworkError(err) {
   if (err instanceof ApiError) return err;
+
+  // AbortError = timeout du AbortController
   if (err.name === 'AbortError') {
-    return new ApiError('Le serveur met du temps a repondre', 0, null, 'timeout');
+    return new ApiError(
+      'Le serveur met du temps a repondre. Reessayez.',
+      0, null, 'timeout'
+    );
   }
-  // Verifier NetInfo (leger, pas de HTTP)
+
+  // TypeError = erreur reseau fetch — VERIFIER NetInfo avant de conclure
+  let netConnected = true;
   try {
-    const netInfo = await NetInfo.fetch();
-    if (!netInfo.isConnected || netInfo.isInternetReachable === false) {
-      return new ApiError('Pas de connexion internet', 0, null, 'offline');
-    }
+    const state = await NetInfo.fetch();
+    netConnected = state.isConnected && state.isInternetReachable !== false;
   } catch {}
-  return new ApiError('Impossible de joindre le serveur', 0, null, 'server');
+
+  if (!netConnected) {
+    return new ApiError(
+      'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.',
+      0, null, 'offline'
+    );
+  }
+
+  // Internet OK mais fetch a echoue → probleme serveur/reseau intermediaire
+  return new ApiError(
+    'Impossible de joindre le serveur pour le moment.',
+    0, null, 'server'
+  );
 }
 
 // ========================
-// Request avec retry (fetch classique pour les appels authentifies)
+// Test de connectivite reel (GET /api/health)
 // ========================
-const RETRY_TIMEOUTS = [25000, 45000, 65000];
-const MAX_RETRIES = 3;
+async function healthCheck(timeoutMs = 10000) {
+  try {
+    const res = await fetchT(BASE_URL + '/health', {
+      method: 'GET',
+      headers: { 'User-Agent': USER_AGENT, 'Cache-Control': 'no-store' },
+    }, timeoutMs);
+    return { ok: res.status < 500, status: res.status };
+  } catch {
+    return { ok: false, status: 0 };
+  }
+}
+
+// ========================
+// Requete avec retry + backoff
+// ========================
+const TIMEOUTS = [25000, 45000, 65000];
+const RETRIES = 3;
 
 async function requestWithRetry(url, options = {}) {
+  const rid = ++requestId;
   let lastError = null;
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const timeout = RETRY_TIMEOUTS[attempt];
-
+  for (let i = 0; i < RETRIES; i++) {
+    const t = TIMEOUTS[i];
     try {
-      if (__DEV__) console.log(`[API] ${options.method || 'GET'} ${url} (${attempt + 1}/${MAX_RETRIES})`);
+      if (__DEV__) console.log(`[API #${rid}] ${options.method || 'GET'} ${url} (${i + 1}/${RETRIES}, ${t / 1000}s)`);
 
-      const response = await fetchWithTimeout(url, options, timeout);
-      const contentType = response.headers?.get('content-type') || '';
-      let data = contentType.includes('json') ? await response.json() : await response.text();
+      const res = await fetchT(url, options, t);
+      const ct = res.headers?.get('content-type') || '';
+      const data = ct.includes('json') ? await res.json() : await res.text();
 
-      if (response.ok) return { data, status: response.status };
+      if (res.ok) {
+        if (__DEV__) console.log(`[API #${rid}] OK ${res.status}`);
+        return { data, status: res.status };
+      }
 
-      if (response.status >= 400 && response.status < 500) {
+      // 429 Rate limit — stop
+      if (res.status === 429) {
+        throw new ApiError('Trop de tentatives. Patientez une minute.', 429, data, 'http');
+      }
+
+      // 4xx — stop (erreur client)
+      if (res.status >= 400 && res.status < 500) {
         throw new ApiError(
-          typeof data?.detail === 'string' ? data.detail : `Erreur ${response.status}`,
-          response.status, data, 'http'
+          typeof data?.detail === 'string' ? data.detail : `Erreur ${res.status}`,
+          res.status, data, 'http'
         );
       }
 
-      lastError = new ApiError(`Erreur serveur ${response.status}`, response.status, data, 'http');
+      // 5xx — retry
+      if (__DEV__) console.warn(`[API #${rid}] ${res.status} serveur — retry`);
+      lastError = new ApiError(`Erreur serveur ${res.status}`, res.status, data, 'server');
+
     } catch (err) {
-      if (err instanceof ApiError && err.type === 'http' && err.status >= 400 && err.status < 500) throw err;
-      lastError = await classifyError(err);
+      // 4xx deja classifiee — propager
+      if (err instanceof ApiError && err.type === 'http') throw err;
+
+      lastError = await classifyNetworkError(err);
+      if (__DEV__) console.warn(`[API #${rid}] ${i + 1}/${RETRIES}: ${lastError.type} — ${lastError.message}`);
+
+      // Offline confirme — pas la peine de retry
       if (lastError.type === 'offline') throw lastError;
     }
 
-    if (attempt < MAX_RETRIES - 1) {
-      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+    // Backoff avant retry
+    if (i < RETRIES - 1) {
+      const delay = 2000 * (i + 1);
+      if (__DEV__) console.log(`[API #${rid}] Backoff ${delay / 1000}s...`);
+      await new Promise(r => setTimeout(r, delay));
     }
   }
 
@@ -175,25 +183,27 @@ async function requestWithRetry(url, options = {}) {
 }
 
 // ========================
-// Methodes publiques
+// Construction URL
 // ========================
 function buildUrl(path) {
   if (path.startsWith('http')) return path;
   return BASE_URL + (path.startsWith('/') ? path : '/' + path);
 }
 
-const apiService = {
-  setToken: (token) => { authToken = token; },
+// ========================
+// Service API public
+// ========================
+const api = {
+  setToken: (t) => { authToken = t; },
   getToken: () => authToken,
   getBaseUrl: () => BASE_URL,
+  healthCheck,
 
   get: (url, cfg = {}) => {
-    const fullUrl = buildUrl(url);
-    const params = cfg.params;
-    let finalUrl = fullUrl;
-    if (params) {
-      const qs = Object.entries(params)
-        .filter(([_, v]) => v !== undefined && v !== null)
+    let finalUrl = buildUrl(url);
+    if (cfg.params) {
+      const qs = Object.entries(cfg.params)
+        .filter(([_, v]) => v != null)
         .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
         .join('&');
       if (qs) finalUrl += (finalUrl.includes('?') ? '&' : '?') + qs;
@@ -202,131 +212,116 @@ const apiService = {
   },
 
   post: (url, data, cfg = {}) => {
-    const isFormData = data instanceof FormData;
-    const headers = getHeaders(cfg.headers);
-    if (isFormData) delete headers['Content-Type'];
+    const fm = data instanceof FormData;
+    const h = getHeaders(cfg.headers);
+    if (fm) delete h['Content-Type'];
     return requestWithRetry(buildUrl(url), {
-      method: 'POST', headers,
-      body: isFormData ? data : (data != null ? JSON.stringify(data) : undefined),
+      method: 'POST', headers: h,
+      body: fm ? data : (data != null ? JSON.stringify(data) : undefined),
     });
   },
 
   put: (url, data, cfg = {}) => {
-    const isFormData = data instanceof FormData;
-    const headers = getHeaders(cfg.headers);
-    if (isFormData) delete headers['Content-Type'];
+    const fm = data instanceof FormData;
+    const h = getHeaders(cfg.headers);
+    if (fm) delete h['Content-Type'];
     return requestWithRetry(buildUrl(url), {
-      method: 'PUT', headers,
-      body: isFormData ? data : (data != null ? JSON.stringify(data) : undefined),
+      method: 'PUT', headers: h,
+      body: fm ? data : (data != null ? JSON.stringify(data) : undefined),
     });
   },
 
   delete: (url, cfg = {}) => {
-    return requestWithRetry(buildUrl(url), { method: 'DELETE', headers: getHeaders(cfg.headers) });
+    return requestWithRetry(buildUrl(url), {
+      method: 'DELETE', headers: getHeaders(cfg.headers),
+    });
   },
 
   // ========================
-  // LOGIN via XMLHttpRequest — NE PASSE PAS par le pool OkHttp
-  // C'est la solution au bug "Serveur injoignable apres logout"
+  // LOGIN — health check d'abord, puis POST
   // ========================
   login: async (identifier, password) => {
+    // 1. Health check rapide pour verifier que le serveur repond
+    if (__DEV__) console.log('[API] Login: health check prealable...');
+    const health = await healthCheck(10000);
+    if (!health.ok) {
+      // Verifier si c'est un probleme internet ou serveur
+      const state = await NetInfo.fetch();
+      if (!state.isConnected || state.isInternetReachable === false) {
+        throw new ApiError(
+          'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.',
+          0, null, 'offline'
+        );
+      }
+      if (__DEV__) console.log('[API] Health check echoue mais internet OK — on tente quand meme');
+    }
+
+    // 2. POST login avec retries
     const url = BASE_URL + '/auth/login';
     const body = JSON.stringify({ identifier, password });
-    const headers = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'User-Agent': USER_AGENT,
-      'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.7',
-      'Cache-Control': 'no-cache',
-      'Connection': 'close',
-    };
+    const headers = getHeaders();
+    delete headers['Authorization']; // Pas de token pour login
 
     let lastError = null;
-
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      const timeout = RETRY_TIMEOUTS[attempt];
+    for (let i = 0; i < RETRIES; i++) {
+      const t = TIMEOUTS[i];
       try {
-        if (__DEV__) console.log(`[API] Login XHR ${attempt + 1}/${MAX_RETRIES} (${timeout / 1000}s)`);
+        if (__DEV__) console.log(`[API] Login POST ${i + 1}/${RETRIES} (${t / 1000}s)`);
 
-        const result = await xhrRequest('POST', url, headers, body, timeout);
+        const res = await fetchT(url, { method: 'POST', headers, body }, t);
+        const data = await res.json();
 
-        if (result.ok) {
-          if (__DEV__) console.log('[API] Login OK via XHR');
-          return { data: result.data, status: result.status };
+        if (res.ok) {
+          if (__DEV__) console.log('[API] Login OK');
+          return { data, status: res.status };
         }
 
-        // 429 Rate limit — stop immédiat, pas de retry
-        if (result.status === 429) {
-          throw new ApiError(
-            'Trop de tentatives. Patientez une minute.',
-            429, result.data, 'http'
-          );
+        // 429 — stop
+        if (res.status === 429) {
+          throw new ApiError('Trop de tentatives. Patientez une minute.', 429, data, 'http');
         }
 
-        // 4xx — erreur client (mauvais mot de passe, etc.)
-        if (result.status >= 400 && result.status < 500) {
-          throw new ApiError(
-            result.data?.detail || `Erreur ${result.status}`,
-            result.status, result.data, 'http'
-          );
+        // 4xx — stop
+        if (res.status >= 400 && res.status < 500) {
+          throw new ApiError(data?.detail || `Erreur ${res.status}`, res.status, data, 'http');
         }
 
         // 5xx — retry
-        lastError = new ApiError(`Erreur serveur ${result.status}`, result.status, result.data, 'http');
+        lastError = new ApiError(`Erreur serveur ${res.status}`, res.status, data, 'server');
       } catch (err) {
-        if (err instanceof ApiError && err.type === 'http' && err.status >= 400 && err.status < 500) {
-          throw err;
-        }
-        if (err instanceof ApiError) {
-          lastError = err;
-        } else {
-          lastError = await classifyError(err);
-        }
-        if (__DEV__) console.warn(`[API] Login ${attempt + 1} echoue: ${lastError.type} — ${lastError.message}`);
+        if (err instanceof ApiError && err.type === 'http') throw err;
+        lastError = await classifyNetworkError(err);
+        if (__DEV__) console.warn(`[API] Login ${i + 1}: ${lastError.type}`);
         if (lastError.type === 'offline') throw lastError;
       }
 
-      if (attempt < MAX_RETRIES - 1) {
-        await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+      if (i < RETRIES - 1) {
+        await new Promise(r => setTimeout(r, 2000 * (i + 1)));
       }
     }
 
     throw lastError;
   },
-
-  // Flush: vider le pool de connexions (appeler au logout)
-  flushConnections: async () => {
-    try {
-      // Faire une requete dummy avec Connection: close pour forcer OkHttp a fermer
-      const controller = new AbortController();
-      setTimeout(() => controller.abort(), 3000);
-      await fetch(BASE_URL + '/health', {
-        method: 'GET',
-        headers: { 'Connection': 'close', 'Cache-Control': 'no-store' },
-        signal: controller.signal,
-      }).catch(() => {});
-    } catch {}
-  },
 };
 
-export { apiService as api };
-export default apiService;
+export { api };
+export default api;
 
 // ========================
 // API producteurs
 // ========================
 export const farmerApi = {
-  getParcels: () => apiService.get('/greenlink/parcels/my-parcels'),
-  createParcel: (data) => apiService.post('/greenlink/parcels', data),
-  getHarvests: (params) => apiService.get(`/greenlink/harvests/my-harvests${params || ''}`),
-  createHarvest: (data) => apiService.post('/greenlink/harvests', data),
-  getDashboard: () => apiService.get('/greenlink/farmer/dashboard'),
-  getPaymentRequests: () => apiService.get('/greenlink/payments/my-requests'),
-  createPaymentRequest: (data) => apiService.post('/greenlink/payments/request', data),
-  getSmsHistory: () => apiService.get('/greenlink/sms/history'),
-  getNotifications: () => apiService.get('/greenlink/notifications'),
-  markNotificationRead: (id) => apiService.put(`/greenlink/notifications/${id}/read`),
-  getCarbonScore: () => apiService.get('/greenlink/carbon/my-score'),
-  registerDevice: (data) => apiService.post('/greenlink/notifications/register-device', data),
-  unregisterDevice: (token) => apiService.delete(`/greenlink/notifications/unregister-device?push_token=${token}`),
+  getParcels: () => api.get('/greenlink/parcels/my-parcels'),
+  createParcel: (data) => api.post('/greenlink/parcels', data),
+  getHarvests: (params) => api.get(`/greenlink/harvests/my-harvests${params || ''}`),
+  createHarvest: (data) => api.post('/greenlink/harvests', data),
+  getDashboard: () => api.get('/greenlink/farmer/dashboard'),
+  getPaymentRequests: () => api.get('/greenlink/payments/my-requests'),
+  createPaymentRequest: (data) => api.post('/greenlink/payments/request', data),
+  getSmsHistory: () => api.get('/greenlink/sms/history'),
+  getNotifications: () => api.get('/greenlink/notifications'),
+  markNotificationRead: (id) => api.put(`/greenlink/notifications/${id}/read`),
+  getCarbonScore: () => api.get('/greenlink/carbon/my-score'),
+  registerDevice: (data) => api.post('/greenlink/notifications/register-device', data),
+  unregisterDevice: (token) => api.delete(`/greenlink/notifications/unregister-device?push_token=${token}`),
 };
