@@ -354,6 +354,131 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
     }
 
 
+@router.get("/dashboard-charts")
+async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
+    """Time-series data for dashboard charts (last 6 months)"""
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    cq = coop_id_query(coop_id)
+
+    now = datetime.now(timezone.utc)
+    months = []
+    for i in range(5, -1, -1):
+        d = now - timedelta(days=i * 30)
+        months.append({"year": d.year, "month": d.month, "label": d.strftime("%b %Y")})
+
+    # --- 1. REDD+ monthly evolution ---
+    redd_monthly = []
+    for m in months:
+        start = datetime(m["year"], m["month"], 1, tzinfo=timezone.utc)
+        next_m = m["month"] + 1 if m["month"] < 12 else 1
+        next_y = m["year"] if m["month"] < 12 else m["year"] + 1
+        end = datetime(next_y, next_m, 1, tzinfo=timezone.utc)
+
+        # REDD visits in this month (created_at is ISO string or datetime)
+        pipeline = [
+            {"$match": {**cq, "$or": [
+                {"created_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}},
+                {"created_at": {"$gte": start, "$lt": end}},
+            ]}},
+            {"$group": {
+                "_id": None,
+                "count": {"$sum": 1},
+                "avg_score": {"$avg": "$redd_score"},
+                "total_co2": {"$sum": {"$ifNull": ["$superficie_verifiee", 0]}},
+            }}
+        ]
+        res = await db.redd_tracking_visits.aggregate(pipeline).to_list(1)
+        r = res[0] if res else {}
+        redd_monthly.append({
+            "month": m["label"],
+            "visites": r.get("count", 0),
+            "score_moyen": round(r.get("avg_score", 0) or 0, 1),
+            "co2_tonnes": round((r.get("total_co2", 0) or 0) * 0.8, 1),
+        })
+
+    # --- 2. SSRTE monthly trends ---
+    ssrte_monthly = []
+    for m in months:
+        start = datetime(m["year"], m["month"], 1, tzinfo=timezone.utc)
+        next_m = m["month"] + 1 if m["month"] < 12 else 1
+        next_y = m["year"] if m["month"] < 12 else m["year"] + 1
+        end = datetime(next_y, next_m, 1, tzinfo=timezone.utc)
+
+        pipeline = [
+            {"$match": {**cq, "$or": [
+                {"created_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}},
+                {"created_at": {"$gte": start, "$lt": end}},
+            ]}},
+            {"$addFields": {
+                "_risk": {"$ifNull": ["$niveau_risque", "$risk_level"]},
+                "_enfants": {"$add": [
+                    {"$ifNull": ["$enfants_observes_travaillant", 0]},
+                    {"$ifNull": ["$children_at_risk", 0]}
+                ]}
+            }},
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": 1},
+                "enfants": {"$sum": "$_enfants"},
+                "risks": {"$push": "$_risk"},
+            }}
+        ]
+        res = await db.ssrte_visits.aggregate(pipeline).to_list(1)
+        r = res[0] if res else {}
+        risk_map = {"high": "eleve", "low": "faible", "medium": "modere", "critical": "critique"}
+        risks = r.get("risks", [])
+        risk_counts = {"critique": 0, "eleve": 0, "modere": 0, "faible": 0}
+        for rk in risks:
+            mapped = risk_map.get(rk, rk)
+            if mapped in risk_counts:
+                risk_counts[mapped] += 1
+
+        ssrte_monthly.append({
+            "month": m["label"],
+            "visites": r.get("total", 0),
+            "enfants": r.get("enfants", 0),
+            **risk_counts,
+        })
+
+    # --- 3. Risk by village/zone ---
+    zone_pipeline = [
+        {"$match": cq},
+        {"$lookup": {
+            "from": "coop_members",
+            "let": {"mid": {"$ifNull": ["$farmer_id", "$member_id"]}},
+            "pipeline": [
+                {"$match": {"$expr": {"$eq": [{"$toString": "$_id"}, "$$mid"]}}},
+                {"$project": {"village": 1}}
+            ],
+            "as": "member_info"
+        }},
+        {"$addFields": {
+            "_village": {"$ifNull": [{"$arrayElemAt": ["$member_info.village", 0]}, "Inconnu"]},
+            "_risk": {"$ifNull": ["$niveau_risque", "$risk_level"]}
+        }},
+        {"$group": {
+            "_id": "$_village",
+            "total": {"$sum": 1},
+            "critique": {"$sum": {"$cond": [{"$in": ["$_risk", ["critique", "critical"]]}, 1, 0]}},
+            "eleve": {"$sum": {"$cond": [{"$in": ["$_risk", ["eleve", "high"]]}, 1, 0]}},
+            "modere": {"$sum": {"$cond": [{"$in": ["$_risk", ["modere", "medium"]]}, 1, 0]}},
+            "faible": {"$sum": {"$cond": [{"$in": ["$_risk", ["faible", "low"]]}, 1, 0]}},
+        }},
+        {"$sort": {"critique": -1, "eleve": -1, "total": -1}},
+        {"$limit": 10}
+    ]
+    zones_raw = await db.ssrte_visits.aggregate(zone_pipeline).to_list(10)
+    risk_by_zone = [{"zone": z["_id"], "total": z["total"], "critique": z["critique"],
+                     "eleve": z["eleve"], "modere": z["modere"], "faible": z["faible"]} for z in zones_raw]
+
+    return {
+        "redd_monthly": redd_monthly,
+        "ssrte_monthly": ssrte_monthly,
+        "risk_by_zone": risk_by_zone,
+    }
+
+
 # ============= CARBON AUDIT ENDPOINTS =============
 
 @router.get("/{coop_id}/parcels-for-audit")

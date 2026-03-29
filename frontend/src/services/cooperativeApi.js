@@ -24,6 +24,13 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  getDashboardCharts: async () => {
+    const response = await axios.get(`${API}/dashboard-charts`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Members Management
   getMembers: async (params = {}) => {
     const response = await axios.get(`${API}/members`, {

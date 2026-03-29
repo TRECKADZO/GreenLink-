@@ -18,6 +18,10 @@ import { AlertsBanner } from './components/AlertsBanner';
 import { SubscriptionBanner } from './components/SubscriptionBanner';
 import { REDDWidget } from './components/REDDWidget';
 import { SSRTEWidget } from './components/SSRTEWidget';
+import { REDDEvolutionChart } from './components/REDDEvolutionChart';
+import { SSRTETrendsChart } from './components/SSRTETrendsChart';
+import { RiskByZoneChart } from './components/RiskByZoneChart';
+import { PracticesDonutChart } from './components/PracticesDonutChart';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -31,6 +35,7 @@ const Dashboard = () => {
   const [sendingReminder, setSendingReminder] = useState(null);
   const [simulatorMembers, setSimulatorMembers] = useState([]);
   const [kpiData, setKpiData] = useState(null);
+  const [chartData, setChartData] = useState(null);
 
   const loadDashboard = async () => {
     try {
@@ -59,6 +64,15 @@ const Dashboard = () => {
       setKpiData(data);
     } catch (error) {
       console.error('Error fetching KPIs:', error);
+    }
+  };
+
+  const loadCharts = async () => {
+    try {
+      const data = await cooperativeApi.getDashboardCharts();
+      setChartData(data);
+    } catch (error) {
+      console.error('Error fetching charts:', error);
     }
   };
 
@@ -101,6 +115,7 @@ const Dashboard = () => {
     loadDashboard();
     loadActivationStats();
     loadKPIs();
+    loadCharts();
   }, []);
 
   if (loading) {
@@ -115,6 +130,7 @@ const Dashboard = () => {
   }
 
   const { coop_info, members, parcelles, financial, recent_members } = dashboardData || {};
+  const hasChartData = chartData && (chartData.redd_monthly?.some(m => m.visites > 0) || chartData.ssrte_monthly?.some(m => m.visites > 0));
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]" data-testid="cooperative-dashboard">
@@ -132,11 +148,28 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Column */}
           <div className="lg:col-span-8 space-y-6">
-            {/* REDD+ & SSRTE/ICI Widgets */}
+            {/* REDD+ & SSRTE/ICI KPI Widgets */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <REDDWidget redd={kpiData?.redd} features={kpiData?.features} />
               <SSRTEWidget ssrte={kpiData?.ssrte} ici={kpiData?.ici} features={kpiData?.features} />
             </div>
+
+            {/* Charts Section */}
+            {hasChartData && (
+              <>
+                <div className="pt-2">
+                  <p className="text-[10px] tracking-[0.1em] uppercase font-bold text-[#9CA3AF] mb-4">Analyses & Tendances</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <REDDEvolutionChart data={chartData.redd_monthly} />
+                  <SSRTETrendsChart data={chartData.ssrte_monthly} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <RiskByZoneChart data={chartData.risk_by_zone} />
+                  <PracticesDonutChart practices={kpiData?.redd?.practices_adoption} />
+                </div>
+              </>
+            )}
 
             <ActivationWidget
               activationStats={activationStats}
