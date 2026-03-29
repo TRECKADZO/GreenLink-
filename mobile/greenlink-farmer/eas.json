@@ -21,7 +21,7 @@
       },
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://greenlink-api-proxy.klenakan-eric.workers.dev"
+        "EXPO_PUBLIC_API_URL": "https://carbon-platform-5.emergent.host"
       }
     },
     "production": {
@@ -35,7 +35,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://greenlink-api-proxy.klenakan-eric.workers.dev"
+        "EXPO_PUBLIC_API_URL": "https://carbon-platform-5.emergent.host"
       }
     },
     "production-apk": {
@@ -46,7 +46,7 @@
       },
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://greenlink-api-proxy.klenakan-eric.workers.dev"
+        "EXPO_PUBLIC_API_URL": "https://carbon-platform-5.emergent.host"
       }
     }
   },

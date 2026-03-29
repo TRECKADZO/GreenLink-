@@ -10,7 +10,7 @@ import { Alert, Platform } from 'react-native';
 
 const LOCATION_TASK_NAME = 'greenlink-location-tracking';
 const LOCATION_STORAGE_KEY = 'pending_locations';
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://greenlink-api-proxy.klenakan-eric.workers.dev';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://carbon-platform-5.emergent.host';
 
 // Configuration du tracking
 const TRACKING_CONFIG = {
