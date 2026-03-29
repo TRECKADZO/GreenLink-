@@ -73,6 +73,18 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - Fichiers mis a jour : `eas.json` (3 profiles), `config.js`, `GeolocationService.js`
 - Le Worker Cloudflare (`cloudflare-worker/worker.js`) garde l'URL backend comme cible proxy (mise a jour manuelle cote Cloudflare)
 
+### Systeme d'Abonnements Cooperatives REDD+ (29 Mars 2026)
+- **Backend** : Nouveaux modeles (`coop_subscription_models.py`) et API (`routes/coop_subscriptions.py`)
+  - 3 plans : Starter (50K), Pro (120K), Enterprise (250K) FCFA/mois
+  - Essai gratuit 6 mois avec acces Pro complet
+  - Notifications automatiques 30/15/7 jours avant fin essai
+  - Auto-upgrade Pro apres essai (sauf annulation)
+  - Endpoints : GET /plans, GET /my-subscription, POST /choose-plan, POST /cancel
+- **Frontend PricingSection** : 3 cartes plans REDD+, banner essai gratuit, toggle Mensuel/Annuel (-17%), section valeur REDD+ (Credits Carbone, EUDR, MRV, Paiements Resultats)
+- **FAQ** : Nouvelle categorie REDD+ (4 questions), abonnements cooperatives mis a jour
+- **CTA Homepage** : Message 6 mois essai gratuit + REDD+ + ARS 1000 + SSRTE
+- **Tests** : 100% pass (21/21 backend, all frontend features verified)
+
 ## Backlog
 
 ### P2
