@@ -1,0 +1,76 @@
+import React from 'react';
+import { Building2, Home, UserCircle, Plus, Bell } from 'lucide-react';
+import { Button } from '../../../components/ui/button';
+import { NotificationCenter } from '../../../components/NotificationCenter';
+
+export const DashboardHeader = ({ coopInfo, user, navigate }) => {
+  const name = coopInfo?.name || user?.coop_name || 'Cooperative';
+  const code = coopInfo?.code || user?.coop_code || 'N/A';
+  const certs = coopInfo?.certifications || [];
+
+  return (
+    <div className="bg-[#1A3622] relative overflow-hidden" data-testid="dashboard-header">
+      <div className="absolute inset-0 opacity-[0.04]" style={{
+        backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2V0h2v22H20v-1.5z\' fill=\'%23ffffff\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")',
+      }} />
+      <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-6 md:py-8 relative">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="gl-animate-in">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-md bg-white/10 flex items-center justify-center">
+                <Building2 className="h-5 w-5 text-white" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h1 className="gl-heading text-xl md:text-2xl font-bold text-white tracking-tight" data-testid="coop-name">
+                  {name}
+                </h1>
+                <p className="text-sm text-white/50 gl-mono">{code}</p>
+              </div>
+            </div>
+            {certs.length > 0 && (
+              <div className="flex gap-2 mt-3 ml-[52px]">
+                {certs.map((cert, i) => (
+                  <span key={i} className="text-[10px] tracking-[0.08em] uppercase font-bold text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-2.5 py-1 rounded-sm">
+                    {cert}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 gl-animate-in gl-stagger-2">
+            <NotificationCenter />
+            <Button
+              onClick={() => navigate('/')}
+              variant="ghost"
+              size="sm"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              data-testid="home-btn"
+            >
+              <Home className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+              Accueil
+            </Button>
+            <Button
+              onClick={() => navigate('/profile')}
+              variant="ghost"
+              size="sm"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              data-testid="profile-btn"
+            >
+              <UserCircle className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+              Profil
+            </Button>
+            <Button
+              onClick={() => navigate('/cooperative/members/new')}
+              size="sm"
+              className="bg-white text-[#1A3622] hover:bg-white/90 font-semibold"
+              data-testid="add-member-btn"
+            >
+              <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
+              Ajouter Membre
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
