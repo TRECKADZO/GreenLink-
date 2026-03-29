@@ -85,7 +85,18 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - **CTA Homepage** : Message 6 mois essai gratuit + REDD+ + ARS 1000 + SSRTE
 - **Tests** : 100% pass (21/21 backend, all frontend features verified)
 
-### Refonte UI/UX Dashboard Cooperative (29 Mars 2026)
+### KPIs REDD+, SSRTE & ICI + Synchronisation Temps Reel (29 Mars 2026)
+- **Backend** : Endpoint `GET /api/cooperative/dashboard-kpis` agrege REDD+ (visites, score, distribution niveaux, adoption pratiques, conformite MRV), SSRTE (visites menages, niveaux risque, enfants, couverture), ICI (cas remediation, resolus, en cours, taux)
+- **Harmonisation champs** : Resolution des incoherences de noms de champs entre USSD (francais) et API Web (anglais) :
+  - `niveau_risque` ↔ `risk_level` via `$ifNull` + map normalisation
+  - `enfants_observes_travaillant` ↔ `children_at_risk` via `$add` + `$ifNull`
+  - `farmer_id` ↔ `member_id` via `$ifNull`
+  - Double stockage : SSRTE visits ecrivent desormais les deux conventions
+- **Synchronisation cooperative** : REDD+ visits et SSRTE visits resolvent `coop_id` depuis `user._id` pour les utilisateurs cooperative/admin
+- **Frontend** : `SubscriptionBanner`, `REDDWidget` (score, visites, distribution, pratiques, conformite), `SSRTEWidget` (visites, enfants, couverture, risques, remediation ICI)
+- **Gating abonnement** : Sections verrouillees avec CTA "Mise a niveau" pour plans inferieurs
+- **Seed data demo** : 20 membres, 17 visites REDD+, 18 visites SSRTE, 7 cas ICI
+- **Tests** : 100% pass (iteration 83 — 17/17 backend + frontend, sync verifiee)
 - **Design System** : Theme "Organic & Earthy" - vert foret profond (#1A3622), blanc os (#FAF9F6), or (#D4AF37), terre cuite (#C25E30)
 - **Typographie** : DM Sans (titres), Manrope (corps), JetBrains Mono (code)
 - **Refactoring** : Fichier monolithique de 920 lignes decoupe en 13 composants modulaires :
