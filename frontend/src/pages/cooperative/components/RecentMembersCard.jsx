@@ -31,11 +31,11 @@ export const RecentMembersCard = ({ recentMembers, pendingValidation, navigate }
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-full bg-[#E8F0EA] flex items-center justify-center flex-shrink-0">
                     <span className="text-xs font-bold text-[#1A3622]">
-                      {member.name?.charAt(0)?.toUpperCase() || '?'}
+                      {(member.full_name || member.name)?.charAt(0)?.toUpperCase() || '?'}
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-[#111827] truncate">{member.name}</p>
+                    <p className="text-sm font-medium text-[#111827] truncate">{member.full_name || member.name}</p>
                     <p className="text-[11px] text-[#9CA3AF]">{member.village}</p>
                   </div>
                 </div>

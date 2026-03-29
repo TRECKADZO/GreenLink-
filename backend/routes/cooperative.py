@@ -190,6 +190,164 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
         }
     }
 
+# ============= DASHBOARD KPIs (REDD+, SSRTE, ICI) =============
+
+@router.get("/dashboard-kpis")
+async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
+    """KPIs REDD+, SSRTE, ICI gates par l'abonnement cooperative"""
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+
+    # --- Subscription ---
+    sub = await db.coop_subscriptions.find_one({"user_id": coop_id}, {"_id": 0})
+    if not sub:
+        from coop_subscription_models import create_coop_subscription, CoopPlan, COOP_PLAN_FEATURES, get_coop_sub_status
+        coop_name = current_user.get("coop_name", current_user.get("full_name", ""))
+        sub = create_coop_subscription(coop_id, coop_name)
+        await db.coop_subscriptions.insert_one(sub)
+        sub.pop("_id", None)
+    else:
+        from coop_subscription_models import CoopPlan, COOP_PLAN_FEATURES, get_coop_sub_status
+
+    sub_status = get_coop_sub_status(sub)
+    plan_key = sub.get("plan", CoopPlan.TRIAL.value)
+    try:
+        plan_enum = CoopPlan(plan_key)
+    except ValueError:
+        plan_enum = CoopPlan.TRIAL
+    features = COOP_PLAN_FEATURES.get(plan_enum, COOP_PLAN_FEATURES[CoopPlan.TRIAL])
+
+    subscription_info = {
+        "plan": plan_key,
+        "plan_name": {CoopPlan.TRIAL: "Essai Gratuit Pro", CoopPlan.STARTER: "Starter",
+                      CoopPlan.PRO: "Pro", CoopPlan.ENTERPRISE: "Enterprise"}.get(plan_enum, "Essai"),
+        "is_active": sub_status.get("is_active", False),
+        "is_trial": sub_status.get("is_trial", False),
+        "days_remaining": sub_status.get("days_remaining", 0),
+        "status": sub_status.get("status", ""),
+    }
+
+    # --- REDD+ KPIs ---
+    redd_kpis = None
+    if features.get("redd_avance") or features.get("redd_simplifie"):
+        cq = coop_id_query(coop_id)
+        visits = await db.redd_tracking_visits.find(cq, {"_id": 0}).to_list(2000)
+        total_visits = len(visits)
+        avg_redd = round(sum(v.get("redd_score", 0) for v in visits) / max(total_visits, 1), 1)
+        avg_conf = round(sum(v.get("conformity_pct", 0) for v in visits) / max(total_visits, 1))
+        level_dist = {}
+        for v in visits:
+            lvl = v.get("redd_level", "Non conforme")
+            level_dist[lvl] = level_dist.get(lvl, 0) + 1
+
+        # MRV data from ars_farmer_data
+        farmers_q = {"$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]}
+        farmers_data = await db.ars_farmer_data.find(farmers_q, {"_id": 0}).to_list(2000)
+        total_farmers = len(farmers_data)
+        practices_adoption = {}
+        if total_farmers > 0:
+            for key, label in [("agroforesterie", "Agroforesterie"), ("compost", "Compostage"),
+                               ("couverture_sol", "Couverture sol"), ("brulage", "Zero brulage")]:
+                val = "oui" if key != "brulage" else "non"
+                cnt = sum(1 for f in farmers_data if f.get(key) == val)
+                practices_adoption[label] = {"count": cnt, "pct": round(cnt / total_farmers * 100)}
+
+        redd_kpis = {
+            "total_visits": total_visits,
+            "avg_score": avg_redd,
+            "avg_conformity": avg_conf,
+            "level_distribution": level_dist,
+            "farmers_assessed": total_farmers,
+            "practices_adoption": practices_adoption,
+            "is_advanced": bool(features.get("redd_avance")),
+            "has_mrv": bool(features.get("redd_donnees_mrv")),
+        }
+
+    # --- SSRTE KPIs ---
+    ssrte_kpis = None
+    if features.get("alertes_ssrte"):
+        ssrte_q = {}
+        ssrte_or = [{"cooperative_id": coop_id}]
+        if ObjectId.is_valid(coop_id):
+            ssrte_or.append({"cooperative_id": ObjectId(coop_id)})
+        ssrte_q["$or"] = ssrte_or
+
+        total_ssrte = await db.ssrte_visits.count_documents(ssrte_q)
+
+        risk_pipeline = [
+            {"$match": ssrte_q},
+            {"$group": {"_id": "$niveau_risque", "count": {"$sum": 1}}}
+        ]
+        risk_dist = {r["_id"]: r["count"] for r in await db.ssrte_visits.aggregate(risk_pipeline).to_list(10)}
+
+        children_pipeline = [
+            {"$match": ssrte_q},
+            {"$group": {"_id": None,
+                        "total_enfants": {"$sum": "$enfants_observes_travaillant"},
+                        "with_children": {"$sum": {"$cond": [{"$gt": ["$enfants_observes_travaillant", 0]}, 1, 0]}}}}
+        ]
+        ch = await db.ssrte_visits.aggregate(children_pipeline).to_list(1)
+        enfants_total = ch[0]["total_enfants"] if ch else 0
+        visits_with_children = ch[0]["with_children"] if ch else 0
+
+        unique_pipeline = [{"$match": ssrte_q}, {"$group": {"_id": "$farmer_id"}}, {"$count": "total"}]
+        uf = await db.ssrte_visits.aggregate(unique_pipeline).to_list(1)
+        unique_farmers = uf[0]["total"] if uf else 0
+
+        # Coverage: unique visited / total members
+        total_members = await db.coop_members.count_documents(
+            {"$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]}
+        )
+        coverage = round(unique_farmers / max(total_members, 1) * 100, 1)
+
+        has_reports = bool(features.get("rapports_ssrte_ici"))
+
+        ssrte_kpis = {
+            "total_visits": total_ssrte,
+            "risk_distribution": {
+                "critique": risk_dist.get("critique", 0),
+                "eleve": risk_dist.get("eleve", 0),
+                "modere": risk_dist.get("modere", 0),
+                "faible": risk_dist.get("faible", 0),
+            },
+            "children_identified": enfants_total,
+            "visits_with_children": visits_with_children,
+            "unique_farmers_visited": unique_farmers,
+            "coverage_rate": coverage,
+            "has_full_reports": has_reports,
+        }
+
+    # --- ICI KPIs (Pro+ only) ---
+    ici_kpis = None
+    if features.get("rapports_ssrte_ici"):
+        # Remediation cases for this cooperative
+        ici_q = {}
+        ici_or = [{"cooperative_id": coop_id}]
+        if ObjectId.is_valid(coop_id):
+            ici_or.append({"cooperative_id": ObjectId(coop_id)})
+        ici_q["$or"] = ici_or
+
+        total_cases = await db.ssrte_cases.count_documents(ici_q)
+        resolved = await db.ssrte_cases.count_documents({**ici_q, "status": {"$in": ["resolved", "closed"]}})
+        in_progress = await db.ssrte_cases.count_documents({**ici_q, "status": "in_progress"})
+        resolution_rate = round(resolved / max(total_cases, 1) * 100, 1)
+
+        ici_kpis = {
+            "total_cases": total_cases,
+            "resolved": resolved,
+            "in_progress": in_progress,
+            "resolution_rate": resolution_rate,
+        }
+
+    return {
+        "subscription": subscription_info,
+        "features": features,
+        "redd": redd_kpis,
+        "ssrte": ssrte_kpis,
+        "ici": ici_kpis,
+    }
+
+
 # ============= CARBON AUDIT ENDPOINTS =============
 
 @router.get("/{coop_id}/parcels-for-audit")

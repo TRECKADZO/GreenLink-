@@ -15,6 +15,9 @@ import { FinancialCard } from './components/FinancialCard';
 import { CommissionCardNew } from './components/CommissionCardNew';
 import { USSDPanel } from './components/USSDPanel';
 import { AlertsBanner } from './components/AlertsBanner';
+import { SubscriptionBanner } from './components/SubscriptionBanner';
+import { REDDWidget } from './components/REDDWidget';
+import { SSRTEWidget } from './components/SSRTEWidget';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -27,6 +30,7 @@ const Dashboard = () => {
   const [activationStats, setActivationStats] = useState(null);
   const [sendingReminder, setSendingReminder] = useState(null);
   const [simulatorMembers, setSimulatorMembers] = useState([]);
+  const [kpiData, setKpiData] = useState(null);
 
   const loadDashboard = async () => {
     try {
@@ -46,6 +50,15 @@ const Dashboard = () => {
       setActivationStats(stats);
     } catch (error) {
       console.error('Error fetching activation stats:', error);
+    }
+  };
+
+  const loadKPIs = async () => {
+    try {
+      const data = await cooperativeApi.getDashboardKPIs();
+      setKpiData(data);
+    } catch (error) {
+      console.error('Error fetching KPIs:', error);
     }
   };
 
@@ -87,6 +100,7 @@ const Dashboard = () => {
   useEffect(() => {
     loadDashboard();
     loadActivationStats();
+    loadKPIs();
   }, []);
 
   if (loading) {
@@ -100,7 +114,7 @@ const Dashboard = () => {
     );
   }
 
-  const { coop_info, members, parcelles, lots, financial, recent_members, agents } = dashboardData || {};
+  const { coop_info, members, parcelles, financial, recent_members } = dashboardData || {};
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]" data-testid="cooperative-dashboard">
@@ -108,9 +122,22 @@ const Dashboard = () => {
       <KPIStrip members={members} parcelles={parcelles} financial={financial} navigate={navigate} />
 
       <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-8">
+        {/* Subscription Banner */}
+        {kpiData?.subscription && (
+          <div className="mb-6">
+            <SubscriptionBanner subscription={kpiData.subscription} />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Column */}
           <div className="lg:col-span-8 space-y-6">
+            {/* REDD+ & SSRTE/ICI Widgets */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <REDDWidget redd={kpiData?.redd} features={kpiData?.features} />
+              <SSRTEWidget ssrte={kpiData?.ssrte} ici={kpiData?.ici} features={kpiData?.features} />
+            </div>
+
             <ActivationWidget
               activationStats={activationStats}
               sendingReminder={sendingReminder}

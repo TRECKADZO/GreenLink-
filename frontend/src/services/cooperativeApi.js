@@ -17,6 +17,13 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  getDashboardKPIs: async () => {
+    const response = await axios.get(`${API}/dashboard-kpis`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Members Management
   getMembers: async (params = {}) => {
     const response = await axios.get(`${API}/members`, {
