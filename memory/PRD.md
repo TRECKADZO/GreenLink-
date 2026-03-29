@@ -88,9 +88,12 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 ### Refonte UI/UX Dashboard Cooperative (29 Mars 2026)
 - **Design System** : Theme "Organic & Earthy" - vert foret profond (#1A3622), blanc os (#FAF9F6), or (#D4AF37), terre cuite (#C25E30)
 - **Typographie** : DM Sans (titres), Manrope (corps), JetBrains Mono (code)
-- **Refactoring** : Fichier monolithique de 920 lignes decoupe en 10 composants modulaires :
+- **Refactoring** : Fichier monolithique de 920 lignes decoupe en 13 composants modulaires :
   - `DashboardHeader.jsx` - En-tete avec nom cooperative, certifications, navigation
   - `KPIStrip.jsx` - 4 KPIs principaux avec bordures colorees (Membres, Surface, CO2, Primes)
+  - `SubscriptionBanner.jsx` - Banniere plan d'abonnement (Essai/Starter/Pro/Enterprise), jours restants, CTA upgrade
+  - `REDDWidget.jsx` - KPIs REDD+ gates par abonnement (Score moyen, Visites terrain, Producteurs, Distribution niveaux, Adoption pratiques, Conformite MRV)
+  - `SSRTEWidget.jsx` - KPIs SSRTE/ICI gates par abonnement (Visites, Enfants, Couverture, Niveaux risque, Remediation ICI)
   - `QuickActionsPanel.jsx` - Actions rapides groupees par categories (Exploitation, Commerce, Carbone & REDD+, Conformite)
   - `RecentMembersCard.jsx` - Membres recents avec avatars
   - `ActivationWidget.jsx` - Suivi activations avec barre de progression
@@ -99,9 +102,14 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
   - `CommissionCardNew.jsx` - Taux de commission editable
   - `USSDPanel.jsx` - Panneau simulateur USSD
   - `AlertsBanner.jsx` - Alertes validation en attente
+- **Backend** : Nouvel endpoint `GET /api/cooperative/dashboard-kpis` qui agrege REDD+, SSRTE, ICI et subscription data
+- **Gating abonnement** :
+  - Starter : REDD+ simplifie + alertes SSRTE basiques (locked: MRV avance, rapports ICI)
+  - Pro/Essai : REDD+ avance + donnees MRV + rapports SSRTE/ICI complets + remediation ICI
+  - Enterprise : + API, formation, co-branding, analyse carbone agregee
 - **Layout** : Grille CSS 12 colonnes (8+4), responsive mobile
 - **Animations** : Entrees en fondu avec decalage (gl-animate-in, gl-stagger)
-- **Tests** : 100% pass (iteration 81 - tous composants, navigation, responsivite, theme)
+- **Tests** : 100% pass (iteration 81 design base + iteration 82 KPIs REDD+/SSRTE/ICI)
 
 ## Backlog
 
@@ -131,6 +139,7 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - `GET /api/ussd/ssrte/responses` - Alertes SSRTE
 - `GET /api/cooperative/dashboard` - Dashboard cooperative
 - `GET /api/cooperative/members/activation-stats` - Stats activations
+- `GET /api/cooperative/dashboard-kpis` - KPIs REDD+/SSRTE/ICI gates par abonnement
 - `GET /api/coop-subscriptions/plans` - Plans abonnement
 
 ## Fichiers Cles
