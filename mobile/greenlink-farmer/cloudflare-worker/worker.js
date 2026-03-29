@@ -1,16 +1,14 @@
 /**
- * Cloudflare Worker v2 — Proxy API GreenLink Agritech
+ * Cloudflare Worker v3 — Proxy API GreenLink Agritech
  *
- * CORRECTIF v2 : Gestion du cookie __cf_bm
- * - Le backend Emergent est protege par Cloudflare qui exige un cookie __cf_bm
- * - Le Worker stocke ce cookie et le renvoie sur chaque requete backend
- * - Le cookie est SUPPRIME des reponses vers le mobile (domaine incompatible)
- * - Cela empeche Cloudflare de bloquer le Worker apres plusieurs requetes
+ * v3 : Ajoute Connection: close sur TOUTES les reponses
+ * - Empeche OkHttp Android de pooler les connexions
+ * - Elimine le probleme de connexions stales apres logout
+ * - Gere le cookie __cf_bm du backend Cloudflare
  */
 
 const BACKEND_URL = 'https://mobile-network-fix.preview.emergentagent.com';
 
-// Cookie jar global — persiste entre les requetes Worker
 let cfCookie = '';
 
 export default {
@@ -25,29 +23,33 @@ export default {
         backend: BACKEND_URL,
         timestamp: new Date().toISOString(),
       }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+        headers: {
+          'Content-Type': 'application/json',
+          'Connection': 'close',
+          ...corsHeaders(),
+        },
       });
     }
 
     // Preflight CORS
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders() });
+      return new Response(null, {
+        status: 204,
+        headers: { 'Connection': 'close', ...corsHeaders() },
+      });
     }
 
-    // Construire l'URL backend
     const backendUrl = BACKEND_URL + url.pathname + url.search;
 
-    // Copier les headers (sauf Host)
     const headers = new Headers(request.headers);
     headers.delete('host');
     headers.set('Origin', BACKEND_URL);
     headers.set('X-Forwarded-For', request.headers.get('CF-Connecting-IP') || '');
     headers.set('X-Real-IP', request.headers.get('CF-Connecting-IP') || '');
 
-    // INJECTER le cookie __cf_bm stocke (si on en a un)
     if (cfCookie) {
-      const existingCookies = headers.get('Cookie') || '';
-      headers.set('Cookie', existingCookies ? `${existingCookies}; ${cfCookie}` : cfCookie);
+      const existing = headers.get('Cookie') || '';
+      headers.set('Cookie', existing ? `${existing}; ${cfCookie}` : cfCookie);
     }
 
     try {
@@ -59,7 +61,7 @@ export default {
           : undefined,
       });
 
-      // CAPTURER le nouveau cookie __cf_bm du backend
+      // Capturer le cookie __cf_bm
       const setCookieAll = backendResponse.headers.getAll
         ? backendResponse.headers.getAll('set-cookie')
         : [backendResponse.headers.get('set-cookie')].filter(Boolean);
@@ -67,17 +69,14 @@ export default {
       for (const sc of setCookieAll) {
         if (sc && sc.includes('__cf_bm')) {
           const match = sc.match(/__cf_bm=([^;]+)/);
-          if (match) {
-            cfCookie = `__cf_bm=${match[1]}`;
-          }
+          if (match) cfCookie = `__cf_bm=${match[1]}`;
         }
       }
 
-      // Construire la reponse — SUPPRIMER set-cookie du backend
+      // Reponse avec Connection: close + CORS — sans set-cookie
       const responseHeaders = new Headers(backendResponse.headers);
       responseHeaders.delete('set-cookie');
-
-      // Ajouter nos headers CORS propres
+      responseHeaders.set('Connection', 'close');
       Object.entries(corsHeaders()).forEach(([k, v]) => responseHeaders.set(k, v));
 
       return new Response(backendResponse.body, {
@@ -91,7 +90,11 @@ export default {
         error: err.message,
       }), {
         status: 502,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+        headers: {
+          'Content-Type': 'application/json',
+          'Connection': 'close',
+          ...corsHeaders(),
+        },
       });
     }
   },

@@ -1,20 +1,20 @@
 /**
- * Client API v1.76 — fetch + AbortController (sans NetInfo dans le classifieur)
+ * Client API v1.77 — Anti connexions stales OkHttp
  *
- * Changements v1.76 vs v1.75 :
- * - classifyNetworkError utilise un vrai HEAD ping au lieu de NetInfo.isInternetReachable
- * - healthCheck utilise HEAD (plus rapide, pas de body)
- * - login() ne consulte plus NetInfo directement
- * - Timeouts progressifs 25s / 45s / 65s
- * - 3 retries avec backoff exponentiel
- * - Headers mobile realistes (anti Cloudflare)
- * - flushConnections() pour reset OkHttp au logout
+ * Corrections cles vs v1.76 :
+ * - Connection: close partout (empeche OkHttp de pooler les connexions)
+ * - Warm-up GET /health avant chaque retry POST (force nouvelle connexion)
+ * - Google connectivity check (plus fiable en Afrique que 1.1.1.1)
+ * - Delai 3s entre retries (laisse OkHttp fermer les connexions mortes)
+ * - Timeouts 15s / 25s / 35s (moins d'attente pour l'utilisateur)
  */
 import { Platform } from 'react-native';
 import { CONFIG } from '../config';
 
 const BASE_URL = CONFIG.DIRECT_API_URL + '/api';
-const FALLBACK_PING_URL = 'https://1.1.1.1';
+
+// Google connectivity check — utilise par Android nativement, fiable en Afrique
+const CONNECTIVITY_CHECK_URL = 'https://connectivitycheck.gstatic.com/generate_204';
 
 let authToken = null;
 let requestId = 0;
@@ -23,6 +23,7 @@ const USER_AGENT = Platform.OS === 'ios'
   ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
   : 'Mozilla/5.0 (Linux; Android 14; SM-S918B Build/UP1A.231005.007) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.165 Mobile Safari/537.36';
 
+// Connection: close = empeche OkHttp de garder les connexions dans le pool
 function getHeaders(extra = {}) {
   const h = {
     'Accept': 'application/json',
@@ -31,16 +32,13 @@ function getHeaders(extra = {}) {
     'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
     'Cache-Control': 'no-cache, no-store',
     'Pragma': 'no-cache',
-    'Connection': 'keep-alive',
+    'Connection': 'close',
     ...extra,
   };
   if (authToken) h['Authorization'] = `Bearer ${authToken}`;
   return h;
 }
 
-// ========================
-// ApiError — types: timeout | offline | server | http
-// ========================
 class ApiError extends Error {
   constructor(message, status, data, type) {
     super(message);
@@ -52,9 +50,7 @@ class ApiError extends Error {
   }
 }
 
-// ========================
-// fetch + AbortController timeout
-// ========================
+// Fetch avec timeout via AbortController
 async function fetchT(url, options, timeoutMs) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -68,14 +64,10 @@ async function fetchT(url, options, timeoutMs) {
   }
 }
 
-// ========================
-// Classifier une erreur reseau avec un VRAI PING
-// Plus de NetInfo.isInternetReachable ici — ping reel uniquement
-// ========================
+// Classifier les erreurs reseau — utilise Google connectivity check
 async function classifyNetworkError(err) {
   if (err instanceof ApiError) return err;
 
-  // AbortError = timeout du AbortController
   if (err.name === 'AbortError') {
     return new ApiError(
       'Le serveur met du temps a repondre. Reessayez.',
@@ -83,23 +75,22 @@ async function classifyNetworkError(err) {
     );
   }
 
-  // TypeError = erreur reseau fetch
-  // Verifier avec un vrai HEAD ping vers un service fiable
+  // Verifier internet via Google connectivity check (204 = OK)
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
-    await fetch(FALLBACK_PING_URL, {
+    const res = await fetch(CONNECTIVITY_CHECK_URL, {
       method: 'HEAD',
       signal: controller.signal,
+      headers: { 'Connection': 'close' },
     });
     clearTimeout(timer);
     // Internet fonctionne → probleme cote serveur
     return new ApiError(
-      'Impossible de joindre le serveur pour le moment.',
+      'Impossible de joindre le serveur. Reessayez dans quelques instants.',
       0, null, 'server'
     );
   } catch {
-    // Meme le fallback echoue → vraisemblablement hors-ligne
     return new ApiError(
       'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.',
       0, null, 'offline'
@@ -107,18 +98,17 @@ async function classifyNetworkError(err) {
   }
 }
 
-// ========================
-// Health check reel (HEAD /api/health — rapide, pas de body)
-// ========================
+// Health check avec cache-bust
 async function healthCheck(timeoutMs = 8000) {
   try {
     const bust = `?_cb=${Date.now()}`;
     const res = await fetchT(BASE_URL + '/health' + bust, {
-      method: 'HEAD',
+      method: 'GET',
       headers: {
         'User-Agent': USER_AGENT,
         'Cache-Control': 'no-store',
         'Pragma': 'no-cache',
+        'Connection': 'close',
       },
     }, timeoutMs);
     return { ok: res.status < 500, status: res.status };
@@ -127,11 +117,32 @@ async function healthCheck(timeoutMs = 8000) {
   }
 }
 
-// ========================
-// Requete avec retry + backoff
-// ========================
-const TIMEOUTS = [25000, 45000, 65000];
+// Warm-up : GET /health pour ouvrir une connexion fraiche avant un retry
+async function warmupConnection() {
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 5000);
+    await fetch(BASE_URL + '/health?_warmup=' + Date.now(), {
+      method: 'GET',
+      signal: controller.signal,
+      headers: {
+        'User-Agent': USER_AGENT,
+        'Connection': 'close',
+        'Cache-Control': 'no-store',
+      },
+    });
+    clearTimeout(id);
+    if (__DEV__) console.log('[API] Warm-up OK');
+    return true;
+  } catch {
+    if (__DEV__) console.log('[API] Warm-up echoue');
+    return false;
+  }
+}
+
+const TIMEOUTS = [15000, 25000, 35000];
 const RETRIES = 3;
+const RETRY_DELAY = 3000;
 
 async function requestWithRetry(url, options = {}) {
   const rid = ++requestId;
@@ -146,17 +157,11 @@ async function requestWithRetry(url, options = {}) {
       const ct = res.headers?.get('content-type') || '';
       const data = ct.includes('json') ? await res.json() : await res.text();
 
-      if (res.ok) {
-        if (__DEV__) console.log(`[API #${rid}] OK ${res.status}`);
-        return { data, status: res.status };
-      }
+      if (res.ok) return { data, status: res.status };
 
-      // 429 Rate limit — stop
       if (res.status === 429) {
         throw new ApiError('Trop de tentatives. Patientez une minute.', 429, data, 'http');
       }
-
-      // 4xx — stop (erreur client)
       if (res.status >= 400 && res.status < 500) {
         throw new ApiError(
           typeof data?.detail === 'string' ? data.detail : `Erreur ${res.status}`,
@@ -164,50 +169,37 @@ async function requestWithRetry(url, options = {}) {
         );
       }
 
-      // 5xx — retry
-      if (__DEV__) console.warn(`[API #${rid}] ${res.status} serveur — retry`);
       lastError = new ApiError(`Erreur serveur ${res.status}`, res.status, data, 'server');
-
     } catch (err) {
       if (err instanceof ApiError && err.type === 'http') throw err;
 
       lastError = await classifyNetworkError(err);
-      if (__DEV__) console.warn(`[API #${rid}] ${i + 1}/${RETRIES}: ${lastError.type} — ${lastError.message}`);
-
-      // Offline confirme → pas la peine de retry
+      if (__DEV__) console.warn(`[API #${rid}] ${i + 1}/${RETRIES}: ${lastError.type}`);
       if (lastError.type === 'offline') throw lastError;
     }
 
-    // Backoff avant retry
+    // Avant le prochain retry : attendre + warm-up
     if (i < RETRIES - 1) {
-      const delay = 2000 * (i + 1);
-      if (__DEV__) console.log(`[API #${rid}] Backoff ${delay / 1000}s...`);
-      await new Promise(r => setTimeout(r, delay));
+      if (__DEV__) console.log(`[API #${rid}] Attente ${RETRY_DELAY / 1000}s + warm-up...`);
+      await new Promise(r => setTimeout(r, RETRY_DELAY));
+      await warmupConnection();
     }
   }
 
   throw lastError;
 }
 
-// ========================
-// Construction URL
-// ========================
 function buildUrl(path) {
   if (path.startsWith('http')) return path;
   return BASE_URL + (path.startsWith('/') ? path : '/' + path);
 }
 
-// ========================
-// Service API public
-// ========================
 const api = {
   setToken: (t) => { authToken = t; },
   getToken: () => authToken,
   getBaseUrl: () => BASE_URL,
   healthCheck,
 
-  // Reset auth — ne PAS envoyer Connection: close (contre-productif sur OkHttp)
-  // Le cookie __cf_bm est gere cote Worker maintenant
   flushConnections: async () => {
     authToken = null;
     if (__DEV__) console.log('[API] Auth token cleared');
@@ -251,19 +243,13 @@ const api = {
     });
   },
 
-  // ========================
-  // LOGIN — health check HEAD d'abord, puis POST
-  // Plus de NetInfo.fetch() ici — le vrai check passe par healthCheck()
-  // ========================
+  // Login avec warm-up obligatoire
   login: async (identifier, password) => {
-    // 1. Health check rapide (HEAD 8s) — avec cache-bust
-    if (__DEV__) console.log('[API] Login: health check prealable...');
-    const health = await healthCheck(8000);
-    if (!health.ok) {
-      if (__DEV__) console.log('[API] Health check echoue — on tente quand meme le POST');
-    }
+    // 1. Warm-up : ouvrir une connexion fraiche
+    if (__DEV__) console.log('[API] Login: warm-up connexion...');
+    await warmupConnection();
 
-    // 2. POST login avec retries — cache-bust sur chaque requete
+    // 2. POST login avec retries
     const url = BASE_URL + '/auth/login';
     const body = JSON.stringify({ identifier, password });
     const headers = getHeaders();
@@ -286,7 +272,6 @@ const api = {
         if (res.status === 429) {
           throw new ApiError('Trop de tentatives. Patientez une minute.', 429, data, 'http');
         }
-
         if (res.status >= 400 && res.status < 500) {
           throw new ApiError(data?.detail || `Erreur ${res.status}`, res.status, data, 'http');
         }
@@ -300,7 +285,9 @@ const api = {
       }
 
       if (i < RETRIES - 1) {
-        await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+        if (__DEV__) console.log(`[API] Login retry: attente 3s + warm-up...`);
+        await new Promise(r => setTimeout(r, RETRY_DELAY));
+        await warmupConnection();
       }
     }
 
@@ -311,9 +298,6 @@ const api = {
 export { api };
 export default api;
 
-// ========================
-// API producteurs
-// ========================
 export const farmerApi = {
   getParcels: () => api.get('/greenlink/parcels/my-parcels'),
   createParcel: (data) => api.post('/greenlink/parcels', data),
