@@ -235,17 +235,31 @@ async def create_household_visit(
         if works_on_farm and (age < 15 or not in_school):
             children_at_risk += 1
     
+    # Resolve cooperative_id from member or current user
+    resolved_coop_id = member.get("coop_id") or member.get("cooperative_id") or ""
+    if not resolved_coop_id and current_user.get("user_type") in ("cooperative", "admin"):
+        resolved_coop_id = str(current_user["_id"])
+    if not resolved_coop_id:
+        resolved_coop_id = current_user.get("coop_id", "") or current_user.get("cooperative_id", "")
+
+    # Map risk to French normalized level
+    risk_english = "high" if children_at_risk > 0 else "low"
+    risk_french = {"high": "eleve", "low": "faible"}.get(risk_english, "faible")
+
     visit_doc = {
         "agent_id": str(current_user["_id"]),
         "agent_name": current_user.get("full_name"),
         "member_id": visit.member_id,
+        "farmer_id": visit.member_id,
         "member_name": member.get("full_name"),
-        "cooperative_id": member.get("coop_id"),
+        "cooperative_id": resolved_coop_id,
+        "coop_id": resolved_coop_id,
         "visit_date": datetime.fromisoformat(visit.visit_date) if visit.visit_date else datetime.now(timezone.utc),
         "household_size": visit.household_size,
         "children_count": visit.children_count,
         "children_details": visit.children_details,
         "children_at_risk": children_at_risk,
+        "enfants_observes_travaillant": children_at_risk,
         "living_conditions": visit.living_conditions,
         "has_piped_water": visit.has_piped_water,
         "has_electricity": visit.has_electricity,
@@ -257,7 +271,8 @@ async def create_household_visit(
             "lng": visit.gps_lng
         } if visit.gps_lat and visit.gps_lng else None,
         "status": "completed",
-        "risk_level": "high" if children_at_risk > 0 else "low",
+        "risk_level": risk_english,
+        "niveau_risque": risk_french,
         "created_at": datetime.now(timezone.utc)
     }
     

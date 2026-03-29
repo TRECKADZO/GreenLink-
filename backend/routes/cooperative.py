@@ -266,50 +266,61 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
     # --- SSRTE KPIs ---
     ssrte_kpis = None
     if features.get("alertes_ssrte"):
-        ssrte_q = {}
-        ssrte_or = [{"cooperative_id": coop_id}]
-        if ObjectId.is_valid(coop_id):
-            ssrte_or.append({"cooperative_id": ObjectId(coop_id)})
-        ssrte_q["$or"] = ssrte_or
+        ssrte_q = coop_id_query(coop_id)
 
         total_ssrte = await db.ssrte_visits.count_documents(ssrte_q)
 
+        # Handle both field names: niveau_risque (USSD) and risk_level (Web API)
         risk_pipeline = [
             {"$match": ssrte_q},
-            {"$group": {"_id": "$niveau_risque", "count": {"$sum": 1}}}
+            {"$addFields": {"_risk": {"$ifNull": ["$niveau_risque", "$risk_level"]}}},
+            {"$group": {"_id": "$_risk", "count": {"$sum": 1}}}
         ]
-        risk_dist = {r["_id"]: r["count"] for r in await db.ssrte_visits.aggregate(risk_pipeline).to_list(10)}
+        risk_dist = {r["_id"]: r["count"] for r in await db.ssrte_visits.aggregate(risk_pipeline).to_list(20)}
 
+        # Handle both: enfants_observes_travaillant (USSD) and children_at_risk (Web)
         children_pipeline = [
             {"$match": ssrte_q},
+            {"$addFields": {
+                "_enfants": {"$add": [
+                    {"$ifNull": ["$enfants_observes_travaillant", 0]},
+                    {"$ifNull": ["$children_at_risk", 0]}
+                ]}
+            }},
             {"$group": {"_id": None,
-                        "total_enfants": {"$sum": "$enfants_observes_travaillant"},
-                        "with_children": {"$sum": {"$cond": [{"$gt": ["$enfants_observes_travaillant", 0]}, 1, 0]}}}}
+                        "total_enfants": {"$sum": "$_enfants"},
+                        "with_children": {"$sum": {"$cond": [{"$gt": ["$_enfants", 0]}, 1, 0]}}}}
         ]
         ch = await db.ssrte_visits.aggregate(children_pipeline).to_list(1)
         enfants_total = ch[0]["total_enfants"] if ch else 0
         visits_with_children = ch[0]["with_children"] if ch else 0
 
-        unique_pipeline = [{"$match": ssrte_q}, {"$group": {"_id": "$farmer_id"}}, {"$count": "total"}]
+        # Handle both farmer_id and member_id for unique farmers
+        unique_pipeline = [
+            {"$match": ssrte_q},
+            {"$addFields": {"_fid": {"$ifNull": ["$farmer_id", "$member_id"]}}},
+            {"$group": {"_id": "$_fid"}},
+            {"$count": "total"}
+        ]
         uf = await db.ssrte_visits.aggregate(unique_pipeline).to_list(1)
         unique_farmers = uf[0]["total"] if uf else 0
 
-        # Coverage: unique visited / total members
-        total_members = await db.coop_members.count_documents(
-            {"$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]}
-        )
+        total_members = await db.coop_members.count_documents(coop_id_query(coop_id))
         coverage = round(unique_farmers / max(total_members, 1) * 100, 1)
 
         has_reports = bool(features.get("rapports_ssrte_ici"))
 
+        # Normalize risk keys: map high->eleve, low->faible, medium->modere, critical->critique
+        risk_map = {"high": "eleve", "low": "faible", "medium": "modere", "critical": "critique"}
+        normalized_risk = {"critique": 0, "eleve": 0, "modere": 0, "faible": 0}
+        for k, v in risk_dist.items():
+            mapped = risk_map.get(k, k)
+            if mapped in normalized_risk:
+                normalized_risk[mapped] += v
+
         ssrte_kpis = {
             "total_visits": total_ssrte,
-            "risk_distribution": {
-                "critique": risk_dist.get("critique", 0),
-                "eleve": risk_dist.get("eleve", 0),
-                "modere": risk_dist.get("modere", 0),
-                "faible": risk_dist.get("faible", 0),
-            },
+            "risk_distribution": normalized_risk,
             "children_identified": enfants_total,
             "visits_with_children": visits_with_children,
             "unique_farmers_visited": unique_farmers,
@@ -320,12 +331,7 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
     # --- ICI KPIs (Pro+ only) ---
     ici_kpis = None
     if features.get("rapports_ssrte_ici"):
-        # Remediation cases for this cooperative
-        ici_q = {}
-        ici_or = [{"cooperative_id": coop_id}]
-        if ObjectId.is_valid(coop_id):
-            ici_or.append({"cooperative_id": ObjectId(coop_id)})
-        ici_q["$or"] = ici_or
+        ici_q = coop_id_query(coop_id)
 
         total_cases = await db.ssrte_cases.count_documents(ici_q)
         resolved = await db.ssrte_cases.count_documents({**ici_q, "status": {"$in": ["resolved", "closed"]}})

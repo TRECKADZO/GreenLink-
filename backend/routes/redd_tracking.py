@@ -109,11 +109,20 @@ async def create_redd_tracking_visit(
     else:
         redd_level = "Non conforme"
 
+    # Resolve coop_id: explicit > user.coop_id > user._id (for cooperative/admin users)
+    resolved_coop_id = data.get("coop_id") or current_user.get("coop_id") or ""
+    if not resolved_coop_id and current_user.get("user_type") in ("cooperative", "admin"):
+        resolved_coop_id = str(current_user.get("_id", ""))
+    # For field agents, resolve from cooperative_id field
+    if not resolved_coop_id:
+        resolved_coop_id = current_user.get("cooperative_id", "")
+
     visit_doc = {
         "farmer_id": farmer_id,
         "farmer_name": data.get("farmer_name", ""),
         "farmer_phone": data.get("farmer_phone", ""),
-        "coop_id": data.get("coop_id") or current_user.get("coop_id", ""),
+        "coop_id": resolved_coop_id,
+        "cooperative_id": resolved_coop_id,
         "coop_name": data.get("coop_name") or current_user.get("coop_name", ""),
         "agent_id": str(current_user.get("_id", "")),
         "agent_name": current_user.get("full_name", ""),
