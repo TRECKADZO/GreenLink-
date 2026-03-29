@@ -177,17 +177,10 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
 
-    // Flush les connexions OkHttp stales (Connection: close x2)
+    // Clear auth token interne
     await api.flushConnections();
 
-    // Attendre 500ms pour laisser OkHttp vider son pool
-    await new Promise(r => setTimeout(r, 500));
-
-    // Force un recheck immediat du statut reseau reel
-    // Evite le faux "Serveur injoignable" au prochain login
-    await resetAndRecheck();
-
-    console.log('[Auth] Logout complet — token, connexions, reseau reset');
+    console.log('[Auth] Logout complet — token et user reset');
   }, [resetAndRecheck]);
 
   const updateProfile = async (data) => {

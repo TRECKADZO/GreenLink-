@@ -206,30 +206,11 @@ const api = {
   getBaseUrl: () => BASE_URL,
   healthCheck,
 
-  // Flush les connexions OkHttp stales (appele au logout)
-  // Envoie 2 HEAD avec Connection: close + cache-bust pour forcer le pool a se vider
+  // Reset auth — ne PAS envoyer Connection: close (contre-productif sur OkHttp)
+  // Le cookie __cf_bm est gere cote Worker maintenant
   flushConnections: async () => {
     authToken = null;
-    const bust = `?_cb=${Date.now()}`;
-    for (let i = 0; i < 2; i++) {
-      try {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), 3000);
-        await fetch(BASE_URL + '/health' + bust, {
-          method: 'HEAD',
-          headers: {
-            'User-Agent': USER_AGENT,
-            'Connection': 'close',
-            'Cache-Control': 'no-store',
-          },
-          signal: controller.signal,
-        });
-        clearTimeout(id);
-      } catch {
-        // Ignorer
-      }
-    }
-    if (__DEV__) console.log('[API] Connexions flushed x2');
+    if (__DEV__) console.log('[API] Auth token cleared');
   },
 
   get: (url, cfg = {}) => {
