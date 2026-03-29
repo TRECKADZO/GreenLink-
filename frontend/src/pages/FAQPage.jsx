@@ -12,8 +12,9 @@ const FAQPage = () => {
     { id: 'all', name: 'Toutes', icon: HelpCircle },
     { id: 'general', name: 'Général', icon: Leaf },
     { id: 'carbon', name: 'Crédits Carbone', icon: Leaf },
+    { id: 'redd', name: 'REDD+', icon: Leaf },
     { id: 'coop', name: 'Coopératives', icon: Users },
-    { id: 'pricing', name: 'Tarifs', icon: CreditCard },
+    { id: 'pricing', name: 'Abonnements', icon: CreditCard },
     { id: 'security', name: 'Sécurité', icon: Shield },
     { id: 'mobile', name: 'App Mobile', icon: Smartphone },
   ];
@@ -76,39 +77,65 @@ const FAQPage = () => {
       id: 9,
       category: 'coop',
       question: "Quels avantages pour les coopératives ?",
-      answer: "Les coopératives bénéficient de nombreux avantages **gratuits** :\n\n• Gestion complète des membres et parcelles\n• Génération automatique des rapports EUDR\n• Distribution des primes carbone aux membres\n• Génération de reçus PDF pour chaque paiement\n• Notifications push aux membres\n• Application mobile dédiée pour les agents de terrain\n• Support prioritaire"
+      answer: "Les cooperatives beneficient de 6 mois d'essai gratuit avec acces Pro complet :\n\n\u2022 Dashboard complet avec analyse ARS 1000 (Bronze/Argent/Or)\n\u2022 Rapports REDD+ avances (emissions, agroforesterie, MRV)\n\u2022 Rapports detailles SSRTE (ICI)\n\u2022 Export PDF/Excel pret pour audits BMC et programmes REDD+\n\u2022 Alertes avancees (deforestation, brulage, SSRTE)\n\u2022 Gestion complete des membres et parcelles\n\u2022 Application mobile pour agents terrain\n\u2022 Support prioritaire"
     },
     {
       id: 10,
       category: 'coop',
       question: "Comment enregistrer ma coopérative ?",
-      answer: "Pour enregistrer votre coopérative :\n\n1. Créez un compte en sélectionnant 'Coopérative'\n2. Renseignez le nom officiel et le code de la coopérative\n3. Ajoutez vos coordonnées (email, téléphone)\n4. Importez ou ajoutez manuellement vos membres\n5. Enregistrez les parcelles de chaque membre\n\nL'accès est **100% gratuit** pour les coopératives."
+      answer: "Pour enregistrer votre cooperative :\n\n1. Creez un compte en selectionnant 'Cooperative'\n2. Renseignez le nom officiel et le code de la cooperative\n3. Ajoutez vos coordonnees (email, telephone)\n4. Importez ou ajoutez manuellement vos membres\n5. Enregistrez les parcelles de chaque membre\n\nVotre essai gratuit de 6 mois avec acces Pro complet demarre immediatement."
     },
     {
       id: 11,
       category: 'coop',
       question: "Comment distribuer les primes carbone aux membres ?",
-      answer: "La distribution se fait en quelques étapes :\n\n1. Accédez à 'Distributions' dans votre tableau de bord\n2. Sélectionnez le lot de crédits vendus\n3. Vérifiez le calcul automatique par membre (au prorata des tonnes CO2)\n4. Validez la distribution\n5. Les membres reçoivent une notification push\n6. Le paiement est effectué via Orange Money\n\nDes reçus PDF sont générés automatiquement."
+      answer: "La distribution se fait en quelques etapes :\n\n1. Accedez a 'Distributions' dans votre tableau de bord\n2. Selectionnez le lot de credits vendus\n3. Verifiez le calcul automatique par membre (au prorata des tonnes CO2)\n4. Validez la distribution\n5. Les membres recoivent une notification push\n6. Le paiement est effectue via Orange Money\n\nDes recus PDF sont generes automatiquement."
+    },
+
+    // REDD+
+    {
+      id: 21,
+      category: 'redd',
+      question: "Qu'est-ce que la Strategie Nationale REDD+ ?",
+      answer: "La Strategie Nationale REDD+ de Cote d'Ivoire est un programme gouvernemental qui vise a reduire les emissions de gaz a effet de serre liees a la deforestation et a la degradation des forets.\n\nPour les cooperatives cacao, cela signifie :\n\u2022 Des opportunites de revenus via les credits carbone\n\u2022 Un acces aux Results-Based Payments (paiements bases sur les resultats)\n\u2022 Une tracabilite pour la conformite EUDR (zero-deforestation)\n\u2022 Des donnees pour le systeme MRV (Mesure, Reporting, Verification) national"
+    },
+    {
+      id: 22,
+      category: 'redd',
+      question: "Comment GreenLink aide ma cooperative avec le REDD+ ?",
+      answer: "GreenLink fournit tous les outils REDD+ dont votre cooperative a besoin :\n\n**Niveau Starter :**\n\u2022 Rapport REDD+ simplifie (nombre d'arbres, estimation carbone de base)\n\n**Niveau Pro :**\n\u2022 Estimation des reductions d'emissions\n\u2022 Suivi des pratiques agroforestieres\n\u2022 Donnees geolocalisees pour MRV national\n\u2022 Rapports zero-deforestation\n\u2022 Export PDF/Excel pour audits BMC et programmes juridictionnels (ex. Parc Tai)\n\n**Niveau Enterprise :**\n\u2022 Analyse carbone agregee pour Results-Based Payments\n\u2022 Formation agents terrain sur REDD+\n\u2022 Donnees pour programmes juridictionnels"
+    },
+    {
+      id: 23,
+      category: 'redd',
+      question: "Qu'est-ce que le MRV et pourquoi est-ce important ?",
+      answer: "Le MRV (Mesure, Reporting, Verification) est le systeme utilise par les programmes REDD+ pour mesurer et verifier les reductions d'emissions.\n\nGreenLink automatise la collecte des donnees MRV :\n\u2022 Geolocalisation des parcelles\n\u2022 Comptage des arbres d'ombrage\n\u2022 Suivi des pratiques agricoles\n\u2022 Estimation des stocks de carbone\n\u2022 Rapports conformes aux standards internationaux\n\nCes donnees permettent a votre cooperative d'acceder aux paiements carbone des programmes nationaux et internationaux."
+    },
+    {
+      id: 24,
+      category: 'redd',
+      question: "Qu'est-ce que la conformite EUDR ?",
+      answer: "L'EUDR (European Union Deforestation Regulation) exige que tout cacao exporte vers l'UE soit trace et certifie 'zero-deforestation'.\n\nGreenLink aide votre cooperative a se conformer :\n\u2022 Geolocalisation GPS de chaque parcelle\n\u2022 Verification automatique des zones forestieres protegees\n\u2022 Rapports de tracabilite par lot\n\u2022 Historique complet de la chaine d'approvisionnement\n\u2022 Export des donnees pour les certificateurs"
     },
     
-    // Tarifs
+    // Tarifs / Abonnements
     {
       id: 12,
       category: 'pricing',
-      question: "Combien coûte GreenLink ?",
-      answer: "**Gratuit a vie** pour :\n\u2022 Producteurs (vente, credits carbone, messagerie, alertes)\n\u2022 Cooperatives (gestion membres, agents terrain, fiches ICI/SSRTE)\n\n**Sur devis (15 jours gratuits)** :\n\u2022 Acheteurs : acces bourse des recoltes, propositions d'achat\n\u2022 Fournisseurs : boutique en ligne, gestion catalogue, commandes\n\u2022 Entreprises RSE : credits carbone, rapports ESG, tracabilite\n\nApres les 15 jours d'essai, remplissez un formulaire de devis. L'administrateur l'examine et active votre compte sous 48h."
+      question: "Combien coûte GreenLink pour une cooperative ?",
+      answer: "**6 mois d'essai gratuit offerts** avec acces Pro complet !\n\nApres l'essai, 3 niveaux d'abonnement :\n\n\u2022 **Starter** : 50 000 FCFA/mois (jusqu'a 400 membres)\n  Dashboard basique + ARS 1000 + REDD+ simplifie\n\n\u2022 **Pro** (recommande) : 120 000 FCFA/mois (jusqu'a 800 membres)\n  Dashboard complet + REDD+ avance + exports audits + support prioritaire\n\n\u2022 **Enterprise** : 250 000 FCFA/mois (membres illimites)\n  Tout Pro + API + formation agents REDD+ + analyse carbone agregee\n\n**Producteurs** : acces gratuit a vie.\n**Acheteurs/Fournisseurs/RSE** : sur devis (15 jours d'essai gratuit)."
     },
     {
       id: 13,
       category: 'pricing',
-      question: "Pourquoi est-ce gratuit pour les producteurs ?",
-      answer: "Notre modèle économique repose sur les crédits carbone et les abonnements des acheteurs professionnels. Les producteurs et coopératives sont au cœur de notre écosystème - sans eux, pas de crédits carbone !\n\nEn leur offrant un accès gratuit, nous :\n• Maximisons l'adoption de pratiques durables\n• Augmentons le volume de crédits carbone\n• Créons un impact social positif\n• Renforçons les chaînes d'approvisionnement"
+      question: "Comment fonctionne l'essai gratuit de 6 mois ?",
+      answer: "Des l'activation de votre compte cooperative :\n\n1. Vous beneficiez de 6 mois d'acces complet au niveau Pro\n2. Vous recevez des notifications 30, 15 et 7 jours avant la fin de l'essai\n3. A la fin de l'essai, vous choisissez votre abonnement (Starter, Pro ou Enterprise)\n4. Sans choix explicite, votre cooperative passe automatiquement en mode Pro facturable\n5. Annulation possible a tout moment avant la fin de l'essai\n\nAucune carte bancaire requise pour commencer."
     },
     {
       id: 14,
       category: 'pricing',
-      question: "Comment fonctionne la période d'essai ?",
-      answer: "Pour les plans payants (Acheteurs, Fournisseurs, RSE) :\n\n• Contactez-nous pour un devis personnalisé\n• Démonstration gratuite de la plateforme\n• Accompagnement sur mesure\n• Paiement via Orange Money, Mobile Money ou virement"
+      question: "Pourquoi est-ce gratuit pour les producteurs ?",
+      answer: "Notre modele economique repose sur les credits carbone et les abonnements cooperatives. Les producteurs sont au coeur de notre ecosysteme - sans eux, pas de credits carbone !\n\nEn leur offrant un acces gratuit, nous :\n\u2022 Maximisons l'adoption de pratiques durables\n\u2022 Augmentons le volume de credits carbone\n\u2022 Creons un impact social positif\n\u2022 Renforcons les chaines d'approvisionnement\n\nLes cooperatives beneficient de 6 mois gratuits pour evaluer la valeur de GreenLink."
     },
     
     // Sécurité

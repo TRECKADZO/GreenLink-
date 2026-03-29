@@ -19,6 +19,7 @@ from routes import features, content, contact, auth, marketplace, greenlink, pay
 from routes import cooperative_members, cooperative_parcels, cooperative_lots, cooperative_agents, cooperative_reports, cooperative_carbon_premiums
 from routes import admin_analytics, carbon_premiums
 from routes import tracking, analytics_advanced, notifications, subscriptions, carbon_sales, billing, sms
+from routes import coop_subscriptions
 from routes import premium_analytics, ici_analytics, ici_data_collection, ici_export
 from routes import pdf_reports, websocket_routes
 from routes import ici_pdf_reports
@@ -177,6 +178,7 @@ app.include_router(rse_dashboard.router)
 app.include_router(redd.router)
 app.include_router(redd_pdf.router)
 app.include_router(redd_tracking.router)
+app.include_router(coop_subscriptions.router)
 
 CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '')
 if CORS_ORIGINS:

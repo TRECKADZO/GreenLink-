@@ -14,10 +14,10 @@ const CTASection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-            Rejoignez la révolution agricole
+            Rejoignez la revolution agricole durable
           </h2>
           <p className="text-sm sm:text-lg lg:text-xl text-white/90 max-w-3xl mx-auto px-2">
-            Producteurs, coopératives ou entreprises RSE, créez votre compte gratuit et commencez à transformer votre activité.
+            6 mois d'essai gratuit pour les cooperatives. GreenLink aide votre cooperative a generer des credits carbone via la Strategie Nationale REDD+ tout en simplifiant les audits ARS 1000 et SSRTE.
           </p>
         </div>
         
