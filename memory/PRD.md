@@ -97,6 +97,18 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - **Gating abonnement** : Sections verrouillees avec CTA "Mise a niveau" pour plans inferieurs
 - **Seed data demo** : 20 membres, 17 visites REDD+, 18 visites SSRTE, 7 cas ICI
 - **Tests** : 100% pass (iteration 83 — 17/17 backend + frontend, sync verifiee)
+
+### Graphiques Interactifs Dashboard (29 Mars 2026)
+- **Backend** : Endpoint `GET /api/cooperative/dashboard-charts` - donnees temporelles sur 6 mois
+  - REDD+ mensuel : visites, score moyen, CO₂ (tonnes)
+  - SSRTE mensuel : visites, enfants, repartition risques (critique/eleve/modere/faible)
+  - Risque par zone : top 10 villages classes par niveau de risque
+- **Frontend** : 4 graphiques recharts dans section "Analyses & Tendances"
+  - `REDDEvolutionChart` : Courbe composee double axe (aire CO₂ + ligne Score REDD+)
+  - `SSRTETrendsChart` : Barres empilees risques + ligne pointillee enfants
+  - `RiskByZoneChart` : Barres horizontales colorees par risque dominant
+  - `PracticesDonutChart` : Donut chart adoption pratiques avec % moyen central
+- **Tests** : 100% pass (iteration 84 — 19/19 backend + 4 charts + widgets verifie)
 - **Design System** : Theme "Organic & Earthy" - vert foret profond (#1A3622), blanc os (#FAF9F6), or (#D4AF37), terre cuite (#C25E30)
 - **Typographie** : DM Sans (titres), Manrope (corps), JetBrains Mono (code)
 - **Refactoring** : Fichier monolithique de 920 lignes decoupe en 13 composants modulaires :
