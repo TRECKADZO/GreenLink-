@@ -112,7 +112,8 @@ async function classifyNetworkError(err) {
 // ========================
 async function healthCheck(timeoutMs = 8000) {
   try {
-    const res = await fetchT(BASE_URL + '/health', {
+    const bust = `?_cb=${Date.now()}`;
+    const res = await fetchT(BASE_URL + '/health' + bust, {
       method: 'HEAD',
       headers: {
         'User-Agent': USER_AGENT,
@@ -206,26 +207,29 @@ const api = {
   healthCheck,
 
   // Flush les connexions OkHttp stales (appele au logout)
-  // HEAD /health avec Connection: close force la fermeture du pool
+  // Envoie 2 HEAD avec Connection: close + cache-bust pour forcer le pool a se vider
   flushConnections: async () => {
     authToken = null;
-    try {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 5000);
-      await fetch(BASE_URL + '/health', {
-        method: 'HEAD',
-        headers: {
-          'User-Agent': USER_AGENT,
-          'Connection': 'close',
-          'Cache-Control': 'no-store',
-        },
-        signal: controller.signal,
-      });
-      clearTimeout(id);
-      if (__DEV__) console.log('[API] Connexions flushed (Connection: close)');
-    } catch {
-      if (__DEV__) console.log('[API] Flush — ignore erreur');
+    const bust = `?_cb=${Date.now()}`;
+    for (let i = 0; i < 2; i++) {
+      try {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), 3000);
+        await fetch(BASE_URL + '/health' + bust, {
+          method: 'HEAD',
+          headers: {
+            'User-Agent': USER_AGENT,
+            'Connection': 'close',
+            'Cache-Control': 'no-store',
+          },
+          signal: controller.signal,
+        });
+        clearTimeout(id);
+      } catch {
+        // Ignorer
+      }
     }
+    if (__DEV__) console.log('[API] Connexions flushed x2');
   },
 
   get: (url, cfg = {}) => {
@@ -271,14 +275,14 @@ const api = {
   // Plus de NetInfo.fetch() ici — le vrai check passe par healthCheck()
   // ========================
   login: async (identifier, password) => {
-    // 1. Health check rapide (HEAD 8s)
+    // 1. Health check rapide (HEAD 8s) — avec cache-bust
     if (__DEV__) console.log('[API] Login: health check prealable...');
     const health = await healthCheck(8000);
     if (!health.ok) {
       if (__DEV__) console.log('[API] Health check echoue — on tente quand meme le POST');
     }
 
-    // 2. POST login avec retries
+    // 2. POST login avec retries — cache-bust sur chaque requete
     const url = BASE_URL + '/auth/login';
     const body = JSON.stringify({ identifier, password });
     const headers = getHeaders();

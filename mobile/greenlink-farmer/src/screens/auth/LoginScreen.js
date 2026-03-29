@@ -17,7 +17,7 @@ import { COLORS, FONTS, SPACING } from '../../config';
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
-  const { checkNow } = useRealConnectionStatus();
+  const { isOffline } = useRealConnectionStatus();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,12 +29,9 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
-
-    // 1. Pre-check connectivite via vrai HEAD ping (pas NetInfo seul)
-    const connectivity = await checkNow();
-    if (!connectivity.isOnline) {
-      setLoading(false);
+    // Seul blocage : si NetInfo confirme zero connectivite
+    // (pas de pre-check HTTP — on laisse api.js gerer les retries)
+    if (isOffline) {
       Alert.alert(
         'Pas de connexion',
         'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.',
@@ -42,20 +39,10 @@ const LoginScreen = ({ navigation }) => {
       );
       return;
     }
-    if (!connectivity.isServerReachable) {
-      setLoading(false);
-      Alert.alert(
-        'Serveur indisponible',
-        'Le serveur est temporairement indisponible. Reessayez dans quelques instants.',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Reessayer', onPress: () => handleLogin() },
-        ]
-      );
-      return;
-    }
 
-    // 2. Tenter le login
+    setLoading(true);
+
+    // Tenter le login directement — api.js fait 3 retries (25s/45s/65s)
     const result = await login(identifier.trim(), password);
     setLoading(false);
 
@@ -70,7 +57,7 @@ const LoginScreen = ({ navigation }) => {
 
       Alert.alert(title, result.error, buttons);
     }
-  }, [identifier, password, login, checkNow]);
+  }, [identifier, password, login, isOffline]);
 
   return (
     <KeyboardAvoidingView

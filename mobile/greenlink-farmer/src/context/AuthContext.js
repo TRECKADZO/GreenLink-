@@ -177,8 +177,11 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
 
-    // Flush les connexions OkHttp stales (Connection: close)
+    // Flush les connexions OkHttp stales (Connection: close x2)
     await api.flushConnections();
+
+    // Attendre 500ms pour laisser OkHttp vider son pool
+    await new Promise(r => setTimeout(r, 500));
 
     // Force un recheck immediat du statut reseau reel
     // Evite le faux "Serveur injoignable" au prochain login
