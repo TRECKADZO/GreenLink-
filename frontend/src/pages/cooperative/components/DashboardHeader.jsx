@@ -1,12 +1,39 @@
-import React from 'react';
-import { Building2, Home, UserCircle, Plus, Bell } from 'lucide-react';
+import React, { useState } from 'react';
+import { Building2, Home, UserCircle, Plus, FileDown, Loader2 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { NotificationCenter } from '../../../components/NotificationCenter';
+import { toast } from 'sonner';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export const DashboardHeader = ({ coopInfo, user, navigate }) => {
   const name = coopInfo?.name || user?.coop_name || 'Cooperative';
   const code = coopInfo?.code || user?.coop_code || 'N/A';
   const certs = coopInfo?.certifications || [];
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/cooperative/pdf/dashboard-report`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Erreur export');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dashboard_${name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Rapport PDF telecharge');
+    } catch {
+      toast.error('Erreur lors de l\'export PDF');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="bg-[#1A3622] relative overflow-hidden" data-testid="dashboard-header">
@@ -38,6 +65,17 @@ export const DashboardHeader = ({ coopInfo, user, navigate }) => {
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2 gl-animate-in gl-stagger-2">
+            <Button
+              onClick={handleExportPDF}
+              disabled={exporting}
+              variant="ghost"
+              size="sm"
+              className="text-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-[#D4AF37]/30"
+              data-testid="export-pdf-btn"
+            >
+              {exporting ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <FileDown className="h-4 w-4 mr-1.5" strokeWidth={1.5} />}
+              Export PDF
+            </Button>
             <NotificationCenter />
             <Button
               onClick={() => navigate('/')}

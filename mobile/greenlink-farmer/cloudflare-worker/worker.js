@@ -7,7 +7,7 @@
  * - Gere le cookie __cf_bm du backend Cloudflare
  */
 
-const BACKEND_URL = 'https://carbon-platform-5.emergent.host';
+const BACKEND_URL = 'https://greenlink-agritech.com';
 
 let cfCookie = '';
 

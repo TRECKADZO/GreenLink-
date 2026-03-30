@@ -39,6 +39,7 @@ from routes import marketplace_analytics
 from routes import redd  # REDD+ MRV routes
 from routes import redd_pdf  # REDD+ PDF export  # Advanced Marketplace Analytics
 from routes import redd_tracking  # REDD+ Field Agent Tracking
+from routes import dashboard_pdf  # Dashboard PDF export
 from routes import agent_search  # Agent Terrain - Recherche sécurisée
 from routes import carbon_listings  # Carbon Credit Listings - Soumission/Approbation
 from routes import quotes  # Gestion des Devis pour abonnements fournisseurs
@@ -178,6 +179,7 @@ app.include_router(rse_dashboard.router)
 app.include_router(redd.router)
 app.include_router(redd_pdf.router)
 app.include_router(redd_tracking.router)
+app.include_router(dashboard_pdf.router)
 app.include_router(coop_subscriptions.router)
 
 CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '')
