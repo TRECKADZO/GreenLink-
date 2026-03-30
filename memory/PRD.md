@@ -11,9 +11,6 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 
 ## Shortcode USSD: `*144*99#` (14 questions)
 
-## Fix Critique v1.71.0
-- **Cause du bug "donnees introuvables"** : Le Bunny CDN retourne 404 pour les routes `/api/`. Fix: URL directe en priorite, CDN en fallback.
-
 ## Ce qui est implemente
 
 ### Core
@@ -29,119 +26,57 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 ### REDD+
 - Guide REDD+ (21 pratiques, 5 categories) - Web + Mobile
 - Dashboard MRV REDD+ + Export PDF professionnel
-- **Fiche de suivi REDD+ agents terrain** (NEW):
-  - Flux: Agent terrain -> Selection agriculteur -> Fiche REDD+ (comme ICI/SSRTE)
-  - Backend: `/api/redd/tracking/` (visit, visits, stats, practices-list)
-  - Frontend Web: `/redd/tracking` (formulaire, historique, statistiques)
-  - Mobile: `REDDTrackingFormScreen` accessible via `FarmerProfileScreen`
-  - Onglet historique REDD+ dans le profil agriculteur (mobile)
+- Fiche de suivi REDD+ agents terrain
 - Section REDD+ page d'accueil web + mobile
 
 ### SSRTE/ICI
 - SSRTE/ICI alertes USSD
 - Dashboard SSRTE cooperatives
 
-### Mobile Navigation (Corrige)
-- Score REDD+ -> REDDGuide (etait USSDCarbon)
-- Pratiques REDD+ -> REDDGuide (etait USSDFullSimulator)
-- Fiche REDD+ accessible depuis FieldAgentDashboard
+### Systeme d'Abonnements Cooperatives REDD+
+- 3 plans : Starter (50K), Pro (120K), Enterprise (250K) FCFA/mois
+- Essai gratuit 6 mois avec acces Pro complet
+- Notifications automatiques 30/15/7 jours avant fin essai
 
-### Bug Fix Mobile v1.72.2 (27 Mars 2026)
-- **Cause racine**: Ligne corrompue `creen;` (fragment de `HomeScreen;`) a la fin de `HomeScreen.js` (ligne 488)
-- **Effet**: Erreur de syntaxe JS -> Metro bundler echoue -> `safeRequire` attrape l'erreur -> "Ecran indisponible - HomeScreen n'a pas pu etre charge"
-- **Fix**: Suppression de la ligne corrompue
-- **Build**: EAS v1.72.2 soumis
+### KPIs REDD+, SSRTE & ICI + Synchronisation Temps Reel
+- Backend: Endpoint `GET /api/cooperative/dashboard-kpis`
+- Harmonisation champs: `niveau_risque` <-> `risk_level`, etc.
+- Frontend: SubscriptionBanner, REDDWidget, SSRTEWidget
 
-### Mobile Network Refactor v1.75.0 (28 Mars 2026)
-- Remplace par v1.76.0
+### Graphiques Interactifs Dashboard
+- Backend: Endpoint `GET /api/cooperative/dashboard-charts` - donnees temporelles sur 6 mois
+- Frontend: 4 graphiques recharts (CO2, SSRTE, Risques, Pratiques)
 
-### Mobile Network Refactor v1.76.0 (28 Mars 2026)
-- **Principe v1.76** : Ne JAMAIS faire confiance a `NetInfo.isInternetReachable` pour les messages d'erreur
-- **`useRealConnectionStatus.js`** (NOUVEAU) : Hook reseau communaute 2025-2026
-  - NetInfo.addEventListener comme trigger rapide uniquement (debounce 800ms)
-  - Verification reelle : HEAD /api/health (8s) -> fallback HEAD https://1.1.1.1 (5s)
-  - `checkNow()` : verification immediate, `resetAndRecheck()` : post-logout
-- **`api.js`** : Plus de `import NetInfo` — classifyNetworkError utilise un vrai HEAD ping vers 1.1.1.1
-  - healthCheck() utilise HEAD (plus rapide, pas de body)
-  - Timeouts progressifs 25s/45s/65s, 3 retries avec backoff
-  - flushConnections() envoie HEAD avec Connection: close pour reset OkHttp
-- **`AuthContext.js`** : Utilise useRealConnectionStatus, appelle resetAndRecheck() au logout
-- **`LoginScreen.js`** : Pre-check via checkNow() avant login, messages nuances (offline/serveur/timeout)
+### Export PDF Dashboard Complet
+- Backend: Endpoint `GET /api/cooperative/pdf/dashboard-report`
+- Design: Palette vert foret / or / terre cuite, tableaux avec bordures
 
-### Configuration URLs stables v1.76 (28 Mars 2026)
-- Remplace toutes les URLs hardcodees `preview.emergentagent.com` par `https://api.greenlink-agritech.com` (Cloudflare Worker proxy permanent)
-- Fichiers mis a jour : `eas.json` (3 profiles), `config.js`, `GeolocationService.js`
-- Le Worker Cloudflare (`cloudflare-worker/worker.js`) garde l'URL backend comme cible proxy (mise a jour manuelle cote Cloudflare)
+### Audit & Gating des Fonctionnalites Abonnement (30 Mars 2026)
+- **Backend**: Nouveau module `subscription_guard.py` - helper reutilisable `get_coop_features()` et `require_feature()`
+- **Backend Gating**:
+  - `dashboard-charts`: Retourne donnees vides pour les plans sans les features correspondantes (redd_monthly vide si pas redd_avance/redd_simplifie, risk_by_zone vide si pas rapports_ssrte_ici)
+  - `dashboard-report` (PDF): Renvoie 403 si pas `export_pdf_excel`
+  - `dashboard-kpis`: Refactorise pour utiliser le helper partage
+- **Frontend Gating**:
+  - Bouton Export PDF: Desactive et grise pour les plans sans `export_pdf_excel`
+  - Section Graphiques: Visible seulement si `redd_avance`, `redd_simplifie` ou `alertes_ssrte`
+  - QuickActions: MRV REDD+ masque si pas `redd_avance`, SSRTE/ICI masque si pas `alertes_ssrte`
+  - MRVDashboard: Affiche message "bloque" avec CTA upgrade si pas `redd_donnees_mrv`
+- **Verification par plan**:
+  - Trial: Acces Pro complet (6 mois gratuits)
+  - Starter: Limite (pas PDF, pas REDD+ avance, pas ICI reports, pas MRV)
+  - Pro: Tout sauf Enterprise (pas API personnalisee, pas formation, pas co-branding)
+  - Enterprise: Tout inclus
+- **Tests**: 100% pass (iteration 86 — 19/19 backend, tous elements UI verifies)
 
-### Systeme d'Abonnements Cooperatives REDD+ (29 Mars 2026)
-- **Backend** : Nouveaux modeles (`coop_subscription_models.py`) et API (`routes/coop_subscriptions.py`)
-  - 3 plans : Starter (50K), Pro (120K), Enterprise (250K) FCFA/mois
-  - Essai gratuit 6 mois avec acces Pro complet
-  - Notifications automatiques 30/15/7 jours avant fin essai
-  - Auto-upgrade Pro apres essai (sauf annulation)
-  - Endpoints : GET /plans, GET /my-subscription, POST /choose-plan, POST /cancel
-- **Frontend PricingSection** : 3 cartes plans REDD+, banner essai gratuit, toggle Mensuel/Annuel (-17%), section valeur REDD+ (Credits Carbone, EUDR, MRV, Paiements Resultats)
-- **FAQ** : Nouvelle categorie REDD+ (4 questions), abonnements cooperatives mis a jour
-- **CTA Homepage** : Message 6 mois essai gratuit + REDD+ + ARS 1000 + SSRTE
-- **Tests** : 100% pass (21/21 backend, all frontend features verified)
-
-### KPIs REDD+, SSRTE & ICI + Synchronisation Temps Reel (29 Mars 2026)
-- **Backend** : Endpoint `GET /api/cooperative/dashboard-kpis` agrege REDD+ (visites, score, distribution niveaux, adoption pratiques, conformite MRV), SSRTE (visites menages, niveaux risque, enfants, couverture), ICI (cas remediation, resolus, en cours, taux)
-- **Harmonisation champs** : Resolution des incoherences de noms de champs entre USSD (francais) et API Web (anglais) :
-  - `niveau_risque` ↔ `risk_level` via `$ifNull` + map normalisation
-  - `enfants_observes_travaillant` ↔ `children_at_risk` via `$add` + `$ifNull`
-  - `farmer_id` ↔ `member_id` via `$ifNull`
-  - Double stockage : SSRTE visits ecrivent desormais les deux conventions
-- **Synchronisation cooperative** : REDD+ visits et SSRTE visits resolvent `coop_id` depuis `user._id` pour les utilisateurs cooperative/admin
-- **Frontend** : `SubscriptionBanner`, `REDDWidget` (score, visites, distribution, pratiques, conformite), `SSRTEWidget` (visites, enfants, couverture, risques, remediation ICI)
-- **Gating abonnement** : Sections verrouillees avec CTA "Mise a niveau" pour plans inferieurs
-- **Seed data demo** : 20 membres, 17 visites REDD+, 18 visites SSRTE, 7 cas ICI
-- **Tests** : 100% pass (iteration 83 — 17/17 backend + frontend, sync verifiee)
-
-### Graphiques Interactifs Dashboard (29 Mars 2026)
-- **Backend** : Endpoint `GET /api/cooperative/dashboard-charts` - donnees temporelles sur 6 mois
-  - REDD+ mensuel : visites, score moyen, CO₂ (tonnes)
-  - SSRTE mensuel : visites, enfants, repartition risques (critique/eleve/modere/faible)
-  - Risque par zone : top 10 villages classes par niveau de risque
-- **Frontend** : 4 graphiques recharts dans section "Analyses & Tendances"
-  - `REDDEvolutionChart` : Courbe composee double axe (aire CO₂ + ligne Score REDD+)
-  - `SSRTETrendsChart` : Barres empilees risques + ligne pointillee enfants
-  - `RiskByZoneChart` : Barres horizontales colorees par risque dominant
-  - `PracticesDonutChart` : Donut chart adoption pratiques avec % moyen central
-- **Tests** : 100% pass (iteration 84 — 19/19 backend + 4 charts + widgets verifie)
-
-### Export PDF Dashboard Complet (30 Mars 2026)
-- **Backend** : Endpoint `GET /api/cooperative/pdf/dashboard-report` genere rapport PDF reportlab A4
-  - Sections : Indicateurs Cles (8 KPIs), REDD+ & MRV (niveaux + pratiques), SSRTE & ICI (risques + remediation), Risque par Zone (10 villages), Tendances Mensuelles (6 mois)
-  - Design : Palette vert foret / or / terre cuite, tableaux avec bordures, barres progression
-- **Frontend** : Bouton "Export PDF" dore dans header dashboard avec telechargement blob
-- **Tests** : 100% pass (iteration 85 — 15/15 backend + frontend verifie)
-- **Design System** : Theme "Organic & Earthy" - vert foret profond (#1A3622), blanc os (#FAF9F6), or (#D4AF37), terre cuite (#C25E30)
-- **Typographie** : DM Sans (titres), Manrope (corps), JetBrains Mono (code)
-- **Refactoring** : Fichier monolithique de 920 lignes decoupe en 13 composants modulaires :
-  - `DashboardHeader.jsx` - En-tete avec nom cooperative, certifications, navigation
-  - `KPIStrip.jsx` - 4 KPIs principaux avec bordures colorees (Membres, Surface, CO2, Primes)
-  - `SubscriptionBanner.jsx` - Banniere plan d'abonnement (Essai/Starter/Pro/Enterprise), jours restants, CTA upgrade
-  - `REDDWidget.jsx` - KPIs REDD+ gates par abonnement (Score moyen, Visites terrain, Producteurs, Distribution niveaux, Adoption pratiques, Conformite MRV)
-  - `SSRTEWidget.jsx` - KPIs SSRTE/ICI gates par abonnement (Visites, Enfants, Couverture, Niveaux risque, Remediation ICI)
-  - `QuickActionsPanel.jsx` - Actions rapides groupees par categories (Exploitation, Commerce, Carbone & REDD+, Conformite)
-  - `RecentMembersCard.jsx` - Membres recents avec avatars
-  - `ActivationWidget.jsx` - Suivi activations avec barre de progression
-  - `ParcelsSection.jsx` - Gestion parcelles avec stats et actions
-  - `FinancialCard.jsx` - Resume financier (FCFA)
-  - `CommissionCardNew.jsx` - Taux de commission editable
-  - `USSDPanel.jsx` - Panneau simulateur USSD
-  - `AlertsBanner.jsx` - Alertes validation en attente
-- **Backend** : Nouvel endpoint `GET /api/cooperative/dashboard-kpis` qui agrege REDD+, SSRTE, ICI et subscription data
-- **Gating abonnement** :
-  - Starter : REDD+ simplifie + alertes SSRTE basiques (locked: MRV avance, rapports ICI)
-  - Pro/Essai : REDD+ avance + donnees MRV + rapports SSRTE/ICI complets + remediation ICI
-  - Enterprise : + API, formation, co-branding, analyse carbone agregee
-- **Layout** : Grille CSS 12 colonnes (8+4), responsive mobile
-- **Animations** : Entrees en fondu avec decalage (gl-animate-in, gl-stagger)
-- **Tests** : 100% pass (iteration 81 design base + iteration 82 KPIs REDD+/SSRTE/ICI)
+## Design System
+- Theme "Organic & Earthy" - vert foret profond (#1A3622), blanc os (#FAF9F6), or (#D4AF37), terre cuite (#C25E30)
+- Typographie: DM Sans (titres), Manrope (corps), JetBrains Mono (code)
 
 ## Backlog
+
+### P0
+- Build APK mobile (demande utilisateur)
 
 ### P1
 - SSL custom domain Cloudflare (bloque - propagation externe)
@@ -170,16 +105,18 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - `GET /api/cooperative/dashboard` - Dashboard cooperative
 - `GET /api/cooperative/members/activation-stats` - Stats activations
 - `GET /api/cooperative/dashboard-kpis` - KPIs REDD+/SSRTE/ICI gates par abonnement
+- `GET /api/cooperative/dashboard-charts` - Graphiques gates par abonnement
+- `GET /api/cooperative/pdf/dashboard-report` - Export PDF gate par export_pdf_excel
 - `GET /api/coop-subscriptions/plans` - Plans abonnement
+- `GET /api/coop-subscriptions/my-subscription` - Mon abonnement
 
 ## Fichiers Cles
-- `/app/backend/routes/redd_tracking.py` - API fiche de suivi REDD+
-- `/app/backend/routes/redd.py` - API MRV REDD+
-- `/app/backend/routes/ussd.py` - Moteur USSD (>2400 lignes)
-- `/app/frontend/src/pages/cooperative/Dashboard.jsx` - Orchestrateur dashboard (refactorise)
-- `/app/frontend/src/pages/cooperative/components/` - 10 composants dashboard
-- `/app/frontend/src/pages/farmer/USSDCarbonCalculator.jsx` - Calculateur web
-- `/app/frontend/src/pages/cooperative/REDDTrackingPage.jsx` - Suivi REDD+ web
-- `/app/mobile/greenlink-farmer/src/screens/redd/REDDGuideScreen.js`
-- `/app/mobile/greenlink-farmer/src/screens/redd/REDDTrackingFormScreen.js`
-- `/app/mobile/greenlink-farmer/src/AppContent.js` - Navigation mobile
+- `/app/backend/subscription_guard.py` - Helper gating abonnement
+- `/app/backend/coop_subscription_models.py` - Modeles et features par plan
+- `/app/backend/routes/cooperative.py` - Dashboard KPIs, Charts
+- `/app/backend/routes/dashboard_pdf.py` - Export PDF
+- `/app/backend/routes/coop_subscriptions.py` - API abonnements
+- `/app/frontend/src/pages/cooperative/Dashboard.jsx` - Orchestrateur dashboard
+- `/app/frontend/src/pages/cooperative/components/` - Composants dashboard gates
+- `/app/frontend/src/services/cooperativeApi.js` - API service
+- `/app/mobile/greenlink-farmer/` - App mobile Expo
