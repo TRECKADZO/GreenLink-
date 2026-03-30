@@ -5,47 +5,53 @@ import {
   UserCircle, Clock, Smartphone, ChevronDown
 } from 'lucide-react';
 
-const categories = [
-  {
-    title: 'Exploitation',
-    items: [
-      { icon: Plus, label: 'Parcelle', path: '/cooperative/parcels/new', color: 'text-[#1A3622]' },
-      { icon: Users, label: 'Membres', path: '/cooperative/members', color: 'text-[#1A3622]' },
-      { icon: Shield, label: 'Agents', path: '/cooperative/agents', color: 'text-[#1A3622]' },
-      { icon: Target, label: 'Progression', path: '/cooperative/agents-progress', color: 'text-[#1A3622]' },
-    ],
-  },
-  {
-    title: 'Commerce',
-    items: [
-      { icon: Package, label: 'Ventes', path: '/cooperative/lots', color: 'text-[#92400E]' },
-      { icon: Store, label: 'Recoltes', path: '/marketplace/harvest', color: 'text-[#92400E]' },
-      { icon: Package, label: 'Intrants', path: '/marketplace', color: 'text-[#92400E]' },
-      { icon: Clock, label: 'Commandes', path: '/buyer/orders', color: 'text-[#92400E]' },
-    ],
-  },
-  {
-    title: 'Carbone & REDD+',
-    items: [
-      { icon: DollarSign, label: 'Primes', path: '/cooperative/carbon-premiums', color: 'text-[#065F46]' },
-      { icon: Leaf, label: 'Tonnage', path: '/cooperative/carbon-submissions', color: 'text-[#065F46]' },
-      { icon: Leaf, label: 'MRV REDD+', path: '/cooperative/mrv', color: 'text-[#065F46]' },
-      { icon: DollarSign, label: 'Distributions', path: '/cooperative/distributions', color: 'text-[#065F46]' },
-    ],
-  },
-  {
-    title: 'Conformite',
-    items: [
-      { icon: FileText, label: 'EUDR', path: '/cooperative/reports', color: 'text-[#6B7280]' },
-      { icon: TreePine, label: 'Naturalisation', path: '/cooperative/parcels/verification', color: 'text-[#6B7280]' },
-      { icon: AlertTriangle, label: 'SSRTE / ICI', path: '/cooperative/ssrte', color: 'text-[#6B7280]' },
-      { icon: UserCircle, label: 'Inscriptions', path: '/cooperative/inscriptions', color: 'text-[#6B7280]' },
-    ],
-  },
-];
+const getCategories = (features = {}) => {
+  const hasReddAvance = features.redd_avance;
+  const hasSsrteReports = features.rapports_ssrte_ici;
 
-export const QuickActionsPanel = ({ navigate, onToggleSimulator }) => {
+  return [
+    {
+      title: 'Exploitation',
+      items: [
+        { icon: Plus, label: 'Parcelle', path: '/cooperative/parcels/new', color: 'text-[#1A3622]' },
+        { icon: Users, label: 'Membres', path: '/cooperative/members', color: 'text-[#1A3622]' },
+        { icon: Shield, label: 'Agents', path: '/cooperative/agents', color: 'text-[#1A3622]' },
+        { icon: Target, label: 'Progression', path: '/cooperative/agents-progress', color: 'text-[#1A3622]' },
+      ],
+    },
+    {
+      title: 'Commerce',
+      items: [
+        { icon: Package, label: 'Ventes', path: '/cooperative/lots', color: 'text-[#92400E]' },
+        { icon: Store, label: 'Recoltes', path: '/marketplace/harvest', color: 'text-[#92400E]' },
+        { icon: Package, label: 'Intrants', path: '/marketplace', color: 'text-[#92400E]' },
+        { icon: Clock, label: 'Commandes', path: '/buyer/orders', color: 'text-[#92400E]' },
+      ],
+    },
+    {
+      title: 'Carbone & REDD+',
+      items: [
+        { icon: DollarSign, label: 'Primes', path: '/cooperative/carbon-premiums', color: 'text-[#065F46]' },
+        { icon: Leaf, label: 'Tonnage', path: '/cooperative/carbon-submissions', color: 'text-[#065F46]' },
+        ...(hasReddAvance ? [{ icon: Leaf, label: 'MRV REDD+', path: '/cooperative/mrv', color: 'text-[#065F46]' }] : []),
+        { icon: DollarSign, label: 'Distributions', path: '/cooperative/distributions', color: 'text-[#065F46]' },
+      ],
+    },
+    {
+      title: 'Conformite',
+      items: [
+        { icon: FileText, label: 'EUDR', path: '/cooperative/reports', color: 'text-[#6B7280]' },
+        { icon: TreePine, label: 'Naturalisation', path: '/cooperative/parcels/verification', color: 'text-[#6B7280]' },
+        ...(features.alertes_ssrte ? [{ icon: AlertTriangle, label: 'SSRTE / ICI', path: '/cooperative/ssrte', color: 'text-[#6B7280]' }] : []),
+        { icon: UserCircle, label: 'Inscriptions', path: '/cooperative/inscriptions', color: 'text-[#6B7280]' },
+      ],
+    },
+  ];
+};
+
+export const QuickActionsPanel = ({ navigate, onToggleSimulator, features }) => {
   const [expanded, setExpanded] = useState(true);
+  const categories = getCategories(features || {});
 
   return (
     <div className="bg-white border border-[#E5E5E0] rounded-md overflow-hidden gl-animate-in gl-stagger-5" data-testid="quick-actions-panel">

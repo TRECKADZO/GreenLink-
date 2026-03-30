@@ -199,33 +199,15 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
     coop_id = str(current_user["_id"])
 
     # --- Subscription ---
-    sub = await db.coop_subscriptions.find_one({"user_id": coop_id}, {"_id": 0})
-    if not sub:
-        from coop_subscription_models import create_coop_subscription, CoopPlan, COOP_PLAN_FEATURES, get_coop_sub_status
-        coop_name = current_user.get("coop_name", current_user.get("full_name", ""))
-        sub = create_coop_subscription(coop_id, coop_name)
-        await db.coop_subscriptions.insert_one(sub)
-        sub.pop("_id", None)
-    else:
-        from coop_subscription_models import CoopPlan, COOP_PLAN_FEATURES, get_coop_sub_status
+    from subscription_guard import get_coop_features
+    sub_info = await get_coop_features(coop_id, current_user)
+    features = sub_info["features"]
 
-    sub_status = get_coop_sub_status(sub)
-    plan_key = sub.get("plan", CoopPlan.TRIAL.value)
-    try:
-        plan_enum = CoopPlan(plan_key)
-    except ValueError:
-        plan_enum = CoopPlan.TRIAL
-    features = COOP_PLAN_FEATURES.get(plan_enum, COOP_PLAN_FEATURES[CoopPlan.TRIAL])
-
-    subscription_info = {
-        "plan": plan_key,
-        "plan_name": {CoopPlan.TRIAL: "Essai Gratuit Pro", CoopPlan.STARTER: "Starter",
-                      CoopPlan.PRO: "Pro", CoopPlan.ENTERPRISE: "Enterprise"}.get(plan_enum, "Essai"),
-        "is_active": sub_status.get("is_active", False),
-        "is_trial": sub_status.get("is_trial", False),
-        "days_remaining": sub_status.get("days_remaining", 0),
-        "status": sub_status.get("status", ""),
-    }
+    subscription_info = sub_info["subscription"]
+    subscription_info["plan_name"] = {
+        "coop_trial": "Essai Gratuit Pro", "coop_starter": "Starter",
+        "coop_pro": "Pro", "coop_enterprise": "Enterprise"
+    }.get(subscription_info["plan"], "Essai")
 
     # --- REDD+ KPIs ---
     redd_kpis = None
@@ -356,10 +338,15 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
 
 @router.get("/dashboard-charts")
 async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
-    """Time-series data for dashboard charts (last 6 months)"""
+    """Time-series data for dashboard charts (last 6 months) - gated by subscription"""
     verify_cooperative(current_user)
     coop_id = str(current_user["_id"])
     cq = coop_id_query(coop_id)
+
+    # --- Subscription gating ---
+    from subscription_guard import get_coop_features
+    sub_info = await get_coop_features(coop_id, current_user)
+    features = sub_info["features"]
 
     now = datetime.now(timezone.utc)
     months = []
@@ -472,11 +459,25 @@ async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
     risk_by_zone = [{"zone": z["_id"], "total": z["total"], "critique": z["critique"],
                      "eleve": z["eleve"], "modere": z["modere"], "faible": z["faible"]} for z in zones_raw]
 
-    return {
-        "redd_monthly": redd_monthly,
-        "ssrte_monthly": ssrte_monthly,
-        "risk_by_zone": risk_by_zone,
-    }
+    # Gate data based on subscription features
+    result = {}
+    if features.get("redd_avance") or features.get("redd_simplifie"):
+        result["redd_monthly"] = redd_monthly
+    else:
+        result["redd_monthly"] = []
+
+    if features.get("alertes_ssrte"):
+        result["ssrte_monthly"] = ssrte_monthly
+    else:
+        result["ssrte_monthly"] = []
+
+    if features.get("rapports_ssrte_ici"):
+        result["risk_by_zone"] = risk_by_zone
+    else:
+        result["risk_by_zone"] = []
+
+    result["features"] = features
+    return result
 
 
 # ============= CARBON AUDIT ENDPOINTS =============

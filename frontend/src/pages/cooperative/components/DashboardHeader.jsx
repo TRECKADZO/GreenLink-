@@ -6,11 +6,12 @@ import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-export const DashboardHeader = ({ coopInfo, user, navigate }) => {
+export const DashboardHeader = ({ coopInfo, user, navigate, features }) => {
   const name = coopInfo?.name || user?.coop_name || 'Cooperative';
   const code = coopInfo?.code || user?.coop_code || 'N/A';
   const certs = coopInfo?.certifications || [];
   const [exporting, setExporting] = useState(false);
+  const canExportPdf = features?.export_pdf_excel !== false;
 
   const handleExportPDF = async () => {
     setExporting(true);
@@ -67,10 +68,14 @@ export const DashboardHeader = ({ coopInfo, user, navigate }) => {
           <div className="flex flex-wrap items-center gap-2 gl-animate-in gl-stagger-2">
             <Button
               onClick={handleExportPDF}
-              disabled={exporting}
+              disabled={exporting || !canExportPdf}
               variant="ghost"
               size="sm"
-              className="text-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-[#D4AF37]/30"
+              className={canExportPdf
+                ? "text-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 border border-[#D4AF37]/30"
+                : "text-white/30 border border-white/10 cursor-not-allowed"
+              }
+              title={canExportPdf ? 'Exporter le rapport PDF' : 'Export PDF disponible avec le plan Pro ou superieur'}
               data-testid="export-pdf-btn"
             >
               {exporting ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <FileDown className="h-4 w-4 mr-1.5" strokeWidth={1.5} />}

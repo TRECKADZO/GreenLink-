@@ -31,6 +31,13 @@ export const cooperativeApi = {
     return response.data;
   },
 
+  getSubscription: async () => {
+    const response = await axios.get(`${BACKEND_URL}/api/coop-subscriptions/my-subscription`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Members Management
   getMembers: async (params = {}) => {
     const response = await axios.get(`${API}/members`, {

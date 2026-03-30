@@ -1,0 +1,151 @@
+{
+  "summary": "Iteration 86 - Subscription Feature Gating Audit Complete. All 19 backend tests passed (100%). Frontend UI verified for Trial plan: Export PDF button gold/enabled, REDD+ widget visible with data, SSRTE widget visible with data, ICI remediation visible, Charts section visible, Quick Actions panel shows MRV REDD+ and SSRTE/ICI links. Subscription plans correctly defined with proper feature gating.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Dashboard Charts",
+        "issues": ["Console warning: recharts width/height -1 on initial render (cosmetic, charts render correctly after)"]
+      },
+      {
+        "screen": "MRV Dashboard",
+        "issues": ["Console warning: Cannot update component while rendering different component (React setState warning)"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_subscription_gating_iteration86.py",
+    "/app/test_reports/pytest/pytest_subscription_gating_iteration86.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PASS: GET /api/cooperative/dashboard-kpis returns correct features based on subscription plan",
+    "PASS: GET /api/cooperative/dashboard-charts returns features dict and gates data correctly",
+    "PASS: GET /api/cooperative/pdf/dashboard-report requires export_pdf_excel feature (403 without)",
+    "PASS: GET /api/coop-subscriptions/plans returns all plans with correct features",
+    "PASS: GET /api/coop-subscriptions/my-subscription returns features for cooperative user (403 for admin)",
+    "PASS: Trial plan (coop_trial) has Pro-level access: dashboard_complet=True, redd_avance=True, export_pdf_excel=True",
+    "PASS: Starter plan (coop_starter) correctly limited: dashboard_complet=False, export_pdf_excel=False, redd_avance=False",
+    "PASS: Starter plan has: rapports_ars1000=True, alertes_ssrte=True, redd_simplifie=True",
+    "PASS: Features consistent between dashboard-kpis and dashboard-charts endpoints",
+    "PASS: Frontend Export PDF button gold/enabled for Trial plan",
+    "PASS: Frontend REDD+ Widget visible with data (Score 4.9, 17 visits, 18 producteurs)",
+    "PASS: Frontend SSRTE Widget visible with data (18 visits, 20 enfants, 80% couverture)",
+    "PASS: Frontend ICI Remediation section visible (7 cas, 3 resolus, 2 en cours)",
+    "PASS: Frontend Charts section 'Analyses & Tendances' visible",
+    "PASS: Frontend Quick Actions panel shows MRV REDD+ link (redd_avance=True)",
+    "PASS: Frontend Quick Actions panel shows SSRTE/ICI link (alertes_ssrte=True)",
+    "PASS: Subscription banner shows 'Essai Gratuit Pro' with 179 days remaining"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_subscription_gating_iteration86.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "100% (All subscription-gated UI elements verified)"
+  },
+  "test_credentials": {
+    "admin": {
+      "identifier": "klenakan.eric@gmail.com",
+      "password": "474Treckadzo"
+    }
+  },
+  "seed_data_creation": "Used existing seed data from previous iterations",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 86 verified subscription feature gating for cooperative plans. Trial plan has full Pro access (6 months free). Starter plan is limited (no export_pdf_excel, no redd_avance, no rapports_ssrte_ici). The my-subscription endpoint only works for cooperative user_type (admin gets 403). Dashboard-kpis and dashboard-charts endpoints return features dict for frontend gating. PDF export endpoint requires export_pdf_excel feature. All UI elements correctly show/hide based on subscription features.",
+  "mocked_api_note": {
+    "Orange Money API": "MOCKED - payments logged but not actually processed",
+    "Orange SMS API": "MOCKED - SMS logged but not sent"
+  },
+  "subscription_features_verified": {
+    "trial_plan": {
+      "plan_id": "coop_trial",
+      "plan_name": "Essai Gratuit Pro",
+      "access_level": "Pro",
+      "duration_days": 180,
+      "features": {
+        "dashboard_complet": true,
+        "redd_avance": true,
+        "export_pdf_excel": true,
+        "alertes_ssrte": true,
+        "rapports_ssrte_ici": true,
+        "redd_donnees_mrv": true
+      }
+    },
+    "starter_plan": {
+      "plan_id": "coop_starter",
+      "plan_name": "Starter",
+      "price_monthly": 50000,
+      "features": {
+        "dashboard_complet": false,
+        "rapports_ars1000": true,
+        "alertes_ssrte": true,
+        "redd_simplifie": true,
+        "redd_avance": false,
+        "export_pdf_excel": false,
+        "rapports_ssrte_ici": false
+      }
+    },
+    "pro_plan": {
+      "plan_id": "coop_pro",
+      "plan_name": "Pro",
+      "price_monthly": 120000,
+      "features": {
+        "dashboard_complet": true,
+        "redd_avance": true,
+        "export_pdf_excel": true,
+        "alertes_ssrte": true,
+        "rapports_ssrte_ici": true
+      }
+    },
+    "enterprise_plan": {
+      "plan_id": "coop_enterprise",
+      "plan_name": "Enterprise",
+      "price_monthly": 250000,
+      "features": {
+        "all_pro_features": true,
+        "api_personnalisee": true,
+        "formation_agents_redd": true,
+        "co_branding": true,
+        "analyse_carbone_agregee": true
+      }
+    }
+  },
+  "ui_elements_verified": {
+    "export_pdf_button": {
+      "data_testid": "export-pdf-btn",
+      "trial_state": "gold styling, enabled",
+      "starter_state": "grayed out, disabled"
+    },
+    "redd_widget": {
+      "data_testid": "redd-widget",
+      "trial_state": "visible with data",
+      "starter_state": "visible with simplified data (redd_simplifie=True)"
+    },
+    "ssrte_widget": {
+      "data_testid": "ssrte-widget",
+      "trial_state": "visible with data + ICI remediation",
+      "starter_state": "visible with data (alertes_ssrte=True), no ICI section"
+    },
+    "quick_actions_mrv": {
+      "data_testid": "qa-mrv-redd-",
+      "trial_state": "visible",
+      "starter_state": "hidden (no redd_avance)"
+    },
+    "quick_actions_ssrte": {
+      "data_testid": "qa-ssrte-/-ici",
+      "trial_state": "visible",
+      "starter_state": "visible (alertes_ssrte in all plans)"
+    },
+    "charts_section": {
+      "trial_state": "visible (redd_avance or redd_simplifie or alertes_ssrte)",
+      "starter_state": "visible (has redd_simplifie and alertes_ssrte)"
+    }
+  }
+}

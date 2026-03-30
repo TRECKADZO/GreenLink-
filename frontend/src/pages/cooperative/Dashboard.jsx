@@ -131,10 +131,12 @@ const Dashboard = () => {
 
   const { coop_info, members, parcelles, financial, recent_members } = dashboardData || {};
   const hasChartData = chartData && (chartData.redd_monthly?.some(m => m.visites > 0) || chartData.ssrte_monthly?.some(m => m.visites > 0));
+  const canViewCharts = kpiData?.features?.redd_avance || kpiData?.features?.redd_simplifie || kpiData?.features?.alertes_ssrte;
+  const canExportPdf = kpiData?.features?.export_pdf_excel;
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]" data-testid="cooperative-dashboard">
-      <DashboardHeader coopInfo={coop_info} user={user} navigate={navigate} />
+      <DashboardHeader coopInfo={coop_info} user={user} navigate={navigate} features={kpiData?.features} />
       <KPIStrip members={members} parcelles={parcelles} financial={financial} navigate={navigate} />
 
       <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-8">
@@ -155,7 +157,7 @@ const Dashboard = () => {
             </div>
 
             {/* Charts Section */}
-            {hasChartData && (
+            {hasChartData && canViewCharts && (
               <>
                 <div className="pt-2">
                   <p className="text-[10px] tracking-[0.1em] uppercase font-bold text-[#9CA3AF] mb-4">Analyses & Tendances</p>
@@ -184,7 +186,7 @@ const Dashboard = () => {
 
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6">
-            <QuickActionsPanel navigate={navigate} onToggleSimulator={handleToggleSimulator} />
+            <QuickActionsPanel navigate={navigate} onToggleSimulator={handleToggleSimulator} features={kpiData?.features} />
             <RecentMembersCard
               recentMembers={recent_members}
               pendingValidation={members?.pending_validation}
