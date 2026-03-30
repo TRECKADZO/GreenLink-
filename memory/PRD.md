@@ -109,6 +109,13 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
   - `RiskByZoneChart` : Barres horizontales colorees par risque dominant
   - `PracticesDonutChart` : Donut chart adoption pratiques avec % moyen central
 - **Tests** : 100% pass (iteration 84 — 19/19 backend + 4 charts + widgets verifie)
+
+### Export PDF Dashboard Complet (30 Mars 2026)
+- **Backend** : Endpoint `GET /api/cooperative/pdf/dashboard-report` genere rapport PDF reportlab A4
+  - Sections : Indicateurs Cles (8 KPIs), REDD+ & MRV (niveaux + pratiques), SSRTE & ICI (risques + remediation), Risque par Zone (10 villages), Tendances Mensuelles (6 mois)
+  - Design : Palette vert foret / or / terre cuite, tableaux avec bordures, barres progression
+- **Frontend** : Bouton "Export PDF" dore dans header dashboard avec telechargement blob
+- **Tests** : 100% pass (iteration 85 — 15/15 backend + frontend verifie)
 - **Design System** : Theme "Organic & Earthy" - vert foret profond (#1A3622), blanc os (#FAF9F6), or (#D4AF37), terre cuite (#C25E30)
 - **Typographie** : DM Sans (titres), Manrope (corps), JetBrains Mono (code)
 - **Refactoring** : Fichier monolithique de 920 lignes decoupe en 13 composants modulaires :
