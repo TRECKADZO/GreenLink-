@@ -8,7 +8,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://agri-sync-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://apk-build-test.preview.emergentagent.com').rstrip('/')
 
 # Test credentials from test_credentials.md
 TEST_EMAIL = "klenakan.eric@gmail.com"
