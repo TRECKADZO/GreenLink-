@@ -153,7 +153,7 @@ const USSDCarbonCalculator = () => {
             </div>
             <div className="flex gap-2">
               <span className="text-emerald-400 font-bold min-w-[20px]">3.</span>
-              <p><strong className="text-white">ARS 1000</strong> : Norme Africaine pour le Cacao Durable (Bronze, Argent, Or). Certifie la qualite de vos pratiques.</p>
+              <p><strong className="text-white">Certification Qualite</strong> : Norme Africaine pour le Cacao Durable (Bon, Tres Bon, Excellent). Certifie la qualite de vos pratiques.</p>
             </div>
             <div className="flex gap-2">
               <span className="text-emerald-400 font-bold min-w-[20px]">4.</span>

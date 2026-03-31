@@ -160,9 +160,9 @@ CARBON_QUESTIONS_SIMPLE = [
     {"key": "compost", "text": "Utilisez-vous du compost organique ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "agroforesterie", "text": "Pratiquez-vous l'agroforesterie ?\n(arbres + cultures ensemble)\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "couverture_sol", "text": "Couverture vegetale au sol ?\n(plantes basses entre les arbres)\n1. Oui\n2. Non", "type": "yesno"},
-    {"key": "biochar", "text": "REDD+ - Utilisez-vous du biochar ?\n(charbon vegetal dans le sol)\n1. Oui\n2. Non", "type": "yesno"},
-    {"key": "zero_deforestation", "text": "REDD+ - Engagement zero deforestation ?\n(Pas d'extension sur foret)\n1. Oui\n2. Non", "type": "yesno"},
-    {"key": "reboisement", "text": "REDD+ - Faites-vous du reboisement ?\n(Plantation de nouveaux arbres)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "biochar", "text": "Utilisez-vous du biochar ?\n(charbon vegetal dans le sol)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "zero_deforestation", "text": "Engagement zero deforestation ?\n(Pas d'extension sur foret)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "reboisement", "text": "Faites-vous du reboisement ?\n(Plantation de nouveaux arbres)\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "age_cacaoyers", "text": "Age moyen de vos cacaoyers ?\n1. Moins de 5 ans\n2. 5 a 15 ans\n3. Plus de 15 ans", "type": "choice3"},
 ]
 
@@ -176,9 +176,9 @@ CARBON_QUESTIONS_DETAILED = [
     {"key": "compost", "text": "Utilisez-vous du compost organique ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "agroforesterie", "text": "Pratiquez-vous l'agroforesterie ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "couverture_sol", "text": "Avez-vous une couverture vegetale au sol ?\n1. Oui\n2. Non", "type": "yesno"},
-    {"key": "biochar", "text": "REDD+ - Utilisez-vous du biochar ?\n(charbon vegetal dans le sol)\n1. Oui\n2. Non", "type": "yesno"},
-    {"key": "zero_deforestation", "text": "REDD+ - Engagement zero deforestation ?\n(Pas d'extension sur foret)\n1. Oui\n2. Non", "type": "yesno"},
-    {"key": "reboisement", "text": "REDD+ - Faites-vous du reboisement ?\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "biochar", "text": "Utilisez-vous du biochar ?\n(charbon vegetal dans le sol)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "zero_deforestation", "text": "Engagement zero deforestation ?\n(Pas d'extension sur foret)\n1. Oui\n2. Non", "type": "yesno"},
+    {"key": "reboisement", "text": "Faites-vous du reboisement ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "age_cacaoyers", "text": "Age moyen de vos cacaoyers ?\n1. Moins de 5 ans\n2. 5 a 15 ans\n3. Plus de 15 ans", "type": "choice3"},
 ]
 
@@ -338,12 +338,18 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     }
 
 
-# ============= ARS 1000 COMPLIANCE ENGINE =============
+# ============= MOTEUR DE SCORING PRATIQUES DURABLES =============
+
+# Mapping interne -> affichage planteur
+LEVEL_DISPLAY = {"Or": "Excellent", "Argent": "Tres Bon", "Bronze": "Bon", "Non conforme": "A ameliorer"}
+
+def level_label(internal_level):
+    return LEVEL_DISPLAY.get(internal_level, internal_level)
 
 def calculate_ars_level(answers: dict) -> dict:
     """
-    Calcule le niveau de conformite ARS 1000 (Bronze/Argent/Or)
-    Base sur les criteres: agroforesterie, brulage, engrais, tracabilite
+    Calcule le score de pratiques durables (Bon/Tres Bon/Excellent)
+    Base sur: agroforesterie, brulage, engrais, tracabilite
     """
     hectares = float(answers.get("hectares", 0))
     arbres_grands = int(answers.get("arbres_grands", 0))
@@ -383,7 +389,7 @@ def calculate_ars_level(answers: dict) -> dict:
         pct += 20
         details.append("Brulage: Non (conforme)")
     else:
-        details.append("Brulage: Oui (non conforme ARS)")
+        details.append("Brulage: Oui (reduit votre prime)")
 
     # Critere 4: Gestion engrais (10 points)
     if answers.get("engrais") == "non":
@@ -401,18 +407,18 @@ def calculate_ars_level(answers: dict) -> dict:
     # Determiner le niveau
     if pct >= 80:
         level = "Or"
-        conseil = "Felicitations ! Vous etes au niveau Or ARS 1000."
+        conseil = "Felicitations ! Niveau Excellent - votre prime est maximale !"
     elif pct >= 55:
         level = "Argent"
         manque = 80 - pct
         arbres_manquants = max(0, int((40 - arbres_par_ha) * max(hectares, 1)))
         if arbres_manquants > 0:
-            conseil = f"Plantez {arbres_manquants} arbres supplementaires pour viser le niveau Or."
+            conseil = f"Plantez {arbres_manquants} arbres supplementaires pour atteindre le niveau Excellent."
         else:
-            conseil = f"Arretez le brulage et utilisez le compost pour atteindre le niveau Or."
+            conseil = f"Arretez le brulage et utilisez le compost pour atteindre le niveau Excellent."
     elif pct >= 30:
         level = "Bronze"
-        conseil = "Plantez plus d'arbres ombres et arretez le brulage pour passer au niveau Argent."
+        conseil = "Plantez plus d'arbres ombres et arretez le brulage pour ameliorer votre prime."
     else:
         level = "Non conforme"
         conseil = "Commencez par planter au moins 20 arbres/ha et arreter le brulage."
@@ -421,7 +427,7 @@ def calculate_ars_level(answers: dict) -> dict:
 
 
 async def save_ars_data(farmer_id: str, answers: dict, result: dict, phone: str, farmer_name: str, coop_name: str):
-    """Sauvegarder les donnees ARS 1000 du planteur et notifier l'admin"""
+    """Sauvegarder les donnees de pratiques durables du planteur et notifier l'admin"""
     now = datetime.now(timezone.utc)
     arbres_total = int(answers.get("arbres_grands", 0)) + int(answers.get("arbres_moyens", 0)) + int(answers.get("arbres_petits", 0))
 
@@ -467,7 +473,7 @@ async def save_ars_data(farmer_id: str, answers: dict, result: dict, phone: str,
 
 
 async def notify_admin_ars_update(farmer_id: str, farmer_name: str, phone: str, coop_name: str, field: str, value, ars_result: dict):
-    """Enregistrer une notification admin lors de la mise a jour ARS"""
+    """Enregistrer une notification admin lors de la mise a jour des pratiques"""
     field_labels = {
         "hectares": "Hectares cacao",
         "arbres_total": "Arbres ombres total",
@@ -485,7 +491,7 @@ async def notify_admin_ars_update(farmer_id: str, farmer_name: str, phone: str, 
         "new_value": value,
         "ars_level": ars_result["level"],
         "ars_pct": ars_result["pct"],
-        "message": f"{farmer_name} ({coop_name}) a mis a jour: {field_labels.get(field, field)} = {value}. Niveau ARS: {ars_result['level']} ({ars_result['pct']}%)",
+        "message": f"{farmer_name} ({coop_name}) a mis a jour: {field_labels.get(field, field)} = {value}. Niveau: {level_label(ars_result['level'])} ({ars_result['pct']}%)",
         "read": False,
         "created_at": datetime.now(timezone.utc)
     })
@@ -545,16 +551,16 @@ async def ussd_callback(request: USSDRequest):
                     
                     coop_label = f" ({coop})" if coop else ""
                     response_text = (
-                        f"GreenLink Agritech - ARS 1000\n"
+                        f"GreenLink Agritech\n"
                         f"Bonjour {name}{coop_label}\n\n"
-                        f"1. Prime carbone + conformite ARS\n"
-                        f"2. Mes donnees ARS 1000\n"
-                        f"3. Conseils pratiques ARS\n"
+                        f"1. Estimation de ma prime\n"
+                        f"2. Mes pratiques durables\n"
+                        f"3. Conseils pour ma prime\n"
                         f"4. Demander paiement prime\n"
                         f"5. Mes parcelles\n"
                         f"6. SSRTE - Travail des enfants\n"
                         f"7. Mon profil\n"
-                        f"8. REDD+ Pratiques durables\n"
+                        f"8. Pratiques durables\n"
                         f"0. Quitter"
                     )
                 else:
@@ -637,16 +643,16 @@ async def ussd_callback(request: USSDRequest):
                 session["data"]["coop_name"] = coop
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"GreenLink Agritech - ARS 1000\n"
+                    f"GreenLink Agritech\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Prime carbone + conformite ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils pratiques ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils pour ma prime\n"
                     f"4. Demander paiement prime\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -788,7 +794,7 @@ async def ussd_callback(request: USSDRequest):
                 # Prime carbone + conformite ARS -> choix simple/detaillee
                 session["state"] = "estimation_type"
                 response_text = (
-                    "Prime Carbone + Conformite ARS\n\n"
+                    "Estimation de votre Prime Carbone\n\n"
                     "1. Estimation simple (rapide)\n"
                     "2. Estimation detaillee\n"
                     "0. Retour"
@@ -803,7 +809,7 @@ async def ussd_callback(request: USSDRequest):
                     if ars_data:
                         session["data"]["has_ars_data"] = True
                         response_text = (
-                            "MES DONNEES ARS 1000\n\n"
+                            "MES PRATIQUES DURABLES\n\n"
                             "1. Voir mes donnees actuelles\n"
                             "2. Mettre a jour mes donnees\n"
                             "3. Generer rapport pour coop\n"
@@ -813,11 +819,11 @@ async def ussd_callback(request: USSDRequest):
                     else:
                         session["data"]["has_ars_data"] = False
                         response_text = (
-                            "MES DONNEES ARS 1000\n\n"
+                            "MES PRATIQUES DURABLES\n\n"
                             "Aucune donnee enregistree.\n"
                             "Faites d'abord une estimation\n"
                             "(choix 1 du menu)\n"
-                            "pour creer votre profil ARS.\n\n"
+                            "pour creer votre profil.\n\n"
                             "1. Faire une estimation\n"
                             "0. Retour"
                         )
@@ -829,7 +835,7 @@ async def ussd_callback(request: USSDRequest):
                 # Conseils pratiques ARS 1000
                 session["state"] = "ars_conseils_menu"
                 response_text = (
-                    "CONSEILS PRATIQUES ARS 1000\n\n"
+                    "CONSEILS POUR AMELIORER VOTRE PRIME\n\n"
                     "1. Agroforesterie\n"
                     "2. Lutte contre le brulage\n"
                     "3. Gestion des engrais\n"
@@ -904,7 +910,7 @@ async def ussd_callback(request: USSDRequest):
                 
                 # Check ARS level
                 ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id}) if farmer_id else None
-                ars_label = f"Niveau ARS: {ars_data['ars_level']} ({ars_data['ars_pct']}%)\n" if ars_data else ""
+                ars_label = f"Niveau: {level_label(ars_data['ars_level'])} ({ars_data['ars_pct']}%)\n" if ars_data else ""
                 
                 response_text = (
                     f"Mon Profil\n\n"
@@ -920,11 +926,11 @@ async def ussd_callback(request: USSDRequest):
                 session["state"] = "profile_view"
 
             elif choice == "8":
-                # REDD+ Pratiques durables
+                # Pratiques durables
                 farmer_id = data.get("farmer_id", "")
                 session["state"] = "redd_menu"
                 
-                # Check REDD+ data
+                # Check sustainable practices data
                 redd_data = None
                 if farmer_id:
                     ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id})
@@ -935,8 +941,8 @@ async def ussd_callback(request: USSDRequest):
                     redd_score = redd_data.get("score_redd", 0)
                     redd_level = redd_data.get("redd_level", "Non evalue")
                     response_text = (
-                        f"REDD+ PRATIQUES DURABLES\n\n"
-                        f"Votre score REDD+: {redd_score}/10\n"
+                        f"PRATIQUES DURABLES\n\n"
+                        f"Votre score: {redd_score}/10\n"
                         f"Niveau: {redd_level}\n\n"
                         f"1. Guide des pratiques\n"
                         f"2. Mon score detaille\n"
@@ -945,8 +951,8 @@ async def ussd_callback(request: USSDRequest):
                     )
                 else:
                     response_text = (
-                        f"REDD+ PRATIQUES DURABLES\n\n"
-                        f"Aucune evaluation REDD+.\n"
+                        f"PRATIQUES DURABLES\n\n"
+                        f"Aucune evaluation disponible.\n"
                         f"Faites une estimation (choix 1)\n"
                         f"pour obtenir votre score.\n\n"
                         f"1. Guide des pratiques\n"
@@ -963,14 +969,14 @@ async def ussd_callback(request: USSDRequest):
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
                     f"Option invalide.\n\n"
-                    f"1. Prime carbone + ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils prime\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
 
@@ -986,7 +992,7 @@ async def ussd_callback(request: USSDRequest):
                 # Guide des pratiques REDD+
                 session["state"] = "redd_guide"
                 response_text = (
-                    "GUIDE REDD+ (5 categories)\n\n"
+                    "GUIDE PRATIQUES DURABLES (5 categories)\n\n"
                     "1. Agroforesterie\n"
                     "   Arbres + cultures\n"
                     "2. Zero-deforestation\n"
@@ -996,7 +1002,7 @@ async def ussd_callback(request: USSDRequest):
                     "4. Restauration\n"
                     "   Reboisement, bois-energie\n"
                     "5. Tracabilite\n"
-                    "   GPS, ARS 1000, MRV\n\n"
+                    "   GPS, pratiques durables, MRV\n\n"
                     "0. Retour"
                 )
             elif choice == "2":
@@ -1013,7 +1019,7 @@ async def ussd_callback(request: USSDRequest):
                         if ars_data.get("couverture_sol"): practices.append("Couverture sol")
                         plist = "\n".join(f"  - {p}" for p in practices) if practices else "  Aucune pratique validee"
                         response_text = (
-                            f"MON SCORE REDD+ DETAILLE\n\n"
+                            f"MON SCORE DETAILLE\n\n"
                             f"Score: {ars_data.get('score_redd', 0)}/10\n"
                             f"Niveau: {ars_data.get('redd_level', 'N/A')}\n\n"
                             f"Pratiques validees:\n{plist}\n\n"
@@ -1023,7 +1029,7 @@ async def ussd_callback(request: USSDRequest):
                         # Redirect to estimation
                         session["state"] = "estimation_type"
                         response_text = (
-                            "Aucune donnee REDD+.\n"
+                            "Aucune donnee disponible.\n"
                             "Faites une estimation:\n\n"
                             "1. Estimation simple\n"
                             "2. Estimation detaillee\n"
@@ -1036,7 +1042,7 @@ async def ussd_callback(request: USSDRequest):
                 # Comment ameliorer son score REDD+
                 session["state"] = "redd_improve"
                 response_text = (
-                    "AMELIORER VOTRE SCORE REDD+\n\n"
+                    "AMELIORER VOTRE SCORE\n\n"
                     "Actions a fort impact:\n"
                     "1. Planter des arbres d'ombrage\n"
                     "   (+1.5 pts)\n"
@@ -1045,9 +1051,9 @@ async def ussd_callback(request: USSDRequest):
                     "3. Faire du compost\n"
                     "   (+1.0 pt)\n"
                     "4. S'engager zero deforestation\n"
-                    "   (+0.3 pt REDD+)\n"
+                    "   (+0.3 pt bonus)\n"
                     "5. Reboiser les zones degradees\n"
-                    "   (+0.4 pt REDD+)\n\n"
+                    "   (+0.4 pt bonus)\n\n"
                     "0. Retour"
                 )
             elif choice == "0":
@@ -1056,16 +1062,16 @@ async def ussd_callback(request: USSDRequest):
                 coop = data.get("coop_name", "")
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"GreenLink Agritech - ARS 1000\n"
+                    f"GreenLink Agritech\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Prime carbone + conformite ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils pratiques ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils pour ma prime\n"
                     f"4. Demander paiement prime\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1084,7 +1090,7 @@ async def ussd_callback(request: USSDRequest):
                         redd_data = ars_data
                 if redd_data:
                     response_text = (
-                        f"REDD+ PRATIQUES DURABLES\n\n"
+                        f"PRATIQUES DURABLES\n\n"
                         f"Score: {redd_data.get('score_redd', 0)}/10\n"
                         f"Niveau: {redd_data.get('redd_level', 'N/A')}\n\n"
                         f"1. Guide des pratiques\n"
@@ -1094,7 +1100,7 @@ async def ussd_callback(request: USSDRequest):
                     )
                 else:
                     response_text = (
-                        f"REDD+ PRATIQUES DURABLES\n\n"
+                        f"PRATIQUES DURABLES\n\n"
                         f"1. Guide des pratiques\n"
                         f"2. Faire une estimation\n"
                         f"0. Retour menu principal"
@@ -1116,7 +1122,7 @@ async def ussd_callback(request: USSDRequest):
                         "- Intensifier sur la meme surface\n"
                         "- Restaurer les parcelles degradees\n"
                         "- Proteger les forets classees\n\n"
-                        "Impact: +0.3 pt REDD+\n\n"
+                        "Impact: +0.3 pt bonus\n\n"
                         "0. Retour guide"
                     ),
                     "3": (
@@ -1131,7 +1137,7 @@ async def ussd_callback(request: USSDRequest):
                     "4": (
                         "RESTAURATION\n\n"
                         "- Reboiser les zones degradees\n"
-                        "  (+0.4 pt REDD+)\n"
+                        "  (+0.4 pt bonus)\n"
                         "- Plantations bois-energie\n"
                         "- Proteger les bords de riviere\n"
                         "- Valoriser les residus agricoles\n\n"
@@ -1140,7 +1146,7 @@ async def ussd_callback(request: USSDRequest):
                     "5": (
                         "TRACABILITE\n\n"
                         "- Cartographier vos parcelles (GPS)\n"
-                        "- Obtenir la certification ARS 1000\n"
+                        "- Ameliorer vos pratiques durables\n"
                         "- Participer au suivi MRV\n"
                         "- Respecter les normes sociales\n\n"
                         "0. Retour guide"
@@ -1203,16 +1209,16 @@ async def ussd_callback(request: USSDRequest):
                 coop = data.get("coop_name", "")
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"GreenLink Agritech - ARS 1000\n"
+                    f"GreenLink Agritech\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Prime carbone + conformite ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils pratiques ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils pour ma prime\n"
                     f"4. Demander paiement prime\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1311,16 +1317,16 @@ async def ussd_callback(request: USSDRequest):
                 coop = data.get("coop_name", "")
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"GreenLink Agritech - ARS 1000\n"
+                    f"GreenLink Agritech\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Prime carbone + conformite ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils pratiques ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils pour ma prime\n"
                     f"4. Demander paiement prime\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1433,12 +1439,12 @@ async def ussd_callback(request: USSDRequest):
                             await save_ars_data(farmer_id, answers, result, phone, data.get("farmer_name", ""), data.get("coop_name", ""))
                         
                         response_text = (
-                            f"Prime Carbone + ARS 1000\n\n"
+                            f"Votre Prime Carbone\n\n"
                             f"Hectares: {result['hectares']} ha\n"
                             f"Arbres >8m: {result['arbres_grands']}\n"
                             f"Score: {result['score']}/10\n"
                             f"Prime: {format_xof(result['prime_annuelle'])}/an\n\n"
-                            f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                            f"Niveau: {level_label(result['ars_level'])} ({result['ars_pct']}%)\n"
                             f"Niveau REDD+: {result.get('redd_level', 'N/A')} ({result.get('redd_score', 0)}/10)\n"
                             f"{result['ars_conseil']}\n\n"
                             f"1. Demander le versement\n"
@@ -1496,14 +1502,14 @@ async def ussd_callback(request: USSDRequest):
                             await save_ars_data(farmer_id, answers, result, phone, data.get("farmer_name", ""), data.get("coop_name", ""))
                         
                         response_text = (
-                            f"Prime Carbone + ARS 1000\n\n"
+                            f"Votre Prime Carbone\n\n"
                             f"Hectares: {result['hectares']} ha\n"
                             f"Grands >12m: {result['arbres_grands']}\n"
                             f"Moyens 8-12m: {result['arbres_moyens']}\n"
                             f"Petits <8m: {result['arbres_petits']}\n"
                             f"Score: {result['score']}/10\n"
                             f"Prime: {format_xof(result['prime_annuelle'])}/an\n\n"
-                            f"Niveau ARS: {result['ars_level']} ({result['ars_pct']}%)\n"
+                            f"Niveau: {level_label(result['ars_level'])} ({result['ars_pct']}%)\n"
                             f"Niveau REDD+: {result.get('redd_level', 'N/A')} ({result.get('redd_score', 0)}/10)\n"
                             f"{result['ars_conseil']}\n\n"
                             f"1. Demander le versement\n"
@@ -1558,16 +1564,16 @@ async def ussd_callback(request: USSDRequest):
                 coop = data.get("coop_name", "")
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"GreenLink Agritech - ARS 1000\n"
+                    f"GreenLink Agritech\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Prime carbone + ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils prime\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1588,14 +1594,14 @@ async def ussd_callback(request: USSDRequest):
                     updated = ars_data.get("updated_at", ars_data.get("created_at", ""))
                     updated_str = updated.strftime("%d/%m/%Y") if hasattr(updated, 'strftime') else str(updated)[:10]
                     response_text = (
-                        f"VOS DONNEES ARS 1000\n"
+                        f"VOS PRATIQUES DURABLES\n"
                         f"(maj: {updated_str})\n\n"
                         f"Hectares: {ars_data.get('hectares', '-')} ha\n"
                         f"Arbres total: {ars_data.get('arbres_total', '-')}\n"
                         f"Arbres >8m: {ars_data.get('arbres_grands', '-')}\n"
                         f"Engrais: {'Oui' if ars_data.get('engrais') == 'oui' else 'Non'}\n"
                         f"Brulage: {'Oui' if ars_data.get('brulage') == 'oui' else 'Non'}\n"
-                        f"Niveau ARS: {ars_data.get('ars_level', '-')} ({ars_data.get('ars_pct', 0)}%)\n\n"
+                        f"Niveau: {level_label(ars_data.get('ars_level', '-'))} ({ars_data.get('ars_pct', 0)}%)\n\n"
                         f"1. Mettre a jour\n"
                         f"2. Generer rapport coop\n"
                         f"0. Retour"
@@ -1608,7 +1614,7 @@ async def ussd_callback(request: USSDRequest):
                 # Mise a jour donnees
                 session["state"] = "ars_update_menu"
                 response_text = (
-                    "MISE A JOUR ARS 1000\n\n"
+                    "MISE A JOUR PRATIQUES\n\n"
                     "1. Hectares de cacao\n"
                     "2. Nombre total arbres\n"
                     "3. Arbres > 8 metres\n"
@@ -1623,7 +1629,7 @@ async def ussd_callback(request: USSDRequest):
                 name = data.get("farmer_name", "Planteur")
                 if ars_data:
                     response_text = (
-                        f"RAPPORT ARS 1000\n"
+                        f"RAPPORT PRATIQUES DURABLES\n"
                         f"Planteur: {name}\n"
                         f"Niveau: {ars_data.get('ars_level', '-')}\n"
                         f"Score: {ars_data.get('ars_pct', 0)}%\n\n"
@@ -1654,7 +1660,7 @@ async def ussd_callback(request: USSDRequest):
                     level = ars_data.get("ars_level", "Bronze")
                     pct = ars_data.get("ars_pct", 0)
                     response_text = (
-                        f"RECOMMANDATIONS ARS 1000\n\n"
+                        f"RECOMMANDATIONS PRATIQUES DURABLES\n\n"
                         f"Votre niveau: {level} ({pct}%)\n\n"
                         f"{conseil}\n\n"
                         f"0. Retour"
@@ -1667,7 +1673,7 @@ async def ussd_callback(request: USSDRequest):
                 # Rediriger vers estimation
                 session["state"] = "estimation_type"
                 response_text = (
-                    "Prime Carbone + Conformite ARS\n\n"
+                    "Estimation de votre Prime Carbone\n\n"
                     "1. Estimation simple (rapide)\n"
                     "2. Estimation detaillee\n"
                     "0. Retour"
@@ -1678,16 +1684,16 @@ async def ussd_callback(request: USSDRequest):
                 name = data.get("farmer_name", "Planteur")
                 coop_label = f" ({data.get('coop_name', '')})" if data.get('coop_name') else ""
                 response_text = (
-                    f"GreenLink Agritech - ARS 1000\n"
+                    f"GreenLink Agritech\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Prime carbone + ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils prime\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1702,7 +1708,7 @@ async def ussd_callback(request: USSDRequest):
             if choice == "1":
                 session["state"] = "ars_update_menu"
                 response_text = (
-                    "MISE A JOUR ARS 1000\n\n"
+                    "MISE A JOUR PRATIQUES\n\n"
                     "1. Hectares de cacao\n"
                     "2. Nombre total arbres\n"
                     "3. Arbres > 8 metres\n"
@@ -1718,7 +1724,7 @@ async def ussd_callback(request: USSDRequest):
                 session["state"] = "ars_data_menu"
                 session["data"]["has_ars_data"] = True
                 response_text = (
-                    "MES DONNEES ARS 1000\n\n"
+                    "MES PRATIQUES DURABLES\n\n"
                     "1. Voir mes donnees\n"
                     "2. Mettre a jour\n"
                     "3. Generer rapport coop\n"
@@ -1752,7 +1758,7 @@ async def ussd_callback(request: USSDRequest):
                 session["state"] = "ars_data_menu"
                 session["data"]["has_ars_data"] = True
                 response_text = (
-                    "MES DONNEES ARS 1000\n\n"
+                    "MES PRATIQUES DURABLES\n\n"
                     "1. Voir mes donnees\n"
                     "2. Mettre a jour\n"
                     "3. Generer rapport coop\n"
@@ -1853,7 +1859,7 @@ async def ussd_callback(request: USSDRequest):
             if choice == "1":
                 session["state"] = "ars_update_menu"
                 response_text = (
-                    "MISE A JOUR ARS 1000\n\n"
+                    "MISE A JOUR PRATIQUES\n\n"
                     "1. Hectares de cacao\n"
                     "2. Nombre total arbres\n"
                     "3. Arbres > 8 metres\n"
@@ -1865,7 +1871,7 @@ async def ussd_callback(request: USSDRequest):
                 session["state"] = "ars_data_menu"
                 session["data"]["has_ars_data"] = True
                 response_text = (
-                    "MES DONNEES ARS 1000\n\n"
+                    "MES PRATIQUES DURABLES\n\n"
                     "1. Voir mes donnees\n"
                     "2. Mettre a jour\n"
                     "3. Generer rapport coop\n"
@@ -1877,16 +1883,16 @@ async def ussd_callback(request: USSDRequest):
                 name = data.get("farmer_name", "Planteur")
                 coop_label = f" ({data.get('coop_name', '')})" if data.get('coop_name') else ""
                 response_text = (
-                    f"GreenLink Agritech - ARS 1000\n"
+                    f"GreenLink Agritech\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Prime carbone + ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils prime\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
 
@@ -1900,7 +1906,7 @@ async def ussd_callback(request: USSDRequest):
                 ars_data = await db.ars_farmer_data.find_one({"farmer_id": farmer_id}) if farmer_id else None
                 arbres_ha = round(ars_data.get("arbres_total", 0) / max(ars_data.get("hectares", 1), 0.1)) if ars_data else 0
                 response_text = (
-                    "AGROFORESTERIE (ARS 1000)\n\n"
+                    "AGROFORESTERIE\n\n"
                     "Plantez au moins 40 arbres\n"
                     "ombres par hectare.\n"
                     "Arbres recommandes: acajou,\n"
@@ -1914,7 +1920,7 @@ async def ussd_callback(request: USSDRequest):
                 response_text = (
                     "LUTTE CONTRE LE BRULAGE\n\n"
                     "Le brulage est interdit pour\n"
-                    "les niveaux Argent et Or ARS.\n\n"
+                    "les niveaux Tres Bon et Excellent.\n\n"
                     "Alternatives:\n"
                     "- Paillage des residus\n"
                     "- Compostage\n"
@@ -1924,7 +1930,7 @@ async def ussd_callback(request: USSDRequest):
                 session["state"] = "ars_conseil_view"
             elif choice == "3":
                 response_text = (
-                    "GESTION ENGRAIS (ARS 1000)\n\n"
+                    "GESTION ENGRAIS\n\n"
                     "- Engrais recommandes CCC\n"
                     "- Dose max: 300 kg/ha/an\n"
                     "- Preferez le compost pour\n"
@@ -1936,7 +1942,7 @@ async def ussd_callback(request: USSDRequest):
                 session["state"] = "ars_conseil_view"
             elif choice == "4":
                 response_text = (
-                    "TRACABILITE (ARS 1000-2)\n\n"
+                    "TRACABILITE PARCELLES\n\n"
                     "- Enregistrez toutes vos\n"
                     "  parcelles avec code planteur\n"
                     "- Gardez preuves: photos,\n"
@@ -1976,16 +1982,16 @@ async def ussd_callback(request: USSDRequest):
                 name = data.get("farmer_name", "Planteur")
                 coop_label = f" ({data.get('coop_name', '')})" if data.get('coop_name') else ""
                 response_text = (
-                    f"GreenLink Agritech - ARS 1000\n"
+                    f"GreenLink Agritech\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Prime carbone + ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils prime\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -1994,7 +2000,7 @@ async def ussd_callback(request: USSDRequest):
         elif state == "ars_conseil_view":
             session["state"] = "ars_conseils_menu"
             response_text = (
-                "CONSEILS PRATIQUES ARS 1000\n\n"
+                "CONSEILS POUR AMELIORER VOTRE PRIME\n\n"
                 "1. Agroforesterie\n"
                 "2. Lutte contre le brulage\n"
                 "3. Gestion des engrais\n"
@@ -2014,16 +2020,16 @@ async def ussd_callback(request: USSDRequest):
                 coop = data.get("coop_name", "")
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"GreenLink Agritech - ARS 1000\n"
+                    f"GreenLink Agritech\n"
                     f"Bonjour {name}{coop_label}\n\n"
-                    f"1. Prime carbone + ARS\n"
-                    f"2. Mes donnees ARS 1000\n"
-                    f"3. Conseils ARS\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils prime\n"
                     f"4. Demander paiement\n"
                     f"5. Mes parcelles\n"
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
-                    f"8. REDD+ Pratiques durables\n"
+                    f"8. Pratiques durables\n"
                     f"0. Quitter"
                 )
             else:
@@ -2088,9 +2094,9 @@ async def ussd_carbon_calculator(request: USSDRequest):
             {"key": "compost", "text": "Question 8/14\nCompost organique ?\nLe compost ameliore la fertilite du sol et stocke du carbone durablement.\n\n1. Oui\n2. Non", "type": "yesno"},
             {"key": "agroforesterie", "text": "Question 9/14\nAgroforesterie ?\nL'agroforesterie associe arbres et cultures pour maximiser le stockage carbone.\n\n1. Oui\n2. Non", "type": "yesno"},
             {"key": "couverture_sol", "text": "Question 10/14\nCouverture vegetale au sol ?\nLes plantes basses entre les arbres protegent le sol et stockent du carbone.\n\n1. Oui\n2. Non", "type": "yesno"},
-            {"key": "biochar", "text": "REDD+ Question 11/14\nBiochar (charbon vegetal) ?\nLe biochar est du bois carbonise melange au sol pour stocker le carbone durablement.\n\n1. Oui\n2. Non", "type": "yesno"},
-            {"key": "zero_deforestation", "text": "REDD+ Question 12/14\nEngagement zero deforestation ?\nVous vous engagez a ne pas couper de foret pour agrandir vos parcelles.\n\n1. Oui\n2. Non", "type": "yesno"},
-            {"key": "reboisement", "text": "REDD+ Question 13/14\nReboisement actif ?\nVous plantez de nouveaux arbres forestiers pour restaurer les zones degradees.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "biochar", "text": "Question 11/14\nBiochar (charbon vegetal) ?\nLe biochar est du bois carbonise melange au sol pour stocker le carbone durablement.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "zero_deforestation", "text": "Question 12/14\nEngagement zero deforestation ?\nVous vous engagez a ne pas couper de foret pour agrandir vos parcelles.\n\n1. Oui\n2. Non", "type": "yesno"},
+            {"key": "reboisement", "text": "Question 13/14\nReboisement actif ?\nVous plantez de nouveaux arbres forestiers pour restaurer les zones degradees.\n\n1. Oui\n2. Non", "type": "yesno"},
             {"key": "age_cacaoyers", "text": "Question 14/14\nAge moyen de vos cacaoyers ?\nLes cacaoyers matures stockent plus de carbone que les jeunes plants.\n\n1. Moins de 5 ans\n2. 5 a 15 ans\n3. Plus de 15 ans", "type": "choice3"},
         ]
         
@@ -2150,7 +2156,7 @@ async def ussd_carbon_calculator(request: USSDRequest):
         
         if result["eligible"]:
             result_text = (
-                f"PRIME CARBONE + ARS 1000\n\n"
+                f"VOTRE PRIME CARBONE\n\n"
                 f"Score: {result['score']}/10\n"
                 f"Arbres/ha: {result['arbres_par_ha']}\n\n"
                 f"Prime estimee:\n"
@@ -2163,7 +2169,7 @@ async def ussd_carbon_calculator(request: USSDRequest):
             )
         else:
             result_text = (
-                f"ESTIMATION + ARS 1000\n\n"
+                f"ESTIMATION PRIME CARBONE\n\n"
                 f"Score: {result['score']}/10\n"
                 f"(Minimum requis: 5/10)\n\n"
                 f"Niveau ARS: {result['ars_level']}\n"

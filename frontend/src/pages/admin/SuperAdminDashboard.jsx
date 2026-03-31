@@ -1612,7 +1612,7 @@ const ReddImpactTab = ({ data, loading }) => {
               <Shield className="h-5 w-5 text-amber-500" />
               Conformité & Certifications
             </CardTitle>
-            <CardDescription className="text-slate-400">EUDR et ARS 1000</CardDescription>
+            <CardDescription className="text-slate-400">EUDR et Certification Qualite</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-4">
@@ -1624,18 +1624,18 @@ const ReddImpactTab = ({ data, loading }) => {
               <p className="text-xs text-slate-500 mt-1">{conformite?.eudr_verified_parcels || 0} / {conformite?.eudr_total_parcels || 0} parcelles vérifiées</p>
             </div>
             <div>
-              <p className="text-slate-400 text-sm mb-3">Distribution ARS 1000 ({conformite?.ars_total_assessed || 0} évalués)</p>
+              <p className="text-slate-400 text-sm mb-3">Distribution Certification ({conformite?.ars_total_assessed || 0} évalués)</p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-lg bg-amber-900/20 border border-amber-600/30 text-center">
-                  <p className="text-amber-400 text-xs">Bronze</p>
+                  <p className="text-amber-400 text-xs">Bon</p>
                   <p className="text-2xl font-bold text-white">{conformite?.ars_distribution?.bronze || 0}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-slate-500/20 border border-slate-400/30 text-center">
-                  <p className="text-slate-300 text-xs">Argent</p>
+                  <p className="text-slate-300 text-xs">Tres Bon</p>
                   <p className="text-2xl font-bold text-white">{conformite?.ars_distribution?.argent || 0}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-yellow-900/20 border border-yellow-600/30 text-center">
-                  <p className="text-yellow-400 text-xs">Or</p>
+                  <p className="text-yellow-400 text-xs">Excellent</p>
                   <p className="text-2xl font-bold text-white">{conformite?.ars_distribution?.or || 0}</p>
                 </div>
               </div>

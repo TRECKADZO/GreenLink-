@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 
 const allFeatures = [
   'Dashboard complet avec KPIs durabilite, SSRTE & ICI',
-  'Rapports ARS 1000 automatises (Bronze/Argent/Or)',
+  'Rapports de certification automatises (Bronze/Argent/Or)',
   'Suivi avance : emissions, agroforesterie, MRV',
   'Rapports detailles SSRTE / ICI (Remediation)',
   'Zero-deforestation + donnees geolocalisees',
@@ -39,7 +39,7 @@ const PricingSection = () => {
           </h2>
           <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
             GreenLink est entierement gratuit pour les cooperatives agricoles.
-            Toutes les fonctionnalites durabilite, SSRTE, ICI, et ARS 1000 sont incluses.
+            Toutes les fonctionnalites durabilite, SSRTE, ICI, et certification qualite sont incluses.
           </p>
         </div>
 
@@ -139,7 +139,7 @@ const PricingSection = () => {
         <div className="text-center mt-10 text-xs text-gray-500">
           <p className="flex items-center justify-center gap-1">
             <FileCheck className="w-3.5 h-3.5" />
-            Conforme aux standards ARS 1000, SSRTE/ICI et Strategie Nationale de Durabilite de Cote d'Ivoire.
+            Conforme aux standards de certification qualite, SSRTE/ICI et Strategie Nationale de Durabilite de Cote d'Ivoire.
           </p>
         </div>
       </div>

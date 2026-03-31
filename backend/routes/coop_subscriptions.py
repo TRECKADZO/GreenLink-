@@ -50,7 +50,7 @@ async def get_coop_plans():
             "duration_days": COOP_TRIAL_DAYS,
             "duration_months": 6,
             "access_level": "Pro",
-            "message": "6 mois d'essai gratuit offerts. Ensuite abonnement mensuel. GreenLink aide votre cooperative a generer des credits carbone via la Strategie Nationale REDD+ tout en simplifiant les audits ARS 1000 et SSRTE.",
+            "message": "6 mois d'essai gratuit offerts. Ensuite abonnement mensuel. GreenLink aide votre cooperative a generer des credits carbone et des primes tout en simplifiant les audits et le suivi SSRTE.",
         },
     }
 
@@ -213,7 +213,7 @@ async def check_trial_notifications():
                 "user_id": user_id,
                 "type": "subscription_trial_ending",
                 "title": f"Essai gratuit : {days_before} jours restants",
-                "message": f"Votre periode d'essai gratuit se termine dans {days_before} jours. Choisissez un abonnement pour continuer a beneficier des fonctionnalites REDD+ et ARS 1000.",
+                "message": f"Votre periode d'essai gratuit se termine dans {days_before} jours. Choisissez un abonnement pour continuer a beneficier des fonctionnalites de durabilite et certification qualite.",
                 "read": False,
                 "created_at": now,
             })

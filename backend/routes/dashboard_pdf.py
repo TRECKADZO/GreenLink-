@@ -226,8 +226,8 @@ async def export_dashboard_pdf(current_user: dict = Depends(get_current_user)):
     kpis = [
         make_kpi_box(f"{active_members}/{total_members}", "Membres Actifs", FOREST),
         make_kpi_box(f"{total_ha} ha", "Superficie", GOLD),
-        make_kpi_box(str(total_redd), "Visites REDD+", FOREST),
-        make_kpi_box(f"{avg_redd}/10", "Score REDD+", TERRACOTTA),
+        make_kpi_box(str(total_redd), "Visites terrain", FOREST),
+        make_kpi_box(f"{avg_redd}/10", "Score environnemental", TERRACOTTA),
     ]
     row = Table([kpis], colWidths=[4.1 * cm] * 4)
     row.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
@@ -245,7 +245,7 @@ async def export_dashboard_pdf(current_user: dict = Depends(get_current_user)):
     story.append(row2)
 
     # --- REDD+ Section ---
-    story.append(Paragraph("REDD+ & MRV", styles['Section']))
+    story.append(Paragraph("Durabilite & MRV", styles['Section']))
     story.append(Paragraph(f"Score moyen : <b>{avg_redd}/10</b> | Conformite moyenne : <b>{avg_conf}%</b> | Producteurs evalues : <b>{total_ars}</b>", styles['Cell']))
     story.append(Spacer(1, 8))
 
@@ -266,7 +266,7 @@ async def export_dashboard_pdf(current_user: dict = Depends(get_current_user)):
 
     # Practices bars
     if practices:
-        story.append(Paragraph("Adoption des Pratiques REDD+", styles['CellBold']))
+        story.append(Paragraph("Adoption des Pratiques Durables", styles['CellBold']))
         story.append(Spacer(1, 4))
         rows = [make_progress_bar(Paragraph(f'<b>{lab}</b>', styles['Cell']), data["pct"], FOREST) for lab, data in practices.items()]
         pt = Table(rows, colWidths=[4 * cm, 6.5 * cm, 2 * cm])
@@ -336,7 +336,7 @@ async def export_dashboard_pdf(current_user: dict = Depends(get_current_user)):
 
     # --- Monthly Trends ---
     story.append(Paragraph("Tendances Mensuelles (6 mois)", styles['Section']))
-    trend_header = [Paragraph(f'<b>{h}</b>', styles['CellCenter']) for h in ['Mois', 'REDD+ Visites', 'Score Moyen', 'SSRTE Visites', 'Enfants']]
+    trend_header = [Paragraph(f'<b>{h}</b>', styles['CellCenter']) for h in ['Mois', 'Visites Terrain', 'Score Moyen', 'SSRTE Visites', 'Enfants']]
     trend_rows = [trend_header]
     for m in monthly_data:
         trend_rows.append([

@@ -248,7 +248,7 @@ async def export_mrv_pdf(current_user: dict = Depends(verify_access)):
     story.append(Spacer(1, 15))
 
     # ===== SECTION 3: DISTRIBUTION NIVEAUX =====
-    story.append(Paragraph("2. Distribution des Niveaux REDD+ et ARS 1000", styles['SectionHead']))
+    story.append(Paragraph("2. Distribution des Niveaux de Pratiques Durables", styles['SectionHead']))
     story.append(HRFlowable(width="100%", thickness=1, color=GREEN_LIGHT))
     story.append(Spacer(1, 8))
 
@@ -268,7 +268,7 @@ async def export_mrv_pdf(current_user: dict = Depends(verify_access)):
         ])
 
     # ARS rows
-    dist_rows.append([Paragraph('<b>--- ARS 1000 ---</b>', styles['CellBold']), Paragraph('', styles['CellText']), Paragraph('', styles['CellText'])])
+    dist_rows.append([Paragraph('<b>--- Certification Qualite ---</b>', styles['CellBold']), Paragraph('', styles['CellText']), Paragraph('', styles['CellText'])])
     ars_colors = {"Or": colors.HexColor('#eab308'), "Argent": SLATE_LIGHT, "Bronze": colors.HexColor('#ea580c'), "Non conforme": RED}
     for lvl, cnt in ars_dist.items():
         pct = round(cnt / max(total, 1) * 100)

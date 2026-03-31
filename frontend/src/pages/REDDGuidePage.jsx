@@ -72,7 +72,7 @@ const REDD_CATEGORIES = [
   {
     id: 'tracabilite',
     title: 'Tracabilite et Conformite',
-    subtitle: 'MRV, EUDR, ARS 1000',
+    subtitle: 'MRV, EUDR, Certification',
     icon: FileCheck,
     color: 'violet',
     impact: 'Integrite environnementale, conformite marche carbone, acces primes',
@@ -80,7 +80,7 @@ const REDD_CATEGORIES = [
       { name: 'Enregistrement GPS parcelles', description: 'Geolocalisation des parcelles pour tracabilite EUDR et standards carbone', bonus: 'Obligatoire', prime: 'Eligibilite' },
       { name: 'Safeguards sociaux', description: 'Equite genre, prevention travail des enfants (SSRTE/ICI), clarification foncier', bonus: 'Obligatoire', prime: 'Eligibilite' },
       { name: 'Monitoring MRV', description: 'Collecte de donnees: couverture arboree, pratiques adoptees, reductions emissions', bonus: '+0.5 score', prime: 'Acces programme Tai' },
-      { name: 'Certification ARS 1000', description: 'Niveaux Bronze/Argent/Or pour le cacao durable', bonus: 'Jusqu\'a Or', prime: '+30 000 FCFA/ha' },
+      { name: 'Certification Cacao Durable', description: 'Niveaux Bon/Tres Bon/Excellent pour le cacao durable', bonus: 'Jusqu\'a Excellent', prime: '+30 000 FCFA/ha' },
     ],
   },
 ];

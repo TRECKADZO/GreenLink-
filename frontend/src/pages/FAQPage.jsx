@@ -77,7 +77,7 @@ const FAQPage = () => {
       id: 9,
       category: 'coop',
       question: "Quels avantages pour les cooperatives ?",
-      answer: "GreenLink est entierement gratuit pour toutes les cooperatives. Vous beneficiez de :\n\n\u2022 Dashboard complet avec analyse ARS 1000 (Bronze/Argent/Or)\n\u2022 Rapports avances (emissions, agroforesterie, MRV)\n\u2022 Rapports detailles SSRTE (ICI) et remediation\n\u2022 Export PDF pret pour audits BMC et programmes carbone\n\u2022 Alertes avancees (deforestation, brulage, SSRTE)\n\u2022 Gestion complete des membres et parcelles\n\u2022 Application mobile pour agents terrain\n\u2022 Nombre de membres illimite\n\u2022 Support complet inclus"
+      answer: "GreenLink est entierement gratuit pour toutes les cooperatives. Vous beneficiez de :\n\n\u2022 Dashboard complet avec analyse de vos pratiques durables (Bon/Tres Bon/Excellent)\n\u2022 Rapports avances (emissions, agroforesterie, MRV)\n\u2022 Rapports detailles SSRTE (ICI) et remediation\n\u2022 Export PDF pret pour audits BMC et programmes carbone\n\u2022 Alertes avancees (deforestation, brulage, SSRTE)\n\u2022 Gestion complete des membres et parcelles\n\u2022 Application mobile pour agents terrain\n\u2022 Nombre de membres illimite\n\u2022 Support complet inclus"
     },
     {
       id: 10,
@@ -123,7 +123,7 @@ const FAQPage = () => {
       id: 12,
       category: 'pricing',
       question: "Combien coute GreenLink pour une cooperative ?",
-      answer: "**GreenLink est 100% gratuit pour les cooperatives** — aucun abonnement, aucune limite de temps.\n\nToutes les fonctionnalites sont incluses :\n\u2022 Dashboard complet durabilite, SSRTE, ICI, ARS 1000\n\u2022 Export PDF pour audits\n\u2022 Application mobile agents terrain\n\u2022 Membres illimites\n\n**Producteurs** : acces gratuit a vie.\n**Acheteurs/Fournisseurs/RSE** : sur devis (15 jours d'essai gratuit)."
+      answer: "**GreenLink est 100% gratuit pour les cooperatives** — aucun abonnement, aucune limite de temps.\n\nToutes les fonctionnalites sont incluses :\n\u2022 Dashboard complet durabilite, SSRTE, ICI, certification qualite\n\u2022 Export PDF pour audits\n\u2022 Application mobile agents terrain\n\u2022 Membres illimites\n\n**Producteurs** : acces gratuit a vie.\n**Acheteurs/Fournisseurs/RSE** : sur devis (15 jours d'essai gratuit)."
     },
     {
       id: 13,

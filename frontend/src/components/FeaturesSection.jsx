@@ -50,9 +50,9 @@ const mockFeatures = [
   },
   {
     icon: 'Award',
-    title: 'Conformite ARS 1000',
+    title: 'Certification Cacao Durable',
     description: "Norme Africaine pour le Cacao Durable : evaluez votre niveau Bronze, Argent ou Or via USSD et recevez des recommandations personnalisees",
-    badge: 'ARS 1000',
+    badge: 'Qualite',
     badgeColor: 'bg-yellow-100 text-yellow-700'
   },
   {

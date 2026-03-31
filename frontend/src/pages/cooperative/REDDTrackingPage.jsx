@@ -66,7 +66,7 @@ const REDD_CATEGORIES = [
       { code: 'TRAC1', name: 'Enregistrement GPS parcelles', hint: "Les parcelles ont-elles ete cartographiees avec un GPS ? Les polygones sont-ils enregistres ?" },
       { code: 'TRAC2', name: 'Safeguards sociaux', hint: "Pas de travail d'enfants ni de travail force. Les travailleurs ont-ils des conditions correctes ?" },
       { code: 'TRAC3', name: 'Monitoring MRV', hint: "Le producteur participe-t-il au suivi regulier (Mesure, Reporting, Verification) de ses pratiques ?" },
-      { code: 'TRAC4', name: 'Certification ARS 1000', hint: "Le producteur est-il certifie ou en cours de certification ARS 1000 (norme africaine cacao durable) ?" },
+      { code: 'TRAC4', name: 'Certification Cacao Durable', hint: "Le producteur est-il certifie ou en cours de certification pour la norme cacao durable (Bon/Tres Bon/Excellent) ?" },
     ],
   },
 ];

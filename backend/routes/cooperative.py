@@ -194,7 +194,7 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
 
 @router.get("/dashboard-kpis")
 async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
-    """KPIs REDD+, SSRTE, ICI — acces complet gratuit pour toutes les cooperatives"""
+    """KPIs durabilite, SSRTE, ICI — acces complet gratuit pour toutes les cooperatives"""
     verify_cooperative(current_user)
     coop_id = str(current_user["_id"])
 
@@ -262,7 +262,7 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
 
             total_redd_farmers = max(len(farmers_with_redd), 1)
             redd_labels = {
-                "agroforesterie": "Agroforesterie REDD+",
+                "agroforesterie": "Agroforesterie durable",
                 "zero_deforestation": "Zero deforestation",
                 "gestion_sols": "Gestion durable sols",
                 "restauration": "Restauration ecosystemes",

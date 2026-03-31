@@ -188,7 +188,7 @@ const MRVDashboard = () => {
                   <CardContent className="p-3">
                     <Award className="w-4 h-4 text-yellow-400 mb-1" />
                     <p className="text-xl font-bold">{summary.ars_distribution?.Or || 0}</p>
-                    <p className="text-[10px] text-slate-400">ARS Or</p>
+                    <p className="text-[10px] text-slate-400">Excellent</p>
                   </CardContent>
                 </Card>
               </div>
@@ -284,7 +284,7 @@ const MRVDashboard = () => {
                             <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">Arbres</th>
                             <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">Carbone</th>
                             <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">Niveau</th>
-                            <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">ARS</th>
+                            <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">Qualite</th>
                             <th className="text-left py-2 px-2 text-slate-400 text-xs font-medium">Pratiques</th>
                           </tr>
                         </thead>

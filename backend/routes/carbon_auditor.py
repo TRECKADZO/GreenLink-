@@ -88,7 +88,7 @@ class AuditSubmission(BaseModel):
 async def create_auditor(auditor: AuditorCreate):
     """Créer un nouvel auditeur carbone (Super Admin)
     
-    Supporte la création d'agents triple casquette (Carbone + SSRTE + REDD+)
+    Supporte la création d'agents triple casquette (Carbone + SSRTE + Environnemental)
     """
     # Vérifier si email existe déjà
     existing = await db.users.find_one({"email": auditor.email})
@@ -141,7 +141,7 @@ async def create_auditor(auditor: AuditorCreate):
     result = await db.users.insert_one(user_doc)
     
     if is_triple:
-        role_description = "Agent Triple Casquette (Carbone + SSRTE + REDD+)"
+        role_description = "Agent Triple Casquette (Carbone + SSRTE + Environnemental)"
     elif is_dual:
         role_description = "Agent Double Casquette (Carbone + SSRTE)"
     else:

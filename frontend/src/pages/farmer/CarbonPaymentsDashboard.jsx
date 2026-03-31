@@ -393,7 +393,7 @@ const CarbonPaymentsDashboard = () => {
                 </p>
               </div>
 
-              {/* ARS 1000 Compliance */}
+              {/* Certification Quality Compliance */}
               {primeResult.ars_level && (
                 <div className={`mt-4 rounded-xl p-4 border ${
                   primeResult.ars_level === 'Or' ? 'bg-yellow-50 border-yellow-300' :
@@ -409,7 +409,7 @@ const CarbonPaymentsDashboard = () => {
                         primeResult.ars_level === 'Bronze' ? 'text-orange-600' :
                         'text-red-500'
                       }`} />
-                      <span className="text-sm font-semibold text-gray-800">Conformite ARS 1000</span>
+                      <span className="text-sm font-semibold text-gray-800">Score Pratiques Durables</span>
                     </div>
                     <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${
                       primeResult.ars_level === 'Or' ? 'bg-yellow-200 text-yellow-800' :
@@ -417,7 +417,7 @@ const CarbonPaymentsDashboard = () => {
                       primeResult.ars_level === 'Bronze' ? 'bg-orange-200 text-orange-800' :
                       'bg-red-200 text-red-700'
                     }`} data-testid="ars-level-badge">
-                      {primeResult.ars_level}
+                      {primeResult.ars_level === 'Or' ? 'Excellent' : primeResult.ars_level === 'Argent' ? 'Tres Bon' : primeResult.ars_level === 'Bronze' ? 'Bon' : 'A ameliorer'}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
@@ -434,9 +434,9 @@ const CarbonPaymentsDashboard = () => {
                   <div className="flex justify-between text-[10px] text-gray-500 mb-2">
                     <span>{primeResult.ars_pct}%</span>
                     <div className="flex gap-3">
-                      <span>Bronze 30%</span>
-                      <span>Argent 55%</span>
-                      <span>Or 80%</span>
+                      <span>Bon 30%</span>
+                      <span>Tres Bon 55%</span>
+                      <span>Excellent 80%</span>
                     </div>
                   </div>
                   {primeResult.ars_conseil && (

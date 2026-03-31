@@ -31,7 +31,7 @@ REDD_PRACTICES = [
     {"code": "TRAC1", "name": "Enregistrement GPS parcelles", "category": "tracabilite", "hint": "Les parcelles du producteur ont-elles ete cartographiees avec un GPS ? Les polygones sont-ils enregistres ?"},
     {"code": "TRAC2", "name": "Safeguards sociaux", "category": "tracabilite", "hint": "Pas de travail d'enfants, pas de travail force. Les travailleurs ont-ils des conditions correctes ?"},
     {"code": "TRAC3", "name": "Monitoring MRV", "category": "tracabilite", "hint": "Le producteur participe-t-il au suivi regulier (Mesure, Reporting, Verification) de ses pratiques ?"},
-    {"code": "TRAC4", "name": "Certification ARS 1000", "category": "tracabilite", "hint": "Le producteur est-il certifie ou en cours de certification ARS 1000 (norme africaine cacao durable) ?"},
+    {"code": "TRAC4", "name": "Certification Cacao Durable", "category": "tracabilite", "hint": "Le producteur est-il certifie ou en cours de certification pour la norme cacao durable (Bronze/Argent/Or) ?"},
 ]
 
 
