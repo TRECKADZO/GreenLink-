@@ -76,7 +76,7 @@ const AuditMissionsPage = () => {
 
   const fetchCooperatives = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/cooperatives/list`);
+      const response = await fetch(`${API_URL}/api/cooperative/list`);
       const data = await response.json();
       setCooperatives(data.cooperatives || []);
     } catch (error) {
@@ -87,7 +87,7 @@ const AuditMissionsPage = () => {
   const fetchParcels = async (coopId) => {
     if (!coopId) return;
     try {
-      const response = await fetch(`${API_URL}/api/cooperatives/${coopId}/parcels-for-audit`);
+      const response = await fetch(`${API_URL}/api/cooperative/${coopId}/parcels-for-audit`);
       const data = await response.json();
       setParcels(data.parcels || []);
     } catch (error) {
