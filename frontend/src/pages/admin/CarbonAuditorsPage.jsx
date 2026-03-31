@@ -48,6 +48,7 @@ const CarbonAuditorsPage = () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/api/carbon-auditor/admin/auditors`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setAuditors(data.auditors || []);
     } catch (error) {
@@ -60,7 +61,8 @@ const CarbonAuditorsPage = () => {
 
   const fetchCooperatives = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/admin/cooperatives`);
+      const response = await fetch(`${API_URL}/api/cooperative/list`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setCooperatives(data.cooperatives || []);
     } catch (error) {
@@ -71,6 +73,7 @@ const CarbonAuditorsPage = () => {
   const fetchStats = async () => {
     try {
       const response = await fetch(`${API_URL}/api/carbon-auditor/admin/stats/overview`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setStats(data);
     } catch (error) {
