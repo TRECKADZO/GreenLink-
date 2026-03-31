@@ -194,20 +194,30 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
 
 @router.get("/dashboard-kpis")
 async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
-    """KPIs REDD+, SSRTE, ICI gates par l'abonnement cooperative"""
+    """KPIs REDD+, SSRTE, ICI — acces complet gratuit pour toutes les cooperatives"""
     verify_cooperative(current_user)
     coop_id = str(current_user["_id"])
 
-    # --- Subscription ---
-    from subscription_guard import get_coop_features
-    sub_info = await get_coop_features(coop_id, current_user)
-    features = sub_info["features"]
+    # All features enabled — free for cooperatives
+    features = {
+        "dashboard_complet": True, "rapports_ars1000": True, "analyse_ars_niveaux": True,
+        "alertes_ssrte": True, "rapports_ssrte_ici": True,
+        "redd_avance": True, "redd_estimation_emissions": True,
+        "redd_suivi_agroforesterie": True, "redd_zero_deforestation": True,
+        "redd_donnees_mrv": True, "redd_simplifie": True,
+        "export_pdf_excel": True, "alertes_avancees": True, "support_prioritaire": True,
+        "api_personnalisee": True, "formation_agents_redd": True,
+        "co_branding": True, "analyse_carbone_agregee": True,
+    }
 
-    subscription_info = sub_info["subscription"]
-    subscription_info["plan_name"] = {
-        "coop_trial": "Essai Gratuit Pro", "coop_starter": "Starter",
-        "coop_pro": "Pro", "coop_enterprise": "Enterprise"
-    }.get(subscription_info["plan"], "Essai")
+    subscription_info = {
+        "plan": "coop_gratuit",
+        "plan_name": "Gratuit",
+        "is_active": True,
+        "is_trial": False,
+        "days_remaining": 999,
+        "status": "active",
+    }
 
     # --- REDD+ KPIs ---
     redd_kpis = None
@@ -290,8 +300,6 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
         total_members = await db.coop_members.count_documents(coop_id_query(coop_id))
         coverage = round(unique_farmers / max(total_members, 1) * 100, 1)
 
-        has_reports = bool(features.get("rapports_ssrte_ici"))
-
         # Normalize risk keys: map high->eleve, low->faible, medium->modere, critical->critique
         risk_map = {"high": "eleve", "low": "faible", "medium": "modere", "critical": "critique"}
         normalized_risk = {"critique": 0, "eleve": 0, "modere": 0, "faible": 0}
@@ -307,25 +315,24 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
             "visits_with_children": visits_with_children,
             "unique_farmers_visited": unique_farmers,
             "coverage_rate": coverage,
-            "has_full_reports": has_reports,
+            "has_full_reports": True,
         }
 
-    # --- ICI KPIs (Pro+ only) ---
+    # --- ICI KPIs (always available) ---
     ici_kpis = None
-    if features.get("rapports_ssrte_ici"):
-        ici_q = coop_id_query(coop_id)
+    ici_q = coop_id_query(coop_id)
 
-        total_cases = await db.ssrte_cases.count_documents(ici_q)
-        resolved = await db.ssrte_cases.count_documents({**ici_q, "status": {"$in": ["resolved", "closed"]}})
-        in_progress = await db.ssrte_cases.count_documents({**ici_q, "status": "in_progress"})
-        resolution_rate = round(resolved / max(total_cases, 1) * 100, 1)
+    total_cases = await db.ssrte_cases.count_documents(ici_q)
+    resolved = await db.ssrte_cases.count_documents({**ici_q, "status": {"$in": ["resolved", "closed"]}})
+    in_progress = await db.ssrte_cases.count_documents({**ici_q, "status": "in_progress"})
+    resolution_rate = round(resolved / max(total_cases, 1) * 100, 1)
 
-        ici_kpis = {
-            "total_cases": total_cases,
-            "resolved": resolved,
-            "in_progress": in_progress,
-            "resolution_rate": resolution_rate,
-        }
+    ici_kpis = {
+        "total_cases": total_cases,
+        "resolved": resolved,
+        "in_progress": in_progress,
+        "resolution_rate": resolution_rate,
+    }
 
     return {
         "subscription": subscription_info,
@@ -338,15 +345,10 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
 
 @router.get("/dashboard-charts")
 async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
-    """Time-series data for dashboard charts (last 6 months) - gated by subscription"""
+    """Time-series data for dashboard charts (last 6 months) — acces complet gratuit"""
     verify_cooperative(current_user)
     coop_id = str(current_user["_id"])
     cq = coop_id_query(coop_id)
-
-    # --- Subscription gating ---
-    from subscription_guard import get_coop_features
-    sub_info = await get_coop_features(coop_id, current_user)
-    features = sub_info["features"]
 
     now = datetime.now(timezone.utc)
     months = []
@@ -459,25 +461,12 @@ async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
     risk_by_zone = [{"zone": z["_id"], "total": z["total"], "critique": z["critique"],
                      "eleve": z["eleve"], "modere": z["modere"], "faible": z["faible"]} for z in zones_raw]
 
-    # Gate data based on subscription features
-    result = {}
-    if features.get("redd_avance") or features.get("redd_simplifie"):
-        result["redd_monthly"] = redd_monthly
-    else:
-        result["redd_monthly"] = []
-
-    if features.get("alertes_ssrte"):
-        result["ssrte_monthly"] = ssrte_monthly
-    else:
-        result["ssrte_monthly"] = []
-
-    if features.get("rapports_ssrte_ici"):
-        result["risk_by_zone"] = risk_by_zone
-    else:
-        result["risk_by_zone"] = []
-
-    result["features"] = features
-    return result
+    # Return all data — no subscription gating
+    return {
+        "redd_monthly": redd_monthly,
+        "ssrte_monthly": ssrte_monthly,
+        "risk_by_zone": risk_by_zone,
+    }
 
 
 # ============= CARBON AUDIT ENDPOINTS =============

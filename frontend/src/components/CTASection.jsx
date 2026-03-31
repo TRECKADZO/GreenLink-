@@ -17,7 +17,7 @@ const CTASection = () => {
             Rejoignez la revolution agricole durable
           </h2>
           <p className="text-sm sm:text-lg lg:text-xl text-white/90 max-w-3xl mx-auto px-2">
-            6 mois d'essai gratuit pour les cooperatives. GreenLink aide votre cooperative a generer des credits carbone via la Strategie Nationale REDD+ tout en simplifiant les audits ARS 1000 et SSRTE.
+            GreenLink est entierement gratuit pour les cooperatives. Gerez vos credits carbone, vos audits ARS 1000, SSRTE et la conformite EUDR en toute simplicite.
           </p>
         </div>
         

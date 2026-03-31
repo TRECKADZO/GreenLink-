@@ -14,7 +14,7 @@ const FAQPage = () => {
     { id: 'carbon', name: 'Crédits Carbone', icon: Leaf },
     { id: 'redd', name: 'REDD+', icon: Leaf },
     { id: 'coop', name: 'Coopératives', icon: Users },
-    { id: 'pricing', name: 'Abonnements', icon: CreditCard },
+    { id: 'pricing', name: 'Tarification', icon: CreditCard },
     { id: 'security', name: 'Sécurité', icon: Shield },
     { id: 'mobile', name: 'App Mobile', icon: Smartphone },
   ];
@@ -76,14 +76,14 @@ const FAQPage = () => {
     {
       id: 9,
       category: 'coop',
-      question: "Quels avantages pour les coopératives ?",
-      answer: "Les cooperatives beneficient de 6 mois d'essai gratuit avec acces Pro complet :\n\n\u2022 Dashboard complet avec analyse ARS 1000 (Bronze/Argent/Or)\n\u2022 Rapports REDD+ avances (emissions, agroforesterie, MRV)\n\u2022 Rapports detailles SSRTE (ICI)\n\u2022 Export PDF/Excel pret pour audits BMC et programmes REDD+\n\u2022 Alertes avancees (deforestation, brulage, SSRTE)\n\u2022 Gestion complete des membres et parcelles\n\u2022 Application mobile pour agents terrain\n\u2022 Support prioritaire"
+      question: "Quels avantages pour les cooperatives ?",
+      answer: "GreenLink est entierement gratuit pour toutes les cooperatives. Vous beneficiez de :\n\n\u2022 Dashboard complet avec analyse ARS 1000 (Bronze/Argent/Or)\n\u2022 Rapports REDD+ avances (emissions, agroforesterie, MRV)\n\u2022 Rapports detailles SSRTE (ICI) et remediation\n\u2022 Export PDF pret pour audits BMC et programmes REDD+\n\u2022 Alertes avancees (deforestation, brulage, SSRTE)\n\u2022 Gestion complete des membres et parcelles\n\u2022 Application mobile pour agents terrain\n\u2022 Nombre de membres illimite\n\u2022 Support complet inclus"
     },
     {
       id: 10,
       category: 'coop',
-      question: "Comment enregistrer ma coopérative ?",
-      answer: "Pour enregistrer votre cooperative :\n\n1. Creez un compte en selectionnant 'Cooperative'\n2. Renseignez le nom officiel et le code de la cooperative\n3. Ajoutez vos coordonnees (email, telephone)\n4. Importez ou ajoutez manuellement vos membres\n5. Enregistrez les parcelles de chaque membre\n\nVotre essai gratuit de 6 mois avec acces Pro complet demarre immediatement."
+      question: "Comment enregistrer ma cooperative ?",
+      answer: "Pour enregistrer votre cooperative :\n\n1. Creez un compte en selectionnant 'Cooperative'\n2. Renseignez le nom officiel et le code de la cooperative\n3. Ajoutez vos coordonnees (email, telephone)\n4. Importez ou ajoutez manuellement vos membres\n5. Enregistrez les parcelles de chaque membre\n\nToutes les fonctionnalites sont accessibles immediatement et gratuitement."
     },
     {
       id: 11,
@@ -118,24 +118,18 @@ const FAQPage = () => {
       answer: "L'EUDR (European Union Deforestation Regulation) exige que tout cacao exporte vers l'UE soit trace et certifie 'zero-deforestation'.\n\nGreenLink aide votre cooperative a se conformer :\n\u2022 Geolocalisation GPS de chaque parcelle\n\u2022 Verification automatique des zones forestieres protegees\n\u2022 Rapports de tracabilite par lot\n\u2022 Historique complet de la chaine d'approvisionnement\n\u2022 Export des donnees pour les certificateurs"
     },
     
-    // Tarifs / Abonnements
+    // Tarifs
     {
       id: 12,
       category: 'pricing',
-      question: "Combien coûte GreenLink pour une cooperative ?",
-      answer: "**6 mois d'essai gratuit offerts** avec acces Pro complet !\n\nApres l'essai, 3 niveaux d'abonnement :\n\n\u2022 **Starter** : 50 000 FCFA/mois (jusqu'a 400 membres)\n  Dashboard basique + ARS 1000 + REDD+ simplifie\n\n\u2022 **Pro** (recommande) : 120 000 FCFA/mois (jusqu'a 800 membres)\n  Dashboard complet + REDD+ avance + exports audits + support prioritaire\n\n\u2022 **Enterprise** : 250 000 FCFA/mois (membres illimites)\n  Tout Pro + API + formation agents REDD+ + analyse carbone agregee\n\n**Producteurs** : acces gratuit a vie.\n**Acheteurs/Fournisseurs/RSE** : sur devis (15 jours d'essai gratuit)."
+      question: "Combien coute GreenLink pour une cooperative ?",
+      answer: "**GreenLink est 100% gratuit pour les cooperatives** — aucun abonnement, aucune limite de temps.\n\nToutes les fonctionnalites sont incluses :\n\u2022 Dashboard complet REDD+, SSRTE, ICI, ARS 1000\n\u2022 Export PDF pour audits\n\u2022 Application mobile agents terrain\n\u2022 Membres illimites\n\n**Producteurs** : acces gratuit a vie.\n**Acheteurs/Fournisseurs/RSE** : sur devis (15 jours d'essai gratuit)."
     },
     {
       id: 13,
       category: 'pricing',
-      question: "Comment fonctionne l'essai gratuit de 6 mois ?",
-      answer: "Des l'activation de votre compte cooperative :\n\n1. Vous beneficiez de 6 mois d'acces complet au niveau Pro\n2. Vous recevez des notifications 30, 15 et 7 jours avant la fin de l'essai\n3. A la fin de l'essai, vous choisissez votre abonnement (Starter, Pro ou Enterprise)\n4. Sans choix explicite, votre cooperative passe automatiquement en mode Pro facturable\n5. Annulation possible a tout moment avant la fin de l'essai\n\nAucune carte bancaire requise pour commencer."
-    },
-    {
-      id: 14,
-      category: 'pricing',
-      question: "Pourquoi est-ce gratuit pour les producteurs ?",
-      answer: "Notre modele economique repose sur les credits carbone et les abonnements cooperatives. Les producteurs sont au coeur de notre ecosysteme - sans eux, pas de credits carbone !\n\nEn leur offrant un acces gratuit, nous :\n\u2022 Maximisons l'adoption de pratiques durables\n\u2022 Augmentons le volume de credits carbone\n\u2022 Creons un impact social positif\n\u2022 Renforcons les chaines d'approvisionnement\n\nLes cooperatives beneficient de 6 mois gratuits pour evaluer la valeur de GreenLink."
+      question: "Pourquoi est-ce gratuit pour les cooperatives et les producteurs ?",
+      answer: "Notre modele economique repose sur les credits carbone et les commissions sur les transactions. Les cooperatives et les producteurs sont au coeur de notre ecosysteme — sans eux, pas de credits carbone !\n\nEn offrant un acces gratuit et complet, nous :\n\u2022 Maximisons l'adoption de pratiques durables\n\u2022 Augmentons le volume de credits carbone\n\u2022 Creons un impact social positif\n\u2022 Renforcons les chaines d'approvisionnement durables"
     },
     
     // Sécurité

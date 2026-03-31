@@ -27,14 +27,12 @@ const PracticeBar = ({ label, pct }) => (
   </div>
 );
 
-export const REDDWidget = ({ redd, features }) => {
+export const REDDWidget = ({ redd }) => {
   const navigate = useNavigate();
-  const isLocked = !redd;
-  const isAdvanced = redd?.is_advanced;
 
-  if (isLocked) {
+  if (!redd) {
     return (
-      <div className="bg-white border border-[#E5E5E0] rounded-md overflow-hidden gl-animate-in gl-stagger-3" data-testid="redd-widget-locked">
+      <div className="bg-white border border-[#E5E5E0] rounded-md overflow-hidden gl-animate-in gl-stagger-3" data-testid="redd-widget-empty">
         <div className="px-5 py-4 border-b border-[#E5E5E0]">
           <h3 className="gl-heading text-sm font-semibold text-[#1A3622] tracking-tight flex items-center gap-2">
             <Leaf className="h-4 w-4" strokeWidth={1.5} />
@@ -42,21 +40,16 @@ export const REDDWidget = ({ redd, features }) => {
           </h3>
         </div>
         <div className="p-8 text-center">
-          <Lock className="h-8 w-8 mx-auto mb-3 text-[#D4AF37]" strokeWidth={1.5} />
-          <p className="text-sm font-medium text-[#374151]">Acces REDD+ non disponible</p>
-          <p className="text-xs text-[#9CA3AF] mt-1">Passez au plan Starter pour acceder aux KPIs REDD+ basiques</p>
-          <button
-            onClick={() => navigate('/#pricing')}
-            className="mt-3 text-xs font-semibold text-[#1A3622] hover:underline flex items-center gap-1 mx-auto"
-          >
-            Voir les plans <ChevronRight className="h-3 w-3" />
-          </button>
+          <TreePine className="h-8 w-8 mx-auto mb-3 text-[#9CA3AF]" strokeWidth={1.5} />
+          <p className="text-sm font-medium text-[#374151]">Aucune donnee REDD+</p>
+          <p className="text-xs text-[#9CA3AF] mt-1">Les donnees apparaitront apres les premieres visites terrain</p>
         </div>
       </div>
     );
   }
 
   const totalLevels = Object.values(redd.level_distribution || {}).reduce((a, b) => a + b, 0);
+  const isAdvanced = redd?.is_advanced;
   const levels = [
     { label: 'Excellence', key: 'Excellence', color: 'bg-[#1A3622]' },
     { label: 'Avance', key: 'Avance', color: 'bg-[#065F46]' },
@@ -137,16 +130,6 @@ export const REDDWidget = ({ redd, features }) => {
             <div className="w-full bg-[#F3F4F6] rounded-full h-1.5">
               <div className="h-1.5 rounded-full bg-[#1A3622] transition-all duration-500" style={{ width: `${redd.avg_conformity}%` }} />
             </div>
-          </div>
-        )}
-
-        {/* Upgrade prompt for simplified view */}
-        {!isAdvanced && (
-          <div className="mt-4 p-3 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-md">
-            <p className="text-[11px] text-[#92400E] leading-relaxed">
-              <TreePine className="h-3.5 w-3.5 inline mr-1" strokeWidth={1.5} />
-              Passez au <strong>Pro</strong> pour acceder aux donnees MRV avancees, distribution REDD+ et suivi pratiques.
-            </p>
           </div>
         )}
       </div>

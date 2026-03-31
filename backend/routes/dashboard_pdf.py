@@ -102,17 +102,11 @@ def make_risk_chart(risk_data):
 
 @router.get("/dashboard-report")
 async def export_dashboard_pdf(current_user: dict = Depends(get_current_user)):
-    """Generate complete dashboard PDF report — gated by export_pdf_excel feature."""
+    """Generate complete dashboard PDF report — acces gratuit pour toutes les cooperatives."""
     if current_user.get("user_type") not in ["cooperative", "admin"]:
         raise HTTPException(status_code=403, detail="Acces reserve")
 
     coop_id = str(current_user["_id"])
-
-    # Subscription gating: export_pdf_excel
-    from subscription_guard import get_coop_features, require_feature
-    sub_info = await get_coop_features(coop_id, current_user)
-    require_feature(sub_info["features"], "export_pdf_excel",
-                    "L'export PDF n'est pas disponible avec votre plan actuel. Passez au plan Pro ou superieur.")
     coop_name = current_user.get("coop_name") or current_user.get("full_name", "Cooperative")
     now = datetime.now(timezone.utc)
     cq = coop_id_query(coop_id)

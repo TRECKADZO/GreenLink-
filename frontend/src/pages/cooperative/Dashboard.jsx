@@ -15,7 +15,6 @@ import { FinancialCard } from './components/FinancialCard';
 import { CommissionCardNew } from './components/CommissionCardNew';
 import { USSDPanel } from './components/USSDPanel';
 import { AlertsBanner } from './components/AlertsBanner';
-import { SubscriptionBanner } from './components/SubscriptionBanner';
 import { REDDWidget } from './components/REDDWidget';
 import { SSRTEWidget } from './components/SSRTEWidget';
 import { REDDEvolutionChart } from './components/REDDEvolutionChart';
@@ -131,33 +130,25 @@ const Dashboard = () => {
 
   const { coop_info, members, parcelles, financial, recent_members } = dashboardData || {};
   const hasChartData = chartData && (chartData.redd_monthly?.some(m => m.visites > 0) || chartData.ssrte_monthly?.some(m => m.visites > 0));
-  const canViewCharts = kpiData?.features?.redd_avance || kpiData?.features?.redd_simplifie || kpiData?.features?.alertes_ssrte;
-  const canExportPdf = kpiData?.features?.export_pdf_excel;
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]" data-testid="cooperative-dashboard">
-      <DashboardHeader coopInfo={coop_info} user={user} navigate={navigate} features={kpiData?.features} />
+      <DashboardHeader coopInfo={coop_info} user={user} navigate={navigate} />
       <KPIStrip members={members} parcelles={parcelles} financial={financial} navigate={navigate} />
 
       <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-8">
-        {/* Subscription Banner */}
-        {kpiData?.subscription && (
-          <div className="mb-6">
-            <SubscriptionBanner subscription={kpiData.subscription} />
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Column */}
           <div className="lg:col-span-8 space-y-6">
             {/* REDD+ & SSRTE/ICI KPI Widgets */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <REDDWidget redd={kpiData?.redd} features={kpiData?.features} />
-              <SSRTEWidget ssrte={kpiData?.ssrte} ici={kpiData?.ici} features={kpiData?.features} />
+              <REDDWidget redd={kpiData?.redd} />
+              <SSRTEWidget ssrte={kpiData?.ssrte} ici={kpiData?.ici} />
             </div>
 
             {/* Charts Section */}
-            {hasChartData && canViewCharts && (
+            {hasChartData && (
               <>
                 <div className="pt-2">
                   <p className="text-[10px] tracking-[0.1em] uppercase font-bold text-[#9CA3AF] mb-4">Analyses & Tendances</p>
@@ -186,7 +177,7 @@ const Dashboard = () => {
 
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6">
-            <QuickActionsPanel navigate={navigate} onToggleSimulator={handleToggleSimulator} features={kpiData?.features} />
+            <QuickActionsPanel navigate={navigate} onToggleSimulator={handleToggleSimulator} />
             <RecentMembersCard
               recentMembers={recent_members}
               pendingValidation={members?.pending_validation}

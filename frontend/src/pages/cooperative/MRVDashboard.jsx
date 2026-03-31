@@ -22,7 +22,6 @@ const MRVDashboard = () => {
   const [summary, setSummary] = useState(null);
   const [farmers, setFarmers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
 
   const downloadPDF = async () => {
     try {
@@ -51,15 +50,7 @@ const MRVDashboard = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Check subscription access first
-      const subRes = await axios.get(`${API}/api/coop-subscriptions/my-subscription`, { headers });
-      const features = subRes.data?.features || {};
-      if (!features.redd_donnees_mrv) {
-        setSubscriptionBlocked(true);
-        setLoading(false);
-        return;
-      }
-
+      // All cooperatives have free access - no subscription check needed
       const [sumRes, farmRes] = await Promise.all([
         axios.get(`${API}/api/redd/mrv/summary`, { headers }),
         axios.get(`${API}/api/redd/mrv/farmers?limit=100`, { headers }),
@@ -91,34 +82,6 @@ const MRVDashboard = () => {
   if (!user || (user.user_type !== 'cooperative' && user.user_type !== 'admin')) {
     navigate('/login');
     return null;
-  }
-
-  if (subscriptionBlocked) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-white">
-        <Navbar />
-        <div className="pt-24 pb-12 px-4 sm:px-6">
-          <div className="max-w-2xl mx-auto text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
-              <Shield className="h-8 w-8 text-amber-500" />
-            </div>
-            <h2 className="text-2xl font-bold">Donnees MRV REDD+ non disponibles</h2>
-            <p className="text-slate-400">
-              L'acces aux donnees MRV avancees necessite le plan <strong className="text-emerald-400">Pro</strong> ou superieur.
-              Votre plan actuel ne comprend pas cette fonctionnalite.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button onClick={() => navigate('/cooperative/dashboard')} variant="outline" className="border-slate-600 text-slate-300">
-                <ArrowLeft className="h-4 w-4 mr-2" /> Retour Dashboard
-              </Button>
-              <Button onClick={() => navigate('/#pricing')} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                Voir les plans
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   const reddLevelColor = (level) => {
