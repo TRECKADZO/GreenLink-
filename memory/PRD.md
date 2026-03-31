@@ -33,12 +33,19 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Agent terrain : 5 pratiques eco + 21 pratiques REDD+ (5 categories)
 - Verification parcelle : integre les visites REDD+ tracking
 
-### Conversion USD → XOF (31 Mars 2026)
+### Conversion USD > XOF (31 Mars 2026)
 - BillingDashboard.jsx : tous montants en XOF (factures, paiements, overview)
 - CarbonBusinessDashboard.jsx : distribution 30/25/70/5, prix marche en XOF, simulateur en XOF
 - Formulaires de saisie convertis (prix/tonne XOF, montant paiement XOF)
 - Conversion backend transparente (1 USD = 655 XOF)
-- Distribution affichee corrigee : 27%/20%/75%/5% → 30%/25%/70%/5%
+
+### Impact REDD+ National — Super Admin (31 Mars 2026)
+- Nouvel onglet "Impact REDD+" dans le Super Admin Dashboard
+- Backend: GET /api/redd-impact/national-metrics (agregation nationale)
+- 6 sections: Impact Carbone, Conformite, Impact Social, MRV National, Cooperatives, Investisseurs
+- Projection 5 ans (2026-2030) avec croissance +15%/an
+- Toutes les donnees en XOF, destine aux partenaires internationaux
+- Teste: 100% backend + frontend (iteration 88)
 
 ## Build APK Mobile
 - APK: https://expo.dev/artifacts/eas/bFGGgTSa5yoMchWxr4KYPe.apk

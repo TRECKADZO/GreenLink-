@@ -1,11 +1,14 @@
 # Test Credentials
 
-## Admin / Cooperative
-- **Email**: klenakan.eric@gmail.com
-- **Password**: 474Treckadzo
-- **Login field**: `identifier` (not `email`)
-- **Login endpoint**: POST /api/auth/login
-- **Response token field**: `access_token` (not `token`)
+## Admin
+- identifier: klenakan.eric@gmail.com
+- password: 474Treckadzo
+- Login endpoint: POST /api/auth/login with {"identifier": "...", "password": "..."}
+- Returns: {"access_token": "..."}
+
+## Expo
+- username: treckadzo
+- password: 474Treckadzo$1986
 
 ## Test Farmer
-- **Phone**: +2250707070707
+- phone: +2250707070707
