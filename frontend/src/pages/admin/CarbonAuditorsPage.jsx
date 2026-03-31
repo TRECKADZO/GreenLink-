@@ -120,7 +120,7 @@ const CarbonAuditorsPage = () => {
       
       const result = await response.json();
       const roleMsg = newAuditor.is_triple_role 
-        ? 'Agent triple casquette (Carbone + SSRTE + REDD+)' 
+        ? 'Agent triple casquette (Carbone + SSRTE + Environnemental)' 
         : newAuditor.is_dual_role 
           ? 'Agent double casquette (Carbone + SSRTE)'
           : 'Auditeur carbone';
@@ -384,7 +384,7 @@ const CarbonAuditorsPage = () => {
                           <p className="text-xs text-blue-400">{auditor.ssrte_visits_completed || 0} visites SSRTE</p>
                         )}
                         {auditor.is_triple_role && (
-                          <p className="text-xs text-green-400">{auditor.redd_visits_completed || 0} visites REDD+</p>
+                          <p className="text-xs text-green-400">{auditor.redd_visits_completed || 0} visites environnementales</p>
                         )}
                         <p className="text-xs text-gray-400">{auditor.pending_missions || 0} missions en cours</p>
                       </div>
@@ -434,7 +434,7 @@ const CarbonAuditorsPage = () => {
               Nouvel Auditeur GreenLink
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              Créez un agent GreenLink avec triple casquette : Carbone, SSRTE et REDD+.
+              Créez un agent GreenLink avec triple casquette : Carbone, SSRTE et Environnemental.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddAuditor}>
@@ -504,11 +504,11 @@ const CarbonAuditorsPage = () => {
                     data-testid="triple-role-checkbox"
                   />
                   <Label htmlFor="is_triple_role" className="text-green-400 font-medium cursor-pointer">
-                    Triple Casquette (Carbone + SSRTE + REDD+)
+                    Triple Casquette (Carbone + SSRTE + Environnemental)
                   </Label>
                 </div>
                 <p className="text-xs text-gray-400 mt-2">
-                  Permet à cet agent d'effectuer des audits carbone, des visites SSRTE (travail des enfants) ET le suivi des pratiques REDD+
+                  Permet à cet agent d'effectuer des audits carbone, des visites SSRTE (travail des enfants) ET le suivi des pratiques durables
                 </p>
                 
                 {newAuditor.is_triple_role && (
@@ -624,7 +624,7 @@ const CarbonAuditorsPage = () => {
                               : 'bg-gray-500/20 text-gray-400'
                       }`}
                     >
-                      {role === 'carbon_auditor' ? 'Auditeur Carbone' : role === 'ssrte_agent' ? 'Agent SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role === 'redd_agent' ? 'Agent REDD+' : role}
+                      {role === 'carbon_auditor' ? 'Auditeur Carbone' : role === 'ssrte_agent' ? 'Agent SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role === 'redd_agent' ? 'Agent Environnemental' : role}
                     </Badge>
                   ))}
                 </div>
@@ -671,7 +671,7 @@ const CarbonAuditorsPage = () => {
                       onClick={() => handleAddRole(selectedAuditor.id, 'redd_agent')}
                     >
                       <Plus className="h-3 w-3 mr-1" />
-                      Ajouter rôle REDD+
+                      Ajouter rôle Environnemental
                     </Button>
                   )}
                   {selectedAuditor.roles?.includes('redd_agent') && (
@@ -681,7 +681,7 @@ const CarbonAuditorsPage = () => {
                       className="border-red-500/50 text-red-400 hover:bg-red-500/20"
                       onClick={() => handleRemoveRole(selectedAuditor.id, 'redd_agent')}
                     >
-                      Retirer rôle REDD+
+                      Retirer rôle Environnemental
                     </Button>
                   )}
                 </div>
@@ -705,7 +705,7 @@ const CarbonAuditorsPage = () => {
                   <p className="font-medium text-blue-300">{selectedAuditor.ssrte_visits_completed || 0}</p>
                 </div>
                 <div className="p-3 bg-green-500/10 rounded-lg">
-                  <p className="text-sm text-green-400">Visites REDD+</p>
+                  <p className="text-sm text-green-400">Visites Environnementales</p>
                   <p className="font-medium text-green-300">{selectedAuditor.redd_visits_completed || 0}</p>
                 </div>
                 <div className="p-3 bg-emerald-500/10 rounded-lg col-span-2">

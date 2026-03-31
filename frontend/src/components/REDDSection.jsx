@@ -35,13 +35,13 @@ const REDDSection = () => {
         <div className="text-center mb-10 sm:mb-14">
           <Badge className="mb-3 bg-emerald-100 text-emerald-700">
             <Leaf className="w-3 h-3 mr-1 inline" />
-            REDD+ Cote d'Ivoire
+            Pratiques Durables Cote d'Ivoire
           </Badge>
           <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-3">
-            Pratiques REDD+ Reconnues
+            Pratiques Durables Reconnues
           </h2>
           <p className="text-sm sm:text-lg text-gray-600 max-w-2xl mx-auto">
-            GreenLink recompense les producteurs pour l'adoption de pratiques REDD+ validees par le programme Tai, le FCPF et le Bureau du Marche Carbone.
+            GreenLink recompense les producteurs pour l'adoption de pratiques durables validees par le programme Tai, le FCPF et le Bureau du Marche Carbone.
           </p>
         </div>
 
@@ -71,7 +71,7 @@ const REDDSection = () => {
             data-testid="redd-section-cta"
           >
             <Leaf className="w-4 h-4 mr-2" />
-            Decouvrir les 21 pratiques REDD+
+            Decouvrir les 21 pratiques durables
             <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>

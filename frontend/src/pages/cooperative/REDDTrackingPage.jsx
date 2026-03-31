@@ -187,7 +187,7 @@ const REDDTrackingPage = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`Fiche enregistree ! Score REDD+: ${data.redd_score}/10 (${data.redd_level})`);
+        alert(`Fiche enregistree ! Score environnemental: ${data.redd_score}/10 (${data.redd_level})`);
         resetForm();
       } else {
         alert(data.detail || 'Erreur lors de l\'enregistrement');
@@ -231,7 +231,7 @@ const REDDTrackingPage = () => {
             <Leaf className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Fiche de suivi REDD+</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Fiche de suivi environnemental</h1>
             <p className="text-sm text-gray-500">Verification terrain des 21 pratiques</p>
           </div>
         </div>
@@ -457,7 +457,7 @@ const REDDTrackingPage = () => {
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3"
               data-testid="submit-tracking-btn"
             >
-              {loading ? 'Enregistrement...' : 'Enregistrer la fiche REDD+'}
+              {loading ? 'Enregistrement...' : 'Enregistrer la fiche environnementale'}
             </Button>
           </div>
         )}
@@ -511,7 +511,7 @@ const REDDTrackingPage = () => {
             </div>
             {stats.level_distribution && Object.keys(stats.level_distribution).length > 0 && (
               <Card className="p-4">
-                <h3 className="font-semibold text-sm text-gray-800 mb-3">Distribution niveaux REDD+</h3>
+                <h3 className="font-semibold text-sm text-gray-800 mb-3">Distribution niveaux durabilite</h3>
                 {Object.entries(stats.level_distribution).map(([level, count]) => (
                   <div key={level} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
                     <span className="text-sm text-gray-600">{level}</span>

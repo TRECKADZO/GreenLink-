@@ -2,6 +2,7 @@
 
 ## Probleme Original
 Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pour la Cote d'Ivoire.
+**Message principal** : Prime carbone accessible via USSD pour les petits planteurs.
 
 ## Architecture
 - **Backend**: FastAPI (Python) + MongoDB Atlas (`greenlink_production`)
@@ -22,32 +23,24 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Auth JWT, Dashboards (cooperative, admin, farmer, agent)
 - Marketplace, FAQ, Notifications, Conformite EUDR & ARS 1000
 
-### REDD+ / SSRTE / ICI
-- Guide REDD+ (21 pratiques, 5 categories)
-- Dashboard MRV REDD+ + Export PDF
+### Pratiques Durables (anciennement REDD+)
+- Guide des 21 pratiques durables (5 categories)
+- Dashboard MRV & Suivi + Export PDF
 - SSRTE/ICI alertes + dashboard
 - KPIs complets sans restriction
+- **IMPORTANT** : Le terme "REDD+" a ete retire de toute l'UI (31 mars 2026). Le code backend conserve les noms de variables/routes internes (`redd_tracking_visits`, `redd_agent`, etc.) mais aucun texte visible ne mentionne REDD+. Terminologie de remplacement : "Pratiques Durables", "Impact Environnemental", "Suivi & Verification".
 
 ### Score Carbone (0-10)
-- USSD : 9 questions + REDD+ (biochar, zero-def, reboisement)
-- Agent terrain : 5 pratiques eco + 21 pratiques REDD+ (5 categories)
-- Verification parcelle : integre les visites REDD+ tracking
+- USSD : 9 questions + pratiques durables (biochar, zero-def, reboisement)
+- Agent terrain : 5 pratiques eco + 21 pratiques durables (5 categories)
+- Verification parcelle : integre les visites de suivi
 
-### Conversion USD > XOF (31 Mars 2026)
-- BillingDashboard.jsx : tous montants en XOF (factures, paiements, overview)
-- CarbonBusinessDashboard.jsx : distribution 30/25/70/5, prix marche en XOF, simulateur en XOF
-- Formulaires de saisie convertis (prix/tonne XOF, montant paiement XOF)
-- Conversion backend transparente (1 USD = 655 XOF)
+### Conversions et Dashboards
+- Tous montants Super Admin en XOF
+- Onglet "Impact Environnemental" Super Admin avec 6 sections (carbone, conformite, social, MRV, cooperatives, investisseurs)
+- Triple Casquette auditeurs : Carbone + SSRTE + Environnemental
 
-### Impact REDD+ National — Super Admin (31 Mars 2026)
-- Nouvel onglet "Impact REDD+" dans le Super Admin Dashboard
-- Backend: GET /api/redd-impact/national-metrics (agregation nationale)
-- 6 sections: Impact Carbone, Conformite, Impact Social, MRV National, Cooperatives, Investisseurs
-- Projection 5 ans (2026-2030) avec croissance +15%/an
-- Toutes les donnees en XOF, destine aux partenaires internationaux
-- Teste: 100% backend + frontend (iteration 88)
-
-## Build APK Mobile
+### Build APK Mobile
 - APK: https://expo.dev/artifacts/eas/bFGGgTSa5yoMchWxr4KYPe.apk
 - Version: 1.74.0 (build 69)
 

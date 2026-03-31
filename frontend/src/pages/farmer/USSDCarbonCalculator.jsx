@@ -157,7 +157,7 @@ const USSDCarbonCalculator = () => {
             </div>
             <div className="flex gap-2">
               <span className="text-emerald-400 font-bold min-w-[20px]">4.</span>
-              <p><strong className="text-white">REDD+</strong> : Programme de reduction des emissions liees a la deforestation. Recompense les bonnes pratiques environnementales.</p>
+              <p><strong className="text-white">Pratiques Durables</strong> : Programme de reduction des emissions liees a la deforestation. Recompense les bonnes pratiques environnementales.</p>
             </div>
             <div className="flex gap-2">
               <span className="text-emerald-400 font-bold min-w-[20px]">5.</span>
@@ -173,7 +173,7 @@ const USSDCarbonCalculator = () => {
             </div>
             <div className="flex gap-2">
               <span className="text-emerald-400 font-bold min-w-[20px]">8.</span>
-              <p><strong className="text-white">Zero-Deforestation</strong> : Engagement a ne pas couper la foret pour agrandir les parcelles. Critique pour le programme REDD+.</p>
+              <p><strong className="text-white">Zero-Deforestation</strong> : Engagement a ne pas couper la foret pour agrandir les parcelles. Critique pour le programme de durabilite.</p>
             </div>
             <div className="flex gap-2">
               <span className="text-emerald-400 font-bold min-w-[20px]">9.</span>

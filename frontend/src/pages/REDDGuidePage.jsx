@@ -15,7 +15,7 @@ const REDD_CATEGORIES = [
   {
     id: 'agroforesterie',
     title: 'Agroforesterie',
-    subtitle: 'Pratique prioritaire REDD+',
+    subtitle: 'Pratique prioritaire',
     icon: TreePine,
     color: 'emerald',
     impact: 'Augmente les stocks de carbone, biodiversite, resilience climatique',
@@ -35,7 +35,7 @@ const REDD_CATEGORIES = [
     impact: 'Decouplage agriculture-deforestation, protection forets classees',
     practices: [
       { name: 'Intensification durable', description: 'Ameliorer rendements sur parcelles existantes sans extension forestiere', bonus: '+0.5 score', prime: '+5 000 FCFA/ha' },
-      { name: 'Pas de nouvelle plantation sur foret', description: 'Engagement zero-deforestation, interdiction d\'extension sur terres forestieres', bonus: 'Obligatoire', prime: 'Eligibilite REDD+' },
+      { name: 'Pas de nouvelle plantation sur foret', description: 'Engagement zero-deforestation, interdiction d\'extension sur terres forestieres', bonus: 'Obligatoire', prime: 'Eligibilite prime carbone' },
       { name: 'Restauration parcelles degradees', description: 'Reconversion des parcelles degradees via agroforesterie ou systemes productifs avec arbres', bonus: '+1.0 score', prime: '+12 000 FCFA/ha' },
       { name: 'Protection forets classees', description: 'Participation a l\'agroforesterie communautaire et systeme Taungya', bonus: '+0.5 score', prime: '+7 000 FCFA/ha' },
     ],
@@ -75,7 +75,7 @@ const REDD_CATEGORIES = [
     subtitle: 'MRV, EUDR, ARS 1000',
     icon: FileCheck,
     color: 'violet',
-    impact: 'Integrite REDD+, conformite marche carbone, acces primes',
+    impact: 'Integrite environnementale, conformite marche carbone, acces primes',
     practices: [
       { name: 'Enregistrement GPS parcelles', description: 'Geolocalisation des parcelles pour tracabilite EUDR et standards carbone', bonus: 'Obligatoire', prime: 'Eligibilite' },
       { name: 'Safeguards sociaux', description: 'Equite genre, prevention travail des enfants (SSRTE/ICI), clarification foncier', bonus: 'Obligatoire', prime: 'Eligibilite' },
@@ -129,9 +129,9 @@ const REDDGuidePage = () => {
                 <Leaf className="w-8 h-8 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">Pratiques REDD+ Reconnues</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Pratiques Durables Reconnues</h1>
                 <p className="text-slate-400 mt-1 text-sm sm:text-base max-w-2xl">
-                  Guide des pratiques eligibles aux credits carbone REDD+ en Cote d'Ivoire.
+                  Guide des pratiques eligibles aux credits carbone en Cote d'Ivoire.
                   Adoptez ces pratiques pour augmenter votre score carbone et vos primes.
                 </p>
               </div>
@@ -170,7 +170,7 @@ const REDDGuidePage = () => {
           <Card className="bg-slate-900/50 border-slate-800">
             <CardContent className="p-4">
               <p className="text-xs text-slate-500">
-                <span className="text-slate-400 font-medium">Sources :</span> Strategie Nationale REDD+ (2017), Programme FCPF Parc National de Tai, PROMIRE, Guides agroforestiers IDH/CIRAD/reNature, Bureau du Marche Carbone (BMC)
+                <span className="text-slate-400 font-medium">Sources :</span> Strategie Nationale (2017), Programme FCPF Parc National de Tai, PROMIRE, Guides agroforestiers IDH/CIRAD/reNature, Bureau du Marche Carbone (BMC)
               </p>
             </CardContent>
           </Card>
@@ -240,7 +240,7 @@ const REDDGuidePage = () => {
           {/* CTA */}
           <Card className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 border-emerald-500/30">
             <CardContent className="p-6 text-center">
-              <h3 className="text-lg font-bold text-white mb-2">Estimez votre prime REDD+</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Estimez votre prime carbone</h3>
               <p className="text-sm text-slate-300 mb-4">
                 Composez *144*99# ou utilisez le simulateur en ligne pour calculer votre score carbone et vos primes.
               </p>

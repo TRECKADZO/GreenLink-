@@ -12,7 +12,7 @@ const FAQPage = () => {
     { id: 'all', name: 'Toutes', icon: HelpCircle },
     { id: 'general', name: 'Général', icon: Leaf },
     { id: 'carbon', name: 'Crédits Carbone', icon: Leaf },
-    { id: 'redd', name: 'REDD+', icon: Leaf },
+    { id: 'redd', name: 'Durabilite', icon: Leaf },
     { id: 'coop', name: 'Coopératives', icon: Users },
     { id: 'pricing', name: 'Tarification', icon: CreditCard },
     { id: 'security', name: 'Sécurité', icon: Shield },
@@ -77,7 +77,7 @@ const FAQPage = () => {
       id: 9,
       category: 'coop',
       question: "Quels avantages pour les cooperatives ?",
-      answer: "GreenLink est entierement gratuit pour toutes les cooperatives. Vous beneficiez de :\n\n\u2022 Dashboard complet avec analyse ARS 1000 (Bronze/Argent/Or)\n\u2022 Rapports REDD+ avances (emissions, agroforesterie, MRV)\n\u2022 Rapports detailles SSRTE (ICI) et remediation\n\u2022 Export PDF pret pour audits BMC et programmes REDD+\n\u2022 Alertes avancees (deforestation, brulage, SSRTE)\n\u2022 Gestion complete des membres et parcelles\n\u2022 Application mobile pour agents terrain\n\u2022 Nombre de membres illimite\n\u2022 Support complet inclus"
+      answer: "GreenLink est entierement gratuit pour toutes les cooperatives. Vous beneficiez de :\n\n\u2022 Dashboard complet avec analyse ARS 1000 (Bronze/Argent/Or)\n\u2022 Rapports avances (emissions, agroforesterie, MRV)\n\u2022 Rapports detailles SSRTE (ICI) et remediation\n\u2022 Export PDF pret pour audits BMC et programmes carbone\n\u2022 Alertes avancees (deforestation, brulage, SSRTE)\n\u2022 Gestion complete des membres et parcelles\n\u2022 Application mobile pour agents terrain\n\u2022 Nombre de membres illimite\n\u2022 Support complet inclus"
     },
     {
       id: 10,
@@ -92,24 +92,24 @@ const FAQPage = () => {
       answer: "La distribution se fait en quelques etapes :\n\n1. Accedez a 'Distributions' dans votre tableau de bord\n2. Selectionnez le lot de credits vendus\n3. Verifiez le calcul automatique par membre (au prorata des tonnes CO2)\n4. Validez la distribution\n5. Les membres recoivent une notification push\n6. Le paiement est effectue via Orange Money\n\nDes recus PDF sont generes automatiquement."
     },
 
-    // REDD+
+    // Durabilite
     {
       id: 21,
       category: 'redd',
-      question: "Qu'est-ce que la Strategie Nationale REDD+ ?",
-      answer: "La Strategie Nationale REDD+ de Cote d'Ivoire est un programme gouvernemental qui vise a reduire les emissions de gaz a effet de serre liees a la deforestation et a la degradation des forets.\n\nPour les cooperatives cacao, cela signifie :\n\u2022 Des opportunites de revenus via les credits carbone\n\u2022 Un acces aux Results-Based Payments (paiements bases sur les resultats)\n\u2022 Une tracabilite pour la conformite EUDR (zero-deforestation)\n\u2022 Des donnees pour le systeme MRV (Mesure, Reporting, Verification) national"
+      question: "Qu'est-ce que la Strategie Nationale de Durabilite ?",
+      answer: "La Strategie Nationale de Durabilite de Cote d'Ivoire est un programme gouvernemental qui vise a reduire les emissions de gaz a effet de serre liees a la deforestation et a la degradation des forets.\n\nPour les cooperatives cacao, cela signifie :\n\u2022 Des opportunites de revenus via les credits carbone\n\u2022 Un acces aux Results-Based Payments (paiements bases sur les resultats)\n\u2022 Une tracabilite pour la conformite EUDR (zero-deforestation)\n\u2022 Des donnees pour le systeme MRV (Mesure, Reporting, Verification) national"
     },
     {
       id: 22,
       category: 'redd',
-      question: "Comment GreenLink aide ma cooperative avec le REDD+ ?",
-      answer: "GreenLink fournit tous les outils REDD+ dont votre cooperative a besoin :\n\n**Niveau Starter :**\n\u2022 Rapport REDD+ simplifie (nombre d'arbres, estimation carbone de base)\n\n**Niveau Pro :**\n\u2022 Estimation des reductions d'emissions\n\u2022 Suivi des pratiques agroforestieres\n\u2022 Donnees geolocalisees pour MRV national\n\u2022 Rapports zero-deforestation\n\u2022 Export PDF/Excel pour audits BMC et programmes juridictionnels (ex. Parc Tai)\n\n**Niveau Enterprise :**\n\u2022 Analyse carbone agregee pour Results-Based Payments\n\u2022 Formation agents terrain sur REDD+\n\u2022 Donnees pour programmes juridictionnels"
+      question: "Comment GreenLink aide ma cooperative avec la durabilite ?",
+      answer: "GreenLink fournit tous les outils dont votre cooperative a besoin :\n\n**Inclus gratuitement :**\n\u2022 Rapport simplifie (nombre d'arbres, estimation carbone de base)\n\u2022 Estimation des reductions d'emissions\n\u2022 Suivi des pratiques agroforestieres\n\u2022 Donnees geolocalisees pour MRV national\n\u2022 Rapports zero-deforestation\n\u2022 Export PDF/Excel pour audits BMC et programmes juridictionnels (ex. Parc Tai)\n\u2022 Analyse carbone agregee pour Results-Based Payments\n\u2022 Formation agents terrain\n\u2022 Donnees pour programmes juridictionnels"
     },
     {
       id: 23,
       category: 'redd',
       question: "Qu'est-ce que le MRV et pourquoi est-ce important ?",
-      answer: "Le MRV (Mesure, Reporting, Verification) est le systeme utilise par les programmes REDD+ pour mesurer et verifier les reductions d'emissions.\n\nGreenLink automatise la collecte des donnees MRV :\n\u2022 Geolocalisation des parcelles\n\u2022 Comptage des arbres d'ombrage\n\u2022 Suivi des pratiques agricoles\n\u2022 Estimation des stocks de carbone\n\u2022 Rapports conformes aux standards internationaux\n\nCes donnees permettent a votre cooperative d'acceder aux paiements carbone des programmes nationaux et internationaux."
+      answer: "Le MRV (Mesure, Reporting, Verification) est le systeme utilise pour mesurer et verifier les reductions d'emissions.\n\nGreenLink automatise la collecte des donnees MRV :\n\u2022 Geolocalisation des parcelles\n\u2022 Comptage des arbres d'ombrage\n\u2022 Suivi des pratiques agricoles\n\u2022 Estimation des stocks de carbone\n\u2022 Rapports conformes aux standards internationaux\n\nCes donnees permettent a votre cooperative d'acceder aux paiements carbone des programmes nationaux et internationaux."
     },
     {
       id: 24,
@@ -123,7 +123,7 @@ const FAQPage = () => {
       id: 12,
       category: 'pricing',
       question: "Combien coute GreenLink pour une cooperative ?",
-      answer: "**GreenLink est 100% gratuit pour les cooperatives** — aucun abonnement, aucune limite de temps.\n\nToutes les fonctionnalites sont incluses :\n\u2022 Dashboard complet REDD+, SSRTE, ICI, ARS 1000\n\u2022 Export PDF pour audits\n\u2022 Application mobile agents terrain\n\u2022 Membres illimites\n\n**Producteurs** : acces gratuit a vie.\n**Acheteurs/Fournisseurs/RSE** : sur devis (15 jours d'essai gratuit)."
+      answer: "**GreenLink est 100% gratuit pour les cooperatives** — aucun abonnement, aucune limite de temps.\n\nToutes les fonctionnalites sont incluses :\n\u2022 Dashboard complet durabilite, SSRTE, ICI, ARS 1000\n\u2022 Export PDF pour audits\n\u2022 Application mobile agents terrain\n\u2022 Membres illimites\n\n**Producteurs** : acces gratuit a vie.\n**Acheteurs/Fournisseurs/RSE** : sur devis (15 jours d'essai gratuit)."
     },
     {
       id: 13,

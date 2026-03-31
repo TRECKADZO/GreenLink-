@@ -9,9 +9,9 @@ import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
 
 const allFeatures = [
-  'Dashboard complet avec KPIs REDD+, SSRTE & ICI',
+  'Dashboard complet avec KPIs durabilite, SSRTE & ICI',
   'Rapports ARS 1000 automatises (Bronze/Argent/Or)',
-  'REDD+ avance : emissions, agroforesterie, MRV',
+  'Suivi avance : emissions, agroforesterie, MRV',
   'Rapports detailles SSRTE / ICI (Remediation)',
   'Zero-deforestation + donnees geolocalisees',
   'Export PDF pret pour audits BMC',
@@ -39,7 +39,7 @@ const PricingSection = () => {
           </h2>
           <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
             GreenLink est entierement gratuit pour les cooperatives agricoles.
-            Toutes les fonctionnalites REDD+, SSRTE, ICI, et ARS 1000 sont incluses.
+            Toutes les fonctionnalites durabilite, SSRTE, ICI, et ARS 1000 sont incluses.
           </p>
         </div>
 
@@ -82,18 +82,18 @@ const PricingSection = () => {
           </Card>
         </div>
 
-        {/* REDD+ Value Proposition */}
+        {/* Value Proposition */}
         <div className="bg-gradient-to-br from-emerald-50 via-white to-blue-50 rounded-2xl border border-emerald-100 p-8 lg:p-10" data-testid="redd-value-section">
           <div className="text-center mb-8">
             <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 mb-3">
               <Globe className="w-3.5 h-3.5 mr-1 inline" />
-              Strategie Nationale REDD+ Cote d'Ivoire
+              Strategie Nationale Durabilite Cote d'Ivoire
             </Badge>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              Pourquoi le REDD+ est essentiel pour votre cooperative ?
+              Pourquoi la durabilite est essentielle pour votre cooperative ?
             </h3>
             <p className="text-sm text-gray-600 max-w-2xl mx-auto">
-              La Cote d'Ivoire s'est engagee dans un programme national REDD+ qui ouvre des opportunites
+              La Cote d'Ivoire s'est engagee dans un programme national de durabilite qui ouvre des opportunites
               de revenus carbone pour les cooperatives agricoles.
             </p>
           </div>
@@ -112,7 +112,7 @@ const PricingSection = () => {
               },
               {
                 icon: BarChart3, title: 'MRV National',
-                desc: 'Donnees geolocalisees et rapports automatises pour le systeme MRV national REDD+.',
+                desc: 'Donnees geolocalisees et rapports automatises pour le systeme MRV national.',
                 color: 'violet',
               },
               {
@@ -139,7 +139,7 @@ const PricingSection = () => {
         <div className="text-center mt-10 text-xs text-gray-500">
           <p className="flex items-center justify-center gap-1">
             <FileCheck className="w-3.5 h-3.5" />
-            Conforme aux standards ARS 1000, SSRTE/ICI et Strategie Nationale REDD+ de Cote d'Ivoire.
+            Conforme aux standards ARS 1000, SSRTE/ICI et Strategie Nationale de Durabilite de Cote d'Ivoire.
           </p>
         </div>
       </div>

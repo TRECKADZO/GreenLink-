@@ -36,12 +36,12 @@ export const REDDWidget = ({ redd }) => {
         <div className="px-5 py-4 border-b border-[#E5E5E0]">
           <h3 className="gl-heading text-sm font-semibold text-[#1A3622] tracking-tight flex items-center gap-2">
             <Leaf className="h-4 w-4" strokeWidth={1.5} />
-            REDD+ & MRV
+            Durabilite & MRV
           </h3>
         </div>
         <div className="p-8 text-center">
           <TreePine className="h-8 w-8 mx-auto mb-3 text-[#9CA3AF]" strokeWidth={1.5} />
-          <p className="text-sm font-medium text-[#374151]">Aucune donnee REDD+</p>
+          <p className="text-sm font-medium text-[#374151]">Aucune donnee de suivi</p>
           <p className="text-xs text-[#9CA3AF] mt-1">Les donnees apparaitront apres les premieres visites terrain</p>
         </div>
       </div>
@@ -64,7 +64,7 @@ export const REDDWidget = ({ redd }) => {
         <div>
           <h3 className="gl-heading text-sm font-semibold text-[#1A3622] tracking-tight flex items-center gap-2">
             <Leaf className="h-4 w-4" strokeWidth={1.5} />
-            REDD+ & MRV
+            Durabilite & MRV
           </h3>
           <p className="text-[11px] text-[#6B7280] mt-0.5">
             {isAdvanced ? 'Monitoring avance' : 'Vue simplifiee'} — {redd.total_visits} visite(s) terrain
@@ -99,7 +99,7 @@ export const REDDWidget = ({ redd }) => {
         {/* Level distribution */}
         {isAdvanced && totalLevels > 0 && (
           <div className="mb-5">
-            <p className="text-[10px] tracking-[0.08em] uppercase font-bold text-[#9CA3AF] mb-2">Distribution REDD+</p>
+            <p className="text-[10px] tracking-[0.08em] uppercase font-bold text-[#9CA3AF] mb-2">Distribution Niveaux</p>
             <div className="space-y-1.5">
               {levels.map(l => (
                 <LevelBar key={l.key} label={l.label} count={redd.level_distribution[l.key] || 0} total={totalLevels} color={l.color} />

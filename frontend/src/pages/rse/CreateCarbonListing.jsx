@@ -28,7 +28,7 @@ const CREDIT_TYPES = [
   { id: 'Agroforesterie', name: 'Agroforesterie', desc: 'Integration arbres + cultures' },
   { id: 'Reforestation', name: 'Reforestation', desc: 'Plantation de nouvelles forets' },
   { id: 'Agriculture Regenerative', name: 'Agriculture Regenerative', desc: 'Pratiques de regeneration des sols' },
-  { id: 'Conservation', name: 'Conservation', desc: 'Protection de forets existantes (REDD+)' },
+  { id: 'Conservation', name: 'Conservation', desc: 'Protection de forets existantes' },
 ];
 
 const DEPARTMENTS = [

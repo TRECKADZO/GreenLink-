@@ -33,7 +33,7 @@ const MRVDashboard = () => {
       const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       const a = document.createElement('a');
       a.href = url;
-      a.download = `GreenLink_MRV_REDD_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.download = `GreenLink_MRV_Suivi_${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -127,7 +127,7 @@ const MRVDashboard = () => {
                 <BarChart3 className="w-6 h-6 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold" data-testid="mrv-title">Dashboard MRV REDD+</h1>
+                <h1 className="text-xl sm:text-2xl font-bold" data-testid="mrv-title">Dashboard MRV & Suivi</h1>
                 <p className="text-xs text-slate-400">Monitoring, Rapportage, Verification</p>
               </div>
             </div>
@@ -181,7 +181,7 @@ const MRVDashboard = () => {
                   <CardContent className="p-3">
                     <Leaf className="w-4 h-4 text-emerald-400 mb-1" />
                     <p className="text-xl font-bold">{summary.avg_score_redd}/10</p>
-                    <p className="text-[10px] text-slate-400">Score REDD+</p>
+                    <p className="text-[10px] text-slate-400">Score Carbone</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-slate-900 border-slate-800">
@@ -193,14 +193,14 @@ const MRVDashboard = () => {
                 </Card>
               </div>
 
-              {/* Practice Adoption + REDD Distribution */}
+              {/* Practice Adoption + Level Distribution */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Practice Adoption */}
                 <Card className="bg-slate-900 border-slate-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-white text-base flex items-center gap-2">
                       <Sprout className="w-4 h-4 text-green-400" />
-                      Adoption des Pratiques REDD+
+                      Adoption des Pratiques Durables
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4" data-testid="mrv-practices-adoption">
@@ -218,12 +218,12 @@ const MRVDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* REDD+ Level Distribution */}
+                {/* Level Distribution */}
                 <Card className="bg-slate-900 border-slate-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-white text-base flex items-center gap-2">
                       <BarChart3 className="w-4 h-4 text-blue-400" />
-                      Distribution Niveaux REDD+
+                      Distribution Niveaux Durabilite
                     </CardTitle>
                   </CardHeader>
                   <CardContent data-testid="mrv-redd-distribution">
@@ -283,7 +283,7 @@ const MRVDashboard = () => {
                             <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">Ha</th>
                             <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">Arbres</th>
                             <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">Carbone</th>
-                            <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">REDD+</th>
+                            <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">Niveau</th>
                             <th className="text-center py-2 px-2 text-slate-400 text-xs font-medium">ARS</th>
                             <th className="text-left py-2 px-2 text-slate-400 text-xs font-medium">Pratiques</th>
                           </tr>
@@ -326,7 +326,7 @@ const MRVDashboard = () => {
               {/* Actions */}
               <div className="flex flex-wrap gap-3 justify-center">
                 <Button onClick={() => navigate('/guide-redd')} variant="outline" className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10" data-testid="mrv-guide-btn">
-                  <Leaf className="w-4 h-4 mr-2" /> Guide REDD+
+                  <Leaf className="w-4 h-4 mr-2" /> Guide Pratiques Durables
                 </Button>
                 <Button onClick={() => navigate('/cooperative/ssrte')} variant="outline" className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10" data-testid="mrv-ssrte-btn">
                   <Shield className="w-4 h-4 mr-2" /> Alertes SSRTE/ICI

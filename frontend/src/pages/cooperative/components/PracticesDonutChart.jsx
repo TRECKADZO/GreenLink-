@@ -33,7 +33,7 @@ export const PracticesDonutChart = ({ practices }) => {
           <Leaf className="h-4 w-4" strokeWidth={1.5} />
           Adoption des Pratiques
         </h3>
-        <p className="text-[11px] text-[#6B7280] mt-0.5">Taux d'adoption par pratique REDD+</p>
+        <p className="text-[11px] text-[#6B7280] mt-0.5">Taux d'adoption par pratique durable</p>
       </div>
       <div className="p-5 flex flex-col items-center">
         <div className="relative" style={{ width: 180, height: 180 }}>

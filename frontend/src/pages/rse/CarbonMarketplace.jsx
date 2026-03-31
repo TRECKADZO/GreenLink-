@@ -70,7 +70,7 @@ const DEMO_CREDITS = [
     _id: 'demo-cc-4',
     credit_type: 'Conservation',
     project_name: 'Protection Forêt Classée - Taï',
-    project_description: 'Programme REDD+ de protection de 500 hectares de forêt primaire adjacente au Parc National de Taï. Surveillance communautaire et alternatives économiques.',
+    project_description: 'Programme de protection de 500 hectares de forêt primaire adjacente au Parc National de Taï. Surveillance communautaire et alternatives économiques.',
     verification_standard: 'Verra VCS',
     quantity_tonnes_co2: 2000,
     price_per_tonne: 25000,

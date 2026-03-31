@@ -25,11 +25,11 @@ const categories = [
     ],
   },
   {
-    title: 'Carbone & REDD+',
+    title: 'Carbone & Durabilite',
     items: [
       { icon: DollarSign, label: 'Primes', path: '/cooperative/carbon-premiums', color: 'text-[#065F46]' },
       { icon: Leaf, label: 'Tonnage', path: '/cooperative/carbon-submissions', color: 'text-[#065F46]' },
-      { icon: Leaf, label: 'MRV REDD+', path: '/cooperative/mrv', color: 'text-[#065F46]' },
+      { icon: Leaf, label: 'MRV & Suivi', path: '/cooperative/mrv', color: 'text-[#065F46]' },
       { icon: DollarSign, label: 'Distributions', path: '/cooperative/distributions', color: 'text-[#065F46]' },
     ],
   },

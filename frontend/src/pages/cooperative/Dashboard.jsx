@@ -140,7 +140,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Column */}
           <div className="lg:col-span-8 space-y-6">
-            {/* REDD+ & SSRTE/ICI KPI Widgets */}
+            {/* Durabilite & SSRTE/ICI KPI Widgets */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <REDDWidget redd={kpiData?.redd} />
               <SSRTEWidget ssrte={kpiData?.ssrte} ici={kpiData?.ici} />

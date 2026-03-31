@@ -74,8 +74,8 @@ const SuperAdminDashboard = () => {
           const data = await analyticsApi.getReddImpact();
           setReddImpact(data);
         } catch (error) {
-          console.error('Error fetching REDD+ impact:', error);
-          toast.error('Erreur lors du chargement des données REDD+');
+          console.error('Error fetching environmental impact:', error);
+          toast.error('Erreur lors du chargement des données environnementales');
         } finally {
           setReddLoading(false);
         }
@@ -320,7 +320,7 @@ const SuperAdminDashboard = () => {
             <TabsTrigger value="market" className="data-[state=active]:bg-emerald-600">Marché & Commerce</TabsTrigger>
             <TabsTrigger value="marketplace" className="data-[state=active]:bg-amber-600">Bourse Recoltes</TabsTrigger>
             <TabsTrigger value="ussd" className="data-[state=active]:bg-violet-600">USSD</TabsTrigger>
-            <TabsTrigger value="redd-impact" className="data-[state=active]:bg-green-600" data-testid="redd-impact-tab">Impact REDD+</TabsTrigger>
+            <TabsTrigger value="redd-impact" className="data-[state=active]:bg-green-600" data-testid="redd-impact-tab">Impact Environnemental</TabsTrigger>
             <TabsTrigger value="onboarding" className="data-[state=active]:bg-cyan-600">Onboarding</TabsTrigger>
           </TabsList>
 
@@ -1475,7 +1475,7 @@ const ReddImpactTab = ({ data, loading }) => {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-        <p className="ml-4 text-slate-400">Chargement des métriques REDD+...</p>
+        <p className="ml-4 text-slate-400">Chargement des métriques environnementales...</p>
       </div>
     );
   }
@@ -1484,7 +1484,7 @@ const ReddImpactTab = ({ data, loading }) => {
     return (
       <div className="text-center py-16">
         <TreePine className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-        <p className="text-slate-400">Aucune donnée REDD+ disponible</p>
+        <p className="text-slate-400">Aucune donnée environnementale disponible</p>
       </div>
     );
   }
@@ -1498,7 +1498,7 @@ const ReddImpactTab = ({ data, loading }) => {
         <CardContent className="py-5">
           <div className="flex items-center gap-3 mb-2">
             <TreePine className="h-6 w-6 text-green-400" />
-            <h2 className="text-xl font-bold text-white">Impact REDD+ National</h2>
+            <h2 className="text-xl font-bold text-white">Impact Environnemental National</h2>
             <Badge className="bg-green-600/30 text-green-300 border-green-500/40">Partenaires Internationaux</Badge>
           </div>
           <p className="text-slate-400 text-sm">
@@ -1707,14 +1707,14 @@ const ReddImpactTab = ({ data, loading }) => {
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Eye className="h-5 w-5 text-teal-500" />
-            MRV National — Suivi REDD+
+            MRV National — Suivi Environnemental
           </CardTitle>
           <CardDescription className="text-slate-400">Mesure, Reporting & Vérification des pratiques durables</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="p-3 rounded-lg bg-teal-900/20 border border-teal-700/30 text-center">
-              <p className="text-teal-400 text-xs">Visites REDD+</p>
+              <p className="text-teal-400 text-xs">Visites Terrain</p>
               <p className="text-2xl font-bold text-white">{mrv_national?.total_redd_visits || 0}</p>
             </div>
             <div className="p-3 rounded-lg bg-green-900/20 border border-green-700/30 text-center">

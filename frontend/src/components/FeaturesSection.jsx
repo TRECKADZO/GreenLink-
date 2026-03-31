@@ -8,9 +8,9 @@ import { getIconComponent } from '../utils/iconMapper';
 const mockFeatures = [
   {
     icon: 'TreePine',
-    title: 'REDD+ & Credits Carbone',
-    description: 'Alignement avec les pratiques REDD+ reconnues (Programme Tai, BMC, FCPF). Score REDD+ sur 10 avec 21 pratiques evaluees et export MRV.',
-    badge: 'REDD+',
+    title: 'Durabilite & Credits Carbone',
+    description: 'Alignement avec les pratiques durables reconnues (Programme Tai, BMC, FCPF). Score environnemental sur 10 avec 21 pratiques evaluees et export MRV.',
+    badge: 'Durable',
     badgeColor: 'bg-emerald-100 text-emerald-700'
   },
   {
