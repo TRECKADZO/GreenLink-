@@ -35,8 +35,8 @@ const USSDFullSimulatorScreen = () => {
     : 'Simulateur USSD Cooperative';
 
   const MAIN_MENU_TEXT = 
-    'GreenLink Agritech - ARS 1000\n\n' +
-    '1. Prime carbone + conformite ARS\n' +
+    'GreenLink Agritech\n\n' +
+    '1. Estimation de ma prime\n' +
     '2. SSRTE - Travail des enfants (ICI)\n\n' +
     '0. Quitter';
 

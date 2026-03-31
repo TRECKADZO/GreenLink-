@@ -154,7 +154,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
 
-        {/* Score REDD+ */}
+        {/* Score Carbone */}
         <TouchableOpacity 
           style={styles.reddScore}
           onPress={() => navigation.navigate('REDDGuide')}
@@ -165,7 +165,7 @@ const HomeScreen = ({ navigation }) => {
               <Text style={{ fontSize: 20 }}>{'🌿'}</Text>
             </View>
             <View style={styles.reddInfo}>
-              <Text style={styles.reddLabel}>Score REDD+</Text>
+              <Text style={styles.reddLabel}>Score Carbone</Text>
               <Text style={styles.reddHint}>
                 21 pratiques evaluees - Programme Tai / BMC
               </Text>
@@ -248,7 +248,7 @@ const HomeScreen = ({ navigation }) => {
         
         <MenuItem
           number="5b"
-          title="Pratiques REDD+"
+          title="Pratiques Durables"
           subtitle="Guide des 21 pratiques eligibles"
           icon="🌿"
           onPress={() => navigation.navigate('REDDGuide')}

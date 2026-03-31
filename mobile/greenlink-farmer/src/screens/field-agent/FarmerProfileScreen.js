@@ -423,7 +423,7 @@ const FarmerProfileScreen = ({ navigation, route }) => {
             </View>
           )}
 
-          {/* REDD+ Tab */}
+          {/* Environnemental Tab */}
           {historyTab === 'redd' && (
             <View>
               {reddVisits.length > 0 ? reddVisits.map((v, i) => {
@@ -462,7 +462,7 @@ const FarmerProfileScreen = ({ navigation, route }) => {
                   </View>
                 );
               }) : (
-                <Text style={styles.emptyText}>Aucune fiche REDD+ enregistree</Text>
+                <Text style={styles.emptyText}>Aucune fiche environnementale enregistree</Text>
               )}
             </View>
           )}

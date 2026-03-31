@@ -24,7 +24,7 @@ const CATEGORIES = [
   {
     id: 'agroforesterie',
     title: 'Agroforesterie',
-    subtitle: 'Pratique prioritaire REDD+',
+    subtitle: 'Pratique prioritaire',
     color: COLORS.primary,
     bgColor: COLORS.primaryLight,
     impact: 'Augmente les stocks de carbone, biodiversite et resilience climatique',
@@ -81,15 +81,15 @@ const CATEGORIES = [
   {
     id: 'tracabilite',
     title: 'Tracabilite et Conformite',
-    subtitle: 'MRV, EUDR, ARS 1000',
+    subtitle: 'MRV, EUDR, Certification',
     color: COLORS.violet,
     bgColor: COLORS.violetLight,
-    impact: 'Integrite REDD+, conformite marche carbone international',
+    impact: 'Integrite environnementale, conformite marche carbone international',
     practices: [
       { name: 'Enregistrement GPS parcelles', desc: 'Geolocalisation precise des parcelles pour la tracabilite EUDR et les standards carbone.' },
       { name: 'Safeguards sociaux', desc: 'Equite genre, prevention du travail des enfants (SSRTE/ICI), clarification du foncier.' },
       { name: 'Monitoring MRV', desc: 'Collecte reguliere de donnees : couverture arboree, pratiques adoptees, reductions emissions.' },
-      { name: 'Certification ARS 1000', desc: 'Norme Africaine pour le Cacao Durable avec niveaux Bronze, Argent et Or.' },
+      { name: 'Certification Cacao Durable', desc: 'Norme Africaine pour le Cacao Durable avec niveaux Bon, Tres Bon et Excellent.' },
     ],
   },
 ];
@@ -105,9 +105,9 @@ const REDDGuideScreen = ({ navigation }) => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backText}>Retour</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Pratiques REDD+</Text>
+          <Text style={styles.title}>Pratiques Durables</Text>
           <Text style={styles.subtitle}>
-            Guide des pratiques eligibles aux credits carbone REDD+ en Cote d'Ivoire
+            Guide des pratiques eligibles aux credits carbone en Cote d'Ivoire
           </Text>
         </View>
 
@@ -130,7 +130,7 @@ const REDDGuideScreen = ({ navigation }) => {
         {/* Sources */}
         <View style={styles.sourceCard}>
           <Text style={styles.sourceText}>
-            Sources : Strategie Nationale REDD+ (2017), Programme FCPF Parc National de Tai, PROMIRE, Guides IDH/CIRAD/reNature, Bureau du Marche Carbone (BMC)
+            Sources : Strategie Nationale (2017), Programme FCPF Parc National de Tai, PROMIRE, Guides IDH/CIRAD/reNature, Bureau du Marche Carbone (BMC)
           </Text>
         </View>
 

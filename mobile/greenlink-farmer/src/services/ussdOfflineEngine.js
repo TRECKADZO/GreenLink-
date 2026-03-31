@@ -16,9 +16,9 @@ const QUESTIONS = [
   { key: 'compost', text: 'Question 8/14\nCompost organique ?\nAmeliore la fertilite et stocke du carbone.\n\n1. Oui\n2. Non', type: 'yesno' },
   { key: 'agroforesterie', text: 'Question 9/14\nAgroforesterie ?\nAssociation arbres + cultures pour maximiser le stockage.\n\n1. Oui\n2. Non', type: 'yesno' },
   { key: 'couverture_sol', text: 'Question 10/14\nCouverture vegetale au sol ?\nPlantes basses entre les arbres qui protegent le sol.\n\n1. Oui\n2. Non', type: 'yesno' },
-  { key: 'biochar', text: 'REDD+ Question 11/14\nBiochar (charbon vegetal) ?\nBois carbonise melange au sol pour stocker le carbone.\n\n1. Oui\n2. Non', type: 'yesno' },
-  { key: 'zero_deforestation', text: 'REDD+ Question 12/14\nEngagement zero deforestation ?\nPas d\'extension de parcelles sur la foret.\n\n1. Oui\n2. Non', type: 'yesno' },
-  { key: 'reboisement', text: 'REDD+ Question 13/14\nReboisement actif ?\nPlantation de nouveaux arbres forestiers.\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'biochar', text: 'Question 11/14\nBiochar (charbon vegetal) ?\nBois carbonise melange au sol pour stocker le carbone.\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'zero_deforestation', text: 'Question 12/14\nEngagement zero deforestation ?\nPas d\'extension de parcelles sur la foret.\n\n1. Oui\n2. Non', type: 'yesno' },
+  { key: 'reboisement', text: 'Question 13/14\nReboisement actif ?\nPlantation de nouveaux arbres forestiers.\n\n1. Oui\n2. Non', type: 'yesno' },
   { key: 'age_cacaoyers', text: 'Question 14/14\nAge moyen de vos cacaoyers ?\nLes cacaoyers matures stockent plus de carbone.\n\n1. Moins de 5 ans\n2. 5 a 15 ans\n3. Plus de 15 ans', type: 'choice3' },
 ];
 
@@ -180,7 +180,7 @@ function calculateArsLevel(answers, hectares, arbresGrands, arbresTotal) {
   let level, conseil;
   if (pct >= 80) {
     level = 'Or';
-    conseil = 'Felicitations ! Vous etes au niveau Or ARS 1000.';
+    conseil = 'Felicitations ! Niveau Excellent - votre prime est maximale !';
   } else if (pct >= 55) {
     level = 'Argent';
     const arbresManquants = Math.max(0, Math.floor((40 - arbresParHa) * Math.max(hectares, 1)));
@@ -191,7 +191,7 @@ function calculateArsLevel(answers, hectares, arbresGrands, arbresTotal) {
     }
   } else if (pct >= 30) {
     level = 'Bronze';
-    conseil = "Plantez plus d'arbres ombres et arretez le brulage pour passer au niveau Argent.";
+    conseil = "Plantez plus d'arbres ombres et arretez le brulage pour ameliorer votre prime.";
   } else {
     level = 'Non conforme';
     conseil = "Commencez par planter au moins 20 arbres/ha et arreter le brulage.";
@@ -252,7 +252,7 @@ export function processUSSD(textInput = '') {
   let resultText;
   if (result.eligible) {
     resultText = (
-      `PRIME CARBONE + ARS 1000\n\n` +
+      `VOTRE PRIME CARBONE\n\n` +
       `Score: ${result.score}/10\n` +
       `Arbres/ha: ${result.arbres_par_ha}\n` +
       `CO2: ${result.co2_par_ha}t/ha\n\n` +
@@ -266,7 +266,7 @@ export function processUSSD(textInput = '') {
     );
   } else {
     resultText = (
-      `ESTIMATION + ARS 1000\n\n` +
+      `ESTIMATION PRIME CARBONE\n\n` +
       `Score: ${result.score}/10\n` +
       `(Minimum requis: 5/10)\n\n` +
       `Niveau ARS: ${result.ars_level} (${result.ars_pct}%)\n` +

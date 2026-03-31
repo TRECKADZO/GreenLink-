@@ -13,13 +13,13 @@ const CREDIT_TYPES = [
   { key: 'Agroforesterie', label: 'Agroforesterie', desc: 'Arbres + cultures', icon: 'leaf' },
   { key: 'Reforestation', label: 'Reforestation', desc: 'Nouvelles forets', icon: 'earth' },
   { key: 'Agriculture Regenerative', label: 'Agriculture Regenerative', desc: 'Regeneration des sols', icon: 'flower' },
-  { key: 'Conservation', label: 'Conservation', desc: 'Protection REDD+', icon: 'shield' },
+  { key: 'Conservation', label: 'Conservation', desc: 'Protection des forets', icon: 'shield' },
 ];
 
 const STANDARDS = [
-  { key: 'ARS 1000-1', label: 'ARS 1000-1', desc: 'Norme Africaine Cacao Durable - Exigences generales' },
-  { key: 'ARS 1000-2', label: 'ARS 1000-2', desc: 'Norme Africaine - Tracabilite ferme a export' },
-  { key: 'ARS 1000-3', label: 'ARS 1000-3', desc: 'Norme Africaine - Bonnes pratiques agricoles' },
+  { key: 'ARS 1000-1', label: 'Cacao Durable Niveau 1', desc: 'Norme Africaine Cacao Durable - Exigences generales' },
+  { key: 'ARS 1000-2', label: 'Cacao Durable Niveau 2', desc: 'Norme Africaine - Tracabilite ferme a export' },
+  { key: 'ARS 1000-3', label: 'Cacao Durable Niveau 3', desc: 'Norme Africaine - Bonnes pratiques agricoles' },
   { key: 'Verra VCS', label: 'Verra VCS', desc: 'Le plus utilise mondialement' },
   { key: 'Gold Standard', label: 'Gold Standard', desc: 'Co-benefices sociaux' },
   { key: 'Plan Vivo', label: 'Plan Vivo', desc: 'Communautes rurales' },
@@ -143,7 +143,7 @@ export default function CreateCarbonListingScreen({ navigation }) {
       </ScrollView>
 
       <Field label="Methodologie (optionnel)" value={form.methodology}
-        onChange={v => updateForm('methodology', v)} placeholder="Ex: VM0015 - REDD+ Methodology" testId="input-methodology" />
+        onChange={v => updateForm('methodology', v)} placeholder="Ex: VM0015 - Methodology" testId="input-methodology" />
 
       <View style={styles.btnRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => setStep(1)}>

@@ -74,7 +74,7 @@ const REDD_CATEGORIES = [
       { code: 'TRAC1', name: 'GPS parcelles', hint: "Les parcelles ont-elles ete cartographiees avec un GPS ? Les polygones sont-ils enregistres ?" },
       { code: 'TRAC2', name: 'Safeguards sociaux', hint: "Pas de travail d'enfants ni travail force. Conditions de travail correctes pour tous." },
       { code: 'TRAC3', name: 'Monitoring MRV', hint: "Participe-t-il au suivi regulier (Mesure, Reporting, Verification) de ses pratiques ?" },
-      { code: 'TRAC4', name: 'Certification ARS 1000', hint: "Est-il certifie ou en cours de certification ARS 1000 (norme africaine cacao durable) ?" },
+      { code: 'TRAC4', name: 'Certification Cacao Durable', hint: "Est-il certifie ou en cours de certification pour la norme cacao durable (Bon/Tres Bon/Excellent) ?" },
     ],
   },
 ];
@@ -213,7 +213,7 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
         await api.post('/redd/tracking/visit', visitData);
         Alert.alert(
           'Succes',
-          'La fiche de suivi REDD+ a ete enregistree.',
+          'La fiche de suivi environnemental a ete enregistree.',
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
       } else {
@@ -268,7 +268,7 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fiche REDD+</Text>
+        <Text style={styles.headerTitle}>Fiche Environnementale</Text>
         <View style={styles.onlineStatus}>
           <View style={[styles.statusDot, { backgroundColor: isOnline ? '#10b981' : '#ef4444' }]} />
         </View>
