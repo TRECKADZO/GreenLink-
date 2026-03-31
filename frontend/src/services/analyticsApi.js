@@ -70,6 +70,14 @@ export const analyticsApi = {
     return response.data;
   },
 
+  // REDD+ Impact National
+  getReddImpact: async () => {
+    const response = await axios.get(`${BACKEND_URL}/api/redd-impact/national-metrics`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   // Harvest Marketplace Stats
   getMarketplaceStats: async () => {
     const response = await axios.get(`${BACKEND_URL}/api/harvest-marketplace/admin/analytics`, {

@@ -182,6 +182,7 @@ app.include_router(redd_pdf.router)
 app.include_router(redd_tracking.router)
 app.include_router(dashboard_pdf.router)
 app.include_router(coop_subscriptions.router)
+app.include_router(redd_impact.router)
 
 CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '')
 if CORS_ORIGINS:

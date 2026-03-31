@@ -10,7 +10,8 @@ import {
   MapPin, Shield, Scale, Target, Briefcase,
   ArrowUpRight, ArrowDownRight, RefreshCw,
   ChevronRight, Calendar, Filter, Bell, Activity,
-  Award, Baby, CreditCard, Package, Store, ShoppingBag
+  Award, Baby, CreditCard, Package, Store, ShoppingBag,
+  TreePine, Sprout, Eye, Zap
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -33,6 +34,8 @@ const SuperAdminDashboard = () => {
   const [period, setPeriod] = useState('year');
   const [activeTab, setActiveTab] = useState('overview');
   const [marketplaceStats, setMarketplaceStats] = useState(null);
+  const [reddImpact, setReddImpact] = useState(null);
+  const [reddLoading, setReddLoading] = useState(false);
 
   const fetchDashboard = async () => {
     try {
@@ -62,6 +65,24 @@ const SuperAdminDashboard = () => {
     };
     fetchMarketplaceStats();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'redd-impact' && !reddImpact) {
+      const fetchRedd = async () => {
+        setReddLoading(true);
+        try {
+          const data = await analyticsApi.getReddImpact();
+          setReddImpact(data);
+        } catch (error) {
+          console.error('Error fetching REDD+ impact:', error);
+          toast.error('Erreur lors du chargement des données REDD+');
+        } finally {
+          setReddLoading(false);
+        }
+      };
+      fetchRedd();
+    }
+  }, [activeTab]);
 
   const handleExport = async (reportType) => {
     try {
@@ -299,6 +320,7 @@ const SuperAdminDashboard = () => {
             <TabsTrigger value="market" className="data-[state=active]:bg-emerald-600">Marché & Commerce</TabsTrigger>
             <TabsTrigger value="marketplace" className="data-[state=active]:bg-amber-600">Bourse Recoltes</TabsTrigger>
             <TabsTrigger value="ussd" className="data-[state=active]:bg-violet-600">USSD</TabsTrigger>
+            <TabsTrigger value="redd-impact" className="data-[state=active]:bg-green-600" data-testid="redd-impact-tab">Impact REDD+</TabsTrigger>
             <TabsTrigger value="onboarding" className="data-[state=active]:bg-cyan-600">Onboarding</TabsTrigger>
           </TabsList>
 
@@ -616,6 +638,10 @@ const SuperAdminDashboard = () => {
                 </div>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="redd-impact">
+            <ReddImpactTab data={reddImpact} loading={reddLoading} />
           </TabsContent>
 
           <TabsContent value="onboarding">
@@ -1436,6 +1462,337 @@ const MarketplaceTab = ({ data }) => {
               <Download className="h-4 w-4 mr-2" />
               Exporter Rapport
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// REDD+ Impact National Tab for international partners
+const ReddImpactTab = ({ data, loading }) => {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <p className="ml-4 text-slate-400">Chargement des métriques REDD+...</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="text-center py-16">
+        <TreePine className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+        <p className="text-slate-400">Aucune donnée REDD+ disponible</p>
+      </div>
+    );
+  }
+
+  const { carbon_impact, conformite, social_impact, mrv_national, cooperatives, investor_metrics } = data;
+
+  return (
+    <div className="space-y-6" data-testid="redd-impact-content">
+      {/* Header Banner */}
+      <Card className="bg-gradient-to-r from-green-900/60 to-emerald-900/40 border-green-700/40">
+        <CardContent className="py-5">
+          <div className="flex items-center gap-3 mb-2">
+            <TreePine className="h-6 w-6 text-green-400" />
+            <h2 className="text-xl font-bold text-white">Impact REDD+ National</h2>
+            <Badge className="bg-green-600/30 text-green-300 border-green-500/40">Partenaires Internationaux</Badge>
+          </div>
+          <p className="text-slate-400 text-sm">
+            Données agrégées pour les bailleurs, investisseurs carbone et organismes de certification.
+            Dernière mise à jour : {data.generated_at ? new Date(data.generated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Row 1: Key Impact Numbers */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" data-testid="redd-kpi-row">
+        <div className="p-4 rounded-xl bg-gradient-to-br from-green-900/50 to-slate-800 border border-green-700/30">
+          <p className="text-green-400 text-xs font-medium">CO₂ Séquestré</p>
+          <p className="text-2xl font-bold text-white" data-testid="redd-co2-tonnes">{carbon_impact?.total_co2_tonnes || 0} <span className="text-sm text-slate-400">T</span></p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-900/50 to-slate-800 border border-emerald-700/30">
+          <p className="text-emerald-400 text-xs font-medium">Hectares Couverts</p>
+          <p className="text-2xl font-bold text-white">{carbon_impact?.total_hectares_couverts || 0} <span className="text-sm text-slate-400">ha</span></p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-teal-900/50 to-slate-800 border border-teal-700/30">
+          <p className="text-teal-400 text-xs font-medium">Score Carbone Moy.</p>
+          <p className="text-2xl font-bold text-white">{carbon_impact?.avg_carbon_score || 0}<span className="text-sm text-slate-400">/10</span></p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-lime-900/50 to-slate-800 border border-lime-700/30">
+          <p className="text-lime-400 text-xs font-medium">Forêt Équivalente</p>
+          <p className="text-2xl font-bold text-white">{carbon_impact?.foret_equivalente_ha || 0} <span className="text-sm text-slate-400">ha</span></p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-blue-900/50 to-slate-800 border border-blue-700/30">
+          <p className="text-blue-400 text-xs font-medium">Coopératives</p>
+          <p className="text-2xl font-bold text-white">{cooperatives?.total_cooperatives || 0}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-amber-900/50 to-slate-800 border border-amber-700/30">
+          <p className="text-amber-400 text-xs font-medium">Agents Terrain</p>
+          <p className="text-2xl font-bold text-white">{cooperatives?.total_field_agents || 0}</p>
+        </div>
+      </div>
+
+      {/* Row 2: Carbon Revenue + Investor Pipeline */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Leaf className="h-5 w-5 text-green-500" />
+              Revenus Carbone
+            </CardTitle>
+            <CardDescription className="text-slate-400">Projection annuelle et valeur du pipeline</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="p-4 rounded-lg bg-green-900/20 border border-green-700/30">
+                <p className="text-green-400 text-xs">Revenu Annuel Estimé</p>
+                <p className="text-2xl font-bold text-white" data-testid="redd-annual-revenue">{formatCurrency(carbon_impact?.annual_revenue_xof || 0)} <span className="text-sm text-green-400">XOF</span></p>
+              </div>
+              <div className="p-4 rounded-lg bg-emerald-900/20 border border-emerald-700/30">
+                <p className="text-emerald-400 text-xs">Pipeline Vérifiable</p>
+                <p className="text-2xl font-bold text-white">{investor_metrics?.pipeline_credits_tonnes || 0} <span className="text-sm text-emerald-400">T CO₂</span></p>
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-slate-700/30">
+              <p className="text-slate-400 text-xs mb-1">Prix carbone actuel</p>
+              <p className="text-lg font-bold text-amber-400">{(investor_metrics?.carbon_price_xof_per_tonne || 0).toLocaleString('fr-FR')} XOF/tonne</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-amber-500" />
+              Projection 5 Ans
+            </CardTitle>
+            <CardDescription className="text-slate-400">Croissance estimée +15%/an</CardDescription>
+          </CardHeader>
+          <CardContent data-testid="redd-projection-table">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-700">
+                    <th className="text-left text-slate-400 py-2 px-2">Année</th>
+                    <th className="text-right text-slate-400 py-2 px-2">CO₂ (T)</th>
+                    <th className="text-right text-slate-400 py-2 px-2">Revenus XOF</th>
+                    <th className="text-right text-slate-400 py-2 px-2">Hectares</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(carbon_impact?.five_year_projection || []).map((row, i) => (
+                    <tr key={i} className="border-b border-slate-700/50 hover:bg-slate-700/20">
+                      <td className="py-2 px-2 text-white font-medium">{row.year}</td>
+                      <td className="py-2 px-2 text-right text-emerald-400">{row.tonnes_co2?.toLocaleString('fr-FR')}</td>
+                      <td className="py-2 px-2 text-right text-amber-400">{formatCurrency(row.revenue_xof)}</td>
+                      <td className="py-2 px-2 text-right text-slate-300">{row.hectares?.toLocaleString('fr-FR')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-3 p-3 rounded-lg bg-amber-900/20 border border-amber-700/30">
+              <p className="text-amber-300 text-xs">ROI moyen par coopérative</p>
+              <p className="text-lg font-bold text-white">{(investor_metrics?.roi_per_coop_xof || 0).toLocaleString('fr-FR')} <span className="text-sm text-amber-400">XOF</span></p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 3: Conformité + Social Impact */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Conformité & Certifications */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Shield className="h-5 w-5 text-amber-500" />
+              Conformité & Certifications
+            </CardTitle>
+            <CardDescription className="text-slate-400">EUDR et ARS 1000</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4">
+              <div className="flex justify-between mb-2">
+                <span className="text-slate-400 text-sm">Conformité EUDR</span>
+                <span className="text-amber-400 font-bold">{conformite?.eudr_compliance_rate || 0}%</span>
+              </div>
+              <Progress value={conformite?.eudr_compliance_rate || 0} className="h-3 bg-slate-700" />
+              <p className="text-xs text-slate-500 mt-1">{conformite?.eudr_verified_parcels || 0} / {conformite?.eudr_total_parcels || 0} parcelles vérifiées</p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-sm mb-3">Distribution ARS 1000 ({conformite?.ars_total_assessed || 0} évalués)</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-lg bg-amber-900/20 border border-amber-600/30 text-center">
+                  <p className="text-amber-400 text-xs">Bronze</p>
+                  <p className="text-2xl font-bold text-white">{conformite?.ars_distribution?.bronze || 0}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-slate-500/20 border border-slate-400/30 text-center">
+                  <p className="text-slate-300 text-xs">Argent</p>
+                  <p className="text-2xl font-bold text-white">{conformite?.ars_distribution?.argent || 0}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-yellow-900/20 border border-yellow-600/30 text-center">
+                  <p className="text-yellow-400 text-xs">Or</p>
+                  <p className="text-2xl font-bold text-white">{conformite?.ars_distribution?.or || 0}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Impact Social SSRTE/ICI */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Baby className="h-5 w-5 text-blue-500" />
+              Impact Social (SSRTE / ICI)
+            </CardTitle>
+            <CardDescription className="text-slate-400">Protection de l'enfance et remédiation</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="p-3 rounded-lg bg-blue-900/20 border border-blue-700/30">
+                <p className="text-blue-400 text-xs">Visites SSRTE</p>
+                <p className="text-2xl font-bold text-white">{social_impact?.total_ssrte_visits || 0}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-rose-900/20 border border-rose-700/30">
+                <p className="text-rose-400 text-xs">Enfants Identifiés</p>
+                <p className="text-2xl font-bold text-white">{social_impact?.children_identified || 0}</p>
+              </div>
+            </div>
+            <p className="text-slate-400 text-xs mb-2">Répartition des risques</p>
+            <div className="space-y-2">
+              {[
+                { label: 'Critique', key: 'critique', color: 'bg-rose-500', text: 'text-rose-400' },
+                { label: 'Élevé', key: 'eleve', color: 'bg-orange-500', text: 'text-orange-400' },
+                { label: 'Modéré', key: 'modere', color: 'bg-amber-500', text: 'text-amber-400' },
+                { label: 'Faible', key: 'faible', color: 'bg-emerald-500', text: 'text-emerald-400' },
+              ].map(r => {
+                const count = social_impact?.risk_distribution?.[r.key] || 0;
+                const total = social_impact?.total_ssrte_visits || 1;
+                return (
+                  <div key={r.key} className="flex items-center gap-2">
+                    <span className={`text-xs w-16 ${r.text}`}>{r.label}</span>
+                    <div className="flex-1 bg-slate-700 rounded-full h-2 overflow-hidden">
+                      <div className={`h-full rounded-full ${r.color}`} style={{ width: `${(count / total) * 100}%` }} />
+                    </div>
+                    <span className="text-xs text-slate-400 w-8 text-right">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-700">
+              <div className="text-center">
+                <p className="text-xs text-slate-500">Cas ICI</p>
+                <p className="text-lg font-bold text-white">{social_impact?.ici_total_cases || 0}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-slate-500">Résolus</p>
+                <p className="text-lg font-bold text-emerald-400">{social_impact?.ici_resolved || 0}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-slate-500">Taux Résolution</p>
+                <p className="text-lg font-bold text-blue-400">{social_impact?.ici_resolution_rate || 0}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 4: MRV National */}
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Eye className="h-5 w-5 text-teal-500" />
+            MRV National — Suivi REDD+
+          </CardTitle>
+          <CardDescription className="text-slate-400">Mesure, Reporting & Vérification des pratiques durables</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="p-3 rounded-lg bg-teal-900/20 border border-teal-700/30 text-center">
+              <p className="text-teal-400 text-xs">Visites REDD+</p>
+              <p className="text-2xl font-bold text-white">{mrv_national?.total_redd_visits || 0}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-green-900/20 border border-green-700/30 text-center">
+              <p className="text-green-400 text-xs">Zones Couvertes</p>
+              <p className="text-2xl font-bold text-white">{mrv_national?.zones_covered || 0}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-emerald-900/20 border border-emerald-700/30 text-center">
+              <p className="text-emerald-400 text-xs">Score Conformité Moy.</p>
+              <p className="text-2xl font-bold text-white">{mrv_national?.avg_conformity_score || 0}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-blue-900/20 border border-blue-700/30 text-center">
+              <p className="text-blue-400 text-xs">Couverture MRV</p>
+              <p className="text-2xl font-bold text-white">{mrv_national?.mrv_coverage_rate || 0}%</p>
+            </div>
+          </div>
+
+          {/* Practices Adoption by Category */}
+          {Object.keys(mrv_national?.practices_adoption_by_category || {}).length > 0 && (
+            <div className="mb-4">
+              <p className="text-slate-400 text-sm mb-3">Adoption des pratiques par catégorie</p>
+              <div className="space-y-2">
+                {Object.entries(mrv_national.practices_adoption_by_category).sort((a, b) => b[1] - a[1]).map(([cat, count]) => {
+                  const maxCount = Math.max(...Object.values(mrv_national.practices_adoption_by_category), 1);
+                  return (
+                    <div key={cat} className="flex items-center gap-2">
+                      <span className="text-xs text-slate-300 w-40 truncate capitalize">{cat.replace(/_/g, ' ')}</span>
+                      <div className="flex-1 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-400" style={{ width: `${(count / maxCount) * 100}%` }} />
+                      </div>
+                      <span className="text-xs text-slate-400 w-8 text-right">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Monthly Trends */}
+          {(mrv_national?.monthly_visit_trends || []).length > 0 && (
+            <div>
+              <p className="text-slate-400 text-sm mb-3">Tendances mensuelles des visites</p>
+              <div className="flex items-end gap-1 h-24">
+                {mrv_national.monthly_visit_trends.map((m, i) => {
+                  const maxV = Math.max(...mrv_national.monthly_visit_trends.map(t => t.visits), 1);
+                  const height = (m.visits / maxV) * 100;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] text-slate-500">{m.visits}</span>
+                      <div className="w-full rounded-t bg-gradient-to-t from-green-600 to-emerald-400" style={{ height: `${Math.max(height, 4)}%` }} />
+                      <span className="text-[9px] text-slate-600 -rotate-45 origin-top-left">{m.month?.slice(5)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Row 5: Parcelles Assessment */}
+      <Card className="bg-gradient-to-r from-slate-800 to-green-900/20 border-green-700/30">
+        <CardContent className="py-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Sprout className="h-6 w-6 text-green-400" />
+              <div>
+                <p className="text-white font-semibold">Couverture d'Évaluation des Parcelles</p>
+                <p className="text-slate-400 text-sm">{carbon_impact?.parcels_assessed || 0} parcelles évaluées sur {carbon_impact?.total_parcels || 0}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-48">
+                <Progress value={carbon_impact?.total_parcels ? (carbon_impact.parcels_assessed / carbon_impact.total_parcels) * 100 : 0} className="h-3 bg-slate-700" />
+              </div>
+              <span className="text-green-400 font-bold text-lg">
+                {carbon_impact?.total_parcels ? Math.round((carbon_impact.parcels_assessed / carbon_impact.total_parcels) * 100) : 0}%
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>
