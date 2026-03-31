@@ -237,12 +237,43 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
         farmers_data = await db.ars_farmer_data.find(farmers_q, {"_id": 0}).to_list(2000)
         total_farmers = len(farmers_data)
         practices_adoption = {}
+
         if total_farmers > 0:
             for key, label in [("agroforesterie", "Agroforesterie"), ("compost", "Compostage"),
                                ("couverture_sol", "Couverture sol"), ("brulage", "Zero brulage")]:
                 val = "oui" if key != "brulage" else "non"
                 cnt = sum(1 for f in farmers_data if f.get(key) == val)
                 practices_adoption[label] = {"count": cnt, "pct": round(cnt / total_farmers * 100)}
+
+        # Also enrich with REDD+ tracking visits practices_adopted (field agent data)
+        if visits:
+            redd_practice_counts = {}
+            farmers_with_redd = set()
+            for v in visits:
+                farmer_id = v.get("farmer_id", "")
+                adopted = v.get("practices_adopted") or []
+                if adopted and farmer_id:
+                    farmers_with_redd.add(farmer_id)
+                for p in adopted:
+                    cat = p.get("category", "")
+                    if cat:
+                        redd_practice_counts[cat] = redd_practice_counts.get(cat, set())
+                        redd_practice_counts[cat].add(farmer_id)
+
+            total_redd_farmers = max(len(farmers_with_redd), 1)
+            redd_labels = {
+                "agroforesterie": "Agroforesterie REDD+",
+                "zero_deforestation": "Zero deforestation",
+                "gestion_sols": "Gestion durable sols",
+                "restauration": "Restauration ecosystemes",
+                "tracabilite": "Tracabilite carbone",
+            }
+            for cat, label in redd_labels.items():
+                if cat in redd_practice_counts:
+                    cnt = len(redd_practice_counts[cat])
+                    pct = round(cnt / total_redd_farmers * 100)
+                    if label not in practices_adoption or practices_adoption.get(label, {}).get("pct", 0) < pct:
+                        practices_adoption[label] = {"count": cnt, "pct": pct}
 
         redd_kpis = {
             "total_visits": total_visits,

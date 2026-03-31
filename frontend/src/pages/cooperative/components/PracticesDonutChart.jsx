@@ -2,7 +2,7 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Leaf } from 'lucide-react';
 
-const COLORS = ['#1A3622', '#065F46', '#D4AF37', '#C25E30'];
+const COLORS = ['#1A3622', '#065F46', '#D4AF37', '#C25E30', '#2563EB', '#7C3AED', '#059669', '#B45309', '#DC2626'];
 
 const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
