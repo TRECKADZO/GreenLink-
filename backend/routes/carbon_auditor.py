@@ -46,8 +46,9 @@ class AuditorCreate(BaseModel):
     password: str
     zone_coverage: List[str] = []  # Départements couverts
     certifications: List[str] = []  # Ex: Verra VCS, Gold Standard
-    is_dual_role: bool = False  # Si True, l'agent aura aussi le rôle SSRTE
-    cooperative_id: Optional[str] = None  # Pour les agents double casquette
+    is_dual_role: bool = False  # Legacy: double casquette (Carbone + SSRTE)
+    is_triple_role: bool = False  # Triple casquette (Carbone + SSRTE + REDD+)
+    cooperative_id: Optional[str] = None  # Pour les agents multi-casquette
 
 class AuditorUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -87,7 +88,7 @@ class AuditSubmission(BaseModel):
 async def create_auditor(auditor: AuditorCreate):
     """Créer un nouvel auditeur carbone (Super Admin)
     
-    Supporte la création d'agents à double casquette (Carbon + SSRTE)
+    Supporte la création d'agents triple casquette (Carbone + SSRTE + REDD+)
     """
     # Vérifier si email existe déjà
     existing = await db.users.find_one({"email": auditor.email})
@@ -102,10 +103,18 @@ async def create_auditor(auditor: AuditorCreate):
     roles = ["carbon_auditor"]
     user_type = "carbon_auditor"
     
-    # Si double casquette, ajouter le rôle SSRTE/field_agent
-    if auditor.is_dual_role:
+    # Triple casquette: Carbone + SSRTE + REDD+
+    if auditor.is_triple_role:
         roles.append("ssrte_agent")
         roles.append("field_agent")
+        roles.append("redd_agent")
+    # Legacy double casquette: Carbone + SSRTE
+    elif auditor.is_dual_role:
+        roles.append("ssrte_agent")
+        roles.append("field_agent")
+    
+    is_dual = "carbon_auditor" in roles and ("ssrte_agent" in roles or "field_agent" in roles)
+    is_triple = is_dual and "redd_agent" in roles
     
     # Créer l'utilisateur auditeur
     user_doc = {
@@ -114,29 +123,37 @@ async def create_auditor(auditor: AuditorCreate):
         "full_name": auditor.full_name,
         "hashed_password": hashed_password,
         "user_type": user_type,
-        "roles": roles,  # Liste des rôles pour supporter la double casquette
+        "roles": roles,
         "zone_coverage": auditor.zone_coverage,
         "certifications": auditor.certifications,
-        "cooperative_id": auditor.cooperative_id,  # Pour les agents double casquette
+        "cooperative_id": auditor.cooperative_id,
         "is_active": True,
-        "is_dual_role": auditor.is_dual_role,
+        "is_dual_role": is_dual,
+        "is_triple_role": is_triple,
         "audits_completed": 0,
         "parcels_validated": 0,
-        "ssrte_visits_completed": 0,  # Pour les agents SSRTE
+        "ssrte_visits_completed": 0,
+        "redd_visits_completed": 0,
         "created_at": datetime.now(timezone.utc),
         "created_by": "admin"
     }
     
     result = await db.users.insert_one(user_doc)
     
-    role_description = "Auditeur Carbone + Agent SSRTE" if auditor.is_dual_role else "Auditeur Carbone"
+    if is_triple:
+        role_description = "Agent Triple Casquette (Carbone + SSRTE + REDD+)"
+    elif is_dual:
+        role_description = "Agent Double Casquette (Carbone + SSRTE)"
+    else:
+        role_description = "Auditeur Carbone"
     
     return {
         "message": f"{role_description} créé avec succès",
         "auditor_id": str(result.inserted_id),
         "email": auditor.email,
         "roles": roles,
-        "is_dual_role": auditor.is_dual_role
+        "is_dual_role": is_dual,
+        "is_triple_role": is_triple
     }
 
 
@@ -146,7 +163,7 @@ async def add_role_to_auditor(auditor_id: str, role: str):
     
     Permet de transformer un auditeur carbone en agent double casquette
     """
-    valid_roles = ["carbon_auditor", "ssrte_agent", "field_agent"]
+    valid_roles = ["carbon_auditor", "ssrte_agent", "field_agent", "redd_agent"]
     if role not in valid_roles:
         raise HTTPException(status_code=400, detail=f"Rôle invalide. Valides: {valid_roles}")
     
@@ -162,12 +179,14 @@ async def add_role_to_auditor(auditor_id: str, role: str):
         current_roles.append(role)
     
     is_dual = "carbon_auditor" in current_roles and ("ssrte_agent" in current_roles or "field_agent" in current_roles)
+    is_triple = is_dual and "redd_agent" in current_roles
     
     await db.users.update_one(
         {"_id": ObjectId(auditor_id)},
         {"$set": {
             "roles": current_roles,
             "is_dual_role": is_dual,
+            "is_triple_role": is_triple,
             "updated_at": datetime.now(timezone.utc)
         }}
     )
@@ -175,7 +194,8 @@ async def add_role_to_auditor(auditor_id: str, role: str):
     return {
         "message": f"Rôle '{role}' ajouté avec succès",
         "roles": current_roles,
-        "is_dual_role": is_dual
+        "is_dual_role": is_dual,
+        "is_triple_role": is_triple
     }
 
 
@@ -247,11 +267,13 @@ async def list_auditors(include_dual_role: bool = True):
             "certifications": auditor.get("certifications", []),
             "is_active": auditor.get("is_active", True),
             "is_dual_role": auditor.get("is_dual_role", False),
+            "is_triple_role": auditor.get("is_triple_role", False),
             "roles": auditor.get("roles", [auditor.get("user_type")]),
             "cooperative_id": auditor.get("cooperative_id"),
             "audits_completed": auditor.get("audits_completed", 0),
             "parcels_validated": auditor.get("parcels_validated", 0),
             "ssrte_visits_completed": auditor.get("ssrte_visits_completed", 0),
+            "redd_visits_completed": auditor.get("redd_visits_completed", 0),
             "missions_count": missions_count,
             "pending_missions": pending_missions,
             "created_at": auditor.get("created_at")

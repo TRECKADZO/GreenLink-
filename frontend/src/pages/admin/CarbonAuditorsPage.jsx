@@ -39,6 +39,7 @@ const CarbonAuditorsPage = () => {
     zone_coverage: '',
     certifications: '',
     is_dual_role: false,
+    is_triple_role: false,
     cooperative_id: ''
   });
   const [submitting, setSubmitting] = useState(false);
@@ -99,8 +100,9 @@ const CarbonAuditorsPage = () => {
         certifications: newAuditor.certifications
           ? newAuditor.certifications.split(',').map(c => c.trim()).filter(c => c)
           : [],
-        is_dual_role: newAuditor.is_dual_role,
-        cooperative_id: newAuditor.is_dual_role && newAuditor.cooperative_id 
+        is_triple_role: newAuditor.is_triple_role,
+        is_dual_role: newAuditor.is_triple_role || newAuditor.is_dual_role,
+        cooperative_id: (newAuditor.is_triple_role || newAuditor.is_dual_role) && newAuditor.cooperative_id 
           ? newAuditor.cooperative_id 
           : null
       };
@@ -117,9 +119,11 @@ const CarbonAuditorsPage = () => {
       }
       
       const result = await response.json();
-      const roleMsg = newAuditor.is_dual_role 
-        ? 'Agent double casquette (Carbone + SSRTE)' 
-        : 'Auditeur carbone';
+      const roleMsg = newAuditor.is_triple_role 
+        ? 'Agent triple casquette (Carbone + SSRTE + REDD+)' 
+        : newAuditor.is_dual_role 
+          ? 'Agent double casquette (Carbone + SSRTE)'
+          : 'Auditeur carbone';
       toast.success(`${roleMsg} créé avec succès!`);
       setShowAddModal(false);
       setNewAuditor({
@@ -130,6 +134,7 @@ const CarbonAuditorsPage = () => {
         zone_coverage: '',
         certifications: '',
         is_dual_role: false,
+        is_triple_role: false,
         cooperative_id: ''
       });
       fetchAuditors();
@@ -326,11 +331,15 @@ const CarbonAuditorsPage = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold text-white">{auditor.full_name}</h3>
-                          {auditor.is_dual_role && (
+                          {auditor.is_triple_role ? (
+                            <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-xs">
+                              Triple Casquette
+                            </Badge>
+                          ) : auditor.is_dual_role ? (
                             <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs">
                               Double Casquette
                             </Badge>
-                          )}
+                          ) : null}
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-400">
                           <span className="flex items-center">
@@ -352,10 +361,12 @@ const CarbonAuditorsPage = () => {
                                   ? 'border-emerald-500/50 text-emerald-400' 
                                   : role === 'ssrte_agent' || role === 'field_agent'
                                     ? 'border-blue-500/50 text-blue-400'
-                                    : 'border-gray-500/50 text-gray-400'
+                                    : role === 'redd_agent'
+                                      ? 'border-green-500/50 text-green-400'
+                                      : 'border-gray-500/50 text-gray-400'
                               }`}
                             >
-                              {role === 'carbon_auditor' ? 'Carbone' : role === 'ssrte_agent' ? 'SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role}
+                              {role === 'carbon_auditor' ? 'Carbone' : role === 'ssrte_agent' ? 'SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role === 'redd_agent' ? 'REDD+' : role}
                             </Badge>
                           ))}
                           {auditor.certifications?.map((cert, i) => (
@@ -369,8 +380,11 @@ const CarbonAuditorsPage = () => {
                     <div className="flex items-center gap-4">
                       <div className="text-right hidden md:block">
                         <p className="text-sm font-medium text-white">{auditor.audits_completed || 0} audits carbone</p>
-                        {auditor.is_dual_role && (
+                        {(auditor.is_dual_role || auditor.is_triple_role) && (
                           <p className="text-xs text-blue-400">{auditor.ssrte_visits_completed || 0} visites SSRTE</p>
+                        )}
+                        {auditor.is_triple_role && (
+                          <p className="text-xs text-green-400">{auditor.redd_visits_completed || 0} visites REDD+</p>
                         )}
                         <p className="text-xs text-gray-400">{auditor.pending_missions || 0} missions en cours</p>
                       </div>
@@ -417,10 +431,10 @@ const CarbonAuditorsPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white">
               <Shield className="h-5 w-5 text-emerald-400" />
-              Nouvel Auditeur Carbone
+              Nouvel Auditeur GreenLink
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              Créez un compte auditeur rattaché à GreenLink pour la vérification des parcelles.
+              Créez un agent GreenLink avec triple casquette : Carbone, SSRTE et REDD+.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddAuditor}>
@@ -478,26 +492,26 @@ const CarbonAuditorsPage = () => {
                 />
               </div>
               
-              {/* Double Casquette Option */}
-              <div className="p-4 bg-amber-500/10 rounded-lg border border-amber-500/30">
+              {/* Triple Casquette Option */}
+              <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/30">
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
-                    id="is_dual_role"
-                    checked={newAuditor.is_dual_role}
-                    onChange={(e) => setNewAuditor({...newAuditor, is_dual_role: e.target.checked})}
+                    id="is_triple_role"
+                    checked={newAuditor.is_triple_role}
+                    onChange={(e) => setNewAuditor({...newAuditor, is_triple_role: e.target.checked, is_dual_role: e.target.checked})}
                     className="w-4 h-4 rounded"
-                    data-testid="dual-role-checkbox"
+                    data-testid="triple-role-checkbox"
                   />
-                  <Label htmlFor="is_dual_role" className="text-amber-400 font-medium cursor-pointer">
-                    Double Casquette (Carbone + SSRTE)
+                  <Label htmlFor="is_triple_role" className="text-green-400 font-medium cursor-pointer">
+                    Triple Casquette (Carbone + SSRTE + REDD+)
                   </Label>
                 </div>
                 <p className="text-xs text-gray-400 mt-2">
-                  Permet à cet agent d'effectuer des audits carbone ET des visites de suivi SSRTE (travail des enfants)
+                  Permet à cet agent d'effectuer des audits carbone, des visites SSRTE (travail des enfants) ET le suivi des pratiques REDD+
                 </p>
                 
-                {newAuditor.is_dual_role && (
+                {newAuditor.is_triple_role && (
                   <div className="mt-3">
                     <Label htmlFor="cooperative_id" className="text-gray-300 text-sm">Coopérative rattachée (optionnel)</Label>
                     <select
@@ -549,7 +563,7 @@ const CarbonAuditorsPage = () => {
                 className="bg-emerald-600 hover:bg-emerald-700"
                 data-testid="submit-auditor-btn"
               >
-                {submitting ? 'Création...' : newAuditor.is_dual_role ? 'Créer l\'agent double casquette' : 'Créer l\'auditeur'}
+                {submitting ? 'Création...' : newAuditor.is_triple_role ? 'Créer l\'agent triple casquette' : 'Créer l\'auditeur'}
               </Button>
             </DialogFooter>
           </form>
@@ -580,11 +594,15 @@ const CarbonAuditorsPage = () => {
                     <Badge className={selectedAuditor.is_active ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-500/20 text-gray-400"}>
                       {selectedAuditor.is_active ? "Actif" : "Inactif"}
                     </Badge>
-                    {selectedAuditor.is_dual_role && (
+                    {selectedAuditor.is_triple_role ? (
+                      <Badge className="bg-green-500/20 text-green-400">
+                        Triple Casquette
+                      </Badge>
+                    ) : selectedAuditor.is_dual_role ? (
                       <Badge className="bg-amber-500/20 text-amber-400">
                         Double Casquette
                       </Badge>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -601,10 +619,12 @@ const CarbonAuditorsPage = () => {
                           ? 'bg-emerald-500/20 text-emerald-400' 
                           : role === 'ssrte_agent' || role === 'field_agent'
                             ? 'bg-blue-500/20 text-blue-400'
-                            : 'bg-gray-500/20 text-gray-400'
+                            : role === 'redd_agent'
+                              ? 'bg-green-500/20 text-green-400'
+                              : 'bg-gray-500/20 text-gray-400'
                       }`}
                     >
-                      {role === 'carbon_auditor' ? 'Auditeur Carbone' : role === 'ssrte_agent' ? 'Agent SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role}
+                      {role === 'carbon_auditor' ? 'Auditeur Carbone' : role === 'ssrte_agent' ? 'Agent SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role === 'redd_agent' ? 'Agent REDD+' : role}
                     </Badge>
                   ))}
                 </div>
@@ -643,6 +663,27 @@ const CarbonAuditorsPage = () => {
                       Ajouter Agent Terrain
                     </Button>
                   )}
+                  {!selectedAuditor.roles?.includes('redd_agent') && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-green-500/50 text-green-400 hover:bg-green-500/20"
+                      onClick={() => handleAddRole(selectedAuditor.id, 'redd_agent')}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Ajouter rôle REDD+
+                    </Button>
+                  )}
+                  {selectedAuditor.roles?.includes('redd_agent') && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-red-500/50 text-red-400 hover:bg-red-500/20"
+                      onClick={() => handleRemoveRole(selectedAuditor.id, 'redd_agent')}
+                    >
+                      Retirer rôle REDD+
+                    </Button>
+                  )}
                 </div>
               </div>
               
@@ -662,6 +703,10 @@ const CarbonAuditorsPage = () => {
                 <div className="p-3 bg-blue-500/10 rounded-lg">
                   <p className="text-sm text-blue-400">Visites SSRTE</p>
                   <p className="font-medium text-blue-300">{selectedAuditor.ssrte_visits_completed || 0}</p>
+                </div>
+                <div className="p-3 bg-green-500/10 rounded-lg">
+                  <p className="text-sm text-green-400">Visites REDD+</p>
+                  <p className="font-medium text-green-300">{selectedAuditor.redd_visits_completed || 0}</p>
                 </div>
                 <div className="p-3 bg-emerald-500/10 rounded-lg col-span-2">
                   <p className="text-sm text-emerald-400">Parcelles validées</p>
