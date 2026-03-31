@@ -771,8 +771,25 @@ async def verify_parcel_by_agent(
     if pratiques:
         update_data["pratiques_ecologiques"] = pratiques
 
-    # Recalculate carbon score with enriched data
+    # Recalculate carbon score with enriched data + REDD+ practices
     area = float(corrected) if corrected else parcel.get("area_hectares", 0)
+
+    # Fetch REDD+ tracking practices for this parcel's farmer
+    farmer_id_str = str(parcel.get("farmer_id", ""))
+    redd_practices_adopted = []
+    if farmer_id_str:
+        redd_visits = await db.redd_tracking_visits.find(
+            {"farmer_id": farmer_id_str},
+            {"practices_adopted": 1, "_id": 0}
+        ).sort("visit_date", -1).limit(5).to_list(5)
+        seen_codes = set()
+        for visit in redd_visits:
+            for practice in (visit.get("practices_adopted") or []):
+                code = practice.get("code", "")
+                if code and code not in seen_codes:
+                    seen_codes.add(code)
+                    redd_practices_adopted.append(practice)
+
     carbon_score = _calculate_verified_carbon_score(
         nombre_arbres=nombre_arbres,
         couverture_ombragee=couverture_ombragee,
@@ -782,6 +799,7 @@ async def verify_parcel_by_agent(
         arbres_petits=arbres_petits,
         arbres_moyens=arbres_moyens,
         arbres_grands=arbres_grands,
+        redd_practices=redd_practices_adopted,
     )
     update_data["carbon_score"] = carbon_score
     update_data["co2_captured_tonnes"] = round(area * carbon_score * 2.5, 2)
@@ -810,15 +828,24 @@ async def verify_parcel_by_agent(
 
 
 def _calculate_verified_carbon_score(nombre_arbres, couverture_ombragee, pratiques, area, existing_practices=None,
-                                     arbres_petits=None, arbres_moyens=None, arbres_grands=None):
+                                     arbres_petits=None, arbres_moyens=None, arbres_grands=None,
+                                     redd_practices=None):
     """
-    Recalculate carbon score using field-verified data with tree height categories.
+    Recalculate carbon score using field-verified data with tree height categories
+    and REDD+ practices integration.
     Base score 3.0, max 10.0.
     
     Tree biomass weighting (based on allometric equations AGB ~ f(D^2 * H)):
     - Petits (< 8m): coefficient 0.3 (young trees, low biomass)
     - Moyens (8-12m): coefficient 0.7 (maturing trees, moderate biomass)
     - Grands (> 12m): coefficient 1.0 (mature trees, full biomass)
+    
+    REDD+ practices (21 practices, 5 categories):
+    - agroforesterie: AGF1-AGF4 (+0.3 each, max +1.2)
+    - zero_deforestation: ZD1-ZD4 (+0.3 each, max +1.2)
+    - gestion_sols: SOL1-SOL5 (+0.2 each, max +1.0)
+    - restauration: REST1-REST4 (+0.3 each, max +1.2)
+    - tracabilite: TRAC1-TRAC4 (+0.15 each, max +0.6)
     """
     score = 3.0
 
@@ -881,6 +908,31 @@ def _calculate_verified_carbon_score(nombre_arbres, couverture_ombragee, pratiqu
         if p not in seen:
             score += practice_scores.get(p, 0)
             seen.add(p)
+
+    # REDD+ practices bonus (from field agent tracking visits)
+    redd_category_scores = {
+        "agroforesterie": 0.3,      # AGF1-AGF4: +0.3 each
+        "zero_deforestation": 0.3,   # ZD1-ZD4: +0.3 each
+        "gestion_sols": 0.2,         # SOL1-SOL5: +0.2 each
+        "restauration": 0.3,         # REST1-REST4: +0.3 each
+        "tracabilite": 0.15,         # TRAC1-TRAC4: +0.15 each
+    }
+    redd_category_caps = {
+        "agroforesterie": 1.2,
+        "zero_deforestation": 1.2,
+        "gestion_sols": 1.0,
+        "restauration": 1.2,
+        "tracabilite": 0.6,
+    }
+    if redd_practices:
+        category_totals = {}
+        for rp in redd_practices:
+            cat = rp.get("category", "")
+            if cat in redd_category_scores:
+                category_totals[cat] = category_totals.get(cat, 0) + redd_category_scores[cat]
+        for cat, total in category_totals.items():
+            capped = min(total, redd_category_caps.get(cat, 1.0))
+            score += capped
 
     # Area bonus (0-0.5 pts)
     if area >= 5:

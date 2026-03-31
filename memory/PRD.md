@@ -7,7 +7,6 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - **Backend**: FastAPI (Python) + MongoDB Atlas (`greenlink_production`)
 - **Frontend**: React (Vite) + Shadcn UI
 - **Mobile**: Expo React Native v1.74.0 (SDK 53)
-- **Proxy CDN**: Bunny CDN (frontend)
 - **Mobile API Proxy**: Cloudflare Worker -> `https://greenlink-agritech.com`
 
 ## Modele Economique
@@ -15,65 +14,62 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 Producteurs : gratuit a vie.
 Acheteurs/Fournisseurs/RSE : sur devis.
 
+### Formule Prime Carbone (CONFIDENTIELLE)
+```
+Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperatives)
+```
+- RSE_total = score_carbone x taux_par_hectare x hectares
+- Seuil admissibilite : score >= 6.0/10
+- Taux par defaut : 5000 FCFA/ha (modifiable par Super Admin)
+
+### Score Carbone (0-10)
+**3 calculateurs** :
+1. **USSD** (`ussd.py`): 9 questions, base 4.0, bonus REDD+ (biochar, zero-def, reboisement)
+2. **Agent terrain** (`field_agent_dashboard.py`): Verification terrain, base 3.0, + 21 pratiques REDD+ (5 categories)
+3. **Creation parcelle** (`cooperative_parcels.py`): Score initial simplifie, recalcule lors verification
+
+**Composantes du score agent terrain** :
+- Base: 3.0
+- Densite arbres (pondere allometrique petits/moyens/grands): 0-2.0
+- Couverture ombrage: 0-2.0
+- Pratiques ecologiques (5): 0-2.5
+- **REDD+ (21 pratiques, 5 categories): 0-5.2**
+  - Agroforesterie (AGF1-4): +0.3 chacune, max 1.2
+  - Zero-deforestation (ZD1-4): +0.3 chacune, max 1.2
+  - Gestion sols (SOL1-5): +0.2 chacune, max 1.0
+  - Restauration (REST1-4): +0.3 chacune, max 1.2
+  - Tracabilite (TRAC1-4): +0.15 chacune, max 0.6
+- Surface bonus: 0-0.5
+
 ## Ce qui est implemente
 
 ### Core
 - Auth JWT, Dashboards (cooperative, admin, farmer, agent)
-- Marketplace, FAQ, Notifications
-- Conformite EUDR & ARS 1000
+- Marketplace, FAQ, Notifications, Conformite EUDR & ARS 1000
 
-### USSD / Carbon
-- Calculateur carbone USSD (9 questions)
-- Resultats USSD: Score, Prime estimee, Niveau ARS
+### REDD+ / SSRTE / ICI
+- Guide REDD+ (21 pratiques, 5 categories)
+- Dashboard MRV REDD+ + Export PDF
+- SSRTE/ICI alertes + dashboard
+- KPIs gates -> 100% gratuit
 
-### REDD+
-- Guide REDD+ (21 pratiques, 5 categories) - Web + Mobile
-- Dashboard MRV REDD+ + Export PDF professionnel
-- Fiche de suivi REDD+ agents terrain
-
-### SSRTE/ICI
-- SSRTE/ICI alertes USSD
-- Dashboard SSRTE cooperatives
-
-### KPIs REDD+, SSRTE & ICI + Graphiques
-- `GET /api/cooperative/dashboard-kpis` — toutes les donnees, sans restriction
-- `GET /api/cooperative/dashboard-charts` — graphiques temps reel complets
-- 4 graphiques recharts (CO2, SSRTE, Risques, Pratiques)
-
-### Export PDF Dashboard
-- `GET /api/cooperative/pdf/dashboard-report` — acces libre
-
-### Gratuite Cooperatives (31 Mars 2026)
-- **Backend** : Suppression de tout gating par abonnement sur dashboard-kpis, dashboard-charts, dashboard-report
-- **Frontend** : 
-  - Page accueil : PricingSection reecrite — carte unique "Gratuit" avec toutes les fonctionnalites
-  - CTASection : suppression reference "6 mois essai"
-  - Dashboard : suppression SubscriptionBanner, REDDWidget/SSRTEWidget sans etat verrouille
-  - QuickActions : tous les liens visibles (MRV, SSRTE/ICI)
-  - MRVDashboard : acces libre sans blocage
-  - FAQPage : reecrite pour refléter la gratuite
-- **Tests** : 100% pass (iteration 87)
-
-### Build APK Mobile (30 Mars 2026)
-- APK: https://expo.dev/artifacts/eas/bFGGgTSa5yoMchWxr4KYPe.apk
-- Version: 1.74.0 (build 69), SDK Expo 53
-
-## Design System
-- Theme "Organic & Earthy" - vert foret (#1A3622), blanc os (#FAF9F6), or (#D4AF37), terre cuite (#C25E30)
+### Audit Score Carbone + Formule Prime (31 Mars 2026)
+- Score agent terrain enrichi avec 21 pratiques REDD+ (5 categories)
+- Verification parcelle cooperative integre les visites REDD+ tracking
+- Formule prime validee : 30% frais + 70% (25% GL + 70% paysans + 5% coops)
+- Commentaires errones corriges dans carbon_business_model.py
+- Tests automatises : score sans REDD+ 6.1 -> avec REDD+ 8.3 (+2.2 pts)
 
 ## Backlog
-
 ### P1
-- SSL custom domain Cloudflare (bloque - propagation)
-
+- SSL custom domain Cloudflare (bloque)
 ### P2
-- Passerelle SMS reelle Orange CI / MTN (actuellement MOCK)
+- Passerelle SMS reelle Orange CI / MTN (MOCK)
 - Langues locales (Baoule/Dioula) mobile
-
 ### P3
 - Refactoriser ussd.py (>2400 lignes)
 - Optimiser get_coop_members (N+1)
-- Nettoyage : supprimer subscription_guard.py, coop_subscription_models.py, SubscriptionBanner.jsx (code mort)
+- Nettoyage code mort (subscription files)
 
 ## Credentials
 - Admin: `klenakan.eric@gmail.com` / `474Treckadzo`

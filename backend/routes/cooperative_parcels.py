@@ -380,9 +380,26 @@ async def verify_parcel(
     if verification.pratiques_ecologiques:
         update_data["pratiques_ecologiques"] = verification.pratiques_ecologiques
 
-    # Recalculate carbon score with tree categories
+    # Recalculate carbon score with tree categories + REDD+ practices
     area = update_data.get("area_hectares", parcel.get("area_hectares", 0))
     from routes.field_agent_dashboard import _calculate_verified_carbon_score
+
+    # Fetch REDD+ tracking practices for this parcel's farmer
+    farmer_id_str = str(parcel.get("farmer_id") or parcel.get("member_id") or "")
+    redd_practices_adopted = []
+    if farmer_id_str:
+        redd_visits = await db.redd_tracking_visits.find(
+            {"farmer_id": farmer_id_str},
+            {"practices_adopted": 1, "_id": 0}
+        ).sort("visit_date", -1).limit(5).to_list(5)
+        seen_codes = set()
+        for visit in redd_visits:
+            for practice in (visit.get("practices_adopted") or []):
+                code = practice.get("code", "")
+                if code and code not in seen_codes:
+                    seen_codes.add(code)
+                    redd_practices_adopted.append(practice)
+
     new_carbon_score = _calculate_verified_carbon_score(
         nombre_arbres=update_data.get("nombre_arbres", parcel.get("nombre_arbres")),
         couverture_ombragee=update_data.get("couverture_ombragee", parcel.get("couverture_ombragee")),
@@ -392,6 +409,7 @@ async def verify_parcel(
         arbres_petits=update_data.get("arbres_petits", parcel.get("arbres_petits")),
         arbres_moyens=update_data.get("arbres_moyens", parcel.get("arbres_moyens")),
         arbres_grands=update_data.get("arbres_grands", parcel.get("arbres_grands")),
+        redd_practices=redd_practices_adopted,
     )
     update_data["carbon_score"] = new_carbon_score
     update_data["co2_captured_tonnes"] = round(area * new_carbon_score * 2.5, 2)

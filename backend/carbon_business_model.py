@@ -1,8 +1,7 @@
 # Carbon Credit Business Model for GreenLink
-# Revenue model based on carbon credit sales with:
-# - 20-25% margin for GreenLink
-# - 65-75% redistribution to farmers
-# - Pricing: 5-40 USD/tCO2 depending on market
+# Revenue model:
+# Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperatives)
+# Pricing: 5-40 USD/tCO2 depending on market and quality
 
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
@@ -321,16 +320,17 @@ def calculate_revenue_distribution(
     """
     Calculate how revenue is distributed between GreenLink, farmers, and cooperatives
     
-    Model (realistic carbon credit distribution):
-    1. Gross revenue from sale = 100%
-    2. Deduct costs (27% of gross) = audits, verification, buffer, fees
-    3. Net revenue (73% of gross) split into:
-       - 20% GreenLink margin (= ~14.6% of gross)
-       - 75% Farmers pro-rata (= ~54.75% of gross)
-       - 5% Cooperatives (= ~3.65% of gross)
+    Model: Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperatives)
     
-    TOTAL = 27% costs + 73% net = 100% ✓
-    NET = 20% + 75% + 5% = 100% ✓
+    1. Gross revenue from sale = 100%
+    2. Deduct fees (30% of gross) = audits, verification, buffer, operational
+    3. Net revenue (70% of gross) split into:
+       - 25% GreenLink margin (= 17.5% of gross)
+       - 70% Farmers pro-rata (= 49% of gross)
+       - 5% Cooperatives (= 3.5% of gross)
+    
+    TOTAL = 30% fees + 70% net = 100%
+    NET = 25% + 70% + 5% = 100%
     """
     # Gross revenue
     gross_usd = total_tonnes * price_per_tonne_usd
@@ -405,8 +405,9 @@ def calculate_farmer_premium_per_kg(
     """
     Calculate the carbon premium per kg of cacao for a farmer
     
-    Model: Prix vente (fixé par Admin) → 30% frais → 70% net → 70% farmer / 25% GreenLink / 5% coop
-    Example: 4.8 t CO2/ha × 30 USD/t × (1 - 0.30) × 0.70 / 2200 kg/ha
+    Model: Prix vente RSE = 30% frais + 70% net (25% GreenLink + 70% farmer + 5% coop)
+    Farmer share of gross = 70% * 70% = 49%
+    Example: 4.8 t CO2/ha x 30 USD/t x (1 - 0.30) x 0.70 / 2200 kg/ha
     """
     gross_usd = tonnes_co2 * price_per_tonne_usd
     net_after_fees = gross_usd * (1 - FEES_RATE)
