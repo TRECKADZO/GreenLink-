@@ -12,7 +12,6 @@ import { RecentMembersCard } from './components/RecentMembersCard';
 import { ActivationWidget } from './components/ActivationWidget';
 import { ParcelsSection } from './components/ParcelsSection';
 import { FinancialCard } from './components/FinancialCard';
-import { CommissionCardNew } from './components/CommissionCardNew';
 import { USSDPanel } from './components/USSDPanel';
 import { AlertsBanner } from './components/AlertsBanner';
 import { REDDWidget } from './components/REDDWidget';
@@ -183,7 +182,6 @@ const Dashboard = () => {
               pendingValidation={members?.pending_validation}
               navigate={navigate}
             />
-            <CommissionCardNew coopInfo={coop_info} onUpdated={loadDashboard} />
           </div>
         </div>
 

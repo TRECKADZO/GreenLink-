@@ -241,26 +241,6 @@ const FarmerDashboard = () => {
           ))}
         </div>
 
-        {/* Carbon Premium Info */}
-        {(stats.score_carbone_moyen || 0) >= 7 && (
-          <Card className="p-6 mb-8 border-l-4 border-green-500 bg-green-50">
-            <div className="flex items-start gap-3">
-              <CheckCircle className="w-6 h-6 text-green-600 mt-1" />
-              <div>
-                <h3 className="font-bold text-green-900 mb-1">
-                  🎉 Prime Carbone Active!
-                </h3>
-                <p className="text-green-800">
-                  Votre score carbone de <strong>{(stats.score_carbone_moyen || 0).toFixed(1)}/10</strong> vous donne droit à une prime de <strong>10%</strong> sur toutes vos ventes!
-                </p>
-                <p className="text-sm text-green-700 mt-2">
-                  Vous avez déjà gagné <strong>{(stats.prime_carbone || 0).toLocaleString()} XOF</strong> en primes carbone.
-                </p>
-              </div>
-            </div>
-          </Card>
-        )}
-
         {/* Recent Harvests */}
         <Card className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Récoltes Récentes</h2>
