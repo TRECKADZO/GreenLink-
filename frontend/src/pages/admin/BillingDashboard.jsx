@@ -52,6 +52,8 @@ const BillingDashboard = () => {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   
+  const USD_TO_XOF = 655;
+
   const [invoiceForm, setInvoiceForm] = useState({
     buyer_name: '',
     buyer_email: '',
@@ -59,13 +61,13 @@ const BillingDashboard = () => {
     buyer_tax_id: '',
     description: '',
     tonnes_co2: 0,
-    price_per_tonne_usd: 30,
+    price_per_tonne_xof: 19650,
     payment_terms_days: 30,
     notes: ''
   });
   
   const [paymentForm, setPaymentForm] = useState({
-    amount_usd: 0,
+    amount_xof: 0,
     payment_method: 'bank_transfer',
     payment_reference: '',
     notes: ''
@@ -137,16 +139,21 @@ const BillingDashboard = () => {
   const handleCreateInvoice = async (e) => {
     e.preventDefault();
     try {
-      await apiClient.post('/api/billing/invoices/create', invoiceForm);
-      toast.success('Facture créée avec succès');
+      const apiPayload = {
+        ...invoiceForm,
+        price_per_tonne_usd: invoiceForm.price_per_tonne_xof / USD_TO_XOF,
+      };
+      delete apiPayload.price_per_tonne_xof;
+      await apiClient.post('/api/billing/invoices/create', apiPayload);
+      toast.success('Facture creee avec succes');
       setShowInvoiceForm(false);
       setInvoiceForm({
         buyer_name: '', buyer_email: '', buyer_address: '', buyer_tax_id: '',
-        description: '', tonnes_co2: 0, price_per_tonne_usd: 30, payment_terms_days: 30, notes: ''
+        description: '', tonnes_co2: 0, price_per_tonne_xof: 19650, payment_terms_days: 30, notes: ''
       });
       fetchAllData();
     } catch (error) {
-      toast.error('Erreur lors de la création', { description: error.response?.data?.detail });
+      toast.error('Erreur lors de la creation', { description: error.response?.data?.detail });
     }
   };
 
@@ -166,15 +173,18 @@ const BillingDashboard = () => {
     try {
       await apiClient.post('/api/billing/payments/record', {
         invoice_id: selectedInvoice._id,
-        ...paymentForm
+        amount_usd: paymentForm.amount_xof / USD_TO_XOF,
+        payment_method: paymentForm.payment_method,
+        payment_reference: paymentForm.payment_reference,
+        notes: paymentForm.notes,
       });
-      toast.success('Paiement enregistré avec succès');
+      toast.success('Paiement enregistre avec succes');
       setShowPaymentForm(false);
       setSelectedInvoice(null);
-      setPaymentForm({ amount_usd: 0, payment_method: 'bank_transfer', payment_reference: '', notes: '' });
+      setPaymentForm({ amount_xof: 0, payment_method: 'bank_transfer', payment_reference: '', notes: '' });
       fetchAllData();
     } catch (error) {
-      toast.error('Erreur lors de l\'enregistrement', { description: error.response?.data?.detail });
+      toast.error("Erreur lors de l'enregistrement", { description: error.response?.data?.detail });
     }
   };
 
@@ -244,10 +254,7 @@ const BillingDashboard = () => {
                   <div>
                     <p className="text-sm text-gray-500">Total Facturé</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {formatNumber(dashboard?.overview?.total_invoiced_usd)} USD
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {formatNumber(dashboard?.overview?.total_invoiced_xof)} XOF
+                      {formatNumber(dashboard?.overview?.total_invoiced_xof || (dashboard?.overview?.total_invoiced_usd || 0) * USD_TO_XOF)} XOF
                     </p>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-lg">
@@ -263,7 +270,7 @@ const BillingDashboard = () => {
                   <div>
                     <p className="text-sm text-gray-500">Total Encaissé</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {formatNumber(dashboard?.overview?.total_paid_usd)} USD
+                      {formatNumber((dashboard?.overview?.total_paid_usd || 0) * USD_TO_XOF)} XOF
                     </p>
                     <p className="text-xs text-gray-400">
                       Taux: {dashboard?.overview?.collection_rate}%
@@ -282,7 +289,7 @@ const BillingDashboard = () => {
                   <div>
                     <p className="text-sm text-gray-500">En Attente</p>
                     <p className="text-2xl font-bold text-orange-600">
-                      {formatNumber(dashboard?.overview?.total_pending_usd)} USD
+                      {formatNumber(dashboard?.overview?.total_pending_xof || (dashboard?.overview?.total_pending_usd || 0) * USD_TO_XOF)} XOF
                     </p>
                   </div>
                   <div className="p-3 bg-orange-100 rounded-lg">
@@ -298,7 +305,7 @@ const BillingDashboard = () => {
                   <div>
                     <p className="text-sm text-gray-500">En Retard</p>
                     <p className="text-2xl font-bold text-red-600">
-                      {formatNumber(dashboard?.overview?.total_overdue_usd)} USD
+                      {formatNumber(dashboard?.overview?.total_overdue_xof || (dashboard?.overview?.total_overdue_usd || 0) * USD_TO_XOF)} XOF
                     </p>
                   </div>
                   <div className="p-3 bg-red-100 rounded-lg">
@@ -317,10 +324,7 @@ const BillingDashboard = () => {
                   <div>
                     <p className="text-green-200 text-sm">Marge GreenLink</p>
                     <p className="text-3xl font-bold">
-                      {formatNumber(dashboard?.greenlink_revenue?.total_margin_usd)} USD
-                    </p>
-                    <p className="text-green-300 text-sm">
-                      {formatNumber(dashboard?.greenlink_revenue?.total_margin_xof)} XOF
+                      {formatNumber(dashboard?.greenlink_revenue?.total_margin_xof || (dashboard?.greenlink_revenue?.total_margin_usd || 0) * USD_TO_XOF)} XOF
                     </p>
                   </div>
                   <TrendingUp className="w-12 h-12 text-green-300 opacity-50" />
@@ -432,12 +436,11 @@ const BillingDashboard = () => {
                                 </span>
                               </td>
                               <td className="py-3 px-2 text-right">
-                                <p className="font-medium">{formatNumber(invoice.total_usd)} USD</p>
-                                <p className="text-xs text-gray-500">{formatNumber(invoice.total_xof)} XOF</p>
+                                <p className="font-medium">{formatNumber(invoice.total_xof || (invoice.total_usd || 0) * USD_TO_XOF)} XOF</p>
                               </td>
                               <td className="py-3 px-2 text-right">
                                 <p className={`font-medium ${invoice.amount_paid_usd > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                                  {formatNumber(invoice.amount_paid_usd)} USD
+                                  {formatNumber((invoice.amount_paid_usd || 0) * USD_TO_XOF)} XOF
                                 </p>
                               </td>
                               <td className="py-3 px-2 text-sm">{formatDate(invoice.due_date)}</td>
@@ -460,7 +463,7 @@ const BillingDashboard = () => {
                                       className="bg-green-600 hover:bg-green-700"
                                       onClick={() => {
                                         setSelectedInvoice(invoice);
-                                        setPaymentForm({...paymentForm, amount_usd: invoice.amount_due_usd});
+                                        setPaymentForm({...paymentForm, amount_xof: (invoice.amount_due_usd || 0) * USD_TO_XOF});
                                         setShowPaymentForm(true);
                                       }}
                                       title="Enregistrer un paiement"
@@ -659,18 +662,18 @@ const BillingDashboard = () => {
                         />
                       </div>
                       <div>
-                        <Label>Prix/tonne (USD) *</Label>
+                        <Label>Prix/tonne (XOF) *</Label>
                         <Input
                           type="number"
                           min="0"
-                          step="0.01"
-                          value={invoiceForm.price_per_tonne_usd}
-                          onChange={(e) => setInvoiceForm({...invoiceForm, price_per_tonne_usd: parseFloat(e.target.value)})}
+                          step="1"
+                          value={invoiceForm.price_per_tonne_xof}
+                          onChange={(e) => setInvoiceForm({...invoiceForm, price_per_tonne_xof: parseFloat(e.target.value)})}
                           required
                         />
                       </div>
                       <div>
-                        <Label>Délai de paiement (jours)</Label>
+                        <Label>Delai de paiement (jours)</Label>
                         <Input
                           type="number"
                           min="1"
@@ -681,12 +684,9 @@ const BillingDashboard = () => {
                     </div>
 
                     <div className="p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-500">Total estimé:</p>
+                      <p className="text-sm text-gray-500">Total estime:</p>
                       <p className="text-2xl font-bold text-gray-900">
-                        {formatNumber(invoiceForm.tonnes_co2 * invoiceForm.price_per_tonne_usd)} USD
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        ≈ {formatNumber(invoiceForm.tonnes_co2 * invoiceForm.price_per_tonne_usd * 655)} XOF
+                        {formatNumber(invoiceForm.tonnes_co2 * invoiceForm.price_per_tonne_xof)} XOF
                       </p>
                     </div>
 
@@ -732,18 +732,18 @@ const BillingDashboard = () => {
                   <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-500">Facture: {selectedInvoice.invoice_number}</p>
                     <p className="font-medium">{selectedInvoice.buyer_name}</p>
-                    <p className="text-sm">Restant dû: <span className="font-bold text-orange-600">{formatNumber(selectedInvoice.amount_due_usd)} USD</span></p>
+                    <p className="text-sm">Restant du: <span className="font-bold text-orange-600">{formatNumber((selectedInvoice.amount_due_usd || 0) * USD_TO_XOF)} XOF</span></p>
                   </div>
 
                   <form onSubmit={handleRecordPayment} className="space-y-4">
                     <div>
-                      <Label>Montant reçu (USD) *</Label>
+                      <Label>Montant recu (XOF) *</Label>
                       <Input
                         type="number"
                         min="0"
-                        step="0.01"
-                        value={paymentForm.amount_usd}
-                        onChange={(e) => setPaymentForm({...paymentForm, amount_usd: parseFloat(e.target.value)})}
+                        step="1"
+                        value={paymentForm.amount_xof}
+                        onChange={(e) => setPaymentForm({...paymentForm, amount_xof: parseFloat(e.target.value)})}
                         required
                       />
                     </div>

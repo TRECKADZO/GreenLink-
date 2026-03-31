@@ -7,39 +7,14 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 - **Backend**: FastAPI (Python) + MongoDB Atlas (`greenlink_production`)
 - **Frontend**: React (Vite) + Shadcn UI
 - **Mobile**: Expo React Native v1.74.0 (SDK 53)
-- **Mobile API Proxy**: Cloudflare Worker -> `https://greenlink-agritech.com`
 
 ## Modele Economique
-**Cooperatives : 100% GRATUIT** — acces complet, sans abonnement, sans limite de temps.
-Producteurs : gratuit a vie.
-Acheteurs/Fournisseurs/RSE : sur devis.
-
-### Formule Prime Carbone (CONFIDENTIELLE)
+**Cooperatives : 100% GRATUIT** — acces complet, sans abonnement.
+**Formule Prime Carbone** :
 ```
 Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperatives)
 ```
-- RSE_total = score_carbone x taux_par_hectare x hectares
-- Seuil admissibilite : score >= 6.0/10
-- Taux par defaut : 5000 FCFA/ha (modifiable par Super Admin)
-
-### Score Carbone (0-10)
-**3 calculateurs** :
-1. **USSD** (`ussd.py`): 9 questions, base 4.0, bonus REDD+ (biochar, zero-def, reboisement)
-2. **Agent terrain** (`field_agent_dashboard.py`): Verification terrain, base 3.0, + 21 pratiques REDD+ (5 categories)
-3. **Creation parcelle** (`cooperative_parcels.py`): Score initial simplifie, recalcule lors verification
-
-**Composantes du score agent terrain** :
-- Base: 3.0
-- Densite arbres (pondere allometrique petits/moyens/grands): 0-2.0
-- Couverture ombrage: 0-2.0
-- Pratiques ecologiques (5): 0-2.5
-- **REDD+ (21 pratiques, 5 categories): 0-5.2**
-  - Agroforesterie (AGF1-4): +0.3 chacune, max 1.2
-  - Zero-deforestation (ZD1-4): +0.3 chacune, max 1.2
-  - Gestion sols (SOL1-5): +0.2 chacune, max 1.0
-  - Restauration (REST1-4): +0.3 chacune, max 1.2
-  - Tracabilite (TRAC1-4): +0.15 chacune, max 0.6
-- Surface bonus: 0-0.5
+**Devise** : Toutes les donnees monetaires en **XOF** (Franc CFA BCEAO).
 
 ## Ce qui est implemente
 
@@ -51,18 +26,25 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Guide REDD+ (21 pratiques, 5 categories)
 - Dashboard MRV REDD+ + Export PDF
 - SSRTE/ICI alertes + dashboard
-- KPIs gates -> 100% gratuit
+- KPIs complets sans restriction
 
-### Audit Score Carbone + Formule Prime (31 Mars 2026)
-- Score agent terrain enrichi avec 21 pratiques REDD+ (5 categories)
-- Verification parcelle cooperative integre les visites REDD+ tracking
-- Formule prime validee : 30% frais + 70% (25% GL + 70% paysans + 5% coops)
-- Commentaires errones corriges dans carbon_business_model.py
-- Tests automatises : score sans REDD+ 6.1 -> avec REDD+ 8.3 (+2.2 pts)
+### Score Carbone (0-10)
+- USSD : 9 questions + REDD+ (biochar, zero-def, reboisement)
+- Agent terrain : 5 pratiques eco + 21 pratiques REDD+ (5 categories)
+- Verification parcelle : integre les visites REDD+ tracking
+
+### Conversion USD → XOF (31 Mars 2026)
+- BillingDashboard.jsx : tous montants en XOF (factures, paiements, overview)
+- CarbonBusinessDashboard.jsx : distribution 30/25/70/5, prix marche en XOF, simulateur en XOF
+- Formulaires de saisie convertis (prix/tonne XOF, montant paiement XOF)
+- Conversion backend transparente (1 USD = 655 XOF)
+- Distribution affichee corrigee : 27%/20%/75%/5% → 30%/25%/70%/5%
+
+## Build APK Mobile
+- APK: https://expo.dev/artifacts/eas/bFGGgTSa5yoMchWxr4KYPe.apk
+- Version: 1.74.0 (build 69)
 
 ## Backlog
-### P1
-- SSL custom domain Cloudflare (bloque)
 ### P2
 - Passerelle SMS reelle Orange CI / MTN (MOCK)
 - Langues locales (Baoule/Dioula) mobile

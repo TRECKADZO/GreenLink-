@@ -27,6 +27,7 @@ const CarbonBusinessDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
   const [projection, setProjection] = useState(null);
   const [marketPrices, setMarketPrices] = useState(null);
+  const USD_TO_XOF = 655;
   const [loading, setLoading] = useState(true);
   const [projectionParams, setProjectionParams] = useState({
     numFarmers: 1000,
@@ -118,33 +119,33 @@ const CarbonBusinessDashboard = () => {
           </div>
           <div className="grid md:grid-cols-5 gap-4">
             <div className="text-center p-3 bg-white/10 rounded-lg">
-              <div className="text-2xl font-bold">27%</div>
-              <div className="text-green-200 text-xs">Coûts</div>
-              <div className="text-green-300 text-xs">(audits, vérif.)</div>
+              <div className="text-2xl font-bold">30%</div>
+              <div className="text-green-200 text-xs">Frais</div>
+              <div className="text-green-300 text-xs">(audits, verif.)</div>
             </div>
             <div className="text-center p-3 bg-white/10 rounded-lg">
-              <div className="text-2xl font-bold">~15%</div>
+              <div className="text-2xl font-bold">~17.5%</div>
               <div className="text-green-200 text-xs">GreenLink</div>
-              <div className="text-green-300 text-xs">(20% du net)</div>
+              <div className="text-green-300 text-xs">(25% du net)</div>
             </div>
             <div className="text-center p-3 bg-white/10 rounded-lg">
-              <div className="text-2xl font-bold">~55%</div>
+              <div className="text-2xl font-bold">~49%</div>
               <div className="text-green-200 text-xs">Planteurs</div>
-              <div className="text-green-300 text-xs">(75% du net)</div>
+              <div className="text-green-300 text-xs">(70% du net)</div>
             </div>
             <div className="text-center p-3 bg-white/10 rounded-lg">
-              <div className="text-2xl font-bold">~3%</div>
-              <div className="text-green-200 text-xs">Coopératives</div>
+              <div className="text-2xl font-bold">~3.5%</div>
+              <div className="text-green-200 text-xs">Cooperatives</div>
               <div className="text-green-300 text-xs">(5% du net)</div>
             </div>
             <div className="text-center p-3 bg-green-500/30 rounded-lg border border-green-400">
-              <div className="text-2xl font-bold">20-40</div>
-              <div className="text-green-200 text-xs">USD/tonne</div>
-              <div className="text-green-300 text-xs">(prix marché)</div>
+              <div className="text-2xl font-bold">13 100-26 200</div>
+              <div className="text-green-200 text-xs">XOF/tonne</div>
+              <div className="text-green-300 text-xs">(prix marche)</div>
             </div>
           </div>
           <div className="text-center mt-4">
-            <p className="text-green-300 text-xs">Total = 27% (coûts) + 73% (net distribué) = 100% ✓</p>
+            <p className="text-green-300 text-xs">Total = 30% (frais) + 70% (25% GL + 70% agriculteurs + 5% coops) = 100%</p>
           </div>
         </CardContent>
       </Card>
@@ -204,12 +205,12 @@ const CarbonBusinessDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Prix USD/t CO2</label>
+                  <label className="text-sm font-medium text-gray-700">Prix XOF/t CO2</label>
                   <input 
                     type="number" 
                     className="w-full mt-1 p-2 border rounded-lg"
-                    value={projectionParams.priceUsd}
-                    onChange={(e) => setProjectionParams({...projectionParams, priceUsd: parseFloat(e.target.value)})}
+                    value={projectionParams.priceUsd * USD_TO_XOF}
+                    onChange={(e) => setProjectionParams({...projectionParams, priceUsd: parseFloat(e.target.value) / USD_TO_XOF})}
                   />
                 </div>
               </div>
@@ -250,10 +251,7 @@ const CarbonBusinessDashboard = () => {
                     <div>
                       <p className="text-sm text-gray-500">Revenu Brut</p>
                       <p className="text-2xl font-bold text-gray-900">
-                        {formatNumber(projection.revenue?.gross_usd)} USD
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {formatCurrency(projection.revenue?.gross_xof)}
+                        {formatNumber(projection.revenue?.gross_xof || (projection.revenue?.gross_usd || 0) * USD_TO_XOF)} XOF
                       </p>
                     </div>
                     <div className="p-3 bg-blue-100 rounded-lg">
@@ -269,10 +267,7 @@ const CarbonBusinessDashboard = () => {
                     <div>
                       <p className="text-sm text-green-200">Marge GreenLink (25%)</p>
                       <p className="text-2xl font-bold">
-                        {formatNumber(projection.distribution?.greenlink_margin_usd)} USD
-                      </p>
-                      <p className="text-sm text-green-200 mt-1">
-                        {formatCurrency(projection.distribution?.greenlink_margin_xof)}
+                        {formatNumber(projection.distribution?.greenlink_margin_xof || (projection.distribution?.greenlink_margin_usd || 0) * USD_TO_XOF)} XOF
                       </p>
                     </div>
                     <div className="p-3 bg-green-800 rounded-lg">
@@ -310,9 +305,9 @@ const CarbonBusinessDashboard = () => {
                           </td>
                           <td className="py-3 px-4 text-right">{formatNumber(data.farmers)}</td>
                           <td className="py-3 px-4 text-right">{formatNumber(data.tonnes_co2)}</td>
-                          <td className="py-3 px-4 text-right">{formatNumber(data.gross_usd)} USD</td>
+                          <td className="py-3 px-4 text-right">{formatNumber((data.gross_usd || 0) * USD_TO_XOF)} XOF</td>
                           <td className="py-3 px-4 text-right font-bold text-green-600">
-                            {formatNumber(data.greenlink_margin_usd)} USD
+                            {formatNumber((data.greenlink_margin_usd || 0) * USD_TO_XOF)} XOF
                           </td>
                         </tr>
                       ))}
@@ -341,7 +336,7 @@ const CarbonBusinessDashboard = () => {
                     <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">{tier.quality_name}</p>
-                        <p className="text-sm text-gray-500">{tier.price_range_usd}</p>
+                        <p className="text-sm text-gray-500">{tier.price_range_usd?.replace(/(\d+)/g, (m) => formatNumber(parseInt(m) * USD_TO_XOF))?.replace('USD', 'XOF')}</p>
                       </div>
                       <Badge className={
                         tier.quality === 'biochar' ? 'bg-purple-100 text-purple-700' :
@@ -349,7 +344,7 @@ const CarbonBusinessDashboard = () => {
                         tier.quality === 'verified' ? 'bg-blue-100 text-blue-700' :
                         'bg-gray-100 text-gray-700'
                       }>
-                        {tier.default_price_usd} USD/t
+                        {formatNumber((tier.default_price_usd || 0) * USD_TO_XOF)} XOF/t
                       </Badge>
                     </div>
                   ))}
@@ -376,7 +371,7 @@ const CarbonBusinessDashboard = () => {
                         </p>
                       </div>
                       <Badge className="bg-green-100 text-green-700">
-                        ~{buyer.example_price_usd} USD/t
+                        ~{formatNumber((buyer.example_price_usd || 0) * USD_TO_XOF)} XOF/t
                       </Badge>
                     </div>
                   ))}
@@ -435,7 +430,7 @@ const CarbonBusinessDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500">Revenus Totaux</p>
-                    <p className="text-2xl font-bold">{formatNumber(dashboard?.sales?.total_revenue_usd)} USD</p>
+                    <p className="text-2xl font-bold">{formatNumber((dashboard?.sales?.total_revenue_usd || 0) * USD_TO_XOF)} XOF</p>
                   </div>
                   <DollarSign className="w-8 h-8 text-green-500" />
                 </div>
@@ -473,8 +468,9 @@ const CarbonBusinessDashboard = () => {
                   <p className="text-xs text-blue-600 mt-1">Redistribué aux agriculteurs</p>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 font-medium">Taux de change</p>
-                  <p className="text-2xl font-bold text-gray-700">1 USD = {dashboard?.business_model?.usd_to_xof} XOF</p>
+                  <p className="text-sm text-gray-600 font-medium">Devise</p>
+                  <p className="text-2xl font-bold text-gray-700">XOF</p>
+                  <p className="text-xs text-gray-600 mt-1">Franc CFA (BCEAO)</p>
                 </div>
               </div>
             </CardContent>
