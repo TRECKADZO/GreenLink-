@@ -44,6 +44,7 @@ from routes import agent_search  # Agent Terrain - Recherche sécurisée
 from routes import carbon_listings  # Carbon Credit Listings - Soumission/Approbation
 from routes import quotes  # Gestion des Devis pour abonnements fournisseurs
 from routes import rse_dashboard  # RSE Dashboard enrichi
+from routes import redd_impact  # REDD+ Impact National metrics
 from services.push_notifications import router as push_notifications_router
 
 
@@ -187,7 +188,7 @@ if CORS_ORIGINS:
     allowed_origins = [o.strip() for o in CORS_ORIGINS.split(',') if o.strip()]
 else:
     allowed_origins = [
-        "https://apk-build-test.preview.emergentagent.com",
+        "https://redd-impact-metrics.preview.emergentagent.com",
         "http://localhost:3000",
     ]
 

@@ -16,7 +16,7 @@ import os
 import time
 import random
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://apk-build-test.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://redd-impact-metrics.preview.emergentagent.com')
 
 # Test credentials
 COOP_EMAIL = "bielaghana@gmail.com"

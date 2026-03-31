@@ -106,7 +106,7 @@ L'application utilise l'API backend GreenLink. L'URL est configurée dans :
 - `/app/mobile/greenlink-farmer/src/config.js`
 
 ```javascript
-API_URL: 'https://apk-build-test.preview.emergentagent.com/api'
+API_URL: 'https://redd-impact-metrics.preview.emergentagent.com/api'
 ```
 
 ### Notifications Push
