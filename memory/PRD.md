@@ -49,6 +49,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Niveaux: Excellent/Tres Bon/Bon (ex: Or/Argent/Bronze)
 
 ### Build APK Mobile
+- AAB v1.76.0 (Play Store): https://expo.dev/artifacts/eas/skubahKrw7gRYNAkjYZGbc.aab
 - APK v1.76.0 (1er avril 2026): https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/9959655a-5fba-4bea-809d-ae2eaad44c58
 - APK v1.75.0: https://expo.dev/artifacts/eas/bFGGgTSa5yoMchWxr4KYPe.apk
 
