@@ -30,7 +30,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/android-icon-monochrome.png",
-        "backgroundColor": "#2d5a4d"
+        "backgroundColor": "#1a3d29"
       },
       "package": "com.greenlink.farmer",
       "permissions": [
