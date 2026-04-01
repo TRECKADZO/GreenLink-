@@ -166,7 +166,7 @@ async def create_redd_tracking_visit(
     )
 
     return {
-        "message": "Fiche de suivi REDD+ enregistree avec succes",
+        "message": "Fiche de suivi environnemental enregistree avec succes",
         "visit_id": str(result.inserted_id),
         "redd_score": redd_score,
         "redd_level": redd_level,

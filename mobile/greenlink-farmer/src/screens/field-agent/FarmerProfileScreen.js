@@ -8,7 +8,7 @@ import { api } from '../../services/api';
 const FORMS = [
   { id: 'ici', label: 'Fiche ICI', desc: 'Evaluation initiale: famille, enfants, education, pratiques', icon: 'document-text', color: '#8b5cf6', bg: '#8b5cf620', screen: 'FarmerICIForm' },
   { id: 'ssrte', label: 'Visite SSRTE', desc: 'Visite terrain: observation travail enfants, risques, remediation', icon: 'clipboard', color: '#06b6d4', bg: '#06b6d420', screen: 'SSRTEVisitForm' },
-  { id: 'redd', label: 'Fiche REDD+', desc: 'Verification des 21 pratiques REDD+ (agroforesterie, sols, tracabilite)', icon: 'leaf', color: '#059669', bg: '#05966920', screen: 'REDDTrackingForm' },
+  { id: 'redd', label: 'Fiche Environnementale', desc: 'Verification des 21 pratiques durables (agroforesterie, sols, tracabilite)', icon: 'leaf', color: '#059669', bg: '#05966920', screen: 'REDDTrackingForm' },
   { id: 'parcels', label: 'Declaration parcelles', desc: 'GPS, superficie, type de culture', icon: 'map', color: '#f59e0b', bg: '#f59e0b20', screen: 'ParcelVerification' },
   { id: 'photos', label: 'Photos geolocalisees', desc: 'Photos terrain avec position GPS', icon: 'camera', color: '#ec4899', bg: '#ec489920', screen: 'GeoPhoto' },
   { id: 'register', label: 'Enregistrement membre', desc: 'Inscrire comme membre cooperative', icon: 'person-add', color: '#10b981', bg: '#10b98120', screen: 'AddCoopMember' },
@@ -291,7 +291,7 @@ const FarmerProfileScreen = ({ navigation, route }) => {
               onPress={() => setHistoryTab('redd')}
             >
               <Ionicons name="leaf" size={14} color={historyTab === 'redd' ? '#059669' : '#94a3b8'} />
-              <Text style={[styles.historyTabText, historyTab === 'redd' && { color: '#059669' }]}>REDD+</Text>
+              <Text style={[styles.historyTabText, historyTab === 'redd' && { color: '#059669' }]}>Environnement</Text>
             </TouchableOpacity>
           </View>
 

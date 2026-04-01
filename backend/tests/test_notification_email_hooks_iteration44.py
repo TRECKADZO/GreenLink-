@@ -12,7 +12,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://redd-impact-metrics.preview.emergentagent.com")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://mobile-refactor-v2.preview.emergentagent.com")
 
 
 class TestLoginRegression:

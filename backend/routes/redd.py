@@ -106,19 +106,19 @@ def calculate_redd_score(answers: dict) -> dict:
     # Level
     if score >= 8:
         level = "Excellence"
-        level_label = "Excellence REDD+"
+        level_label = "Excellent"
     elif score >= 6:
         level = "Avance"
-        level_label = "Avance REDD+"
+        level_label = "Tres Bon"
     elif score >= 4:
         level = "Intermediaire"
-        level_label = "Intermediaire REDD+"
+        level_label = "Bon"
     elif score >= 2:
         level = "Debutant"
-        level_label = "Debutant REDD+"
+        level_label = "En Progression"
     else:
         level = "Non conforme"
-        level_label = "Non conforme REDD+"
+        level_label = "A Ameliorer"
 
     return {
         "score": score,

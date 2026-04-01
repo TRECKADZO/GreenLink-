@@ -123,7 +123,7 @@ const USSDSimulatorScreen = safeRequire(() => require('./screens/ussd/USSDSimula
 const USSDCarbonScreen = safeRequire(() => require('./screens/ussd/USSDCarbonScreen'), 'USSDCarbonScreen');
 const USSDFullSimulatorScreen = safeRequire(() => require('./screens/ussd/USSDFullSimulatorScreen'), 'USSDFullSimulatorScreen');
 
-// REDD+
+// Pratiques Durables
 const REDDGuideScreen = safeRequire(() => require('./screens/redd/REDDGuideScreen'), 'REDDGuideScreen');
 const REDDTrackingFormScreen = safeRequire(() => require('./screens/redd/REDDTrackingFormScreen'), 'REDDTrackingFormScreen');
 

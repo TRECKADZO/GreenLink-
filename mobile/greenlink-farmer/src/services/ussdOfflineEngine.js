@@ -77,7 +77,7 @@ function calculateCarbonPremium(answers) {
   if (answers.agroforesterie === 'oui') score += 1.0;
   if (answers.couverture_sol === 'oui') score += 0.5;
 
-  // REDD+ bonus
+  // Bonus pratiques durables
   if (answers.biochar === 'oui') score += 0.3;
   if (answers.zero_deforestation === 'oui') score += 0.3;
   if (answers.reboisement === 'oui') score += 0.4;
@@ -102,7 +102,7 @@ function calculateCarbonPremium(answers) {
 
   const arsResult = calculateArsLevel(answers, hectares, arbresGrands, totalTrees);
 
-  // REDD+ score calculation
+  // Score environnemental calculation
   let reddScore = 0;
   const reddPractices = [];
   if (answers.agroforesterie === 'oui') { reddScore += 1.5; reddPractices.push('Agroforesterie'); }

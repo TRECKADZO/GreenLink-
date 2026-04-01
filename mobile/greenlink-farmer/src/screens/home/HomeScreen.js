@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.primary,
   },
-  // REDD+ Score Card
+  // Score Carbone Card
   reddScore: {
     backgroundColor: '#ecfdf5',
     borderRadius: 16,

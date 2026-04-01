@@ -366,7 +366,7 @@ const CarbonAuditorsPage = () => {
                                       : 'border-gray-500/50 text-gray-400'
                               }`}
                             >
-                              {role === 'carbon_auditor' ? 'Carbone' : role === 'ssrte_agent' ? 'SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role === 'redd_agent' ? 'REDD+' : role}
+                              {role === 'carbon_auditor' ? 'Carbone' : role === 'ssrte_agent' ? 'SSRTE' : role === 'field_agent' ? 'Agent Terrain' : role === 'redd_agent' ? 'Environnement' : role}
                             </Badge>
                           ))}
                           {auditor.certifications?.map((cert, i) => (

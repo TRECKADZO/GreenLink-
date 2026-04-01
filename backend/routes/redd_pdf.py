@@ -171,7 +171,7 @@ async def export_mrv_pdf(current_user: dict = Depends(verify_access)):
     story.append(Spacer(1, 15))
     story.append(HRFlowable(width="60%", thickness=2, color=GREEN, hAlign='CENTER'))
     story.append(Spacer(1, 15))
-    story.append(Paragraph("Rapport MRV REDD+", styles['ReportTitle']))
+    story.append(Paragraph("Rapport Pratiques Durables", styles['ReportTitle']))
     story.append(Paragraph("Monitoring, Rapportage et Verification", styles['ReportSub']))
     story.append(Paragraph(f"Genere le {now.strftime('%d/%m/%Y a %H:%M UTC')}", styles['SmallNote']))
     story.append(Spacer(1, 25))
@@ -182,12 +182,12 @@ async def export_mrv_pdf(current_user: dict = Depends(verify_access)):
         (str(total_ha), "Hectares", "#2563eb"),
         (f"{total_arbres:,}", "Arbres", "#059669"),
         (f"{avg_score}/10", "Score Carbone", "#d97706"),
-        (f"{avg_redd}/10", "Score REDD+", "#059669"),
+        (f"{avg_redd}/10", "Score Environnemental", "#059669"),
     ]))
     story.append(Spacer(1, 20))
 
     # ===== SECTION 2: ADOPTION DES PRATIQUES =====
-    story.append(Paragraph("1. Adoption des Pratiques REDD+", styles['SectionHead']))
+    story.append(Paragraph("1. Adoption des Pratiques Durables", styles['SectionHead']))
     story.append(HRFlowable(width="100%", thickness=1, color=GREEN_LIGHT))
     story.append(Spacer(1, 8))
 
@@ -316,7 +316,7 @@ async def export_mrv_pdf(current_user: dict = Depends(verify_access)):
             Paragraph('<b>Ha</b>', styles['CellBold']),
             Paragraph('<b>Arbres</b>', styles['CellBold']),
             Paragraph('<b>Carbone</b>', styles['CellBold']),
-            Paragraph('<b>REDD+</b>', styles['CellBold']),
+            Paragraph('<b>Env.</b>', styles['CellBold']),
             Paragraph('<b>ARS</b>', styles['CellBold']),
             Paragraph('<b>Pratiques</b>', styles['CellBold']),
         ]
@@ -376,7 +376,7 @@ async def export_mrv_pdf(current_user: dict = Depends(verify_access)):
     if total > 0:
         agro_pct = round(agro_count / total * 100)
         if agro_pct < 50:
-            recommendations.append(f"Priorite: Seulement {agro_pct}% des planteurs pratiquent l'agroforesterie. Objectif: atteindre 80% pour maximiser les credits carbone REDD+.")
+            recommendations.append(f"Priorite: Seulement {agro_pct}% des planteurs pratiquent l'agroforesterie. Objectif: atteindre 80% pour maximiser les credits carbone.")
         no_brul_pct = round(no_brulage / total * 100)
         if no_brul_pct < 70:
             recommendations.append(f"Urgent: {100 - no_brul_pct}% des planteurs pratiquent encore le brulage. Former les producteurs aux alternatives (compostage, paillage).")
@@ -385,7 +385,7 @@ async def export_mrv_pdf(current_user: dict = Depends(verify_access)):
         if biochar_count / max(total, 1) < 0.3:
             recommendations.append("Le biochar est peu adopte. Organiser des demonstrations pratiques pour promouvoir cette technique de stockage carbone.")
         if zero_defo / max(total, 1) < 0.6:
-            recommendations.append("Renforcer les engagements zero-deforestation aupres des planteurs. Essentiel pour l'eligibilite REDD+.")
+            recommendations.append("Renforcer les engagements zero-deforestation aupres des planteurs. Essentiel pour l'eligibilite aux credits carbone.")
         if ssrte_alertes > 0:
             recommendations.append(f"SSRTE/ICI: {ssrte_alertes} alerte(s) de travail des enfants detectee(s). Interventions d'accompagnement a planifier.")
     else:
@@ -401,8 +401,8 @@ async def export_mrv_pdf(current_user: dict = Depends(verify_access)):
     # Footer
     story.append(HRFlowable(width="100%", thickness=1, color=GREEN))
     story.append(Spacer(1, 5))
-    story.append(Paragraph("GreenLink Agritech - Rapport MRV REDD+ Confidentiel", styles['SmallNote']))
-    story.append(Paragraph(f"Genere automatiquement le {now.strftime('%d/%m/%Y')} | Sources: Strategie REDD+ CI, FCPF Tai, BMC", styles['SmallNote']))
+    story.append(Paragraph("GreenLink Agritech - Rapport Pratiques Durables - Confidentiel", styles['SmallNote']))
+    story.append(Paragraph(f"Genere automatiquement le {now.strftime('%d/%m/%Y')} | Sources: Strategie Nationale CI, FCPF Tai, BMC", styles['SmallNote']))
 
     # Build
     doc.build(story)

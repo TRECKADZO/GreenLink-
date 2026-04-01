@@ -1,0 +1,13 @@
+<analysis>ars_levelscore_reddredd_agent/app/mobile/greenlink-farmer/REDDTrackingFormScreen.jsAppContent.js/app/mobile/greenlink-farmer/src/screens//app/mobile/greenlink-farmer/src/AppContent.jstitle=...REDD+...<Text>...REDD+...</Text>headerTitlescreenOptionseas build --platform androidussd.pyn;HeroSection.jsx
+/app
+├── backend/
+│   ├── routes/
+│   │   ├── ussd.py (Massively refactored text responses)
+│   │   ├── carbon_auditor.py (Added redd_agent / is_triple_role)
+│   │   └── ...
+├── frontend/
+│   └── src/ (All visible REDD+/ARS1000 texts replaced)
+├── mobile/
+│   └── greenlink-farmer/
+│       └── src/ (Contains pending text replacements)
+score_reddars_levelusersrolesredd_agentis_triple_role/app/mobile/greenlink-farmer/src/AppContent.js/app/mobile/greenlink-farmer/src/screens/redd/REDDTrackingFormScreen.js/app/mobile/greenlink-farmer/src/screens/redd/REDDGuideScreen.js/app/backend/routes/ussd.pyussd.py/api/cooperative/list/api/cooperatives/list/api/carbon-auditor/admin/auditorsreddars/app/memory/PRD.md/app/test_reports/iteration_88.jsoneas buildn;HeroSection.jsxtreckadzoklenakan.eric@gmail.com474TreckadzotreckadzoscreenOptions</analysis>
