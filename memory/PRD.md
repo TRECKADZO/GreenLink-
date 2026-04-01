@@ -49,8 +49,8 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Niveaux: Excellent/Tres Bon/Bon (ex: Or/Argent/Bronze)
 
 ### Build APK Mobile
+- APK v1.76.0 (1er avril 2026): https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/9959655a-5fba-4bea-809d-ae2eaad44c58
 - APK v1.75.0: https://expo.dev/artifacts/eas/bFGGgTSa5yoMchWxr4KYPe.apk
-- **Note**: Un nouveau build APK est nécessaire pour intégrer les corrections textuelles mobile (REDD+ → Pratiques Durables)
 
 ## Travail complété (1er avril 2026)
 - Suppression complète de toutes les références visibles "REDD+" dans le code mobile (FarmerProfileScreen, AppContent, HomeScreen, ussdOfflineEngine)
