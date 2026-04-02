@@ -193,18 +193,18 @@ const ForgotPassword = () => {
               </div>
             )}
 
-            {/* Simulation Mode Notice (phone users or email failure) */}
+            {/* Code Display - Always shown */}
             {simulationCode && (
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="p-4 bg-green-50 border border-green-300 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-amber-800">Mode Simulation SMS</p>
-                    <p className="text-sm text-amber-700 mt-1">
-                      Votre code de verification est: <span className="font-bold">{simulationCode}</span>
-                    </p>
-                    <p className="text-xs text-amber-600 mt-1">
-                      Les SMS seront actifs quand Orange API sera configuree
+                  <Check className="w-5 h-5 text-green-600 mt-0.5" />
+                  <div className="w-full">
+                    <p className="text-sm font-medium text-green-800">Votre code de verification</p>
+                    <div className="mt-2 bg-white border-2 border-green-400 rounded-lg p-3 text-center">
+                      <span className="text-2xl font-bold tracking-[0.4em] text-[#2d5a4d]">{simulationCode}</span>
+                    </div>
+                    <p className="text-xs text-green-600 mt-2">
+                      Recopiez ce code ci-dessous pour continuer
                     </p>
                   </div>
                 </div>

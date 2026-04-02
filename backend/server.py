@@ -56,6 +56,13 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Auto-restore data if database is empty (for fresh deployments)
+try:
+    from data_seed.restore_if_empty import check_and_restore
+    check_and_restore(mongo_url, os.environ['DB_NAME'])
+except Exception as e:
+    print(f"[SEED] Skipped auto-restore: {e}")
+
 # Rate limiter setup
 limiter = Limiter(key_func=get_remote_address)
 

@@ -52,7 +52,10 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - AAB v1.76.0 (versionCode 71, nouvelle icône): https://expo.dev/artifacts/eas/p9urNq29d8SkXcF1uta7ZJ.aab
 - APK v1.76.0: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/9959655a-5fba-4bea-809d-ae2eaad44c58
 
-## Travail complété (1er avril 2026)
+## Travail complété (2 avril 2026)
+- Migration automatique MongoDB : script `data_seed/restore_if_empty.py` qui restaure les données au démarrage si la base est vide (55 collections, 108 users)
+- Amélioration UI réinitialisation de mot de passe : code affiché en grand format avec instructions claires
+- Archive de données compressée incluse dans le backend pour les déploiements frais
 - Suppression complète de toutes les références visibles "REDD+" dans le code mobile (FarmerProfileScreen, AppContent, HomeScreen, ussdOfflineEngine)
 - Suppression "REDD+" dans les réponses USSD backend, API redd_tracking, rapports PDF (redd_pdf)
 - Correction badge "REDD+" → "Environnement" dans CarbonAuditorsPage (frontend web)
