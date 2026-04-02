@@ -1,0 +1,1 @@
+[{"_id": {"$oid": "69a23a37c81986b1fa956c67"}, "phone_number": "+225 07 07 07 07 07", "message": "GreenLink: Votre code de v\u00e9rification est 454753. Valide 5 minutes. Ne partagez pas ce code.", "type": "otp", "status": "pending", "created_at": {"$date": "2026-02-28T00:43:35.759Z"}}]

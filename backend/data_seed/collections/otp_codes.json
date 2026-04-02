@@ -1,0 +1,1 @@
+[{"_id": {"$oid": "69a23a37d3b4f6de6fa97f17"}, "purpose": "payment", "user_id": "69a22d7bf64360df4cbb7acc", "phone_number": "+225 07 07 07 07 07", "code": "454753", "created_at": {"$date": "2026-02-28T00:43:35.686Z"}, "expires_at": {"$date": "2026-02-28T00:48:35.686Z"}, "verified": false}]
