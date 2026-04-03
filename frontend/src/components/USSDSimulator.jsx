@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -9,8 +9,15 @@ import {
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => {
-  const [sessionId] = useState(() => `sim_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+function USSDSimulator({ title, onClose, members }) {
+  const defaultTitle = title || "Simulateur USSD";
+  const membersList = members || [];
+  
+  const [sessionId] = useState(() => {
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).slice(2, 8);
+    return `sim_${timestamp}_${randomStr}`;
+  });
   const [phoneNumber, setPhoneNumber] = useState('');
   const [started, setStarted] = useState(false);
   const [history, setHistory] = useState([]);
@@ -23,7 +30,9 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
   const inputRef = useRef(null);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [history]);
 
   useEffect(() => {
@@ -32,7 +41,8 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
     }
   }, [started, history]);
 
-  const sendUSSD = async (text = '') => {
+  const sendUSSD = async (text) => {
+    const textValue = text || '';
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/ussd/callback`, {
@@ -42,25 +52,38 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
           sessionId: currentSessionId,
           serviceCode: '*144*99#',
           phoneNumber: phoneNumber,
-          text: text
+          text: textValue
         })
       });
       const data = await res.json();
       
-      if (text) {
-        setHistory(prev => [...prev, { type: 'user', text: text }]);
+      if (textValue) {
+        setHistory(prev => {
+          const newHistory = [...prev];
+          newHistory.push({ type: 'user', text: textValue });
+          return newHistory;
+        });
       }
       
-      setHistory(prev => [...prev, { 
-        type: 'system', 
-        text: data.raw_response || data.text?.replace(/^(CON |END )/, '') || 'Erreur'
-      }]);
+      const rawResponse = data.raw_response;
+      const textResponse = data.text ? data.text.replace(/^(CON |END )/, '') : null;
+      const responseText = rawResponse || textResponse || 'Erreur';
+      
+      setHistory(prev => {
+        const newHistory = [...prev];
+        newHistory.push({ type: 'system', text: responseText });
+        return newHistory;
+      });
       
       if (!data.continue_session) {
         setSessionEnded(true);
       }
     } catch (error) {
-      setHistory(prev => [...prev, { type: 'error', text: 'Erreur de connexion au serveur' }]);
+      setHistory(prev => {
+        const newHistory = [...prev];
+        newHistory.push({ type: 'error', text: 'Erreur de connexion au serveur' });
+        return newHistory;
+      });
     } finally {
       setLoading(false);
       setInput('');
@@ -72,15 +95,20 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
     setStarted(true);
     setHistory([]);
     setSessionEnded(false);
-    const newSid = `sim_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).slice(2, 8);
+    const newSid = `sim_${timestamp}_${randomStr}`;
     setCurrentSessionId(newSid);
     setTimeout(() => sendUSSD(''), 100);
   };
 
   const handleSend = (e) => {
-    e?.preventDefault();
-    if (!input.trim() || loading || sessionEnded) return;
-    sendUSSD(input.trim());
+    if (e) {
+      e.preventDefault();
+    }
+    const trimmedInput = input.trim();
+    if (!trimmedInput || loading || sessionEnded) return;
+    sendUSSD(trimmedInput);
   };
 
   const handleQuickInput = (value) => {
@@ -96,28 +124,50 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
   };
 
   // Extract menu options from last system message for quick buttons
-  const lastSystemMsg = [...history].reverse().find(h => h.type === 'system');
-  const quickOptions = [];
-  if (lastSystemMsg && !sessionEnded) {
-    const lines = lastSystemMsg.text.split('\n');
-    for (const line of lines) {
-      const match = line.match(/^(\d)\.\s+(.+)/);
-      if (match) {
-        quickOptions.push({ value: match[1], label: match[2].substring(0, 30) });
+  const quickOptions = useMemo(() => {
+    const options = [];
+    const reversedHistory = [...history].reverse();
+    const lastSystemMsg = reversedHistory.find(h => h.type === 'system');
+    
+    if (lastSystemMsg && !sessionEnded) {
+      const lines = lastSystemMsg.text.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const match = line.match(/^(\d)\.\s+(.+)/);
+        if (match) {
+          const value = match[1];
+          const labelText = match[2];
+          const label = labelText.substring(0, 30);
+          options.push({ value: value, label: label });
+        }
       }
     }
-  }
+    return options;
+  }, [history, sessionEnded]);
 
-  const hasMembersList = members && members.length > 0;
-  const filteredMembers = hasMembersList
-    ? members.filter(m => {
-        const search = memberSearch.toLowerCase();
-        return (m.full_name || '').toLowerCase().includes(search) ||
-               (m.phone_number || '').includes(search) ||
-               (m.village || '').toLowerCase().includes(search) ||
-               (m.code_planteur || '').toLowerCase().includes(search);
-      })
-    : [];
+  const hasMembersList = membersList.length > 0;
+  
+  const filteredMembers = useMemo(() => {
+    if (!hasMembersList) return [];
+    const search = memberSearch.toLowerCase();
+    return membersList.filter(m => {
+      const fullName = m.full_name || '';
+      const phoneNum = m.phone_number || '';
+      const village = m.village || '';
+      const codePlanteur = m.code_planteur || '';
+      
+      return fullName.toLowerCase().includes(search) ||
+             phoneNum.includes(search) ||
+             village.toLowerCase().includes(search) ||
+             codePlanteur.toLowerCase().includes(search);
+    });
+  }, [membersList, memberSearch, hasMembersList]);
+
+  const selectMember = (member) => {
+    const phone = member.phone_number || '';
+    setPhoneNumber(phone);
+    setMemberSearch('');
+  };
 
   if (!started) {
     return (
@@ -125,7 +175,8 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base text-white flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-emerald-400" /> {title}
+              <Smartphone className="w-4 h-4 text-emerald-400" /> 
+              <span>{defaultTitle}</span>
             </CardTitle>
             {onClose && (
               <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-400 hover:text-white h-7 w-7 p-0">
@@ -148,7 +199,8 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
           {hasMembersList ? (
             <div className="space-y-2">
               <label className="text-xs text-gray-400 flex items-center gap-1">
-                <Users className="w-3 h-3" /> Selectionnez un membre ({members.length})
+                <Users className="w-3 h-3" /> 
+                <span>Selectionnez un membre ({membersList.length})</span>
               </label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-500" />
@@ -161,30 +213,34 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
                 />
               </div>
               <div className="max-h-48 overflow-y-auto space-y-1 rounded-lg">
-                {filteredMembers.slice(0, 20).map((m, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setPhoneNumber(m.phone_number || '');
-                      setMemberSearch('');
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                      phoneNumber === m.phone_number
-                        ? 'bg-emerald-600/30 border border-emerald-500/50 text-emerald-300'
-                        : 'bg-gray-800/50 hover:bg-gray-800 text-gray-300 border border-transparent'
-                    }`}
-                    data-testid={`ussd-sim-member-${i}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium truncate">{m.full_name}</span>
-                      {m.code_planteur && <span className="text-[10px] text-gray-500 ml-1">{m.code_planteur}</span>}
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-gray-500">{m.phone_number || 'Pas de tel'}</span>
-                      {m.village && <span className="text-[10px] text-gray-600">- {m.village}</span>}
-                    </div>
-                  </button>
-                ))}
+                {filteredMembers.slice(0, 20).map((m, i) => {
+                  const isSelected = phoneNumber === m.phone_number;
+                  const buttonClass = isSelected
+                    ? 'bg-emerald-600/30 border border-emerald-500/50 text-emerald-300'
+                    : 'bg-gray-800/50 hover:bg-gray-800 text-gray-300 border border-transparent';
+                  
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => selectMember(m)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${buttonClass}`}
+                      data-testid={`ussd-sim-member-${i}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium truncate">{m.full_name}</span>
+                        {m.code_planteur && (
+                          <span className="text-[10px] text-gray-500 ml-1">{m.code_planteur}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-gray-500">{m.phone_number || 'Pas de tel'}</span>
+                        {m.village && (
+                          <span className="text-[10px] text-gray-600">- {m.village}</span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
                 {filteredMembers.length === 0 && (
                   <p className="text-xs text-gray-500 text-center py-3">Aucun membre trouve</p>
                 )}
@@ -215,7 +271,8 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
             disabled={!phoneNumber || phoneNumber.length < 8}
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
           >
-            <Phone className="w-4 h-4 mr-2" /> Composer *144*99#
+            <Phone className="w-4 h-4 mr-2" /> 
+            <span>Composer *144*99#</span>
           </Button>
         </CardContent>
       </Card>
@@ -239,22 +296,25 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
 
       {/* Chat area */}
       <div className="h-[380px] overflow-y-auto p-3 space-y-2 bg-gray-950" data-testid="ussd-sim-chat">
-        {history.map((msg, i) => (
-          <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
-                msg.type === 'user'
-                  ? 'bg-emerald-600 text-white rounded-br-none'
-                  : msg.type === 'error'
-                  ? 'bg-red-900/50 text-red-300 border border-red-800'
-                  : 'bg-gray-800 text-gray-100 rounded-bl-none border border-gray-700'
-              }`}
-              data-testid={`ussd-sim-msg-${i}`}
-            >
-              {msg.text}
+        {history.map((msg, i) => {
+          let msgClass = 'bg-gray-800 text-gray-100 rounded-bl-none border border-gray-700';
+          if (msg.type === 'user') {
+            msgClass = 'bg-emerald-600 text-white rounded-br-none';
+          } else if (msg.type === 'error') {
+            msgClass = 'bg-red-900/50 text-red-300 border border-red-800';
+          }
+          
+          return (
+            <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${msgClass}`}
+                data-testid={`ussd-sim-msg-${i}`}
+              >
+                {msg.text}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {loading && (
           <div className="flex justify-start">
             <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 rounded-bl-none">
@@ -294,7 +354,8 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
             onClick={handleRestart} 
             className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300"
           >
-            <RotateCcw className="w-4 h-4 mr-2" /> Nouvelle session
+            <RotateCcw className="w-4 h-4 mr-2" /> 
+            <span>Nouvelle session</span>
           </Button>
         ) : (
           <form onSubmit={handleSend} className="flex gap-2">
@@ -321,6 +382,6 @@ const USSDSimulator = ({ title = "Simulateur USSD", onClose, members = [] }) => 
       </div>
     </Card>
   );
-};
+}
 
 export default USSDSimulator;

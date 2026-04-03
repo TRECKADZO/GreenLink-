@@ -148,16 +148,18 @@ const MarketplacePage = () => {
   };
 
   const renderStars = (rating) => {
+    const stars = [1, 2, 3, 4, 5];
     return (
       <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`w-4 h-4 ${
-              star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-            }`}
-          />
-        ))}
+        {stars.map((star) => {
+          const starClass = star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300';
+          return (
+            <Star
+              key={star}
+              className={`w-4 h-4 ${starClass}`}
+            />
+          );
+        })}
       </div>
     );
   };
@@ -256,13 +258,15 @@ const MarketplacePage = () => {
           {/* Products Grid */}
           {loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[1,2,3,4,5,6,7,8].map(i => (
-                <Card key={i} className="p-4 animate-pulse">
-                  <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
-                  <div className="h-5 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                </Card>
-              ))}
+              {[1,2,3,4,5,6,7,8].map((i) => {
+                return (
+                  <Card key={i} className="p-4 animate-pulse">
+                    <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
+                    <div className="h-5 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </Card>
+                );
+              })}
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-16">
@@ -444,23 +448,27 @@ const ProductDetailModal = ({ product, onClose, onAddToCart, isInWishlist, onTog
     }
   };
 
-  const renderStars = (rating, interactive = false, onChange = null) => {
+  const renderStars = (rating, interactive, onChange) => {
+    const isInteractive = interactive || false;
+    const stars = [1, 2, 3, 4, 5];
     return (
       <div className="flex items-center gap-1 relative z-10">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`w-5 h-5 ${
-              star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-            } ${interactive ? 'cursor-pointer hover:scale-110 transition-transform relative z-20' : ''}`}
-            onClick={(e) => {
-              if (interactive && onChange) {
-                e.stopPropagation();
-                onChange(star);
-              }
-            }}
-          />
-        ))}
+        {stars.map((star) => {
+          const starClass = star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300';
+          const interactiveClass = isInteractive ? 'cursor-pointer hover:scale-110 transition-transform relative z-20' : '';
+          return (
+            <Star
+              key={star}
+              className={`w-5 h-5 ${starClass} ${interactiveClass}`}
+              onClick={(e) => {
+                if (isInteractive && onChange) {
+                  e.stopPropagation();
+                  onChange(star);
+                }
+              }}
+            />
+          );
+        })}
       </div>
     );
   };
