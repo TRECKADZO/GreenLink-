@@ -86,11 +86,18 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
   FieldAgentDashboard, FarmerSearchScreen, ProfileScreen
 - Suppression complete de getCachedData/cacheData (AsyncStorage) dans tous les ecrans
 
+### SyncEngine + Batch Sync API (3 avril 2026)
+- Backend: POST /api/sync/batch — accepte changements en lots, resolution conflits last-write-wins par timestamps
+- Mobile: SyncEngine (syncEngine.js) — moteur de sync par lots (BATCH_SIZE=20), retry auto, mise a jour SQLite local
+- SyncContext (SyncContext.js) — auto-declenchement offline->online, expose syncing, queueStats, triggerSync(), retryFailed()
+- Provider: Connectivity > Auth > Database > Sync > Offline > RootNavigator
+
 ## Travail complete
 - (2 avr) Migration auto MongoDB, UI mot de passe oublie, suppression REDD+/ARS 1000
 - (3 avr) Expo SQLite integre avec 10 tables, DAOs, sync bidirectionnel, DatabaseContext
 - (3 avr) ConnectivityContext: context unifie NetInfo + ping reel, refactoring OfflineContext/AuthContext/LoginScreen/REDDTrackingForm
 - (3 avr) Offline-First Data Layer: offlineData.js + 14 ecrans migres SQLite, suppression complete AsyncStorage cache
+- (3 avr) SyncEngine batch + /api/sync/batch endpoint: last-write-wins conflict resolution, auto-sync on reconnect
 
 ## Backlog
 ### P0

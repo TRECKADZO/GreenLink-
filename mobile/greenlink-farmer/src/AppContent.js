@@ -38,6 +38,7 @@ import { ConnectivityProvider } from './context/ConnectivityContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { OfflineProvider } from './context/OfflineContext';
 import { DatabaseProvider } from './context/DatabaseContext';
+import { SyncProvider } from './context/SyncContext';
 
 // ============= SERVICES (safe) =============
 let notificationService = null;
@@ -251,6 +252,7 @@ function RootNavigator() {
   const { isAuthenticated, loading, user } = useAuth();
   const { isOnline: connectivityOnline } = require('./context/ConnectivityContext').useConnectivity();
   const { dbReady, fullSync, clearLocal } = require('./context/DatabaseContext').useDatabase();
+  const { triggerSync } = require('./context/SyncContext').useSync();
   const navigationRef = useRef(null);
   const notificationListener = useRef(null);
   const responseListener = useRef(null);
@@ -304,30 +306,24 @@ function RootNavigator() {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    if (!isAuthenticated || !syncService) return;
-    syncService.registerBackgroundSync().catch((e) => console.error('[App] Sync register error:', e?.message));
+    if (!isAuthenticated) return;
+    // Background sync registration (notifications service)
+    if (syncService) {
+      syncService.registerBackgroundSync().catch((e) => console.error('[App] Sync register error:', e?.message));
+    }
   }, [isAuthenticated]);
 
   const handleAppStateChange = useCallback(async (nextAppState) => {
     if (appState.current.match(/inactive|background/) && nextAppState === 'active' && isAuthenticated) {
-      // Legacy AsyncStorage sync
-      if (syncService) {
-        try {
-          const result = await syncService.syncNow();
-          if (result.synced > 0) {
-            Alert.alert('Synchronisation', `${result.synced} element(s) synchronise(s)`, [{ text: 'OK' }]);
-          }
-        } catch (error) {
-          console.error('[App] Foreground sync error:', error?.message);
-        }
-      }
-      // SQLite sync (silently refresh local DB)
+      // Push any queued offline changes via SyncEngine batch
+      triggerSync().catch(e => console.warn('[App] SyncEngine foreground error:', e?.message));
+      // Pull fresh data from server into SQLite
       if (dbReady) {
         fullSync().catch(e => console.warn('[App] SQLite foreground sync error:', e?.message));
       }
     }
     appState.current = nextAppState;
-  }, [isAuthenticated, dbReady, fullSync]);
+  }, [isAuthenticated, dbReady, fullSync, triggerSync]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', handleAppStateChange);
@@ -353,9 +349,11 @@ export default function AppContent() {
       <ConnectivityProvider>
         <AuthProvider>
           <DatabaseProvider>
-            <OfflineProvider>
-              <RootNavigator />
-            </OfflineProvider>
+            <SyncProvider>
+              <OfflineProvider>
+                <RootNavigator />
+              </OfflineProvider>
+            </SyncProvider>
           </DatabaseProvider>
         </AuthProvider>
       </ConnectivityProvider>

@@ -45,6 +45,7 @@ from routes import carbon_listings  # Carbon Credit Listings - Soumission/Approb
 from routes import quotes  # Gestion des Devis pour abonnements fournisseurs
 from routes import rse_dashboard  # RSE Dashboard enrichi
 from routes import redd_impact  # REDD+ Impact National metrics
+from routes import sync_batch  # Offline batch sync with conflict resolution
 from services.push_notifications import router as push_notifications_router
 
 
@@ -190,6 +191,7 @@ app.include_router(redd_tracking.router)
 app.include_router(dashboard_pdf.router)
 app.include_router(coop_subscriptions.router)
 app.include_router(redd_impact.router)
+app.include_router(sync_batch.router)
 
 CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '')
 if CORS_ORIGINS:

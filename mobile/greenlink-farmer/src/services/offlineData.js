@@ -22,6 +22,7 @@ import {
   PaymentsDAO,
   PendingSyncDAO,
 } from './database';
+import { syncEngine } from './syncEngine';
 import { api, farmerApi } from './api';
 import { marketplaceApi } from './marketplace';
 import { carbonApi } from './carbon';
@@ -69,7 +70,7 @@ export const offlineParcels = {
     const localId = tempId();
     const localParcel = { ...data, id: localId, created_at: new Date().toISOString(), verification_status: 'pending' };
     await ParcelsDAO.upsert(localParcel);
-    await PendingSyncDAO.add('CREATE_PARCEL', 'parcels', localId, data);
+    await syncEngine.enqueue('CREATE_PARCEL', 'parcels', localId, data);
     return { success: true, data: localParcel, offline: true };
   },
 };
@@ -191,7 +192,7 @@ export const offlineOrders = {
     const localId = tempId();
     const localOrder = { ...data, id: localId, status: 'pending', created_at: new Date().toISOString() };
     await OrdersDAO.upsert(localOrder);
-    await PendingSyncDAO.add('CREATE_ORDER', 'orders', localId, data);
+    await syncEngine.enqueue('CREATE_ORDER', 'orders', localId, data);
     return { success: true, data: localOrder, offline: true };
   },
 
@@ -305,7 +306,7 @@ export const offlinePayments = {
     const localId = tempId();
     const localPayment = { ...data, id: localId, status: 'pending', created_at: new Date().toISOString() };
     await PaymentsDAO.upsert(localPayment);
-    await PendingSyncDAO.add('CREATE_PAYMENT_REQUEST', 'payments', localId, data || {});
+    await syncEngine.enqueue('CREATE_PAYMENT_REQUEST', 'payments', localId, data || {});
     return { success: true, data: localPayment, offline: true };
   },
 };
