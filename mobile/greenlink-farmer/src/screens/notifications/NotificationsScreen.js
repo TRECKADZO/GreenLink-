@@ -10,14 +10,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { useOffline } from '../../context/OfflineContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { Loader, EmptyState } from '../../components/UI';
 import { COLORS, FONTS, SPACING } from '../../config';
-import { api } from '../../services/api';
+import { offlineNotifications } from '../../services/offlineData';
 
 const NotificationsScreen = ({ navigation }) => {
   const { token } = useAuth();
-  const { isOnline, getCachedData, cacheData } = useOffline();
+  const { isOnline } = useConnectivity();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -25,22 +25,10 @@ const NotificationsScreen = ({ navigation }) => {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      if (!isOnline) {
-        const cached = await getCachedData('notifications');
-        if (cached) {
-          setNotifications(cached);
-          setLoading(false);
-          return;
-        }
-      }
-
-      const response = await api.get('/notifications/history', { params: { limit: 100 } });
-      setNotifications(response.data.notifications || []);
-      await cacheData('notifications', response.data.notifications || []);
+      const data = await offlineNotifications.fetch(isOnline);
+      setNotifications(data || []);
     } catch (error) {
       console.error('Error loading notifications:', error);
-      const cached = await getCachedData('notifications');
-      if (cached) setNotifications(cached);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -58,9 +46,9 @@ const NotificationsScreen = ({ navigation }) => {
 
   const markAsRead = async (id) => {
     try {
-      await api.put(`/notifications/history/${id}/read`);
-      setNotifications(notifications.map(n => 
-        n._id === id ? { ...n, read: true } : n
+      await offlineNotifications.markRead(isOnline, id);
+      setNotifications(notifications.map(n =>
+        (n._id === id || n.id === id) ? { ...n, read: true, is_read: 1 } : n
       ));
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -69,8 +57,8 @@ const NotificationsScreen = ({ navigation }) => {
 
   const markAllAsRead = async () => {
     try {
-      await api.put('/notifications/history/read-all');
-      setNotifications(notifications.map(n => ({ ...n, read: true })));
+      await offlineNotifications.markAllRead(isOnline);
+      setNotifications(notifications.map(n => ({ ...n, read: true, is_read: 1 })));
       Alert.alert('Succès', 'Toutes les notifications ont été marquées comme lues');
     } catch (error) {
       console.error('Error marking all as read:', error);

@@ -11,16 +11,16 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { useOffline } from '../../context/OfflineContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { Button, Loader, EmptyState } from '../../components/UI';
 import { COLORS, FONTS, SPACING } from '../../config';
-import { api } from '../../services/api';
+import { offlineCarbonPayments } from '../../services/offlineData';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CarbonPaymentsDashboard = ({ navigation }) => {
   const { token, user } = useAuth();
-  const { isOnline, getCachedData, cacheData } = useOffline();
+  const { isOnline } = useConnectivity();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -28,22 +28,10 @@ const CarbonPaymentsDashboard = ({ navigation }) => {
 
   const fetchDashboard = useCallback(async () => {
     try {
-      if (!isOnline) {
-        const cached = await getCachedData('carbon_payments_dashboard');
-        if (cached) {
-          setData(cached);
-          setLoading(false);
-          return;
-        }
-      }
-
-      const response = await api.get('/carbon-payments/dashboard');
-      setData(response.data);
-      await cacheData('carbon_payments_dashboard', response.data);
+      const result = await offlineCarbonPayments.fetch(isOnline);
+      setData(result);
     } catch (error) {
       console.error('Error fetching carbon dashboard:', error);
-      const cached = await getCachedData('carbon_payments_dashboard');
-      if (cached) setData(cached);
     } finally {
       setLoading(false);
       setRefreshing(false);

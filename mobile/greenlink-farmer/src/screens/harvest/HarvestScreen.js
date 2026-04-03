@@ -10,16 +10,18 @@ import {
   Image,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Button, Loader } from '../../components/UI';
-import { farmerApi } from '../../services/api';
+import { offlineParcels, offlineHarvests } from '../../services/offlineData';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 // Image des cabosses de cacao pour l'illustration
 const HARVEST_IMAGE = 'https://images.unsplash.com/photo-1573710661345-610f790e1218?w=400&q=80';
 
 const HarvestScreen = ({ navigation }) => {
-  const { isOnline, addPendingAction, getCachedData, cacheData } = useOffline();
+  const { isOnline } = useConnectivity();
+  const { addPendingAction } = useOffline();
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -42,21 +44,13 @@ const HarvestScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       loadParcels();
-    }, [])
+    }, [isOnline])
   );
 
   const loadParcels = async () => {
     try {
-      const cached = await getCachedData('parcels');
-      if (cached) {
-        setParcels(cached);
-      }
-      
-      if (isOnline) {
-        const response = await farmerApi.getParcels();
-        setParcels(response.data);
-        await cacheData('parcels', response.data);
-      }
+      const data = await offlineParcels.fetch(isOnline);
+      setParcels(data || []);
     } catch (error) {
       console.error('Error loading parcels:', error);
     } finally {
@@ -81,35 +75,26 @@ const HarvestScreen = ({ navigation }) => {
 
     setSubmitting(true);
 
-    if (!isOnline) {
-      await addPendingAction({
-        type: 'CREATE_HARVEST',
-        data: harvestData,
-      });
+    const result = await offlineHarvests.create(isOnline, harvestData);
+
+    if (result.offline) {
+      // Also add to legacy pending queue for backward compat
+      await addPendingAction({ type: 'CREATE_HARVEST', data: harvestData });
       Alert.alert(
         'Enregistré localement',
         'Votre récolte sera synchronisée dès que vous serez connecté.',
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
-      setSubmitting(false);
-      return;
-    }
-
-    try {
-      await farmerApi.createHarvest(harvestData);
+    } else if (result.success) {
       Alert.alert(
         'Succès',
         'Votre récolte a été déclarée avec succès !',
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
-    } catch (error) {
-      Alert.alert(
-        'Erreur',
-        error.response?.data?.detail || 'Impossible de déclarer la récolte'
-      );
-    } finally {
-      setSubmitting(false);
+    } else {
+      Alert.alert('Erreur', result.error || 'Impossible de déclarer la récolte');
     }
+    setSubmitting(false);
   };
 
   if (loading) {

@@ -9,25 +9,27 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { marketplaceApi } from '../../services/marketplace';
+import { useConnectivity } from '../../context/ConnectivityContext';
+import { offlineOrders } from '../../services/offlineData';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const OrdersScreen = ({ navigation }) => {
+  const { isOnline } = useConnectivity();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     try {
-      const response = await marketplaceApi.getOrders();
-      setOrders(response.data || []);
+      const data = await offlineOrders.fetch(isOnline);
+      setOrders(data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [isOnline]);
 
   useEffect(() => {
     fetchOrders();

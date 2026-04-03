@@ -19,13 +19,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { useOffline } from '../../context/OfflineContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { COLORS, FONTS, SPACING } from '../../config';
 import { api } from '../../services/api';
+import { offlineCache } from '../../services/offlineData';
 
 const FarmerSearchScreen = ({ navigation }) => {
   const { token, user } = useAuth();
-  const { isOnline, getCachedData, cacheData } = useOffline();
+  const { isOnline } = useConnectivity();
   const [phone, setPhone] = useState('');
   const [searching, setSearching] = useState(false);
   const [farmer, setFarmer] = useState(null);
@@ -41,7 +42,7 @@ const FarmerSearchScreen = ({ navigation }) => {
 
   const loadCachedFarmers = async () => {
     try {
-      const cached = await getCachedData('zone_farmers');
+      const cached = await offlineCache._read('zone_farmers');
       if (cached) {
         setCachedFarmers(cached.farmers || []);
         setLastSync(cached.sync_time);
@@ -60,10 +61,11 @@ const FarmerSearchScreen = ({ navigation }) => {
     setSyncing(true);
     try {
       const res = await api.get('/agent/sync/download');
-      await cacheData('zone_farmers', {
+      const syncData = {
         farmers: res.data.farmers,
         sync_time: res.data.sync_timestamp,
-      });
+      };
+      await offlineCache._write('zone_farmers', syncData);
       setCachedFarmers(res.data.farmers || []);
       setLastSync(res.data.sync_timestamp);
       Alert.alert('Synchronisation', `${res.data.farmers_count} planteurs téléchargés`);

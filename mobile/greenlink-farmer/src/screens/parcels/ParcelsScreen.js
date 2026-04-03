@@ -9,13 +9,13 @@ import {
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useOffline } from '../../context/OfflineContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { Button, InfoCard, Loader, EmptyState } from '../../components/UI';
-import { farmerApi } from '../../services/api';
+import { offlineParcels } from '../../services/offlineData';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const ParcelsScreen = ({ navigation }) => {
-  const { isOnline, getCachedData, cacheData } = useOffline();
+  const { isOnline } = useConnectivity();
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -24,27 +24,15 @@ const ParcelsScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       loadParcels();
-    }, [])
+    }, [isOnline])
   );
 
   const loadParcels = async () => {
     try {
-      if (!isOnline) {
-        const cached = await getCachedData('parcels');
-        if (cached) {
-          setParcels(cached);
-          setLoading(false);
-          return;
-        }
-      }
-
-      const response = await farmerApi.getParcels();
-      setParcels(response.data);
-      await cacheData('parcels', response.data);
+      const data = await offlineParcels.fetch(isOnline);
+      setParcels(data);
     } catch (error) {
       console.error('Error loading parcels:', error);
-      const cached = await getCachedData('parcels');
-      if (cached) setParcels(cached);
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { useOffline } from '../../context/OfflineContext';
 import { Button, NetworkStatus } from '../../components/UI';
 import { MainLayout } from '../../components/navigation';
@@ -19,7 +20,8 @@ import { COLORS, FONTS, SPACING } from '../../config';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout, updateProfile } = useAuth();
-  const { isOnline, pendingActions } = useOffline();
+  const { isOnline } = useConnectivity();
+  const { pendingActions } = useOffline();
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null);

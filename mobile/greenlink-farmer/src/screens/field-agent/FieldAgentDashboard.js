@@ -6,11 +6,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
-import { useOffline } from '../../context/OfflineContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { Loader } from '../../components/UI';
 import { MainLayout } from '../../components/navigation';
 import { COLORS, SPACING } from '../../config';
 import { api } from '../../services/api';
+import { offlineCache } from '../../services/offlineData';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -22,7 +23,7 @@ const TABS = [
 
 const FieldAgentDashboard = ({ navigation }) => {
   const { token, user } = useAuth();
-  const { isOnline, getCachedData, cacheData } = useOffline();
+  const { isOnline } = useConnectivity();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,16 +37,13 @@ const FieldAgentDashboard = ({ navigation }) => {
 
   const fetchDashboard = useCallback(async () => {
     try {
-      if (!isOnline) {
-        const cached = await getCachedData('field_agent_dashboard');
-        if (cached) { setData(cached); setLoading(false); return; }
-      }
-      const res = await api.get('/field-agent/dashboard');
-      setData(res.data);
-      await cacheData('field_agent_dashboard', res.data);
+      const result = await offlineCache.fetch(isOnline, 'field_agent_dashboard', async () => {
+        const res = await api.get('/field-agent/dashboard');
+        return res.data;
+      });
+      setData(result);
     } catch (e) {
-      const cached = await getCachedData('field_agent_dashboard');
-      if (cached) setData(cached);
+      console.error('Error loading dashboard:', e);
     } finally { setLoading(false); setRefreshing(false); }
   }, [token, isOnline]);
 

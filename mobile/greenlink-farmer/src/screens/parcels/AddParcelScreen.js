@@ -13,9 +13,11 @@ import {
   FlatList,
 } from 'react-native';
 import { useOffline } from '../../context/OfflineContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/UI';
 import { farmerApi } from '../../services/api';
+import { offlineParcels } from '../../services/offlineData';
 import { cooperativeApi } from '../../services/cooperativeApi';
 import { cameraService } from '../../services/camera';
 import { locationService } from '../../services/location';
@@ -67,7 +69,8 @@ const AddParcelScreen = ({ navigation, route }) => {
   // Récupérer les données du producteur depuis le scan QR (si disponible)
   const { farmerId, farmerData } = route?.params || {};
   
-  const { isOnline, addPendingAction } = useOffline();
+  const { addPendingAction } = useOffline();
+  const { isOnline } = useConnectivity();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
@@ -209,8 +212,7 @@ const AddParcelScreen = ({ navigation, route }) => {
     setLoading(true);
 
     if (!isOnline) {
-      // Mode offline: sauvegarder localement
-      // Sauvegarder les photos localement
+      // Mode offline: sauvegarder localement (photos + SQLite + pending queue)
       const localPhotos = [];
       for (const photo of photos) {
         const localUri = await cameraService.saveImageLocally(
@@ -223,6 +225,10 @@ const AddParcelScreen = ({ navigation, route }) => {
       }
       parcelData.photos = localPhotos;
 
+      // Save to SQLite + pending sync
+      const result = await offlineParcels.create(false, parcelData);
+
+      // Also add to legacy pending queue for backward compat
       await addPendingAction({
         type: 'CREATE_PARCEL',
         data: parcelData,
@@ -252,12 +258,16 @@ const AddParcelScreen = ({ navigation, route }) => {
       }
       parcelData.photos = uploadedPhotos;
 
-      await farmerApi.createParcel(parcelData);
-      Alert.alert(
-        'Succès',
-        'Votre parcelle a été déclarée avec succès !',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
+      const apiResult = await offlineParcels.create(true, parcelData);
+      if (apiResult.success) {
+        Alert.alert(
+          'Succès',
+          'Votre parcelle a été déclarée avec succès !',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+      } else {
+        Alert.alert('Erreur', apiResult.error || 'Impossible de déclarer la parcelle');
+      }
     } catch (error) {
       Alert.alert(
         'Erreur',

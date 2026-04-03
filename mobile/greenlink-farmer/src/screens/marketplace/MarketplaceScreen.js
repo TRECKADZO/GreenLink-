@@ -12,6 +12,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useConnectivity } from '../../context/ConnectivityContext';
+import { offlineProducts } from '../../services/offlineData';
 import { marketplaceApi } from '../../services/marketplace';
 import { COLORS, FONTS, SPACING, CONFIG } from '../../config';
 
@@ -25,6 +27,7 @@ const categories = [
 ];
 
 const MarketplaceScreen = ({ navigation }) => {
+  const { isOnline } = useConnectivity();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,17 +39,18 @@ const MarketplaceScreen = ({ navigation }) => {
     try {
       const filters = {};
       if (selectedCategory) filters.category = selectedCategory;
-      const response = await marketplaceApi.getProducts(filters);
-      setProducts(response.data || []);
+      const data = await offlineProducts.fetch(isOnline, filters);
+      setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, isOnline]);
 
   const fetchCartCount = async () => {
+    if (!isOnline) return;
     try {
       const response = await marketplaceApi.getCart();
       const items = response.data?.items || [];

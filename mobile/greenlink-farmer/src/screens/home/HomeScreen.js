@@ -10,15 +10,16 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
-import { useOffline } from '../../context/OfflineContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { MenuItem, InfoCard, NetworkStatus, Loader } from '../../components/UI';
 import { MainLayout } from '../../components/navigation';
 import { farmerApi } from '../../services/api';
+import { offlineCache } from '../../services/offlineData';
 import { COLORS, FONTS, SPACING, MESSAGES } from '../../config';
 
 const HomeScreen = ({ navigation }) => {
   const { user, logout } = useAuth();
-  const { isOnline, getCachedData, cacheData } = useOffline();
+  const { isOnline } = useConnectivity();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -41,24 +42,13 @@ const HomeScreen = ({ navigation }) => {
 
   const loadDashboard = async () => {
     try {
-      // Essayer d'abord le cache si offline
-      if (!isOnline) {
-        const cached = await getCachedData('dashboard');
-        if (cached) {
-          setDashboard(cached);
-          setLoading(false);
-          return;
-        }
-      }
-
-      const response = await farmerApi.getDashboard();
-      setDashboard(response.data);
-      await cacheData('dashboard', response.data);
+      const data = await offlineCache.fetch(isOnline, 'dashboard', async () => {
+        const response = await farmerApi.getDashboard();
+        return response.data;
+      });
+      setDashboard(data);
     } catch (error) {
       console.error('Error loading dashboard:', error);
-      // Fallback au cache
-      const cached = await getCachedData('dashboard');
-      if (cached) setDashboard(cached);
     } finally {
       setLoading(false);
       setRefreshing(false);

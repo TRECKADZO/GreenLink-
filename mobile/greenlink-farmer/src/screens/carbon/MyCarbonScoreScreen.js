@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { carbonApi } from '../../services/carbon';
 import { useAuth } from '../../context/AuthContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
+import { offlineCarbonScore } from '../../services/offlineData';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const SCORE_THRESHOLDS = [
@@ -70,6 +71,7 @@ const pStyles = StyleSheet.create({
 
 const MyCarbonScoreScreen = ({ navigation }) => {
   const { user } = useAuth();
+  const { isOnline } = useConnectivity();
   const [scoreData, setScoreData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -77,10 +79,10 @@ const MyCarbonScoreScreen = ({ navigation }) => {
 
   const fetchScore = async () => {
     try {
-      const response = await carbonApi.getMyCarbonScore();
-      setScoreData(response.data);
+      const data = await offlineCarbonScore.fetch(isOnline, user?.id || user?._id);
+      setScoreData(data);
       // Animate gauge
-      const score = response.data?.average_score || 0;
+      const score = data?.average_score || 0;
       Animated.timing(gaugeAnim, {
         toValue: score / 10,
         duration: 1200,

@@ -6,10 +6,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { farmerApi } from '../../services/api';
+import { useConnectivity } from '../../context/ConnectivityContext';
+import { offlineHarvests } from '../../services/offlineData';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const MyHarvestsScreen = ({ navigation }) => {
+  const { isOnline } = useConnectivity();
   const [harvests, setHarvests] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
@@ -19,17 +21,16 @@ const MyHarvestsScreen = ({ navigation }) => {
   const fetchHarvests = useCallback(async () => {
     try {
       const params = filter ? `?statut=${filter}` : '';
-      const response = await farmerApi.getHarvests(params);
-      const data = response.data || response;
-      setHarvests(data.harvests || []);
-      setStats(data.stats || {});
+      const result = await offlineHarvests.fetch(isOnline, params);
+      setHarvests(result.harvests || []);
+      setStats(result.stats || {});
     } catch (error) {
       console.error('Error fetching harvests:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [filter]);
+  }, [filter, isOnline]);
 
   useFocusEffect(
     useCallback(() => {

@@ -74,10 +74,23 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Provider au sommet de la hierarchie (avant AuthProvider)
 - Fichier : `src/context/ConnectivityContext.js`
 
+### Offline-First Data Layer (3 avril 2026)
+- Service centralise `offlineData.js` — couche d'acces donnees offline-first
+- LECTURES : online → API + cache SQLite ; offline → lecture SQLite
+- ECRITURES : online → API + upsert SQLite ; offline → sauvegarde SQLite + file pending_sync
+- 8 domaines : `offlineParcels`, `offlineHarvests`, `offlineProducts`, `offlineOrders`, `offlineNotifications`, `offlineCarbonScore`, `offlinePayments`, `offlineCarbonPayments`, + `offlineCache` generique
+- 14 ecrans mis a jour pour utiliser la couche offline-first :
+  ParcelsScreen, AddParcelScreen, HarvestScreen, MyHarvestsScreen,
+  MarketplaceScreen, OrdersScreen, NotificationsScreen, PaymentsScreen,
+  CarbonPaymentsDashboard, MyCarbonScoreScreen, HomeScreen,
+  FieldAgentDashboard, FarmerSearchScreen, ProfileScreen
+- Suppression complete de getCachedData/cacheData (AsyncStorage) dans tous les ecrans
+
 ## Travail complete
 - (2 avr) Migration auto MongoDB, UI mot de passe oublie, suppression REDD+/ARS 1000
 - (3 avr) Expo SQLite integre avec 10 tables, DAOs, sync bidirectionnel, DatabaseContext
 - (3 avr) ConnectivityContext: context unifie NetInfo + ping reel, refactoring OfflineContext/AuthContext/LoginScreen/REDDTrackingForm
+- (3 avr) Offline-First Data Layer: offlineData.js + 14 ecrans migres SQLite, suppression complete AsyncStorage cache
 
 ## Backlog
 ### P0

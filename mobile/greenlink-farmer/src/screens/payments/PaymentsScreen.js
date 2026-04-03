@@ -8,13 +8,13 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useOffline } from '../../context/OfflineContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { Button, Loader, EmptyState } from '../../components/UI';
-import { farmerApi } from '../../services/api';
+import { offlinePayments } from '../../services/offlineData';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const PaymentsScreen = ({ navigation }) => {
-  const { isOnline, getCachedData, cacheData } = useOffline();
+  const { isOnline } = useConnectivity();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -25,22 +25,10 @@ const PaymentsScreen = ({ navigation }) => {
 
   const loadPayments = async () => {
     try {
-      if (!isOnline) {
-        const cached = await getCachedData('payments');
-        if (cached) {
-          setPayments(cached);
-          setLoading(false);
-          return;
-        }
-      }
-
-      const response = await farmerApi.getPaymentRequests();
-      setPayments(response.data || []);
-      await cacheData('payments', response.data || []);
+      const data = await offlinePayments.fetch(isOnline);
+      setPayments(data || []);
     } catch (error) {
       console.error('Error loading payments:', error);
-      const cached = await getCachedData('payments');
-      if (cached) setPayments(cached);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,8 +50,12 @@ const PaymentsScreen = ({ navigation }) => {
           text: 'Confirmer', 
           onPress: async () => {
             try {
-              await farmerApi.createPaymentRequest({});
-              Alert.alert('Succès', 'Votre demande de paiement a été envoyée');
+              const result = await offlinePayments.createRequest(isOnline, {});
+              if (result.offline) {
+                Alert.alert('Enregistré localement', 'Votre demande sera envoyée dès que vous serez connecté.');
+              } else {
+                Alert.alert('Succès', 'Votre demande de paiement a été envoyée');
+              }
               loadPayments();
             } catch (error) {
               Alert.alert('Erreur', 'Impossible de créer la demande');
