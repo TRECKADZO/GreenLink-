@@ -197,7 +197,11 @@ CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '')
 if CORS_ORIGINS:
     allowed_origins = [o.strip() for o in CORS_ORIGINS.split(',') if o.strip()]
 else:
-    allowed_origins = ["*"]  # Allow all origins for mobile compatibility
+    allowed_origins = [
+        "https://dev-archive-link.preview.emergentagent.com",
+        "http://localhost:3000",
+        "http://localhost:8001",
+    ]
 
 app.add_middleware(
     CORSMiddleware,
