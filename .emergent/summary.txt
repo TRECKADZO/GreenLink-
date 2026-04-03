@@ -1,13 +1,14 @@
-<analysis>ars_levelscore_reddredd_agent/app/mobile/greenlink-farmer/REDDTrackingFormScreen.jsAppContent.js/app/mobile/greenlink-farmer/src/screens//app/mobile/greenlink-farmer/src/AppContent.jstitle=...REDD+...<Text>...REDD+...</Text>headerTitlescreenOptionseas build --platform androidussd.pyn;HeroSection.jsx
+<analysis>cluster0.ieoimmt.mongodb.netcluster0.ieoimmt.mongodb.net.env/app/backend/.env.envMONGO_URLmongodb+srv://klenakaneric_db_user:474Treckadzo@cluster0.ieoimmt.mongodb.net/?appName=Cluster0[MONGODB_MIGRATE]/app/backend/services/sms_service.pyussd.pyversionCode: 71app.jsonrestore_if_empty.pycluster0.ieoimmt.mongodb.net.env
 /app
 ├── backend/
+│   ├── data_seed/
+│   │   └── restore_if_empty.py (Custom script to seed empty DBs via JSON)
 │   ├── routes/
-│   │   ├── ussd.py (Massively refactored text responses)
-│   │   ├── carbon_auditor.py (Added redd_agent / is_triple_role)
-│   │   └── ...
+│   └── server.py
 ├── frontend/
-│   └── src/ (All visible REDD+/ARS1000 texts replaced)
+│   └── src/pages/ForgotPassword.jsx
 ├── mobile/
 │   └── greenlink-farmer/
-│       └── src/ (Contains pending text replacements)
-score_reddars_levelusersrolesredd_agentis_triple_role/app/mobile/greenlink-farmer/src/AppContent.js/app/mobile/greenlink-farmer/src/screens/redd/REDDTrackingFormScreen.js/app/mobile/greenlink-farmer/src/screens/redd/REDDGuideScreen.js/app/backend/routes/ussd.pyussd.py/api/cooperative/list/api/cooperatives/list/api/carbon-auditor/admin/auditorsreddars/app/memory/PRD.md/app/test_reports/iteration_88.jsoneas buildn;HeroSection.jsxtreckadzoklenakan.eric@gmail.com474TreckadzotreckadzoscreenOptions</analysis>
+│       ├── app.json (Contains logo and EAS build config)
+│       └── assets/ (Newly generated logo icons)
+eas.jsonapp.jsonversionCodebackend/.envusershashed_passwordcluster0.ieoimmt.mongodb.net/app/backend/.env/app/mobile/greenlink-farmer/app.json/app/frontend/src/pages/ForgotPassword.jsx/app/backend/data_seed/restore_if_empty.pymongorestoreussd.py/api/auth/login/api/auth/forgot-password.envMONGO_URL.envMONGO_URL[MONGODB_MIGRATE]/app/memory/PRD.mdeas buildversionCode: 71app.jsonapp.json.envcluster0.ieoimmt.mongodb.nettreckadzoklenakan.eric@gmail.com474Treckadzo</analysis>

@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 
 # API Configuration
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://mobile-refactor-v2.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://farmer-rewards-app.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_CREDENTIALS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
