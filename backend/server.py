@@ -201,6 +201,10 @@ else:
         "https://dev-archive-link.preview.emergentagent.com",
         "http://localhost:3000",
         "http://localhost:8001",
+        "https://greenlink-agritech.com",
+        "https://www.greenlink-agritech.com",
+        "http://greenlink-agritech.com",
+        "http://www.greenlink-agritech.com",
     ]
 
 app.add_middleware(
