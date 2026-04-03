@@ -87,10 +87,17 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Suppression complete de getCachedData/cacheData (AsyncStorage) dans tous les ecrans
 
 ### SyncEngine + Batch Sync API (3 avril 2026)
-- Backend: POST /api/sync/batch — accepte changements en lots, resolution conflits last-write-wins par timestamps
-- Mobile: SyncEngine (syncEngine.js) — moteur de sync par lots (BATCH_SIZE=20), retry auto, mise a jour SQLite local
-- SyncContext (SyncContext.js) — auto-declenchement offline->online, expose syncing, queueStats, triggerSync(), retryFailed()
-- Provider: Connectivity > Auth > Database > Sync > Offline > RootNavigator
+- Backend: POST /api/sync/batch — push changements en lots, last-write-wins par timestamps
+- Backend: POST /api/sync/pull — pull changements serveur depuis last_sync_at (par collection, paginé, ownership filtré)
+- Backend: GET /api/sync/status — nombre de changements par table depuis un timestamp
+- Suivi des suppressions via collection `sync_deletions`
+- Logs d'audit via collection `sync_log`
+- Mobile: SyncEngine (syncEngine.js) — fullSync bidirectionnel (push + pull)
+  - processQueue(): push offline changes en lots (BATCH_SIZE=20)
+  - pullChanges(): pull serveur, upsert dans SQLite, supprimer entités supprimées
+  - checkForChanges(): vérification rapide si le serveur a des changements
+  - Tracking last_sync_at par table dans db_meta SQLite
+- SyncContext: auto-déclenchement offline→online, expose triggerFullSync, pullChanges, checkForChanges
 
 ## Travail complete
 - (2 avr) Migration auto MongoDB, UI mot de passe oublie, suppression REDD+/ARS 1000
@@ -98,6 +105,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (3 avr) ConnectivityContext: context unifie NetInfo + ping reel, refactoring OfflineContext/AuthContext/LoginScreen/REDDTrackingForm
 - (3 avr) Offline-First Data Layer: offlineData.js + 14 ecrans migres SQLite, suppression complete AsyncStorage cache
 - (3 avr) SyncEngine batch + /api/sync/batch endpoint: last-write-wins conflict resolution, auto-sync on reconnect
+- (3 avr) Sync Pull API: POST /api/sync/pull + GET /api/sync/status + deletion tracking + SyncEngine fullSync bidirectionnel
 
 ## Backlog
 ### P0

@@ -252,7 +252,7 @@ function RootNavigator() {
   const { isAuthenticated, loading, user } = useAuth();
   const { isOnline: connectivityOnline } = require('./context/ConnectivityContext').useConnectivity();
   const { dbReady, fullSync, clearLocal } = require('./context/DatabaseContext').useDatabase();
-  const { triggerSync } = require('./context/SyncContext').useSync();
+  const { triggerFullSync } = require('./context/SyncContext').useSync();
   const navigationRef = useRef(null);
   const notificationListener = useRef(null);
   const responseListener = useRef(null);
@@ -315,15 +315,15 @@ function RootNavigator() {
 
   const handleAppStateChange = useCallback(async (nextAppState) => {
     if (appState.current.match(/inactive|background/) && nextAppState === 'active' && isAuthenticated) {
-      // Push any queued offline changes via SyncEngine batch
-      triggerSync().catch(e => console.warn('[App] SyncEngine foreground error:', e?.message));
-      // Pull fresh data from server into SQLite
+      // Full bidirectional sync: push queued changes → pull server changes
+      triggerFullSync().catch(e => console.warn('[App] SyncEngine foreground error:', e?.message));
+      // Also refresh the DatabaseContext full sync
       if (dbReady) {
         fullSync().catch(e => console.warn('[App] SQLite foreground sync error:', e?.message));
       }
     }
     appState.current = nextAppState;
-  }, [isAuthenticated, dbReady, fullSync, triggerSync]);
+  }, [isAuthenticated, dbReady, fullSync, triggerFullSync]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', handleAppStateChange);

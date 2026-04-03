@@ -17,12 +17,17 @@
  *   const result = await syncEngine.processQueue();  // manual trigger
  *   // Auto-trigger is handled by SyncProvider in context.
  */
-import { PendingSyncDAO, ParcelsDAO, HarvestsDAO, OrdersDAO, PaymentsDAO, getDatabase } from './database';
+import {
+  PendingSyncDAO, ParcelsDAO, HarvestsDAO, OrdersDAO, PaymentsDAO,
+  ProductsDAO, NotificationsDAO, CarbonScoresDAO, MessagesDAO,
+  getDatabase,
+} from './database';
 import { api } from './api';
 
 const BATCH_SIZE = 20;
-const MAX_RETRY_DELAY_MS = 30000;
-const BASE_RETRY_DELAY_MS = 2000;
+
+// Tables to pull from the server
+const PULL_TABLES = ['parcels', 'harvests', 'products', 'orders', 'notifications', 'payments', 'carbon_scores', 'messages'];
 
 class SyncEngine {
   constructor() {
@@ -263,13 +268,190 @@ class SyncEngine {
   async retryFailed() {
     const db = getDatabase();
     if (!db) return;
-
-    // Reset 'failed' items back to 'pending' with reset retry_count
     await db.runAsync(
       "UPDATE pending_sync SET status = 'pending', retry_count = 0 WHERE status = 'failed'"
     );
-
     return this.processQueue();
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  PULL — fetch changes the client hasn't seen yet
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Read per-table last_sync_at timestamps from SQLite db_meta.
+   * Returns { parcels: "2026-...", harvests: null, ... }
+   */
+  async _getLastSyncTimestamps() {
+    const db = getDatabase();
+    if (!db) return {};
+    const timestamps = {};
+    for (const table of PULL_TABLES) {
+      const row = await db.getFirstAsync(
+        'SELECT value FROM db_meta WHERE key = ?',
+        [`last_sync_${table}`]
+      );
+      timestamps[table] = row ? row.value : null;
+    }
+    return timestamps;
+  }
+
+  async _setLastSyncTimestamp(table, timestamp) {
+    const db = getDatabase();
+    if (!db) return;
+    await db.runAsync(
+      'INSERT OR REPLACE INTO db_meta (key, value) VALUES (?, ?)',
+      [`last_sync_${table}`, timestamp]
+    );
+  }
+
+  /**
+   * Quick check: are there server-side changes since our last sync?
+   */
+  async checkForChanges() {
+    try {
+      const timestamps = await this._getLastSyncTimestamps();
+      // Use the earliest timestamp as the global "since"
+      const allTs = Object.values(timestamps).filter(Boolean);
+      const since = allTs.length
+        ? allTs.sort()[0]  // oldest timestamp
+        : null;
+
+      const url = since ? `/sync/status?since=${encodeURIComponent(since)}` : '/sync/status';
+      const resp = await api.get(url);
+      return resp.data;
+    } catch (e) {
+      console.warn('[SyncEngine] checkForChanges error:', e.message);
+      return null;
+    }
+  }
+
+  /**
+   * Pull changes from the server that the client hasn't seen yet.
+   * Upserts into SQLite and removes locally-deleted entities.
+   */
+  async pullChanges() {
+    this._emit({ type: 'pull_start' });
+    const timestamps = await this._getLastSyncTimestamps();
+    let totalUpserts = 0;
+    let totalDeletions = 0;
+
+    try {
+      // Build pull request
+      const tables = PULL_TABLES.map(table => ({
+        table,
+        last_sync_at: timestamps[table] || null,
+      }));
+
+      const resp = await api.post('/sync/pull', { tables });
+      const data = resp.data;
+      const serverTime = data.server_time;
+
+      for (const result of data.results) {
+        const { table, upserts, deletions } = result;
+
+        // Apply upserts to local SQLite
+        if (upserts && upserts.length > 0) {
+          await this._applyUpserts(table, upserts);
+          totalUpserts += upserts.length;
+        }
+
+        // Apply deletions to local SQLite
+        if (deletions && deletions.length > 0) {
+          await this._applyDeletions(table, deletions);
+          totalDeletions += deletions.length;
+        }
+
+        // Update last_sync_at for this table
+        await this._setLastSyncTimestamp(table, serverTime);
+      }
+
+      console.log(`[SyncEngine] Pull complete: ${totalUpserts} upserts, ${totalDeletions} deletions`);
+    } catch (e) {
+      console.error('[SyncEngine] pullChanges error:', e.message);
+    }
+
+    this._emit({ type: 'pull_end', upserts: totalUpserts, deletions: totalDeletions });
+    return { upserts: totalUpserts, deletions: totalDeletions };
+  }
+
+  /**
+   * Full bidirectional sync: push pending → pull changes.
+   */
+  async fullSync() {
+    const pushResult = await this.processQueue();
+    const pullResult = await this.pullChanges();
+    return {
+      push: pushResult,
+      pull: pullResult,
+    };
+  }
+
+  // ─── Apply pulled upserts to local SQLite ─────────────────
+  async _applyUpserts(table, docs) {
+    const db = getDatabase();
+    if (!db || !docs.length) return;
+
+    try {
+      await db.withTransactionAsync(async () => {
+        for (const doc of docs) {
+          switch (table) {
+            case 'parcels':
+              await ParcelsDAO.upsert(doc);
+              break;
+            case 'harvests':
+              await HarvestsDAO.upsert(doc);
+              break;
+            case 'products':
+              await ProductsDAO.upsert(doc);
+              break;
+            case 'orders':
+              await OrdersDAO.upsert(doc);
+              break;
+            case 'notifications':
+              await NotificationsDAO.upsert(doc);
+              break;
+            case 'payments':
+              await PaymentsDAO.upsert(doc);
+              break;
+            case 'carbon_scores':
+              await CarbonScoresDAO.upsert(doc);
+              break;
+            case 'messages':
+              await MessagesDAO.upsert(doc);
+              break;
+          }
+        }
+      });
+    } catch (e) {
+      console.warn(`[SyncEngine] _applyUpserts error for ${table}:`, e.message);
+    }
+  }
+
+  // ─── Apply pulled deletions to local SQLite ────────────────
+  async _applyDeletions(table, entityIds) {
+    const db = getDatabase();
+    if (!db || !entityIds.length) return;
+
+    const tableMap = {
+      parcels: 'parcels',
+      harvests: 'harvests',
+      products: 'products',
+      orders: 'orders',
+      notifications: 'notifications',
+      payments: 'payments',
+      carbon_scores: 'carbon_scores',
+      messages: 'messages',
+    };
+    const sqlTable = tableMap[table];
+    if (!sqlTable) return;
+
+    try {
+      const placeholders = entityIds.map(() => '?').join(',');
+      await db.runAsync(`DELETE FROM ${sqlTable} WHERE id IN (${placeholders})`, entityIds);
+    } catch (e) {
+      console.warn(`[SyncEngine] _applyDeletions error for ${table}:`, e.message);
+    }
   }
 }
 

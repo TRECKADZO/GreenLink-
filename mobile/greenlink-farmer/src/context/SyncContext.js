@@ -36,16 +36,22 @@ export const SyncProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = syncEngine.onChange((event) => {
       if (!mountedRef.current) return;
-      if (event.type === 'sync_start') {
+      if (event.type === 'sync_start' || event.type === 'pull_start') {
         setSyncing(true);
       } else if (event.type === 'sync_end') {
-        setSyncing(false);
-        setLastSyncResult({
-          synced: event.synced,
-          conflicts: event.conflicts,
-          errors: event.errors,
+        setLastSyncResult(prev => ({
+          ...prev,
+          push: { synced: event.synced, conflicts: event.conflicts, errors: event.errors },
           timestamp: new Date().toISOString(),
-        });
+        }));
+        refreshStats();
+      } else if (event.type === 'pull_end') {
+        setSyncing(false);
+        setLastSyncResult(prev => ({
+          ...prev,
+          pull: { upserts: event.upserts, deletions: event.deletions },
+          timestamp: new Date().toISOString(),
+        }));
         refreshStats();
       } else if (event.type === 'enqueued') {
         refreshStats();
@@ -64,25 +70,23 @@ export const SyncProvider = ({ children }) => {
     // We just came back online
     if (wasOfflineRef.current && isAuthenticated) {
       wasOfflineRef.current = false;
-      console.log('[SyncProvider] Connectivity restored — triggering batch sync');
+      console.log('[SyncProvider] Connectivity restored — triggering full sync (push + pull)');
 
       (async () => {
-        // Small delay to let connection stabilize
         await new Promise(r => setTimeout(r, 1500));
 
-        const result = await syncEngine.processQueue();
+        const result = await syncEngine.fullSync();
 
-        if (mountedRef.current && (result.synced > 0 || result.conflicts > 0)) {
+        if (mountedRef.current) {
           const parts = [];
-          if (result.synced > 0) parts.push(`${result.synced} synchronise(s)`);
-          if (result.conflicts > 0) parts.push(`${result.conflicts} conflit(s) resolu(s)`);
-          if (result.errors > 0) parts.push(`${result.errors} erreur(s)`);
+          if (result.push.synced > 0) parts.push(`${result.push.synced} envoye(s)`);
+          if (result.push.conflicts > 0) parts.push(`${result.push.conflicts} conflit(s)`);
+          if (result.pull.upserts > 0) parts.push(`${result.pull.upserts} recu(s)`);
+          if (result.pull.deletions > 0) parts.push(`${result.pull.deletions} supprime(s)`);
 
-          Alert.alert(
-            'Synchronisation terminee',
-            parts.join(', '),
-            [{ text: 'OK' }]
-          );
+          if (parts.length > 0) {
+            Alert.alert('Synchronisation terminee', parts.join(', '), [{ text: 'OK' }]);
+          }
         }
       })();
     }
@@ -93,12 +97,30 @@ export const SyncProvider = ({ children }) => {
     refreshStats();
   }, [isAuthenticated, refreshStats]);
 
-  // Manual sync trigger
+  // Manual sync trigger (push only)
   const triggerSync = useCallback(async () => {
     if (!isOnline || !isAuthenticated) {
       return { synced: 0, conflicts: 0, errors: 0, serverWins: [], offline: !isOnline };
     }
     return syncEngine.processQueue();
+  }, [isOnline, isAuthenticated]);
+
+  // Manual full sync (push + pull)
+  const triggerFullSync = useCallback(async () => {
+    if (!isOnline || !isAuthenticated) return null;
+    return syncEngine.fullSync();
+  }, [isOnline, isAuthenticated]);
+
+  // Pull only (fetch server changes)
+  const pullChanges = useCallback(async () => {
+    if (!isOnline || !isAuthenticated) return null;
+    return syncEngine.pullChanges();
+  }, [isOnline, isAuthenticated]);
+
+  // Check if there are changes on the server
+  const checkForChanges = useCallback(async () => {
+    if (!isOnline || !isAuthenticated) return null;
+    return syncEngine.checkForChanges();
   }, [isOnline, isAuthenticated]);
 
   // Retry previously failed items
@@ -114,6 +136,9 @@ export const SyncProvider = ({ children }) => {
         queueStats,
         lastSyncResult,
         triggerSync,
+        triggerFullSync,
+        pullChanges,
+        checkForChanges,
         retryFailed,
         refreshStats,
         enqueue: syncEngine.enqueue.bind(syncEngine),
