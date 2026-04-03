@@ -29,20 +29,10 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
-    // Seul blocage : si NetInfo confirme zero connectivite
-    // (pas de pre-check HTTP — on laisse api.js gerer les retries)
-    if (isOffline) {
-      Alert.alert(
-        'Pas de connexion',
-        'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
     setLoading(true);
 
-    // Tenter le login directement — api.js fait 3 retries (25s/45s/65s)
+    // Toujours tenter le login — ne PAS bloquer sur isOffline
+    // api.js gere les retries, timeouts et classification d'erreur
     const result = await login(identifier.trim(), password);
     setLoading(false);
 
@@ -57,7 +47,7 @@ const LoginScreen = ({ navigation }) => {
 
       Alert.alert(title, result.error, buttons);
     }
-  }, [identifier, password, login, isOffline]);
+  }, [identifier, password, login]);
 
   return (
     <KeyboardAvoidingView

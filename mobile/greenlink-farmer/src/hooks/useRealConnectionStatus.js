@@ -18,10 +18,15 @@ import NetInfo from '@react-native-community/netinfo';
 import { CONFIG } from '../config';
 
 const HEALTH_URL = CONFIG.DIRECT_API_URL + '/api/health';
-const FALLBACK_URL = 'https://1.1.1.1';
+// Multiple fallbacks for African mobile networks (Orange CI, MTN)
+const FALLBACK_URLS = [
+  'https://connectivitycheck.gstatic.com/generate_204',
+  'https://www.google.com/generate_204',
+  'https://clients3.google.com/generate_204',
+];
 const DEBOUNCE_MS = 800;
-const PING_TIMEOUT_MS = 8000;
-const FALLBACK_TIMEOUT_MS = 5000;
+const PING_TIMEOUT_MS = 12000;
+const FALLBACK_TIMEOUT_MS = 6000;
 
 // ========================
 // Ping reel via HEAD (pas de body = rapide + leger)
@@ -33,7 +38,7 @@ async function pingHead(url, timeoutMs) {
     const res = await fetch(url, {
       method: 'HEAD',
       signal: controller.signal,
-      headers: { 'Cache-Control': 'no-store', 'Pragma': 'no-cache' },
+      headers: { 'Cache-Control': 'no-store', 'Pragma': 'no-cache', 'Connection': 'close' },
     });
     clearTimeout(timer);
     return { reachable: true, status: res.status };
@@ -45,24 +50,24 @@ async function pingHead(url, timeoutMs) {
 
 // ========================
 // Verification reelle en 2 etapes :
-// 1. HEAD /api/health (8s) → serveur accessible ?
-// 2. Si non → HEAD 1.1.1.1 (5s) → internet accessible ?
+// 1. HEAD /api/health (12s) → serveur accessible ?
+// 2. Si non → HEAD multiple Google URLs en parallele → internet accessible ?
 // ========================
 async function checkReal() {
-  // Etape 1 : ping le serveur API
   const server = await pingHead(HEALTH_URL, PING_TIMEOUT_MS);
   if (server.reachable && server.status < 500) {
     return { isOnline: true, isServerReachable: true, source: 'server-ok' };
   }
 
-  // Etape 2 : serveur KO → verifier si internet fonctionne via fallback
-  const fallback = await pingHead(FALLBACK_URL, FALLBACK_TIMEOUT_MS);
-  if (fallback.reachable) {
-    // Internet OK mais serveur injoignable
+  // Multi-fallback : tester plusieurs URLs Google en parallele
+  const results = await Promise.allSettled(
+    FALLBACK_URLS.map(url => pingHead(url, FALLBACK_TIMEOUT_MS))
+  );
+  const hasInternet = results.some(r => r.status === 'fulfilled' && r.value.reachable);
+
+  if (hasInternet) {
     return { isOnline: true, isServerReachable: false, source: 'server-down' };
   }
-
-  // Ni serveur ni fallback → vraisemblablement hors-ligne
   return { isOnline: false, isServerReachable: false, source: 'offline' };
 }
 

@@ -18,10 +18,15 @@ import NetInfo from '@react-native-community/netinfo';
 import { CONFIG } from '../config';
 
 const HEALTH_URL = CONFIG.DIRECT_API_URL + '/api/health';
-const FALLBACK_URL = 'https://connectivitycheck.gstatic.com/generate_204';
+// Multiple fallbacks — African mobile networks often block specific IPs
+const FALLBACK_URLS = [
+  'https://connectivitycheck.gstatic.com/generate_204',  // Google (used natively by Android)
+  'https://www.google.com/generate_204',                   // Google alt
+  'https://clients3.google.com/generate_204',              // Google alt 2
+];
 const DEBOUNCE_MS = 800;
-const PING_TIMEOUT_MS = 8000;
-const FALLBACK_TIMEOUT_MS = 5000;
+const PING_TIMEOUT_MS = 12000;   // 12s for African mobile latency
+const FALLBACK_TIMEOUT_MS = 6000;
 
 // ─── Real ping via HEAD ──────────────────────────────────────
 async function pingHead(url, timeoutMs) {
@@ -41,16 +46,27 @@ async function pingHead(url, timeoutMs) {
   }
 }
 
+// ─── Multi-fallback internet verification ────────────────────
+// Tries multiple URLs in parallel — if ANY responds, device has internet
+async function checkInternetFallback() {
+  const results = await Promise.allSettled(
+    FALLBACK_URLS.map(url => pingHead(url, FALLBACK_TIMEOUT_MS))
+  );
+  return results.some(
+    r => r.status === 'fulfilled' && r.value.reachable
+  );
+}
+
 // ─── Two-step real verification ──────────────────────────────
 // 1. HEAD /api/health → server OK?
-// 2. If not → HEAD Google connectivity check → internet OK?
+// 2. If not → multi-fallback Google check → internet OK?
 async function verifyConnection() {
   const server = await pingHead(HEALTH_URL, PING_TIMEOUT_MS);
   if (server.reachable && server.status < 500) {
     return { isOnline: true, isServerReachable: true, source: 'server-ok' };
   }
-  const fallback = await pingHead(FALLBACK_URL, FALLBACK_TIMEOUT_MS);
-  if (fallback.reachable) {
+  const hasInternet = await checkInternetFallback();
+  if (hasInternet) {
     return { isOnline: true, isServerReachable: false, source: 'server-down' };
   }
   return { isOnline: false, isServerReachable: false, source: 'offline' };
