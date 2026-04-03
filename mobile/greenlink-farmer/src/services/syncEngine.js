@@ -328,51 +328,83 @@ class SyncEngine {
 
   /**
    * Pull changes from the server that the client hasn't seen yet.
-   * Upserts into SQLite and removes locally-deleted entities.
+   * Uses smart delta: calls /status first, then only pulls tables with changes.
+   * Saves bandwidth for rural farmers with limited data plans.
    */
   async pullChanges() {
     this._emit({ type: 'pull_start' });
-    const timestamps = await this._getLastSyncTimestamps();
     let totalUpserts = 0;
     let totalDeletions = 0;
+    let skippedTables = 0;
 
     try {
-      // Build pull request
-      const tables = PULL_TABLES.map(table => ({
-        table,
-        last_sync_at: timestamps[table] || null,
-      }));
+      // Step 1: Check which tables have changes (lightweight GET)
+      const status = await this.checkForChanges();
 
-      const resp = await api.post('/sync/pull', { tables });
+      if (!status || status.total_changes === 0) {
+        console.log('[SyncEngine] Delta check: no server changes — pull skipped');
+        this._emit({ type: 'pull_end', upserts: 0, deletions: 0, skipped: true });
+        return { upserts: 0, deletions: 0, skipped: true };
+      }
+
+      // Step 2: Build pull request for ONLY tables that have changes
+      const timestamps = await this._getLastSyncTimestamps();
+      const tablesWithChanges = [];
+
+      for (const ts of status.tables) {
+        if (ts.changes_since > 0 || ts.deletions_since > 0) {
+          tablesWithChanges.push({
+            table: ts.table,
+            last_sync_at: timestamps[ts.table] || null,
+          });
+        } else {
+          skippedTables++;
+        }
+      }
+
+      if (tablesWithChanges.length === 0) {
+        console.log('[SyncEngine] Delta check: all tables up to date');
+        this._emit({ type: 'pull_end', upserts: 0, deletions: 0, skipped: true });
+        return { upserts: 0, deletions: 0, skipped: true };
+      }
+
+      console.log(`[SyncEngine] Delta pull: ${tablesWithChanges.length} tables with changes, ${skippedTables} skipped`);
+
+      // Step 3: Pull only the tables that changed
+      const resp = await api.post('/sync/pull', { tables: tablesWithChanges });
       const data = resp.data;
       const serverTime = data.server_time;
 
       for (const result of data.results) {
         const { table, upserts, deletions } = result;
 
-        // Apply upserts to local SQLite
         if (upserts && upserts.length > 0) {
           await this._applyUpserts(table, upserts);
           totalUpserts += upserts.length;
         }
 
-        // Apply deletions to local SQLite
         if (deletions && deletions.length > 0) {
           await this._applyDeletions(table, deletions);
           totalDeletions += deletions.length;
         }
 
-        // Update last_sync_at for this table
         await this._setLastSyncTimestamp(table, serverTime);
       }
 
-      console.log(`[SyncEngine] Pull complete: ${totalUpserts} upserts, ${totalDeletions} deletions`);
+      // Also bump the timestamp for skipped tables (they're up to date)
+      for (const ts of status.tables) {
+        if (ts.changes_since === 0 && ts.deletions_since === 0) {
+          await this._setLastSyncTimestamp(ts.table, serverTime);
+        }
+      }
+
+      console.log(`[SyncEngine] Pull complete: ${totalUpserts} upserts, ${totalDeletions} deletions, ${skippedTables} tables skipped`);
     } catch (e) {
       console.error('[SyncEngine] pullChanges error:', e.message);
     }
 
-    this._emit({ type: 'pull_end', upserts: totalUpserts, deletions: totalDeletions });
-    return { upserts: totalUpserts, deletions: totalDeletions };
+    this._emit({ type: 'pull_end', upserts: totalUpserts, deletions: totalDeletions, skipped: false });
+    return { upserts: totalUpserts, deletions: totalDeletions, skipped: false };
   }
 
   /**
