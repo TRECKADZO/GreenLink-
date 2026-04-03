@@ -22,8 +22,8 @@
         "UIBackgroundModes": [
           "remote-notification"
         ],
-        "NSCameraUsageDescription": "GreenLink a besoin d'acc\u00e9der \u00e0 la cam\u00e9ra pour photographier les parcelles et preuves de v\u00e9rification.",
-        "NSLocationWhenInUseUsageDescription": "GreenLink a besoin de votre position pour g\u00e9olocaliser vos photos et parcelles."
+        "NSCameraUsageDescription": "GreenLink a besoin d'accéder à la caméra pour photographier les parcelles et preuves de vérification.",
+        "NSLocationWhenInUseUsageDescription": "GreenLink a besoin de votre position pour géolocaliser vos photos et parcelles."
       }
     },
     "android": {
@@ -71,11 +71,12 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "GreenLink a besoin d'acc\u00e9der \u00e0 la cam\u00e9ra pour photographier vos parcelles."
+          "cameraPermission": "GreenLink a besoin d'accéder à la caméra pour photographier vos parcelles."
         }
       ],
       "./plugins/removeMediaPermissions",
-      "expo-font"
+      "expo-font",
+      "expo-sqlite"
     ],
     "notification": {
       "icon": "./assets/notification-icon.png",

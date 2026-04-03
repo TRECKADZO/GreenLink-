@@ -7,7 +7,7 @@ Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pou
 ## Architecture
 - **Backend**: FastAPI (Python) + MongoDB Atlas (`greenlink_production`)
 - **Frontend**: React (Vite) + Shadcn UI
-- **Mobile**: Expo React Native v1.74.0 (SDK 53)
+- **Mobile**: Expo React Native v1.76.0 (SDK 53) + **expo-sqlite** (stockage local)
 
 ## Modele Economique
 **Cooperatives : 100% GRATUIT** — acces complet, sans abonnement.
@@ -49,23 +49,30 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Niveaux: Excellent/Tres Bon/Bon (ex: Or/Argent/Bronze)
 
 ### Build APK Mobile
-- AAB v1.76.0 (versionCode 71, nouvelle icône): https://expo.dev/artifacts/eas/p9urNq29d8SkXcF1uta7ZJ.aab
+- AAB v1.76.0 (versionCode 71, nouvelle icone): https://expo.dev/artifacts/eas/p9urNq29d8SkXcF1uta7ZJ.aab
 - APK v1.76.0: https://expo.dev/accounts/treckadzo/projects/greenlink-farmer/builds/9959655a-5fba-4bea-809d-ae2eaad44c58
 
-### Base de données
+### Base de donnees
 - MongoDB Atlas (Cluster0): `mongodb+srv://klenakaneric_db_user:474Treckadzo@cluster0.ieoimmt.mongodb.net/?appName=Cluster0`
 - DB: `greenlink_production` — 55 collections, 1072 documents
 
-## Travail complété (2 avril 2026)
-- Migration automatique MongoDB : script `data_seed/restore_if_empty.py` qui restaure les données au démarrage si la base est vide (55 collections, 108 users)
-- Amélioration UI réinitialisation de mot de passe : code affiché en grand format avec instructions claires
-- Archive de données compressée incluse dans le backend pour les déploiements frais
-- Suppression complète de toutes les références visibles "REDD+" dans le code mobile (FarmerProfileScreen, AppContent, HomeScreen, ussdOfflineEngine)
-- Suppression "REDD+" dans les réponses USSD backend, API redd_tracking, rapports PDF (redd_pdf)
-- Correction badge "REDD+" → "Environnement" dans CarbonAuditorsPage (frontend web)
-- Mise à jour des level_label REDD+ → termes simplifiés (Excellent, Très Bon, Bon, En Progression, À Améliorer)
+### Stockage Local SQLite (3 avril 2026)
+- **expo-sqlite@15.2.14** integre dans l'app mobile (SDK 53)
+- Schema SQLite avec 10 tables miroir des collections MongoDB cles :
+  `users`, `parcels`, `harvests`, `products`, `orders`, `notifications`, `messages`, `carbon_scores`, `payments`, `pending_sync`
+- `DatabaseContext` avec DAOs complets (upsert, upsertMany, getBy*, search, delete)
+- File `pending_sync` pour queue d'actions offline avec retry automatique
+- Sync bidirectionnel : push pending actions → pull from server
+- Auto-sync au login, au retour foreground, et nettoyage au logout
+- Fichiers : `src/services/database.js`, `src/context/DatabaseContext.js`
+
+## Travail complete
+- (2 avr) Migration auto MongoDB, UI mot de passe oublie, suppression REDD+/ARS 1000
+- (3 avr) Expo SQLite integre avec 10 tables, DAOs, sync bidirectionnel, DatabaseContext
 
 ## Backlog
+### P0
+- Mettre a jour MONGO_URL dans les Secrets Emergent Dashboard (action utilisateur)
 ### P2
 - Passerelle SMS reelle Orange CI / MTN (MOCK)
 - Langues locales (Baoule/Dioula) mobile

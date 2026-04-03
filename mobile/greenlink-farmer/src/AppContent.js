@@ -36,6 +36,7 @@ function safeRequire(requireFn, screenName) {
 // ============= CONTEXT PROVIDERS =============
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { OfflineProvider } from './context/OfflineContext';
+import { DatabaseProvider } from './context/DatabaseContext';
 
 // ============= SERVICES (safe) =============
 let notificationService = null;
@@ -247,10 +248,25 @@ function AppNavigator() {
 // ============= ROOT NAVIGATOR =============
 function RootNavigator() {
   const { isAuthenticated, loading, user } = useAuth();
+  const { dbReady, fullSync, clearLocal } = require('./context/DatabaseContext').useDatabase();
   const navigationRef = useRef(null);
   const notificationListener = useRef(null);
   const responseListener = useRef(null);
   const appState = useRef(AppState.currentState);
+  const wasAuthenticated = useRef(false);
+
+  // SQLite sync on login
+  useEffect(() => {
+    if (dbReady && isAuthenticated && user) {
+      wasAuthenticated.current = true;
+      fullSync().catch(e => console.warn('[App] SQLite initial sync error:', e?.message));
+    }
+    // Clear local DB on logout
+    if (dbReady && !isAuthenticated && wasAuthenticated.current) {
+      wasAuthenticated.current = false;
+      clearLocal().catch(e => console.warn('[App] SQLite clear error:', e?.message));
+    }
+  }, [dbReady, isAuthenticated, user]);
 
   useEffect(() => {
     if (!isAuthenticated || !user || !notificationService) return;
@@ -291,18 +307,25 @@ function RootNavigator() {
   }, [isAuthenticated]);
 
   const handleAppStateChange = useCallback(async (nextAppState) => {
-    if (appState.current.match(/inactive|background/) && nextAppState === 'active' && isAuthenticated && syncService) {
-      try {
-        const result = await syncService.syncNow();
-        if (result.synced > 0) {
-          Alert.alert('Synchronisation', `${result.synced} element(s) synchronise(s)`, [{ text: 'OK' }]);
+    if (appState.current.match(/inactive|background/) && nextAppState === 'active' && isAuthenticated) {
+      // Legacy AsyncStorage sync
+      if (syncService) {
+        try {
+          const result = await syncService.syncNow();
+          if (result.synced > 0) {
+            Alert.alert('Synchronisation', `${result.synced} element(s) synchronise(s)`, [{ text: 'OK' }]);
+          }
+        } catch (error) {
+          console.error('[App] Foreground sync error:', error?.message);
         }
-      } catch (error) {
-        console.error('[App] Foreground sync error:', error?.message);
+      }
+      // SQLite sync (silently refresh local DB)
+      if (dbReady) {
+        fullSync().catch(e => console.warn('[App] SQLite foreground sync error:', e?.message));
       }
     }
     appState.current = nextAppState;
-  }, [isAuthenticated]);
+  }, [isAuthenticated, dbReady, fullSync]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', handleAppStateChange);
@@ -326,9 +349,11 @@ export default function AppContent() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <OfflineProvider>
-          <RootNavigator />
-        </OfflineProvider>
+        <DatabaseProvider>
+          <OfflineProvider>
+            <RootNavigator />
+          </OfflineProvider>
+        </DatabaseProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
