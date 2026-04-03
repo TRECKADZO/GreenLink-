@@ -62,13 +62,22 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
   `users`, `parcels`, `harvests`, `products`, `orders`, `notifications`, `messages`, `carbon_scores`, `payments`, `pending_sync`
 - `DatabaseContext` avec DAOs complets (upsert, upsertMany, getBy*, search, delete)
 - File `pending_sync` pour queue d'actions offline avec retry automatique
-- Sync bidirectionnel : push pending actions → pull from server
+- Sync bidirectionnel : push pending actions -> pull from server
 - Auto-sync au login, au retour foreground, et nettoyage au logout
 - Fichiers : `src/services/database.js`, `src/context/DatabaseContext.js`
+
+### ConnectivityContext (3 avril 2026)
+- Context React unifie pour l'etat reseau, utilisant `@react-native-community/netinfo`
+- Detection evenementielle (pas de polling) + verification reelle par HEAD ping
+- Expose : `isOnline`, `isOffline`, `isServerReachable`, `connectionType`, `connectionDetails`, `checkNow()`, `resetAndRecheck()`
+- Refactore `OfflineContext` (supprime polling expo-network), `AuthContext` (supprime useRealConnectionStatus hook), `LoginScreen`, `REDDTrackingFormScreen`
+- Provider au sommet de la hierarchie (avant AuthProvider)
+- Fichier : `src/context/ConnectivityContext.js`
 
 ## Travail complete
 - (2 avr) Migration auto MongoDB, UI mot de passe oublie, suppression REDD+/ARS 1000
 - (3 avr) Expo SQLite integre avec 10 tables, DAOs, sync bidirectionnel, DatabaseContext
+- (3 avr) ConnectivityContext: context unifie NetInfo + ping reel, refactoring OfflineContext/AuthContext/LoginScreen/REDDTrackingForm
 
 ## Backlog
 ### P0

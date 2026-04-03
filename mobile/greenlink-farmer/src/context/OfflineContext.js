@@ -1,31 +1,17 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Network from 'expo-network';
+import { useConnectivity } from './ConnectivityContext';
 
 const OfflineContext = createContext();
 
 export const OfflineProvider = ({ children }) => {
-  const [isOnline, setIsOnline] = useState(true);
+  const { isOnline, checkNow } = useConnectivity();
   const [pendingActions, setPendingActions] = useState([]);
   const [lastSync, setLastSync] = useState(null);
 
   useEffect(() => {
-    checkNetwork();
     loadPendingActions();
-    
-    // Vérifier la connexion toutes les 30 secondes
-    const interval = setInterval(checkNetwork, 30000);
-    return () => clearInterval(interval);
   }, []);
-
-  const checkNetwork = async () => {
-    try {
-      const networkState = await Network.getNetworkStateAsync();
-      setIsOnline(networkState.isConnected && networkState.isInternetReachable);
-    } catch (error) {
-      setIsOnline(false);
-    }
-  };
 
   const loadPendingActions = async () => {
     try {
@@ -55,7 +41,7 @@ export const OfflineProvider = ({ children }) => {
     await AsyncStorage.removeItem('pendingActions');
   };
 
-  // Cache des données pour mode offline
+  // Cache des donnees pour mode offline
   const cacheData = async (key, data) => {
     try {
       await AsyncStorage.setItem(`cache_${key}`, JSON.stringify({
@@ -101,7 +87,7 @@ export const OfflineProvider = ({ children }) => {
         cacheData,
         getCachedData,
         updateLastSync,
-        checkNetwork,
+        checkNetwork: checkNow,
       }}
     >
       {children}

@@ -11,13 +11,13 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { useRealConnectionStatus } from '../../hooks/useRealConnectionStatus';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { Button, Divider } from '../../components/UI';
 import { COLORS, FONTS, SPACING } from '../../config';
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
-  const { isOffline } = useRealConnectionStatus();
+  const { isOffline } = useConnectivity();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

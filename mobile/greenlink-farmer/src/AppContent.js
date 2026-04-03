@@ -34,6 +34,7 @@ function safeRequire(requireFn, screenName) {
 }
 
 // ============= CONTEXT PROVIDERS =============
+import { ConnectivityProvider } from './context/ConnectivityContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { OfflineProvider } from './context/OfflineContext';
 import { DatabaseProvider } from './context/DatabaseContext';
@@ -248,6 +249,7 @@ function AppNavigator() {
 // ============= ROOT NAVIGATOR =============
 function RootNavigator() {
   const { isAuthenticated, loading, user } = useAuth();
+  const { isOnline: connectivityOnline } = require('./context/ConnectivityContext').useConnectivity();
   const { dbReady, fullSync, clearLocal } = require('./context/DatabaseContext').useDatabase();
   const navigationRef = useRef(null);
   const notificationListener = useRef(null);
@@ -348,13 +350,15 @@ function RootNavigator() {
 export default function AppContent() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <DatabaseProvider>
-          <OfflineProvider>
-            <RootNavigator />
-          </OfflineProvider>
-        </DatabaseProvider>
-      </AuthProvider>
+      <ConnectivityProvider>
+        <AuthProvider>
+          <DatabaseProvider>
+            <OfflineProvider>
+              <RootNavigator />
+            </OfflineProvider>
+          </DatabaseProvider>
+        </AuthProvider>
+      </ConnectivityProvider>
     </SafeAreaProvider>
   );
 }

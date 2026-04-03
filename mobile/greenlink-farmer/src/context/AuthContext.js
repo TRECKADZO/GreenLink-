@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../services/api';
-import { useRealConnectionStatus } from '../hooks/useRealConnectionStatus';
+import { useConnectivity } from './ConnectivityContext';
 
 const AuthContext = createContext();
 
@@ -10,8 +10,8 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Hook reseau v1.76 — vrai ping, pas NetInfo.isInternetReachable
-  const { checkNow, resetAndRecheck } = useRealConnectionStatus();
+  // Network state from ConnectivityContext
+  const { checkNow, resetAndRecheck } = useConnectivity();
 
   useEffect(() => {
     loadStoredAuth();
@@ -69,7 +69,6 @@ export const AuthProvider = ({ children }) => {
       const data = error.data || error.response?.data;
 
       if (status) {
-        // Erreur HTTP avec code — pas besoin de check reseau
         if (status === 401) {
           errorMessage = 'Identifiant ou mot de passe incorrect';
         } else if (status === 403) {
@@ -86,8 +85,6 @@ export const AuthProvider = ({ children }) => {
           errorMessage = data.detail;
         }
       } else {
-        // Pas de status HTTP — erreur reseau
-        // Utiliser le type deja classifie par api.js (qui fait un vrai ping)
         isServerError = true;
         if (error.type === 'offline') {
           errorMessage = 'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.';
@@ -96,7 +93,7 @@ export const AuthProvider = ({ children }) => {
         } else if (error.type === 'server') {
           errorMessage = 'Impossible de joindre le serveur. Reessayez dans quelques instants.';
         } else {
-          // Dernier recours : vrai check via le hook
+          // Fallback: use connectivity context for real check
           const connectivity = await checkNow();
           if (!connectivity.isOnline) {
             errorMessage = 'Pas de connexion internet. Verifiez votre WiFi ou donnees mobiles.';
@@ -173,12 +170,12 @@ export const AuthProvider = ({ children }) => {
       console.warn('[Auth] SecureStore cleanup error:', e);
     }
 
-    // Reset l'etat React
     setToken(null);
     setUser(null);
-
-    // Clear auth token interne
     await api.flushConnections();
+
+    // Reset connectivity state after clearing auth
+    resetAndRecheck().catch(() => {});
 
     console.log('[Auth] Logout complet — token et user reset');
   }, [resetAndRecheck]);

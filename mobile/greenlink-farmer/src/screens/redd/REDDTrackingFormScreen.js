@@ -12,9 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useConnectivity } from '../../context/ConnectivityContext';
 import { cooperativeApi } from '../../services/cooperativeApi';
 import { api } from '../../services/api';
 
@@ -82,9 +82,9 @@ const REDD_CATEGORIES = [
 const REDDTrackingFormScreen = ({ navigation, route }) => {
   const { farmerId: paramFarmerId, farmerData: paramFarmerData, farmerName: paramFarmerName } = route.params || {};
   const { user, token } = useAuth();
+  const { isOnline } = useConnectivity();
 
   const [loading, setLoading] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
   const [members, setMembers] = useState([]);
   const [selectedFarmer, setSelectedFarmer] = useState(paramFarmerId || '');
   const [farmerName, setFarmerName] = useState(paramFarmerData?.full_name || paramFarmerData?.name || paramFarmerName || '');
@@ -98,19 +98,14 @@ const REDDTrackingFormScreen = ({ navigation, route }) => {
   const [suiviRequis, setSuiviRequis] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsOnline(state.isConnected);
-    });
     loadMembers();
-    return () => unsubscribe();
   }, []);
 
   const loadMembers = async () => {
     try {
       const cachedMembers = await AsyncStorage.getItem('cached_members');
       if (cachedMembers) setMembers(JSON.parse(cachedMembers));
-      const netInfo = await NetInfo.fetch();
-      if (netInfo.isConnected) {
+      if (isOnline) {
         const response = await cooperativeApi.getMembers(token);
         if (response.data?.members) {
           setMembers(response.data.members);
