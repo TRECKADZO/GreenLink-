@@ -198,7 +198,7 @@ if CORS_ORIGINS:
     allowed_origins = [o.strip() for o in CORS_ORIGINS.split(',') if o.strip()]
 else:
     allowed_origins = [
-        "https://farmer-rewards-app.preview.emergentagent.com",
+        "https://dev-archive-link.preview.emergentagent.com",
         "http://localhost:3000",
     ]
 
