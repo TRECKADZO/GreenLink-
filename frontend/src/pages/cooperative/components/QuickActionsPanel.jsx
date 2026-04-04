@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Plus, Users, Shield, Target, Package, Store,
   DollarSign, Leaf, FileText, TreePine, AlertTriangle,
-  UserCircle, Clock, Smartphone, ChevronDown
+  UserCircle, Clock, Smartphone, ChevronDown, Gift
 } from 'lucide-react';
 
 const categories = [
@@ -40,6 +40,12 @@ const categories = [
       { icon: TreePine, label: 'Naturalisation', path: '/cooperative/parcels/verification', color: 'text-[#6B7280]' },
       { icon: AlertTriangle, label: 'SSRTE / ICI', path: '/cooperative/ssrte', color: 'text-[#6B7280]' },
       { icon: UserCircle, label: 'Inscriptions', path: '/cooperative/inscriptions', color: 'text-[#6B7280]' },
+    ],
+  },
+  {
+    title: 'Reseau',
+    items: [
+      { icon: Gift, label: 'Parrainage', path: '/cooperative/referral', color: 'text-[#7C3AED]' },
     ],
   },
 ];

@@ -90,6 +90,7 @@ const Register = () => {
     zone: '',
     // Cooperative fields
     coopName: '',
+    sponsorReferralCode: '', // Code de parrainage (optionnel)
     // ICI Data Fields for producers
     genre: '',
     dateNaissance: '',
@@ -102,6 +103,8 @@ const Register = () => {
   const [registrationResult, setRegistrationResult] = useState(null);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [referralValidation, setReferralValidation] = useState(null);
+  const [validatingReferral, setValidatingReferral] = useState(false);
 
   // Get unique zones for filtering
   const zones = [...new Set(DEPARTEMENTS.map(d => d.zone))].sort();
@@ -110,6 +113,38 @@ const Register = () => {
   const filteredDepartements = formData.zone 
     ? DEPARTEMENTS.filter(d => d.zone === formData.zone)
     : DEPARTEMENTS;
+
+  // Validate referral code for cooperatives
+  const validateReferralCode = async (code) => {
+    if (!code || code.length < 5) {
+      setReferralValidation(null);
+      return;
+    }
+    
+    setValidatingReferral(true);
+    try {
+      const response = await axios.post(`${API_URL}/api/cooperative-referral/validate`, {
+        referral_code: code.toUpperCase()
+      });
+      setReferralValidation(response.data);
+    } catch (error) {
+      setReferralValidation({ valid: false, message: 'Erreur de validation du code' });
+    } finally {
+      setValidatingReferral(false);
+    }
+  };
+
+  // Debounce referral code validation
+  useEffect(() => {
+    if (formData.userType === 'cooperative' && formData.sponsorReferralCode) {
+      const timer = setTimeout(() => {
+        validateReferralCode(formData.sponsorReferralCode);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setReferralValidation(null);
+    }
+  }, [formData.sponsorReferralCode, formData.userType]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -148,6 +183,7 @@ const Register = () => {
         departement: formData.departement,
         zone: formData.zone,
         coop_name: formData.coopName || null,
+        sponsor_referral_code: formData.sponsorReferralCode?.toUpperCase() || null,
         ...iciData
       }
     );
@@ -367,9 +403,49 @@ const Register = () => {
                   data-testid="coop-name-input"
                 />
               </div>
-              <p className="text-xs text-gray-500">
-                Votre code cooperative sera genere automatiquement a la creation du compte.
+              
+              {/* Code de parrainage optionnel */}
+              <div className="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                <Label className="text-xs text-emerald-700 mb-1 block font-medium">
+                  Avez-vous un code de parrainage ? (facultatif)
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Ex: GL-COOP-ABJ-1234"
+                  value={formData.sponsorReferralCode}
+                  onChange={(e) => setFormData({ ...formData, sponsorReferralCode: e.target.value.toUpperCase() })}
+                  className="text-sm font-mono uppercase"
+                  data-testid="sponsor-code-input"
+                />
+                {validatingReferral && (
+                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                    <span className="animate-spin">⏳</span> Validation en cours...
+                  </p>
+                )}
+                {referralValidation && (
+                  <p className={`text-xs mt-1 ${referralValidation.valid ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {referralValidation.valid ? '✓ ' : '✗ '}{referralValidation.message}
+                    {referralValidation.sponsor_name && (
+                      <span className="font-medium"> ({referralValidation.sponsor_name})</span>
+                    )}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500 mt-2">
+                  Si une autre cooperative vous a invite, entrez son code ici. Sinon, laissez vide.
+                </p>
+              </div>
+              
+              <p className="text-xs text-gray-500 mt-2">
+                Votre code cooperative et votre code de parrainage unique seront generes automatiquement.
               </p>
+              
+              {/* Message service gratuit */}
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-700">
+                  💡 <strong>Service 100% gratuit</strong> - Le service est entierement gratuit pour votre cooperative. 
+                  Vous pourrez parrainer d'autres cooperatives en partageant votre code apres inscription.
+                </p>
+              </div>
             </div>
           )}
 

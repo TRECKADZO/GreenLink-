@@ -156,6 +156,33 @@ async def register(user_data: UserCreate):
             user_dict["headquarters_region"] = getattr(user_data, 'headquarters_region', None) or dept
             user_dict["commission_rate"] = getattr(user_data, 'commission_rate', 0.10)
             user_dict["orange_money_business"] = getattr(user_data, 'orange_money_business', None)
+            
+            # Générer automatiquement le code de parrainage unique
+            import random, string
+            region_code = dept[:3].upper() if dept else coop_name[:3].upper() if coop_name else "COO"
+            random_digits = "".join(random.choices(string.digits, k=4))
+            referral_code = f"GL-COOP-{region_code}-{random_digits}"
+            # S'assurer de l'unicité
+            while await db.users.find_one({"referral_code": referral_code}):
+                random_digits = "".join(random.choices(string.digits, k=4))
+                referral_code = f"GL-COOP-{region_code}-{random_digits}"
+            user_dict["referral_code"] = referral_code
+            user_dict["referral_code_created_at"] = datetime.utcnow()
+            
+            # Gérer le parrainage si un code est fourni
+            sponsor_code = getattr(user_data, 'sponsor_referral_code', None)
+            if sponsor_code:
+                sponsor_code = sponsor_code.strip().upper()
+                sponsor = await db.users.find_one({
+                    "referral_code": sponsor_code,
+                    "user_type": "cooperative",
+                    "is_active": True
+                })
+                if sponsor:
+                    user_dict["sponsor_id"] = sponsor["id"]
+                    user_dict["sponsor_referral_code"] = sponsor_code
+                    user_dict["affiliated_at"] = datetime.utcnow()
+                    logger.info(f"[REGISTER] Cooperative {coop_name} affiliated to sponsor {sponsor.get('coop_name')} via code {sponsor_code}")
         elif user_data.user_type == "field_agent":
             user_dict["zone"] = getattr(user_data, 'zone', None)
             user_dict["village_coverage"] = []

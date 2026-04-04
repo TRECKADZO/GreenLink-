@@ -94,6 +94,7 @@ import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 import MRVDashboard from "./pages/cooperative/MRVDashboard";
 import REDDGuidePage from "./pages/REDDGuidePage";
 import REDDTrackingPage from "./pages/cooperative/REDDTrackingPage";
+import CooperativeReferralPage from "./pages/cooperative/CooperativeReferralPage";
 
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
@@ -234,6 +235,8 @@ function App() {
               <Route path="/cooperative/inscriptions" element={<USSDRegistrationsPage />} />
               <Route path="/cooperative/ssrte" element={<CooperativeSSRTEDashboard />} />
               <Route path="/cooperative/mrv" element={<MRVDashboard />} />
+              <Route path="/cooperative/referral" element={<CooperativeReferralPage />} />
+              <Route path="/cooperative/parrainage" element={<CooperativeReferralPage />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
 

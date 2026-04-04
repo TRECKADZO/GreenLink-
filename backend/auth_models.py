@@ -60,6 +60,9 @@ class UserCreate(UserBase):
     commission_rate: Optional[float] = None
     orange_money_business: Optional[str] = None
     
+    # Code de parrainage (optionnel, pour les coopératives)
+    sponsor_referral_code: Optional[str] = None
+    
     # ICI Data Fields (for producteurs)
     date_naissance: Optional[str] = None
     genre: Optional[str] = None  # homme/femme
