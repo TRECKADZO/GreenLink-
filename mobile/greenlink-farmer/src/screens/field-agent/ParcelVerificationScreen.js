@@ -5,11 +5,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
 let Location = null;
 try { Location = require('expo-location'); } catch (e) {}
+
+const OFFLINE_PARCELS_KEY = 'offline_parcel_declarations';
 
 const CROP_TYPES = [
   { id: 'cacao', label: 'Cacao', icon: 'leaf' },
@@ -29,6 +33,8 @@ const ParcelVerificationScreen = ({ navigation, route }) => {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [location, setLocation] = useState(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const [offlineCount, setOfflineCount] = useState(0);
 
   // New parcel form
   const [village, setVillage] = useState('');
@@ -39,7 +45,29 @@ const ParcelVerificationScreen = ({ navigation, route }) => {
   useEffect(() => {
     loadParcels();
     getLocation();
+    checkConnectivity();
+    loadOfflineCount();
+    
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsOnline(state.isConnected && state.isInternetReachable);
+    });
+    return () => unsubscribe();
   }, []);
+
+  const checkConnectivity = async () => {
+    const netInfo = await NetInfo.fetch();
+    setIsOnline(netInfo.isConnected && netInfo.isInternetReachable);
+  };
+
+  const loadOfflineCount = async () => {
+    try {
+      const data = await AsyncStorage.getItem(OFFLINE_PARCELS_KEY);
+      if (data) {
+        const items = JSON.parse(data);
+        setOfflineCount(items.length);
+      }
+    } catch (e) {}
+  };
 
   const getLocation = async () => {
     if (!Location) return;
@@ -75,23 +103,64 @@ const ParcelVerificationScreen = ({ navigation, route }) => {
     }
 
     setSubmitting(true);
-    try {
-      const parcelData = {
-        village: village.trim(),
-        area_hectares: parseFloat(area),
-        crop_type: cropType,
-        notes: notes.trim(),
-        gps_coordinates: location || null,
-      };
+    
+    const parcelData = {
+      farmer_id: farmerId,
+      farmer_name: farmerName || farmerData?.full_name || farmerData?.name,
+      village: village.trim(),
+      area_hectares: parseFloat(area),
+      crop_type: cropType,
+      notes: notes.trim(),
+      gps_coordinates: location || null,
+      created_at: new Date().toISOString(),
+      offline_id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    };
 
-      const res = await api.post(`/field-agent/farmer-parcels/${farmerId}`, parcelData);
-      Alert.alert('Parcelle declaree', 'La parcelle a ete enregistree avec succes.', [
-        { text: 'OK', onPress: () => { setShowForm(false); resetForm(); loadParcels(); } }
-      ]);
-    } catch {
-      Alert.alert('Erreur', 'Erreur reseau');
-    } finally {
-      setSubmitting(false);
+    // Vérifier la connexion
+    const netInfo = await NetInfo.fetch();
+    const online = netInfo.isConnected && netInfo.isInternetReachable;
+
+    if (online) {
+      try {
+        const res = await api.post(`/field-agent/farmer-parcels/${farmerId}`, parcelData);
+        Alert.alert('Parcelle declaree', 'La parcelle a ete enregistree avec succes.', [
+          { text: 'OK', onPress: () => { setShowForm(false); resetForm(); loadParcels(); } }
+        ]);
+      } catch (error) {
+        console.warn('API error, saving offline:', error);
+        // En cas d'erreur réseau, sauvegarder hors-ligne
+        await saveOffline(parcelData);
+        Alert.alert(
+          'Sauvegarde hors-ligne',
+          'La parcelle a ete sauvegardee localement. Elle sera synchronisee automatiquement.',
+          [{ text: 'OK', onPress: () => { setShowForm(false); resetForm(); loadOfflineCount(); } }]
+        );
+      }
+    } else {
+      // Mode hors-ligne - sauvegarder localement
+      await saveOffline(parcelData);
+      Alert.alert(
+        'Sauvegarde hors-ligne',
+        'Pas de connexion internet. La parcelle a ete sauvegardee localement et sera synchronisee quand vous serez connecte.',
+        [
+          { text: 'Nouvelle parcelle', onPress: () => { resetForm(); loadOfflineCount(); } },
+          { text: 'Terminer', onPress: () => { setShowForm(false); resetForm(); navigation.goBack(); } }
+        ]
+      );
+    }
+    
+    setSubmitting(false);
+  };
+
+  const saveOffline = async (parcelData) => {
+    try {
+      const existingData = await AsyncStorage.getItem(OFFLINE_PARCELS_KEY);
+      const parcels = existingData ? JSON.parse(existingData) : [];
+      parcels.push(parcelData);
+      await AsyncStorage.setItem(OFFLINE_PARCELS_KEY, JSON.stringify(parcels));
+      setOfflineCount(parcels.length);
+    } catch (e) {
+      console.error('Error saving offline parcel:', e);
     }
   };
 
@@ -113,6 +182,13 @@ const ParcelVerificationScreen = ({ navigation, route }) => {
           <Text style={styles.headerTitle}>Declaration parcelles</Text>
           <Text style={styles.headerSubtitle}>{farmerName || 'Agriculteur'}</Text>
         </View>
+        {/* Online/Offline indicator */}
+        <View style={[styles.statusBadge, { backgroundColor: isOnline ? '#dcfce7' : '#fef3c7' }]}>
+          <View style={[styles.statusDot, { backgroundColor: isOnline ? '#22c55e' : '#f59e0b' }]} />
+          <Text style={[styles.statusText, { color: isOnline ? '#166534' : '#92400e' }]}>
+            {isOnline ? 'En ligne' : 'Hors-ligne'}
+          </Text>
+        </View>
         {!showForm && (
           <TouchableOpacity style={styles.addBtn} onPress={() => setShowForm(true)}>
             <Ionicons name="add" size={20} color="#fff" />
@@ -120,6 +196,16 @@ const ParcelVerificationScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Offline count badge */}
+      {offlineCount > 0 && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline" size={16} color="#92400e" />
+          <Text style={styles.offlineBannerText}>
+            {offlineCount} parcelle(s) en attente de synchronisation
+          </Text>
+        </View>
+      )}
 
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* GPS Info */}
@@ -245,10 +331,15 @@ const ParcelVerificationScreen = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', flexWrap: 'wrap' },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#1e293b' },
   headerSubtitle: { fontSize: 12, color: '#64748b' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, marginRight: 8 },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontSize: 10, fontWeight: '600' },
+  offlineBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 8, backgroundColor: '#fef3c7', borderBottomWidth: 1, borderBottomColor: '#fcd34d' },
+  offlineBannerText: { fontSize: 12, color: '#92400e', fontWeight: '500' },
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#059669', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
   addBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   content: { flex: 1, padding: 16 },

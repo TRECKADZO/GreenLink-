@@ -240,7 +240,16 @@ class SyncService {
         console.warn('[SyncService] Parcel verification sync error:', e.message);
       }
 
-      // 6. Synchroniser les actions pendingActions classiques
+      // 6. Synchroniser les déclarations de parcelles hors-ligne
+      try {
+        const parcelDeclResult = await this._syncOfflineParcelDeclarations();
+        synced += parcelDeclResult.synced;
+        failed += parcelDeclResult.failed;
+      } catch (e) {
+        console.warn('[SyncService] Parcel declaration sync error:', e.message);
+      }
+
+      // 7. Synchroniser les actions pendingActions classiques
       const pendingActionsStr = await AsyncStorage.getItem('pendingActions');
       if (pendingActionsStr) {
         const pendingActions = JSON.parse(pendingActionsStr);
@@ -306,6 +315,51 @@ class SyncService {
     return { synced, failed };
   }
 
+  // Synchroniser les déclarations de parcelles hors-ligne
+  async _syncOfflineParcelDeclarations() {
+    let synced = 0;
+    let failed = 0;
+    const storageKey = 'offline_parcel_declarations';
+    
+    const dataStr = await AsyncStorage.getItem(storageKey);
+    if (!dataStr) return { synced: 0, failed: 0 };
+    
+    const parcels = JSON.parse(dataStr);
+    if (!parcels || parcels.length === 0) return { synced: 0, failed: 0 };
+    
+    console.log(`[SyncService] Syncing ${parcels.length} offline parcel declarations`);
+    
+    const failedItems = [];
+    
+    for (const parcel of parcels) {
+      try {
+        const farmerId = parcel.farmer_id;
+        const parcelData = {
+          village: parcel.village,
+          area_hectares: parcel.area_hectares,
+          crop_type: parcel.crop_type,
+          notes: parcel.notes,
+          gps_coordinates: parcel.gps_coordinates,
+        };
+        await api.post(`/field-agent/farmer-parcels/${farmerId}`, parcelData);
+        synced++;
+      } catch (error) {
+        console.error('[SyncService] Failed to sync parcel declaration:', error.message);
+        failedItems.push(parcel);
+        failed++;
+      }
+    }
+    
+    // Sauvegarder uniquement les items échoués
+    if (failedItems.length > 0) {
+      await AsyncStorage.setItem(storageKey, JSON.stringify(failedItems));
+    } else {
+      await AsyncStorage.removeItem(storageKey);
+    }
+    
+    return { synced, failed };
+  }
+
   // Obtenir le statut de synchronisation
   async getSyncStatus() {
     try {
@@ -356,6 +410,13 @@ class SyncService {
       if (verifStr) {
         const verif = JSON.parse(verifStr);
         pendingCount += verif.length;
+      }
+
+      // Déclarations de parcelles hors-ligne
+      const parcelDeclStr = await AsyncStorage.getItem('offline_parcel_declarations');
+      if (parcelDeclStr) {
+        const parcelDecl = JSON.parse(parcelDeclStr);
+        pendingCount += parcelDecl.length;
       }
 
       return {
