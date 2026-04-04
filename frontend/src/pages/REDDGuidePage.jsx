@@ -20,10 +20,10 @@ const REDD_CATEGORIES = [
     color: 'emerald',
     impact: 'Augmente les stocks de carbone, biodiversite, resilience climatique',
     practices: [
-      { name: 'Arbres d\'ombrage (30-50% couverture)', description: 'Planter et maintenir des arbres d\'ombrage dans les parcelles cacao/cafe', bonus: '+1.0 score', prime: '+15 000 FCFA/ha' },
-      { name: 'Systeme agroforestier multi-strates', description: 'Association cacaoyers avec arbres forestiers (Acajou, Terminalia), fruitiers (avocat, safou) et legumineuses (Gliricidia)', bonus: '+1.5 score', prime: '+20 000 FCFA/ha' },
-      { name: 'Enrichissement parcelles existantes', description: 'Plantation d\'arbres supplementaires et maintien des arbres spontanes', bonus: '+0.5 score', prime: '+8 000 FCFA/ha' },
-      { name: 'Transition plein soleil vers ombrage', description: 'Conversion progressive des parcelles plein soleil vers systemes multi-strates (2-3 strates)', bonus: '+2.0 score', prime: '+25 000 FCFA/ha' },
+      { name: 'Arbres d\'ombrage (30-50% couverture)', description: 'Planter et maintenir des arbres d\'ombrage dans les parcelles cacao/cafe', bonus: '+1.0 score' },
+      { name: 'Systeme agroforestier multi-strates', description: 'Association cacaoyers avec arbres forestiers (Acajou, Terminalia), fruitiers (avocat, safou) et legumineuses (Gliricidia)', bonus: '+1.5 score' },
+      { name: 'Enrichissement parcelles existantes', description: 'Plantation d\'arbres supplementaires et maintien des arbres spontanes', bonus: '+0.5 score' },
+      { name: 'Transition plein soleil vers ombrage', description: 'Conversion progressive des parcelles plein soleil vers systemes multi-strates (2-3 strates)', bonus: '+2.0 score' },
     ],
   },
   {
@@ -34,10 +34,10 @@ const REDD_CATEGORIES = [
     color: 'blue',
     impact: 'Decouplage agriculture-deforestation, protection forets classees',
     practices: [
-      { name: 'Intensification durable', description: 'Ameliorer rendements sur parcelles existantes sans extension forestiere', bonus: '+0.5 score', prime: '+5 000 FCFA/ha' },
-      { name: 'Pas de nouvelle plantation sur foret', description: 'Engagement zero-deforestation, interdiction d\'extension sur terres forestieres', bonus: 'Obligatoire', prime: 'Eligibilite prime carbone' },
-      { name: 'Restauration parcelles degradees', description: 'Reconversion des parcelles degradees via agroforesterie ou systemes productifs avec arbres', bonus: '+1.0 score', prime: '+12 000 FCFA/ha' },
-      { name: 'Protection forets classees', description: 'Participation a l\'agroforesterie communautaire et systeme Taungya', bonus: '+0.5 score', prime: '+7 000 FCFA/ha' },
+      { name: 'Intensification durable', description: 'Ameliorer rendements sur parcelles existantes sans extension forestiere', bonus: '+0.5 score' },
+      { name: 'Pas de nouvelle plantation sur foret', description: 'Engagement zero-deforestation, interdiction d\'extension sur terres forestieres', bonus: 'Obligatoire' },
+      { name: 'Restauration parcelles degradees', description: 'Reconversion des parcelles degradees via agroforesterie ou systemes productifs avec arbres', bonus: '+1.0 score' },
+      { name: 'Protection forets classees', description: 'Participation a l\'agroforesterie communautaire et systeme Taungya', bonus: '+0.5 score' },
     ],
   },
   {
@@ -48,11 +48,11 @@ const REDD_CATEGORIES = [
     color: 'amber',
     impact: 'Amelioration fertilite sols, reduction emissions GES',
     practices: [
-      { name: 'Paillage et compostage', description: 'Production d\'intrants organiques, reduction des engrais chimiques', bonus: '+1.0 score', prime: '+10 000 FCFA/ha' },
-      { name: 'Biochar', description: 'Utilisation de biochar pour ameliorer la fertilite et stocker le carbone', bonus: '+0.5 score', prime: '+6 000 FCFA/ha' },
-      { name: 'Couverture vegetale', description: 'Plantes rampantes legumineuses pour lutter contre l\'erosion et maintenir l\'humidite', bonus: '+0.5 score', prime: '+5 000 FCFA/ha' },
-      { name: 'Gestion integree ravageurs', description: 'Reduction des pesticides, methodes biologiques de lutte', bonus: '+0.3 score', prime: '+4 000 FCFA/ha' },
-      { name: 'Taille et elagage sanitaire', description: 'Entretien regulier des cacaoyers/cafeiers pour productivite et sante', bonus: '+0.2 score', prime: '+3 000 FCFA/ha' },
+      { name: 'Paillage et compostage', description: 'Production d\'intrants organiques, reduction des engrais chimiques', bonus: '+1.0 score' },
+      { name: 'Biochar', description: 'Utilisation de biochar pour ameliorer la fertilite et stocker le carbone', bonus: '+0.5 score' },
+      { name: 'Couverture vegetale', description: 'Plantes rampantes legumineuses pour lutter contre l\'erosion et maintenir l\'humidite', bonus: '+0.5 score' },
+      { name: 'Gestion integree ravageurs', description: 'Reduction des pesticides, methodes biologiques de lutte', bonus: '+0.3 score' },
+      { name: 'Taille et elagage sanitaire', description: 'Entretien regulier des cacaoyers/cafeiers pour productivite et sante', bonus: '+0.2 score' },
     ],
   },
   {
@@ -63,10 +63,10 @@ const REDD_CATEGORIES = [
     color: 'teal',
     impact: 'Regeneration ecosystemes, reduction pression bois-energie',
     practices: [
-      { name: 'Reboisement et regeneration assistee', description: 'Regeneration naturelle assistee sur terres degradees', bonus: '+1.5 score', prime: '+18 000 FCFA/ha' },
-      { name: 'Plantations bois-energie', description: 'Reduire la coupe dans les forets naturelles en plantant du bois-energie', bonus: '+0.5 score', prime: '+7 000 FCFA/ha' },
-      { name: 'Protection zones ripariennes', description: 'Protection des pentes, berges et zones ecologiquement fragiles', bonus: '+0.5 score', prime: '+6 000 FCFA/ha' },
-      { name: 'Valorisation residus agricoles', description: 'Gestion durable des residus (pas de brulage), compostage, mulching', bonus: '+0.5 score', prime: '+5 000 FCFA/ha' },
+      { name: 'Reboisement et regeneration assistee', description: 'Regeneration naturelle assistee sur terres degradees', bonus: '+1.5 score' },
+      { name: 'Plantations bois-energie', description: 'Reduire la coupe dans les forets naturelles en plantant du bois-energie', bonus: '+0.5 score' },
+      { name: 'Protection zones ripariennes', description: 'Protection des pentes, berges et zones ecologiquement fragiles', bonus: '+0.5 score' },
+      { name: 'Valorisation residus agricoles', description: 'Gestion durable des residus (pas de brulage), compostage, mulching', bonus: '+0.5 score' },
     ],
   },
   {
@@ -77,10 +77,10 @@ const REDD_CATEGORIES = [
     color: 'violet',
     impact: 'Integrite environnementale, conformite marche carbone, acces primes',
     practices: [
-      { name: 'Enregistrement GPS parcelles', description: 'Geolocalisation des parcelles pour tracabilite EUDR et standards carbone', bonus: 'Obligatoire', prime: 'Eligibilite' },
-      { name: 'Safeguards sociaux', description: 'Equite genre, prevention travail des enfants (SSRTE/ICI), clarification foncier', bonus: 'Obligatoire', prime: 'Eligibilite' },
-      { name: 'Monitoring MRV', description: 'Collecte de donnees: couverture arboree, pratiques adoptees, reductions emissions', bonus: '+0.5 score', prime: 'Acces programme Tai' },
-      { name: 'Certification Cacao Durable', description: 'Niveaux Bon/Tres Bon/Excellent pour le cacao durable', bonus: 'Jusqu\'a Excellent', prime: '+30 000 FCFA/ha' },
+      { name: 'Enregistrement GPS parcelles', description: 'Geolocalisation des parcelles pour tracabilite EUDR et standards carbone', bonus: 'Obligatoire' },
+      { name: 'Safeguards sociaux', description: 'Equite genre, prevention travail des enfants (SSRTE/ICI), clarification foncier', bonus: 'Obligatoire' },
+      { name: 'Monitoring MRV', description: 'Collecte de donnees: couverture arboree, pratiques adoptees, reductions emissions', bonus: '+0.5 score' },
+      { name: 'Certification Cacao Durable', description: 'Niveaux Bon/Tres Bon/Excellent pour le cacao durable', bonus: 'Jusqu\'a Excellent' },
     ],
   },
 ];
@@ -139,7 +139,7 @@ const REDDGuidePage = () => {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <Card className="bg-slate-900 border-slate-800">
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-emerald-400">5</p>
@@ -150,12 +150,6 @@ const REDDGuidePage = () => {
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-blue-400">21</p>
                 <p className="text-xs text-slate-400">Pratiques</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-slate-900 border-slate-800">
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-amber-400">60k</p>
-                <p className="text-xs text-slate-400">FCFA/ha max</p>
               </CardContent>
             </Card>
             <Card className="bg-slate-900 border-slate-800">
@@ -225,7 +219,6 @@ const REDDGuidePage = () => {
                               <Badge variant="outline" className={`${colors.border} ${colors.text} text-[10px]`}>
                                 {practice.bonus}
                               </Badge>
-                              <p className="text-[10px] text-slate-500 mt-1">{practice.prime}</p>
                             </div>
                           </div>
                         </div>
