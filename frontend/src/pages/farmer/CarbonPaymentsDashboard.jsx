@@ -45,6 +45,13 @@ const CarbonPaymentsDashboard = () => {
     residus_au_sol: '',
     plantes_couverture: '',
     especes_arbres: '',
+    // Questions bonus (9-14)
+    compostage: '',
+    agroforesterie: '',
+    irrigation_goutte: '',
+    zero_pesticides: '',
+    haies_vives: '',
+    rotation_cultures: '',
   });
 
   useEffect(() => {
@@ -74,7 +81,9 @@ const CarbonPaymentsDashboard = () => {
 
   const handleCalculate = async () => {
     if (!form.hectares || !form.grands_arbres || !form.culture || form.engrais_chimique === '' ||
-        form.brulage === '' || form.residus_au_sol === '' || form.plantes_couverture === '' || !form.especes_arbres) {
+        form.brulage === '' || form.residus_au_sol === '' || form.plantes_couverture === '' || !form.especes_arbres ||
+        form.compostage === '' || form.agroforesterie === '' || form.irrigation_goutte === '' ||
+        form.zero_pesticides === '' || form.haies_vives === '' || form.rotation_cultures === '') {
       return;
     }
     setCalculating(true);
@@ -88,6 +97,13 @@ const CarbonPaymentsDashboard = () => {
         residus_au_sol: form.residus_au_sol === 'oui',
         plantes_couverture: form.plantes_couverture === 'oui',
         especes_arbres: parseInt(form.especes_arbres),
+        // Questions bonus (9-14)
+        compostage: form.compostage === 'oui',
+        agroforesterie: form.agroforesterie === 'oui',
+        irrigation_goutte: form.irrigation_goutte === 'oui',
+        zero_pesticides: form.zero_pesticides === 'oui',
+        haies_vives: form.haies_vives === 'oui',
+        rotation_cultures: form.rotation_cultures === 'oui',
       };
       const response = await fetch(`${API_URL}/api/carbon-payments/ma-prime`, {
         method: 'POST',
@@ -355,6 +371,84 @@ const CarbonPaymentsDashboard = () => {
                     className="mt-1"
                     data-testid="q-especes"
                   />
+                </div>
+                {/* 9. Compostage */}
+                <div>
+                  <Label className="text-gray-700 text-sm font-medium">9. Faites-vous du compostage ?</Label>
+                  <Select value={form.compostage} onValueChange={(v) => setForm({ ...form, compostage: v })}>
+                    <SelectTrigger className="mt-1" data-testid="q-compostage">
+                      <SelectValue placeholder="Choisir..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="oui">Oui</SelectItem>
+                      <SelectItem value="non">Non</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* 10. Agroforesterie */}
+                <div>
+                  <Label className="text-gray-700 text-sm font-medium">10. Pratiquez-vous l'agroforesterie ?</Label>
+                  <Select value={form.agroforesterie} onValueChange={(v) => setForm({ ...form, agroforesterie: v })}>
+                    <SelectTrigger className="mt-1" data-testid="q-agroforesterie">
+                      <SelectValue placeholder="Choisir..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="oui">Oui</SelectItem>
+                      <SelectItem value="non">Non</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* 11. Irrigation goutte-à-goutte */}
+                <div>
+                  <Label className="text-gray-700 text-sm font-medium">11. Irrigation goutte-à-goutte ?</Label>
+                  <Select value={form.irrigation_goutte} onValueChange={(v) => setForm({ ...form, irrigation_goutte: v })}>
+                    <SelectTrigger className="mt-1" data-testid="q-irrigation">
+                      <SelectValue placeholder="Choisir..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="oui">Oui</SelectItem>
+                      <SelectItem value="non">Non</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* 12. Zéro pesticides */}
+                <div>
+                  <Label className="text-gray-700 text-sm font-medium">12. Zéro pesticides chimiques ?</Label>
+                  <Select value={form.zero_pesticides} onValueChange={(v) => setForm({ ...form, zero_pesticides: v })}>
+                    <SelectTrigger className="mt-1" data-testid="q-pesticides">
+                      <SelectValue placeholder="Choisir..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="oui">Oui, aucun pesticide</SelectItem>
+                      <SelectItem value="non">Non, j'en utilise</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* 13. Haies vives */}
+                <div>
+                  <Label className="text-gray-700 text-sm font-medium">13. Haies vives autour des parcelles ?</Label>
+                  <Select value={form.haies_vives} onValueChange={(v) => setForm({ ...form, haies_vives: v })}>
+                    <SelectTrigger className="mt-1" data-testid="q-haies">
+                      <SelectValue placeholder="Choisir..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="oui">Oui</SelectItem>
+                      <SelectItem value="non">Non</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* 14. Rotation des cultures */}
+                <div>
+                  <Label className="text-gray-700 text-sm font-medium">14. Rotation des cultures ?</Label>
+                  <Select value={form.rotation_cultures} onValueChange={(v) => setForm({ ...form, rotation_cultures: v })}>
+                    <SelectTrigger className="mt-1" data-testid="q-rotation">
+                      <SelectValue placeholder="Choisir..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="oui">Oui</SelectItem>
+                      <SelectItem value="non">Non</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

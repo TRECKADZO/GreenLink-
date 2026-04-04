@@ -479,6 +479,13 @@ class MaPrimeRequest(BaseModel):
     residus_au_sol: bool = Field(..., description="Laisse les résidus de récolte au sol?")
     plantes_couverture: bool = Field(..., description="Utilise des plantes de couverture?")
     especes_arbres: int = Field(..., ge=0, description="Nombre d'espèces d'arbres différentes")
+    # Questions bonus (9-14)
+    compostage: bool = Field(False, description="Pratique le compostage?")
+    agroforesterie: bool = Field(False, description="Pratique l'agroforesterie?")
+    irrigation_goutte: bool = Field(False, description="Utilise l'irrigation goutte-à-goutte?")
+    zero_pesticides: bool = Field(False, description="Zéro pesticides chimiques?")
+    haies_vives: bool = Field(False, description="A des haies vives autour des parcelles?")
+    rotation_cultures: bool = Field(False, description="Pratique la rotation des cultures?")
 
 
 @router.post("/ma-prime")
@@ -498,7 +505,7 @@ async def calculer_ma_prime(data: MaPrimeRequest):
     else:
         co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["low"]["rate"]
 
-    # 2. Bonus pour bonnes pratiques
+    # 2. Bonus pour bonnes pratiques (questions 4-8)
     if not data.engrais_chimique:
         co2_rate += SEQUESTRATION_RATES["organic_practices"]
     if not data.brulage:
@@ -511,6 +518,20 @@ async def calculer_ma_prime(data: MaPrimeRequest):
         co2_rate += SEQUESTRATION_RATES["agroforestry_diversity"]
     elif data.especes_arbres >= 3:
         co2_rate += SEQUESTRATION_RATES["agroforestry_diversity"] * 0.5
+
+    # 3. Bonus pour pratiques durables avancées (questions 9-14)
+    if data.compostage:
+        co2_rate += 0.3  # Bonus compostage
+    if data.agroforesterie:
+        co2_rate += 0.4  # Bonus agroforesterie
+    if data.irrigation_goutte:
+        co2_rate += 0.15  # Bonus irrigation efficiente
+    if data.zero_pesticides:
+        co2_rate += 0.35  # Bonus zéro pesticides
+    if data.haies_vives:
+        co2_rate += 0.25  # Bonus haies vives (biodiversité)
+    if data.rotation_cultures:
+        co2_rate += 0.2  # Bonus rotation des cultures
 
     # 3. Total tonnes CO2 par an
     tonnes_co2_year = co2_rate * data.hectares
