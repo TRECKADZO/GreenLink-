@@ -35,24 +35,24 @@ const CarbonPaymentsDashboard = () => {
   const [primeResult, setPrimeResult] = useState(null);
   const [requestingPayment, setRequestingPayment] = useState(false);
 
-  // Formulaire "Ma Prime" — 14 questions (aligné avec USSD *144*99#)
+  // Formulaire "Ma Prime" — 14 questions (aligné avec USSD *144*99# détaillé)
   const [form, setForm] = useState({
-    // Questions de base (1-9)
+    // Questions de base (1-4)
     hectares: '',
-    arbres_grands: '',
-    engrais_chimique: '',
+    arbres_grands: '',      // > 12 mètres
+    arbres_moyens: '',      // 8-12 mètres
+    arbres_petits: '',      // < 8 mètres
+    // Questions pratiques (5-14)
+    engrais: '',
     brulage: '',
     compost: '',
     agroforesterie: '',
     couverture_sol: '',
     biochar: '',
     zero_deforestation: '',
-    // Questions bonus (10-14)
     reboisement: '',
     age_cacaoyers: '',
     culture: '',
-    pesticides: '',
-    haies_vives: '',
   });
 
   useEffect(() => {
@@ -82,19 +82,21 @@ const CarbonPaymentsDashboard = () => {
 
   const handleCalculate = async () => {
     // Validation des 14 questions
-    if (!form.hectares || !form.arbres_grands || form.engrais_chimique === '' ||
-        form.brulage === '' || form.compost === '' || form.agroforesterie === '' ||
-        form.couverture_sol === '' || form.biochar === '' || form.zero_deforestation === '' ||
-        form.reboisement === '' || form.age_cacaoyers === '' || form.culture === '' ||
-        form.pesticides === '' || form.haies_vives === '') {
+    if (!form.hectares || !form.arbres_grands || !form.arbres_moyens || !form.arbres_petits ||
+        form.engrais === '' || form.brulage === '' || form.compost === '' || 
+        form.agroforesterie === '' || form.couverture_sol === '' || form.biochar === '' || 
+        form.zero_deforestation === '' || form.reboisement === '' || 
+        form.age_cacaoyers === '' || form.culture === '') {
       return;
     }
     setCalculating(true);
     try {
       const payload = {
         hectares: parseFloat(form.hectares),
-        arbres_grands: parseInt(form.arbres_grands),
-        engrais: form.engrais_chimique,
+        arbres_grands: parseInt(form.arbres_grands) || 0,
+        arbres_moyens: parseInt(form.arbres_moyens) || 0,
+        arbres_petits: parseInt(form.arbres_petits) || 0,
+        engrais: form.engrais,
         brulage: form.brulage,
         compost: form.compost,
         agroforesterie: form.agroforesterie,
@@ -104,8 +106,6 @@ const CarbonPaymentsDashboard = () => {
         reboisement: form.reboisement,
         age_cacaoyers: form.age_cacaoyers,
         culture: form.culture,
-        pesticides: form.pesticides,
-        haies_vives: form.haies_vives,
       };
       const response = await fetch(`${API_URL}/api/carbon-payments/ma-prime`, {
         method: 'POST',
@@ -270,7 +270,7 @@ const CarbonPaymentsDashboard = () => {
 
           {showCalculator && (
             <CardContent className="space-y-4">
-              {/* 14 questions - alignées avec USSD *144*99# */}
+              {/* 14 questions - alignées avec USSD *144*99# détaillé */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* 1. Hectares */}
                 <div>
@@ -285,22 +285,49 @@ const CarbonPaymentsDashboard = () => {
                     data-testid="q-hectares"
                   />
                 </div>
-                {/* 2. Arbres grands */}
+                {/* 2. Arbres GRANDS > 12m */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">2. Nombre d'arbres ombres {'>'} 8 mètres ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">2. Arbres GRANDS {'>'} 12 mètres ?</Label>
+                  <p className="text-xs text-gray-500">(grands arbres d'ombrage)</p>
                   <Input
                     type="number"
                     value={form.arbres_grands}
                     onChange={(e) => setForm({ ...form, arbres_grands: e.target.value })}
-                    placeholder="Ex: 120"
+                    placeholder="Ex: 50"
                     className="mt-1"
-                    data-testid="q-arbres"
+                    data-testid="q-arbres-grands"
                   />
                 </div>
-                {/* 3. Engrais chimique */}
+                {/* 3. Arbres MOYENS 8-12m */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">3. Utilisez-vous de l'engrais chimique ?</Label>
-                  <Select value={form.engrais_chimique} onValueChange={(v) => setForm({ ...form, engrais_chimique: v })}>
+                  <Label className="text-gray-700 text-sm font-medium">3. Arbres MOYENS 8-12 mètres ?</Label>
+                  <p className="text-xs text-gray-500">(arbres de taille moyenne)</p>
+                  <Input
+                    type="number"
+                    value={form.arbres_moyens}
+                    onChange={(e) => setForm({ ...form, arbres_moyens: e.target.value })}
+                    placeholder="Ex: 80"
+                    className="mt-1"
+                    data-testid="q-arbres-moyens"
+                  />
+                </div>
+                {/* 4. Arbres PETITS < 8m */}
+                <div>
+                  <Label className="text-gray-700 text-sm font-medium">4. Arbres PETITS {'<'} 8 mètres ?</Label>
+                  <p className="text-xs text-gray-500">(jeunes arbres)</p>
+                  <Input
+                    type="number"
+                    value={form.arbres_petits}
+                    onChange={(e) => setForm({ ...form, arbres_petits: e.target.value })}
+                    placeholder="Ex: 30"
+                    className="mt-1"
+                    data-testid="q-arbres-petits"
+                  />
+                </div>
+                {/* 5. Engrais chimique */}
+                <div>
+                  <Label className="text-gray-700 text-sm font-medium">5. Utilisez-vous de l'engrais chimique ?</Label>
+                  <Select value={form.engrais} onValueChange={(v) => setForm({ ...form, engrais: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-engrais">
                       <SelectValue placeholder="Choisir..." />
                     </SelectTrigger>
@@ -310,9 +337,9 @@ const CarbonPaymentsDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* 4. Brûlage */}
+                {/* 6. Brûlage */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">4. Pratiquez-vous le brûlage des résidus ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">6. Pratiquez-vous le brûlage des résidus ?</Label>
                   <Select value={form.brulage} onValueChange={(v) => setForm({ ...form, brulage: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-brulage">
                       <SelectValue placeholder="Choisir..." />
@@ -323,9 +350,9 @@ const CarbonPaymentsDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* 5. Compost */}
+                {/* 7. Compost */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">5. Utilisez-vous du compost organique ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">7. Utilisez-vous du compost organique ?</Label>
                   <Select value={form.compost} onValueChange={(v) => setForm({ ...form, compost: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-compost">
                       <SelectValue placeholder="Choisir..." />
@@ -336,9 +363,9 @@ const CarbonPaymentsDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* 6. Agroforesterie */}
+                {/* 8. Agroforesterie */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">6. Pratiquez-vous l'agroforesterie ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">8. Pratiquez-vous l'agroforesterie ?</Label>
                   <p className="text-xs text-gray-500">(arbres + cultures ensemble)</p>
                   <Select value={form.agroforesterie} onValueChange={(v) => setForm({ ...form, agroforesterie: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-agroforesterie">
@@ -350,9 +377,9 @@ const CarbonPaymentsDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* 7. Couverture végétale */}
+                {/* 9. Couverture végétale */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">7. Couverture végétale au sol ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">9. Couverture végétale au sol ?</Label>
                   <p className="text-xs text-gray-500">(plantes basses entre les arbres)</p>
                   <Select value={form.couverture_sol} onValueChange={(v) => setForm({ ...form, couverture_sol: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-couverture">
@@ -364,9 +391,9 @@ const CarbonPaymentsDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* 8. Biochar */}
+                {/* 10. Biochar */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">8. Utilisez-vous du biochar ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">10. Utilisez-vous du biochar ?</Label>
                   <p className="text-xs text-gray-500">(charbon végétal dans le sol)</p>
                   <Select value={form.biochar} onValueChange={(v) => setForm({ ...form, biochar: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-biochar">
@@ -378,9 +405,9 @@ const CarbonPaymentsDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* 9. Zéro déforestation */}
+                {/* 11. Zéro déforestation */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">9. Engagement zéro déforestation ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">11. Engagement zéro déforestation ?</Label>
                   <p className="text-xs text-gray-500">(pas d'extension sur forêt)</p>
                   <Select value={form.zero_deforestation} onValueChange={(v) => setForm({ ...form, zero_deforestation: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-deforestation">
@@ -392,9 +419,9 @@ const CarbonPaymentsDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* 10. Reboisement */}
+                {/* 12. Reboisement */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">10. Faites-vous du reboisement ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">12. Faites-vous du reboisement ?</Label>
                   <p className="text-xs text-gray-500">(plantation de nouveaux arbres)</p>
                   <Select value={form.reboisement} onValueChange={(v) => setForm({ ...form, reboisement: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-reboisement">
@@ -406,9 +433,9 @@ const CarbonPaymentsDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* 11. Âge des cacaoyers */}
+                {/* 13. Âge des cacaoyers */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">11. Âge moyen de vos cacaoyers ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">13. Âge moyen de vos cacaoyers ?</Label>
                   <Select value={form.age_cacaoyers} onValueChange={(v) => setForm({ ...form, age_cacaoyers: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-age">
                       <SelectValue placeholder="Choisir..." />
@@ -420,9 +447,9 @@ const CarbonPaymentsDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* 12. Culture principale */}
+                {/* 14. Culture principale */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">12. Quelle est votre culture principale ?</Label>
+                  <Label className="text-gray-700 text-sm font-medium">14. Quelle est votre culture principale ?</Label>
                   <Select value={form.culture} onValueChange={(v) => setForm({ ...form, culture: v })}>
                     <SelectTrigger className="mt-1" data-testid="q-culture">
                       <SelectValue placeholder="Choisir..." />
@@ -431,33 +458,6 @@ const CarbonPaymentsDashboard = () => {
                       <SelectItem value="cacao">Cacao</SelectItem>
                       <SelectItem value="cafe">Café</SelectItem>
                       <SelectItem value="anacarde">Anacarde</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* 13. Pesticides */}
-                <div>
-                  <Label className="text-gray-700 text-sm font-medium">13. Utilisez-vous des pesticides chimiques ?</Label>
-                  <Select value={form.pesticides} onValueChange={(v) => setForm({ ...form, pesticides: v })}>
-                    <SelectTrigger className="mt-1" data-testid="q-pesticides">
-                      <SelectValue placeholder="Choisir..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="oui">Oui</SelectItem>
-                      <SelectItem value="non">Non, aucun</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* 14. Haies vives */}
-                <div>
-                  <Label className="text-gray-700 text-sm font-medium">14. Avez-vous des haies vives ?</Label>
-                  <p className="text-xs text-gray-500">(bordures végétales autour des parcelles)</p>
-                  <Select value={form.haies_vives} onValueChange={(v) => setForm({ ...form, haies_vives: v })}>
-                    <SelectTrigger className="mt-1" data-testid="q-haies">
-                      <SelectValue placeholder="Choisir..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="oui">Oui</SelectItem>
-                      <SelectItem value="non">Non</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

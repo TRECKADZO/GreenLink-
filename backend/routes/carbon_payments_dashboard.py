@@ -471,9 +471,11 @@ from carbon_business_model import (
 
 
 class MaPrimeRequest(BaseModel):
-    """14 questions alignées avec le USSD *144*99#"""
+    """14 questions alignées avec le USSD *144*99# détaillé (avec 3 tailles d'arbres)"""
     hectares: float = Field(..., gt=0, description="Superficie en hectares")
-    arbres_grands: int = Field(..., ge=0, description="Nombre d'arbres ombres > 8 mètres")
+    arbres_grands: int = Field(0, ge=0, description="Arbres GRANDS > 12 mètres")
+    arbres_moyens: int = Field(0, ge=0, description="Arbres MOYENS 8-12 mètres")
+    arbres_petits: int = Field(0, ge=0, description="Arbres PETITS < 8 mètres")
     engrais: str = Field(..., description="oui/non - Utilise des engrais chimiques?")
     brulage: str = Field(..., description="oui/non - Pratique le brûlage des résidus?")
     compost: str = Field(..., description="oui/non - Utilise du compost organique?")
@@ -484,18 +486,20 @@ class MaPrimeRequest(BaseModel):
     reboisement: str = Field(..., description="oui/non - Fait du reboisement?")
     age_cacaoyers: str = Field(..., description="jeune/mature/vieux - Âge des cacaoyers")
     culture: str = Field(..., description="cacao/cafe/anacarde - Culture principale")
-    pesticides: str = Field(..., description="oui/non - Utilise des pesticides?")
-    haies_vives: str = Field(..., description="oui/non - A des haies vives?")
 
 
 @router.post("/ma-prime")
 async def calculer_ma_prime(data: MaPrimeRequest):
     """
     Calculateur de prime carbone pour le planteur.
-    14 questions alignées avec le USSD *144*99#
+    14 questions alignées avec le USSD *144*99# détaillé (3 tailles d'arbres)
     """
-    # 1. Calculer le taux de séquestration CO2 basé sur les arbres
-    arbres_par_ha = data.arbres_grands / max(data.hectares, 0.1)
+    # 1. Calcul pondéré des arbres (coefficients allométriques)
+    # Grands (>12m): coef 1.0, Moyens (8-12m): coef 0.7, Petits (<8m): coef 0.3
+    weighted_trees = (data.arbres_grands * 1.0) + (data.arbres_moyens * 0.7) + (data.arbres_petits * 0.3)
+    arbres_par_ha = weighted_trees / max(data.hectares, 0.1)
+    
+    # Taux de séquestration CO2 basé sur les arbres pondérés
     if arbres_par_ha >= 80:
         co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["very_high"]["rate"]
     elif arbres_par_ha >= 40:
@@ -505,58 +509,48 @@ async def calculer_ma_prime(data: MaPrimeRequest):
     else:
         co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["low"]["rate"]
 
-    # 2. Bonus/Malus pour les 14 questions (alignées USSD)
-    # Q3: Engrais chimique
+    # 2. Bonus/Malus pour les pratiques (questions 5-14)
+    # Q5: Engrais chimique
     if data.engrais == "non":
         co2_rate += SEQUESTRATION_RATES["organic_practices"]
     else:
         co2_rate -= 0.3
     
-    # Q4: Brûlage
+    # Q6: Brûlage
     if data.brulage == "non":
         co2_rate += 0.5
     else:
         co2_rate -= 1.5
     
-    # Q5: Compost
+    # Q7: Compost
     if data.compost == "oui":
         co2_rate += 1.0
     
-    # Q6: Agroforesterie
+    # Q8: Agroforesterie
     if data.agroforesterie == "oui":
         co2_rate += 1.0
     
-    # Q7: Couverture végétale
+    # Q9: Couverture végétale
     if data.couverture_sol == "oui":
         co2_rate += SEQUESTRATION_RATES["cover_crops"]
     
-    # Q8: Biochar
+    # Q10: Biochar
     if data.biochar == "oui":
         co2_rate += 0.3
     
-    # Q9: Zéro déforestation
+    # Q11: Zéro déforestation
     if data.zero_deforestation == "oui":
         co2_rate += 0.3
     
-    # Q10: Reboisement
+    # Q12: Reboisement
     if data.reboisement == "oui":
         co2_rate += 0.4
     
-    # Q11: Âge des cacaoyers (bonus pour maturité)
+    # Q13: Âge des cacaoyers (bonus pour maturité)
     if data.age_cacaoyers == "mature":
         co2_rate += 0.3
     elif data.age_cacaoyers == "vieux":
         co2_rate += 0.1  # Moins productif mais stocke du carbone
-    
-    # Q13: Pesticides
-    if data.pesticides == "non":
-        co2_rate += 0.35
-    else:
-        co2_rate -= 0.2
-    
-    # Q14: Haies vives
-    if data.haies_vives == "oui":
-        co2_rate += 0.25
 
     # Plafonner le score
     co2_rate = max(0.5, min(co2_rate, 10.0))
@@ -579,9 +573,9 @@ async def calculer_ma_prime(data: MaPrimeRequest):
     total_yield_kg = data.hectares * yield_kg_per_ha
     prime_par_kg = round(farmer_share / total_yield_kg) if total_yield_kg > 0 else 0
 
-    # 7. Calcul niveau Certification (ex-ARS 1000)
+    # 7. Calcul niveau Certification
     cert_pct = 0
-    # Arbres d'ombrage
+    # Arbres d'ombrage (pondérés)
     if arbres_par_ha >= 40:
         cert_pct += 25
     elif arbres_par_ha >= 20:
@@ -603,8 +597,8 @@ async def calculer_ma_prime(data: MaPrimeRequest):
     # Zéro déforestation
     if data.zero_deforestation == "oui":
         cert_pct += 10
-    # Pas de pesticides
-    if data.pesticides == "non":
+    # Reboisement
+    if data.reboisement == "oui":
         cert_pct += 10
 
     if cert_pct >= 80:
@@ -621,7 +615,10 @@ async def calculer_ma_prime(data: MaPrimeRequest):
         cert_conseil = "Commencez par planter des arbres d'ombrage et arrêter le brûlage."
 
     # 8. Conseil personnalisé
-    conseil = _generer_conseil_14q(data, co2_rate, data.arbres_grands)
+    conseil = _generer_conseil_14q(data, co2_rate, weighted_trees)
+
+    # Totaux arbres
+    total_arbres = data.arbres_grands + data.arbres_moyens + data.arbres_petits
 
     return {
         "prime_par_kg_fcfa": prime_par_kg,
@@ -630,6 +627,8 @@ async def calculer_ma_prime(data: MaPrimeRequest):
         "culture": data.culture,
         "hectares": data.hectares,
         "arbres_par_ha": int(arbres_par_ha),
+        "total_arbres": total_arbres,
+        "arbres_ponderes": round(weighted_trees, 1),
         "score_carbone": round(co2_rate, 1),
         "rendement_kg_ha": yield_kg_per_ha,
         "conseil": conseil,
@@ -639,7 +638,7 @@ async def calculer_ma_prime(data: MaPrimeRequest):
     }
 
 
-def _generer_conseil_14q(data: MaPrimeRequest, score: float, trees: int) -> str:
+def _generer_conseil_14q(data: MaPrimeRequest, score: float, weighted_trees: float) -> str:
     """Génère un conseil personnalisé basé sur les 14 questions."""
     conseils = []
     
@@ -655,12 +654,16 @@ def _generer_conseil_14q(data: MaPrimeRequest, score: float, trees: int) -> str:
     if data.agroforesterie == "non":
         conseils.append("L'agroforesterie peut augmenter votre score de +10%")
     
-    arbres_par_ha = trees / max(data.hectares, 0.1)
+    arbres_par_ha = weighted_trees / max(data.hectares, 0.1)
     if arbres_par_ha < 40:
-        conseils.append(f"Plantez plus d'arbres d'ombrage (actuellement {int(arbres_par_ha)}/ha, idéal: 40+)")
+        conseils.append(f"Plantez plus d'arbres d'ombrage (actuellement {int(arbres_par_ha)} pondérés/ha, idéal: 40+)")
     
     if data.reboisement == "non":
         conseils.append("Le reboisement améliore votre score environnemental")
+    
+    total_arbres = data.arbres_grands + data.arbres_moyens + data.arbres_petits
+    if total_arbres > 0 and data.arbres_grands < (total_arbres * 0.3):
+        conseils.append("Favorisez la croissance de grands arbres (>12m) pour un meilleur score")
     
     if score >= 7:
         return "Excellent ! Vos pratiques sont déjà très bonnes. Maintenez-les pour une prime optimale."
