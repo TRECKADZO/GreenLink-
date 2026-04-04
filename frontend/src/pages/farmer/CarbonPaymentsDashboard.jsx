@@ -19,7 +19,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const STEPS = [
   { num: 1, icon: Phone, text: "Compose *144*99# (gratuit)", color: "bg-emerald-500" },
-  { num: 2, icon: Sparkles, text: "Réponds à 8 questions simples", color: "bg-blue-500" },
+  { num: 2, icon: Sparkles, text: "Réponds à 14 questions simples", color: "bg-blue-500" },
   { num: 3, icon: Leaf, text: "Reçois ta prime carbone estimée", color: "bg-teal-500" },
   { num: 4, icon: ShoppingBag, text: "Vends ton cacao à un acheteur responsable", color: "bg-amber-500" },
   { num: 5, icon: Banknote, text: "Reçois prix normal + prime sur Orange Money", color: "bg-orange-500" },
@@ -35,7 +35,7 @@ const CarbonPaymentsDashboard = () => {
   const [primeResult, setPrimeResult] = useState(null);
   const [requestingPayment, setRequestingPayment] = useState(false);
 
-  // Formulaire "Ma Prime" — 8 questions
+  // Formulaire "Ma Prime" — 14 questions
   const [form, setForm] = useState({
     hectares: '',
     grands_arbres: '',
@@ -252,7 +252,7 @@ const CarbonPaymentsDashboard = () => {
 
           {showCalculator && (
             <CardContent className="space-y-4">
-              {/* 8 questions */}
+              {/* 14 questions */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* 1. Hectares */}
                 <div>
