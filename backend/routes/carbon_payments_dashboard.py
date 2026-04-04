@@ -471,67 +471,95 @@ from carbon_business_model import (
 
 
 class MaPrimeRequest(BaseModel):
+    """14 questions alignées avec le USSD *144*99#"""
     hectares: float = Field(..., gt=0, description="Superficie en hectares")
-    grands_arbres: int = Field(..., ge=0, description="Nombre d'arbres grands (>8m) par hectare")
-    culture: str = Field(..., description="cacao, cafe, anacarde")
-    engrais_chimique: bool = Field(..., description="Utilise des engrais chimiques?")
-    brulage: bool = Field(..., description="Pratique le brûlage des résidus?")
-    residus_au_sol: bool = Field(..., description="Laisse les résidus de récolte au sol?")
-    plantes_couverture: bool = Field(..., description="Utilise des plantes de couverture?")
-    especes_arbres: int = Field(..., ge=0, description="Nombre d'espèces d'arbres différentes")
-    # Questions bonus (9-14)
-    compostage: bool = Field(False, description="Pratique le compostage?")
-    agroforesterie: bool = Field(False, description="Pratique l'agroforesterie?")
-    irrigation_goutte: bool = Field(False, description="Utilise l'irrigation goutte-à-goutte?")
-    zero_pesticides: bool = Field(False, description="Zéro pesticides chimiques?")
-    haies_vives: bool = Field(False, description="A des haies vives autour des parcelles?")
-    rotation_cultures: bool = Field(False, description="Pratique la rotation des cultures?")
+    arbres_grands: int = Field(..., ge=0, description="Nombre d'arbres ombres > 8 mètres")
+    engrais: str = Field(..., description="oui/non - Utilise des engrais chimiques?")
+    brulage: str = Field(..., description="oui/non - Pratique le brûlage des résidus?")
+    compost: str = Field(..., description="oui/non - Utilise du compost organique?")
+    agroforesterie: str = Field(..., description="oui/non - Pratique l'agroforesterie?")
+    couverture_sol: str = Field(..., description="oui/non - Couverture végétale au sol?")
+    biochar: str = Field(..., description="oui/non - Utilise du biochar?")
+    zero_deforestation: str = Field(..., description="oui/non - Engagement zéro déforestation?")
+    reboisement: str = Field(..., description="oui/non - Fait du reboisement?")
+    age_cacaoyers: str = Field(..., description="jeune/mature/vieux - Âge des cacaoyers")
+    culture: str = Field(..., description="cacao/cafe/anacarde - Culture principale")
+    pesticides: str = Field(..., description="oui/non - Utilise des pesticides?")
+    haies_vives: str = Field(..., description="oui/non - A des haies vives?")
 
 
 @router.post("/ma-prime")
 async def calculer_ma_prime(data: MaPrimeRequest):
     """
-    Calculateur simple de prime carbone pour le planteur.
-    Répond aux 8 questions et retourne uniquement la prime estimée en FCFA/kg.
+    Calculateur de prime carbone pour le planteur.
+    14 questions alignées avec le USSD *144*99#
     """
     # 1. Calculer le taux de séquestration CO2 basé sur les arbres
-    trees_per_ha = data.grands_arbres
-    if trees_per_ha >= 81:
+    arbres_par_ha = data.arbres_grands / max(data.hectares, 0.1)
+    if arbres_par_ha >= 80:
         co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["very_high"]["rate"]
-    elif trees_per_ha >= 41:
+    elif arbres_par_ha >= 40:
         co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["high"]["rate"]
-    elif trees_per_ha >= 21:
+    elif arbres_par_ha >= 20:
         co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["medium"]["rate"]
     else:
         co2_rate = SEQUESTRATION_RATES["shade_trees_per_ha"]["low"]["rate"]
 
-    # 2. Bonus pour bonnes pratiques (questions 4-8)
-    if not data.engrais_chimique:
+    # 2. Bonus/Malus pour les 14 questions (alignées USSD)
+    # Q3: Engrais chimique
+    if data.engrais == "non":
         co2_rate += SEQUESTRATION_RATES["organic_practices"]
-    if not data.brulage:
-        co2_rate += 0.2  # Bonus non-brûlage
-    if data.residus_au_sol:
-        co2_rate += SEQUESTRATION_RATES["soil_residues"]
-    if data.plantes_couverture:
+    else:
+        co2_rate -= 0.3
+    
+    # Q4: Brûlage
+    if data.brulage == "non":
+        co2_rate += 0.5
+    else:
+        co2_rate -= 1.5
+    
+    # Q5: Compost
+    if data.compost == "oui":
+        co2_rate += 1.0
+    
+    # Q6: Agroforesterie
+    if data.agroforesterie == "oui":
+        co2_rate += 1.0
+    
+    # Q7: Couverture végétale
+    if data.couverture_sol == "oui":
         co2_rate += SEQUESTRATION_RATES["cover_crops"]
-    if data.especes_arbres >= 5:
-        co2_rate += SEQUESTRATION_RATES["agroforestry_diversity"]
-    elif data.especes_arbres >= 3:
-        co2_rate += SEQUESTRATION_RATES["agroforestry_diversity"] * 0.5
+    
+    # Q8: Biochar
+    if data.biochar == "oui":
+        co2_rate += 0.3
+    
+    # Q9: Zéro déforestation
+    if data.zero_deforestation == "oui":
+        co2_rate += 0.3
+    
+    # Q10: Reboisement
+    if data.reboisement == "oui":
+        co2_rate += 0.4
+    
+    # Q11: Âge des cacaoyers (bonus pour maturité)
+    if data.age_cacaoyers == "mature":
+        co2_rate += 0.3
+    elif data.age_cacaoyers == "vieux":
+        co2_rate += 0.1  # Moins productif mais stocke du carbone
+    
+    # Q13: Pesticides
+    if data.pesticides == "non":
+        co2_rate += 0.35
+    else:
+        co2_rate -= 0.2
+    
+    # Q14: Haies vives
+    if data.haies_vives == "oui":
+        co2_rate += 0.25
 
-    # 3. Bonus pour pratiques durables avancées (questions 9-14)
-    if data.compostage:
-        co2_rate += 0.3  # Bonus compostage
-    if data.agroforesterie:
-        co2_rate += 0.4  # Bonus agroforesterie
-    if data.irrigation_goutte:
-        co2_rate += 0.15  # Bonus irrigation efficiente
-    if data.zero_pesticides:
-        co2_rate += 0.35  # Bonus zéro pesticides
-    if data.haies_vives:
-        co2_rate += 0.25  # Bonus haies vives (biodiversité)
-    if data.rotation_cultures:
-        co2_rate += 0.2  # Bonus rotation des cultures
+    # Plafonner le score
+    co2_rate = max(0.5, min(co2_rate, 10.0))
 
     # 3. Total tonnes CO2 par an
     tonnes_co2_year = co2_rate * data.hectares
@@ -551,73 +579,92 @@ async def calculer_ma_prime(data: MaPrimeRequest):
     total_yield_kg = data.hectares * yield_kg_per_ha
     prime_par_kg = round(farmer_share / total_yield_kg) if total_yield_kg > 0 else 0
 
-    # 7. Calcul ARS 1000
-    ars_pct = 0
-    # Arbres d'ombrage >8m
-    if trees_per_ha >= 40:
-        ars_pct += 25
-    elif trees_per_ha >= 20:
-        ars_pct += 15
-    elif trees_per_ha >= 10:
-        ars_pct += 8
+    # 7. Calcul niveau Certification (ex-ARS 1000)
+    cert_pct = 0
+    # Arbres d'ombrage
+    if arbres_par_ha >= 40:
+        cert_pct += 25
+    elif arbres_par_ha >= 20:
+        cert_pct += 15
+    elif arbres_par_ha >= 10:
+        cert_pct += 8
     # Pas d'engrais chimique
-    if not data.engrais_chimique:
-        ars_pct += 20
-    # Pas de brulage
-    if not data.brulage:
-        ars_pct += 20
-    # Residus au sol
-    if data.residus_au_sol:
-        ars_pct += 10
-    # Plantes de couverture
-    if data.plantes_couverture:
-        ars_pct += 10
-    # Diversite arbres
-    if data.especes_arbres >= 5:
-        ars_pct += 15
-    elif data.especes_arbres >= 3:
-        ars_pct += 8
+    if data.engrais == "non":
+        cert_pct += 15
+    # Pas de brûlage
+    if data.brulage == "non":
+        cert_pct += 20
+    # Compost
+    if data.compost == "oui":
+        cert_pct += 10
+    # Agroforesterie
+    if data.agroforesterie == "oui":
+        cert_pct += 10
+    # Zéro déforestation
+    if data.zero_deforestation == "oui":
+        cert_pct += 10
+    # Pas de pesticides
+    if data.pesticides == "non":
+        cert_pct += 10
 
-    if ars_pct >= 80:
-        ars_level = "Or"
-        ars_conseil = "Excellent ! Niveau Or ARS 1000. Vos pratiques sont exemplaires."
-    elif ars_pct >= 55:
-        ars_level = "Argent"
-        ars_conseil = "Bon niveau Argent ARS 1000. Augmentez la diversite et les arbres pour atteindre l'Or."
-    elif ars_pct >= 30:
-        ars_level = "Bronze"
-        ars_conseil = "Niveau Bronze ARS 1000. Plantez plus d'arbres et arretez le brulage pour passer au niveau Argent."
+    if cert_pct >= 80:
+        cert_level = "Excellent"
+        cert_conseil = "Bravo ! Niveau Excellent. Vos pratiques sont exemplaires."
+    elif cert_pct >= 55:
+        cert_level = "Très Bon"
+        cert_conseil = "Bon niveau. Quelques améliorations pour atteindre l'Excellence."
+    elif cert_pct >= 30:
+        cert_level = "Bon"
+        cert_conseil = "Niveau Bon. Plantez plus d'arbres et arrêtez le brûlage pour progresser."
     else:
-        ars_level = "Non conforme"
-        ars_conseil = "Pas encore conforme ARS 1000. Commencez par planter des arbres d'ombrage et arreter le brulage."
+        cert_level = "À améliorer"
+        cert_conseil = "Commencez par planter des arbres d'ombrage et arrêter le brûlage."
 
-    # 8. Projection annuelle
+    # 8. Conseil personnalisé
+    conseil = _generer_conseil_14q(data, co2_rate, data.arbres_grands)
+
     return {
         "prime_par_kg_fcfa": prime_par_kg,
         "prime_annuelle_fcfa": round(farmer_share),
         "tonnes_co2_an": round(tonnes_co2_year, 1),
         "culture": data.culture,
         "hectares": data.hectares,
-        "arbres_par_ha": trees_per_ha,
+        "arbres_par_ha": int(arbres_par_ha),
         "score_carbone": round(co2_rate, 1),
         "rendement_kg_ha": yield_kg_per_ha,
-        "conseil": _generer_conseil(data, co2_rate, trees_per_ha),
-        "ars_level": ars_level,
-        "ars_pct": min(ars_pct, 100),
-        "ars_conseil": ars_conseil
+        "conseil": conseil,
+        "ars_level": cert_level,
+        "ars_pct": min(cert_pct, 100),
+        "ars_conseil": cert_conseil
     }
 
 
-def _generer_conseil(data: MaPrimeRequest, co2_rate: float, trees: int) -> str:
-    """Génère un conseil personnalisé pour améliorer la prime"""
-    if trees < 21:
-        return f"Plantez plus d'arbres d'ombrage ! Passer de {trees} à 48 arbres/ha pourrait tripler votre prime."
-    if trees < 41:
-        return f"Vous êtes sur la bonne voie. Ajouter {48 - trees} arbres/ha de plus augmentera votre prime de 60%."
-    if data.engrais_chimique:
-        return "Passer aux pratiques biologiques ajouterait environ 15 FCFA/kg à votre prime."
-    if data.brulage:
-        return "Arrêter le brûlage des résidus améliorerait votre score carbone et votre prime."
-    if not data.plantes_couverture:
-        return "Les plantes de couverture protègent vos sols et augmentent votre prime carbone."
-    return "Excellent ! Vos pratiques sont déjà très bonnes. Maintenez-les pour une prime optimale."
+def _generer_conseil_14q(data: MaPrimeRequest, score: float, trees: int) -> str:
+    """Génère un conseil personnalisé basé sur les 14 questions."""
+    conseils = []
+    
+    if data.brulage == "oui":
+        conseils.append("Arrêtez le brûlage pour augmenter votre prime de +20%")
+    
+    if data.engrais == "oui":
+        conseils.append("Passez aux engrais organiques pour une meilleure prime")
+    
+    if data.compost == "non":
+        conseils.append("Utilisez du compost pour enrichir vos sols")
+    
+    if data.agroforesterie == "non":
+        conseils.append("L'agroforesterie peut augmenter votre score de +10%")
+    
+    arbres_par_ha = trees / max(data.hectares, 0.1)
+    if arbres_par_ha < 40:
+        conseils.append(f"Plantez plus d'arbres d'ombrage (actuellement {int(arbres_par_ha)}/ha, idéal: 40+)")
+    
+    if data.reboisement == "non":
+        conseils.append("Le reboisement améliore votre score environnemental")
+    
+    if score >= 7:
+        return "Excellent ! Vos pratiques sont déjà très bonnes. Maintenez-les pour une prime optimale."
+    elif conseils:
+        return conseils[0]  # Premier conseil prioritaire
+    else:
+        return "Continuez vos bonnes pratiques pour maintenir votre prime."
