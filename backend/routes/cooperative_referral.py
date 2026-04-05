@@ -136,7 +136,16 @@ async def ensure_referral_code(user_id: str) -> str:
     S'assure qu'une coopérative a un code de parrainage.
     Si elle n'en a pas, en génère un nouveau.
     """
-    user = await db.users.find_one({"id": user_id})
+    # Chercher par id ou par _id (pour compatibilité)
+    user = await db.users.find_one({"$or": [{"id": user_id}, {"_id": user_id}]})
+    if not user:
+        # Essayer avec ObjectId si c'est un format valide
+        try:
+            from bson import ObjectId
+            user = await db.users.find_one({"_id": ObjectId(user_id)})
+        except:
+            pass
+    
     if not user:
         raise HTTPException(status_code=404, detail="Coopérative non trouvée")
     
@@ -163,8 +172,9 @@ async def ensure_referral_code(user_id: str) -> str:
         new_code = f"{new_code}-{random.randint(10, 99)}"
     
     # Sauvegarder le code
+    user_mongo_id = user.get("_id")
     await db.users.update_one(
-        {"id": user_id},
+        {"_id": user_mongo_id},
         {"$set": {"referral_code": new_code, "referral_code_created_at": datetime.utcnow()}}
     )
     
@@ -184,7 +194,9 @@ async def get_my_referral_code(current_user: dict = Depends(get_current_user)):
     if current_user.get("user_type") != "cooperative":
         raise HTTPException(status_code=403, detail="Seules les coopératives peuvent avoir un code de parrainage")
     
-    referral_code = await ensure_referral_code(current_user["id"])
+    # Utiliser id ou _id
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    referral_code = await ensure_referral_code(user_id)
     coop_name = current_user.get("coop_name") or current_user.get("full_name") or "Ma Coopérative"
     
     return ReferralCodeResponse(
@@ -234,25 +246,29 @@ async def get_my_affiliates(current_user: dict = Depends(get_current_user)):
     if current_user.get("user_type") != "cooperative":
         raise HTTPException(status_code=403, detail="Seules les coopératives peuvent voir leurs affiliés")
     
+    # Utiliser id ou _id
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
     # S'assurer que la coopérative a un code
-    referral_code = await ensure_referral_code(current_user["id"])
+    referral_code = await ensure_referral_code(user_id)
     
     # Récupérer les coopératives affiliées
     affiliates_cursor = db.users.find({
-        "sponsor_id": current_user["id"],
+        "sponsor_id": user_id,
         "user_type": "cooperative",
         "is_active": True
     }).sort("affiliated_at", -1)
     
     affiliates = []
     async for affiliate in affiliates_cursor:
+        affiliate_id = affiliate.get("id") or str(affiliate.get("_id"))
         # Compter les membres de cette coopérative
         members_count = await db.coop_members.count_documents({
-            "cooperative_id": affiliate["id"]
+            "cooperative_id": affiliate_id
         })
         
         affiliates.append(AffiliatedCooperative(
-            id=affiliate["id"],
+            id=affiliate_id,
             coop_name=affiliate.get("coop_name") or affiliate.get("full_name") or "Coopérative",
             region=affiliate.get("headquarters_region"),
             affiliated_at=affiliate.get("affiliated_at") or affiliate.get("created_at") or datetime.utcnow(),
