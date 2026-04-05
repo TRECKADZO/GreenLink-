@@ -96,25 +96,37 @@ async def register(user_data: UserCreate):
         
         # Check if user already exists (by phone or email)
         query = []
-        if user_data.phone_number:
+        if user_data.phone_number and user_data.phone_number.strip():
             query.append({"phone_number": user_data.phone_number})
-        if user_data.email:
-            query.append({"email": user_data.email})
+        if user_data.email and user_data.email.strip():
+            query.append({"email": user_data.email.lower()})
         
         if query:
             existing_user = await db.users.find_one({"$or": query})
             logger.info(f"[REGISTER] Existing user check result: {existing_user is not None}")
             if existing_user:
                 logger.info(f"[REGISTER] Found existing user with phone: {existing_user.get('phone_number')}, email: {existing_user.get('email')}")
-                if existing_user.get("phone_number") == user_data.phone_number:
+                # Vérifier quel champ correspond
+                existing_phone = existing_user.get("phone_number")
+                existing_email = existing_user.get("email", "").lower() if existing_user.get("email") else ""
+                
+                # Si l'utilisateur a fourni un téléphone ET qu'il correspond
+                if user_data.phone_number and user_data.phone_number.strip() and existing_phone == user_data.phone_number:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Ce numéro de téléphone est déjà enregistré"
                     )
-                else:
+                # Si l'utilisateur a fourni un email ET qu'il correspond
+                elif user_data.email and user_data.email.strip() and existing_email == user_data.email.lower():
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Cet email est déjà enregistré"
+                    )
+                else:
+                    # Cas générique (ne devrait pas arriver)
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Un compte existe déjà avec ces informations"
                     )
         
         # Create user

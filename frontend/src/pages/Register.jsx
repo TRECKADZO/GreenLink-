@@ -106,6 +106,13 @@ const Register = () => {
   const [referralValidation, setReferralValidation] = useState(null);
   const [validatingReferral, setValidatingReferral] = useState(false);
 
+  // Effet pour sélectionner Email par défaut pour les coopératives
+  useEffect(() => {
+    if (formData.userType === 'cooperative') {
+      setContactMethod('email');
+    }
+  }, [formData.userType]);
+
   // Get unique zones for filtering
   const zones = [...new Set(DEPARTEMENTS.map(d => d.zone))].sort();
   
