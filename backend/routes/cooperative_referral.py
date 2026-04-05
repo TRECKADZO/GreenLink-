@@ -382,3 +382,235 @@ async def get_network_stats(current_user: dict = Depends(get_current_user)):
         "top_sponsors": top_sponsors,
         "message": "Le réseau de coopératives affiliées GreenLink grandit ensemble pour des pratiques durables."
     }
+
+
+@router.get("/admin/network-full")
+async def get_admin_network_full(current_user: dict = Depends(get_current_user)):
+    """
+    Dashboard admin complet du réseau de coopératives affiliées.
+    Retourne toutes les coopératives, leurs liens de parrainage, et des stats détaillées.
+    """
+    if current_user.get("user_type") not in ["super_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+
+    from bson import ObjectId
+
+    # 1. Toutes les coopératives actives
+    all_coops = await db.users.find(
+        {"user_type": "cooperative", "is_active": True},
+        {
+            "_id": 1, "id": 1, "coop_name": 1, "full_name": 1, "email": 1,
+            "phone_number": 1, "referral_code": 1, "coop_code": 1,
+            "headquarters_region": 1, "sponsor_id": 1, "sponsor_referral_code": 1,
+            "affiliated_at": 1, "created_at": 1, "referral_code_created_at": 1,
+        }
+    ).sort("created_at", -1).to_list(500)
+
+    # Build lookup map: id -> coop
+    coop_map = {}
+    coop_list = []
+    for c in all_coops:
+        cid = c.get("id") or str(c["_id"])
+        coop_map[cid] = c
+        coop_map[str(c["_id"])] = c
+
+    # 2. Count members per cooperative
+    members_pipeline = [
+        {"$group": {"_id": "$cooperative_id", "count": {"$sum": 1}}}
+    ]
+    members_counts_raw = await db.coop_members.aggregate(members_pipeline).to_list(500)
+    members_map = {str(m["_id"]): m["count"] for m in members_counts_raw}
+
+    # Also count by coop_id field
+    members_pipeline2 = [
+        {"$group": {"_id": "$coop_id", "count": {"$sum": 1}}}
+    ]
+    members_counts_raw2 = await db.coop_members.aggregate(members_pipeline2).to_list(500)
+    for m in members_counts_raw2:
+        key = str(m["_id"])
+        members_map[key] = members_map.get(key, 0) + m["count"]
+
+    # 3. Build nodes and edges for the network graph
+    nodes = []
+    edges = []
+    sponsors_count = {}  # sponsor_id -> count of affiliates
+
+    for c in all_coops:
+        cid = c.get("id") or str(c["_id"])
+        cid_str = str(c["_id"])
+        sponsor_id = c.get("sponsor_id")
+
+        if sponsor_id:
+            sponsors_count[sponsor_id] = sponsors_count.get(sponsor_id, 0) + 1
+            edges.append({
+                "from": sponsor_id,
+                "to": cid,
+                "affiliated_at": c.get("affiliated_at", c.get("created_at", "")).isoformat() if c.get("affiliated_at") or c.get("created_at") else None
+            })
+
+        members_count = members_map.get(cid, 0) or members_map.get(cid_str, 0)
+
+        nodes.append({
+            "id": cid,
+            "coop_name": c.get("coop_name") or c.get("full_name") or "Sans nom",
+            "email": c.get("email"),
+            "phone": c.get("phone_number"),
+            "referral_code": c.get("referral_code"),
+            "coop_code": c.get("coop_code"),
+            "region": c.get("headquarters_region"),
+            "sponsor_id": sponsor_id,
+            "sponsor_referral_code": c.get("sponsor_referral_code"),
+            "members_count": members_count,
+            "affiliated_at": c.get("affiliated_at").isoformat() if c.get("affiliated_at") else None,
+            "created_at": c.get("created_at").isoformat() if c.get("created_at") else None,
+            "has_referral_code": bool(c.get("referral_code")),
+            "is_sponsor": cid in sponsors_count or cid_str in sponsors_count,
+            "is_affiliated": bool(sponsor_id),
+        })
+
+    # Update is_sponsor and affiliates_count after full loop
+    for node in nodes:
+        nid = node["id"]
+        node["affiliates_count"] = sponsors_count.get(nid, 0)
+        node["is_sponsor"] = node["affiliates_count"] > 0
+
+    # 4. Compute stats
+    total = len(nodes)
+    affiliated = sum(1 for n in nodes if n["is_affiliated"])
+    orphan = total - affiliated
+    active_sponsors = sum(1 for n in nodes if n["is_sponsor"])
+    total_members = sum(n["members_count"] for n in nodes)
+    with_code = sum(1 for n in nodes if n["has_referral_code"])
+
+    # Top sponsors
+    top_sponsors = sorted(
+        [n for n in nodes if n["is_sponsor"]],
+        key=lambda x: x["affiliates_count"], reverse=True
+    )[:10]
+
+    # Recent affiliations (last 20)
+    recent = sorted(
+        [n for n in nodes if n["is_affiliated"] and n.get("affiliated_at")],
+        key=lambda x: x["affiliated_at"] or "", reverse=True
+    )[:20]
+
+    # Region distribution
+    region_dist = {}
+    for n in nodes:
+        r = n.get("region") or "Non renseignée"
+        region_dist[r] = region_dist.get(r, 0) + 1
+    region_distribution = [{"region": k, "count": v} for k, v in sorted(region_dist.items(), key=lambda x: -x[1])]
+
+    # Monthly growth (affiliations per month)
+    monthly_growth = {}
+    for n in nodes:
+        created = n.get("created_at")
+        if created:
+            month_key = created[:7]  # YYYY-MM
+            monthly_growth[month_key] = monthly_growth.get(month_key, 0) + 1
+    growth_timeline = [{"month": k, "count": v} for k, v in sorted(monthly_growth.items())]
+
+    return {
+        "stats": {
+            "total_cooperatives": total,
+            "affiliated_cooperatives": affiliated,
+            "orphan_cooperatives": orphan,
+            "active_sponsors": active_sponsors,
+            "affiliation_rate": round(affiliated / total * 100, 1) if total > 0 else 0,
+            "total_members_in_network": total_members,
+            "cooperatives_with_code": with_code,
+            "code_coverage_rate": round(with_code / total * 100, 1) if total > 0 else 0,
+        },
+        "nodes": nodes,
+        "edges": edges,
+        "top_sponsors": [
+            {
+                "id": s["id"],
+                "coop_name": s["coop_name"],
+                "region": s["region"],
+                "referral_code": s["referral_code"],
+                "affiliates_count": s["affiliates_count"],
+                "members_count": s["members_count"],
+            }
+            for s in top_sponsors
+        ],
+        "recent_affiliations": [
+            {
+                "id": r["id"],
+                "coop_name": r["coop_name"],
+                "region": r["region"],
+                "sponsor_referral_code": r["sponsor_referral_code"],
+                "affiliated_at": r["affiliated_at"],
+            }
+            for r in recent
+        ],
+        "region_distribution": region_distribution,
+        "growth_timeline": growth_timeline,
+    }
+
+
+@router.post("/admin/generate-code/{coop_id}")
+async def admin_generate_referral_code(coop_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Admin: Générer un code de parrainage pour une coopérative qui n'en a pas.
+    """
+    if current_user.get("user_type") not in ["super_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+
+    from bson import ObjectId
+
+    coop = None
+    if ObjectId.is_valid(coop_id):
+        coop = await db.users.find_one({"_id": ObjectId(coop_id), "user_type": "cooperative"})
+    if not coop:
+        coop = await db.users.find_one({"id": coop_id, "user_type": "cooperative"})
+    if not coop:
+        raise HTTPException(status_code=404, detail="Coopérative non trouvée")
+
+    if coop.get("referral_code"):
+        return {"referral_code": coop["referral_code"], "message": "Code existant", "already_existed": True}
+
+    region = coop.get("headquarters_region") or coop.get("department") or ""
+    coop_name = coop.get("coop_name") or coop.get("full_name") or ""
+
+    for _ in range(10):
+        new_code = generate_referral_code(region, coop_name)
+        existing = await db.users.find_one({"referral_code": new_code})
+        if not existing:
+            break
+
+    await db.users.update_one(
+        {"_id": coop["_id"]},
+        {"$set": {"referral_code": new_code, "referral_code_created_at": datetime.utcnow()}}
+    )
+
+    logger.info(f"[ADMIN] Generated referral code {new_code} for coop {coop_id}")
+    return {"referral_code": new_code, "message": "Code généré avec succès", "already_existed": False}
+
+
+@router.delete("/admin/remove-affiliation/{coop_id}")
+async def admin_remove_affiliation(coop_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Admin: Supprimer l'affiliation d'une coopérative (retirer le sponsor).
+    """
+    if current_user.get("user_type") not in ["super_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+
+    from bson import ObjectId
+
+    coop = None
+    if ObjectId.is_valid(coop_id):
+        coop = await db.users.find_one({"_id": ObjectId(coop_id), "user_type": "cooperative"})
+    if not coop:
+        coop = await db.users.find_one({"id": coop_id, "user_type": "cooperative"})
+    if not coop:
+        raise HTTPException(status_code=404, detail="Coopérative non trouvée")
+
+    await db.users.update_one(
+        {"_id": coop["_id"]},
+        {"$unset": {"sponsor_id": "", "sponsor_referral_code": "", "affiliated_at": ""}}
+    )
+
+    logger.info(f"[ADMIN] Removed affiliation for coop {coop_id}")
+    return {"message": "Affiliation supprimée", "coop_id": coop_id}
+
