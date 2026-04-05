@@ -237,7 +237,7 @@ async def get_redd_tracking_stats(
         lvl = v.get("redd_level", "Non conforme")
         level_dist[lvl] = level_dist.get(lvl, 0) + 1
 
-    recent = sorted(visits, key=lambda x: x.get("created_at", ""), reverse=True)[:5]
+    recent = sorted(visits, key=lambda x: str(x.get("created_at", "")), reverse=True)[:5]
 
     return {
         "total_visits": total_visits,

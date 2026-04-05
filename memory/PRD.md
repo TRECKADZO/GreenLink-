@@ -134,6 +134,8 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (5 avr) FIX Sync offline SSRTE: le handler stocke maintenant TOUTES les donnees (taille_menage, enfants, conditions_vie, eau, electricite, etc.) — avant seuls status/risk_level/notes etaient sauvegardes
 - (5 avr) FIX Sync offline REDD: utilise la bonne collection redd_tracking_visits (au lieu de redd_visits) avec calcul du score REDD
 - (5 avr) FIX Dedup sync: offline_id vide ne bloque plus les synchronisations
+- (5 avr) FIX CRITIQUE Auto-sync REDD offline: OfflineContext reecrit — ajout pendingCount aux deps du useEffect auto-sync, utilisation de refs pour eviter les closures obsoletes, retry exponentiel (5s-60s) en cas d'echec, listener visibilitychange pour sync au retour sur l'onglet. Cause racine: le useEffect ne dependait que de [isOnline], donc si le reseau tombait sans declencher l'evenement offline du navigateur, les actions restaient bloquees dans IndexedDB
+- (5 avr) FIX REDD stats endpoint: correction comparaison datetime vs string dans le tri des visites recentes (redd_tracking.py)
   - Agent Terrain: 5 tabs (Accueil USSD + Tableau de bord KPIs + Planteurs + Inscrire + Plus), profil planteur avec 6 fiches fonctionnelles (ICI modal, SSRTE modal, REDD tracking, Parcelles, Photos, Inscription). Onglet Plus: Outils Terrain (SSRTE, Verification Parcelles, Photos, Pratiques Durables, Recherche), Mon Compte (Profil, Notifications), Deconnexion
   - Farmer: 5 tabs (Accueil USSD avec Score Carbone gauge/Stats/Menu + Tableau de bord + Parcelles + Carbone + Plus). Onglet Plus: Mes Activites (Parcelles, Recoltes, Declarer, Commandes), Marketplace & Primes (Boutique, Primes Carbone, Pratiques Durables), Mon Compte (Profil, Notifications), Deconnexion
   - Accueil = menu numerote style mobile, Tableau = KPIs detailles avec objectifs/progression
@@ -142,6 +144,8 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 ### P0
 - Mettre a jour MONGO_URL dans les Secrets Emergent Dashboard (action utilisateur)
 - Configuration DNS domaine greenlink-agritech.com (action utilisateur GoDaddy)
+### P1
+- Indicateur taille stockage offline (IndexedDB) dans le profil agent
 ### P2
 - Passerelle SMS reelle Orange CI / MTN (MOCK)
 - Langues locales (Baoule/Dioula) mobile
