@@ -1,14 +1,13 @@
-# Test Credentials
+# Test Credentials - GreenLink Agritech
 
-## Admin
-- identifier: klenakan.eric@gmail.com
-- password: 474Treckadzo
-- Login endpoint: POST /api/auth/login with {"identifier": "...", "password": "..."}
-- Returns: {"access_token": "..."}
+## Admin Account
+- Email: klenakan.eric@gmail.com
+- Password: 474Treckadzo
 
-## Expo
-- username: treckadzo
-- password: 474Treckadzo$1986
+## Cooperative Test Accounts
+- Sponsor: sponsor-coop-e2e@test.ci / test123456
+- Child: child-coop-e2e@test.ci / test123456
 
-## Test Farmer
-- phone: +2250707070707
+## User's Cooperative Account
+- Email: boidigsproplus@gmail.com
+- Password: (set by user, unknown)

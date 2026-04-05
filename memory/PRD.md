@@ -106,16 +106,23 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (3 avr) Offline-First Data Layer: offlineData.js + 14 ecrans migres SQLite, suppression complete AsyncStorage cache
 - (3 avr) SyncEngine batch + /api/sync/batch endpoint: last-write-wins conflict resolution, auto-sync on reconnect
 - (3 avr) Sync Pull API: POST /api/sync/pull + GET /api/sync/status + deletion tracking + SyncEngine fullSync bidirectionnel
+- (7 avr) Fix bug 403 Forbidden sur /api/cooperative-referral/my-code
+- (7 avr) Fix coop_name affichant "N/A" pour les nouvelles cooperatives
+- (7 avr) Fix AuthContext.jsx: forwarding sponsor_referral_code vers le backend
+- (7 avr) Fix id field non defini dans MongoDB apres inscription
+- (7 avr) Ajout lien application dans le message de partage du code de parrainage
 
 ## Backlog
 ### P0
 - Mettre a jour MONGO_URL dans les Secrets Emergent Dashboard (action utilisateur)
+- Configuration DNS domaine greenlink-agritech.com (action utilisateur GoDaddy)
 ### P2
 - Passerelle SMS reelle Orange CI / MTN (MOCK)
 - Langues locales (Baoule/Dioula) mobile
 ### P3
 - Refactoriser ussd.py
 - Nettoyage code mort (subscription files)
+- Nettoyer la gestion id vs _id dans MongoDB pour tous les anciens comptes
 
 ## Credentials
 - Admin: `klenakan.eric@gmail.com` / `474Treckadzo`
