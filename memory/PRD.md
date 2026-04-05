@@ -116,6 +116,8 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Mode offline-first web (Agent Terrain + Coopérative): OfflineContext, OfflineBanner, IndexedDB (coop_members, coop_lots, coop_dashboard), offlineCooperativeApi avec fallback cache, sync auto au login et retour en ligne, Service Worker PWA
 - (7 avr) Vues mobile 100% natives (Agent Terrain + Agriculteur): MobileAppShell (container 430px, status bar, bottom tab nav)
 - (5 avr) Onglet "+" (Plus) ajoute aux dashboards Agent Terrain et Agriculteur pour parite fonctionnelle avec l'app mobile Expo
+- (5 avr) Fix bug "Erreur reseau" inscription Agent Terrain: endpoint corrige register-by-agent → register-web + support offline (IndexedDB queue + sync auto)
+- (5 avr) Backend sync/upload: handler register_farmer pour synchroniser les inscriptions hors-ligne
   - Agent Terrain: 5 tabs (Accueil USSD + Tableau de bord KPIs + Planteurs + Inscrire + Plus), profil planteur avec 6 fiches fonctionnelles (ICI modal, SSRTE modal, REDD tracking, Parcelles, Photos, Inscription). Onglet Plus: Outils Terrain (SSRTE, Verification Parcelles, Photos, Pratiques Durables, Recherche), Mon Compte (Profil, Notifications), Deconnexion
   - Farmer: 5 tabs (Accueil USSD avec Score Carbone gauge/Stats/Menu + Tableau de bord + Parcelles + Carbone + Plus). Onglet Plus: Mes Activites (Parcelles, Recoltes, Declarer, Commandes), Marketplace & Primes (Boutique, Primes Carbone, Pratiques Durables), Mon Compte (Profil, Notifications), Deconnexion
   - Accueil = menu numerote style mobile, Tableau = KPIs detailles avec objectifs/progression
