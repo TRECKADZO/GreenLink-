@@ -313,10 +313,26 @@ async def get_farmer_full_details(
     ssrte_visits = await db.ssrte_visits.find({"farmer_id": lookup_id}).sort("visit_date", -1).to_list(20)
     visits_data = [{
         "id": str(v["_id"]),
-        "visit_date": str(v.get("visit_date", "")),
+        "visit_date": str(v.get("visit_date", v.get("date_visite", ""))),
+        "date_visite": str(v.get("date_visite", v.get("visit_date", ""))),
         "agent_name": v.get("agent_name", ""),
         "status": v.get("status", ""),
-        "risk_level": v.get("risk_level", "")
+        "risk_level": v.get("risk_level", v.get("niveau_risque", "")),
+        "niveau_risque": v.get("niveau_risque", v.get("risk_level", "faible")),
+        "taille_menage": v.get("taille_menage", 0),
+        "nombre_enfants": v.get("nombre_enfants", 0),
+        "liste_enfants": v.get("liste_enfants", []),
+        "conditions_vie": v.get("conditions_vie", ""),
+        "eau_courante": v.get("eau_courante", False),
+        "electricite": v.get("electricite", False),
+        "distance_ecole_km": v.get("distance_ecole_km"),
+        "enfants_observes_travaillant": v.get("enfants_observes_travaillant", 0),
+        "taches_dangereuses_observees": v.get("taches_dangereuses_observees", []),
+        "taches_dangereuses_count": v.get("taches_dangereuses_count", 0),
+        "support_fourni": v.get("support_fourni", []),
+        "recommandations": v.get("recommandations", []),
+        "visite_suivi_requise": v.get("visite_suivi_requise", False),
+        "observations": v.get("observations", ""),
     } for v in ssrte_visits]
 
     # Coopérative

@@ -467,13 +467,20 @@ async def get_farmer_history(
             "recorded_at": v.get("recorded_at"),
             "agent_name": v.get("agent_name", ""),
             "niveau_risque": v.get("niveau_risque", "faible"),
+            "taille_menage": v.get("taille_menage", 0),
+            "nombre_enfants": v.get("nombre_enfants", 0),
+            "liste_enfants": v.get("liste_enfants", []),
+            "conditions_vie": v.get("conditions_vie", ""),
+            "eau_courante": v.get("eau_courante", False),
+            "electricite": v.get("electricite", False),
+            "distance_ecole_km": v.get("distance_ecole_km"),
             "enfants_observes_travaillant": v.get("enfants_observes_travaillant", 0),
             "taches_dangereuses_observees": v.get("taches_dangereuses_observees", []),
             "taches_dangereuses_count": v.get("taches_dangereuses_count", 0),
             "support_fourni": v.get("support_fourni", []),
             "recommandations": v.get("recommandations", []),
             "visite_suivi_requise": v.get("visite_suivi_requise", False),
-            "notes": v.get("notes", ""),
+            "observations": v.get("observations", ""),
         })
     
     risk_order = {"faible": 0, "modere": 1, "eleve": 2, "critique": 3}
@@ -571,11 +578,24 @@ async def get_ssrte_visits(
         "visits": [{
             "id": str(v["_id"]),
             "farmer_id": v.get("farmer_id"),
+            "farmer_name": v.get("farmer_name", ""),
             "date_visite": v.get("date_visite"),
+            "agent_name": v.get("agent_name", ""),
             "niveau_risque": v.get("niveau_risque"),
             "enfants_observes_travaillant": v.get("enfants_observes_travaillant", 0),
+            "taille_menage": v.get("taille_menage", 0),
+            "nombre_enfants": v.get("nombre_enfants", 0),
+            "liste_enfants": v.get("liste_enfants", []),
+            "conditions_vie": v.get("conditions_vie", ""),
+            "eau_courante": v.get("eau_courante", False),
+            "electricite": v.get("electricite", False),
+            "distance_ecole_km": v.get("distance_ecole_km"),
+            "taches_dangereuses_observees": v.get("taches_dangereuses_observees", []),
             "taches_dangereuses_count": v.get("taches_dangereuses_count", 0),
-            "support_fourni": v.get("support_fourni", [])
+            "support_fourni": v.get("support_fourni", []),
+            "recommandations": v.get("recommandations", []),
+            "visite_suivi_requise": v.get("visite_suivi_requise", False),
+            "observations": v.get("observations", ""),
         } for v in visits]
     }
 

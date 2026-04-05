@@ -53,8 +53,54 @@ const SSRTEVisitCard = ({ visit }) => {
       </button>
       {expanded && (
         <div className="px-3 pb-3 space-y-2 border-t bg-gray-50/50">
+          {/* Menage & Conditions */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+            {visit.taille_menage > 0 && (
+              <div className="bg-white rounded p-2 text-center border">
+                <p className="text-base font-bold text-violet-700">{visit.taille_menage}</p>
+                <p className="text-[9px] text-gray-500">Menage</p>
+              </div>
+            )}
+            {visit.nombre_enfants > 0 && (
+              <div className="bg-white rounded p-2 text-center border">
+                <p className="text-base font-bold text-blue-700">{visit.nombre_enfants}</p>
+                <p className="text-[9px] text-gray-500">Enfants</p>
+              </div>
+            )}
+            {visit.conditions_vie && (
+              <div className="bg-white rounded p-2 text-center border">
+                <p className="text-xs font-bold text-gray-700 capitalize">{visit.conditions_vie}</p>
+                <p className="text-[9px] text-gray-500">Conditions</p>
+              </div>
+            )}
+            {(visit.eau_courante || visit.electricite) && (
+              <div className="bg-white rounded p-2 text-center border">
+                <div className="flex justify-center gap-2 text-[10px]">
+                  {visit.eau_courante && <span className="text-blue-600">Eau</span>}
+                  {visit.electricite && <span className="text-amber-600">Elec.</span>}
+                </div>
+                <p className="text-[9px] text-gray-500">Services</p>
+              </div>
+            )}
+          </div>
+          {/* Liste enfants */}
+          {visit.liste_enfants?.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Enfants enregistres</p>
+              <div className="space-y-1">
+                {visit.liste_enfants.map((e, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs bg-white rounded p-1.5 border">
+                    <span className="font-medium">{e.prenom}</span>
+                    <span className="text-gray-400">{e.age} ans</span>
+                    {e.scolarise && <Badge className="bg-green-50 text-green-600 text-[8px] px-1">Scolarise</Badge>}
+                    {e.travaille_exploitation && <Badge className="bg-red-50 text-red-600 text-[8px] px-1">Travaille</Badge>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {visit.taches_dangereuses_observees?.length > 0 && (
-            <div className="pt-2">
+            <div>
               <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Taches dangereuses</p>
               <div className="flex flex-wrap gap-1">
                 {visit.taches_dangereuses_observees.map(t => (
@@ -79,6 +125,12 @@ const SSRTEVisitCard = ({ visit }) => {
               <ul className="text-xs text-gray-600 list-disc pl-4 space-y-0.5">
                 {visit.recommandations.map((r, i) => <li key={i}>{r}</li>)}
               </ul>
+            </div>
+          )}
+          {visit.observations && (
+            <div>
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Observations</p>
+              <p className="text-xs text-gray-600 bg-white rounded p-2 border">{visit.observations}</p>
             </div>
           )}
           {visit.visite_suivi_requise && (
