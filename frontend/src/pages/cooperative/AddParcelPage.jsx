@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { offlineCooperativeApi as cooperativeApi } from '../../services/offlineCooperativeApi';
 import { 
-  MapPin, ChevronLeft, Leaf, Navigation, Users
+  MapPin, ChevronLeft, Leaf, Navigation, Users, User
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -40,12 +40,17 @@ const DEPARTMENTS = [
 
 const AddParcelPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const presetFarmerId = searchParams.get('farmer_id') || '';
+  const presetFarmerName = decodeURIComponent(searchParams.get('farmer_name') || '');
+  const isFromAgent = !!presetFarmerId;
+
   const [members, setMembers] = useState([]);
-  const [loadingMembers, setLoadingMembers] = useState(true);
+  const [loadingMembers, setLoadingMembers] = useState(!isFromAgent);
   const [submitting, setSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
-    member_id: '',
+    member_id: presetFarmerId,
     location: '',
     village: '',
     department: '',
@@ -57,19 +62,21 @@ const AddParcelPage = () => {
   });
 
   useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const data = await cooperativeApi.getMembers({ status: 'active' });
-        setMembers(data.members || []);
-      } catch (error) {
-        console.error('Error fetching members:', error);
-        toast.error('Erreur lors du chargement des membres');
-      } finally {
-        setLoadingMembers(false);
-      }
-    };
-    fetchMembers();
-  }, []);
+    if (!isFromAgent) {
+      const fetchMembers = async () => {
+        try {
+          const data = await cooperativeApi.getMembers({ status: 'active' });
+          setMembers(data.members || []);
+        } catch (error) {
+          console.error('Error fetching members:', error);
+          toast.error('Erreur lors du chargement des membres');
+        } finally {
+          setLoadingMembers(false);
+        }
+      };
+      fetchMembers();
+    }
+  }, [isFromAgent]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -138,7 +145,7 @@ const AddParcelPage = () => {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => navigate('/cooperative/members')}
+              onClick={() => navigate(-1)}
               className="text-white hover:bg-white/10"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -170,6 +177,16 @@ const AddParcelPage = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Member Selection */}
+              {isFromAgent ? (
+                <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <Label className="text-emerald-800 font-semibold flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Agriculteur
+                  </Label>
+                  <p className="mt-1 text-base font-bold text-emerald-900">{presetFarmerName}</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">Parcelle liee automatiquement a cet agriculteur</p>
+                </div>
+              ) : (
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <Label htmlFor="member_id" className="text-blue-800 font-semibold flex items-center gap-2">
                   <Users className="h-4 w-4" />
@@ -196,6 +213,7 @@ const AddParcelPage = () => {
                   </p>
                 )}
               </div>
+              )}
 
               {/* Location and Village */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -354,7 +372,7 @@ const AddParcelPage = () => {
                   type="button" 
                   variant="outline" 
                   className="flex-1"
-                  onClick={() => navigate('/cooperative/members')}
+                  onClick={() => navigate(-1)}
                 >
                   Annuler
                 </Button>

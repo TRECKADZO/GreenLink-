@@ -295,6 +295,12 @@ const REDDTrackingPage = () => {
             {/* Farmer Info */}
             <Card className="p-4">
               <h3 className="font-semibold text-gray-800 mb-3 text-sm">Producteur</h3>
+              {paramFarmerName ? (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                  <p className="text-sm font-bold text-emerald-900">{farmerName}</p>
+                  {farmerPhone && <p className="text-xs text-emerald-600 mt-0.5">{farmerPhone}</p>}
+                </div>
+              ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
@@ -313,6 +319,7 @@ const REDDTrackingPage = () => {
                   data-testid="farmer-phone-input"
                 />
               </div>
+              )}
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <input
                   type="number"
