@@ -115,6 +115,10 @@ import MessagingPage from "./pages/messaging/MessagingPage";
 import ActivateMember from "./pages/auth/ActivateMember";
 import ActivateAgent from "./pages/auth/ActivateAgent";
 
+// Offline-First
+import { OfflineProvider } from "./context/OfflineContext";
+import { OfflineBanner } from "./components/OfflineBanner";
+
 // Agent Terrain
 import AgentTerrainDashboard from "./pages/agent/AgentTerrainDashboard";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
@@ -127,8 +131,10 @@ function App() {
   return (
     <div className="App">
       <AuthProvider>
+        <OfflineProvider>
         <CartProvider>
           <BrowserRouter>
+            <OfflineBanner />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/register" element={<Register />} />
@@ -277,6 +283,7 @@ function App() {
           <ToasterUI />
           <PWAInstallPrompt />
         </CartProvider>
+        </OfflineProvider>
       </AuthProvider>
     </div>
   );

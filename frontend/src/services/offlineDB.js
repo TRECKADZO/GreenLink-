@@ -8,7 +8,7 @@
 import { openDB } from 'idb';
 
 const DB_NAME = 'greenlink_agent_offline';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const STORES = {
   FARMERS: 'farmers',
@@ -16,6 +16,9 @@ const STORES = {
   SSRTE_VISITS: 'ssrte_visits',
   PENDING_ACTIONS: 'pending_actions',
   META: 'meta',
+  COOP_MEMBERS: 'coop_members',
+  COOP_LOTS: 'coop_lots',
+  COOP_DASHBOARD: 'coop_dashboard',
 };
 
 let dbInstance = null;
@@ -57,6 +60,24 @@ async function getDB() {
       // Métadonnées (dernière sync, version)
       if (!db.objectStoreNames.contains(STORES.META)) {
         db.createObjectStore(STORES.META, { keyPath: 'key' });
+      }
+
+      // === Coopérative stores ===
+      if (!db.objectStoreNames.contains(STORES.COOP_MEMBERS)) {
+        const membersStore = db.createObjectStore(STORES.COOP_MEMBERS, { keyPath: 'id' });
+        membersStore.createIndex('phone_number', 'phone_number', { unique: false });
+        membersStore.createIndex('full_name', 'full_name', { unique: false });
+        membersStore.createIndex('status', 'status', { unique: false });
+        membersStore.createIndex('village', 'village', { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains(STORES.COOP_LOTS)) {
+        const lotsStore = db.createObjectStore(STORES.COOP_LOTS, { keyPath: 'id' });
+        lotsStore.createIndex('status', 'status', { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains(STORES.COOP_DASHBOARD)) {
+        db.createObjectStore(STORES.COOP_DASHBOARD, { keyPath: 'key' });
       }
     },
   });
@@ -307,10 +328,162 @@ function getPhonePatterns(normalized) {
 
 export async function clearAllOfflineData() {
   const db = await getDB();
-  const stores = [STORES.FARMERS, STORES.PARCELS, STORES.SSRTE_VISITS, STORES.PENDING_ACTIONS, STORES.META];
+  const stores = [
+    STORES.FARMERS, STORES.PARCELS, STORES.SSRTE_VISITS,
+    STORES.PENDING_ACTIONS, STORES.META,
+    STORES.COOP_MEMBERS, STORES.COOP_LOTS, STORES.COOP_DASHBOARD,
+  ];
   for (const store of stores) {
-    const tx = db.transaction(store, 'readwrite');
-    await tx.store.clear();
-    await tx.done;
+    try {
+      const tx = db.transaction(store, 'readwrite');
+      await tx.store.clear();
+      await tx.done;
+    } catch { /* store may not exist in old version */ }
   }
+}
+
+// ============= COOPÉRATIVE — MEMBRES =============
+
+export async function saveCoopMembers(members) {
+  const db = await getDB();
+  const tx = db.transaction(STORES.COOP_MEMBERS, 'readwrite');
+  await tx.store.clear();
+  for (const m of members) {
+    if (m.id || m._id) {
+      await tx.store.put({ ...m, id: m.id || m._id });
+    }
+  }
+  await tx.done;
+}
+
+export async function getAllCoopMembers() {
+  const db = await getDB();
+  return db.getAll(STORES.COOP_MEMBERS);
+}
+
+export async function getCoopMemberById(id) {
+  const db = await getDB();
+  return db.get(STORES.COOP_MEMBERS, id);
+}
+
+export async function getCoopMembersCount() {
+  try {
+    const db = await getDB();
+    return db.count(STORES.COOP_MEMBERS);
+  } catch { return 0; }
+}
+
+export async function searchCoopMemberByName(name) {
+  const db = await getDB();
+  const all = await db.getAll(STORES.COOP_MEMBERS);
+  const lower = name.toLowerCase();
+  return all.filter((m) =>
+    (m.full_name || '').toLowerCase().includes(lower) ||
+    (m.farmer_name || '').toLowerCase().includes(lower)
+  );
+}
+
+export async function searchCoopMemberByPhone(phone) {
+  const db = await getDB();
+  const normalized = normalizePhone(phone);
+  const patterns = getPhonePatterns(normalized);
+  const all = await db.getAll(STORES.COOP_MEMBERS);
+  return all.filter((m) => {
+    const mPhone = normalizePhone(m.phone_number || '');
+    return patterns.some((p) => mPhone === p || (m.phone_number || '').includes(p));
+  });
+}
+
+// ============= COOPÉRATIVE — LOTS =============
+
+export async function saveCoopLots(lots) {
+  const db = await getDB();
+  const tx = db.transaction(STORES.COOP_LOTS, 'readwrite');
+  await tx.store.clear();
+  for (const l of lots) {
+    if (l.id || l._id) {
+      await tx.store.put({ ...l, id: l.id || l._id });
+    }
+  }
+  await tx.done;
+}
+
+export async function getAllCoopLots() {
+  const db = await getDB();
+  return db.getAll(STORES.COOP_LOTS);
+}
+
+// ============= COOPÉRATIVE — DASHBOARD =============
+
+export async function saveCoopDashboard(data) {
+  const db = await getDB();
+  await db.put(STORES.COOP_DASHBOARD, { key: 'dashboard', ...data });
+}
+
+export async function getCoopDashboard() {
+  const db = await getDB();
+  return db.get(STORES.COOP_DASHBOARD, 'dashboard');
+}
+
+export async function saveCoopDashboardKPIs(data) {
+  const db = await getDB();
+  await db.put(STORES.COOP_DASHBOARD, { key: 'kpis', ...data });
+}
+
+export async function getCoopDashboardKPIs() {
+  const db = await getDB();
+  return db.get(STORES.COOP_DASHBOARD, 'kpis');
+}
+
+// ============= SYNC COOPÉRATIVE COMPLÈTE =============
+
+export async function syncCooperativeData(apiUrl, token) {
+  const headers = { Authorization: `Bearer ${token}` };
+
+  // 1. Members
+  let membersCount = 0;
+  try {
+    const res = await fetch(`${apiUrl}/api/cooperative/members?limit=500`, { headers });
+    if (res.ok) {
+      const data = await res.json();
+      const members = data.members || data || [];
+      await saveCoopMembers(members);
+      membersCount = members.length;
+    }
+  } catch (e) { console.warn('[OfflineSync] Members failed:', e); }
+
+  // 2. Lots
+  try {
+    const res = await fetch(`${apiUrl}/api/cooperative/lots`, { headers });
+    if (res.ok) {
+      const data = await res.json();
+      await saveCoopLots(data.lots || data || []);
+    }
+  } catch (e) { console.warn('[OfflineSync] Lots failed:', e); }
+
+  // 3. Dashboard
+  try {
+    const res = await fetch(`${apiUrl}/api/cooperative/dashboard`, { headers });
+    if (res.ok) {
+      const data = await res.json();
+      await saveCoopDashboard(data);
+    }
+  } catch (e) { console.warn('[OfflineSync] Dashboard failed:', e); }
+
+  // 4. KPIs
+  try {
+    const res = await fetch(`${apiUrl}/api/cooperative/dashboard-kpis`, { headers });
+    if (res.ok) {
+      const data = await res.json();
+      await saveCoopDashboardKPIs(data);
+    }
+  } catch (e) { console.warn('[OfflineSync] KPIs failed:', e); }
+
+  // 5. Update meta
+  const syncTimestamp = new Date().toISOString();
+  await setLastSyncTime(syncTimestamp);
+  const db = await getDB();
+  await db.put(STORES.META, { key: 'coop_members_count', value: membersCount });
+
+  return { membersCount, syncTimestamp };
 }

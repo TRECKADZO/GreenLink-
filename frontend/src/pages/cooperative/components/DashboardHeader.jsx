@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Building2, Home, UserCircle, Plus, FileDown, Loader2 } from 'lucide-react';
+import { Building2, Home, UserCircle, Plus, FileDown, Loader2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { NotificationCenter } from '../../../components/NotificationCenter';
+import { useOffline } from '../../../context/OfflineContext';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -11,6 +12,16 @@ export const DashboardHeader = ({ coopInfo, user, navigate }) => {
   const code = coopInfo?.code || user?.coop_code || 'N/A';
   const certs = coopInfo?.certifications || [];
   const [exporting, setExporting] = useState(false);
+  const { isOnline, syncing, pendingCount, lastSync, syncAll } = useOffline();
+
+  const formatSync = (iso) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    const diff = Math.floor((new Date() - d) / 60000);
+    if (diff < 1) return "Sync a l'instant";
+    if (diff < 60) return `Sync il y a ${diff}min`;
+    return `Sync ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+  };
 
   const handleExportPDF = async () => {
     setExporting(true);
@@ -65,6 +76,32 @@ export const DashboardHeader = ({ coopInfo, user, navigate }) => {
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2 gl-animate-in gl-stagger-2">
+            {/* Sync Status Indicator */}
+            <button
+              onClick={syncing ? undefined : syncAll}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs transition-colors ${
+                !isOnline
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  : syncing
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    : pendingCount > 0
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30'
+                      : 'bg-white/5 text-white/50 border border-white/10'
+              }`}
+              data-testid="sync-status-indicator"
+              title={isOnline ? 'Cliquer pour synchroniser' : 'Mode hors-ligne'}
+            >
+              {syncing ? (
+                <RefreshCw className="w-3 h-3 animate-spin" />
+              ) : isOnline ? (
+                <Wifi className="w-3 h-3" />
+              ) : (
+                <WifiOff className="w-3 h-3" />
+              )}
+              <span>
+                {syncing ? 'Sync...' : !isOnline ? 'Hors-ligne' : pendingCount > 0 ? `${pendingCount} en attente` : formatSync(lastSync) || 'En ligne'}
+              </span>
+            </button>
             <Button
               onClick={handleExportPDF}
               disabled={exporting}

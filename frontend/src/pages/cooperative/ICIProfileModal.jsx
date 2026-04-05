@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { cooperativeApi } from '../../services/cooperativeApi';
+import { offlineCooperativeApi as cooperativeApi } from '../../services/offlineCooperativeApi';
 import {
   Users, Plus, X, Save, FileText, Baby, GraduationCap, AlertTriangle, Loader2
 } from 'lucide-react';

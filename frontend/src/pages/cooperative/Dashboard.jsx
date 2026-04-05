@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { cooperativeApi } from '../../services/cooperativeApi';
+import { offlineCooperativeApi as cooperativeApi } from '../../services/offlineCooperativeApi';
+import { useOffline } from '../../context/OfflineContext';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 

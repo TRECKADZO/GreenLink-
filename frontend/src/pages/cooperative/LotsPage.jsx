@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { cooperativeApi } from '../../services/cooperativeApi';
+import { offlineCooperativeApi as cooperativeApi } from '../../services/offlineCooperativeApi';
 import { 
   Package, Plus, ChevronLeft, ChevronDown, ChevronUp, Leaf, Users,
   DollarSign, CheckCircle, Clock, TrendingUp,

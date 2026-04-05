@@ -152,6 +152,19 @@ export const AuthProvider = ({ children }) => {
       setToken(access_token);
       setUser(userData);
       localStorage.setItem('token', access_token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Trigger offline sync for field_agent and cooperative users
+      if (userData.user_type === 'field_agent' || userData.user_type === 'cooperative') {
+        try {
+          const { syncCooperativeData, performFullSync } = await import('../services/offlineDB');
+          if (userData.user_type === 'cooperative') {
+            syncCooperativeData(BACKEND_URL, access_token).catch(() => {});
+          } else {
+            performFullSync(BACKEND_URL, access_token).catch(() => {});
+          }
+        } catch { /* offline DB not ready */ }
+      }
       
       console.log('[Auth] Login successful, token saved');
       return { success: true, user: userData };
