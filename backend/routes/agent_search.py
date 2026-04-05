@@ -681,6 +681,35 @@ async def upload_offline_actions(
                     f"Recherche offline: {data.get('farmer_name', 'N/A')}",
                     "offline"
                 )
+            elif action_type == "register_farmer":
+                # Inscription d'un planteur depuis le mode offline
+                import hashlib as _hl
+                nom = data.get("nom_complet", "").strip()
+                telephone = data.get("telephone", "").strip()
+                village = data.get("village", "").strip()
+                pin = data.get("pin", "")
+                if nom and telephone:
+                    existing = await db.ussd_registrations.find_one({
+                        "phone_number": {"$regex": telephone[-9:] + "$"}
+                    })
+                    if not existing:
+                        pin_hash = _hl.sha256(pin.encode()).hexdigest() if pin else ""
+                        reg_doc = {
+                            "full_name": nom,
+                            "nom_complet": nom,
+                            "phone_number": telephone,
+                            "cooperative_code": data.get("cooperative_code", ""),
+                            "village": village,
+                            "pin_hash": pin_hash,
+                            "hectares_approx": float(data["hectares"]) if data.get("hectares") else None,
+                            "user_type": "producteur",
+                            "registered_via": "agent_offline",
+                            "registered_by_agent": agent_id,
+                            "status": "active",
+                            "created_at": datetime.now(timezone.utc),
+                            "synced_from_offline": True
+                        }
+                        await db.ussd_registrations.insert_one(reg_doc)
 
             await db.sync_log.insert_one({
                 "offline_id": offline_id,

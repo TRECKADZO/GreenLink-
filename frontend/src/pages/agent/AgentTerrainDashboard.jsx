@@ -264,27 +264,93 @@ const MoreTab = ({ navigate, onTabChange }) => {
 
 // ========= INSCRIPTION =========
 const AgentRegistrationForm = () => {
+  const { isOnline, queueAction } = useOffline();
   const [form, setForm] = useState({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' });
   const [submitting, setSubmitting] = useState(false);
   const [recentRegs, setRecentRegs] = useState([]);
+  const [offlineRegs, setOfflineRegs] = useState([]);
   const handleChange = (f, v) => setForm(p => ({ ...p, [f]: v }));
-  const loadRecent = async () => { try { const r = await fetch(`${API_URL}/api/ussd/registrations?limit=10`, { headers: getAuthHeader() }); if (r.ok) { const d = await r.json(); setRecentRegs(d.registrations || []); } } catch {} };
-  React.useEffect(() => { loadRecent(); }, []);
+
+  const loadRecent = async () => {
+    try {
+      const r = await fetch(`${API_URL}/api/ussd/registrations?limit=10`, { headers: getAuthHeader() });
+      if (r.ok) { const d = await r.json(); setRecentRegs(d.registrations || []); }
+    } catch {}
+  };
+
+  // Load offline registrations from localStorage
+  const loadOfflineRegs = () => {
+    try {
+      const stored = localStorage.getItem('offline_registrations');
+      if (stored) setOfflineRegs(JSON.parse(stored));
+    } catch {}
+  };
+
+  const saveOfflineReg = (reg) => {
+    const updated = [reg, ...offlineRegs].slice(0, 20);
+    setOfflineRegs(updated);
+    localStorage.setItem('offline_registrations', JSON.stringify(updated));
+  };
+
+  React.useEffect(() => { loadRecent(); loadOfflineRegs(); }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.nom_complet.trim() || !form.telephone.trim() || !form.pin || form.pin.length !== 4) { toast.error('Nom, telephone et PIN (4 chiffres) requis'); return; }
+    if (!form.nom_complet.trim() || !form.telephone.trim() || !form.pin || form.pin.length !== 4) {
+      toast.error('Nom, telephone et PIN (4 chiffres) requis');
+      return;
+    }
     setSubmitting(true);
-    try {
-      const r = await fetch(`${API_URL}/api/ussd/register-by-agent`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(form) });
-      const d = await r.json();
-      if (r.ok) { toast.success(`${form.nom_complet} inscrit!`); setForm({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' }); loadRecent(); }
-      else toast.error(d.detail || 'Erreur');
-    } catch { toast.error('Erreur reseau'); }
+
+    if (isOnline) {
+      try {
+        const r = await fetch(`${API_URL}/api/ussd/register-web`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify(form)
+        });
+        const d = await r.json();
+        if (r.ok) {
+          toast.success(`${form.nom_complet} inscrit!`);
+          setForm({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' });
+          loadRecent();
+        } else {
+          toast.error(d.detail || 'Erreur');
+        }
+      } catch {
+        // Network failed even though we thought we were online — queue offline
+        await queueAction({
+          action_type: 'register_farmer',
+          data: { ...form },
+        });
+        saveOfflineReg({ full_name: form.nom_complet, phone_number: form.telephone, village: form.village, offline: true, created_at: new Date().toISOString() });
+        toast.success(`${form.nom_complet} sauvegarde hors-ligne (sync auto)`);
+        setForm({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' });
+      }
+    } else {
+      // Offline mode — queue for later sync
+      await queueAction({
+        action_type: 'register_farmer',
+        data: { ...form },
+      });
+      saveOfflineReg({ full_name: form.nom_complet, phone_number: form.telephone, village: form.village, offline: true, created_at: new Date().toISOString() });
+      toast.success(`${form.nom_complet} sauvegarde hors-ligne (sync auto au retour en ligne)`);
+      setForm({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' });
+    }
     setSubmitting(false);
   };
+
+  const allRegs = [...offlineRegs.map(r => ({ ...r, _offline: true })), ...recentRegs.filter(r => !offlineRegs.some(o => o.phone_number === r.phone_number))];
+
   return (
     <div className="p-4 space-y-4">
       <h2 className="text-base font-bold text-gray-800">Inscrire un planteur</h2>
+      {!isOnline && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-2 text-xs text-amber-700" data-testid="offline-reg-banner">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <span>Mode hors-ligne — Les inscriptions seront synchronisees au retour en ligne</span>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-3" data-testid="agent-reg-form">
         <Input placeholder="Nom complet *" value={form.nom_complet} onChange={e => handleChange('nom_complet', e.target.value)} className="h-12 text-base rounded-xl" data-testid="agent-reg-name" />
         <Input placeholder="Telephone *" value={form.telephone} onChange={e => handleChange('telephone', e.target.value)} className="h-12 text-base rounded-xl" data-testid="agent-reg-phone" />
@@ -295,13 +361,22 @@ const AgentRegistrationForm = () => {
           <Input placeholder="Hectares" type="number" step="0.5" value={form.hectares} onChange={e => handleChange('hectares', e.target.value)} className="h-12 text-base rounded-xl" />
         </div>
         <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-base font-semibold rounded-xl" data-testid="agent-reg-submit">
-          {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Inscription...</> : <><UserPlus className="w-4 h-4 mr-2" />Inscrire</>}
+          {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Inscription...</> : <><UserPlus className="w-4 h-4 mr-2" />{isOnline ? 'Inscrire' : 'Sauvegarder (hors-ligne)'}</>}
         </Button>
       </form>
-      {recentRegs.length > 0 && (
+      {allRegs.length > 0 && (
         <div><h3 className="text-sm font-semibold text-gray-500 mb-2">Recentes</h3>
-          <div className="space-y-2">{recentRegs.slice(0, 5).map((r, i) => (
-            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"><div><p className="text-sm font-medium text-gray-800">{r.full_name || r.nom_complet}</p><p className="text-xs text-gray-400">{r.phone_number}</p></div><span className="text-[10px] text-gray-400">{r.village}</span></div>
+          <div className="space-y-2">{allRegs.slice(0, 5).map((r, i) => (
+            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+              <div>
+                <p className="text-sm font-medium text-gray-800">{r.full_name || r.nom_complet}</p>
+                <p className="text-xs text-gray-400">{r.phone_number}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-gray-400">{r.village}</span>
+                {r._offline && <Badge className="bg-amber-100 text-amber-700 text-[8px] px-1.5">En attente</Badge>}
+              </div>
+            </div>
           ))}</div>
         </div>
       )}

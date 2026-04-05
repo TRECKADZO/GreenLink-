@@ -1,0 +1,85 @@
+{
+  "summary": "Iteration 95: Bug fix verification for Agent Terrain registration form and Plus tab testing - ALL TESTS PASSED",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration_95.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_iteration_95.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "field_agent": "testagent@test.ci / test123456",
+    "farmer": "testplanteur@test.ci / test123456"
+  },
+  "seed_data_creation": "Created test registrations via /api/ussd/register-web during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug fix verified: Agent Terrain registration form now correctly calls /api/ussd/register-web instead of non-existent /api/ussd/register-by-agent. All features working: registration form, Plus tabs for both agent and farmer dashboards, field agent dashboard, my-farmers endpoint.",
+  "detailed_test_results": {
+    "bug_fix_verification": {
+      "issue": "Agent Terrain registration form was calling non-existent endpoint /api/ussd/register-by-agent causing 'Erreur reseau'",
+      "fix": "Changed to use /api/ussd/register-web endpoint",
+      "status": "VERIFIED FIXED",
+      "tests": [
+        {"test": "POST /api/ussd/register-web with valid data", "result": "PASSED - Returns 200 with farmer_id and code_planteur"},
+        {"test": "POST /api/ussd/register-web with missing name", "result": "PASSED - Returns 400"},
+        {"test": "POST /api/ussd/register-web with missing phone", "result": "PASSED - Returns 400"},
+        {"test": "POST /api/ussd/register-web with invalid PIN", "result": "PASSED - Returns 400"},
+        {"test": "POST /api/ussd/register-web with duplicate phone", "result": "PASSED - Returns 409"}
+      ]
+    },
+    "agent_terrain_dashboard": {
+      "status": "PASSED",
+      "tests": [
+        {"test": "Login as field agent", "result": "PASSED"},
+        {"test": "Agent dashboard loads", "result": "PASSED"},
+        {"test": "Inscrire tab shows registration form", "result": "PASSED"},
+        {"test": "Registration form submits successfully", "result": "PASSED - Toast shows 'inscrit!'"},
+        {"test": "Registered farmer appears in Recentes list", "result": "PASSED"},
+        {"test": "Planteurs tab loads (0 farmers for test agent)", "result": "PASSED"},
+        {"test": "Plus tab renders with correct sections", "result": "PASSED"}
+      ],
+      "plus_tab_sections": ["OUTILS TERRAIN", "MON COMPTE", "Deconnexion"]
+    },
+    "farmer_dashboard": {
+      "status": "PASSED",
+      "tests": [
+        {"test": "Login as farmer", "result": "PASSED"},
+        {"test": "Farmer dashboard loads", "result": "PASSED"},
+        {"test": "Plus tab renders with correct sections", "result": "PASSED"}
+      ],
+      "plus_tab_sections": ["MES ACTIVITES", "MARKETPLACE & PRIMES", "MON COMPTE", "Deconnexion"]
+    },
+    "backend_api_tests": {
+      "status": "PASSED",
+      "total_tests": 14,
+      "passed": 14,
+      "failed": 0,
+      "test_classes": [
+        "TestAuthEndpoints (3 tests)",
+        "TestUSSDRegisterWeb (5 tests)",
+        "TestFieldAgentEndpoints (3 tests)",
+        "TestUSSDRegistrations (1 test)",
+        "TestAgentSearch (2 tests)"
+      ]
+    }
+  },
+  "notes": {
+    "farmer_selection_flow": "Could not fully test farmer selection -> fiches flow because test agent has 0 farmers assigned. The Planteurs tab correctly shows empty state. The farmer profile view with 6 FARMER_FORMS is implemented in code but requires farmers to be assigned to the agent.",
+    "offline_support": "Offline support for registration is implemented in code (uses queueAction from OfflineContext). When offline, registrations are queued in IndexedDB and synced when back online. This was not tested as it requires simulating offline mode."
+  }
+}

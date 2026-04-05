@@ -2368,13 +2368,12 @@ async def register_farmer_web(data: dict):
         pin = data.get("pin", "").strip()
         hectares = data.get("hectares")
         email = data.get("email", "").strip()
+        agent_id = data.get("agent_id")
         
         if not nom or len(nom) < 2:
             raise HTTPException(status_code=400, detail="Nom complet requis (min 2 caracteres)")
         if not telephone or len(telephone) < 8:
             raise HTTPException(status_code=400, detail="Numero de telephone requis")
-        if not village or len(village) < 2:
-            raise HTTPException(status_code=400, detail="Village requis")
         if not pin or len(pin) != 4 or not pin.isdigit():
             raise HTTPException(status_code=400, detail="Code PIN a 4 chiffres requis")
         
@@ -2397,7 +2396,8 @@ async def register_farmer_web(data: dict):
             "hectares_approx": float(hectares) if hectares else None,
             "email": email or None,
             "user_type": "producteur",
-            "registered_via": "web",
+            "registered_via": "agent" if agent_id else "web",
+            "registered_by_agent": agent_id,
             "status": "active",
             "created_at": datetime.now(timezone.utc)
         }
