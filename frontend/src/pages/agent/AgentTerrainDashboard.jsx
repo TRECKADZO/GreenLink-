@@ -4,7 +4,7 @@ import {
   Shield, Users, MapPin, Leaf, Camera, FileText,
   Award, UserPlus, Search, Phone, ClipboardCheck, Activity, 
   Target, Star, AlertTriangle, Eye, Loader2, ArrowLeft,
-  ChevronRight, User, CheckCircle2, Circle
+  ChevronRight, User, CheckCircle2, Circle, Home, RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -12,7 +12,7 @@ import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { Progress } from '../../components/ui/progress';
 import { toast } from 'sonner';
-import Navbar from '../../components/Navbar';
+import { MobileAppShell } from '../../components/MobileAppShell';
 import { NotificationCenter } from '../../components/NotificationCenter';
 import ICIProfileModal from '../cooperative/ICIProfileModal';
 import SSRTEVisitModal from '../cooperative/SSRTEVisitModal';
@@ -24,22 +24,23 @@ const getAuthHeader = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const MENU_ITEMS = [
-  { id: 'dashboard', label: 'Tableau de bord', icon: Activity, color: 'text-emerald-600' },
-  { id: 'farmers', label: 'Mes Agriculteurs', icon: Users, color: 'text-cyan-600' },
-  { id: 'inscriptions', label: 'Inscriptions', icon: UserPlus, color: 'text-violet-600' },
-  { id: 'search', label: 'Recherche planteur', icon: Search, color: 'text-gray-600' },
-];
-
 const FARMER_FORMS = [
-  { id: 'ici', label: 'Fiche ICI', desc: 'Evaluation initiale: famille, enfants, education, pratiques', icon: FileText, color: 'bg-violet-50 text-violet-700 border-violet-200' },
-  { id: 'ssrte', label: 'Visite SSRTE', desc: 'Visite terrain: observation travail enfants, risques, remediation', icon: ClipboardCheck, color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
-  { id: 'redd', label: 'Fiche Environnementale', desc: 'Verification des 21 pratiques durables (agroforesterie, sols, tracabilite)', icon: Leaf, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  { id: 'parcels', label: 'Declaration parcelles', desc: 'GPS, superficie, type de culture', icon: MapPin, color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  { id: 'photos', label: 'Photos geolocalisees', desc: 'Photos terrain avec position GPS', icon: Camera, color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  { id: 'register', label: 'Enregistrement membre', desc: 'Inscrire ce producteur comme membre', icon: UserPlus, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { id: 'ici', label: 'Fiche ICI', desc: 'Evaluation initiale', icon: FileText, color: 'bg-violet-500', lightBg: 'bg-violet-50', lightText: 'text-violet-700' },
+  { id: 'ssrte', label: 'Visite SSRTE', desc: 'Visite terrain', icon: ClipboardCheck, color: 'bg-cyan-500', lightBg: 'bg-cyan-50', lightText: 'text-cyan-700' },
+  { id: 'redd', label: 'Fiche Environnementale', desc: '21 pratiques durables', icon: Leaf, color: 'bg-emerald-500', lightBg: 'bg-emerald-50', lightText: 'text-emerald-700' },
+  { id: 'parcels', label: 'Parcelles', desc: 'GPS, superficie, culture', icon: MapPin, color: 'bg-amber-500', lightBg: 'bg-amber-50', lightText: 'text-amber-700' },
+  { id: 'photos', label: 'Photos GPS', desc: 'Photos geoloc.', icon: Camera, color: 'bg-purple-500', lightBg: 'bg-purple-50', lightText: 'text-purple-700' },
+  { id: 'register', label: 'Enregistrer', desc: 'Inscrire membre', icon: UserPlus, color: 'bg-blue-500', lightBg: 'bg-blue-50', lightText: 'text-blue-700' },
 ];
 
+const TABS = [
+  { id: 'dashboard', label: 'Accueil', icon: Home },
+  { id: 'farmers', label: 'Planteurs', icon: Users },
+  { id: 'inscriptions', label: 'Inscrire', icon: UserPlus },
+  { id: 'search', label: 'Chercher', icon: Search },
+];
+
+// ========= REGISTRATION FORM (Mobile) =========
 const AgentRegistrationForm = () => {
   const [form, setForm] = useState({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -61,97 +62,84 @@ const AgentRegistrationForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.nom_complet || !form.telephone || !form.village || !form.pin || form.pin.length !== 4) {
-      toast.error('Remplissez tous les champs obligatoires (nom, tel, village, PIN 4 chiffres)');
+    if (!form.nom_complet.trim() || !form.telephone.trim() || !form.pin || form.pin.length !== 4) {
+      toast.error('Nom, telephone et PIN (4 chiffres) requis');
       return;
     }
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_URL}/api/ussd/register-web`, {
+      const res = await fetch(`${API_URL}/api/ussd/register-by-agent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-        body: JSON.stringify(form)
+        body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        toast.success(`${data.nom} inscrit ! Code: ${data.code_planteur}`);
+      if (res.ok) {
+        toast.success(`${form.nom_complet} inscrit avec succes!`);
         setForm({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' });
         loadRecent();
       } else {
         toast.error(data.detail || 'Erreur');
       }
-    } catch { toast.error('Erreur reseau'); } finally { setSubmitting(false); }
+    } catch { toast.error('Erreur reseau'); }
+    setSubmitting(false);
   };
 
   return (
-    <div className="space-y-4">
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <UserPlus className="h-5 w-5 text-violet-600" /> Inscrire un planteur
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="agent-register-form">
-            <Input placeholder="Nom complet *" value={form.nom_complet} onChange={e => handleChange('nom_complet', e.target.value)} data-testid="agent-reg-name" />
-            <Input placeholder="Telephone *" value={form.telephone} onChange={e => handleChange('telephone', e.target.value)} data-testid="agent-reg-phone" />
-            <Input placeholder="Code cooperative (optionnel)" value={form.cooperative_code} onChange={e => handleChange('cooperative_code', e.target.value)} data-testid="agent-reg-coop" />
-            <Input placeholder="Village *" value={form.village} onChange={e => handleChange('village', e.target.value)} data-testid="agent-reg-village" />
-            <Input placeholder="PIN 4 chiffres *" type="password" maxLength={4} value={form.pin} onChange={e => handleChange('pin', e.target.value.replace(/\D/g, '').slice(0, 4))} data-testid="agent-reg-pin" />
-            <Input placeholder="Hectares (optionnel)" type="number" step="0.5" value={form.hectares} onChange={e => handleChange('hectares', e.target.value)} data-testid="agent-reg-hectares" />
-            <div className="sm:col-span-2">
-              <Button type="submit" disabled={submitting} className="w-full bg-violet-600 hover:bg-violet-700" data-testid="agent-reg-submit">
-                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Inscription...</> : <><UserPlus className="w-4 h-4 mr-2" />Inscrire le planteur</>}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="p-4 space-y-4">
+      <h2 className="text-base font-bold text-gray-800">Inscrire un planteur</h2>
+      <form onSubmit={handleSubmit} className="space-y-3" data-testid="agent-reg-form">
+        <Input placeholder="Nom complet *" value={form.nom_complet} onChange={e => handleChange('nom_complet', e.target.value)} className="h-12 text-base" data-testid="agent-reg-name" />
+        <Input placeholder="Telephone *" value={form.telephone} onChange={e => handleChange('telephone', e.target.value)} className="h-12 text-base" data-testid="agent-reg-phone" />
+        <Input placeholder="Code cooperative (optionnel)" value={form.cooperative_code} onChange={e => handleChange('cooperative_code', e.target.value)} className="h-12 text-base" />
+        <Input placeholder="Village" value={form.village} onChange={e => handleChange('village', e.target.value)} className="h-12 text-base" />
+        <div className="grid grid-cols-2 gap-3">
+          <Input placeholder="PIN 4 chiffres *" type="password" maxLength={4} value={form.pin} onChange={e => handleChange('pin', e.target.value.replace(/\D/g, '').slice(0, 4))} className="h-12 text-base" data-testid="agent-reg-pin" />
+          <Input placeholder="Hectares" type="number" step="0.5" value={form.hectares} onChange={e => handleChange('hectares', e.target.value)} className="h-12 text-base" />
+        </div>
+        <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-base font-semibold" data-testid="agent-reg-submit">
+          {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Inscription...</> : <><UserPlus className="w-4 h-4 mr-2" />Inscrire</>}
+        </Button>
+      </form>
 
       {recentRegs.length > 0 && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-gray-500">Dernieres inscriptions</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y">
-              {recentRegs.slice(0, 5).map((r, i) => (
-                <div key={i} className="px-4 py-2.5 flex items-center justify-between text-sm" data-testid={`agent-recent-reg-${i}`}>
-                  <div>
-                    <span className="font-medium text-gray-800">{r.full_name || r.nom_complet}</span>
-                    <span className="text-gray-400 ml-2">{r.phone_number}</span>
-                  </div>
-                  <span className="text-xs text-gray-400">{r.village} - {r.registered_via}</span>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-500 mb-2">Inscriptions recentes</h3>
+          <div className="space-y-2">
+            {recentRegs.slice(0, 5).map((r, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl" data-testid={`agent-recent-reg-${i}`}>
+                <div>
+                  <p className="text-sm font-medium text-gray-800">{r.full_name || r.nom_complet}</p>
+                  <p className="text-xs text-gray-400">{r.phone_number}</p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <span className="text-[10px] text-gray-400">{r.village}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
 };
 
+// ========= MAIN DASHBOARD =========
 const AgentTerrainDashboard = () => {
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState('dashboard');
 
-  // Farmers
   const [myFarmers, setMyFarmers] = useState([]);
   const [farmersLoading, setFarmersLoading] = useState(false);
   const [selectedFarmer, setSelectedFarmer] = useState(null);
   const [farmerSearch, setFarmerSearch] = useState('');
 
-  // Search by phone
   const [phone, setPhone] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
 
-  // ICI Modal
   const [showICIModal, setShowICIModal] = useState(false);
-  // SSRTE Modal
   const [showSSRTEModal, setShowSSRTEModal] = useState(false);
 
   const loadDashboard = useCallback(async () => {
@@ -174,6 +162,12 @@ const AgentTerrainDashboard = () => {
 
   useEffect(() => { loadDashboard(); loadMyFarmers(); }, [loadDashboard, loadMyFarmers]);
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([loadDashboard(), loadMyFarmers()]);
+    setRefreshing(false);
+  };
+
   const openFarmerProfile = (farmer) => {
     setSelectedFarmer(farmer);
     setTab('farmer-profile');
@@ -181,15 +175,10 @@ const AgentTerrainDashboard = () => {
 
   const handleFormAction = (formId) => {
     if (!selectedFarmer) return;
-    if (formId === 'ici') {
-      setShowICIModal(true);
-    } else if (formId === 'ssrte') {
-      setShowSSRTEModal(true);
-    } else if (formId === 'redd') {
-      navigate(`/redd/tracking?farmer=${encodeURIComponent(selectedFarmer.full_name)}&phone=${encodeURIComponent(selectedFarmer.phone_number || '')}&id=${encodeURIComponent(selectedFarmer.id || '')}`);
-    } else {
-      toast.info(`${formId} - Fonctionnalite disponible sur l'application mobile`);
-    }
+    if (formId === 'ici') setShowICIModal(true);
+    else if (formId === 'ssrte') setShowSSRTEModal(true);
+    else if (formId === 'redd') navigate(`/redd/tracking?farmer=${encodeURIComponent(selectedFarmer.full_name)}&phone=${encodeURIComponent(selectedFarmer.phone_number || '')}&id=${encodeURIComponent(selectedFarmer.id || '')}`);
+    else toast.info(`${formId} — Bientot disponible`);
   };
 
   const handleSearch = async (e) => {
@@ -202,10 +191,8 @@ const AgentTerrainDashboard = () => {
       const data = await res.json();
       if (data.found) {
         setSearchResult(data.farmer);
-        toast.success(`Planteur trouve: ${data.farmer.full_name}`);
-      } else {
-        toast.error('Aucun planteur trouve avec ce numero');
-      }
+        toast.success(`Trouve: ${data.farmer.full_name}`);
+      } else toast.error('Aucun planteur trouve');
     } catch { toast.error('Erreur reseau'); }
     setSearching(false);
   };
@@ -218,12 +205,12 @@ const AgentTerrainDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <Navbar />
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
+      <MobileAppShell title="GreenLink Agent" tabs={TABS} activeTab="dashboard" onTabChange={setTab}>
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
+          <p className="text-sm text-gray-400">Chargement...</p>
         </div>
-      </div>
+      </MobileAppShell>
     );
   }
 
@@ -231,361 +218,288 @@ const AgentTerrainDashboard = () => {
   const perf = dashboard?.performance || {};
   const stats = dashboard?.statistics || {};
   const achievements = dashboard?.achievements || [];
-  const activities = dashboard?.recent_activities || [];
   const risks = dashboard?.risk_distribution || {};
+  const score = perf.score || 0;
 
   const kpis = [
-    { label: 'Visites SSRTE', value: stats.ssrte_visits?.total || 0, month: stats.ssrte_visits?.this_month || 0, target: stats.ssrte_visits?.target || 20, progress: stats.ssrte_visits?.progress || 0, icon: ClipboardCheck, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-    { label: 'Membres', value: stats.members_onboarded?.total || 0, target: stats.members_onboarded?.target || 10, progress: stats.members_onboarded?.progress || 0, icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
-    { label: 'Parcelles', value: stats.parcels_declared?.total || 0, target: stats.parcels_declared?.target || 15, progress: stats.parcels_declared?.progress || 0, icon: MapPin, color: 'text-amber-500', bg: 'bg-amber-50' },
-    { label: 'Photos', value: stats.geotagged_photos?.total || 0, target: stats.geotagged_photos?.target || 30, progress: stats.geotagged_photos?.progress || 0, icon: Camera, color: 'text-purple-500', bg: 'bg-purple-50' },
+    { label: 'Visites', value: stats.ssrte_visits?.total || 0, target: stats.ssrte_visits?.target || 20, progress: stats.ssrte_visits?.progress || 0, icon: ClipboardCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Membres', value: stats.members_onboarded?.total || 0, target: stats.members_onboarded?.target || 10, progress: stats.members_onboarded?.progress || 0, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Parcelles', value: stats.parcels_declared?.total || 0, target: stats.parcels_declared?.target || 15, progress: stats.parcels_declared?.progress || 0, icon: MapPin, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Photos', value: stats.geotagged_photos?.total || 0, target: stats.geotagged_photos?.target || 30, progress: stats.geotagged_photos?.progress || 0, icon: Camera, color: 'text-purple-600', bg: 'bg-purple-50' },
   ];
 
-  const riskColor = (level) => {
-    switch(level) {
-      case 'critique': return 'bg-red-100 text-red-700 border-red-200';
-      case 'eleve': return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'modere': return 'bg-amber-100 text-amber-700 border-amber-200';
-      default: return 'bg-green-100 text-green-700 border-green-200';
-    }
-  };
+  const badgeInfo = score >= 80 ? { text: 'Expert', bg: 'bg-emerald-500' }
+    : score >= 50 ? { text: 'Confirme', bg: 'bg-amber-500' }
+    : { text: 'Debutant', bg: 'bg-gray-400' };
 
-  const score = perf.score || 0;
-  const badge = score >= 80 ? { text: 'Expert', bg: 'bg-emerald-100 text-emerald-700', ring: 'ring-emerald-500' }
-    : score >= 50 ? { text: 'Confirme', bg: 'bg-amber-100 text-amber-700', ring: 'ring-amber-500' }
-    : { text: 'Debutant', bg: 'bg-gray-100 text-gray-600', ring: 'ring-gray-400' };
+  const bottomTabs = TABS.map(t => ({
+    ...t,
+    badge: t.id === 'farmers' ? myFarmers.length : 0,
+  }));
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20" data-testid="agent-terrain-dashboard">
-      <Navbar />
-
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-700 to-emerald-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className={`w-14 h-14 rounded-full bg-white/20 flex items-center justify-center ring-2 ${badge.ring}`}>
-                <Shield className="h-7 w-7" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold" data-testid="agent-name">{info.name || 'Agent Terrain'}</h1>
-                <p className="text-emerald-200 text-sm">{info.cooperative || 'Cooperative'} {info.zone ? `- ${info.zone}` : ''}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <NotificationCenter />
-              <Badge className={`${badge.bg} px-3 py-1`}>{badge.text}</Badge>
-              <div className="text-center bg-white/10 rounded-lg px-4 py-2">
-                <p className="text-2xl font-bold">{score}%</p>
-                <p className="text-xs text-emerald-200">Performance</p>
-              </div>
-            </div>
+    <MobileAppShell
+      title={info.name || 'Agent Terrain'}
+      subtitle={`${info.cooperative || 'Cooperative'} ${info.zone ? `- ${info.zone}` : ''}`}
+      tabs={bottomTabs}
+      activeTab={tab === 'farmer-profile' ? 'farmers' : tab}
+      onTabChange={(id) => { setTab(id); setSelectedFarmer(null); }}
+      headerRight={
+        <div className="flex items-center gap-2">
+          <NotificationCenter />
+          <div className="flex flex-col items-center bg-white/15 rounded-xl px-3 py-1">
+            <span className="text-xl font-bold leading-tight">{score}%</span>
+            <span className={`text-[9px] ${badgeInfo.bg} text-white px-2 py-0.5 rounded-full -mt-0.5`}>{badgeInfo.text}</span>
           </div>
         </div>
-      </div>
+      }
+      refreshing={refreshing}
+      data-testid="agent-terrain-dashboard"
+    >
+      {/* === ACCUEIL === */}
+      {tab === 'dashboard' && (
+        <div className="p-4 space-y-4">
+          {/* Refresh button */}
+          <button onClick={handleRefresh} className="flex items-center gap-2 text-xs text-gray-400 active:text-emerald-600 transition-colors" data-testid="refresh-dashboard">
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            Actualiser
+          </button>
 
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Sidebar */}
-          <div className="lg:w-56 flex-shrink-0">
-            <Card className="border-0 shadow-sm sticky top-24">
-              <CardContent className="p-2">
-                <nav className="space-y-1" data-testid="agent-sidebar-menu">
-                  {MENU_ITEMS.map(item => (
-                    <button key={item.id} onClick={() => { setTab(item.id); setSelectedFarmer(null); }} data-testid={`menu-${item.id}`}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                        (tab === item.id || (item.id === 'farmers' && tab === 'farmer-profile'))
-                          ? 'bg-emerald-50 text-emerald-700 shadow-sm' : 'text-gray-600 hover:bg-gray-50'
-                      }`}>
-                      <item.icon className={`h-4 w-4 ${(tab === item.id || (item.id === 'farmers' && tab === 'farmer-profile')) ? 'text-emerald-600' : item.color}`} />
-                      {item.label}
-                      {item.id === 'farmers' && <Badge className="ml-auto bg-emerald-100 text-emerald-700 text-[10px] px-1.5">{myFarmers.length}</Badge>}
-                    </button>
-                  ))}
-                </nav>
-              </CardContent>
-            </Card>
+          {/* KPIs Grid */}
+          <div className="grid grid-cols-2 gap-3" data-testid="kpi-cards">
+            {kpis.map((kpi, i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`p-2 rounded-xl ${kpi.bg}`}>
+                    <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+                  </div>
+                  <span className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</span>
+                </div>
+                <p className="text-[11px] text-gray-500 mb-2">{kpi.label}</p>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${Math.min(kpi.progress, 100)}%` }} />
+                </div>
+                <p className="text-[9px] text-gray-400 mt-1 text-right">Obj: {kpi.target}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Main Content */}
-          <div className="flex-1 space-y-4">
-
-            {/* === TABLEAU DE BORD === */}
-            {tab === 'dashboard' && (
-              <>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" data-testid="kpi-cards">
-                  {kpis.map((kpi, i) => (
-                    <Card key={i} className="border-0 shadow-sm">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className={`p-2 rounded-lg ${kpi.bg}`}><kpi.icon className={`h-4 w-4 ${kpi.color}`} /></div>
-                          <span className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mb-2">{kpi.label}</p>
-                        <Progress value={kpi.progress} className="h-1.5" />
-                        <div className="flex justify-between mt-1">
-                          <span className="text-[10px] text-gray-400">{kpi.month !== undefined ? `${kpi.month} ce mois` : ''}</span>
-                          <span className="text-[10px] text-gray-400">Obj: {kpi.target}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+          {/* Alerts Row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                <div>
+                  <p className="text-xl font-bold text-red-600">{stats.children_identified || 0}</p>
+                  <p className="text-[10px] text-red-500">Enfants identifies</p>
                 </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                  <Card className="border-0 shadow-sm">
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-red-50"><AlertTriangle className="h-4 w-4 text-red-500" /></div>
-                      <div><p className="text-xl font-bold text-red-600">{stats.children_identified || 0}</p><p className="text-xs text-gray-500">Enfants identifies</p></div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setTab('farmers')}>
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-cyan-50"><Users className="h-4 w-4 text-cyan-500" /></div>
-                      <div className="flex-1"><p className="text-xl font-bold text-cyan-600">{myFarmers.length}</p><p className="text-xs text-gray-500">Fermiers assignes</p></div>
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {(risks.critique > 0 || risks.eleve > 0 || risks.modere > 0 || risks.faible > 0) && (
-                  <Card className="border-0 shadow-sm">
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2"><Target className="h-4 w-4" />Repartition des Risques</CardTitle></CardHeader>
-                    <CardContent className="pb-4">
-                      <div className="flex gap-2">
-                        {Object.entries(risks).map(([level, count]) => (
-                          <div key={level} className={`flex-1 text-center p-2 rounded-lg border ${riskColor(level)}`}>
-                            <p className="font-bold text-lg">{count}</p><p className="text-[10px] capitalize">{level}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {achievements.length > 0 && (
-                  <Card className="border-0 shadow-sm">
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium flex items-center gap-2"><Award className="h-4 w-4 text-amber-500" />Badges</CardTitle></CardHeader>
-                    <CardContent className="pb-4"><div className="flex flex-wrap gap-2">{achievements.map(a => <Badge key={a.id} className="bg-amber-50 text-amber-700 border-amber-200 px-3 py-1"><Star className="h-3 w-3 mr-1" />{a.name}</Badge>)}</div></CardContent>
-                  </Card>
-                )}
-
-                {activities.length > 0 && (
-                  <Card className="border-0 shadow-sm">
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium flex items-center gap-2"><Activity className="h-4 w-4" />Activites Recentes</CardTitle></CardHeader>
-                    <CardContent className="pb-4"><div className="space-y-2">
-                      {activities.slice(0, 5).map((a, i) => (
-                        <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                          <div className={`w-2 h-2 rounded-full ${a.risk_level === 'critique' ? 'bg-red-500' : a.risk_level === 'eleve' ? 'bg-orange-500' : 'bg-green-500'}`} />
-                          <div className="flex-1"><p className="text-sm text-gray-700">{a.farmer_name}</p><p className="text-xs text-gray-400">{a.children_count > 0 ? `${a.children_count} enfant(s)` : 'RAS'}</p></div>
-                          <Badge className={riskColor(a.risk_level)} variant="outline">{a.risk_level || 'faible'}</Badge>
-                        </div>
-                      ))}
-                    </div></CardContent>
-                  </Card>
-                )}
-              </>
-            )}
-
-            {/* === MES AGRICULTEURS (liste) === */}
-            {tab === 'farmers' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-gray-800">Mes Agriculteurs ({myFarmers.length})</h2>
-                </div>
-                <div className="relative max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input placeholder="Rechercher par nom, telephone ou village..." value={farmerSearch} onChange={e => setFarmerSearch(e.target.value)} className="pl-10" data-testid="farmer-search-input" />
-                </div>
-                {farmersLoading ? (
-                  <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-600" /></div>
-                ) : filteredFarmers.length > 0 ? (
-                  <div className="grid gap-3" data-testid="farmers-list">
-                    {filteredFarmers.map(f => {
-                      const comp = f.completion || { completed: 0, total: 5, percentage: 0 };
-                      const progressColor = comp.percentage >= 80 ? 'bg-emerald-500' : comp.percentage >= 40 ? 'bg-amber-500' : 'bg-gray-300';
-                      return (
-                      <Card key={f.id} className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer group" onClick={() => openFarmerProfile(f)} data-testid={`farmer-card-${f.id}`}>
-                        <CardContent className="p-4 flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center relative">
-                            <Leaf className="h-6 w-6 text-emerald-600" />
-                            {comp.percentage === 100 && (
-                              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center ring-2 ring-white">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-white" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors">{f.full_name}</h3>
-                            <div className="flex items-center gap-3 text-sm text-gray-500">
-                              {f.phone_number && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{f.phone_number}</span>}
-                              <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{f.village || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-2">
-                              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-[140px]">
-                                <div className={`h-full rounded-full transition-all ${progressColor}`} style={{ width: `${comp.percentage}%` }} />
-                              </div>
-                              <span className="text-[10px] font-medium text-gray-400">{comp.completed}/{comp.total}</span>
-                            </div>
-                          </div>
-                          <div className="text-right hidden sm:block">
-                            <p className="text-sm font-medium text-gray-700">{f.parcels_count || 0} parcelle(s)</p>
-                            <p className={`text-xs font-medium mt-1 ${comp.percentage === 100 ? 'text-emerald-600' : comp.percentage > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
-                              {comp.percentage === 100 ? 'Complet' : comp.percentage > 0 ? `${comp.percentage}%` : 'A faire'}
-                            </p>
-                          </div>
-                          <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-emerald-500 transition-colors" />
-                        </CardContent>
-                      </Card>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <Card><CardContent className="py-12 text-center">
-                    <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-gray-500">{farmerSearch ? 'Aucun resultat' : 'Aucun fermier assigne'}</p>
-                    <p className="text-sm text-gray-400 mt-1">Contactez votre cooperative pour l'attribution.</p>
-                  </CardContent></Card>
-                )}
               </div>
-            )}
+            </div>
+            <button onClick={() => setTab('farmers')} className="bg-cyan-50 rounded-2xl p-4 border border-cyan-100 text-left active:bg-cyan-100 transition-colors">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-cyan-500" />
+                <div className="flex-1">
+                  <p className="text-xl font-bold text-cyan-600">{myFarmers.length}</p>
+                  <p className="text-[10px] text-cyan-500">Mes planteurs</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-cyan-400" />
+              </div>
+            </button>
+          </div>
 
-            {/* === PROFIL AGRICULTEUR (toutes les fiches) === */}
-            {tab === 'farmer-profile' && selectedFarmer && (
-              <div className="space-y-4" data-testid="farmer-profile-view">
-                <Button variant="ghost" size="sm" onClick={() => { setTab('farmers'); setSelectedFarmer(null); }} className="text-gray-500 hover:text-gray-700 -ml-2">
-                  <ArrowLeft className="h-4 w-4 mr-1" />Retour a la liste
-                </Button>
-
-                {/* Farmer Header Card */}
-                <Card className="border-0 shadow-sm border-l-4 border-l-emerald-500" data-testid="farmer-header-card">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
-                        <User className="h-8 w-8 text-emerald-600" />
+          {/* Risk Distribution */}
+          {(risks.critique > 0 || risks.eleve > 0 || risks.modere > 0 || risks.faible > 0) && (
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <h3 className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                <Target className="w-4 h-4" />Risques
+              </h3>
+              <div className="flex gap-2">
+                {Object.entries(risks).map(([level, count]) => {
+                  const colors = { critique: 'bg-red-500', eleve: 'bg-orange-500', modere: 'bg-amber-400', faible: 'bg-emerald-500' };
+                  return (
+                    <div key={level} className="flex-1 text-center">
+                      <div className={`${colors[level]} text-white rounded-xl p-2 mb-1`}>
+                        <p className="text-lg font-bold">{count}</p>
                       </div>
-                      <div className="flex-1">
-                        <h2 className="text-xl font-bold text-gray-900" data-testid="farmer-name">{selectedFarmer.full_name}</h2>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                          {selectedFarmer.phone_number && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{selectedFarmer.phone_number}</span>}
-                          <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{selectedFarmer.village || 'N/A'}</span>
+                      <p className="text-[9px] text-gray-500 capitalize">{level}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Badges */}
+          {achievements.length > 0 && (
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <h3 className="text-xs font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                <Award className="w-4 h-4 text-amber-500" />Badges
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {achievements.map(a => (
+                  <span key={a.id} className="bg-amber-50 text-amber-700 border border-amber-200 text-xs px-3 py-1.5 rounded-full flex items-center gap-1">
+                    <Star className="w-3 h-3" />{a.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* === MES PLANTEURS === */}
+      {tab === 'farmers' && (
+        <div className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-gray-800">Mes Planteurs</h2>
+            <Badge className="bg-emerald-100 text-emerald-700">{myFarmers.length}</Badge>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input placeholder="Rechercher..." value={farmerSearch} onChange={e => setFarmerSearch(e.target.value)} className="pl-10 h-11 rounded-xl text-sm" data-testid="farmer-search-input" />
+          </div>
+          {farmersLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-emerald-500" /></div>
+          ) : filteredFarmers.length > 0 ? (
+            <div className="space-y-2" data-testid="farmers-list">
+              {filteredFarmers.map(f => {
+                const comp = f.completion || { completed: 0, total: 5, percentage: 0 };
+                return (
+                  <button key={f.id} onClick={() => openFarmerProfile(f)} className="w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3 active:bg-gray-50 transition-colors text-left" data-testid={`farmer-card-${f.id}`}>
+                    <div className="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center relative flex-shrink-0">
+                      <Leaf className="h-5 w-5 text-emerald-600" />
+                      {comp.percentage === 100 && (
+                        <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center ring-2 ring-white">
+                          <CheckCircle2 className="h-2.5 w-2.5 text-white" />
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-emerald-600">{selectedFarmer.parcels_count || 0}</p>
-                        <p className="text-xs text-gray-500">parcelle(s)</p>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{f.full_name}</p>
+                      <p className="text-xs text-gray-400 truncate">{f.phone_number} {f.village ? `- ${f.village}` : ''}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-[100px]">
+                          <div className={`h-full rounded-full ${comp.percentage >= 80 ? 'bg-emerald-500' : comp.percentage >= 40 ? 'bg-amber-500' : 'bg-gray-300'}`} style={{ width: `${comp.percentage}%` }} />
+                        </div>
+                        <span className="text-[9px] text-gray-400">{comp.completed}/{comp.total}</span>
                       </div>
                     </div>
-                    {selectedFarmer.parcels?.length > 0 && (
-                      <div className="mt-3 pt-3 border-t flex flex-wrap gap-2">
-                        {selectedFarmer.parcels.map((p, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">{p.area_hectares} ha - {p.crop_type || 'cacao'} {p.carbon_score > 0 ? `(Score: ${p.carbon_score})` : ''}</Badge>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Users className="w-12 h-12 mx-auto text-gray-200 mb-3" />
+              <p className="text-gray-400 text-sm">{farmerSearch ? 'Aucun resultat' : 'Aucun planteur'}</p>
+            </div>
+          )}
+        </div>
+      )}
 
-                {/* Overall Completion Progress */}
-                {selectedFarmer.completion && (
-                  <Card className="border-0 shadow-sm" data-testid="farmer-completion-card">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Progression globale</span>
-                        <span className={`text-sm font-bold ${selectedFarmer.completion.percentage === 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                          {selectedFarmer.completion.percentage}%
-                        </span>
-                      </div>
-                      <Progress value={selectedFarmer.completion.percentage} className="h-2" />
-                      <p className="text-xs text-gray-400 mt-1">{selectedFarmer.completion.completed} / {selectedFarmer.completion.total} fiches completees</p>
-                    </CardContent>
-                  </Card>
-                )}
+      {/* === PROFIL PLANTEUR === */}
+      {tab === 'farmer-profile' && selectedFarmer && (
+        <div className="p-4 space-y-3" data-testid="farmer-profile-view">
+          <button onClick={() => { setTab('farmers'); setSelectedFarmer(null); }} className="flex items-center gap-1 text-gray-400 text-sm active:text-gray-600">
+            <ArrowLeft className="w-4 h-4" />Retour
+          </button>
 
-                {/* All Available Forms */}
-                <h3 className="font-semibold text-gray-700 text-sm px-1">Fiches a remplir pour {selectedFarmer.full_name}</h3>
-                <div className="grid gap-3" data-testid="farmer-forms-list">
-                  {FARMER_FORMS.map(form => {
-                    const status = selectedFarmer.forms_status?.[form.id];
-                    const isDone = status?.completed;
-                    return (
-                    <Card key={form.id} className={`border shadow-sm hover:shadow-md transition-all cursor-pointer group ${isDone ? 'border-emerald-200 bg-emerald-50/30' : form.color}`} onClick={() => handleFormAction(form.id)} data-testid={`form-${form.id}`}>
-                      <CardContent className="p-4 flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${isDone ? 'bg-emerald-100' : 'bg-white/80'}`}>
-                          <form.icon className={`h-6 w-6 ${isDone ? 'text-emerald-600' : ''}`} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-sm">{form.label}</h4>
-                            {isDone && <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] px-1.5 py-0">Complete</Badge>}
-                          </div>
-                          <p className="text-xs opacity-75 mt-0.5">{form.desc}</p>
-                          {status?.count > 0 && <p className="text-[10px] text-emerald-600 font-medium mt-1">{status.count} enregistrement(s)</p>}
-                        </div>
-                        {isDone ? (
-                          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                        ) : (
-                          <Circle className="h-5 w-5 text-gray-300 group-hover:text-gray-400 transition-colors" />
-                        )}
-                      </CardContent>
-                    </Card>
-                    );
-                  })}
+          {/* Farmer Header */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100" data-testid="farmer-header-card">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <User className="h-7 w-7 text-emerald-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-bold text-gray-900 truncate" data-testid="farmer-name">{selectedFarmer.full_name}</h2>
+                <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                  {selectedFarmer.phone_number && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{selectedFarmer.phone_number}</span>}
+                  <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedFarmer.village || 'N/A'}</span>
                 </div>
-
-                {/* Historique ICI + SSRTE */}
-                <FarmerHistorySection farmer={selectedFarmer} />
               </div>
-            )}
-
-            {/* === RECHERCHE PLANTEUR === */}
-            {tab === 'search' && (
-              <div className="space-y-4">
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-gray-700 mb-3">Rechercher un planteur par numero de telephone</h3>
-                    <form onSubmit={handleSearch} className="flex gap-3" data-testid="agent-search-form">
-                      <div className="relative flex-1">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input placeholder="Numero (ex: 0701234567)" value={phone} onChange={e => setPhone(e.target.value)} className="pl-10 h-12" data-testid="agent-search-input" />
-                      </div>
-                      <Button type="submit" disabled={searching} className="bg-emerald-600 hover:bg-emerald-700 h-12 px-6" data-testid="agent-search-button">
-                        <Search className="w-4 h-4 mr-2" />{searching ? '...' : 'Rechercher'}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-                {searchResult && (
-                  <Card className="border-0 shadow-sm border-l-4 border-l-emerald-500 cursor-pointer hover:shadow-md transition-shadow" onClick={() => openFarmerProfile(searchResult)} data-testid="search-result-card">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center"><Leaf className="h-6 w-6 text-emerald-600" /></div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{searchResult.full_name}</h3>
-                          <p className="text-sm text-gray-500">{searchResult.phone_number} - {searchResult.village || 'N/A'}</p>
-                        </div>
-                        <Button variant="outline" className="text-emerald-700 border-emerald-200">
-                          <Eye className="h-4 w-4 mr-1" />Ouvrir les fiches
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+              <div className="text-center">
+                <p className="text-lg font-bold text-emerald-600">{selectedFarmer.parcels_count || 0}</p>
+                <p className="text-[9px] text-gray-400">parcelle(s)</p>
               </div>
-            )}
+            </div>
 
-            {tab === 'inscriptions' && (
-              <AgentRegistrationForm />
+            {/* Progress */}
+            {selectedFarmer.completion && (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs text-gray-500">Progression</span>
+                  <span className={`text-xs font-bold ${selectedFarmer.completion.percentage === 100 ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedFarmer.completion.percentage}%</span>
+                </div>
+                <Progress value={selectedFarmer.completion.percentage} className="h-2" />
+              </div>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* ICI Modal */}
+          {/* Forms Grid */}
+          <h3 className="text-xs font-semibold text-gray-500 px-1">Fiches disponibles</h3>
+          <div className="grid grid-cols-2 gap-2" data-testid="farmer-forms-list">
+            {FARMER_FORMS.map(form => {
+              const status = selectedFarmer.forms_status?.[form.id];
+              const isDone = status?.completed;
+              return (
+                <button key={form.id} onClick={() => handleFormAction(form.id)} className={`relative rounded-2xl p-4 text-left active:scale-[0.97] transition-transform border ${isDone ? 'bg-emerald-50 border-emerald-200' : `${form.lightBg} border-transparent`}`} data-testid={`form-${form.id}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${isDone ? 'bg-emerald-500' : form.color}`}>
+                    <form.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <p className="text-sm font-semibold text-gray-800">{form.label}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">{form.desc}</p>
+                  {isDone && (
+                    <CheckCircle2 className="absolute top-3 right-3 w-5 h-5 text-emerald-500" />
+                  )}
+                  {status?.count > 0 && (
+                    <span className="text-[9px] text-emerald-600 font-medium mt-1 block">{status.count} enreg.</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* History */}
+          <FarmerHistorySection farmer={selectedFarmer} />
+        </div>
+      )}
+
+      {/* === RECHERCHE === */}
+      {tab === 'search' && (
+        <div className="p-4 space-y-4">
+          <h2 className="text-base font-bold text-gray-800">Rechercher un planteur</h2>
+          <form onSubmit={handleSearch} className="space-y-3" data-testid="agent-search-form">
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input placeholder="Numero de telephone" value={phone} onChange={e => setPhone(e.target.value)} className="pl-10 h-12 rounded-xl text-base" data-testid="agent-search-input" />
+            </div>
+            <Button type="submit" disabled={searching} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-base" data-testid="agent-search-button">
+              <Search className="w-4 h-4 mr-2" />{searching ? 'Recherche...' : 'Rechercher'}
+            </Button>
+          </form>
+          {searchResult && (
+            <button onClick={() => openFarmerProfile(searchResult)} className="w-full bg-white rounded-2xl p-4 shadow-sm border-l-4 border-emerald-500 flex items-center gap-3 active:bg-gray-50 text-left" data-testid="search-result-card">
+              <div className="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center">
+                <Leaf className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold">{searchResult.full_name}</p>
+                <p className="text-xs text-gray-400">{searchResult.phone_number} - {searchResult.village || 'N/A'}</p>
+              </div>
+              <Eye className="w-4 h-4 text-emerald-500" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* === INSCRIPTIONS === */}
+      {tab === 'inscriptions' && <AgentRegistrationForm />}
+
+      {/* Modals */}
       <ICIProfileModal open={showICIModal} onOpenChange={setShowICIModal} farmer={selectedFarmer} onSaved={() => loadMyFarmers()} />
-      {/* SSRTE Visit Modal */}
       <SSRTEVisitModal open={showSSRTEModal} onOpenChange={setShowSSRTEModal} farmer={selectedFarmer} onSaved={() => loadMyFarmers()} />
-    </div>
+    </MobileAppShell>
   );
 };
 

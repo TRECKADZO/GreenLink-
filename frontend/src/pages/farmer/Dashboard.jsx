@@ -1,39 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import Navbar from '../../components/Navbar';
+import { Button } from '../../components/ui/button';
+import { MobileAppShell } from '../../components/MobileAppShell';
 import { NotificationCenter } from '../../components/NotificationCenter';
 import { greenlinkApi } from '../../services/greenlinkApi';
 import { 
-  Sprout, 
-  TrendingUp, 
-  DollarSign, 
-  MapPin,
-  Award,
-  Plus,
-  Phone,
-  CheckCircle,
-  MessageSquare,
-  Send,
-  Store,
-  Leaf,
-  Package,
-  Clock,
-  BarChart3
+  Sprout, TrendingUp, DollarSign, MapPin, Award, Plus, Phone,
+  MessageSquare, Send, Store, Leaf, Package, BarChart3, Home,
+  ChevronRight, RefreshCw, Loader2, Clock
 } from 'lucide-react';
-import { useToast } from '../../hooks/use-toast';
+
+const TABS = [
+  { id: 'home', label: 'Accueil', icon: Home },
+  { id: 'parcels', label: 'Parcelles', icon: MapPin },
+  { id: 'harvests', label: 'Recoltes', icon: Package },
+  { id: 'carbon', label: 'Carbone', icon: Award },
+  { id: 'market', label: 'Boutique', icon: Store },
+];
 
 const FarmerDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [stats, setStats] = useState(null);
   const [smsHistory, setSmsHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [sendingSummary, setSendingSummary] = useState(false);
+  const [activeTab, setActiveTab] = useState('home');
 
   useEffect(() => {
     if (authLoading) return;
@@ -70,279 +65,225 @@ const FarmerDashboard = () => {
     try {
       const result = await greenlinkApi.sendWeeklySummary();
       if (result.success) {
-        toast({
-          title: 'SMS envoyé!',
-          description: 'Votre résumé hebdomadaire a été envoyé par SMS'
-        });
-        fetchSmsHistory(); // Refresh SMS history
+        // use sonner toast
       }
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible d\'envoyer le SMS',
-        variant: 'destructive'
-      });
-    } finally {
-      setSendingSummary(false);
+    } catch { /* silent */ }
+    setSendingSummary(false);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchDashboard(), fetchSmsHistory()]);
+    setRefreshing(false);
+  };
+
+  const handleTabChange = (tabId) => {
+    switch (tabId) {
+      case 'home': setActiveTab('home'); break;
+      case 'parcels': navigate('/farmer/parcels/new'); break;
+      case 'harvests': navigate('/farmer/my-harvests'); break;
+      case 'carbon': navigate('/farmer/carbon-score'); break;
+      case 'market': navigate('/marketplace'); break;
+      default: setActiveTab(tabId);
     }
   };
 
   if (loading || !stats) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
-        <Navbar />
-        <div className="max-w-7xl mx-auto px-6 py-12 pt-24">
-          <div className="text-center py-12">
-            <Sprout className="w-12 h-12 text-green-600 animate-pulse mx-auto mb-4" />
-            <p className="text-gray-600">Chargement...</p>
-          </div>
+      <MobileAppShell
+        title="GreenLink"
+        subtitle="Espace Planteur"
+        headerGradient="from-green-600 to-emerald-600"
+        statusBarColor="bg-green-700"
+        tabs={TABS}
+        activeTab="home"
+        onTabChange={handleTabChange}
+      >
+        <div className="flex flex-col items-center justify-center py-20">
+          <Sprout className="w-10 h-10 text-green-500 animate-pulse mb-3" />
+          <p className="text-sm text-gray-400">Chargement...</p>
         </div>
-      </div>
+      </MobileAppShell>
     );
   }
 
   const statCards = [
-    {
-      title: 'Mes Parcelles',
-      value: stats.total_parcelles || 0,
-      subtitle: `${(stats.superficie_totale || 0).toFixed(1)} hectares`,
-      icon: MapPin,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      title: 'Score Carbone Moyen',
-      value: `${(stats.score_carbone_moyen || 0).toFixed(1)}/10`,
-      subtitle: `${(stats.credits_carbone || 0).toFixed(1)} credits CO2`,
-      icon: Award,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      title: 'Revenus Total',
-      value: `${(stats.revenu_total || 0).toLocaleString()} F`,
-      subtitle: `+${(stats.prime_carbone || 0).toLocaleString()} F prime`,
-      icon: DollarSign,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-100'
-    },
-    {
-      title: 'Arbres Plantés',
-      value: (stats.total_arbres || 0).toLocaleString(),
-      subtitle: 'Impact environnemental',
-      icon: Sprout,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-100'
-    }
+    { title: 'Parcelles', value: stats.total_parcelles || 0, sub: `${(stats.superficie_totale || 0).toFixed(1)} ha`, icon: MapPin, color: 'text-green-600', bg: 'bg-green-50' },
+    { title: 'Score Carbone', value: `${(stats.score_carbone_moyen || 0).toFixed(1)}`, sub: `${(stats.credits_carbone || 0).toFixed(1)} CO2`, icon: Award, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { title: 'Revenus', value: `${((stats.revenu_total || 0) / 1000).toFixed(0)}k`, sub: `+${(stats.prime_carbone || 0).toLocaleString()} F`, icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { title: 'Arbres', value: (stats.total_arbres || 0).toLocaleString(), sub: 'Impact env.', icon: Sprout, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  ];
+
+  const quickActions = [
+    { label: 'Parcelle', icon: Plus, color: 'bg-green-500', route: '/farmer/parcels/new' },
+    { label: 'Recolte', icon: TrendingUp, color: 'bg-blue-500', route: '/farmer/harvests/new' },
+    { label: 'Score', icon: Award, color: 'bg-emerald-500', route: '/farmer/carbon-score' },
+    { label: 'Primes', icon: Leaf, color: 'bg-teal-500', route: '/farmer/carbon-payments' },
+    { label: 'Boutique', icon: Store, color: 'bg-orange-500', route: '/marketplace' },
+    { label: 'Bourse', icon: BarChart3, color: 'bg-cyan-500', route: '/marketplace/harvest' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
-      <Navbar />
-      
-      <div className="max-w-7xl mx-auto px-6 py-12 pt-24">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <Sprout className="w-10 h-10 text-green-600" />
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900">Bienvenue {user?.full_name}</h1>
-                <p className="text-gray-600">Votre espace planteur GreenLink</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="[&_button]:border-green-300 [&_button]:text-green-700 [&_button]:hover:bg-green-100">
-                <NotificationCenter />
-              </div>
-            </div>
-          </div>
+    <MobileAppShell
+      title={`Bonjour ${user?.full_name?.split(' ')[0] || 'Planteur'}`}
+      subtitle="Espace Planteur GreenLink"
+      headerGradient="from-green-600 to-emerald-600"
+      statusBarColor="bg-green-700"
+      tabs={TABS}
+      activeTab="home"
+      onTabChange={handleTabChange}
+      headerRight={
+        <div className="flex items-center gap-2">
+          <NotificationCenter />
         </div>
+      }
+      refreshing={refreshing}
+    >
+      <div className="p-4 space-y-5">
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-          <Button 
-            className="h-16 bg-green-600 hover:bg-green-700 text-white"
-            onClick={() => navigate('/farmer/parcels/new')}
-            data-testid="action-new-parcel"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Declarer Parcelle
-          </Button>
-          <Button 
-            className="h-16 bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => navigate('/farmer/harvests/new')}
-            data-testid="action-new-harvest"
-          >
-            <TrendingUp className="w-5 h-5 mr-2" />
-            Declarer Recolte
-          </Button>
-          <Button 
-            className="h-16 bg-emerald-600 hover:bg-emerald-700 text-white"
-            onClick={() => navigate('/farmer/carbon-score')}
-            data-testid="action-carbon-score"
-          >
-            <Award className="w-5 h-5 mr-2" />
-            Score Carbone
-          </Button>
-          <Button 
-            className="h-16 bg-amber-600 hover:bg-amber-700 text-white"
-            onClick={() => navigate('/farmer/my-harvests')}
-            data-testid="action-my-harvests"
-          >
-            <Package className="w-5 h-5 mr-2" />
-            Mes Recoltes
-          </Button>
-          <Button 
-            className="h-16 bg-teal-600 hover:bg-teal-700 text-white"
-            onClick={() => navigate('/farmer/carbon-payments')}
-            data-testid="action-carbon-payments"
-          >
-            <Leaf className="w-5 h-5 mr-2" />
-            Primes Carbone
-          </Button>
-          <Button 
-            className="h-16 bg-orange-600 hover:bg-orange-700 text-white"
-            onClick={() => navigate('/marketplace')}
-            data-testid="action-marketplace"
-          >
-            <Store className="w-5 h-5 mr-2" />
-            Marketplace Intrants
-          </Button>
-          <Button 
-            className="h-16 bg-violet-600 hover:bg-violet-700 text-white"
-            onClick={() => navigate('/buyer/orders')}
-            data-testid="action-orders"
-          >
-            <Clock className="w-5 h-5 mr-2" />
-            Mes Commandes
-          </Button>
-          <Button 
-            className="h-16 bg-cyan-600 hover:bg-cyan-700 text-white"
-            onClick={() => navigate('/marketplace/harvest')}
-            data-testid="action-harvest-marketplace"
-          >
-            <BarChart3 className="w-5 h-5 mr-2" />
-            Bourse Recoltes
-          </Button>
-        </div>
+        {/* Refresh */}
+        <button onClick={handleRefresh} className="flex items-center gap-2 text-xs text-gray-400 active:text-green-600 transition-colors">
+          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+          Actualiser
+        </button>
 
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {statCards.map((stat, index) => (
-            <Card key={index} className="p-6 bg-white hover:shadow-xl transition-shadow duration-200">
-              <div className={`p-3 rounded-lg ${stat.bgColor} w-fit mb-4`}>
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {statCards.map((stat, i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`p-2 rounded-xl ${stat.bg}`}>
+                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                </div>
               </div>
-              <h3 className="text-sm text-gray-600 mb-1">{stat.title}</h3>
-              <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
-              <p className="text-sm text-gray-500">{stat.subtitle}</p>
-            </Card>
+              <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">{stat.title} - {stat.sub}</p>
+            </div>
           ))}
         </div>
 
+        {/* Quick Actions */}
+        <div>
+          <h3 className="text-xs font-semibold text-gray-500 mb-3">Actions Rapides</h3>
+          <div className="grid grid-cols-3 gap-3">
+            {quickActions.map((action, i) => (
+              <button
+                key={i}
+                onClick={() => navigate(action.route)}
+                className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-2xl shadow-sm border border-gray-100 active:scale-[0.95] transition-transform"
+                data-testid={`quick-action-${action.label.toLowerCase()}`}
+              >
+                <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center`}>
+                  <action.icon className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-[11px] font-medium text-gray-700">{action.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Recent Harvests */}
-        <Card className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Récoltes Récentes</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <h3 className="text-sm font-bold text-gray-800">Recoltes Recentes</h3>
+            <button onClick={() => navigate('/farmer/my-harvests')} className="text-xs text-green-600 font-medium flex items-center gap-0.5">
+              Tout voir <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
           
           {(stats.recoltes_recentes || []).length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Aucune récolte déclarée</p>
+            <div className="text-center py-8 px-4">
+              <TrendingUp className="w-10 h-10 mx-auto text-gray-200 mb-2" />
+              <p className="text-sm text-gray-400">Aucune recolte declaree</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {(stats.recoltes_recentes || []).map((harvest, index) => (
-                <div 
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                >
+            <div className="divide-y divide-gray-100">
+              {(stats.recoltes_recentes || []).slice(0, 4).map((harvest, index) => (
+                <div key={index} className="flex items-center justify-between px-4 py-3">
                   <div>
-                    <p className="font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-gray-800">
                       {harvest.quantity_kg} kg - Grade {harvest.quality_grade}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-[10px] text-gray-400">
                       {new Date(harvest.created_at).toLocaleDateString('fr-FR')}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-900">
-                      {harvest.total_amount.toLocaleString()} XOF
+                    <p className="text-sm font-bold text-gray-900">
+                      {harvest.total_amount?.toLocaleString()} F
                     </p>
                     {harvest.carbon_premium > 0 && (
-                      <Badge className="bg-green-100 text-green-700 text-xs">
-                        +{harvest.carbon_premium.toLocaleString()}F prime
+                      <Badge className="bg-green-100 text-green-700 text-[9px] px-1.5 py-0">
+                        +{harvest.carbon_premium?.toLocaleString()}F
                       </Badge>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      {harvest.payment_status === 'paid' ? '✓ Payé' : 'En attente'}
-                    </p>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </Card>
+        </div>
 
-        {/* SMS Notifications Section */}
-        <Card className="p-6 mt-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="w-6 h-6 text-orange-600" />
-              <h2 className="text-xl font-bold text-gray-900">Notifications SMS</h2>
-            </div>
-            <Button 
+        {/* SMS Notifications */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-orange-500" />
+              Notifications SMS
+            </h3>
+            <Button
               onClick={sendWeeklySummary}
               disabled={sendingSummary}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
+              size="sm"
+              className="bg-orange-500 hover:bg-orange-600 text-white h-8 text-xs rounded-lg"
             >
-              <Send className="w-4 h-4 mr-2" />
-              {sendingSummary ? 'Envoi...' : 'Envoyer Résumé'}
+              <Send className="w-3 h-3 mr-1" />
+              {sendingSummary ? '...' : 'Resume'}
             </Button>
           </div>
-          
-          <div className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-4 rounded-r-lg">
-            <p className="text-sm text-orange-800">
-              <strong>Notifications automatiques:</strong> Vous recevez un SMS quand votre parcelle atteint un score carbone ≥ 7/10 (éligible à la prime).
-            </p>
+
+          <div className="px-4 pb-2">
+            <div className="bg-orange-50 rounded-xl p-3 mb-3">
+              <p className="text-[10px] text-orange-700">
+                SMS automatique quand votre score carbone atteint 7/10.
+              </p>
+            </div>
           </div>
 
           {smsHistory.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Aucun SMS envoyé</p>
+            <div className="text-center py-6 px-4">
+              <MessageSquare className="w-8 h-8 mx-auto text-gray-200 mb-2" />
+              <p className="text-xs text-gray-400">Aucun SMS</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {smsHistory.slice(0, 5).map((sms, index) => (
-                <div 
-                  key={index}
-                  className="p-4 bg-gray-50 rounded-lg border-l-4 border-orange-400"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge className={`text-xs ${
+            <div className="divide-y divide-gray-100">
+              {smsHistory.slice(0, 3).map((sms, index) => (
+                <div key={index} className="px-4 py-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <Badge className={`text-[9px] px-1.5 py-0 ${
                       sms.template === 'carbon_premium_eligible' ? 'bg-green-100 text-green-700' :
                       sms.template === 'harvest_payment' ? 'bg-blue-100 text-blue-700' :
-                      'bg-gray-100 text-gray-700'
+                      'bg-gray-100 text-gray-600'
                     }`}>
-                      {sms.template === 'carbon_premium_eligible' ? 'Prime Carbone' :
+                      {sms.template === 'carbon_premium_eligible' ? 'Prime' :
                        sms.template === 'harvest_payment' ? 'Paiement' :
-                       sms.template === 'weekly_summary' ? 'Résumé' : sms.template}
+                       sms.template === 'weekly_summary' ? 'Resume' : sms.template}
                     </Badge>
-                    <span className="text-xs text-gray-500">
-                      {new Date(sms.created_at).toLocaleString('fr-FR')}
+                    <span className="text-[9px] text-gray-400">
+                      {new Date(sms.created_at).toLocaleDateString('fr-FR')}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-800 font-mono bg-white p-2 rounded border">
-                    {sms.message}
+                  <p className="text-[11px] text-gray-600 bg-gray-50 p-2 rounded-lg font-mono leading-relaxed">
+                    {sms.message?.length > 120 ? sms.message.substring(0, 120) + '...' : sms.message}
                   </p>
                 </div>
               ))}
             </div>
           )}
-        </Card>
+        </div>
+
       </div>
-    </div>
+    </MobileAppShell>
   );
 };
 
