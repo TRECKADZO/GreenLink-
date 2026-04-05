@@ -2335,14 +2335,18 @@ async def get_ussd_stats():
 # ============= REGISTRATION ENDPOINTS =============
 
 @router.get("/registrations")
-async def get_ussd_registrations(limit: int = 50, skip: int = 0):
-    """Get USSD registrations for admin/cooperative dashboards."""
+async def get_ussd_registrations(limit: int = 50, skip: int = 0, agent_id: str = None):
+    """Get USSD registrations. If agent_id is provided, filter by that agent only."""
     try:
+        query = {}
+        if agent_id:
+            query["registered_by_agent"] = agent_id
+        
         registrations = await db.ussd_registrations.find(
-            {}, {"pin_hash": 0}
+            query, {"pin_hash": 0}
         ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
         
-        total = await db.ussd_registrations.count_documents({})
+        total = await db.ussd_registrations.count_documents(query)
         
         for r in registrations:
             r["_id"] = str(r["_id"])

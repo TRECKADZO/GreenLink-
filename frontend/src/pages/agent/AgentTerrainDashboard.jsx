@@ -271,7 +271,9 @@ const AgentRegistrationForm = () => {
 
   const loadRecent = async () => {
     try {
-      const r = await fetch(`${API_URL}/api/ussd/registrations?limit=10`, { headers: getAuthHeader() });
+      const storedUser = localStorage.getItem('user');
+      const userId = storedUser ? JSON.parse(storedUser)._id : '';
+      const r = await fetch(`${API_URL}/api/ussd/registrations?limit=10${userId ? `&agent_id=${userId}` : ''}`, { headers: getAuthHeader() });
       if (r.ok) { const d = await r.json(); setRecentRegs(d.registrations || []); }
     } catch {}
   };
