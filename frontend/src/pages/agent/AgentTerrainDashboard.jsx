@@ -77,19 +77,19 @@ const HomeTab = ({ info, myFarmers, onTabChange, navigate }) => {
             {info?.zone && <p className="text-xs text-gray-400">Zone: {info.zone}</p>}
           </div>
         </div>
+        {/* Sync inline compact */}
+        <button onClick={syncing ? undefined : syncAll}
+          className={`mt-3 w-full rounded-lg px-3 py-1.5 flex items-center justify-between transition-colors ${!isOnline ? 'bg-amber-50' : pendingCount > 0 ? 'bg-blue-50' : 'bg-gray-50'}`}
+          data-testid="sync-status-home">
+          <div className="flex items-center gap-1.5">
+            {syncing ? <RefreshCw className="w-3 h-3 text-blue-500 animate-spin" /> : !isOnline ? <AlertTriangle className="w-3 h-3 text-amber-500" /> : <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+            <span className={`text-[10px] font-medium ${!isOnline ? 'text-amber-700' : 'text-gray-500'}`}>
+              {!isOnline ? 'Hors-ligne' : syncing ? 'Sync...' : pendingCount > 0 ? `${pendingCount} en attente` : formatSync()}
+            </span>
+          </div>
+          {isOnline && !syncing && <RefreshCw className="w-3 h-3 text-gray-400" />}
+        </button>
       </div>
-
-      <button onClick={syncing ? undefined : syncAll}
-        className={`w-full rounded-xl p-3 flex items-center justify-between transition-colors ${!isOnline ? 'bg-amber-50 border border-amber-200' : pendingCount > 0 ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}
-        data-testid="sync-status-home">
-        <div className="flex items-center gap-2">
-          {syncing ? <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" /> : !isOnline ? <AlertTriangle className="w-4 h-4 text-amber-500" /> : <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-          <span className={`text-xs font-medium ${!isOnline ? 'text-amber-700' : 'text-gray-600'}`}>
-            {!isOnline ? 'Mode hors-ligne' : syncing ? 'Synchronisation...' : pendingCount > 0 ? `${pendingCount} action(s) en attente` : formatSync()}
-          </span>
-        </div>
-        {isOnline && !syncing && <RefreshCw className="w-3.5 h-3.5 text-gray-400" />}
-      </button>
 
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-cyan-50 rounded-xl p-3 text-center border border-cyan-100">
@@ -380,6 +380,106 @@ const AgentRegistrationForm = () => {
   );
 };
 
+// ========= PHOTOS GEOLOCALISEES =========
+const PhotosPanel = ({ farmer, onClose }) => {
+  const { queueAction } = useOffline();
+  const [photos, setPhotos] = useState([]);
+  const [gpsStatus, setGpsStatus] = useState('idle');
+  const [currentGps, setCurrentGps] = useState(null);
+  const fileRef = React.useRef(null);
+
+  React.useEffect(() => {
+    setGpsStatus('loading');
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { setCurrentGps({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: Math.round(pos.coords.accuracy) }); setGpsStatus('ok'); },
+        () => setGpsStatus('error'),
+        { enableHighAccuracy: true, timeout: 15000 }
+      );
+    } else { setGpsStatus('error'); }
+  }, []);
+
+  const handleCapture = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhotos(prev => [...prev, {
+        data: reader.result,
+        name: file.name,
+        gps: currentGps,
+        timestamp: new Date().toISOString(),
+        farmer_id: farmer.id,
+        farmer_name: farmer.full_name,
+      }]);
+      toast.success('Photo capturee');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async () => {
+    if (photos.length === 0) { toast.error('Aucune photo'); return; }
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/agent/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          farmer_id: farmer.id,
+          farmer_name: farmer.full_name,
+          photos: photos.map(p => ({ gps: p.gps, timestamp: p.timestamp, name: p.name })),
+        }),
+      });
+      if (res.ok) { toast.success(`${photos.length} photo(s) enregistree(s)`); onClose(); }
+      else throw new Error();
+    } catch {
+      await queueAction({
+        action_type: 'photos_geolocalisees',
+        farmer_id: farmer.id,
+        data: { farmer_name: farmer.full_name, photos: photos.map(p => ({ gps: p.gps, timestamp: p.timestamp, name: p.name })) },
+      });
+      toast.success('Photos sauvegardees hors-ligne');
+      onClose();
+    }
+  };
+
+  return (
+    <div className="p-4 space-y-4" data-testid="photos-panel">
+      <button onClick={onClose} className="flex items-center gap-1 text-gray-400 text-sm"><ArrowLeft className="w-4 h-4" />Retour au profil</button>
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <h2 className="text-base font-bold text-gray-800 mb-1">Photos Geolocalisees</h2>
+        <p className="text-xs text-gray-400 mb-3">Planteur: <strong>{farmer.full_name}</strong></p>
+        <div className={`flex items-center gap-2 p-2 rounded-lg text-xs mb-3 ${gpsStatus === 'ok' ? 'bg-emerald-50 text-emerald-700' : gpsStatus === 'error' ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500'}`}>
+          <MapPin className="w-3.5 h-3.5" />
+          {gpsStatus === 'loading' && 'Localisation GPS...'}
+          {gpsStatus === 'ok' && `GPS: ${currentGps.lat.toFixed(5)}, ${currentGps.lng.toFixed(5)} (±${currentGps.acc}m)`}
+          {gpsStatus === 'error' && 'GPS indisponible'}
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleCapture} className="hidden" />
+        <Button onClick={() => fileRef.current?.click()} className="w-full h-12 bg-pink-500 hover:bg-pink-600 rounded-xl text-base" data-testid="capture-photo-btn">
+          <Camera className="w-5 h-5 mr-2" />Prendre une photo
+        </Button>
+      </div>
+      {photos.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-gray-500">{photos.length} photo(s) capturee(s)</p>
+          <div className="grid grid-cols-3 gap-2">
+            {photos.map((p, i) => (
+              <div key={i} className="relative rounded-xl overflow-hidden border border-gray-200 aspect-square">
+                <img src={p.data} alt="" className="w-full h-full object-cover" />
+                {p.gps && <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-[8px] text-white px-1.5 py-0.5"><MapPin className="w-2.5 h-2.5 inline mr-0.5" />{p.gps.lat.toFixed(4)}, {p.gps.lng.toFixed(4)}</div>}
+              </div>
+            ))}
+          </div>
+          <Button onClick={handleSave} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-base" data-testid="save-photos-btn">
+            <CheckCircle2 className="w-4 h-4 mr-2" />Enregistrer ({photos.length} photo{photos.length > 1 ? 's' : ''})
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ========= MAIN =========
 const AgentTerrainDashboard = () => {
   const navigate = useNavigate();
@@ -397,6 +497,7 @@ const AgentTerrainDashboard = () => {
   const [searchResult, setSearchResult] = useState(null);
   const [showICIModal, setShowICIModal] = useState(false);
   const [showSSRTEModal, setShowSSRTEModal] = useState(false);
+  const [showPhotosPanel, setShowPhotosPanel] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     try { const r = await fetch(`${API_URL}/api/field-agent/dashboard`, { headers: getAuthHeader() }); if (r.ok) setDashboard(await r.json()); } catch {} finally { setLoading(false); }
@@ -416,7 +517,7 @@ const AgentTerrainDashboard = () => {
       case 'ssrte': setShowSSRTEModal(true); break;
       case 'redd': navigate(`/redd/tracking?farmer=${fName}&phone=${fPhone}&id=${fId}`); break;
       case 'parcels': navigate(`/cooperative/parcels/new?farmer_id=${fId}&farmer_name=${fName}`); break;
-      case 'photos': toast.info('Utilisez votre camera puis uploadez via le formulaire parcelle'); break;
+      case 'photos': setShowPhotosPanel(true); break;
       case 'register': navigate(`/farmer/inscription?phone=${fPhone}&name=${fName}`); break;
       default: break;
     }
@@ -500,8 +601,11 @@ const AgentTerrainDashboard = () => {
         </div>
       )}
 
-      {/* Profil Planteur */}
+      {/* Profil Planteur ou Panel Photos */}
       {tab === 'farmer-profile' && selectedFarmer && (
+        showPhotosPanel ? (
+          <PhotosPanel farmer={selectedFarmer} onClose={() => setShowPhotosPanel(false)} />
+        ) : (
         <div className="p-4 space-y-3" data-testid="farmer-profile-view">
           <button onClick={() => { setTab('farmers'); setSelectedFarmer(null); }} className="flex items-center gap-1 text-gray-400 text-sm"><ArrowLeft className="w-4 h-4" />Retour</button>
           <div className={`rounded-2xl p-4 shadow-sm border ${selectedFarmer.completion?.percentage === 100 ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-gray-100'}`}>
@@ -531,6 +635,7 @@ const AgentTerrainDashboard = () => {
           </div>
           <FarmerHistorySection farmer={selectedFarmer} />
         </div>
+        )
       )}
 
       <ICIProfileModal open={showICIModal} onOpenChange={setShowICIModal} farmer={selectedFarmer} onSaved={() => loadMyFarmers()} />

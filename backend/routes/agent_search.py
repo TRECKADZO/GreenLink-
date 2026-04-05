@@ -775,3 +775,37 @@ async def get_sync_status(
         "last_upload": last_upload["timestamp"].isoformat() if last_upload and isinstance(last_upload.get("timestamp"), datetime) else None,
         "total_synced_actions": await db.sync_log.count_documents({"agent_id": agent_id})
     }
+
+
+
+@router.post("/photos")
+async def save_geolocated_photos(
+    request: Request,
+    current_user: dict = Depends(verify_agent_role)
+):
+    """Sauvegarder les metadonnees de photos geolocalisees pour un planteur."""
+    data = await request.json()
+    agent_id = str(current_user.get("_id", ""))
+    farmer_id = data.get("farmer_id", "")
+    farmer_name = data.get("farmer_name", "")
+    photos = data.get("photos", [])
+
+    if not photos:
+        raise HTTPException(status_code=400, detail="Aucune photo fournie")
+
+    doc = {
+        "agent_id": agent_id,
+        "agent_name": current_user.get("full_name", ""),
+        "farmer_id": farmer_id,
+        "farmer_name": farmer_name,
+        "photos": photos,
+        "photo_count": len(photos),
+        "created_at": datetime.now(timezone.utc)
+    }
+    await db.agent_photos.insert_one(doc)
+
+    return {
+        "success": True,
+        "message": f"{len(photos)} photo(s) enregistree(s)",
+        "farmer_id": farmer_id
+    }
