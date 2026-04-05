@@ -429,12 +429,12 @@ async def get_my_assigned_farmers(
         fid = ap["_id"]
         photo_map[fid] = photo_map.get(fid, 0) + ap["count"]
 
-    # Check REDD visits
+    # Check REDD visits (correct collection: redd_tracking_visits)
     redd_pipeline = [
         {"$match": {"farmer_id": {"$in": all_possible_ids}}},
         {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}}}
     ]
-    redd_agg = await db.redd_visits.aggregate(redd_pipeline).to_list(500)
+    redd_agg = await db.redd_tracking_visits.aggregate(redd_pipeline).to_list(500)
     redd_map = {r["_id"]: r["count"] for r in redd_agg}
 
     parcel_pipeline = [

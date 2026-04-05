@@ -213,16 +213,7 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
         await queueAction({
           action_type: 'ssrte_visit',
           farmer_id: farmer.id,
-          data: {
-            farmer_id: farmer.id,
-            date_visite: new Date().toISOString(),
-            taille_menage: tailleMenage,
-            nombre_enfants: nombreEnfants,
-            niveau_risque: riskLevel,
-            enfants_observes_travaillant: enfantsObserves,
-            taches_dangereuses_observees: selectedTasks,
-            observations: observations || null,
-          },
+          data: visitData,
         });
         toast.success('Visite SSRTE sauvegardee hors-ligne (sync auto)');
         resetForm();

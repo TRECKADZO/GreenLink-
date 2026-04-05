@@ -640,10 +640,11 @@ async def upload_offline_actions(
         farmer_id = action.get("farmer_id")
 
         try:
-            existing = await db.sync_log.find_one({"offline_id": offline_id})
-            if existing:
-                results.append({"offline_id": offline_id, "status": "already_synced"})
-                continue
+            if offline_id:
+                existing = await db.sync_log.find_one({"offline_id": offline_id})
+                if existing:
+                    results.append({"offline_id": offline_id, "status": "already_synced"})
+                    continue
 
             if action_type == "parcel_verification":
                 parcel_id = data.get("parcel_id")
@@ -660,16 +661,27 @@ async def upload_offline_actions(
                         }}
                     )
             elif action_type == "ssrte_visit":
+                # Store ALL SSRTE data from the offline form
                 visit_doc = {
                     "farmer_id": farmer_id,
                     "agent_id": agent_id,
                     "agent_name": current_user.get("full_name", ""),
+                    "date_visite": data.get("date_visite", action.get("timestamp", datetime.now(timezone.utc).isoformat())),
                     "visit_date": datetime.fromisoformat(action.get("timestamp", datetime.now(timezone.utc).isoformat())),
-                    "status": data.get("status", "completed"),
-                    "risk_level": data.get("risk_level", "low"),
-                    "notes": data.get("notes", ""),
-                    "gps_coordinates": data.get("gps_coordinates"),
-                    "children_observed": data.get("children_observed", 0),
+                    "taille_menage": data.get("taille_menage", 0),
+                    "nombre_enfants": data.get("nombre_enfants", 0),
+                    "liste_enfants": data.get("liste_enfants", []),
+                    "conditions_vie": data.get("conditions_vie", ""),
+                    "eau_courante": data.get("eau_courante", False),
+                    "electricite": data.get("electricite", False),
+                    "distance_ecole_km": data.get("distance_ecole_km"),
+                    "enfants_observes_travaillant": data.get("enfants_observes_travaillant", 0),
+                    "taches_dangereuses_observees": data.get("taches_dangereuses_observees", []),
+                    "support_fourni": data.get("support_fourni", []),
+                    "niveau_risque": data.get("niveau_risque", "faible"),
+                    "recommandations": data.get("recommandations", []),
+                    "visite_suivi_requise": data.get("visite_suivi_requise", False),
+                    "observations": data.get("observations", ""),
                     "created_at": datetime.now(timezone.utc),
                     "synced_from_offline": True
                 }
@@ -738,23 +750,50 @@ async def upload_offline_actions(
                         except Exception as e:
                             logger.error(f"Sync register_farmer coop_member error: {e}")
             elif action_type == "redd_visit":
-                # Visite REDD+ depuis le mode offline
+                # Visite REDD+ depuis le mode offline — store in redd_tracking_visits
+                practices = data.get("practices_verified", [])
+                # Calculate REDD score
+                total_conforme = sum(1 for p in practices if p.get("status") == "conforme")
+                total_partiel = sum(1 for p in practices if p.get("status") == "partiellement")
+                total_non_conf = sum(1 for p in practices if p.get("status") == "non_conforme")
+                total_checked = total_conforme + total_partiel + total_non_conf
+                redd_score = 0
+                for p in practices:
+                    s = p.get("status", "")
+                    if s == "non_applicable": continue
+                    cat = p.get("category", "")
+                    w = {"agroforesterie": 0.75, "zero_deforestation": 0.5, "gestion_sols": 0.5, "restauration": 0.375, "tracabilite": 0.25}.get(cat, 0.3)
+                    if s == "conforme": redd_score += w
+                    elif s == "partiellement": redd_score += w * 0.5
+                redd_score = min(round(redd_score, 1), 10)
+                redd_level = "Excellence" if redd_score >= 8 else "Avance" if redd_score >= 6 else "Intermediaire" if redd_score >= 4 else "Debutant" if redd_score >= 2 else "Non conforme"
+
+                agent_record = await db.coop_agents.find_one({"user_id": agent_id})
+                coop_id = agent_record.get("coop_id", "") if agent_record else ""
+
                 redd_doc = {
                     "farmer_id": data.get("farmer_id", ""),
                     "farmer_name": data.get("farmer_name", ""),
                     "farmer_phone": data.get("farmer_phone", ""),
-                    "practices_verified": data.get("practices_verified", []),
+                    "coop_id": coop_id,
+                    "cooperative_id": coop_id,
+                    "agent_id": agent_id,
+                    "agent_name": current_user.get("full_name", ""),
+                    "date_visite": action.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                    "practices_verified": practices,
                     "superficie_verifiee": data.get("superficie_verifiee", 0),
                     "arbres_comptes": data.get("arbres_comptes", 0),
                     "observations": data.get("observations", ""),
                     "recommandations": data.get("recommandations", ""),
                     "suivi_requis": data.get("suivi_requis", False),
-                    "agent_id": agent_id,
-                    "visit_date": datetime.fromisoformat(action.get("timestamp", datetime.now(timezone.utc).isoformat())),
+                    "redd_score": redd_score,
+                    "redd_level": redd_level,
+                    "total_practices_checked": total_checked,
+                    "conformity_percentage": round((total_conforme + total_partiel * 0.5) / max(total_checked, 1) * 100) if total_checked else 0,
                     "created_at": datetime.now(timezone.utc),
                     "synced_from_offline": True
                 }
-                await db.redd_visits.insert_one(redd_doc)
+                await db.redd_tracking_visits.insert_one(redd_doc)
 
             await db.sync_log.insert_one({
                 "offline_id": offline_id,
