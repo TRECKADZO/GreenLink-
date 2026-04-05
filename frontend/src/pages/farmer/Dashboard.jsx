@@ -11,7 +11,8 @@ import {
   Sprout, TrendingUp, DollarSign, MapPin, Award, Plus, Phone,
   MessageSquare, Send, Store, Leaf, Package, BarChart3, Home,
   ChevronRight, RefreshCw, Loader2, ShoppingCart, FileText,
-  CheckCircle2, LogOut, AlertTriangle, Star
+  CheckCircle2, LogOut, AlertTriangle, Star, User, Bell,
+  Grid3X3
 } from 'lucide-react';
 
 const TABS = [
@@ -19,7 +20,7 @@ const TABS = [
   { id: 'dashboard', label: 'Tableau', icon: BarChart3 },
   { id: 'parcels', label: 'Parcelles', icon: MapPin },
   { id: 'carbon', label: 'Carbone', icon: Award },
-  { id: 'market', label: 'Boutique', icon: Store },
+  { id: 'more', label: 'Plus', icon: Grid3X3 },
 ];
 
 // ========= ACCUEIL (Home) — like mobile USSD style =========
@@ -38,7 +39,7 @@ const FarmerHome = ({ user, stats, navigate, onTabChange }) => {
     { num: '4', label: 'Marketplace Intrants', sub: 'Achetez intrants & equipements', icon: ShoppingCart, color: 'bg-orange-500', action: () => navigate('/marketplace'), highlight: true },
     { num: '5', label: 'Mon Score Carbone', sub: `Score: ${carbonScore.toFixed(1)}/10`, icon: Award, color: 'bg-teal-500', action: () => navigate('/farmer/carbon-score') },
     { num: '5b', label: 'Pratiques Durables', sub: 'Guide des 21 pratiques eligibles', icon: Leaf, color: 'bg-green-600', action: () => navigate('/guide-redd'), highlight: true },
-    { num: '6', label: 'Mes Commandes', sub: 'Historique des achats', icon: FileText, color: 'bg-gray-500', action: () => navigate('/orders') },
+    { num: '6', label: 'Mes Commandes', sub: 'Historique des achats', icon: FileText, color: 'bg-gray-500', action: () => navigate('/buyer/orders') },
     { num: '7', label: 'Primes Carbone', sub: 'Simulateur et paiements', icon: DollarSign, color: 'bg-purple-500', action: () => navigate('/farmer/carbon-payments') },
   ];
 
@@ -238,6 +239,72 @@ const FarmerDashboardTab = ({ stats, smsHistory, onSendSummary, sendingSummary, 
   );
 };
 
+// ========= ONGLET PLUS =========
+const FarmerMoreTab = ({ navigate }) => {
+  const { logout } = useAuth();
+
+  const sections = [
+    {
+      title: 'Mes Activites',
+      items: [
+        { label: 'Mes Parcelles', desc: 'Declarer et gerer mes parcelles', icon: MapPin, color: 'bg-emerald-500', route: '/farmer/parcels/new' },
+        { label: 'Mes Recoltes', desc: 'Suivre mes declarations', icon: Package, color: 'bg-amber-500', route: '/farmer/my-harvests' },
+        { label: 'Declarer une Recolte', desc: 'Enregistrer ma production', icon: TrendingUp, color: 'bg-blue-500', route: '/harvest-marketplace' },
+        { label: 'Mes Commandes', desc: 'Historique de mes achats', icon: FileText, color: 'bg-gray-500', route: '/buyer/orders' },
+      ]
+    },
+    {
+      title: 'Marketplace & Primes',
+      items: [
+        { label: 'Boutique Intrants', desc: 'Acheter intrants et equipements', icon: ShoppingCart, color: 'bg-orange-500', route: '/marketplace' },
+        { label: 'Primes Carbone', desc: 'Simulateur et paiements', icon: DollarSign, color: 'bg-purple-500', route: '/farmer/carbon-payments' },
+        { label: 'Pratiques Durables', desc: '21 pratiques REDD+ evaluees', icon: Leaf, color: 'bg-green-600', route: '/guide-redd' },
+      ]
+    },
+    {
+      title: 'Mon Compte',
+      items: [
+        { label: 'Mon Profil', desc: 'Informations personnelles', icon: User, color: 'bg-blue-500', route: '/profile' },
+        { label: 'Notifications', desc: 'Alertes et messages', icon: Bell, color: 'bg-orange-500', route: '/notifications' },
+      ]
+    },
+  ];
+
+  return (
+    <div className="p-4 space-y-5" data-testid="farmer-more-tab">
+      <h2 className="text-base font-bold text-gray-800">Plus</h2>
+
+      {sections.map((section) => (
+        <div key={section.title}>
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{section.title}</p>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100 overflow-hidden">
+            {section.items.map((item) => (
+              <button key={item.label} onClick={() => navigate(item.route)}
+                className="w-full flex items-center gap-3 p-4 text-left active:bg-gray-50 transition-colors"
+                data-testid={`farmer-more-${item.label.toLowerCase().replace(/\s/g, '-')}`}>
+                <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center flex-shrink-0`}>
+                  <item.icon className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-800">{item.label}</p>
+                  <p className="text-[10px] text-gray-400">{item.desc}</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <button onClick={logout}
+        className="w-full flex items-center justify-center gap-2 p-4 bg-red-50 rounded-2xl text-red-500 text-sm font-medium active:bg-red-100 transition-colors border border-red-100"
+        data-testid="farmer-logout">
+        <LogOut className="w-4 h-4" />Deconnexion
+      </button>
+    </div>
+  );
+};
+
 // ========= MAIN FARMER DASHBOARD =========
 const FarmerDashboard = () => {
   const { user, loading: authLoading, logout } = useAuth();
@@ -283,7 +350,7 @@ const FarmerDashboard = () => {
       case 'dashboard': setActiveTab('dashboard'); break;
       case 'parcels': navigate('/farmer/parcels/new'); break;
       case 'carbon': navigate('/farmer/carbon-score'); break;
-      case 'market': navigate('/marketplace'); break;
+      case 'more': setActiveTab('more'); break;
       default: setActiveTab(tabId);
     }
   };
@@ -317,6 +384,10 @@ const FarmerDashboard = () => {
 
       {activeTab === 'dashboard' && (
         <FarmerDashboardTab stats={stats} smsHistory={smsHistory} onSendSummary={sendWeeklySummary} sendingSummary={sendingSummary} navigate={navigate} />
+      )}
+
+      {activeTab === 'more' && (
+        <FarmerMoreTab navigate={navigate} />
       )}
     </MobileAppShell>
   );

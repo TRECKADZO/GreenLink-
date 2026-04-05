@@ -11,3 +11,15 @@
 ## User's Cooperative Account
 - Email: boidigsproplus@gmail.com
 - Password: (set by user, unknown)
+
+## Test Farmer (Producteur) Account
+- Email: testplanteur@test.ci
+- Password: test123456
+- Phone: +2250101010101
+- User Type: producteur
+
+## Test Field Agent Account
+- Email: testagent@test.ci
+- Password: test123456
+- Phone: +2250202020202
+- User Type: field_agent
