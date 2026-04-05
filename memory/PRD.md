@@ -126,6 +126,9 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (5 avr) Photos Geolocalisees: panel photo avec capture camera, GPS auto, sauvegarde + mode offline. Endpoint POST /api/agent/photos
 - (5 avr) Fiches pre-associees: quand l'agent selectionne un planteur, toutes les fiches sont automatiquement liees a ce planteur
 - (5 avr) FIX CRITIQUE: inscription agent → l'agriculteur est maintenant cree dans coop_members ET ajoute a assigned_farmers de l'agent (online + offline sync). Avant: cree uniquement dans ussd_registrations → invisible dans "Mes Planteurs"
+- (5 avr) Cooperative auto: suppression du champ "Code cooperative" du formulaire agent. L'agriculteur est automatiquement inscrit dans la cooperative de l'agent
+- (5 avr) FIX Photos validees: le backend verifie maintenant geotagged_photos + agent_photos pour le statut de completion
+- (5 avr) Ajout suivi REDD dans forms_status (6 fiches trackees: ICI, SSRTE, REDD, Parcelles, Photos, Enregistrement)
   - Agent Terrain: 5 tabs (Accueil USSD + Tableau de bord KPIs + Planteurs + Inscrire + Plus), profil planteur avec 6 fiches fonctionnelles (ICI modal, SSRTE modal, REDD tracking, Parcelles, Photos, Inscription). Onglet Plus: Outils Terrain (SSRTE, Verification Parcelles, Photos, Pratiques Durables, Recherche), Mon Compte (Profil, Notifications), Deconnexion
   - Farmer: 5 tabs (Accueil USSD avec Score Carbone gauge/Stats/Menu + Tableau de bord + Parcelles + Carbone + Plus). Onglet Plus: Mes Activites (Parcelles, Recoltes, Declarer, Commandes), Marketplace & Primes (Boutique, Primes Carbone, Pratiques Durables), Mon Compte (Profil, Notifications), Deconnexion
   - Accueil = menu numerote style mobile, Tableau = KPIs detailles avec objectifs/progression
