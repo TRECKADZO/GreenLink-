@@ -1,0 +1,70 @@
+{
+  "summary": "Iteration 89 - Cooperative Referral System Bug Fixes Testing Complete. All 8 backend tests passed. The main bugs have been fixed: 1) GET /api/cooperative-referral/my-code now returns 200 (not 403) for cooperative users, 2) coop_name displays correctly (not 'N/A'), 3) Share message in CooperativeReferralPage.jsx includes the application URL (https://cooperative-staging.preview.emergentagent.com/register). Frontend Register.jsx shows coop_name input and sponsor_referral_code input fields correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_cooperative_referral_iteration89.py",
+    "/app/test_reports/pytest/pytest_cooperative_referral_iteration89.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PASS: POST /api/auth/register with user_type=cooperative creates user with coop_name, referral_code (GL-COOP-XXX-XXXX format)",
+    "PASS: POST /api/auth/register with sponsor_referral_code links new cooperative to sponsor (sponsor_id, sponsor_referral_code, affiliated_at set)",
+    "PASS: GET /api/cooperative-referral/my-code returns 200 for cooperative users (BUG FIX VERIFIED - was returning 403)",
+    "PASS: GET /api/cooperative-referral/my-code returns coop_name correctly (BUG FIX VERIFIED - was showing 'N/A')",
+    "PASS: GET /api/cooperative-referral/my-affiliates returns list of affiliated cooperatives",
+    "PASS: POST /api/cooperative-referral/validate validates referral codes correctly",
+    "PASS: Frontend Register.jsx shows coop_name input with data-testid='coop-name-input'",
+    "PASS: Frontend Register.jsx shows sponsor_referral_code input with data-testid='sponsor-code-input'",
+    "PASS: Frontend CooperativeReferralPage.jsx share message includes application URL (https://cooperative-staging.preview.emergentagent.com/register)",
+    "PASS: AuthContext.jsx forwards sponsor_referral_code in registration payload"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_cooperative_referral_iteration89.py"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 passed)",
+    "frontend": "100% (All cooperative referral UI elements verified)"
+  },
+  "test_credentials": {
+    "admin": {
+      "identifier": "klenakan.eric@gmail.com",
+      "password": "474Treckadzo"
+    },
+    "note": "Admin account is NOT a cooperative type, so it correctly gets 403 on /my-code endpoint"
+  },
+  "seed_data_creation": "Created test cooperatives during testing (prefixed with test_)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 89 verified the cooperative referral system bug fixes. The main issues fixed were: 1) 403 Forbidden on GET /api/cooperative-referral/my-code - now returns 200 for cooperative users, 2) coop_name showing 'N/A' - now displays correctly, 3) Share message missing app URL - now includes full URL. The fixes involved: AuthContext.jsx forwarding sponsor_referral_code, auth.py setting 'id' field after insert, and CooperativeReferralPage.jsx including window.location.origin in share message.",
+  "bugs_fixed_verification": {
+    "403_forbidden_bug": {
+      "status": "FIXED",
+      "endpoint": "GET /api/cooperative-referral/my-code",
+      "before": "Returned 403 Forbidden for cooperative users",
+      "after": "Returns 200 with referral_code and coop_name"
+    },
+    "coop_name_na_bug": {
+      "status": "FIXED",
+      "before": "coop_name displayed as 'N/A'",
+      "after": "coop_name displays correctly from user data"
+    },
+    "share_message_url_bug": {
+      "status": "FIXED",
+      "before": "Share message did not include application URL",
+      "after": "Share message includes https://cooperative-staging.preview.emergentagent.com/register"
+    },
+    "sponsor_referral_code_forwarding": {
+      "status": "FIXED",
+      "before": "AuthContext.jsx was NOT forwarding sponsor_referral_code to backend",
+      "after": "sponsor_referral_code is forwarded and new cooperative is linked to sponsor"
+    }
+  }
+}

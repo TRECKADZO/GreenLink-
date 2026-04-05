@@ -68,13 +68,15 @@ const CooperativeReferralPage = () => {
   };
 
   const shareCode = async () => {
-    const shareText = `Rejoignez le réseau GreenLink Agritech ! Utilisez mon code de parrainage lors de votre inscription : ${referralCode}\n\nEnsemble, engageons-nous pour des pratiques agricoles durables. 🌱`;
+    const appUrl = window.location.origin;
+    const shareText = `Rejoignez le réseau GreenLink Agritech ! Utilisez mon code de parrainage lors de votre inscription : ${referralCode}\n\nInscrivez-vous ici : ${appUrl}/register\n\nEnsemble, engageons-nous pour des pratiques agricoles durables.`;
     
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'Code de parrainage GreenLink',
           text: shareText,
+          url: `${appUrl}/register`,
         });
       } catch (err) {
         console.log('Share cancelled');
@@ -157,7 +159,7 @@ const CooperativeReferralPage = () => {
           {/* Share Message */}
           <div className="mt-4 p-3 bg-white/60 rounded-lg border border-emerald-200">
             <p className="text-sm text-gray-600 italic">
-              "Rejoignez le réseau GreenLink Agritech ! Utilisez mon code <strong>{referralCode}</strong> lors de votre inscription. Ensemble, engageons-nous pour des pratiques agricoles durables. 🌱"
+              "Rejoignez le réseau GreenLink Agritech ! Utilisez mon code <strong>{referralCode}</strong> lors de votre inscription. Inscrivez-vous ici : <strong>{window.location.origin}/register</strong> - Ensemble, engageons-nous pour des pratiques agricoles durables."
             </p>
           </div>
         </CardContent>

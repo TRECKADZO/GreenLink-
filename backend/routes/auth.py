@@ -191,7 +191,7 @@ async def register(user_data: UserCreate):
                     "is_active": True
                 })
                 if sponsor:
-                    user_dict["sponsor_id"] = sponsor["id"]
+                    user_dict["sponsor_id"] = sponsor.get("id") or str(sponsor["_id"])
                     user_dict["sponsor_referral_code"] = sponsor_code
                     user_dict["affiliated_at"] = datetime.utcnow()
                     logger.info(f"[REGISTER] Cooperative {coop_name} affiliated to sponsor {sponsor.get('coop_name')} via code {sponsor_code}")
@@ -201,7 +201,14 @@ async def register(user_data: UserCreate):
             user_dict["roles"] = ["field_agent"]
         
         result = await db.users.insert_one(user_dict)
-        user_dict["_id"] = str(result.inserted_id)
+        user_id_str = str(result.inserted_id)
+        user_dict["_id"] = user_id_str
+        
+        # Set id field in DB for consistency
+        await db.users.update_one(
+            {"_id": result.inserted_id},
+            {"$set": {"id": user_id_str}}
+        )
         
         # Link new user to existing coop_member by phone number
         if user_data.phone_number:

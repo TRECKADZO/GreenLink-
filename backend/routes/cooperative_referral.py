@@ -254,7 +254,10 @@ async def get_my_affiliates(current_user: dict = Depends(get_current_user)):
     
     # Récupérer les coopératives affiliées
     affiliates_cursor = db.users.find({
-        "sponsor_id": user_id,
+        "$or": [
+            {"sponsor_id": user_id},
+            {"sponsor_id": str(current_user.get("_id"))}
+        ],
         "user_type": "cooperative",
         "is_active": True
     }).sort("affiliated_at", -1)
@@ -296,7 +299,14 @@ async def get_my_sponsor(current_user: dict = Depends(get_current_user)):
             "message": "Votre coopérative n'est pas affiliée à un parrain"
         }
     
-    sponsor = await db.users.find_one({"id": sponsor_id, "is_active": True})
+    sponsor = await db.users.find_one({"$or": [{"id": sponsor_id}, {"_id": sponsor_id}], "is_active": True})
+    if not sponsor:
+        try:
+            from bson import ObjectId
+            if ObjectId.is_valid(sponsor_id):
+                sponsor = await db.users.find_one({"_id": ObjectId(sponsor_id), "is_active": True})
+        except:
+            pass
     if not sponsor:
         return {
             "has_sponsor": False,
@@ -349,7 +359,14 @@ async def get_network_stats(current_user: dict = Depends(get_current_user)):
     
     top_sponsors = []
     for ts in top_sponsors_raw:
-        sponsor = await db.users.find_one({"id": ts["_id"]})
+        sponsor = await db.users.find_one({"$or": [{"id": ts["_id"]}, {"_id": ts["_id"]}]})
+        if not sponsor:
+            try:
+                from bson import ObjectId
+                if ObjectId.is_valid(str(ts["_id"])):
+                    sponsor = await db.users.find_one({"_id": ObjectId(str(ts["_id"]))})
+            except:
+                pass
         if sponsor:
             top_sponsors.append({
                 "coop_name": sponsor.get("coop_name") or sponsor.get("full_name"),

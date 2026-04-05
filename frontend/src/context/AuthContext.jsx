@@ -76,6 +76,9 @@ export const AuthProvider = ({ children }) => {
         if (additionalData.coop_name) {
           payload.coop_name = additionalData.coop_name;
         }
+        if (additionalData.sponsor_referral_code) {
+          payload.sponsor_referral_code = additionalData.sponsor_referral_code;
+        }
         
         // ICI demographic fields for producers
         if (additionalData.genre) {
