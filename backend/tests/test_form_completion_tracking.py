@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://farmer-dash-enhance.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://greenlink-sync-fix.preview.emergentagent.com').rstrip('/')
 
 class TestFormCompletionTracking:
     """Form completion tracking feature tests"""

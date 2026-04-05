@@ -327,7 +327,7 @@ test_plan:
 
 agent_communication:
   - agent: "testing"
-    message: "🎉 COMPREHENSIVE BACKEND TESTING COMPLETE - All 7 backend APIs tested successfully with 100% pass rate. Features API (7 items), Steps API (3 items), Crops API (6 items), Producers API (4 items with limit parameter), Testimonials API (2 items), Pricing Plans API (4 items), and Contact API (POST endpoint) all working perfectly. Backend service is fully operational at https://farmer-dash-enhance.preview.emergentagent.com/api"
+    message: "🎉 COMPREHENSIVE BACKEND TESTING COMPLETE - All 7 backend APIs tested successfully with 100% pass rate. Features API (7 items), Steps API (3 items), Crops API (6 items), Producers API (4 items with limit parameter), Testimonials API (2 items), Pricing Plans API (4 items), and Contact API (POST endpoint) all working perfectly. Backend service is fully operational at https://greenlink-sync-fix.preview.emergentagent.com/api"
   - agent: "testing"
     message: "🔐 AUTHENTICATION SYSTEM TESTING COMPLETE - All authentication endpoints working perfectly: ✅ Registration (all user types), ✅ Login with JWT tokens, ✅ Profile access with Bearer auth, ✅ Profile updates, ✅ Error handling (duplicate users, wrong passwords, invalid formats, unauthorized access). All 4 user types (producteur, acheteur, entreprise_rse, fournisseur) properly initialize their specific fields. Phone validation requires format without spaces (e.g., +22507123456789). Complete authentication flow verified and operational."
   - agent: "testing"
