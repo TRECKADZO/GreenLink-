@@ -1,0 +1,123 @@
+{
+  "summary": "Iteration 93 - Home vs Dashboard Tab Separation Testing Complete. All 13 backend tests passed. Frontend Agent Terrain Dashboard verified: Home tab (Accueil) shows greeting card, sync status, quick stats, and USSD-style menu (1-6 items). Dashboard tab (Tableau) shows detailed KPIs with objectives and progress bars. Tabs are properly separated with different content. Menu item navigation works correctly (1->Planteurs, 3->Inscriptions, 5->/guide-redd). Farmer Dashboard correctly redirects non-farmer users.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_home_dashboard_separation_iteration93.py",
+    "/app/test_reports/pytest/pytest_home_dashboard_iteration93.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PASS: GET /api/health returns 200 with status=ok",
+    "PASS: GET /api/field-agent/dashboard returns 200 with cooperative_info/agent_info",
+    "PASS: GET /api/field-agent/my-farmers returns 200 with farmers list",
+    "PASS: GET /api/agent/search?phone=xxx returns 200 with found boolean",
+    "PASS: GET /api/agent/search without phone returns 422 (validation error)",
+    "PASS: All protected endpoints return 401/403 without auth",
+    "PASS: Frontend MobileAppShell loads with data-testid='mobile-app-shell'",
+    "PASS: Home tab shows USSD menu with 6 items (data-testid='agent-ussd-menu')",
+    "PASS: Home tab shows greeting card 'Bonjour, {name}'",
+    "PASS: Home tab shows sync status (data-testid='sync-status-home')",
+    "PASS: Home tab shows quick stats (Visites/Planteurs/Parcelles)",
+    "PASS: Home tab header is hidden (title=null)",
+    "PASS: Dashboard tab shows KPI cards (data-testid='dashboard-kpi-cards')",
+    "PASS: Dashboard tab shows header with user name",
+    "PASS: Home and Dashboard tabs have different content (properly separated)",
+    "PASS: Menu item 1 (Mes Planteurs) switches to Planteurs tab",
+    "PASS: Menu item 3 (Inscrire) switches to Inscriptions tab",
+    "PASS: Menu item 5 (Pratiques Durables) navigates to /guide-redd",
+    "PASS: Farmer Dashboard redirects non-farmer users to homepage"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_home_dashboard_separation_iteration93.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 passed)",
+    "frontend": "100% (All Home vs Dashboard separation features verified)"
+  },
+  "test_credentials": {
+    "admin": {
+      "identifier": "klenakan.eric@gmail.com",
+      "password": "474Treckadzo",
+      "user_type": "admin"
+    }
+  },
+  "seed_data_creation": "No new seed data created",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 93 verified the Home vs Dashboard tab separation for Agent Terrain. Key findings: 1) Agent Terrain now has 5 tabs: home (Accueil), dashboard (Tableau), farmers (Planteurs), inscriptions (Inscrire), search (Chercher). 2) Home tab shows USSD-style menu with 6 numbered items, greeting card, sync status, and quick stats. Header is hidden on Home tab. 3) Dashboard tab shows detailed KPIs (Visites SSRTE, Membres Inscrits, Parcelles Declarees, Photos Geoloc.) with objectives and progress bars, alerts, risk distribution. Header is visible on Dashboard tab. 4) Menu item actions work: item 1 -> Planteurs tab, item 3 -> Inscriptions tab, item 5 -> /guide-redd page. 5) Farmer profile forms (ICI, SSRTE, REDD, Parcelles, Photos, Register) are defined in code with proper data-testids but couldn't be tested as admin has no assigned farmers. 6) Farmer Dashboard correctly redirects non-farmer users.",
+  "features_verified": {
+    "agent_terrain_home_tab": {
+      "status": "WORKING",
+      "file": "/app/frontend/src/pages/agent/AgentTerrainDashboard.jsx",
+      "component": "HomeTab (line 48-168)",
+      "features": [
+        "Greeting card with user name",
+        "Sync status button (data-testid='sync-status-home')",
+        "Quick stats row (Visites/Planteurs/Parcelles)",
+        "USSD-style menu with 6 items (data-testid='agent-ussd-menu')",
+        "Menu items 1-6 with data-testid='menu-item-{num}'",
+        "Logout button",
+        "Header hidden (title=null)"
+      ]
+    },
+    "agent_terrain_dashboard_tab": {
+      "status": "WORKING",
+      "file": "/app/frontend/src/pages/agent/AgentTerrainDashboard.jsx",
+      "component": "DashboardTab (line 172-268)",
+      "features": [
+        "KPI cards (data-testid='dashboard-kpi-cards')",
+        "Visites SSRTE with target and progress",
+        "Membres Inscrits with target and progress",
+        "Parcelles Declarees with target and progress",
+        "Photos Geoloc. with target and progress",
+        "Alerts (Enfants identifies, Mes planteurs)",
+        "Risk distribution chart",
+        "Badges section",
+        "Header visible with user name"
+      ]
+    },
+    "agent_terrain_menu_navigation": {
+      "status": "WORKING",
+      "menu_items": {
+        "1": "Mes Planteurs -> switches to 'farmers' tab",
+        "2": "Visites SSRTE -> navigates to /agent/ssrte",
+        "3": "Inscrire un Planteur -> switches to 'inscriptions' tab",
+        "4": "Declaration Parcelles -> navigates to /cooperative/parcels/verification",
+        "5": "Pratiques Durables -> navigates to /guide-redd",
+        "6": "Rechercher Planteur -> switches to 'search' tab"
+      }
+    },
+    "farmer_profile_forms": {
+      "status": "CODE VERIFIED (not tested due to no assigned farmers)",
+      "file": "/app/frontend/src/pages/agent/AgentTerrainDashboard.jsx",
+      "forms": [
+        {"id": "ici", "action": "Opens ICIProfileModal"},
+        {"id": "ssrte", "action": "Opens SSRTEVisitModal"},
+        {"id": "redd", "action": "Navigates to /redd/tracking with farmer params"},
+        {"id": "parcels", "action": "Navigates to /cooperative/parcels/new with farmer params"},
+        {"id": "photos", "action": "Shows toast info"},
+        {"id": "register", "action": "Navigates to /farmer/inscription with farmer params"}
+      ],
+      "data_testids": ["form-ici", "form-ssrte", "form-redd", "form-parcels", "form-photos", "form-register"]
+    },
+    "farmer_dashboard": {
+      "status": "WORKING (redirect for non-farmers)",
+      "file": "/app/frontend/src/pages/farmer/Dashboard.jsx",
+      "behavior": "Redirects non-farmer users to homepage",
+      "tabs": ["home", "dashboard", "parcels", "carbon", "market"]
+    },
+    "backend_apis": {
+      "GET /api/field-agent/dashboard": "WORKING - returns agent stats or coop overview",
+      "GET /api/field-agent/my-farmers": "WORKING - returns assigned farmers list",
+      "GET /api/agent/search?phone=xxx": "WORKING - searches farmer by phone"
+    }
+  }
+}
