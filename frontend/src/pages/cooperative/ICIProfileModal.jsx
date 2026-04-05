@@ -17,6 +17,8 @@ import {
 import { Switch } from '../../components/ui/switch';
 import { toast } from 'sonner';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 const EMPTY_CHILD = { prenom: '', sexe: 'Garcon', age: 0, scolarise: false, travaille_exploitation: false };
 
 const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
@@ -80,6 +82,32 @@ const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
             ...(data.labor_force || {}),
           },
         }));
+      } else {
+        // No ICI profile yet — try to load family data from SSRTE
+        try {
+          const token = localStorage.getItem('token');
+          const familyRes = await fetch(`${API_URL}/api/ici-data/farmers/${farmer.id}/family-data`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (familyRes.ok) {
+            const familyData = await familyRes.json();
+            if (familyData.source) {
+              setForm(prev => ({
+                ...prev,
+                taille_menage: familyData.taille_menage || prev.taille_menage,
+                household_children: {
+                  ...prev.household_children,
+                  nombre_enfants: familyData.nombre_enfants || 0,
+                  liste_enfants: familyData.liste_enfants || [],
+                  total_enfants: familyData.nombre_enfants || 0,
+                },
+              }));
+              toast.info('Donnees familiales pre-remplies depuis les fiches precedentes');
+            }
+          }
+        } catch {
+          // Ignore — no pre-fill available
+        }
       }
     } catch {
       // Profile doesn't exist yet, use defaults

@@ -61,6 +61,7 @@ const CONDITIONS_VIE = [
 const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
   const { isOnline, queueAction } = useOffline();
   const [saving, setSaving] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
   // Menage
   const [tailleMenage, setTailleMenage] = useState(0);
   const [nombreEnfants, setNombreEnfants] = useState(0);
@@ -78,6 +79,36 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
   const [recommendations, setRecommendations] = useState('');
   const [followUpRequired, setFollowUpRequired] = useState(false);
   const [observations, setObservations] = useState('');
+
+  // Auto-load family data from ICI/SSRTE when modal opens
+  useEffect(() => {
+    if (open && farmer?.id) {
+      const loadFamilyData = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_URL}/api/ici-data/farmers/${farmer.id}/family-data`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.source) {
+              if (data.taille_menage) setTailleMenage(data.taille_menage);
+              if (data.nombre_enfants) setNombreEnfants(data.nombre_enfants);
+              if (data.liste_enfants?.length) setListeEnfants(data.liste_enfants);
+              if (data.conditions_vie) setConditionsVie(data.conditions_vie);
+              if (data.eau_courante !== null) setEauCourante(data.eau_courante);
+              if (data.electricite !== null) setElectricite(data.electricite);
+              if (data.distance_ecole_km) setDistanceEcole(String(data.distance_ecole_km));
+              setPrefilled(true);
+            }
+          }
+        } catch {
+          // Offline or error — no pre-fill
+        }
+      };
+      loadFamilyData();
+    }
+  }, [open, farmer]);
 
   const addChild = () => {
     setListeEnfants([...listeEnfants, { prenom: '', sexe: 'Garcon', age: 0, scolarise: false, travaille_exploitation: false }]);
@@ -222,6 +253,13 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+
+          {prefilled && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2 text-xs text-emerald-700" data-testid="prefilled-banner">
+              <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+              <span>Informations familiales pre-remplies depuis les fiches precedentes. Vous pouvez les modifier si necessaire.</span>
+            </div>
+          )}
 
           {/* Section 1: Menage */}
           <Card>

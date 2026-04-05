@@ -2,7 +2,7 @@
 # Système de collecte de données et d'alertes basé sur les indicateurs ICI
 # Pour alimentation automatique des métriques du dashboard
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from typing import Optional, List
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
@@ -493,6 +493,55 @@ async def get_farmer_history(
         "ssrte_total": len(visits_list),
         "risk_evolution": risk_evolution,
     }
+
+
+@router.get("/farmers/{farmer_id}/family-data")
+async def get_farmer_family_data(farmer_id: str, request: Request):
+    """Retourne les donnees familiales connues d'un planteur (ICI + SSRTE) pour pre-remplissage."""
+    result = {
+        "farmer_id": farmer_id,
+        "taille_menage": 0,
+        "nombre_enfants": 0,
+        "liste_enfants": [],
+        "conditions_vie": "",
+        "eau_courante": None,
+        "electricite": None,
+        "distance_ecole_km": None,
+        "source": None,
+    }
+
+    # 1. Check ICI profile
+    ici = await db.ici_profiles.find_one({"farmer_id": farmer_id}, {"_id": 0})
+    if ici:
+        hc = ici.get("household_children", {})
+        result["taille_menage"] = ici.get("taille_menage", 0)
+        result["nombre_enfants"] = hc.get("nombre_enfants", len(hc.get("liste_enfants", [])))
+        result["liste_enfants"] = hc.get("liste_enfants", [])
+        result["source"] = "ici"
+
+    # 2. Check latest SSRTE visit (may have more recent or additional data)
+    ssrte = await db.ssrte_visits.find_one(
+        {"farmer_id": farmer_id},
+        sort=[("date_visite", -1)]
+    )
+    if ssrte:
+        if not result["source"] or ssrte.get("taille_menage", 0) > result["taille_menage"]:
+            result["taille_menage"] = ssrte.get("taille_menage", result["taille_menage"])
+        ssrte_enfants = ssrte.get("liste_enfants", [])
+        if len(ssrte_enfants) > len(result["liste_enfants"]):
+            result["liste_enfants"] = ssrte_enfants
+            result["nombre_enfants"] = ssrte.get("nombre_enfants", len(ssrte_enfants))
+        result["conditions_vie"] = ssrte.get("conditions_vie", result["conditions_vie"])
+        result["eau_courante"] = ssrte.get("eau_courante", result["eau_courante"])
+        result["electricite"] = ssrte.get("electricite", result["electricite"])
+        result["distance_ecole_km"] = ssrte.get("distance_ecole_km", result["distance_ecole_km"])
+        if not result["source"]:
+            result["source"] = "ssrte"
+        elif result["source"] == "ici":
+            result["source"] = "ici+ssrte"
+
+    return result
+
 
 
 @router.get("/ssrte/visits")
