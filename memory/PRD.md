@@ -114,7 +114,10 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Onglet "Réseau Coopératives" dans Super Admin: arbre de parrainage, top parrains, répartition régionale, croissance, affiliations récentes, liste complète avec recherche/filtres, actions admin (générer code, retirer affiliation)
 - (7 avr) Nettoyage base de données: 90 comptes test supprimés, 467 docs liés nettoyés. 34 utilisateurs réels conservés
 - (7 avr) Mode offline-first web (Agent Terrain + Coopérative): OfflineContext, OfflineBanner, IndexedDB (coop_members, coop_lots, coop_dashboard), offlineCooperativeApi avec fallback cache, sync auto au login et retour en ligne, Service Worker PWA
-- (7 avr) Vues mobile 100% natives (Agent Terrain + Agriculteur): MobileAppShell (container 430px, status bar, bottom tab nav), Agent Terrain avec 4 tabs (Accueil/Planteurs/Inscrire/Chercher) + profil planteur, Farmer Dashboard avec 5 tabs (Accueil/Parcelles/Récoltes/Carbone/Boutique)
+- (7 avr) Vues mobile 100% natives (Agent Terrain + Agriculteur): MobileAppShell (container 430px, status bar, bottom tab nav)
+  - Agent Terrain: 5 tabs (Accueil USSD + Tableau de bord KPIs + Planteurs + Inscrire + Chercher), profil planteur avec 6 fiches fonctionnelles (ICI modal, SSRTE modal, REDD tracking, Parcelles, Photos, Inscription)
+  - Farmer: 5 tabs (Accueil USSD avec Score Carbone gauge/Stats/Menu + Tableau de bord + Parcelles + Carbone + Boutique)
+  - Accueil = menu numerote style mobile, Tableau = KPIs detailles avec objectifs/progression
 
 ## Backlog
 ### P0
