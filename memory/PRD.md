@@ -122,6 +122,9 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (5 avr) Compteur de progression "Ma Progression" dans l'onglet Plus du farmer (6 etapes: Profil, Parcelles, Recoltes, Score Carbone, Commande, Pratiques REDD)
 - (5 avr) Simplification menu Agent Terrain: 3 items seulement (Mes Planteurs, Inscrire, Pratiques Durables) — suppression items redondants (SSRTE, Parcelles, Rechercher) accessibles via profil planteur
 - (5 avr) Suppression interference cooperative: retrait de tous les liens vers /cooperative/* du dashboard Agent Terrain
+- (5 avr) Bouton sync compact: integre dans la carte profil agent (ne masque plus le menu sur mobile)
+- (5 avr) Photos Geolocalisees: panel photo avec capture camera, GPS auto, sauvegarde + mode offline. Endpoint POST /api/agent/photos
+- (5 avr) Fiches pre-associees: quand l'agent selectionne un planteur, toutes les fiches sont automatiquement liees a ce planteur
   - Agent Terrain: 5 tabs (Accueil USSD + Tableau de bord KPIs + Planteurs + Inscrire + Plus), profil planteur avec 6 fiches fonctionnelles (ICI modal, SSRTE modal, REDD tracking, Parcelles, Photos, Inscription). Onglet Plus: Outils Terrain (SSRTE, Verification Parcelles, Photos, Pratiques Durables, Recherche), Mon Compte (Profil, Notifications), Deconnexion
   - Farmer: 5 tabs (Accueil USSD avec Score Carbone gauge/Stats/Menu + Tableau de bord + Parcelles + Carbone + Plus). Onglet Plus: Mes Activites (Parcelles, Recoltes, Declarer, Commandes), Marketplace & Primes (Boutique, Primes Carbone, Pratiques Durables), Mon Compte (Profil, Notifications), Deconnexion
   - Accueil = menu numerote style mobile, Tableau = KPIs detailles avec objectifs/progression
