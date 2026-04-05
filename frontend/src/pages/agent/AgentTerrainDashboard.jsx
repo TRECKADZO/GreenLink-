@@ -50,12 +50,9 @@ const HomeTab = ({ info, myFarmers, onTabChange, navigate }) => {
   const { user, logout } = useAuth();
 
   const menuItems = [
-    { num: '1', label: 'Mes Planteurs', sub: `${myFarmers.length} agriculteur(s)`, icon: Users, color: 'bg-emerald-500', action: () => onTabChange('farmers') },
-    { num: '2', label: 'Visites SSRTE', sub: 'Tableau suivi des visites', icon: ClipboardCheck, color: 'bg-cyan-500', action: () => navigate('/agent/ssrte') },
-    { num: '3', label: 'Inscrire un Planteur', sub: 'Enregistrement rapide', icon: UserPlus, color: 'bg-blue-500', action: () => onTabChange('inscriptions') },
-    { num: '4', label: 'Declaration Parcelles', sub: 'GPS et verification terrain', icon: MapPin, color: 'bg-amber-500', action: () => navigate('/cooperative/parcels/verification') },
-    { num: '5', label: 'Pratiques Durables', sub: 'Guide des 21 pratiques', icon: Leaf, color: 'bg-green-600', action: () => navigate('/guide-redd'), highlight: true },
-    { num: '6', label: 'Rechercher Planteur', sub: 'Par numero de telephone', icon: Search, color: 'bg-gray-500', action: () => onTabChange('search') },
+    { num: '1', label: 'Mes Planteurs', sub: `${myFarmers.length} agriculteur(s) — Toutes les fiches`, icon: Users, color: 'bg-emerald-500', action: () => onTabChange('farmers') },
+    { num: '2', label: 'Inscrire un Planteur', sub: 'Enregistrement rapide', icon: UserPlus, color: 'bg-blue-500', action: () => onTabChange('inscriptions') },
+    { num: '3', label: 'Pratiques Durables', sub: 'Guide des 21 pratiques', icon: Leaf, color: 'bg-green-600', action: () => navigate('/guide-redd'), highlight: true },
   ];
 
   const formatSync = () => {
@@ -212,7 +209,6 @@ const MoreTab = ({ navigate, onTabChange }) => {
       title: 'Outils Terrain',
       items: [
         { label: 'Tableau SSRTE', desc: 'Suivi des visites SSRTE', icon: ClipboardCheck, color: 'bg-cyan-500', route: '/agent/ssrte' },
-        { label: 'Verification Parcelles', desc: 'Liste et verification GPS', icon: MapPin, color: 'bg-amber-500', route: '/cooperative/parcels/verification' },
         { label: 'Photos Geolocalisees', desc: 'Capturer avec position GPS', icon: Camera, color: 'bg-pink-500', action: () => toast.info('Utilisez la camera de votre appareil puis uploadez via le formulaire parcelle') },
         { label: 'Pratiques Durables', desc: '21 pratiques REDD+', icon: Leaf, color: 'bg-emerald-500', route: '/guide-redd' },
         { label: 'Rechercher Planteur', desc: 'Par telephone', icon: Search, color: 'bg-gray-500', action: () => onTabChange('search') },
@@ -428,7 +424,7 @@ const AgentTerrainDashboard = () => {
   const handleSearch = async (e) => {
     e.preventDefault(); if (!phone.trim()) return;
     setSearching(true); setSearchResult(null);
-    try { const r = await fetch(`${API_URL}/api/agent/search?phone=${encodeURIComponent(phone.trim())}`, { headers: getAuthHeader() }); const d = await r.json(); if (d.found) { setSearchResult(d.farmer); toast.success(`Trouve: ${d.farmer.full_name}`); } else toast.error('Aucun planteur trouve'); } catch { toast.error('Erreur reseau'); }
+    try { const r = await fetch(`${API_URL}/api/agent/search?phone=${encodeURIComponent(phone.trim())}`, { headers: getAuthHeader() }); const d = await r.json(); if (d.found) { setSearchResult(d.farmer); toast.success(`Trouve: ${d.farmer.full_name}`); } else toast.error('Aucun planteur trouve'); } catch { toast.error('Recherche impossible — verifiez votre connexion'); }
     setSearching(false);
   };
   const filteredFarmers = myFarmers.filter(f => { if (!farmerSearch) return true; const s = farmerSearch.toLowerCase(); return f.full_name?.toLowerCase().includes(s) || f.phone_number?.includes(s) || f.village?.toLowerCase().includes(s); });
