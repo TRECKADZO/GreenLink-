@@ -14,6 +14,7 @@ router = APIRouter(prefix="/api/carbon-auditor", tags=["Carbon Auditor"])
 
 # Use centralized async database connection
 from database import db
+from routes.auth import get_current_user
 
 
 # ============== HELPER FUNCTIONS ==============
@@ -82,10 +83,17 @@ class AuditSubmission(BaseModel):
     recommendation: str  # approved, rejected, needs_review
     rejection_reason: Optional[str] = None
 
+# ============== AUTH HELPERS ==============
+
+async def get_admin_user(current_user: dict = Depends(get_current_user)):
+    if current_user.get('user_type') not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Acces reserve aux administrateurs")
+    return current_user
+
 # ============== ADMIN ROUTES (Gestion Auditeurs) ==============
 
 @router.post("/admin/auditors/create")
-async def create_auditor(auditor: AuditorCreate):
+async def create_auditor(auditor: AuditorCreate, admin: dict = Depends(get_admin_user)):
     """Créer un nouvel auditeur carbone (Super Admin)
     
     Supporte la création d'agents triple casquette (Carbone + SSRTE + Environnemental)
@@ -158,7 +166,7 @@ async def create_auditor(auditor: AuditorCreate):
 
 
 @router.post("/admin/auditors/{auditor_id}/add-role")
-async def add_role_to_auditor(auditor_id: str, role: str):
+async def add_role_to_auditor(auditor_id: str, role: str, admin: dict = Depends(get_admin_user)):
     """Ajouter un rôle à un auditeur existant (Super Admin)
     
     Permet de transformer un auditeur carbone en agent double casquette
@@ -200,7 +208,7 @@ async def add_role_to_auditor(auditor_id: str, role: str):
 
 
 @router.delete("/admin/auditors/{auditor_id}/remove-role/{role}")
-async def remove_role_from_auditor(auditor_id: str, role: str):
+async def remove_role_from_auditor(auditor_id: str, role: str, admin: dict = Depends(get_admin_user)):
     """Retirer un rôle à un auditeur (Super Admin)"""
     user = await db.users.find_one({"_id": ObjectId(auditor_id)})
     if not user:
@@ -234,7 +242,7 @@ async def remove_role_from_auditor(auditor_id: str, role: str):
 
 
 @router.get("/admin/auditors")
-async def list_auditors(include_dual_role: bool = True):
+async def list_auditors(include_dual_role: bool = True, admin: dict = Depends(get_admin_user)):
     """Lister tous les auditeurs carbone (Super Admin)
     
     Inclut les agents avec rôle carbon_auditor dans leurs rôles
@@ -285,7 +293,7 @@ async def list_auditors(include_dual_role: bool = True):
     }
 
 @router.get("/admin/auditors/{auditor_id}")
-async def get_auditor_details(auditor_id: str):
+async def get_auditor_details(auditor_id: str, admin: dict = Depends(get_admin_user)):
     """Détails d'un auditeur (Super Admin) - Supporte les rôles multiples"""
     # Chercher par user_type ou par rôle
     auditor = await db.users.find_one(
@@ -339,7 +347,7 @@ async def get_auditor_details(auditor_id: str):
     }
 
 @router.put("/admin/auditors/{auditor_id}")
-async def update_auditor(auditor_id: str, update: AuditorUpdate):
+async def update_auditor(auditor_id: str, update: AuditorUpdate, admin: dict = Depends(get_admin_user)):
     """Mettre à jour un auditeur (Super Admin) - Supporte les rôles multiples"""
     update_data = {k: v for k, v in update.dict().items() if v is not None}
     
@@ -372,7 +380,7 @@ async def update_auditor(auditor_id: str, update: AuditorUpdate):
     return {"message": "Auditeur mis à jour avec succès"}
 
 @router.delete("/admin/auditors/{auditor_id}")
-async def deactivate_auditor(auditor_id: str):
+async def deactivate_auditor(auditor_id: str, admin: dict = Depends(get_admin_user)):
     """Désactiver un auditeur (Super Admin)"""
     result = await db.users.update_one(
         {
@@ -393,7 +401,7 @@ async def deactivate_auditor(auditor_id: str):
 # ============== MISSIONS D'AUDIT ==============
 
 @router.post("/admin/missions/create")
-async def create_audit_mission(mission: AuditMissionCreate):
+async def create_audit_mission(mission: AuditMissionCreate, admin: dict = Depends(get_admin_user)):
     """Créer une mission d'audit (Super Admin)"""
     # Vérifier que l'auditeur existe
     auditor = await db.users.find_one({"_id": ObjectId(mission.auditor_id), "user_type": "carbon_auditor"})
@@ -428,7 +436,7 @@ async def create_audit_mission(mission: AuditMissionCreate):
     }
 
 @router.get("/admin/missions")
-async def list_missions(status: Optional[str] = None):
+async def list_missions(status: Optional[str] = None, admin: dict = Depends(get_admin_user)):
     """Lister toutes les missions d'audit (Super Admin)"""
     query = {}
     if status:
@@ -455,7 +463,7 @@ async def list_missions(status: Optional[str] = None):
 # ============== ROUTES AUDITEUR (Dashboard & Audits) ==============
 
 @router.get("/dashboard/{auditor_id}")
-async def get_auditor_dashboard(auditor_id: str):
+async def get_auditor_dashboard(auditor_id: str, current_user: dict = Depends(get_current_user)):
     """Dashboard de l'auditeur carbone"""
     # Vérifier l'auditeur
     auditor = await db.users.find_one(
@@ -560,7 +568,7 @@ def get_next_badge_info(audits_completed: int) -> dict:
         }
 
 @router.get("/missions/{auditor_id}")
-async def get_auditor_missions(auditor_id: str, status: Optional[str] = None):
+async def get_auditor_missions(auditor_id: str, status: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     """Liste des missions d'un auditeur"""
     query = {"auditor_id": auditor_id}
     if status:
@@ -584,7 +592,7 @@ async def get_auditor_missions(auditor_id: str, status: Optional[str] = None):
     }
 
 @router.get("/mission/{mission_id}/parcels")
-async def get_mission_parcels(mission_id: str):
+async def get_mission_parcels(mission_id: str, current_user: dict = Depends(get_current_user)):
     """Liste des parcelles d'une mission à auditer"""
     mission = await db.audit_missions.find_one({"_id": ObjectId(mission_id)})
     
@@ -632,7 +640,7 @@ async def get_mission_parcels(mission_id: str):
     }
 
 @router.post("/audit/submit")
-async def submit_audit(audit: AuditSubmission, auditor_id: str, mission_id: str):
+async def submit_audit(audit: AuditSubmission, auditor_id: str, mission_id: str, current_user: dict = Depends(get_current_user)):
     """Soumettre un audit de parcelle"""
     # Vérifier l'auditeur
     auditor = await db.users.find_one({"_id": ObjectId(auditor_id), "user_type": "carbon_auditor"})
@@ -804,7 +812,7 @@ def calculate_carbon_score_from_audit(audit: AuditSubmission) -> float:
     return min(round(score, 1), 10.0)
 
 @router.get("/audit/{audit_id}")
-async def get_audit_details(audit_id: str):
+async def get_audit_details(audit_id: str, current_user: dict = Depends(get_current_user)):
     """Détails d'un audit"""
     audit = await db.carbon_audits.find_one({"_id": ObjectId(audit_id)})
     
@@ -840,7 +848,7 @@ async def get_audit_details(audit_id: str):
 # ============== STATS GLOBALES ==============
 
 @router.get("/admin/stats/overview")
-async def get_audit_stats_overview():
+async def get_audit_stats_overview(admin: dict = Depends(get_admin_user)):
     """Statistiques globales des audits (Super Admin)"""
     total_auditors = await db.users.count_documents({"user_type": "carbon_auditor", "is_active": True})
     total_missions = await db.audit_missions.count_documents({})
@@ -883,7 +891,7 @@ async def get_audit_stats_overview():
 # ============== PDF REPORTS ==============
 
 @router.get("/audit/{audit_id}/pdf")
-async def get_audit_pdf_report(audit_id: str):
+async def get_audit_pdf_report(audit_id: str, current_user: dict = Depends(get_current_user)):
     """Générer le rapport PDF d'un audit"""
     from fastapi.responses import Response
     from services.pdf_service import pdf_generator
@@ -944,7 +952,7 @@ async def get_audit_pdf_report(audit_id: str):
 
 
 @router.get("/auditor/{auditor_id}/badge-certificate")
-async def get_badge_certificate(auditor_id: str):
+async def get_badge_certificate(auditor_id: str, current_user: dict = Depends(get_current_user)):
     """Générer le certificat de badge d'un auditeur"""
     from fastapi.responses import Response
     from services.pdf_service import pdf_generator
@@ -982,7 +990,7 @@ async def get_badge_certificate(auditor_id: str):
 # ============== ANALYTICS DASHBOARD ==============
 
 @router.get("/admin/analytics/badges")
-async def get_badges_analytics():
+async def get_badges_analytics(admin: dict = Depends(get_admin_user)):
     """Dashboard Analytics des badges auditeurs"""
     
     # Badge distribution

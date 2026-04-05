@@ -503,7 +503,7 @@ async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
 # ============= CARBON AUDIT ENDPOINTS =============
 
 @router.get("/{coop_id}/parcels-for-audit")
-async def get_parcels_for_audit(coop_id: str):
+async def get_parcels_for_audit(coop_id: str, current_user: dict = Depends(get_current_user)):
     """Get all parcels of a cooperative for carbon audit"""
     try:
         members = await db.coop_members.find({"cooperative_id": coop_id}).to_list(length=500)

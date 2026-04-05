@@ -10,6 +10,7 @@ from datetime import datetime
 
 from database import db
 from services.websocket_manager import manager, WebSocketMessageTypes, send_alert_notification, send_stats_update
+from routes.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -231,14 +232,14 @@ async def get_recent_alerts(limit: int = 10) -> list:
 # ============= API REST pour déclencher les notifications =============
 
 @router.post("/api/ws/notify-alert")
-async def notify_alert_via_ws(alert_data: dict):
+async def notify_alert_via_ws(alert_data: dict, current_user: dict = Depends(get_current_user)):
     """API interne pour notifier une nouvelle alerte via WebSocket"""
     await send_alert_notification(alert_data)
     return {"status": "notified", "connections": manager.get_connection_count()}
 
 
 @router.post("/api/ws/broadcast-stats")
-async def broadcast_stats_via_ws():
+async def broadcast_stats_via_ws(current_user: dict = Depends(get_current_user)):
     """API interne pour diffuser les stats via WebSocket"""
     stats = await get_realtime_stats()
     await send_stats_update(stats)
@@ -246,6 +247,6 @@ async def broadcast_stats_via_ws():
 
 
 @router.get("/api/ws/connections")
-async def get_ws_connections():
+async def get_ws_connections(current_user: dict = Depends(get_current_user)):
     """Obtenir l'état des connexions WebSocket"""
     return manager.get_connection_count()

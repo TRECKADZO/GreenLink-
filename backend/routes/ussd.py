@@ -10,9 +10,10 @@ Flux:
 5. Parcelles, Conseils, Profil, Aide
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel
 from typing import Optional
+from routes.auth import get_current_user
 from datetime import datetime, timezone
 from bson import ObjectId
 from pymongo import ReturnDocument
@@ -2312,7 +2313,7 @@ async def handle_incoming_sms(request: SMSRequest):
 # ============= ADMIN STATS =============
 
 @router.get("/stats")
-async def get_ussd_stats():
+async def get_ussd_stats(current_user: dict = Depends(get_current_user)):
     try:
         from datetime import timedelta
         today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -2335,7 +2336,7 @@ async def get_ussd_stats():
 # ============= REGISTRATION ENDPOINTS =============
 
 @router.get("/registrations")
-async def get_ussd_registrations(limit: int = 50, skip: int = 0, agent_id: str = None):
+async def get_ussd_registrations(limit: int = 50, skip: int = 0, agent_id: str = None, current_user: dict = Depends(get_current_user)):
     """Get USSD registrations. If agent_id is provided, filter by that agent only."""
     try:
         query = {}
@@ -2480,7 +2481,7 @@ async def test_ussd(phone: str = Query(..., description="Phone number to test"))
 # SSRTE API - Consultation des reponses
 # ==============================
 @router.get("/ssrte/responses")
-async def get_ssrte_responses(coop_id: str = Query(None), statut: str = Query(None)):
+async def get_ssrte_responses(coop_id: str = Query(None), statut: str = Query(None), current_user: dict = Depends(get_current_user)):
     """Consulter les reponses SSRTE des agriculteurs."""
     query = {}
     if coop_id:
@@ -2500,7 +2501,7 @@ async def get_ssrte_responses(coop_id: str = Query(None), statut: str = Query(No
 
 
 @router.get("/ssrte/alerts")
-async def get_ssrte_alerts():
+async def get_ssrte_alerts(current_user: dict = Depends(get_current_user)):
     """Consulter les alertes SSRTE (enfants non scolarises)."""
     alerts = await db.ssrte_responses.find(
         {"statut": "alerte_ici"}, {"_id": 0}

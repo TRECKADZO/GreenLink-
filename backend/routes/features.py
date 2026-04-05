@@ -1,10 +1,16 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 import os
 from database import db
 from models import Feature, FeatureInDB
+from routes.auth import get_current_user
 
 router = APIRouter(prefix="/api/features", tags=["features"])
+
+async def get_admin_user(current_user: dict = Depends(get_current_user)):
+    if current_user.get('user_type') not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Acces reserve aux administrateurs")
+    return current_user
 
 @router.get("", response_model=List[FeatureInDB])
 async def get_features():
@@ -12,7 +18,7 @@ async def get_features():
     return [{**feature, "_id": str(feature["_id"])} for feature in features]
 
 @router.post("", response_model=FeatureInDB)
-async def create_feature(feature: Feature):
+async def create_feature(feature: Feature, admin: dict = Depends(get_admin_user)):
     feature_dict = feature.dict()
     result = await db.features.insert_one(feature_dict)
     feature_dict["_id"] = str(result.inserted_id)
@@ -28,7 +34,7 @@ async def get_feature(feature_id: str):
     return feature
 
 @router.put("/{feature_id}", response_model=FeatureInDB)
-async def update_feature(feature_id: str, feature: Feature):
+async def update_feature(feature_id: str, feature: Feature, admin: dict = Depends(get_admin_user)):
     from bson import ObjectId
     result = await db.features.update_one(
         {"_id": ObjectId(feature_id)},
@@ -41,7 +47,7 @@ async def update_feature(feature_id: str, feature: Feature):
     return updated_feature
 
 @router.delete("/{feature_id}")
-async def delete_feature(feature_id: str):
+async def delete_feature(feature_id: str, admin: dict = Depends(get_admin_user)):
     from bson import ObjectId
     result = await db.features.delete_one({"_id": ObjectId(feature_id)})
     if result.deleted_count == 0:

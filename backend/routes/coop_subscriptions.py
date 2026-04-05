@@ -190,7 +190,7 @@ async def cancel_coop_subscription(current_user: dict = Depends(get_current_user
 # ============= Trial notifications check (cron-style) =============
 
 @router.post("/check-trial-notifications")
-async def check_trial_notifications():
+async def check_trial_notifications(current_user: dict = Depends(get_current_user)):
     """Check and send trial expiration notifications (call from cron/scheduler)"""
     now = datetime.utcnow()
     notifications_sent = 0

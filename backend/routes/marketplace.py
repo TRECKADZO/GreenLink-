@@ -1333,7 +1333,7 @@ async def get_price_history(product_id: str):
 # ============= SEED DEMO DATA =============
 
 @router.post("/seed-demo-products")
-async def seed_demo_products():
+async def seed_demo_products(current_user: dict = Depends(get_current_user)):
     """Seed the marketplace with demo products for testing"""
     existing = await db.products.count_documents({"is_demo": True})
     if existing > 0:

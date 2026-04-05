@@ -1,13 +1,14 @@
 # SMS OTP Routes
 # Real SMS integration with Orange Côte d'Ivoire API
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timedelta
 import random
 import string
 from services.orange_sms import orange_sms
+from routes.auth import get_current_user
 
 router = APIRouter(prefix="/api/sms", tags=["SMS"])
 
@@ -133,7 +134,7 @@ async def verify_otp(request: VerifyOTPRequest):
     }
 
 @router.post("/send")
-async def send_sms(request: SendSMSRequest):
+async def send_sms(request: SendSMSRequest, current_user: dict = Depends(get_current_user)):
     """
     Envoie un SMS personnalisé (admin only)
     """

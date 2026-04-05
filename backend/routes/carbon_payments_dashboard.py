@@ -489,7 +489,7 @@ class MaPrimeRequest(BaseModel):
 
 
 @router.post("/ma-prime")
-async def calculer_ma_prime(data: MaPrimeRequest):
+async def calculer_ma_prime(data: MaPrimeRequest, current_user: dict = Depends(get_current_user)):
     """
     Calculateur de prime carbone pour le planteur.
     14 questions alignées avec le USSD *144*99# détaillé (3 tailles d'arbres)

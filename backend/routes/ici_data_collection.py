@@ -503,7 +503,7 @@ async def get_farmer_history(
 
 
 @router.get("/farmers/{farmer_id}/family-data")
-async def get_farmer_family_data(farmer_id: str, request: Request):
+async def get_farmer_family_data(farmer_id: str, request: Request, current_user: dict = Depends(get_admin_or_coop_user)):
     """Retourne les donnees familiales connues d'un planteur (ICI + SSRTE) pour pre-remplissage."""
     result = {
         "farmer_id": farmer_id,
