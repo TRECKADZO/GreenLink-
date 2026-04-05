@@ -419,6 +419,24 @@ async def get_my_assigned_farmers(
     photo_agg = await db.geotagged_photos.aggregate(photo_pipeline).to_list(500)
     photo_map = {p["_id"]: p["count"] for p in photo_agg}
 
+    # Also check agent_photos collection
+    agent_photo_pipeline = [
+        {"$match": {"farmer_id": {"$in": all_possible_ids}}},
+        {"$group": {"_id": "$farmer_id", "count": {"$sum": "$photo_count"}}}
+    ]
+    agent_photo_agg = await db.agent_photos.aggregate(agent_photo_pipeline).to_list(500)
+    for ap in agent_photo_agg:
+        fid = ap["_id"]
+        photo_map[fid] = photo_map.get(fid, 0) + ap["count"]
+
+    # Check REDD visits
+    redd_pipeline = [
+        {"$match": {"farmer_id": {"$in": all_possible_ids}}},
+        {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}}}
+    ]
+    redd_agg = await db.redd_visits.aggregate(redd_pipeline).to_list(500)
+    redd_map = {r["_id"]: r["count"] for r in redd_agg}
+
     parcel_pipeline = [
         {"$match": {"$or": [
             {"farmer_id": {"$in": all_possible_ids}},
@@ -449,13 +467,15 @@ async def get_my_assigned_farmers(
         ssrte_done = ssrte_info.get("count", 0) > 0
         parcels_done = parcels_count > 0
         photos_done = photo_map.get(member_id, 0) > 0 or photo_map.get(farmer_uid, 0) > 0
+        redd_done = redd_map.get(member_id, 0) > 0 or redd_map.get(farmer_uid, 0) > 0
         registered = m.get("status") == "active" or m.get("is_active", False)
 
         forms_status = {
             "ici": {"completed": ici_done, "label": "Visite ICI"},
             "ssrte": {"completed": ssrte_done, "label": "Visite SSRTE", "count": ssrte_info.get("count", 0)},
+            "redd": {"completed": redd_done, "label": "Fiche Environnementale", "count": redd_map.get(member_id, 0) or redd_map.get(farmer_uid, 0)},
             "parcels": {"completed": parcels_done, "label": "Parcelles", "count": parcels_count},
-            "photos": {"completed": photos_done, "label": "Photos", "count": photo_map.get(member_id, 0)},
+            "photos": {"completed": photos_done, "label": "Photos", "count": photo_map.get(member_id, 0) or photo_map.get(farmer_uid, 0)},
             "register": {"completed": registered, "label": "Enregistrement"},
         }
         completed_count = sum(1 for f in forms_status.values() if f["completed"])

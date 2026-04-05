@@ -352,12 +352,12 @@ const AgentRegistrationForm = () => {
       <form onSubmit={handleSubmit} className="space-y-3" data-testid="agent-reg-form">
         <Input placeholder="Nom complet *" value={form.nom_complet} onChange={e => handleChange('nom_complet', e.target.value)} className="h-12 text-base rounded-xl" data-testid="agent-reg-name" />
         <Input placeholder="Telephone *" value={form.telephone} onChange={e => handleChange('telephone', e.target.value)} className="h-12 text-base rounded-xl" data-testid="agent-reg-phone" />
-        <Input placeholder="Code cooperative" value={form.cooperative_code} onChange={e => handleChange('cooperative_code', e.target.value)} className="h-12 text-base rounded-xl" />
         <Input placeholder="Village" value={form.village} onChange={e => handleChange('village', e.target.value)} className="h-12 text-base rounded-xl" />
         <div className="grid grid-cols-2 gap-3">
           <Input placeholder="PIN 4 chiffres *" type="password" maxLength={4} value={form.pin} onChange={e => handleChange('pin', e.target.value.replace(/\D/g, '').slice(0, 4))} className="h-12 text-base rounded-xl" data-testid="agent-reg-pin" />
           <Input placeholder="Hectares" type="number" step="0.5" value={form.hectares} onChange={e => handleChange('hectares', e.target.value)} className="h-12 text-base rounded-xl" />
         </div>
+        <p className="text-[10px] text-gray-400 px-1">L'agriculteur sera automatiquement inscrit dans votre cooperative</p>
         <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-base font-semibold rounded-xl" data-testid="agent-reg-submit">
           {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Inscription...</> : <><UserPlus className="w-4 h-4 mr-2" />{isOnline ? 'Inscrire' : 'Sauvegarder (hors-ligne)'}</>}
         </Button>
