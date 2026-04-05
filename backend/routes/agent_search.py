@@ -710,6 +710,33 @@ async def upload_offline_actions(
                             "synced_from_offline": True
                         }
                         await db.ussd_registrations.insert_one(reg_doc)
+
+                        # Also create coop_member and assign to agent
+                        try:
+                            agent_record = await db.coop_agents.find_one({"user_id": agent_id})
+                            coop_id = agent_record.get("coop_id", "") if agent_record else ""
+                            member_doc = {
+                                "coop_id": coop_id,
+                                "full_name": nom,
+                                "phone_number": telephone,
+                                "village": village,
+                                "status": "active",
+                                "is_active": True,
+                                "pin_hash": pin_hash,
+                                "hectares_approx": float(data["hectares"]) if data.get("hectares") else None,
+                                "created_at": datetime.now(timezone.utc),
+                                "created_by": agent_id,
+                                "registered_via": "agent_offline",
+                            }
+                            member_result = await db.coop_members.insert_one(member_doc)
+                            member_id = str(member_result.inserted_id)
+                            if agent_record:
+                                await db.coop_agents.update_one(
+                                    {"_id": agent_record["_id"]},
+                                    {"$addToSet": {"assigned_farmers": member_id}}
+                                )
+                        except Exception as e:
+                            logger.error(f"Sync register_farmer coop_member error: {e}")
             elif action_type == "redd_visit":
                 # Visite REDD+ depuis le mode offline
                 redd_doc = {

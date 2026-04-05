@@ -1,0 +1,67 @@
+{
+  "summary": "Iteration 99 - Critical Bug Fix Verified: Farmers registered by agents now appear in my-farmers. All 8 backend tests PASSED. All frontend UI tests PASSED. The fix correctly creates coop_member AND adds to agent's assigned_farmers list for both online (register-web) and offline (sync/upload) registration flows.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration_99_farmer_registration.py",
+    "/app/test_reports/iteration_99.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "register-web endpoint (ussd.py lines 2357-2460) correctly creates coop_member and adds to agent's assigned_farmers when agent_id is provided",
+    "sync/upload register_farmer handler (agent_search.py lines 684-739) correctly creates coop_member and adds to agent's assigned_farmers",
+    "my-farmers endpoint (field_agent_dashboard.py lines 369-500) correctly returns farmers from agent's assigned_farmers list",
+    "Frontend AgentRegistrationForm (AgentTerrainDashboard.jsx line 308) correctly sends agent_id with registration request"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration_99_farmer_registration.py"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "100% (all UI flows verified)"
+  },
+  "test_credentials": {
+    "field_agent": "testagent@test.ci / test123456",
+    "agent_id": "69d26d0a74d244372789cc81"
+  },
+  "seed_data_creation": "Test farmers created during testing: TEST_Planteur_TORU, TEST_Planteur_ACIP, TEST_FrontendPlanteur_7834 (all assigned to test agent)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The critical bug fix is verified working. Test agent now has 5 assigned farmers. When registering farmers via agent (online or offline), they are correctly added to coop_members AND the agent's assigned_farmers list, making them visible in the Planteurs tab.",
+  "features_tested": {
+    "backend": [
+      "POST /api/ussd/register-web with agent_id - creates ussd_registration - PASSED",
+      "POST /api/ussd/register-web with agent_id - creates coop_member - PASSED",
+      "POST /api/ussd/register-web with agent_id - returns member_id - PASSED",
+      "POST /api/ussd/register-web - duplicate phone returns 409 - PASSED",
+      "POST /api/agent/sync/upload register_farmer - creates ussd_registration - PASSED",
+      "POST /api/agent/sync/upload register_farmer - creates coop_member - PASSED",
+      "POST /api/agent/sync/upload register_farmer - adds to assigned_farmers - PASSED",
+      "GET /api/field-agent/my-farmers - returns assigned farmers - PASSED",
+      "GET /api/field-agent/my-farmers - requires authentication - PASSED"
+    ],
+    "frontend": [
+      "Agent login - PASSED",
+      "Inscrire tab - registration form visible - PASSED",
+      "Inscrire tab - form submission works - PASSED",
+      "Inscrire tab - success message shown - PASSED",
+      "Planteurs tab - shows farmer list - PASSED",
+      "Planteurs tab - newly registered farmer appears - PASSED",
+      "Home tab - shows correct farmer count (5) - PASSED",
+      "Plus tab - navigation works - PASSED",
+      "5-tab navigation (Accueil, Tableau, Planteurs, Inscrire, Plus) - PASSED"
+    ]
+  },
+  "bug_fix_verification": {
+    "original_bug": "When an agent registers a farmer, the farmer was created in ussd_registrations but NOT in coop_members, and NOT added to the agent's assigned_farmers list",
+    "fix_applied": "register-web now creates coop_member + assigns to agent. Sync handler register_farmer also creates coop_member + assigns to agent",
+    "verification_result": "PASSED - Farmers registered by agents now correctly appear in my-farmers list"
+  }
+}

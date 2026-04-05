@@ -2359,6 +2359,7 @@ async def register_farmer_web(data: dict):
     """
     Web/App registration form endpoint.
     Code planteur auto-generated. Optional: cooperative_code (rattachement coop), hectares, email.
+    If agent_id is provided, also creates coop_member and assigns to the agent.
     """
     try:
         nom = data.get("nom_complet", "").strip()
@@ -2404,10 +2405,49 @@ async def register_farmer_web(data: dict):
         
         result = await db.ussd_registrations.insert_one(reg_doc)
         
+        member_id = None
+        # If registered by an agent, also create coop_member and assign to agent
+        if agent_id:
+            try:
+                agent_record = await db.coop_agents.find_one({"user_id": agent_id})
+                if not agent_record:
+                    agent_record = await db.coop_agents.find_one({"user_id": str(agent_id)})
+                
+                coop_id = agent_record.get("coop_id", "") if agent_record else ""
+                
+                # Create coop_member
+                member_doc = {
+                    "coop_id": coop_id,
+                    "full_name": nom,
+                    "phone_number": telephone,
+                    "village": village,
+                    "status": "active",
+                    "is_active": True,
+                    "code_planteur": farmer_code,
+                    "pin_hash": hash_pin(pin),
+                    "hectares_approx": float(hectares) if hectares else None,
+                    "created_at": datetime.now(timezone.utc),
+                    "created_by": agent_id,
+                    "registered_via": "agent",
+                }
+                member_result = await db.coop_members.insert_one(member_doc)
+                member_id = str(member_result.inserted_id)
+                
+                # Add to agent's assigned_farmers
+                if agent_record:
+                    await db.coop_agents.update_one(
+                        {"_id": agent_record["_id"]},
+                        {"$addToSet": {"assigned_farmers": member_id}}
+                    )
+                logger.info(f"Farmer {nom} created as coop_member {member_id} and assigned to agent {agent_id}")
+            except Exception as e:
+                logger.error(f"Error creating coop_member for agent registration: {e}")
+        
         return {
             "success": True,
             "message": "Inscription reussie !",
             "farmer_id": str(result.inserted_id),
+            "member_id": member_id,
             "code_planteur": farmer_code,
             "nom": nom,
             "telephone": telephone,

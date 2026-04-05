@@ -261,6 +261,8 @@ const MoreTab = ({ navigate, onTabChange }) => {
 // ========= INSCRIPTION =========
 const AgentRegistrationForm = () => {
   const { isOnline, queueAction } = useOffline();
+  const { user } = useAuth();
+  const agentId = user?.id || user?._id || '';
   const [form, setForm] = useState({ nom_complet: '', telephone: '', cooperative_code: '', village: '', pin: '', hectares: '' });
   const [submitting, setSubmitting] = useState(false);
   const [recentRegs, setRecentRegs] = useState([]);
@@ -303,7 +305,7 @@ const AgentRegistrationForm = () => {
         const r = await fetch(`${API_URL}/api/ussd/register-web`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-          body: JSON.stringify(form)
+          body: JSON.stringify({ ...form, agent_id: agentId })
         });
         const d = await r.json();
         if (r.ok) {
