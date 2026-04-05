@@ -222,7 +222,7 @@ const REDDTrackingPage = () => {
             suivi_requis: suiviRequis,
           },
         });
-        alert('Connexion perdue. Fiche REDD sauvegardee hors-ligne.');
+        alert('Fiche REDD sauvegardee hors-ligne. La synchronisation sera automatique au retour du reseau.');
         resetForm();
       } catch {
         alert('Erreur: impossible de sauvegarder');
