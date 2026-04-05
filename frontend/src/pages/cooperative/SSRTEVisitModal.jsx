@@ -18,6 +18,7 @@ import { Switch } from '../../components/ui/switch';
 import { Textarea } from '../../components/ui/textarea';
 import { Checkbox } from '../../components/ui/checkbox';
 import { toast } from 'sonner';
+import { useOffline } from '../../context/OfflineContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -58,6 +59,7 @@ const CONDITIONS_VIE = [
 ];
 
 const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
+  const { isOnline, queueAction } = useOffline();
   const [saving, setSaving] = useState(false);
   // Menage
   const [tailleMenage, setTailleMenage] = useState(0);
@@ -147,23 +149,57 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
         observations: observations || null,
       };
 
-      const res = await fetch(`${API_URL}/api/ici-data/ssrte/visit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(visitData),
-      });
+      if (isOnline) {
+        const res = await fetch(`${API_URL}/api/ici-data/ssrte/visit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(visitData),
+        });
 
-      if (res.ok) {
-        toast.success('Visite SSRTE enregistree');
+        if (res.ok) {
+          toast.success('Visite SSRTE enregistree');
+          resetForm();
+          onSaved?.();
+          onOpenChange(false);
+        } else {
+          const data = await res.json();
+          toast.error(data.detail || 'Erreur lors de la sauvegarde');
+        }
+      } else {
+        await queueAction({
+          action_type: 'ssrte_visit',
+          farmer_id: farmer.id,
+          data: visitData,
+        });
+        toast.success('Visite SSRTE sauvegardee hors-ligne (sync auto au retour en ligne)');
         resetForm();
         onSaved?.();
         onOpenChange(false);
-      } else {
-        const data = await res.json();
-        toast.error(data.detail || 'Erreur lors de la sauvegarde');
       }
-    } catch {
-      toast.error('Erreur reseau');
+    } catch (err) {
+      // Network error even though we thought online — queue offline
+      try {
+        await queueAction({
+          action_type: 'ssrte_visit',
+          farmer_id: farmer.id,
+          data: {
+            farmer_id: farmer.id,
+            date_visite: new Date().toISOString(),
+            taille_menage: tailleMenage,
+            nombre_enfants: nombreEnfants,
+            niveau_risque: riskLevel,
+            enfants_observes_travaillant: enfantsObserves,
+            taches_dangereuses_observees: selectedTasks,
+            observations: observations || null,
+          },
+        });
+        toast.success('Visite SSRTE sauvegardee hors-ligne (sync auto)');
+        resetForm();
+        onSaved?.();
+        onOpenChange(false);
+      } catch {
+        toast.error('Erreur: impossible de sauvegarder');
+      }
     } finally {
       setSaving(false);
     }

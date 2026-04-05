@@ -171,4 +171,27 @@ export const offlineCooperativeApi = {
     }
     return cooperativeApi.getMembers({ search: query });
   },
+
+  // Pass-through: ICI Profile (Agent Terrain fiches)
+  getICIProfile: cooperativeApi.getICIProfile,
+  updateICIProfile: cooperativeApi.updateICIProfile,
+
+  // Pass-through: Field Agents management
+  getAgents: cooperativeApi.getAgents,
+  createAgent: cooperativeApi.createAgent,
+  getAssignedFarmers: cooperativeApi.getAssignedFarmers,
+  assignFarmers: cooperativeApi.assignFarmers,
+  unassignFarmers: cooperativeApi.unassignFarmers,
+
+  // Pass-through: Reports & Downloads
+  getEUDRReport: cooperativeApi.getEUDRReport,
+  downloadEUDRPdf: cooperativeApi.downloadEUDRPdf,
+  downloadCarbonPdf: cooperativeApi.downloadCarbonPdf,
+  downloadDistributionPdf: cooperativeApi.downloadDistributionPdf,
+  downloadMemberReceipt: cooperativeApi.downloadMemberReceipt,
+
+  // Pass-through: Analytics
+  getAgentsProgress: cooperativeApi.getAgentsProgress,
+  getVillageStats: cooperativeApi.getVillageStats,
+  getAuditSelection: cooperativeApi.getAuditSelection,
 };

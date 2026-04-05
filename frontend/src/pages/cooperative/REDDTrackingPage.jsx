@@ -4,6 +4,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import Navbar from '../../components/Navbar';
 import { ArrowLeft, Leaf, Check, X, Minus, Save, BarChart3, Users } from 'lucide-react';
+import { useOffline } from '../../context/OfflineContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -73,6 +74,7 @@ const REDD_CATEGORIES = [
 
 const REDDTrackingPage = () => {
   const navigate = useNavigate();
+  const { isOnline, queueAction } = useOffline();
   const [searchParams] = useSearchParams();
   const paramFarmerName = searchParams.get('farmer') || '';
   const paramFarmerPhone = searchParams.get('phone') || '';
@@ -167,33 +169,64 @@ const REDDTrackingPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/redd/tracking/visit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          farmer_id: farmerId || `web_${Date.now()}`,
-          farmer_name: farmerName,
-          farmer_phone: farmerPhone,
-          practices_verified,
-          superficie_verifiee: parseFloat(superficie) || 0,
-          arbres_comptes: parseInt(arbres) || 0,
-          observations,
-          recommandations,
-          suivi_requis: suiviRequis,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert(`Fiche enregistree ! Score environnemental: ${data.redd_score}/10 (${data.redd_level})`);
-        resetForm();
+      const visitPayload = {
+        farmer_id: farmerId || `web_${Date.now()}`,
+        farmer_name: farmerName,
+        farmer_phone: farmerPhone,
+        practices_verified,
+        superficie_verifiee: parseFloat(superficie) || 0,
+        arbres_comptes: parseInt(arbres) || 0,
+        observations,
+        recommandations,
+        suivi_requis: suiviRequis,
+      };
+
+      if (isOnline) {
+        const res = await fetch(`${API_URL}/api/redd/tracking/visit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(visitPayload),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`Fiche enregistree ! Score environnemental: ${data.redd_score}/10 (${data.redd_level})`);
+          resetForm();
+        } else {
+          alert(data.detail || 'Erreur lors de l\'enregistrement');
+        }
       } else {
-        alert(data.detail || 'Erreur lors de l\'enregistrement');
+        await queueAction({
+          action_type: 'redd_visit',
+          farmer_id: visitPayload.farmer_id,
+          data: visitPayload,
+        });
+        alert('Fiche REDD sauvegardee hors-ligne. Synchronisation automatique au retour en ligne.');
+        resetForm();
       }
     } catch (e) {
-      alert('Erreur de connexion');
+      try {
+        await queueAction({
+          action_type: 'redd_visit',
+          farmer_id: farmerId || `web_${Date.now()}`,
+          data: {
+            farmer_name: farmerName,
+            farmer_phone: farmerPhone,
+            practices_verified,
+            superficie_verifiee: parseFloat(superficie) || 0,
+            arbres_comptes: parseInt(arbres) || 0,
+            observations,
+            recommandations,
+            suivi_requis: suiviRequis,
+          },
+        });
+        alert('Connexion perdue. Fiche REDD sauvegardee hors-ligne.');
+        resetForm();
+      } catch {
+        alert('Erreur: impossible de sauvegarder');
+      }
     } finally {
       setLoading(false);
     }

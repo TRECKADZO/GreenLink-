@@ -710,6 +710,24 @@ async def upload_offline_actions(
                             "synced_from_offline": True
                         }
                         await db.ussd_registrations.insert_one(reg_doc)
+            elif action_type == "redd_visit":
+                # Visite REDD+ depuis le mode offline
+                redd_doc = {
+                    "farmer_id": data.get("farmer_id", ""),
+                    "farmer_name": data.get("farmer_name", ""),
+                    "farmer_phone": data.get("farmer_phone", ""),
+                    "practices_verified": data.get("practices_verified", []),
+                    "superficie_verifiee": data.get("superficie_verifiee", 0),
+                    "arbres_comptes": data.get("arbres_comptes", 0),
+                    "observations": data.get("observations", ""),
+                    "recommandations": data.get("recommandations", ""),
+                    "suivi_requis": data.get("suivi_requis", False),
+                    "agent_id": agent_id,
+                    "visit_date": datetime.fromisoformat(action.get("timestamp", datetime.now(timezone.utc).isoformat())),
+                    "created_at": datetime.now(timezone.utc),
+                    "synced_from_offline": True
+                }
+                await db.redd_visits.insert_one(redd_doc)
 
             await db.sync_log.insert_one({
                 "offline_id": offline_id,

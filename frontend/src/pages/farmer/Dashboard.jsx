@@ -240,8 +240,21 @@ const FarmerDashboardTab = ({ stats, smsHistory, onSendSummary, sendingSummary, 
 };
 
 // ========= ONGLET PLUS =========
-const FarmerMoreTab = ({ navigate }) => {
+const FarmerMoreTab = ({ navigate, stats }) => {
   const { logout } = useAuth();
+
+  // Progression badge calculation
+  const progressItems = [
+    { label: 'Profil', done: true },
+    { label: 'Parcelles', done: (stats?.total_parcels || 0) > 0 },
+    { label: 'Recoltes', done: (stats?.total_harvests || 0) > 0 },
+    { label: 'Score Carbone', done: (stats?.carbon_score || 0) > 0 },
+    { label: 'Commande', done: (stats?.total_orders || 0) > 0 },
+    { label: 'Pratiques REDD', done: (stats?.redd_evaluated || 0) > 0 },
+  ];
+  const doneCount = progressItems.filter(i => i.done).length;
+  const totalCount = progressItems.length;
+  const progressPct = Math.round((doneCount / totalCount) * 100);
 
   const sections = [
     {
@@ -273,6 +286,32 @@ const FarmerMoreTab = ({ navigate }) => {
   return (
     <div className="p-4 space-y-5" data-testid="farmer-more-tab">
       <h2 className="text-base font-bold text-gray-800">Plus</h2>
+
+      {/* Progression Badge */}
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4" data-testid="farmer-progress-badge">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Star className="w-5 h-5 text-emerald-600" />
+            <span className="text-sm font-bold text-emerald-800">Ma Progression</span>
+          </div>
+          <span className="text-lg font-black text-emerald-700">{progressPct}%</span>
+        </div>
+        <div className="w-full bg-emerald-200 rounded-full h-2.5 mb-3">
+          <div className="bg-emerald-600 h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {progressItems.map((item) => (
+            <span key={item.label}
+              className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                item.done ? 'bg-emerald-500 text-white' : 'bg-white text-gray-400 border border-gray-200'
+              }`}>
+              {item.done ? <CheckCircle2 className="w-3 h-3" /> : <span className="w-3 h-3 rounded-full border border-gray-300 inline-block" />}
+              {item.label}
+            </span>
+          ))}
+        </div>
+        <p className="text-[10px] text-emerald-600 mt-2">{doneCount}/{totalCount} etapes completees</p>
+      </div>
 
       {sections.map((section) => (
         <div key={section.title}>
@@ -387,7 +426,7 @@ const FarmerDashboard = () => {
       )}
 
       {activeTab === 'more' && (
-        <FarmerMoreTab navigate={navigate} />
+        <FarmerMoreTab navigate={navigate} stats={stats} />
       )}
     </MobileAppShell>
   );
