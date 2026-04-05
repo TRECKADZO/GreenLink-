@@ -50,6 +50,75 @@ export const OfflineProvider = ({ children }) => {
   const [userType, setUserType] = useState(null);
   const syncInProgress = useRef(false);
   const pingInterval = useRef(null);
+  const retryTimer = useRef(null);
+  const retryCount = useRef(0);
+  const isOnlineRef = useRef(navigator.onLine);
+  const pendingCountRef = useRef(0);
+
+  // Keep refs in sync with state for use in callbacks
+  useEffect(() => { isOnlineRef.current = isOnline; }, [isOnline]);
+  useEffect(() => { pendingCountRef.current = pendingCount; }, [pendingCount]);
+
+  // Core sync function — uses refs to avoid stale closures
+  const doSync = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token || syncInProgress.current || !isOnlineRef.current) return;
+
+    syncInProgress.current = true;
+    setSyncing(true);
+    setSyncError(null);
+
+    try {
+      // 1. Upload pending actions
+      await uploadPendingActions(API_URL, token);
+
+      // 2. Download fresh data based on user type
+      const storedUser = localStorage.getItem('user');
+      const ut = storedUser ? JSON.parse(storedUser).user_type : null;
+
+      if (ut === 'field_agent') {
+        const result = await performFullSync(API_URL, token);
+        setCachedFarmers(result.farmersCount);
+        setLastSync(result.syncTimestamp);
+      }
+
+      if (ut === 'cooperative') {
+        const result = await syncCooperativeData(API_URL, token);
+        setCachedMembers(result.membersCount);
+        setLastSync(result.syncTimestamp);
+      }
+
+      const remaining = await getPendingActionsCount();
+      setPendingCount(remaining);
+      retryCount.current = 0; // Reset retry on success
+      if (retryTimer.current) { clearTimeout(retryTimer.current); retryTimer.current = null; }
+    } catch (err) {
+      console.error('[OfflineSync] Error:', err);
+      setSyncError(err.message);
+      // Schedule retry with exponential backoff (max 60s)
+      scheduleRetry();
+    } finally {
+      setSyncing(false);
+      syncInProgress.current = false;
+    }
+  }, []);
+
+  const scheduleRetry = useCallback(() => {
+    if (retryTimer.current) clearTimeout(retryTimer.current);
+    const delay = Math.min(5000 * Math.pow(2, retryCount.current), 60000);
+    retryCount.current += 1;
+    retryTimer.current = setTimeout(() => {
+      if (isOnlineRef.current && pendingCountRef.current > 0) {
+        doSync();
+      }
+    }, delay);
+  }, [doSync]);
+
+  // Public syncAll — wraps doSync
+  const syncAll = useCallback(async () => {
+    retryCount.current = 0;
+    await doSync();
+  }, [doSync]);
 
   // Detect online/offline + real ping
   useEffect(() => {
@@ -85,7 +154,8 @@ export const OfflineProvider = ({ children }) => {
     (async () => {
       try {
         setLastSync(await getLastSyncTime());
-        setPendingCount(await getPendingActionsCount());
+        const count = await getPendingActionsCount();
+        setPendingCount(count);
         setCachedFarmers(await getFarmersCount());
         setCachedMembers(await getCoopMembersCount());
       } catch { /* IndexedDB may not be ready */ }
@@ -100,64 +170,41 @@ export const OfflineProvider = ({ children }) => {
     } catch { /* ignore */ }
   }, []);
 
-  // Auto-sync when coming back online
+  // Auto-sync: triggers when isOnline changes OR pendingCount increases
   useEffect(() => {
     if (isOnline && pendingCount > 0 && !syncInProgress.current) {
-      syncAll();
+      doSync();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline]);
+  }, [isOnline, pendingCount, doSync]);
 
-  const getToken = () => localStorage.getItem('token');
-
-  const syncAll = useCallback(async () => {
-    const token = getToken();
-    if (!token || syncInProgress.current || !isOnline) return;
-
-    syncInProgress.current = true;
-    setSyncing(true);
-    setSyncError(null);
-
-    try {
-      // 1. Upload pending actions
-      await uploadPendingActions(API_URL, token);
-
-      // 2. Download fresh data based on user type
-      const storedUser = localStorage.getItem('user');
-      const ut = storedUser ? JSON.parse(storedUser).user_type : null;
-
-      if (ut === 'field_agent') {
-        const result = await performFullSync(API_URL, token);
-        setCachedFarmers(result.farmersCount);
-        setLastSync(result.syncTimestamp);
+  // Also sync when user returns to the tab (handles background/foreground transitions)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && isOnlineRef.current && pendingCountRef.current > 0 && !syncInProgress.current) {
+        doSync();
       }
-
-      if (ut === 'cooperative') {
-        const result = await syncCooperativeData(API_URL, token);
-        setCachedMembers(result.membersCount);
-        setLastSync(result.syncTimestamp);
-      }
-
-      setPendingCount(await getPendingActionsCount());
-    } catch (err) {
-      console.error('[OfflineSync] Error:', err);
-      setSyncError(err.message);
-    } finally {
-      setSyncing(false);
-      syncInProgress.current = false;
-    }
-  }, [isOnline]);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [doSync]);
 
   const queueAction = useCallback(async (action) => {
     const id = await queueOfflineAction(action);
     setPendingCount((c) => c + 1);
 
     // Try sync immediately if online
-    if (isOnline && !syncInProgress.current) {
-      setTimeout(() => syncAll(), 500);
+    if (isOnlineRef.current && !syncInProgress.current) {
+      setTimeout(() => doSync(), 500);
     }
     return id;
-  }, [isOnline, syncAll]);
+  }, [doSync]);
+
+  // Cleanup retry timer on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+    };
+  }, []);
 
   return (
     <OfflineContext.Provider value={{
