@@ -131,6 +131,9 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (5 avr) Ajout suivi REDD dans forms_status (6 fiches trackees: ICI, SSRTE, REDD, Parcelles, Photos, Enregistrement)
 - (5 avr) Fiches auto-associees au planteur: AddParcelPage et REDDTrackingPage lisent farmer_id/farmer_name de l'URL, affichent carte info verte (pas de dropdown/saisie manuelle quand venant du profil planteur)
 - (5 avr) Pre-remplissage donnees familiales cross-fiches: endpoint GET /api/ici-data/farmers/{id}/family-data fusionne ICI + SSRTE. SSRTE modal charge auto taille_menage, enfants, conditions de vie depuis fiches precedentes. ICI modal fait pareil depuis SSRTE si pas encore de profil ICI
+- (5 avr) FIX Sync offline SSRTE: le handler stocke maintenant TOUTES les donnees (taille_menage, enfants, conditions_vie, eau, electricite, etc.) — avant seuls status/risk_level/notes etaient sauvegardes
+- (5 avr) FIX Sync offline REDD: utilise la bonne collection redd_tracking_visits (au lieu de redd_visits) avec calcul du score REDD
+- (5 avr) FIX Dedup sync: offline_id vide ne bloque plus les synchronisations
   - Agent Terrain: 5 tabs (Accueil USSD + Tableau de bord KPIs + Planteurs + Inscrire + Plus), profil planteur avec 6 fiches fonctionnelles (ICI modal, SSRTE modal, REDD tracking, Parcelles, Photos, Inscription). Onglet Plus: Outils Terrain (SSRTE, Verification Parcelles, Photos, Pratiques Durables, Recherche), Mon Compte (Profil, Notifications), Deconnexion
   - Farmer: 5 tabs (Accueil USSD avec Score Carbone gauge/Stats/Menu + Tableau de bord + Parcelles + Carbone + Plus). Onglet Plus: Mes Activites (Parcelles, Recoltes, Declarer, Commandes), Marketplace & Primes (Boutique, Primes Carbone, Pratiques Durables), Mon Compte (Profil, Notifications), Deconnexion
   - Accueil = menu numerote style mobile, Tableau = KPIs detailles avec objectifs/progression
