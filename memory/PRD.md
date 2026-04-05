@@ -112,6 +112,8 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Fix id field non defini dans MongoDB apres inscription
 - (7 avr) Ajout lien application dans le message de partage du code de parrainage
 - (7 avr) Onglet "Réseau Coopératives" dans Super Admin: arbre de parrainage, top parrains, répartition régionale, croissance, affiliations récentes, liste complète avec recherche/filtres, actions admin (générer code, retirer affiliation)
+- (7 avr) Nettoyage base de données: 90 comptes test supprimés, 467 docs liés nettoyés. 34 utilisateurs réels conservés
+- (7 avr) Mode offline-first web (Agent Terrain + Coopérative): OfflineContext, OfflineBanner, IndexedDB (coop_members, coop_lots, coop_dashboard), offlineCooperativeApi avec fallback cache, sync auto au login et retour en ligne, Service Worker PWA
 
 ## Backlog
 ### P0
