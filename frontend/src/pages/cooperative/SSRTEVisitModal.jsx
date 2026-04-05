@@ -132,6 +132,31 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
     }
   }, [listeEnfants]);
 
+  // Auto-calculate risk level based on collected data (works offline)
+  useEffect(() => {
+    const critiqueTasks = selectedTasks.filter(code => {
+      const task = DANGEROUS_TASKS.find(t => t.code === code);
+      return task?.severity === 'critique';
+    });
+    const eleveeTasks = selectedTasks.filter(code => {
+      const task = DANGEROUS_TASKS.find(t => t.code === code);
+      return task?.severity === 'elevee';
+    });
+    const youngChildrenWorking = listeEnfants.filter(e => e.travaille_exploitation && e.age < 15).length;
+
+    let computed = 'faible';
+
+    if (critiqueTasks.length > 0 || enfantsObserves >= 3 || youngChildrenWorking >= 2) {
+      computed = 'critique';
+    } else if (eleveeTasks.length >= 2 || enfantsObserves >= 2 || (conditionsVie === 'precaires' && enfantsObserves >= 1)) {
+      computed = 'eleve';
+    } else if (selectedTasks.length >= 1 || enfantsObserves >= 1 || conditionsVie === 'precaires') {
+      computed = 'modere';
+    }
+
+    setRiskLevel(computed);
+  }, [selectedTasks, enfantsObserves, conditionsVie, listeEnfants]);
+
   const toggleTask = (code) => {
     setSelectedTasks(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]);
   };
@@ -150,35 +175,28 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
     if (!farmer?.id) return;
     if (!tailleMenage) { toast.error('Veuillez renseigner la taille du menage'); return; }
     
-    // Validation: warn if risk is high but no children observed working
-    if ((riskLevel === 'eleve' || riskLevel === 'critique') && enfantsObserves === 0) {
-      const proceed = window.confirm(
-        `Le niveau de risque est "${riskLevel}" mais 0 enfant observe en situation de travail. Voulez-vous continuer ?`
-      );
-      if (!proceed) return;
-    }
-    
     setSaving(true);
+    const visitData = {
+      farmer_id: farmer.id,
+      date_visite: new Date().toISOString(),
+      taille_menage: tailleMenage,
+      nombre_enfants: nombreEnfants,
+      liste_enfants: listeEnfants,
+      conditions_vie: conditionsVie,
+      eau_courante: eauCourante,
+      electricite: electricite,
+      distance_ecole_km: distanceEcole ? parseFloat(distanceEcole) : null,
+      enfants_observes_travaillant: enfantsObserves,
+      taches_dangereuses_observees: selectedTasks,
+      support_fourni: selectedSupport,
+      niveau_risque: riskLevel,
+      recommandations: recommendations.split('\n').filter(r => r.trim()),
+      visite_suivi_requise: followUpRequired,
+      observations: observations || null,
+    };
+
     try {
       const token = localStorage.getItem('token');
-      const visitData = {
-        farmer_id: farmer.id,
-        date_visite: new Date().toISOString(),
-        taille_menage: tailleMenage,
-        nombre_enfants: nombreEnfants,
-        liste_enfants: listeEnfants,
-        conditions_vie: conditionsVie,
-        eau_courante: eauCourante,
-        electricite: electricite,
-        distance_ecole_km: distanceEcole ? parseFloat(distanceEcole) : null,
-        enfants_observes_travaillant: enfantsObserves,
-        taches_dangereuses_observees: selectedTasks,
-        support_fourni: selectedSupport,
-        niveau_risque: riskLevel,
-        recommandations: recommendations.split('\n').filter(r => r.trim()),
-        visite_suivi_requise: followUpRequired,
-        observations: observations || null,
-      };
 
       if (isOnline) {
         const res = await fetch(`${API_URL}/api/ici-data/ssrte/visit`, {
@@ -401,21 +419,24 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
             </CardContent>
           </Card>
 
-          {/* Section 6: Niveau de risque */}
+          {/* Section 6: Niveau de risque (auto-calcule) */}
           <Card>
             <CardContent className="p-4 space-y-3">
               <h4 className="font-semibold text-sm text-gray-700">Niveau de risque</h4>
               <div className="flex gap-2 flex-wrap" data-testid="ssrte-risk-levels">
                 {RISK_LEVELS.map(level => (
-                  <button key={level.value} onClick={() => setRiskLevel(level.value)}
+                  <div key={level.value}
                     className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
                       riskLevel === level.value ? level.color + ' ring-2 ring-offset-1'
-                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                        : 'border-gray-200 bg-white text-gray-400'
                     }`} data-testid={`risk-${level.value}`}>
                     {level.label}
-                  </button>
+                  </div>
                 ))}
               </div>
+              <p className="text-xs text-gray-500 italic" data-testid="risk-auto-label">
+                Calcule automatiquement selon : taches dangereuses ({selectedTasks.length}), enfants observes ({enfantsObserves}), conditions de vie ({conditionsVie})
+              </p>
             </CardContent>
           </Card>
 
