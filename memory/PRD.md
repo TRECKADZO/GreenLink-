@@ -111,6 +111,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Fix AuthContext.jsx: forwarding sponsor_referral_code vers le backend
 - (7 avr) Fix id field non defini dans MongoDB apres inscription
 - (7 avr) Ajout lien application dans le message de partage du code de parrainage
+- (7 avr) Onglet "Réseau Coopératives" dans Super Admin: arbre de parrainage, top parrains, répartition régionale, croissance, affiliations récentes, liste complète avec recherche/filtres, actions admin (générer code, retirer affiliation)
 
 ## Backlog
 ### P0
