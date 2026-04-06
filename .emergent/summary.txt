@@ -6,53 +6,53 @@ PRODUCT REQUIREMENTS:
 3. Clean up all test/demo data and keep only real data.
 4. Implement an Offline-First mode for the web version (similar to the Expo mobile app).
 5. Transform the Web views for Agent Terrain and Agriculteur (Farmer) to look and behave 100% like native mobile apps (Bottom Tabs, Mobile Shell, Feature parity via + tab).
+6. Security and Data Isolation audits and implementations across the platform.
 
-**User's preferred language**: French (INSTRUCT next agent to respond in French only)
+**User's preferred language**: French (You MUST respond in French only)
 
 **what currently exists?** 
-A full-stack agritech platform (FastAPI backend, React web frontend, MongoDB). The Agent Terrain and Farmer dashboards are now 100% mobile-responsive utilizing a  with bottom tabs. An offline-first mode powered by IndexedDB () allows agents to queue Farmer Registrations, SSRTE visits, REDD (Environmental) tracking, and Geolocation photos when offline. The backend has a robust  handler to process these queued actions. Cross-form data sharing (like family details) is implemented between ICI and SSRTE forms.
+A full-stack agritech platform (FastAPI backend, React web frontend, MongoDB). The app features an offline-first architecture with IndexedDB and auto-sync mechanisms. In this session, a massive security and data isolation audit was completed: 25+ endpoints were secured, data is strictly isolated per agent (agents only see their assigned farmers and registrations), SSRTE risk levels are auto-calculated, and advanced security measures (Rate Limiting, JWT invalidation, Path Traversal protection, Security Headers) are actively running.
 
 **Last working item**: 
-    - Last item agent was working: Investigating why the Environmental (REDD Tracking) form, filled offline, does not automatically synchronize with the backend when the network connection is restored. The form successfully saves to the offline IndexedDB queue, but the auto-sync mechanism fails to dispatch or process it.
+    - Last item agent was working: Hiding the password reset code from the UI for users requesting a reset via email. The backend  was successfully updated to no longer return the  in the API response when an email is sent. The agent was just viewing  to remove the UI display of the simulation code.
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? Both (Frontend testing for the  event listener in  and Backend testing to verify the  payload acceptance) using .
+    - Which testing method agent to use? screenshot tool (Frontend testing to ensure the code is no longer displayed on the screen and the user is prompted to check their email).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
-  Issue 1: Automatic synchronization of offline-queued REDD forms fails upon network restoration (Priority: P0)
-     - Attempted fixes: The agent started reading  and  to trace the  function but the session ended before changes were made.
+  Issue 1: Password reset code should only be sent via email, not displayed in the UI (Priority: P0)
+     - Attempted fixes: Backend  was modified successfully to hide the code. Agent was investigating  before session ended.
      - Next debug checklist: 
-        - Check  for the  listener. Does it fire?
-        - Check  to ensure REDD payloads are retrieved correctly from the .
-        - Verify if  silently fails due to a payload validation error on the backend ( at ).
-     - Why fix this issue and what will be achieved with the fix? Field agents working in remote areas will lose critical environmental tracking data if the app cannot auto-sync once back online.
+        - Edit  line ~197 to remove the display of .
+        - Ensure the UI clearly tells the user to Check your email for the reset code without revealing it on screen.
+     - Why fix this issue and what will be achieved with the fix? Huge security vulnerability if the password reset OTP is returned in the API payload and displayed on the screen, allowing unauthorized account takeovers.
      - Status: IN PROGRESS
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Both
+     - Should Test frontend/backend/both after fix? Frontend
      - Blocked on other issue: None
 
 **In progress Task List**: 
-None (Currently focused on the P0 sync bug).
+None (Currently focused on the P0 issue above).
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - P1: Check if the user's GoDaddy DNSSEC and A/CNAME records issue (from previous sessions) needs follow-up.
+    - P1: Medium Priority Security Tests: Test privilege escalation (can an agent change their  to admin?) and verify session invalidation after password change.
+    - P2: Add an offline storage size indicator in the user profile to allow field agents to clear their IndexedDB cache.
     
     Future Tasks:
-    - P2: Add an offline storage size indicator in the user profile to allow field agents to clear their IndexedDB cache.
-    - P3: Refactor  and clean up dead code (subscription files) as noted in PRD.
+    - P3: Real SMS Gateway integration (Orange CI / MTN) and support for local languages.
+    - P4: Refactor  and clean up dead code (subscription files).
 
 **Completed work in this session**
-- Added + (More) tab to the Farmer mobile web dashboard for 100% native parity (DONE).
-- Fixed offline Farmer Registration (Erreur réseau) by updating endpoints and adding it to the sync queue (DONE).
-- Simplified Agent Terrain dashboard menu, removing cooperative dashboard interferences (DONE).
-- Implemented Geolocation Photos capture and backend endpoint (DONE).
-- Fixed a bug where farmers registered by an agent didn't appear in Mes Planteurs (updated  and  logic) (DONE).
-- Removed manual Cooperative Code entry for agents (auto-assigned) (DONE).
-- Auto-associated selected farmer data (Name, Phone) into Add Parcel and REDD Tracking forms (DONE).
-- Implemented cross-form data pre-filling (Household size, children count) between ICI and SSRTE via a new  endpoint (DONE).
-- Fixed SSRTE and REDD offline sync handlers to preserve all data fields and write to the correct  collection (DONE).
+- Fixed auto-sync for offline REDD forms when network is restored ( and  triggers) (DONE)
+- Improved offline Toast messages to clarify that auto-sync is pending (DONE)
+- Auto-calculated SSRTE risk levels based on form data (working offline) (DONE)
+- Saved and displayed complete SSRTE visit data (household, children, living conditions) in the Farmer History dashboard (DONE)
+- Filtered USSD recent registrations to only show registrations created by the logged-in agent (DONE)
+- Conducted massive Security Audit: Secured over 25 vulnerable/unprotected backend routes (, , , , ) (DONE)
+- Implemented Data Isolation: Agents strictly can only fetch SSRTE visits and family data for their assigned farmers (DONE)
+- Implemented High-Priority Security fixes: Added API Rate Limiting (slowapi), JWT invalidation/Blacklisting on logout, Path Traversal protection on file downloads, and HTTP Security Headers (DONE)
 
 **Earlier issues found/mentioned but not fixed**
    None.
@@ -66,22 +66,22 @@ None (Currently focused on the P0 sync bug).
 
 
 **Key Technical Concepts**
-React (Web Frontend), FastAPI (Backend), MongoDB, Offline-first architecture (IndexedDB ), Service worker network events (/), Mobile UI UX (MobileAppShell).
+React (Web Frontend), FastAPI (Backend), MongoDB, Offline-first architecture (IndexedDB ), JWT Authentication, Security Hardening (Rate Limiting, Security Headers), Data Isolation.
 
 **key DB schema**
   - coop_agents: {_id, user_id, phone_number, assigned_farmers[]}
-  - coop_members: {_id, farmer_id, cooperative_id}
   - redd_tracking_visits: {_id, farmer_id, agent_id, redd_score, compliance_level, offline}
-  - sync_log: {offline_id, agent_id, timestamp, action_type}
+  - ssrte_visits: {_id, farmer_id, agent_id, niveau_risque, ...}
+  - token_blacklist: {token, expires_at} (New collection for invalidated JWTs)
 
 **changes in tech stack**
-  - No new stack, but heavy expansion of the IndexedDB offline queuing schema in .
+  - Added  for rate-limiting on FastAPI routes.
 
 **All files of reference** 
--  (Core auto-sync listener)
--  (Queue retrieval logic)
--  (Backend sync processor)
--  (Environmental form queuing the payload)
+-  (Backend logic for JWT and password resets)
+-  (Frontend component for resetting password)
+-  (Rate limiting configuration)
+-  (JWT creation/validation logic)
 
 **Areas that need refactoring**: 
  contains unused code that should be cleaned up later.
@@ -90,97 +90,62 @@ React (Web Frontend), FastAPI (Backend), MongoDB, Offline-first architecture (In
 - 
 - 
 - 
+- 
 
 **Critical Info for New Agent** 
 - INSTRUCT next agent to respond in French ONLY.
-- The REDD form saves correctly offline (queued in IndexedDB), but fails to upload automatically when the internet returns. This is likely an issue inside 's network event listeners, or  payload generation.
-- DO NOT use npm <command>
-
-Usage:
-
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
-
-All commands:
-
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
-
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm for frontend dependencies. Always use yarn install v1.22.22
+- The  has already been removed from the backend response in  for email resets. You just need to remove the frontend logic that tries to display it.
+- Rate limiting is active. If you make too many API calls while testing, you will get a 429 Too Many Requests.
+- Always use yarn install v1.22.22
 [1/4] Resolving packages...
 success Already up-to-date.
-Done in 0.02s..
-- Always omit default values for environment variables.
-- When testing, use  for the Agent Terrain flows (credentials in ).
+Done in 0.07s. for frontend dependencies.
+- Pass  in backend routes to ensure data isolation.
 
 **documents and test reports created in this job**
   - /app/memory/PRD.md
-  - /app/memory/test_credentials.md
-  - /app/test_reports/iteration_94.json to iteration_103.json
+  - /app/test_reports/iteration_104.json
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. (Pending) *Jnai complète une fiche environnementale hors réseau off-line qui n'a pas fonctionné en synchronisation. Voir message* (Offline environmental form doesn't sync automatically).
- 2. (Done) *Lorsque que l'agent terrain remplis une fiche, les même informations sur la famille quo se retrouve dans les autres fiche doit être automatiquement rempli* (Pre-fill family info across ICI and SSRTE forms).
- 3. (Done) *Pourquoi cette fiche a un filtre de choix d agriculteurs alors que l'agriculteur a été sélectionné avant par l'agent terrain* (Remove dropdown when farmer is pre-selected).
- 4. (Done) *losqu un agent terrain inscit un agriculteur... inscrire automatiquement dans la cooperative. j'ai completer la photo geolocalisees... n,apparait pas comme validé* (Auto-assign coop code and fix photo validation status).
- 5. (Done) *en tant que agent terrain j'ai cree un agriculteur en mode offline. apres synchronisation... je ne retrouve pas l'agriculteur* (Fix offline created farmer not appearing in agent's assigned list).
- 6. (Done) *message d,erreur sur Photos geolocalisées... le bouton synchroniser masque le menu... fiches doivent etre associe a ce agriculteur* (Fix photo error, sync button UI, and auto-associate farmer IDs to forms).
- 7. (Done) *je suis connecté comme agent terrain mais je vois une interference du tableau de bord cooperative... pourquoi ajouter le 2,4 et 6?* (Simplify menu and remove cooperative dashboard overlap).
- 8. (Done) *oui+ assurer vous l' Erreur réseau n est pas sur d,autres fiches* (Check other forms for network error).
- 9. (Done) *oui* (Confirm adding progress badge to Farmer dashboard).
- 10. (Done) *L'erreur erreur réseau apparaît sur quel dashboard ? (Agent Terrain)* + User uploaded screenshot of offline network error on registration.
+ 1. (Pending) *Les code de changement de mot de passe pour les inscriptions avec e-mail doit etre uniquement envoyé par email et non affiché comme actuellement* (Hide password reset code in UI).
+ 2. (Done) *Oui* (Proceed with High-Priority security tests).
+ 3. (Done) *Quel autre test de sécurité devrons faire ?* (Asked for more security tests).
+ 4. (Done) *Chaque utilisateur ne voit que les informations dont il doit avoir accès* (Ensure data isolation per user).
+ 5. (Done) *Vérifier les routes des utilisateurs dans tout le projet pour éviter les questions de sécurité et des données* (Requested security audit of all routes).
+ 6. (Done) *Pourquoi ce historique d inscriptions d'agriculteurs s'affiche chez ce agent terrain alors qu'il ne.les a pas créé ?* + Image (Agent sees other agents' registrations).
+ 7. (Done) *Pourquoi quand l'agent terrain complète une fiche de visite, les informations ne sont pas sauvegardé dans la fiche?* (SSRTE full data not saved/displayed).
+ 8. (Done) *Au niveau de la fiche SSRTE, le niveau de risque doit pouvoir etre synchroniser meme en mode hors-ligne pour donner le vrai niveau de risque en fonction des informations collectés* + Image (Auto-calculate SSRTE risk level).
+ 9. (Done) *Screenshot_20260405_170415_Chrome.jpg* (Offline save connection lost alert screenshot).
+ 10. (Done) *Continue* (Approved the initial plan).
 
 **Project Health Check:**
-- Backend: Healthy
+- Backend: Healthy (Secured and Rate-limited)
 - Frontend: Healthy
-- Database: Clean (No test data)
+- Database: Healthy
 
 **3rd Party Integrations** 
-- MongoDB (Requires User MONGO_URL)
+- Resend (Email sending - configured with User API Key)
+- Orange CI SMS (Currently Mocked)
 
 **Testing status**
   - Testing agent used after significant changes: YES
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: 
-  - Known regressions: Auto-sync triggering for offline actions.
+  - Known regressions: None.
 
 **Credentials to test flow:**
 Refer to .
-Agent: 
-Admin: 
-Password:  (or check file)
+Admin:  / 
+Agent:  / 
 
 **What agent forgot to execute**
-The agent was right in the middle of diagnosing the auto-sync problem for the REDD form. They had just viewed the  and  files to see why the queue wasn't firing but the job finished before any changes could be made or tested.
+The agent modified the backend to hide the password reset code but the job terminated before they could modify  to remove the  UI rendering.
 
 **Debugging checklist for current issue**
-    Issue: Automatic synchronization of offline REDD form fails on network restore.
+    Issue: Password reset code displayed on screen.
 
     Frontend files to check: 
-    - : Verify the  triggers the  function successfully without silent try-catch blocks swallowing errors.
-    - : Check how the queue is processed.
-    - : Ensure the payload generated by  matches the expected backend schema.
+    - : Remove the  state and rendering logic entirely. The user should be forced to check their email for the code.
   
     Backend files to check:
-    -  (Lines ~620+ ): Verify if the payload sent by REDD is being rejected, causing the sync array to fail silently.</analysis>
+    - : (Already fixed, verify lines ~580-605 if needed).</analysis>

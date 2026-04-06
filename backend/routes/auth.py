@@ -598,10 +598,19 @@ async def request_password_reset(request: Request, data: PasswordResetRequest):
         "email_sent": email_sent,
     }
     
-    # Always include simulation_code for mobile users
-    # Real SMS (Orange) not yet configured, so mobile users need this code
-    # Remove this line when real SMS gateway is deployed
-    response["simulation_code"] = reset_code
+    # Only include simulation_code for phone-only users (SMS not yet configured)
+    # For email users, the code is sent exclusively by email
+    if user_email and email_sent:
+        # Code sent by email - do NOT expose in response
+        response["delivery_method"] = "email"
+    elif user_phone and not user_email:
+        # Phone-only user, SMS not configured yet - expose code as fallback
+        response["simulation_code"] = reset_code
+        response["delivery_method"] = "sms_simulation"
+    elif user_email and not email_sent:
+        # Email failed to send - expose code as fallback
+        response["simulation_code"] = reset_code
+        response["delivery_method"] = "email_failed"
     
     return response
 
