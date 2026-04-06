@@ -2337,17 +2337,52 @@ async def get_ussd_stats(current_user: dict = Depends(get_current_user)):
 
 @router.get("/registrations")
 async def get_ussd_registrations(limit: int = 50, skip: int = 0, agent_id: str = None, current_user: dict = Depends(get_current_user)):
-    """Get USSD registrations. Agents only see their own, admin/coop see all or filtered."""
+    """Get USSD registrations. Agents see their own, cooperatives see only their members."""
     try:
         user_type = current_user.get('user_type', '')
         user_id = str(current_user.get('_id', ''))
         
         query = {}
-        # Auto-filter by agent for field_agents
-        if user_type == 'field_agent':
+        
+        if user_type in ('field_agent', 'agent_terrain'):
+            # Agents only see registrations they created
             query["registered_by_agent"] = agent_id or user_id
-        elif agent_id:
-            query["registered_by_agent"] = agent_id
+        elif user_type in ('cooperative', 'cooperative_admin'):
+            # Cooperative sees registrations from their agents OR with their referral/coop code
+            coop_id = user_id
+            # Get agent IDs for this cooperative
+            coop_agents_list = await db.coop_agents.find({"coop_id": coop_id}, {"user_id": 1}).to_list(100)
+            agent_ids = [a["user_id"] for a in coop_agents_list if a.get("user_id")]
+            user_agents = await db.users.find({"cooperative_id": coop_id, "user_type": {"$in": ["field_agent", "agent_terrain"]}}, {"_id": 1}).to_list(100)
+            agent_ids.extend([str(a["_id"]) for a in user_agents])
+            agent_ids = list(set(agent_ids))
+            
+            # Get cooperative referral code
+            referral_code = current_user.get("referral_code", "")
+            
+            # Build OR query: by agent OR by coop code
+            or_conditions = []
+            if agent_ids:
+                or_conditions.append({"registered_by_agent": {"$in": agent_ids}})
+            if referral_code:
+                or_conditions.append({"cooperative_code": referral_code})
+                or_conditions.append({"coop_code": referral_code})
+            # Also match by coop_id if present
+            or_conditions.append({"coop_id": coop_id})
+            or_conditions.append({"cooperative_id": coop_id})
+            
+            if or_conditions:
+                query["$or"] = or_conditions
+            else:
+                # No agents and no referral code → show nothing
+                return {"registrations": [], "total": 0}
+        elif user_type == 'admin':
+            # Admin: can filter by agent_id, otherwise sees all
+            if agent_id:
+                query["registered_by_agent"] = agent_id
+        else:
+            # Unknown user type: show nothing
+            return {"registrations": [], "total": 0}
         
         registrations = await db.ussd_registrations.find(
             query, {"pin_hash": 0}
