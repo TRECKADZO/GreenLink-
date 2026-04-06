@@ -739,7 +739,7 @@ async def get_contacts(
 
         query["$or"] = [
             {"_id": {"$in": agent_ids + member_ids}},
-            {"user_type": {"$in": ["admin", "acheteur", "buyer"]}}
+            {"user_type": {"$in": ["acheteur", "buyer"]}}
         ]
     elif user_type == "field_agent":
         # Agent peut contacter sa coopérative et ses agriculteurs assignés
@@ -759,10 +759,7 @@ async def get_contacts(
             except Exception:
                 pass
 
-        query["$or"] = [
-            {"_id": {"$in": targets}},
-            {"user_type": "admin"}
-        ]
+        query["_id"] = {"$in": targets} if targets else {"$in": []}
     elif user_type == "producteur":
         # Agriculteur peut contacter sa coopérative, son agent, et les acheteurs
         # Trouver la coop de cet agriculteur
@@ -781,11 +778,11 @@ async def get_contacts(
 
         query["$or"] = [
             {"_id": {"$in": targets}},
-            {"user_type": {"$in": ["admin", "acheteur", "buyer", "cooperative"]}}
+            {"user_type": {"$in": ["acheteur", "buyer", "cooperative"]}}
         ]
     else:
-        # Autres types (acheteur, etc.) — tout le monde sauf eux-mêmes
-        pass
+        # Autres types (acheteur, etc.) — tout le monde sauf admin
+        query["user_type"] = {"$ne": "admin"}
 
     if search:
         search_regex = {"$regex": search, "$options": "i"}
