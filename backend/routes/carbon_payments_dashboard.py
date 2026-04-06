@@ -359,11 +359,24 @@ async def request_carbon_payment(
                 "message": "Vous avez déjà une demande en cours. Elle sera traitée lors du prochain versement."
             }
         
+        # Trouver la vraie cooperative du planteur (via coop_members ou users.cooperative_id)
+        farmer_coop_id = current_user.get('cooperative_id')
+        if not farmer_coop_id:
+            # Chercher dans coop_members
+            member = await db.coop_members.find_one({
+                "$or": [
+                    {"phone_number": current_user.get("phone_number")},
+                    {"user_id": user_id}
+                ]
+            })
+            if member:
+                farmer_coop_id = str(member.get("coop_id", ""))
+        
         # Créer une demande de paiement
         payment_request = {
             "farmer_id": user_id,
             "farmer_name": current_user.get('full_name'),
-            "cooperative_id": current_user.get('cooperative_id'),
+            "cooperative_id": farmer_coop_id,
             "status": "pending",
             "request_type": "carbon_premium",
             "requested_at": datetime.utcnow(),
@@ -372,17 +385,20 @@ async def request_carbon_payment(
         
         result = await db.payment_requests.insert_one(payment_request)
         
-        # Notifier la coopérative
-        if current_user.get('cooperative_id'):
-            await db.notification_history.insert_one({
-                "user_id": str(current_user.get('cooperative_id')),
-                "title": "Demande de paiement carbone",
-                "body": f"{current_user.get('full_name')} demande le versement de ses primes carbone",
-                "data": {"type": "payment_request", "request_id": str(result.inserted_id)},
-                "type": "payment_request",
-                "read": False,
-                "created_at": datetime.utcnow()
-            })
+        # Notifier la coopérative (dans la collection 'notifications' lue par le frontend)
+        if farmer_coop_id:
+            # Verifier que le destinataire n'est pas un admin
+            coop_user = await db.users.find_one({"_id": ObjectId(farmer_coop_id)}) if ObjectId.is_valid(farmer_coop_id) else None
+            if coop_user and coop_user.get("user_type") not in ("admin", "super_admin"):
+                await db.notifications.insert_one({
+                    "user_id": farmer_coop_id,
+                    "title": "Demande de paiement carbone",
+                    "message": f"{current_user.get('full_name')} demande le versement de ses primes carbone",
+                    "type": "payment_request",
+                    "data": {"request_id": str(result.inserted_id), "farmer_id": user_id},
+                    "read": False,
+                    "created_at": datetime.utcnow()
+                })
         
         return {
             "success": True,
