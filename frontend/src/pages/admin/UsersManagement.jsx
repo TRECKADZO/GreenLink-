@@ -437,6 +437,7 @@ const UsersManagement = () => {
                           Nom {getSortIcon('name')}
                         </div>
                       </th>
+                      <th className="p-3 text-left font-medium text-gray-600">Coopérative</th>
                       <th className="p-3 text-left font-medium text-gray-600">Email</th>
                       <th className="p-3 text-left font-medium text-gray-600">Téléphone</th>
                       <th 
@@ -462,7 +463,7 @@ const UsersManagement = () => {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={8} className="p-8 text-center">
+                        <td colSpan={9} className="p-8 text-center">
                           <div className="flex items-center justify-center gap-2 text-gray-500">
                             <RefreshCw className="w-5 h-5 animate-spin" />
                             Chargement...
@@ -471,7 +472,7 @@ const UsersManagement = () => {
                       </tr>
                     ) : users.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="p-8 text-center text-gray-500">
+                        <td colSpan={9} className="p-8 text-center text-gray-500">
                           Aucun utilisateur trouvé
                         </td>
                       </tr>
@@ -496,6 +497,9 @@ const UsersManagement = () => {
                                 </Badge>
                               )}
                             </div>
+                          </td>
+                          <td className="p-3 text-gray-600 text-sm">
+                            {u.user_type === 'cooperative' ? (u.cooperative_name || u.nom_cooperative || '-') : '-'}
                           </td>
                           <td className="p-3 text-gray-600">{u.email}</td>
                           <td className="p-3 text-gray-600">{u.phone}</td>

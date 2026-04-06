@@ -217,7 +217,9 @@ async def get_all_users(
             {"name": {"$regex": search, "$options": "i"}},
             {"email": {"$regex": search, "$options": "i"}},
             {"phone": {"$regex": search, "$options": "i"}},
-            {"full_name": {"$regex": search, "$options": "i"}}
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"cooperative_name": {"$regex": search, "$options": "i"}},
+            {"nom_cooperative": {"$regex": search, "$options": "i"}}
         ]
     
     # Sort direction
@@ -243,6 +245,8 @@ async def get_all_users(
             "created_at": u.get("created_at"),
             "last_login": u.get("last_login"),
             "cooperative_id": u.get("cooperative_id"),
+            "cooperative_name": u.get("cooperative_name") or u.get("nom_cooperative"),
+            "nom_cooperative": u.get("nom_cooperative"),
             "roles": u.get("roles", []),
             "is_verified": u.get("is_verified", False)
         }
