@@ -562,6 +562,7 @@ async def ussd_callback(request: USSDRequest):
                         f"6. SSRTE - Travail des enfants\n"
                         f"7. Mon profil\n"
                         f"8. Pratiques durables\n"
+                        f"9. Changer mon PIN\n"
                         f"0. Quitter"
                     )
                 else:
@@ -654,6 +655,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
             else:
@@ -961,6 +963,15 @@ async def ussd_callback(request: USSDRequest):
                         f"0. Retour menu principal"
                     )
                 
+            elif choice == "9":
+                # Changer le PIN
+                session["state"] = "change_pin_old"
+                response_text = (
+                    "CHANGER VOTRE PIN\n\n"
+                    "Entrez votre ancien PIN\n"
+                    "(4 chiffres)"
+                )
+
             elif choice == "0":
                 response_text = "Merci d'avoir utilise GreenLink.\nA bientot !"
                 continue_session = False
@@ -978,6 +989,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
 
@@ -1073,6 +1085,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
             else:
@@ -1220,6 +1233,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
             else:
@@ -1328,6 +1342,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
             else:
@@ -1352,6 +1367,138 @@ async def ussd_callback(request: USSDRequest):
             else:
                 response_text = "Demande annulee.\n\n0. Retour"
                 session["state"] = "main_menu"
+
+
+        # ==============================
+        # STATE: CHANGE PIN - OLD PIN
+        # ==============================
+        elif state == "change_pin_old":
+            old_pin = inputs[-1] if inputs else ""
+            farmer_id = data.get("farmer_id", "")
+            
+            if not old_pin or len(old_pin) != 4 or not old_pin.isdigit():
+                response_text = "PIN invalide.\nEntrez 4 chiffres.\n\n0. Retour"
+                session["state"] = "main_menu"
+            else:
+                # Vérifier l'ancien PIN
+                farmer = await db.ussd_registrations.find_one({"farmer_id": farmer_id})
+                if not farmer:
+                    farmer = await db.ussd_registrations.find_one({"phone": phone})
+                if not farmer:
+                    farmer = await db.ussd_registrations.find_one({"phone_number": {"$regex": phone.replace('+225', '')[-9:]}})
+                if not farmer:
+                    farmer = await find_farmer_by_phone(phone)
+                
+                stored_hash = farmer.get("pin_hash", "") if farmer else ""
+                
+                if not stored_hash:
+                    # Pas de PIN defini - permettre de le creer directement
+                    session["state"] = "change_pin_new"
+                    response_text = (
+                        "Aucun PIN defini.\n\n"
+                        "Creez votre PIN\n"
+                        "(4 chiffres)"
+                    )
+                elif verify_pin(old_pin, stored_hash):
+                    session["state"] = "change_pin_new"
+                    response_text = (
+                        "PIN actuel verifie.\n\n"
+                        "Entrez votre nouveau PIN\n"
+                        "(4 chiffres)"
+                    )
+                else:
+                    response_text = "PIN incorrect.\n\n0. Retour menu principal"
+                    session["state"] = "main_menu"
+
+        # ==============================
+        # STATE: CHANGE PIN - NEW PIN
+        # ==============================
+        elif state == "change_pin_new":
+            new_pin = inputs[-1] if inputs else ""
+            
+            if not new_pin or len(new_pin) != 4 or not new_pin.isdigit():
+                response_text = "PIN invalide.\nEntrez 4 chiffres.\n\n0. Retour"
+                session["state"] = "main_menu"
+            else:
+                session["data"]["new_pin"] = new_pin
+                session["state"] = "change_pin_confirm"
+                response_text = (
+                    f"Confirmez votre nouveau PIN:\n"
+                    f"Entrez a nouveau les 4 chiffres"
+                )
+
+        # ==============================
+        # STATE: CHANGE PIN - CONFIRM
+        # ==============================
+        elif state == "change_pin_confirm":
+            confirm_pin = inputs[-1] if inputs else ""
+            new_pin = data.get("new_pin", "")
+            farmer_id = data.get("farmer_id", "")
+            
+            if confirm_pin == new_pin:
+                # Mettre à jour le PIN dans toutes les collections possibles
+                new_hash = hash_pin(new_pin)
+                clean_phone = phone.replace('+225', '')[-9:]
+                await db.ussd_registrations.update_one(
+                    {"$or": [{"farmer_id": farmer_id}, {"phone": phone}, {"phone_number": {"$regex": clean_phone}}]},
+                    {"$set": {"pin_hash": new_hash}},
+                    upsert=False
+                )
+                await db.users.update_one(
+                    {"$or": [{"_id": ObjectId(farmer_id)}, {"phone_number": {"$regex": clean_phone}}]},
+                    {"$set": {"pin_hash": new_hash}}
+                )
+                await db.coop_members.update_one(
+                    {"$or": [{"phone_number": {"$regex": clean_phone}}]},
+                    {"$set": {"pin_hash": new_hash}},
+                    upsert=False
+                )
+                response_text = (
+                    "PIN modifie avec succes !\n\n"
+                    "Votre nouveau PIN est actif.\n"
+                    "Ne le partagez avec personne.\n\n"
+                    "0. Retour menu principal"
+                )
+                session["state"] = "main_menu"
+            else:
+                response_text = (
+                    "Les PIN ne correspondent pas.\n\n"
+                    "1. Reessayer\n"
+                    "0. Retour menu principal"
+                )
+                session["state"] = "change_pin_retry"
+
+        # ==============================
+        # STATE: CHANGE PIN - RETRY
+        # ==============================
+        elif state == "change_pin_retry":
+            choice = inputs[-1] if inputs else ""
+            if choice == "1":
+                session["state"] = "change_pin_new"
+                response_text = (
+                    "Entrez votre nouveau PIN\n"
+                    "(4 chiffres)"
+                )
+            else:
+                session["state"] = "main_menu"
+                name = data.get("farmer_name", "Planteur")
+                coop = data.get("coop_name", "")
+                coop_label = f" ({coop})" if coop else ""
+                response_text = (
+                    f"GreenLink Agritech\n"
+                    f"Bonjour {name}{coop_label}\n\n"
+                    f"1. Estimation de ma prime\n"
+                    f"2. Mes pratiques durables\n"
+                    f"3. Conseils pour ma prime\n"
+                    f"4. Demander paiement prime\n"
+                    f"5. Mes parcelles\n"
+                    f"6. SSRTE - Travail des enfants\n"
+                    f"7. Mon profil\n"
+                    f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
+                    f"0. Quitter"
+                )
+
 
         # ==============================
         # STATE: ESTIMATION TYPE CHOICE
@@ -1575,6 +1722,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
             else:
@@ -1695,6 +1843,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
             else:
@@ -1894,6 +2043,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
 
@@ -1993,6 +2143,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
             else:
@@ -2031,6 +2182,7 @@ async def ussd_callback(request: USSDRequest):
                     f"6. SSRTE - Travail des enfants\n"
                     f"7. Mon profil\n"
                     f"8. Pratiques durables\n"
+                    f"9. Changer mon PIN\n"
                     f"0. Quitter"
                 )
             else:
