@@ -282,6 +282,7 @@ async def create_harvest_lot(
     lot_name = body.get("lot_name", "")
     price_per_kg = body.get("price_per_kg", 0)
     description = body.get("description", "")
+    certifications = body.get("certifications", [])
 
     if not harvest_ids:
         raise HTTPException(status_code=400, detail="Selectionnez au moins une recolte")
@@ -326,7 +327,7 @@ async def create_harvest_lot(
         "price_per_kg": float(price_per_kg) if price_per_kg else 0,
         "min_order_kg": 50,
         "currency": "XOF",
-        "certifications": [],
+        "certifications": certifications if isinstance(certifications, list) else [],
         "origin_country": "CI",
         "origin_region": "",
         "location": "",

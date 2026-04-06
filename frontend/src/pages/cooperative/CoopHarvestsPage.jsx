@@ -33,7 +33,7 @@ const CoopHarvestsPage = () => {
   const [lotMode, setLotMode] = useState(false);
   const [selectedForLot, setSelectedForLot] = useState([]);
   const [lotModal, setLotModal] = useState(false);
-  const [lotForm, setLotForm] = useState({ lot_name: '', price_per_kg: '', description: '' });
+  const [lotForm, setLotForm] = useState({ lot_name: '', price_per_kg: '', description: '', certifications: [] });
   const [lotSubmitting, setLotSubmitting] = useState(false);
 
   const fetchHarvests = async () => {
@@ -103,6 +103,7 @@ const CoopHarvestsPage = () => {
           lot_name: lotForm.lot_name,
           price_per_kg: parseFloat(lotForm.price_per_kg) || 0,
           description: lotForm.description,
+          certifications: lotForm.certifications,
         })
       });
       const data = await res.json();
@@ -111,7 +112,7 @@ const CoopHarvestsPage = () => {
         setLotModal(false);
         setLotMode(false);
         setSelectedForLot([]);
-        setLotForm({ lot_name: '', price_per_kg: '', description: '' });
+        setLotForm({ lot_name: '', price_per_kg: '', description: '', certifications: [] });
         fetchHarvests();
       } else {
         toast.error(data.detail || 'Erreur');
@@ -327,7 +328,7 @@ const CoopHarvestsPage = () => {
       {/* Lot Creation Modal */}
       {lotModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" data-testid="lot-modal">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[85vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-gray-900 mb-1">Creer un lot de vente</h3>
             <p className="text-sm text-gray-500 mb-4">{selectedForLot.length} recolte(s) - {(selectedTotal / 1000).toFixed(2)} tonnes</p>
             <div className="space-y-3">
@@ -351,6 +352,36 @@ const CoopHarvestsPage = () => {
                   placeholder="Details supplementaires..."
                   className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm h-20 resize-none focus:border-blue-400 outline-none"
                   data-testid="lot-desc-input" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">Certifications ARS</label>
+                <div className="space-y-2">
+                  {[
+                    { id: 'rainforest_alliance', label: 'Rainforest Alliance', desc: 'Agriculture durable et protection des ecosystemes' },
+                    { id: 'fairtrade', label: 'Fairtrade / Commerce Equitable', desc: 'Prix equitable et conditions de travail decentes' },
+                    { id: 'bio_organic', label: 'Agriculture Biologique (Bio)', desc: 'Sans pesticides ni engrais chimiques' },
+                    { id: 'utz', label: 'UTZ Certified', desc: 'Agriculture responsable et tracabilite' },
+                    { id: 'iso_14001', label: 'ISO 14001', desc: 'Systeme de management environnemental' },
+                    { id: 'global_gap', label: 'GlobalG.A.P.', desc: 'Bonnes pratiques agricoles internationales' },
+                  ].map(cert => (
+                    <label key={cert.id} className="flex items-start gap-2.5 p-2 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 cursor-pointer transition-colors" data-testid={`cert-${cert.id}`}>
+                      <input type="checkbox" checked={lotForm.certifications.includes(cert.id)}
+                        onChange={(e) => {
+                          setLotForm(p => ({
+                            ...p,
+                            certifications: e.target.checked
+                              ? [...p.certifications, cert.id]
+                              : p.certifications.filter(c => c !== cert.id)
+                          }));
+                        }}
+                        className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      <div>
+                        <p className="text-xs font-medium text-gray-700">{cert.label}</p>
+                        <p className="text-[10px] text-gray-400">{cert.desc}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-xs font-medium text-gray-600 mb-2">Recoltes incluses :</p>
