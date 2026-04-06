@@ -18,6 +18,7 @@ from bson import ObjectId
 from database import db
 from routes.auth import get_current_user
 from services.push_notifications import push_service
+from routes.web_push import send_push_to_user
 import uuid
 import json
 import logging
@@ -353,6 +354,18 @@ async def handle_ws_message(websocket: WebSocket, user: dict, data: dict):
                 )
             except Exception as e:
                 logger.error(f"Error sending push notification: {e}")
+
+            # Envoyer une notification push navigateur (Web Push)
+            try:
+                await send_push_to_user(
+                    user_id=recipient_id,
+                    title=f"{user.get('full_name', 'Nouveau message')}",
+                    body=content[:120],
+                    url=f"/messages/{conversation_id}",
+                    tag=f"msg-{conversation_id}"
+                )
+            except Exception as e:
+                logger.debug(f"Web push error: {e}")
     
     elif msg_type == "typing":
         # Indicateur de frappe
@@ -548,6 +561,18 @@ async def create_conversation(
             )
         except Exception as e:
             logger.error(f"Error sending new conversation push: {e}")
+
+        # Web Push navigateur
+        try:
+            await send_push_to_user(
+                user_id=seller_id,
+                title=f"Nouveau message de {conversation_doc['buyer_name']}",
+                body=data.initial_message[:120],
+                url=f"/messages/{conversation_id}",
+                tag=f"conv-{conversation_id}"
+            )
+        except Exception as e:
+            logger.debug(f"Web push error: {e}")
     
     return {
         "conversation_id": conversation_id,
@@ -659,6 +684,19 @@ async def create_direct_conversation(
         "created_at": datetime.now(timezone.utc),
         "is_read": False
     })
+
+    # Web Push navigateur
+    if not messaging_manager.is_online(recipient_id):
+        try:
+            await send_push_to_user(
+                user_id=recipient_id,
+                title=sender_name,
+                body=data.initial_message[:120],
+                url=f"/messages/{conversation_id}",
+                tag=f"conv-{conversation_id}"
+            )
+        except Exception as e:
+            logger.debug(f"Web push error: {e}")
 
     return {
         "conversation_id": conversation_id,

@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { messagingApi, MessagingWebSocket } from '../../services/messagingApi';
+import { pushService } from '../../services/pushService';
 import { toast } from 'sonner';
 import {
   MessageSquare, Send, Paperclip, Search, MoreVertical, Pin,
   Trash2, Flag, Ban, Archive, Check, CheckCheck, ChevronLeft,
-  X, File, Download, Users, Plus, Building2, UserCircle, Sprout, Shield
+  X, File, Download, Users, Plus, Building2, UserCircle, Sprout, Shield, Bell, BellOff
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -224,11 +225,32 @@ export default function MessagingPage() {
   const [replyTo, setReplyTo] = useState(null);
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const [showNewConv, setShowNewConv] = useState(false);
+  const [pushState, setPushState] = useState('loading'); // loading, prompt, granted, denied, unsupported
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const wsRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+
+  /* ── Push notifications init ── */
+  useEffect(() => {
+    if (!token) return;
+    if (!pushService.isSupported()) { setPushState('unsupported'); return; }
+    const perm = pushService.getPermissionState();
+    if (perm === 'granted') {
+      pushService.init().then(() => setPushState('granted'));
+    } else if (perm === 'denied') {
+      setPushState('denied');
+    } else {
+      setPushState('prompt');
+    }
+  }, [token]);
+
+  const handleEnablePush = async () => {
+    const ok = await pushService.requestPermission();
+    setPushState(ok ? 'granted' : 'denied');
+    if (ok) toast.success('Notifications activees');
+  };
 
   /* ── WebSocket ── */
   useEffect(() => {
@@ -440,6 +462,17 @@ export default function MessagingPage() {
                   className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 ${showArchived ? 'bg-[#d4a574] text-[#1a3a30]' : 'text-white/50 hover:bg-[#2d5a4d]/40'}`}
                 ><Archive className="w-3 h-3" />Archivees</button>
               </div>
+              {/* Push notification prompt */}
+              {pushState === 'prompt' && (
+                <button
+                  data-testid="enable-push-btn"
+                  onClick={handleEnablePush}
+                  className="w-full mt-3 flex items-center gap-2 p-2 bg-[#d4a574]/10 border border-[#d4a574]/30 rounded-lg text-xs text-[#d4a574] hover:bg-[#d4a574]/20 transition-colors"
+                >
+                  <Bell className="w-3.5 h-3.5 shrink-0" />
+                  <span>Activer les notifications pour ne rien manquer</span>
+                </button>
+              )}
             </div>
 
             {/* Conversation list */}

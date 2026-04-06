@@ -172,6 +172,15 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
   - Frontend: Support conversations directes et marketplace dans la meme interface
   - Frontend: Ajout createDirectConversation() et getContacts() dans messagingApi.js
   - Tests: 17/17 backend + tous les tests frontend passes (iteration 105)
+- (6 avr) CLE DE CHIFFREMENT PERSISTANTE: MESSAGE_ENCRYPTION_KEY configuree dans .env
+- (6 avr) NOTIFICATIONS PUSH NAVIGATEUR: 
+  - Backend: Routes /api/push/vapid-key, /api/push/subscribe, /api/push/unsubscribe
+  - Backend: send_push_to_user() integre dans messaging.py (messages, nouvelles conversations, conversations directes)
+  - Backend: Nettoyage automatique des abonnements expires (410/404)
+  - Frontend: Service Worker sw-push.js pour reception et affichage des notifications
+  - Frontend: pushService.js pour gestion abonnements
+  - Frontend: Bandeau d'activation dans la sidebar messagerie
+  - Cles VAPID generees et configurees dans .env
 
 ## Backlog
 ### P0
@@ -187,7 +196,6 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Refactoriser ussd.py
 - Nettoyage code mort (subscription files)
 - Nettoyer la gestion id vs _id dans MongoDB pour tous les anciens comptes
-- Set MESSAGE_ENCRYPTION_KEY dans backend/.env pour chiffrement persistant
 
 ## Credentials
 - Admin: `klenakan.eric@gmail.com` / `474Treckadzo`

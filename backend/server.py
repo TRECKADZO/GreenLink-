@@ -36,6 +36,7 @@ from routes import coverage_zones  # Coverage zones for cooperatives
 from routes import harvest_marketplace  # Harvest Marketplace for producers/coops
 from routes import buyer_dashboard  # Buyer Dashboard
 from routes import messaging  # Secure Messaging System
+from routes import web_push  # Web Push Notifications
 from routes import marketplace_analytics
 from routes import redd  # REDD+ MRV routes
 from routes import redd_pdf  # REDD+ PDF export  # Advanced Marketplace Analytics
@@ -182,6 +183,7 @@ app.include_router(coverage_zones.router)
 app.include_router(harvest_marketplace.router)
 app.include_router(buyer_dashboard.router)
 app.include_router(messaging.router)
+app.include_router(web_push.router)
 app.include_router(marketplace_analytics.router)
 app.include_router(agent_search.router)
 app.include_router(carbon_listings.router)
