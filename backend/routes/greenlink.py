@@ -363,14 +363,8 @@ async def declare_harvest(
         "created_at": datetime.utcnow(),
     }
     
-    # Calculate carbon premium (10% bonus for high carbon score)
-    carbon_score = parcel.get("carbon_score") or parcel.get("score_carbone") or 0
-    if carbon_score >= 7:
-        harvest_dict["carbon_premium"] = quantity_kg * price_per_kg * 0.10
-    else:
-        harvest_dict["carbon_premium"] = 0
-    
-    harvest_dict["total_amount"] = (quantity_kg * price_per_kg) + harvest_dict["carbon_premium"]
+    harvest_dict["carbon_premium"] = 0
+    harvest_dict["total_amount"] = quantity_kg * price_per_kg
     harvest_dict["payment_status"] = "pending"
     harvest_dict["payment_method"] = "orange_money"
     
