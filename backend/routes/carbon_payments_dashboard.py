@@ -487,7 +487,7 @@ from carbon_business_model import (
 
 
 class MaPrimeRequest(BaseModel):
-    """14 questions alignées avec le USSD *144*99# détaillé (avec 3 tailles d'arbres)"""
+    """14 questions alignées avec le USSD *144*99# détaillé (avec 3 strates de canopée)"""
     hectares: float = Field(..., gt=0, description="Superficie en hectares")
     arbres_grands: int = Field(0, ge=0, description="Arbres GRANDS > 12 mètres")
     arbres_moyens: int = Field(0, ge=0, description="Arbres MOYENS 8-12 mètres")
@@ -508,7 +508,7 @@ class MaPrimeRequest(BaseModel):
 async def calculer_ma_prime(data: MaPrimeRequest, current_user: dict = Depends(get_current_user)):
     """
     Calculateur de prime carbone pour le planteur.
-    14 questions alignées avec le USSD *144*99# détaillé (3 tailles d'arbres)
+    14 questions alignées avec le USSD *144*99# détaillé (3 strates de canopée)
     """
     # 1. Calcul pondéré des arbres (coefficients allométriques)
     # Grands (>12m): coef 1.0, Moyens (8-12m): coef 0.7, Petits (<8m): coef 0.3
@@ -679,7 +679,7 @@ def _generer_conseil_14q(data: MaPrimeRequest, score: float, weighted_trees: flo
     
     total_arbres = data.arbres_grands + data.arbres_moyens + data.arbres_petits
     if total_arbres > 0 and data.arbres_grands < (total_arbres * 0.3):
-        conseils.append("Favorisez la croissance de grands arbres (>12m) pour un meilleur score")
+        conseils.append("Favorisez les especes de Strate 3 (canopee >30m) pour un meilleur score")
     
     if score >= 7:
         return "Excellent ! Vos pratiques sont déjà très bonnes. Maintenez-les pour une prime optimale."

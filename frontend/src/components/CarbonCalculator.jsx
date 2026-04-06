@@ -142,15 +142,15 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Ruler className="w-4 h-4 text-[#2d5a4d]" />
-                  <Label className="text-gray-700 font-medium">Arbres d'ombrage par taille</Label>
+                  <Label className="text-gray-700 font-medium">Especes d'arbres par strate</Label>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
                     <div className="flex items-center gap-1 mb-2">
                       <TreePine className="w-5 h-5 text-emerald-700" />
-                      <span className="text-xs font-semibold text-emerald-700">GRANDS</span>
+                      <span className="text-xs font-semibold text-emerald-700">STRATE 3</span>
                     </div>
-                    <p className="text-[10px] text-emerald-600 mb-2">&gt; 12 metres</p>
+                    <p className="text-[10px] text-emerald-600 mb-2">Canopee &gt; 30 m</p>
                     <Input
                       type="number"
                       placeholder="0"
@@ -164,9 +164,9 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                     <div className="flex items-center gap-1 mb-2">
                       <TreePine className="w-4 h-4 text-amber-700" />
-                      <span className="text-xs font-semibold text-amber-700">MOYENS</span>
+                      <span className="text-xs font-semibold text-amber-700">STRATE 2</span>
                     </div>
-                    <p className="text-[10px] text-amber-600 mb-2">8 - 12 metres</p>
+                    <p className="text-[10px] text-amber-600 mb-2">Canopee 5 - 30 m</p>
                     <Input
                       type="number"
                       placeholder="0"
@@ -180,9 +180,9 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                   <div className="bg-sky-50 border border-sky-200 rounded-xl p-3">
                     <div className="flex items-center gap-1 mb-2">
                       <TreePine className="w-3 h-3 text-sky-700" />
-                      <span className="text-xs font-semibold text-sky-700">PETITS</span>
+                      <span className="text-xs font-semibold text-sky-700">STRATE 1</span>
                     </div>
-                    <p className="text-[10px] text-sky-600 mb-2">&lt; 8 metres</p>
+                    <p className="text-[10px] text-sky-600 mb-2">Canopee 3 - 5 m</p>
                     <Input
                       type="number"
                       placeholder="0"
@@ -200,7 +200,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                   </p>
                 )}
                 <p className="text-[10px] text-gray-400 mt-1">
-                  Les grands arbres sequestrent plus de carbone (coefficient x1.0 vs x0.7 et x0.3)
+                  Les especes de Strate 3 (canopee &gt; 30m) sequestrent plus de carbone (coefficient x1.0 vs x0.7 et x0.3)
                 </p>
               </div>
 
@@ -358,20 +358,20 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
               <div className="bg-gray-50 rounded-xl p-4">
                 <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <TreePine className="w-4 h-4 text-[#2d5a4d]" />
-                  Vos arbres d'ombrage
+                  Vos especes par strate
                 </p>
                 <div className="grid grid-cols-3 gap-2 text-center text-sm">
                   <div className="bg-emerald-100 rounded-lg p-2">
                     <p className="text-lg font-bold text-emerald-800">{result.arbres_grands || 0}</p>
-                    <p className="text-[10px] text-emerald-600">Grands (&gt;12m)</p>
+                    <p className="text-[10px] text-emerald-600">Strate 3 (&gt;30m)</p>
                   </div>
                   <div className="bg-amber-100 rounded-lg p-2">
                     <p className="text-lg font-bold text-amber-800">{result.arbres_moyens || 0}</p>
-                    <p className="text-[10px] text-amber-600">Moyens (8-12m)</p>
+                    <p className="text-[10px] text-amber-600">Strate 2 (5-30m)</p>
                   </div>
                   <div className="bg-sky-100 rounded-lg p-2">
                     <p className="text-lg font-bold text-sky-800">{result.arbres_petits || 0}</p>
-                    <p className="text-[10px] text-sky-600">Petits (&lt;8m)</p>
+                    <p className="text-[10px] text-sky-600">Strate 1 (3-5m)</p>
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-2 text-center">
@@ -482,7 +482,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                   <p className="text-sm text-amber-800 font-medium mb-2">Pour ameliorer votre score :</p>
                   <ul className="text-sm text-amber-700 space-y-1">
-                    <li>- Plantez plus d'arbres d'ombrage (surtout des grands &gt; 12m)</li>
+                    <li>- Plantez plus d'especes de Strate 3 (canopee &gt; 30m)</li>
                     <li>- Pratiquez l'agroforesterie</li>
                     <li>- Utilisez du compost organique</li>
                     <li>- Evitez les pesticides chimiques</li>

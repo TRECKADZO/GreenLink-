@@ -159,22 +159,22 @@ const CarbonScorePage = () => {
                 <div className="mt-4 pt-4 border-t">
                   <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <TreePine className="h-4 w-4 text-emerald-600" />
-                    Répartition des arbres par taille (biomasse)
+                    Repartition des especes par strate (biomasse)
                   </h4>
                   <div className="grid grid-cols-3 gap-3 mb-3">
                     <div className="text-center p-3 rounded-lg bg-amber-50 border border-amber-200">
                       <p className="text-2xl font-bold text-amber-600">{data.arbre_categories.petits_lt_8m}</p>
-                      <p className="text-xs text-amber-700 font-medium">Petits {'<'} 8m</p>
+                      <p className="text-xs text-amber-700 font-medium">Strate 1 (3-5m)</p>
                       <p className="text-[10px] text-gray-400">Coeff. x0.3</p>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-green-50 border border-green-200">
                       <p className="text-2xl font-bold text-green-600">{data.arbre_categories.moyens_8_12m}</p>
-                      <p className="text-xs text-green-700 font-medium">Moyens 8-12m</p>
+                      <p className="text-xs text-green-700 font-medium">Strate 2 (5-30m)</p>
                       <p className="text-[10px] text-gray-400">Coeff. x0.7</p>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-emerald-50 border border-emerald-200">
                       <p className="text-2xl font-bold text-emerald-600">{data.arbre_categories.grands_gt_12m}</p>
-                      <p className="text-xs text-emerald-700 font-medium">Grands {'>'} 12m</p>
+                      <p className="text-xs text-emerald-700 font-medium">Strate 3 (&gt;30m)</p>
                       <p className="text-[10px] text-gray-400">Coeff. x1.0</p>
                     </div>
                   </div>

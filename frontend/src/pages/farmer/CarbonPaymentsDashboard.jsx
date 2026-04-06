@@ -39,9 +39,9 @@ const CarbonPaymentsDashboard = () => {
   const [form, setForm] = useState({
     // Questions de base (1-4)
     hectares: '',
-    arbres_grands: '',      // > 12 mètres
-    arbres_moyens: '',      // 8-12 mètres
-    arbres_petits: '',      // < 8 mètres
+    arbres_grands: '',      // Strate 3 (canopee > 30m)
+    arbres_moyens: '',      // Strate 2 (canopee 5-30m)
+    arbres_petits: '',      // Strate 1 (canopee 3-5m)
     // Questions pratiques (5-14)
     engrais: '',
     brulage: '',
@@ -285,10 +285,10 @@ const CarbonPaymentsDashboard = () => {
                     data-testid="q-hectares"
                   />
                 </div>
-                {/* 2. Arbres GRANDS > 12m */}
+                {/* 2. Especes Strate 3 */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">2. Arbres GRANDS {'>'} 12 mètres ?</Label>
-                  <p className="text-xs text-gray-500">(grands arbres d'ombrage)</p>
+                  <Label className="text-gray-700 text-sm font-medium">2. Especes de Strate 3 (canopee &gt; 30m) ?</Label>
+                  <p className="text-xs text-gray-500">(grands arbres d'ombrage, canopee superieure a 30m)</p>
                   <Input
                     type="number"
                     value={form.arbres_grands}
@@ -298,10 +298,10 @@ const CarbonPaymentsDashboard = () => {
                     data-testid="q-arbres-grands"
                   />
                 </div>
-                {/* 3. Arbres MOYENS 8-12m */}
+                {/* 3. Especes Strate 2 */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">3. Arbres MOYENS 8-12 mètres ?</Label>
-                  <p className="text-xs text-gray-500">(arbres de taille moyenne)</p>
+                  <Label className="text-gray-700 text-sm font-medium">3. Especes de Strate 2 (canopee 5-30m) ?</Label>
+                  <p className="text-xs text-gray-500">(arbres de taille moyenne, canopee entre 5 et 30m)</p>
                   <Input
                     type="number"
                     value={form.arbres_moyens}
@@ -311,10 +311,10 @@ const CarbonPaymentsDashboard = () => {
                     data-testid="q-arbres-moyens"
                   />
                 </div>
-                {/* 4. Arbres PETITS < 8m */}
+                {/* 4. Especes Strate 1 */}
                 <div>
-                  <Label className="text-gray-700 text-sm font-medium">4. Arbres PETITS {'<'} 8 mètres ?</Label>
-                  <p className="text-xs text-gray-500">(jeunes arbres)</p>
+                  <Label className="text-gray-700 text-sm font-medium">4. Especes de Strate 1 (canopee 3-5m) ?</Label>
+                  <p className="text-xs text-gray-500">(jeunes arbres, canopee entre 3 et 5m)</p>
                   <Input
                     type="number"
                     value={form.arbres_petits}

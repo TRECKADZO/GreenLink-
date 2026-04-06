@@ -155,7 +155,7 @@ async def get_farmer_payments(farmer_id: str) -> list:
 
 CARBON_QUESTIONS_SIMPLE = [
     {"key": "hectares", "text": "Estimation Prime Carbone\n\nCombien d'hectares de cacao avez-vous ?\n(ex: 3 ou 5.5)\nTapez le nombre", "type": "number"},
-    {"key": "arbres_grands", "text": "Nombre d'arbres ombres > 8 metres ?\n(ex: 120)\nTapez le nombre", "type": "number"},
+    {"key": "arbres_grands", "text": "Nombre d'especes Strate 3 (canopee > 30m) ?\n(ex: 120)\nTapez le nombre", "type": "number"},
     {"key": "engrais", "text": "Utilisez-vous de l'engrais chimique ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "brulage", "text": "Pratiquez-vous le brulage des residus ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "compost", "text": "Utilisez-vous du compost organique ?\n1. Oui\n2. Non", "type": "yesno"},
@@ -169,9 +169,9 @@ CARBON_QUESTIONS_SIMPLE = [
 
 CARBON_QUESTIONS_DETAILED = [
     {"key": "hectares", "text": "Estimation Detaillee\n\nSuperficie totale (hectares) ?\n(ex: 4.5)\nTapez le nombre", "type": "number"},
-    {"key": "arbres_grands", "text": "Arbres GRANDS (> 12 metres) ?\n(ex: 50)", "type": "number"},
-    {"key": "arbres_moyens", "text": "Arbres MOYENS (8-12 metres) ?\n(ex: 80)", "type": "number"},
-    {"key": "arbres_petits", "text": "Arbres PETITS (< 8 metres) ?\n(ex: 30)", "type": "number"},
+    {"key": "arbres_grands", "text": "Especes Strate 3 (canopee > 30m) ?\n(ex: 50)", "type": "number"},
+    {"key": "arbres_moyens", "text": "Especes Strate 2 (canopee 5-30m) ?\n(ex: 80)", "type": "number"},
+    {"key": "arbres_petits", "text": "Especes Strate 1 (canopee 3-5m) ?\n(ex: 30)", "type": "number"},
     {"key": "engrais", "text": "Utilisez-vous des engrais chimiques ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "brulage", "text": "Faites-vous le brulage ?\n1. Oui\n2. Non", "type": "yesno"},
     {"key": "compost", "text": "Utilisez-vous du compost organique ?\n1. Oui\n2. Non", "type": "yesno"},
@@ -377,7 +377,7 @@ def calculate_ars_level(answers: dict) -> dict:
     else:
         details.append("Agroforesterie: Non conforme")
 
-    # Critere 2: Arbres grands >8m (15 points)
+    # Critere 2: Especes Strate 3 canopee >30m (15 points)
     if arbres_grands_par_ha >= 30:
         pct += 15
     elif arbres_grands_par_ha >= 15:
@@ -478,7 +478,7 @@ async def notify_admin_ars_update(farmer_id: str, farmer_name: str, phone: str, 
     field_labels = {
         "hectares": "Hectares cacao",
         "arbres_total": "Arbres ombres total",
-        "arbres_grands": "Arbres > 8 metres",
+        "arbres_grands": "Especes Strate 3 (>30m)",
         "engrais": "Engrais chimique",
         "brulage": "Brulage residus",
     }
@@ -1589,7 +1589,7 @@ async def ussd_callback(request: USSDRequest):
                         response_text = (
                             f"Votre Prime Carbone\n\n"
                             f"Hectares: {result['hectares']} ha\n"
-                            f"Arbres >8m: {result['arbres_grands']}\n"
+                            f"Strate 3 (>30m): {result['arbres_grands']}\n"
                             f"Score: {result['score']}/10\n"
                             f"Prime: {format_xof(result['prime_annuelle'])}/an\n\n"
                             f"Niveau: {level_label(result['ars_level'])} ({result['ars_pct']}%)\n"
@@ -1652,9 +1652,9 @@ async def ussd_callback(request: USSDRequest):
                         response_text = (
                             f"Votre Prime Carbone\n\n"
                             f"Hectares: {result['hectares']} ha\n"
-                            f"Grands >12m: {result['arbres_grands']}\n"
-                            f"Moyens 8-12m: {result['arbres_moyens']}\n"
-                            f"Petits <8m: {result['arbres_petits']}\n"
+                            f"Strate 3 (>30m): {result['arbres_grands']}\n"
+                            f"Strate 2 (5-30m): {result['arbres_moyens']}\n"
+                            f"Strate 1 (3-5m): {result['arbres_petits']}\n"
                             f"Score: {result['score']}/10\n"
                             f"Prime: {format_xof(result['prime_annuelle'])}/an\n\n"
                             f"Niveau: {level_label(result['ars_level'])} ({result['ars_pct']}%)\n"
@@ -1747,7 +1747,7 @@ async def ussd_callback(request: USSDRequest):
                         f"(maj: {updated_str})\n\n"
                         f"Hectares: {ars_data.get('hectares', '-')} ha\n"
                         f"Arbres total: {ars_data.get('arbres_total', '-')}\n"
-                        f"Arbres >8m: {ars_data.get('arbres_grands', '-')}\n"
+                        f"Strate 3 (>30m): {ars_data.get('arbres_grands', '-')}\n"
                         f"Engrais: {'Oui' if ars_data.get('engrais') == 'oui' else 'Non'}\n"
                         f"Brulage: {'Oui' if ars_data.get('brulage') == 'oui' else 'Non'}\n"
                         f"Niveau: {level_label(ars_data.get('ars_level', '-'))} ({ars_data.get('ars_pct', 0)}%)\n\n"
@@ -1766,7 +1766,7 @@ async def ussd_callback(request: USSDRequest):
                     "MISE A JOUR PRATIQUES\n\n"
                     "1. Hectares de cacao\n"
                     "2. Nombre total arbres\n"
-                    "3. Arbres > 8 metres\n"
+                    "3. Especes Strate 3 (>30m)\n"
                     "4. Engrais (Oui/Non)\n"
                     "5. Brulage (Oui/Non)\n"
                     "0. Annuler"
@@ -1861,7 +1861,7 @@ async def ussd_callback(request: USSDRequest):
                     "MISE A JOUR PRATIQUES\n\n"
                     "1. Hectares de cacao\n"
                     "2. Nombre total arbres\n"
-                    "3. Arbres > 8 metres\n"
+                    "3. Especes Strate 3 (>30m)\n"
                     "4. Engrais (Oui/Non)\n"
                     "5. Brulage (Oui/Non)\n"
                     "0. Annuler"
@@ -1891,7 +1891,7 @@ async def ussd_callback(request: USSDRequest):
 
             if choice in ("1", "2", "3"):
                 field_map = {"1": "hectares", "2": "arbres_total", "3": "arbres_grands"}
-                labels = {"1": "hectares de cacao", "2": "arbres ombrages total", "3": "arbres > 8 metres"}
+                labels = {"1": "hectares de cacao", "2": "arbres ombrages total", "3": "especes strate 3 (>30m)"}
                 examples = {"1": "4.5", "2": "250", "3": "180"}
                 session["data"]["ars_update_field"] = field_map[choice]
                 session["state"] = "ars_update_value"
@@ -2012,7 +2012,7 @@ async def ussd_callback(request: USSDRequest):
                     "MISE A JOUR PRATIQUES\n\n"
                     "1. Hectares de cacao\n"
                     "2. Nombre total arbres\n"
-                    "3. Arbres > 8 metres\n"
+                    "3. Especes Strate 3 (>30m)\n"
                     "4. Engrais (Oui/Non)\n"
                     "5. Brulage (Oui/Non)\n"
                     "0. Annuler"
@@ -2238,9 +2238,9 @@ async def ussd_carbon_calculator(request: USSDRequest):
         # All questions for stateless mode (14 questions)
         QUESTIONS = [
             {"key": "hectares", "text": "PRIME CARBONE *144*99#\n\nQuestion 1/14\nSurface plantation (hectares) ?\nLa superficie de votre exploitation determine le potentiel de sequestration carbone.\n\nEx: 3.5", "type": "number"},
-            {"key": "arbres_grands", "text": "Question 2/14\nArbres GRANDS (> 12m) ?\nLes grands arbres stockent plus de carbone et offrent un meilleur ombrage.\n\nEx: 20", "type": "number"},
-            {"key": "arbres_moyens", "text": "Question 3/14\nArbres MOYENS (8-12m) ?\nLes arbres moyens contribuent a la biodiversite et a la couverture.\n\nEx: 30", "type": "number"},
-            {"key": "arbres_petits", "text": "Question 4/14\nArbres PETITS (< 8m) ?\nLes jeunes arbres representent le potentiel futur de stockage carbone.\n\nEx: 10", "type": "number"},
+            {"key": "arbres_grands", "text": "Question 2/14\nEspeces Strate 3 (canopee > 30m) ?\nLes especes de strate 3 stockent plus de carbone et offrent un meilleur ombrage.\n\nEx: 20", "type": "number"},
+            {"key": "arbres_moyens", "text": "Question 3/14\nEspeces Strate 2 (canopee 5-30m) ?\nLes especes de strate 2 contribuent a la biodiversite et a la couverture.\n\nEx: 30", "type": "number"},
+            {"key": "arbres_petits", "text": "Question 4/14\nEspeces Strate 1 (canopee 3-5m) ?\nLes jeunes especes representent le potentiel futur de stockage carbone.\n\nEx: 10", "type": "number"},
             {"key": "culture", "text": "Question 5/14\nCulture principale ?\nChaque culture a un potentiel different de sequestration carbone.\n\n1. Cacao\n2. Cafe\n3. Anacarde", "type": "choice"},
             {"key": "engrais", "text": "Question 6/14\nEngrais chimiques ?\nLes engrais chimiques augmentent les emissions de gaz a effet de serre.\n\n1. Oui\n2. Non", "type": "yesno"},
             {"key": "brulage", "text": "Question 7/14\nBrulage des residus ?\nLe brulage libere du CO2 et detruit la matiere organique du sol.\n\n1. Oui\n2. Non", "type": "yesno"},
