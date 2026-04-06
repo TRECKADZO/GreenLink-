@@ -84,6 +84,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Tests de securite: 5 tests backend passes (test_security_privilege_escalation.py)
 - (7 avr) Bug fix: Cooperatives invisibles dans messagerie admin — get_display_name verifie maintenant coop_name + 12 cooperatives corrigees en DB
 - (7 avr) Ajout decompte arbres ombrages par strate (Strate 1/2/3) dans fiche parcelle (MemberParcelsPage + ParcelsVerificationPage + API backend)
+- (7 avr) Saisie arbres par strate lors de la creation de parcelle (AddParcelPage + MemberParcelsPage modal + backend) avec bonus score carbone
 
 ## Backlog
 ### P0

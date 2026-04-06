@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { offlineCooperativeApi as cooperativeApi } from '../../services/offlineCooperativeApi';
 import { 
-  MapPin, ChevronLeft, Leaf, Navigation, Users, User
+  MapPin, ChevronLeft, Leaf, Navigation, Users, User, TreePine
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -58,7 +58,11 @@ const AddParcelPage = () => {
     crop_type: 'cacao',
     gps_lat: '',
     gps_lng: '',
-    certification: ''
+    certification: '',
+    arbres_grands: '',
+    arbres_moyens: '',
+    arbres_petits: '',
+    couverture_ombragee: ''
   });
 
   useEffect(() => {
@@ -100,7 +104,11 @@ const AddParcelPage = () => {
         crop_type: formData.crop_type,
         gps_lat: formData.gps_lat ? parseFloat(formData.gps_lat) : null,
         gps_lng: formData.gps_lng ? parseFloat(formData.gps_lng) : null,
-        certification: formData.certification || null
+        certification: formData.certification || null,
+        arbres_grands: formData.arbres_grands ? parseInt(formData.arbres_grands) : null,
+        arbres_moyens: formData.arbres_moyens ? parseInt(formData.arbres_moyens) : null,
+        arbres_petits: formData.arbres_petits ? parseInt(formData.arbres_petits) : null,
+        couverture_ombragee: formData.couverture_ombragee ? parseFloat(formData.couverture_ombragee) : null
       });
       
       toast.success(`Parcelle ajoutée avec succès! Score carbone: ${result.score_carbone || result.carbon_score}/10`);
@@ -319,6 +327,74 @@ const AddParcelPage = () => {
 
               {/* GPS Coordinates */}
               <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <TreePine className="h-5 w-5 text-green-600" />
+                  <Label className="text-base font-semibold">Arbres ombrages par strate (optionnel)</Label>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  Renseignez le nombre d'arbres par strate pour ameliorer le calcul du score carbone
+                </p>
+                <div className="grid grid-cols-3 gap-4 mb-3">
+                  <div>
+                    <Label htmlFor="arbres_grands" className="text-sm text-gray-600">Strate 3 (&gt;30m)</Label>
+                    <Input
+                      id="arbres_grands"
+                      type="number"
+                      min="0"
+                      value={formData.arbres_grands}
+                      onChange={(e) => setFormData({...formData, arbres_grands: e.target.value})}
+                      placeholder="0"
+                      data-testid="arbres-strate3-input"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="arbres_moyens" className="text-sm text-gray-600">Strate 2 (5-30m)</Label>
+                    <Input
+                      id="arbres_moyens"
+                      type="number"
+                      min="0"
+                      value={formData.arbres_moyens}
+                      onChange={(e) => setFormData({...formData, arbres_moyens: e.target.value})}
+                      placeholder="0"
+                      data-testid="arbres-strate2-input"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="arbres_petits" className="text-sm text-gray-600">Strate 1 (3-5m)</Label>
+                    <Input
+                      id="arbres_petits"
+                      type="number"
+                      min="0"
+                      value={formData.arbres_petits}
+                      onChange={(e) => setFormData({...formData, arbres_petits: e.target.value})}
+                      placeholder="0"
+                      data-testid="arbres-strate1-input"
+                    />
+                  </div>
+                </div>
+                {(formData.arbres_grands || formData.arbres_moyens || formData.arbres_petits) && (
+                  <div className="text-sm text-green-700 bg-green-50 px-3 py-1.5 rounded mb-3">
+                    Total: <strong>{(parseInt(formData.arbres_grands || 0) + parseInt(formData.arbres_moyens || 0) + parseInt(formData.arbres_petits || 0))}</strong> arbres
+                  </div>
+                )}
+                <div className="max-w-xs">
+                  <Label htmlFor="couverture_ombragee" className="text-sm text-gray-600">Couverture ombragee (%)</Label>
+                  <Input
+                    id="couverture_ombragee"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={formData.couverture_ombragee}
+                    onChange={(e) => setFormData({...formData, couverture_ombragee: e.target.value})}
+                    placeholder="Ex: 40"
+                    data-testid="couverture-ombragee-input"
+                  />
+                </div>
+              </div>
+
+              {/* GPS Coordinates */}
+              <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-3">
                   <Label className="text-base">Coordonnées GPS (optionnel)</Label>
                   <Button 
@@ -360,8 +436,9 @@ const AddParcelPage = () => {
                 <div className="flex items-start gap-2">
                   <Leaf className="h-5 w-5 text-green-600 mt-0.5" />
                   <p className="text-sm text-green-800">
-                    Le <strong>score carbone</strong> sera calculé automatiquement en fonction de la superficie 
-                    et des certifications. Les parcelles certifiées obtiennent un bonus de score.
+                    Le <strong>score carbone</strong> est calcule en fonction de la superficie, 
+                    des certifications et du <strong>nombre d'arbres ombrages</strong>. Plus vous avez d'arbres, 
+                    plus le score est eleve.
                   </p>
                 </div>
               </div>

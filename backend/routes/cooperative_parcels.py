@@ -28,6 +28,11 @@ class MemberParcelCreate(BaseModel):
     gps_lat: Optional[float] = None
     gps_lng: Optional[float] = None
     certification: Optional[str] = None
+    nombre_arbres: Optional[int] = None
+    arbres_petits: Optional[int] = None
+    arbres_moyens: Optional[int] = None
+    arbres_grands: Optional[int] = None
+    couverture_ombragee: Optional[float] = None
 
 
 class ParcelVerificationUpdate(BaseModel):
@@ -63,7 +68,14 @@ async def add_member_parcel(
     if not member:
         raise HTTPException(status_code=404, detail="Membre non trouvé")
     
-    carbon_score = round(min(9.5, 5.5 + (parcel.area_hectares * 0.3) + (1.5 if parcel.certification else 0)), 1)
+    # Calculate tree totals
+    total_trees = parcel.nombre_arbres or 0
+    if parcel.arbres_petits is not None or parcel.arbres_moyens is not None or parcel.arbres_grands is not None:
+        total_trees = (parcel.arbres_petits or 0) + (parcel.arbres_moyens or 0) + (parcel.arbres_grands or 0)
+    
+    # Carbon score: base + surface bonus + certification bonus + tree bonus
+    tree_bonus = min(2.0, total_trees * 0.02) if total_trees > 0 else 0
+    carbon_score = round(min(9.5, 5.5 + (parcel.area_hectares * 0.3) + (1.5 if parcel.certification else 0) + tree_bonus), 1)
     co2_captured = round(parcel.area_hectares * carbon_score * 2.5, 2)
     
     parcel_doc = {
@@ -82,6 +94,11 @@ async def add_member_parcel(
             "lng": parcel.gps_lng
         } if parcel.gps_lat and parcel.gps_lng else None,
         "certification": parcel.certification,
+        "nombre_arbres": total_trees if total_trees > 0 else None,
+        "arbres_petits": parcel.arbres_petits,
+        "arbres_moyens": parcel.arbres_moyens,
+        "arbres_grands": parcel.arbres_grands,
+        "couverture_ombragee": parcel.couverture_ombragee,
         "eudr_compliant": True,
         "deforestation_free": True,
         "status": "active",

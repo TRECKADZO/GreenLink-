@@ -42,7 +42,11 @@ const MemberParcelsPage = () => {
     crop_type: 'cacao',
     gps_lat: '',
     gps_lng: '',
-    certification: ''
+    certification: '',
+    arbres_grands: '',
+    arbres_moyens: '',
+    arbres_petits: '',
+    couverture_ombragee: ''
   });
 
   const fetchParcels = async () => {
@@ -71,7 +75,11 @@ const MemberParcelsPage = () => {
         area_hectares: parseFloat(newParcel.area_hectares),
         gps_lat: newParcel.gps_lat ? parseFloat(newParcel.gps_lat) : null,
         gps_lng: newParcel.gps_lng ? parseFloat(newParcel.gps_lng) : null,
-        certification: newParcel.certification || null
+        certification: newParcel.certification || null,
+        arbres_grands: newParcel.arbres_grands ? parseInt(newParcel.arbres_grands) : null,
+        arbres_moyens: newParcel.arbres_moyens ? parseInt(newParcel.arbres_moyens) : null,
+        arbres_petits: newParcel.arbres_petits ? parseInt(newParcel.arbres_petits) : null,
+        couverture_ombragee: newParcel.couverture_ombragee ? parseFloat(newParcel.couverture_ombragee) : null
       });
       toast.success(`Parcelle ajoutée! Score carbone: ${result.score_carbone || result.carbon_score}/10`);
       setShowAddModal(false);
@@ -82,7 +90,11 @@ const MemberParcelsPage = () => {
         crop_type: 'cacao',
         gps_lat: '',
         gps_lng: '',
-        certification: ''
+        certification: '',
+        arbres_grands: '',
+        arbres_moyens: '',
+        arbres_petits: '',
+        couverture_ombragee: ''
       });
       fetchParcels();
     } catch (error) {
@@ -396,6 +408,31 @@ const MemberParcelsPage = () => {
                 </Select>
               </div>
               
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <TreePine className="h-4 w-4 text-green-600" />
+                  <Label className="font-semibold">Arbres ombrages (optionnel)</Label>
+                </div>
+                <div className="grid grid-cols-3 gap-3 mb-2">
+                  <div>
+                    <Label className="text-xs text-gray-500">Strate 3 (&gt;30m)</Label>
+                    <Input type="number" min="0" value={newParcel.arbres_grands} onChange={(e) => setNewParcel({...newParcel, arbres_grands: e.target.value})} placeholder="0" data-testid="modal-arbres-strate3" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500">Strate 2 (5-30m)</Label>
+                    <Input type="number" min="0" value={newParcel.arbres_moyens} onChange={(e) => setNewParcel({...newParcel, arbres_moyens: e.target.value})} placeholder="0" data-testid="modal-arbres-strate2" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500">Strate 1 (3-5m)</Label>
+                    <Input type="number" min="0" value={newParcel.arbres_petits} onChange={(e) => setNewParcel({...newParcel, arbres_petits: e.target.value})} placeholder="0" data-testid="modal-arbres-strate1" />
+                  </div>
+                </div>
+                <div className="max-w-[200px]">
+                  <Label className="text-xs text-gray-500">Couverture ombragee (%)</Label>
+                  <Input type="number" min="0" max="100" step="0.5" value={newParcel.couverture_ombragee} onChange={(e) => setNewParcel({...newParcel, couverture_ombragee: e.target.value})} placeholder="Ex: 40" data-testid="modal-couverture" />
+                </div>
+              </div>
+
               <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-3">
                   <Label>Coordonnées GPS (optionnel)</Label>
