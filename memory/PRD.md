@@ -85,6 +85,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Bug fix: Cooperatives invisibles dans messagerie admin — get_display_name verifie maintenant coop_name + 12 cooperatives corrigees en DB
 - (7 avr) Ajout decompte arbres ombrages par strate (Strate 1/2/3) dans fiche parcelle (MemberParcelsPage + ParcelsVerificationPage + API backend)
 - (7 avr) Saisie arbres par strate lors de la creation de parcelle (AddParcelPage + MemberParcelsPage modal + backend) avec bonus score carbone
+- (7 avr) GESTION DES ECARTS : Moteur de calcul automatique (surface, arbres par strate, brulage, couverture) + Classification (faible/moyen/important) + Impact prime carbone (0.95/0.80/0.50) + Dashboard cooperative + Notifications farmer + Validation coop + Tests 16/16 passes
 
 ## Backlog
 ### P0
