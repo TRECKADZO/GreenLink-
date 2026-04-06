@@ -20,6 +20,7 @@ const ForgotPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [simulationCode, setSimulationCode] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState(null);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -37,12 +38,16 @@ const ForgotPassword = () => {
         identifier: identifier.trim()
       });
       
+      // Track delivery method from backend
+      setDeliveryMethod(response.data.delivery_method || null);
+      
       // If real email was sent, show confirmation
       if (response.data.email_sent) {
         setEmailSent(true);
       }
-      // In simulation mode (phone users), show the code for testing
-      if (response.data.simulation_code) {
+      // Only show simulation code for phone-only users (SMS not yet configured)
+      // NEVER show code for email users - they must check their inbox
+      if (response.data.simulation_code && response.data.delivery_method === 'sms_simulation') {
         setSimulationCode(response.data.simulation_code);
       }
       
@@ -179,32 +184,48 @@ const ForgotPassword = () => {
         {step === 2 && (
           <form onSubmit={handleVerifyCode} className="space-y-6">
             {/* Email Sent Confirmation */}
-            {emailSent && !simulationCode && (
+            {emailSent && (
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-600 mt-0.5" />
+                  <Mail className="w-5 h-5 text-green-600 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-green-800">Email envoye</p>
+                    <p className="text-sm font-medium text-green-800">Code envoyé par email</p>
                     <p className="text-sm text-green-700 mt-1">
-                      Un code de verification a ete envoye a votre adresse email. Verifiez votre boite de reception.
+                      Un code de vérification à 6 chiffres a été envoyé à votre adresse email. 
+                      Vérifiez votre boîte de réception et vos spams.
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Code Display - Always shown */}
-            {simulationCode && (
-              <div className="p-4 bg-green-50 border border-green-300 rounded-lg">
+            {/* SMS Simulation - Code Display (phone-only users, SMS not yet configured) */}
+            {simulationCode && deliveryMethod === 'sms_simulation' && (
+              <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-600 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
                   <div className="w-full">
-                    <p className="text-sm font-medium text-green-800">Votre code de verification</p>
-                    <div className="mt-2 bg-white border-2 border-green-400 rounded-lg p-3 text-center">
+                    <p className="text-sm font-medium text-amber-800">Mode simulation SMS</p>
+                    <div className="mt-2 bg-white border-2 border-amber-400 rounded-lg p-3 text-center">
                       <span className="text-2xl font-bold tracking-[0.4em] text-[#2d5a4d]">{simulationCode}</span>
                     </div>
-                    <p className="text-xs text-green-600 mt-2">
-                      Recopiez ce code ci-dessous pour continuer
+                    <p className="text-xs text-amber-600 mt-2">
+                      Le service SMS n'est pas encore configuré. Recopiez ce code ci-dessous.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Phone user without email - no simulation code available */}
+            {!emailSent && !simulationCode && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">Code envoyé</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Si un compte existe avec cet identifiant, un code de réinitialisation a été envoyé.
                     </p>
                   </div>
                 </div>

@@ -146,6 +146,9 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
   - Farmer: 5 tabs (Accueil USSD avec Score Carbone gauge/Stats/Menu + Tableau de bord + Parcelles + Carbone + Plus). Onglet Plus: Mes Activites (Parcelles, Recoltes, Declarer, Commandes), Marketplace & Primes (Boutique, Primes Carbone, Pratiques Durables), Mon Compte (Profil, Notifications), Deconnexion
   - Accueil = menu numerote style mobile, Tableau = KPIs detailles avec objectifs/progression
 
+## Travail complete (6 avr suite)
+- (6 avr) FIX SECURITE P0: Code de reinitialisation mot de passe n'est plus affiche dans l'UI pour les utilisateurs email. Backend renvoie delivery_method=email sans simulation_code. Frontend affiche uniquement "Verifiez votre boite de reception et vos spams". Code visible uniquement en mode simulation SMS (utilisateurs sans email, SMS pas encore configure).
+
 ## Backlog
 ### P0
 - Mettre a jour MONGO_URL dans les Secrets Emergent Dashboard (action utilisateur)
