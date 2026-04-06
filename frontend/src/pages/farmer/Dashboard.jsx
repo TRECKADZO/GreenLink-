@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/button';
 import { MobileAppShell } from '../../components/MobileAppShell';
 import { NotificationCenter } from '../../components/NotificationCenter';
 import { greenlinkApi } from '../../services/greenlinkApi';
+import { toast } from 'sonner';
 import { 
   Sprout, TrendingUp, DollarSign, MapPin, Award, Plus, Phone,
   MessageSquare, Send, Store, Leaf, Package, BarChart3, Home,
@@ -240,7 +241,7 @@ const FarmerDashboardTab = ({ stats, smsHistory, onSendSummary, sendingSummary, 
 };
 
 // ========= ONGLET PLUS =========
-const FarmerMoreTab = ({ navigate, stats }) => {
+const FarmerMoreTab = ({ navigate, stats, onTabChange }) => {
   const { logout } = useAuth();
 
   // Progression badge calculation
@@ -260,7 +261,7 @@ const FarmerMoreTab = ({ navigate, stats }) => {
     {
       title: 'Mes Activites',
       items: [
-        { label: 'Mes Parcelles', desc: 'Declarer et gerer mes parcelles', icon: MapPin, color: 'bg-emerald-500', route: '/farmer/parcels/new' },
+        { label: 'Mes Parcelles', desc: 'Declarer et gerer mes parcelles', icon: MapPin, color: 'bg-emerald-500', action: () => onTabChange('parcels') },
         { label: 'Mes Recoltes', desc: 'Suivre mes declarations', icon: Package, color: 'bg-amber-500', route: '/farmer/my-harvests' },
         { label: 'Declarer une Recolte', desc: 'Enregistrer ma production', icon: TrendingUp, color: 'bg-blue-500', route: '/harvest-marketplace' },
         { label: 'Mes Commandes', desc: 'Historique de mes achats', icon: FileText, color: 'bg-gray-500', route: '/buyer/orders' },
@@ -318,7 +319,7 @@ const FarmerMoreTab = ({ navigate, stats }) => {
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{section.title}</p>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100 overflow-hidden">
             {section.items.map((item) => (
-              <button key={item.label} onClick={() => navigate(item.route)}
+              <button key={item.label} onClick={() => item.action ? item.action() : navigate(item.route)}
                 className="w-full flex items-center gap-3 p-4 text-left active:bg-gray-50 transition-colors"
                 data-testid={`farmer-more-${item.label.toLowerCase().replace(/\s/g, '-')}`}>
                 <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center flex-shrink-0`}>
@@ -348,24 +349,58 @@ const FarmerMoreTab = ({ navigate, stats }) => {
 const FarmerParcelsTab = ({ navigate }) => {
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    location: '', region: '', crop_type: 'cacao', area_hectares: '',
+    trees_count: '', has_shade_trees: false, uses_organic_fertilizer: false,
+    has_erosion_control: false, planting_year: ''
+  });
   const API_URL = process.env.REACT_APP_BACKEND_URL;
+  const getToken = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
-  useEffect(() => {
-    const fetchParcels = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_URL}/api/greenlink/parcels/my-parcels`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) setParcels(await res.json());
-      } catch (err) {
-        console.error('Error fetching parcels:', err);
-      } finally {
-        setLoading(false);
+  const fetchParcels = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/greenlink/parcels/my-parcels`, { headers: getToken() });
+      if (res.ok) setParcels(await res.json());
+    } catch (err) { console.error('Error:', err); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchParcels(); }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.area_hectares || !form.location) {
+      toast.error('Veuillez remplir la localisation et la superficie');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const payload = {
+        ...form,
+        area_hectares: parseFloat(form.area_hectares) || 0,
+        trees_count: parseInt(form.trees_count) || 0,
+        planting_year: parseInt(form.planting_year) || null,
+      };
+      const res = await fetch(`${API_URL}/api/greenlink/parcels`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getToken() },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        toast.success('Parcelle declaree avec succes');
+        setShowForm(false);
+        setForm({ location: '', region: '', crop_type: 'cacao', area_hectares: '', trees_count: '', has_shade_trees: false, uses_organic_fertilizer: false, has_erosion_control: false, planting_year: '' });
+        setLoading(true);
+        fetchParcels();
+      } else {
+        const err = await res.json();
+        toast.error(err.detail || 'Erreur lors de la declaration');
       }
-    };
-    fetchParcels();
-  }, [API_URL]);
+    } catch { toast.error('Erreur de connexion'); }
+    finally { setSubmitting(false); }
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -388,14 +423,79 @@ const FarmerParcelsTab = ({ navigate }) => {
     <div className="p-4 space-y-4" data-testid="farmer-parcels-tab">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-gray-800">Mes Parcelles</h2>
-        <span className="text-xs text-gray-400">{parcels.length} parcelle(s)</span>
+        <Button onClick={() => setShowForm(!showForm)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-8 text-xs" data-testid="add-parcel-btn">
+          <Plus className="w-3.5 h-3.5 mr-1" />{showForm ? 'Annuler' : 'Nouvelle Parcelle'}
+        </Button>
       </div>
 
-      {parcels.length === 0 ? (
+      {/* Add Parcel Form */}
+      {showForm && (
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-4 shadow-sm border border-emerald-200 space-y-3" data-testid="add-parcel-form">
+          <p className="text-sm font-semibold text-emerald-800">Declarer une parcelle</p>
+          <div>
+            <label className="text-xs text-gray-500">Localisation / Village *</label>
+            <input value={form.location} onChange={e => setForm(p => ({...p, location: e.target.value}))} placeholder="Ex: Daloa, Vavoua..." className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none" data-testid="parcel-location" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500">Region</label>
+              <select value={form.region} onChange={e => setForm(p => ({...p, region: e.target.value}))} className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-region">
+                <option value="">Selectionner</option>
+                {['Bouafle', 'Daloa', 'Soubre', 'San Pedro', 'Gagnoa', 'Duekoue', 'Man', 'Guiglo', 'Abengourou', 'Abidjan'].map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500">Culture</label>
+              <select value={form.crop_type} onChange={e => setForm(p => ({...p, crop_type: e.target.value}))} className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-crop">
+                <option value="cacao">Cacao</option>
+                <option value="anacarde">Anacarde</option>
+                <option value="cafe">Cafe</option>
+                <option value="hevea">Hevea</option>
+                <option value="palmier">Palmier</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500">Superficie (ha) *</label>
+              <input type="number" step="0.1" value={form.area_hectares} onChange={e => setForm(p => ({...p, area_hectares: e.target.value}))} placeholder="Ex: 3.5" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-area" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500">Nombre d'arbres</label>
+              <input type="number" value={form.trees_count} onChange={e => setForm(p => ({...p, trees_count: e.target.value}))} placeholder="Ex: 500" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-trees" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-gray-500">Annee de plantation</label>
+            <input type="number" value={form.planting_year} onChange={e => setForm(p => ({...p, planting_year: e.target.value}))} placeholder="Ex: 2015" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-year" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs text-gray-500">Pratiques agricoles</label>
+            {[
+              { key: 'has_shade_trees', label: 'Arbres ombrageurs (agroforesterie)' },
+              { key: 'uses_organic_fertilizer', label: 'Engrais organique / compost' },
+              { key: 'has_erosion_control', label: 'Controle de l\'erosion' },
+            ].map(p => (
+              <label key={p.key} className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form[p.key]} onChange={e => setForm(prev => ({...prev, [p.key]: e.target.checked}))} className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                <span className="text-xs text-gray-700">{p.label}</span>
+              </label>
+            ))}
+          </div>
+          <Button type="submit" disabled={submitting} className="w-full bg-emerald-600 hover:bg-emerald-700 h-11 rounded-xl" data-testid="submit-parcel-btn">
+            {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Declaration...</> : <><Plus className="w-4 h-4 mr-2" />Declarer ma parcelle</>}
+          </Button>
+        </form>
+      )}
+
+      {parcels.length === 0 && !showForm ? (
         <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
           <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-600">Aucune parcelle declaree</p>
-          <p className="text-xs text-gray-400 mt-1">Vos parcelles apparaitront ici une fois declarees par votre agent terrain</p>
+          <p className="text-xs text-gray-400 mt-1 mb-4">Declarez votre premiere parcelle pour commencer</p>
+          <Button onClick={() => setShowForm(true)} className="bg-emerald-600 hover:bg-emerald-700" data-testid="add-first-parcel-btn">
+            <Plus className="w-4 h-4 mr-2" />Declarer une parcelle
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -438,9 +538,6 @@ const FarmerParcelsTab = ({ navigate }) => {
                         <span className="text-[10px] text-emerald-600 font-medium">Score: {parcel.score_carbone}/10</span>
                       )}
                     </div>
-                    {parcel.coordonnees_gps && (
-                      <p className="text-[9px] text-gray-300 mt-1">GPS: {typeof parcel.coordonnees_gps === 'object' ? `${parcel.coordonnees_gps.lat?.toFixed(4)}, ${parcel.coordonnees_gps.lng?.toFixed(4)}` : parcel.coordonnees_gps}</p>
-                    )}
                   </div>
                 </div>
               </div>
@@ -538,7 +635,7 @@ const FarmerDashboard = () => {
       )}
 
       {activeTab === 'more' && (
-        <FarmerMoreTab navigate={navigate} stats={stats} />
+        <FarmerMoreTab navigate={navigate} stats={stats} onTabChange={setActiveTab} />
       )}
     </MobileAppShell>
   );
