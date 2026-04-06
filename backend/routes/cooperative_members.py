@@ -42,12 +42,16 @@ async def get_coop_members(
     user_type = current_user.get("user_type")
     if user_type in ("field_agent", "agent_terrain"):
         coop_id = current_user.get("cooperative_id", "")
-    elif user_type in ("cooperative",):
+    elif user_type in ("cooperative", "cooperative_admin"):
         coop_id = str(current_user["_id"])
     elif user_type in ("admin", "super_admin"):
-        coop_id = str(current_user["_id"])
+        # Admin doit specifier quelle cooperative consulter, sinon vide
+        raise HTTPException(status_code=403, detail="Utilisez le tableau de bord Super Admin pour consulter les cooperatives")
     else:
         raise HTTPException(status_code=403, detail="Accès réservé aux coopératives ou agents terrain")
+    
+    if not coop_id:
+        return {"total": 0, "members": []}
     
     # Support both field names and types for backward compatibility
     query = coop_id_query(coop_id)

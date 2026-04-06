@@ -115,7 +115,28 @@ async def update_commission_rate(
 async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
     """Vue d'ensemble du tableau de bord coopérative"""
     verify_cooperative(current_user)
-    coop_id = str(current_user["_id"])
+    user_type = current_user.get("user_type", "")
+    
+    # Seuls les comptes cooperative voient leur propre dashboard
+    if user_type in ("cooperative", "cooperative_admin"):
+        coop_id = str(current_user["_id"])
+    elif user_type in ("field_agent", "agent_terrain"):
+        coop_id = current_user.get("cooperative_id", "")
+    elif user_type in ("admin", "super_admin"):
+        # Admin: pas de données coopérative propre, utiliser le dashboard admin
+        return {
+            "coop_info": {"name": current_user.get("full_name"), "code": "", "certifications": [], "region": "", "commission_rate": 0},
+            "members": {"total": 0, "active": 0, "pending_validation": 0},
+            "parcelles": {"total": 0, "superficie_totale": 0, "total_arbres": 0, "score_carbone_moyen": 0, "co2_total": 0, "verifiees": 0, "en_attente_verification": 0},
+            "recent_members": [],
+            "agents": {"total": 0, "active": 0, "activated": 0}
+        }
+    else:
+        raise HTTPException(status_code=403, detail="Acces reserve")
+    
+    if not coop_id:
+        raise HTTPException(status_code=400, detail="Aucune cooperative associee")
+    
     coop_oid = ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None
     
     # Get members with both field name variants and types
@@ -196,7 +217,14 @@ async def get_coop_dashboard(current_user: dict = Depends(get_current_user)):
 async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
     """KPIs durabilite, SSRTE, ICI — acces complet gratuit pour toutes les cooperatives"""
     verify_cooperative(current_user)
-    coop_id = str(current_user["_id"])
+    user_type = current_user.get("user_type", "")
+    if user_type in ("cooperative", "cooperative_admin"):
+        coop_id = str(current_user["_id"])
+    elif user_type in ("field_agent", "agent_terrain"):
+        coop_id = current_user.get("cooperative_id", "")
+    else:
+        # Admin: retourner KPIs vides
+        return {"redd": None, "ssrte": None, "ici": None, "mrv": None}
 
     # All features enabled — free for cooperatives
     features = {
@@ -392,7 +420,14 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
 async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
     """Time-series data for dashboard charts (last 6 months) — acces complet gratuit"""
     verify_cooperative(current_user)
-    coop_id = str(current_user["_id"])
+    user_type = current_user.get("user_type", "")
+    if user_type in ("cooperative", "cooperative_admin"):
+        coop_id = str(current_user["_id"])
+    elif user_type in ("field_agent", "agent_terrain"):
+        coop_id = current_user.get("cooperative_id", "")
+    else:
+        # Admin: retourner graphiques vides
+        return {"redd_monthly": [], "ssrte_monthly": [], "risk_by_zone": []}
 
     # Build comprehensive query: match by coop_id/cooperative_id OR agent_id of coop's agents
     agent_ids = []
