@@ -178,10 +178,12 @@ export const AuthProvider = ({ children }) => {
       let errorMessage = 'Erreur lors de la connexion';
       if (error.response?.data?.detail) {
         errorMessage = error.response.data.detail;
+      } else if (error.response?.status === 429) {
+        errorMessage = 'Trop de tentatives. Veuillez patienter quelques minutes.';
       } else if (error.code === 'ERR_NETWORK') {
-        errorMessage = 'Erreur de connexion au serveur. Vérifiez votre connexion internet.';
+        errorMessage = 'Impossible de joindre le serveur. Verifiez votre connexion internet et reessayez.';
       } else if (error.code === 'ECONNABORTED') {
-        errorMessage = 'La connexion a expiré. Veuillez réessayer.';
+        errorMessage = 'La connexion a expire. Veuillez reessayer.';
       } else if (error.message) {
         errorMessage = `Erreur: ${error.message}`;
       }

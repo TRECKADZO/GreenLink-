@@ -309,10 +309,11 @@ export default function MessagingPage() {
     } finally { setLoadingMessages(false); }
   }, []);
 
-  useEffect(() => { if (conversationId) { loadConversation(conversationId); setMobileShowChat(true); } }, [conversationId, loadConversation]);
+  useEffect(() => { if (token && conversationId) { loadConversation(conversationId); setMobileShowChat(true); } }, [token, conversationId, loadConversation]);
 
   /* ── Deep-link from marketplace ── */
   useEffect(() => {
+    if (!token) return;
     const listingId = searchParams.get('listing');
     const sellerId = searchParams.get('seller');
     if (listingId && sellerId && !conversationId) {

@@ -219,6 +219,10 @@ else:
         "http://www.greenlink-agritech.com",
     ]
 
+# Rate limiting middleware (inner layer - added first)
+app.add_middleware(RateLimitMiddleware)
+
+# CORS middleware (outer layer - added last = wraps everything including rate limiter)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -227,9 +231,6 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
-
-# Rate limiting middleware (must be after CORS)
-app.add_middleware(RateLimitMiddleware)
 
 # Security headers middleware
 @app.middleware("http")
