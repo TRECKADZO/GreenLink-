@@ -15,6 +15,7 @@ from services.fcm_service import send_notification_to_user
 from routes.notifications import notify_sse_clients
 from datetime import datetime, timedelta
 from bson import ObjectId
+import uuid
 import random
 import hashlib
 import asyncio
@@ -373,14 +374,59 @@ async def declare_harvest(
     harvest_dict["payment_status"] = "pending"
     harvest_dict["payment_method"] = "orange_money"
     
+    # Independent farmer (no cooperative) → auto-validate & create marketplace listing
+    if not coop_id:
+        harvest_dict["statut"] = "validee"
+        harvest_dict["validated_at"] = datetime.utcnow()
+        harvest_dict["validation_note"] = "Auto-validee (agriculteur independant)"
+    
     result = await db.harvests.insert_one(harvest_dict)
     harvest_dict["_id"] = str(result.inserted_id)
     
+    # For independent farmers: auto-create marketplace listing
+    if not coop_id:
+        listing_dict = {
+            "listing_id": f"HRV-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:6].upper()}",
+            "crop_type": parcel.get("type_culture") or parcel.get("crop_type") or "cacao",
+            "variety": "",
+            "grade": quality_grade,
+            "quantity_kg": quantity_kg,
+            "price_per_kg": price_per_kg,
+            "min_order_kg": 50,
+            "currency": "XOF",
+            "certifications": [],
+            "origin_country": "CI",
+            "origin_region": parcel.get("region") or parcel.get("localisation") or "",
+            "location": parcel.get("localisation") or parcel.get("village") or "",
+            "department": parcel.get("region") or "",
+            "harvest_date": datetime.utcnow().isoformat(),
+            "description": harvest.notes or f"Recolte de {quantity_display}",
+            "seller_id": current_user["_id"],
+            "seller_name": current_user.get("full_name", ""),
+            "seller_type": "producteur",
+            "status": "active",
+            "harvest_id": str(result.inserted_id),
+            "views_count": 0,
+            "offers_count": 0,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "expires_at": datetime.utcnow() + timedelta(days=30),
+            "photos": [],
+            "eudr_compliant": False,
+            "deforestation_free": False,
+            "child_labor_free": False,
+        }
+        await db.harvest_listings.insert_one(listing_dict)
+    
     # Notification for the farmer
+    if coop_id:
+        farmer_msg = f"Recolte de {quantity_display} enregistree - En attente de validation par {coop_name}"
+    else:
+        farmer_msg = f"Recolte de {quantity_display} publiee directement sur le marche des recoltes"
     await db.notifications.insert_one({
         "user_id": current_user["_id"],
-        "title": "Récolte déclarée",
-        "message": f"Récolte de {quantity_display} enregistrée{' - En attente de validation par ' + coop_name if coop_name else ''}",
+        "title": "Recolte declaree",
+        "message": farmer_msg,
         "type": "harvest",
         "action_url": f"/farmer/harvests/{str(result.inserted_id)}",
         "created_at": datetime.utcnow(),

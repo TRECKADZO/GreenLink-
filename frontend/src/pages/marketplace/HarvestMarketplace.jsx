@@ -272,12 +272,10 @@ const HarvestMarketplace = () => {
       
       const response = await axios.get(`${API_URL}/api/harvest-marketplace/listings?${params}`);
       const data = response.data || [];
-      // Utiliser les données démo si l'API retourne vide
-      setListings(data.length > 0 ? data : DEMO_LISTINGS);
+      setListings(data);
     } catch (error) {
       console.error('Error fetching listings:', error);
-      // En cas d'erreur, utiliser les données démo
-      setListings(DEMO_LISTINGS);
+      setListings([]);
     } finally {
       setLoading(false);
     }
@@ -287,16 +285,10 @@ const HarvestMarketplace = () => {
     try {
       const response = await axios.get(`${API_URL}/api/harvest-marketplace/stats`);
       const data = response.data;
-      // Utiliser les stats démo si l'API retourne des valeurs nulles
-      if (!data || data.total_listings === 0) {
-        setStats(DEMO_STATS);
-      } else {
-        setStats(data);
-      }
+      setStats(data || { total_listings: 0, total_quantity_tons: 0, avg_price_per_kg: 0, active_sellers: 0 });
     } catch (error) {
       console.error('Error fetching stats:', error);
-      // En cas d'erreur, utiliser les stats démo
-      setStats(DEMO_STATS);
+      setStats({ total_listings: 0, total_quantity_tons: 0, avg_price_per_kg: 0, active_sellers: 0 });
     }
   };
 

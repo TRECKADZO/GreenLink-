@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Clock, CheckCircle2, XCircle, Loader2, User, Calendar, Scale, AlertTriangle, Check, X } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle2, XCircle, Loader2, User, Calendar, Scale, AlertTriangle, Check, X, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -28,6 +28,13 @@ const CoopHarvestsPage = () => {
   const [actionLoading, setActionLoading] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+
+  // Lot de vente state
+  const [lotMode, setLotMode] = useState(false);
+  const [selectedForLot, setSelectedForLot] = useState([]);
+  const [lotModal, setLotModal] = useState(false);
+  const [lotForm, setLotForm] = useState({ lot_name: '', price_per_kg: '', description: '' });
+  const [lotSubmitting, setLotSubmitting] = useState(false);
 
   const fetchHarvests = async () => {
     try {
@@ -82,22 +89,87 @@ const CoopHarvestsPage = () => {
     finally { setActionLoading(null); }
   };
 
+  const toggleLotSelection = (id) => {
+    setSelectedForLot(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const handleCreateLot = async () => {
+    setLotSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/cooperative/harvests/create-lot`, {
+        method: 'POST', headers: getAuthHeader(),
+        body: JSON.stringify({
+          harvest_ids: selectedForLot,
+          lot_name: lotForm.lot_name,
+          price_per_kg: parseFloat(lotForm.price_per_kg) || 0,
+          description: lotForm.description,
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        setLotModal(false);
+        setLotMode(false);
+        setSelectedForLot([]);
+        setLotForm({ lot_name: '', price_per_kg: '', description: '' });
+        fetchHarvests();
+      } else {
+        toast.error(data.detail || 'Erreur');
+      }
+    } catch { toast.error('Erreur de connexion'); }
+    finally { setLotSubmitting(false); }
+  };
+
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+  const validatedAvailable = harvests.filter(h => h.statut === 'validee' && !h.in_lot);
+  const selectedTotal = selectedForLot.reduce((sum, id) => {
+    const h = harvests.find(x => x.id === id);
+    return sum + (h?.quantity_kg || 0);
+  }, 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/cooperative/dashboard')} data-testid="back-btn">
-            <ArrowLeft className="h-4 w-4 mr-1" />Retour
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900" data-testid="page-title">Gestion des Recoltes</h1>
-            <p className="text-sm text-gray-500">Validez ou rejetez les declarations des planteurs</p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/cooperative/dashboard')} data-testid="back-btn">
+              <ArrowLeft className="h-4 w-4 mr-1" />Retour
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900" data-testid="page-title">Gestion des Recoltes</h1>
+              <p className="text-sm text-gray-500">Validez les declarations et creez des lots de vente</p>
+            </div>
           </div>
+          {validatedAvailable.length > 0 && !lotMode && (
+            <Button onClick={() => { setLotMode(true); setFilter('validee'); }} className="bg-blue-600 hover:bg-blue-700 h-9 text-xs" data-testid="start-lot-btn">
+              <ShoppingCart className="h-4 w-4 mr-1" />Creer un lot de vente
+            </Button>
+          )}
+          {lotMode && (
+            <Button variant="outline" size="sm" onClick={() => { setLotMode(false); setSelectedForLot([]); }} data-testid="cancel-lot-btn">
+              Annuler
+            </Button>
+          )}
         </div>
+
+        {/* Lot mode banner */}
+        {lotMode && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4" data-testid="lot-banner">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-800">Selection pour lot de vente</p>
+                <p className="text-xs text-blue-600">{selectedForLot.length} recolte(s) selectionnee(s) - {(selectedTotal / 1000).toFixed(2)} tonnes</p>
+              </div>
+              <Button disabled={selectedForLot.length === 0} onClick={() => setLotModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 h-9" data-testid="confirm-lot-btn">
+                <ShoppingCart className="h-4 w-4 mr-1" />Publier le lot ({selectedForLot.length})
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -120,19 +192,21 @@ const CoopHarvestsPage = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {[
-            { value: 'all', label: 'Toutes' },
-            { value: 'en_attente', label: `En attente (${stats.en_attente || 0})` },
-            { value: 'validee', label: 'Validees' },
-            { value: 'rejetee', label: 'Rejetees' },
-          ].map(f => (
-            <Button key={f.value} variant={filter === f.value ? 'default' : 'outline'} size="sm"
-              onClick={() => setFilter(f.value)} data-testid={`filter-${f.value}`}>
-              {f.label}
-            </Button>
-          ))}
-        </div>
+        {!lotMode && (
+          <div className="flex gap-2 mb-4 flex-wrap">
+            {[
+              { value: 'all', label: 'Toutes' },
+              { value: 'en_attente', label: `En attente (${stats.en_attente || 0})` },
+              { value: 'validee', label: 'Validees' },
+              { value: 'rejetee', label: 'Rejetees' },
+            ].map(f => (
+              <Button key={f.value} variant={filter === f.value ? 'default' : 'outline'} size="sm"
+                onClick={() => setFilter(f.value)} data-testid={`filter-${f.value}`}>
+                {f.label}
+              </Button>
+            ))}
+          </div>
+        )}
 
         {/* List */}
         {loading ? (
@@ -150,31 +224,45 @@ const CoopHarvestsPage = () => {
               const status = STATUS_CONFIG[h.statut] || STATUS_CONFIG.en_attente;
               const StatusIcon = status.icon;
               const isPending = h.statut === 'en_attente';
+              const isValidated = h.statut === 'validee';
+              const isSelected = selectedForLot.includes(h.id);
+              const isInLot = h.in_lot;
 
               return (
-                <Card key={h.id} className={isPending ? 'border-l-4 border-l-amber-400' : ''} data-testid={`harvest-${h.id}`}>
+                <Card key={h.id}
+                  className={`${isPending ? 'border-l-4 border-l-amber-400' : ''} ${isSelected ? 'ring-2 ring-blue-400 bg-blue-50/50' : ''} ${isInLot ? 'opacity-60' : ''} ${lotMode && isValidated && !isInLot ? 'cursor-pointer' : ''}`}
+                  onClick={lotMode && isValidated && !isInLot ? () => toggleLotSelection(h.id) : undefined}
+                  data-testid={`harvest-${h.id}`}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-gray-900">{h.quantity_display || `${h.quantity_kg} kg`}</span>
-                          <Badge className={`${status.color} text-xs border`} data-testid={`status-${h.id}`}>
-                            <StatusIcon className="h-3 w-3 mr-1" />{status.label}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-gray-500">
-                          <span className="flex items-center gap-1"><User className="h-3 w-3" />{h.farmer_name || 'Inconnu'}</span>
-                          <span className="flex items-center gap-1"><Scale className="h-3 w-3" />Qualite: {h.quality_grade || '-'}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
-                          <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(h.created_at)}</span>
-                          {h.notes && <span className="truncate max-w-[200px]">Note: {h.notes}</span>}
-                        </div>
-                        {h.rejection_reason && (
-                          <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3" />Motif: {h.rejection_reason}
-                          </p>
+                      <div className="flex items-start gap-3 flex-1">
+                        {lotMode && isValidated && !isInLot && (
+                          <div className={`w-5 h-5 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                            {isSelected && <Check className="h-3 w-3 text-white" />}
+                          </div>
                         )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-gray-900">{h.quantity_display || `${h.quantity_kg} kg`}</span>
+                            <Badge className={`${status.color} text-xs border`} data-testid={`status-${h.id}`}>
+                              <StatusIcon className="h-3 w-3 mr-1" />{status.label}
+                            </Badge>
+                            {isInLot && <Badge className="bg-blue-100 text-blue-700 text-xs border border-blue-200">Dans un lot</Badge>}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <span className="flex items-center gap-1"><User className="h-3 w-3" />{h.farmer_name || 'Inconnu'}</span>
+                            <span className="flex items-center gap-1"><Scale className="h-3 w-3" />Qualite: {h.quality_grade || '-'}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
+                            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(h.created_at)}</span>
+                            {h.notes && <span className="truncate max-w-[200px]">Note: {h.notes}</span>}
+                          </div>
+                          {h.rejection_reason && (
+                            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3" />Motif: {h.rejection_reason}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       {h.total_amount > 0 && (
                         <div className="text-right flex-shrink-0">
@@ -183,8 +271,8 @@ const CoopHarvestsPage = () => {
                       )}
                     </div>
 
-                    {/* Action buttons for pending harvests */}
-                    {isPending && (
+                    {/* Action buttons for pending harvests (not in lot mode) */}
+                    {isPending && !lotMode && (
                       <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
                         <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 h-9"
                           onClick={() => handleValidate(h.id)}
@@ -230,6 +318,56 @@ const CoopHarvestsPage = () => {
                 disabled={actionLoading === rejectModal} data-testid="confirm-reject">
                 {actionLoading === rejectModal ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
                 Confirmer le rejet
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lot Creation Modal */}
+      {lotModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" data-testid="lot-modal">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Creer un lot de vente</h3>
+            <p className="text-sm text-gray-500 mb-4">{selectedForLot.length} recolte(s) - {(selectedTotal / 1000).toFixed(2)} tonnes</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-500">Nom du lot</label>
+                <input value={lotForm.lot_name} onChange={e => setLotForm(p => ({...p, lot_name: e.target.value}))}
+                  placeholder="Ex: Lot Cacao Premium Mars 2026"
+                  className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-blue-400 outline-none"
+                  data-testid="lot-name-input" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Prix par kg (XOF)</label>
+                <input type="number" value={lotForm.price_per_kg} onChange={e => setLotForm(p => ({...p, price_per_kg: e.target.value}))}
+                  placeholder="Ex: 1500"
+                  className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-blue-400 outline-none"
+                  data-testid="lot-price-input" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Description (optionnel)</label>
+                <textarea value={lotForm.description} onChange={e => setLotForm(p => ({...p, description: e.target.value}))}
+                  placeholder="Details supplementaires..."
+                  className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm h-20 resize-none focus:border-blue-400 outline-none"
+                  data-testid="lot-desc-input" />
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-xs font-medium text-gray-600 mb-2">Recoltes incluses :</p>
+                {selectedForLot.map(id => {
+                  const h = harvests.find(x => x.id === id);
+                  return h ? (
+                    <p key={id} className="text-xs text-gray-500">{h.farmer_name} - {h.quantity_display || `${h.quantity_kg}kg`}</p>
+                  ) : null;
+                })}
+              </div>
+            </div>
+            <div className="flex gap-3 mt-4">
+              <Button variant="outline" className="flex-1" onClick={() => setLotModal(false)}>Annuler</Button>
+              <Button className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={handleCreateLot}
+                disabled={lotSubmitting} data-testid="submit-lot-btn">
+                {lotSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ShoppingCart className="h-4 w-4 mr-1" />}
+                Publier sur le marche
               </Button>
             </div>
           </div>

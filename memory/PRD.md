@@ -149,7 +149,13 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 ## Travail complete (6 avr suite)
 - (6 avr) FIX SECURITE P0: Code de reinitialisation mot de passe n'est plus affiche dans l'UI pour les utilisateurs email. Backend renvoie delivery_method=email sans simulation_code. Frontend affiche uniquement "Verifiez votre boite de reception et vos spams". Code visible uniquement en mode simulation SMS (utilisateurs sans email, SMS pas encore configure).
 - (6 avr) FIX Tableau SSRTE Agent: Les stats etaient a 0 car le filtre backend utilisait uniquement `recorded_by` au lieu de `agent_id OR recorded_by`. Corrige dans `/api/ssrte/stats/overview`. Les visites mensuelles checkent maintenant `recorded_at`, `created_at`, `visit_date`, et `date_visite`.
-- (6 avr) FIX Graphiques et KPIs cooperative: Les dashboards charts et KPIs ne montraient pas toutes les donnees car le filtre ne matchait que par coop_id/cooperative_id. Ajoute la resolution via agent_id (agents de la cooperative). Resultat: Daloa SSRTE 1->7, Bielaghana SSRTE 2->3. Aussi ajoute date_visite et recorded_at en plus de created_at dans les filtres mensuels.
+- (6 avr) Logique metier recoltes implementee:
+  - Agriculteur membre cooperative: declare -> en_attente -> cooperative valide -> cooperative cree lot de vente -> marketplace
+  - Agriculteur independant: declare -> auto-validee -> auto-publiee directement sur marketplace
+  - Endpoint POST /api/cooperative/harvests/create-lot pour creer des lots de vente a partir de recoltes validees
+  - Endpoint GET /api/cooperative/harvests/validated pour lister les recoltes disponibles pour lots
+  - CoopHarvestsPage mise a jour avec mode selection lot de vente + modal creation lot
+  - Marketplace: donnees demo supprimees, utilise uniquement donnees reelles
 - (6 avr) Bouton "Declarer" ajoute sur la page Mes Recoltes du planteur (manquait).
 - (6 avr) Ajout du Simulateur USSD (calcul prime carbone *144*99#) dans le menu Accueil de l'agent terrain. Le simulateur affiche la liste des planteurs de l'agent et permet de composer le code USSD.
 - (6 avr) Nettoyage menu Plus agent terrain: supprime Photos Geolocalisees, Pratiques Durables, Rechercher Planteur (redondants avec fiches planteur et onglets existants).
