@@ -933,14 +933,19 @@ async def upload_attachment(
 
 
 @router.get("/files/{file_id}")
-async def get_file(file_id: str):
-    """Récupérer une pièce jointe"""
+async def get_file(file_id: str, current_user: dict = Depends(get_current_user)):
+    """Recuperer une piece jointe (authentifie)"""
     from fastapi.responses import FileResponse
     
-    file_path = f"/app/uploads/messages/{file_id}"
+    # Path traversal protection
+    safe_name = os.path.basename(file_id)
+    if safe_name != file_id or '..' in file_id:
+        raise HTTPException(status_code=400, detail="Nom de fichier invalide")
+    
+    file_path = f"/app/uploads/messages/{safe_name}"
     
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Fichier non trouvé")
+        raise HTTPException(status_code=404, detail="Fichier non trouve")
     
     return FileResponse(file_path)
 

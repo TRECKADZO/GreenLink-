@@ -208,10 +208,15 @@ async def upload_photo_file(
 @router.get("/view/{filename}")
 async def view_photo(filename: str):
     """Afficher une photo"""
-    filepath = os.path.join(UPLOAD_DIR, filename)
+    # Path traversal protection
+    safe_name = os.path.basename(filename)
+    if safe_name != filename or '..' in filename:
+        raise HTTPException(status_code=400, detail="Nom de fichier invalide")
+    
+    filepath = os.path.join(UPLOAD_DIR, safe_name)
     
     if not os.path.exists(filepath):
-        raise HTTPException(status_code=404, detail="Photo non trouvée")
+        raise HTTPException(status_code=404, detail="Photo non trouvee")
     
     return FileResponse(
         filepath,
@@ -223,16 +228,20 @@ async def view_photo(filename: str):
 @router.get("/thumbnail/{filename}")
 async def view_thumbnail(filename: str):
     """Afficher la miniature d'une photo"""
-    base, ext = os.path.splitext(filename)
+    # Path traversal protection
+    safe_name = os.path.basename(filename)
+    if safe_name != filename or '..' in filename:
+        raise HTTPException(status_code=400, detail="Nom de fichier invalide")
+    
+    base, ext = os.path.splitext(safe_name)
     thumb_filename = f"{base}_thumb{ext}"
     thumb_path = os.path.join(UPLOAD_DIR, thumb_filename)
     
-    # Si pas de thumbnail, retourner l'original
     if not os.path.exists(thumb_path):
-        thumb_path = os.path.join(UPLOAD_DIR, filename)
+        thumb_path = os.path.join(UPLOAD_DIR, safe_name)
     
     if not os.path.exists(thumb_path):
-        raise HTTPException(status_code=404, detail="Photo non trouvée")
+        raise HTTPException(status_code=404, detail="Photo non trouvee")
     
     return FileResponse(
         thumb_path,

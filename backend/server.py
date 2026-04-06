@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter, Request
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from middleware.rate_limiter import RateLimitMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -221,12 +222,34 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+# Rate limiting middleware (must be after CORS)
+app.add_middleware(RateLimitMiddleware)
+
+# Security headers middleware
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+@app.on_event("startup")
+async def create_security_indexes():
+    """Create TTL index on token_blacklist to auto-cleanup expired tokens"""
+    try:
+        await db.token_blacklist.create_index("expires_at", expireAfterSeconds=0)
+    except Exception:
+        pass
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

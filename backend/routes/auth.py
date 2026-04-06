@@ -76,12 +76,34 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             detail="Token invalide"
         )
     
+    # Check token blacklist
+    is_blacklisted = await db.token_blacklist.find_one({"token": token})
+    if is_blacklisted:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expiree. Veuillez vous reconnecter."
+        )
+    
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Utilisateur non trouvé"
         )
+    
+    # Check if token was issued before a password change
+    token_iat = payload.get("iat")
+    pwd_changed = user.get("password_changed_at")
+    if token_iat and pwd_changed:
+        if isinstance(pwd_changed, datetime):
+            pwd_ts = pwd_changed.timestamp()
+        else:
+            pwd_ts = datetime.fromisoformat(str(pwd_changed)).timestamp()
+        if token_iat < pwd_ts:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Mot de passe modifie. Veuillez vous reconnecter."
+            )
     
     user["_id"] = str(user["_id"])
     return user
@@ -653,7 +675,11 @@ async def reset_password(request: PasswordResetVerify):
     
     result = await db.users.update_one(
         {"_id": ObjectId(user_id)},
-        {"$set": {"hashed_password": hashed_password, "updated_at": datetime.utcnow()}}
+        {"$set": {
+            "hashed_password": hashed_password,
+            "updated_at": datetime.utcnow(),
+            "password_changed_at": datetime.utcnow()
+        }}
     )
     
     if result.modified_count == 0:
@@ -671,6 +697,23 @@ async def reset_password(request: PasswordResetVerify):
     logger.info(f"[PASSWORD RESET] Password reset successful for user {user_id}")
     
     return {"message": "Mot de passe réinitialisé avec succès", "success": True}
+
+
+@router.post("/logout")
+async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Invalidate the current token by adding it to the blacklist"""
+    token = credentials.credentials
+    payload = verify_token(token)
+    if payload:
+        exp = payload.get("exp", 0)
+        await db.token_blacklist.insert_one({
+            "token": token,
+            "user_id": payload.get("sub"),
+            "expires_at": datetime.utcfromtimestamp(exp),
+            "created_at": datetime.utcnow()
+        })
+    return {"message": "Deconnexion reussie"}
+
 
 
 # ============= ADMIN PASSWORD HEALTH CHECK & REPAIR =============
