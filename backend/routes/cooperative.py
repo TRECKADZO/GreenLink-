@@ -219,11 +219,25 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
         "status": "active",
     }
 
+    # --- Build comprehensive query for visits: coop_id OR cooperative_id OR agent_ids ---
+    agent_ids = []
+    coop_agents_list = await db.coop_agents.find({"coop_id": coop_id}, {"user_id": 1}).to_list(100)
+    agent_ids.extend([a["user_id"] for a in coop_agents_list if a.get("user_id")])
+    user_agents = await db.users.find({"cooperative_id": coop_id, "user_type": {"$in": ["field_agent", "agent_terrain"]}}, {"_id": 1}).to_list(100)
+    agent_ids.extend([str(a["_id"]) for a in user_agents])
+    agent_ids = list(set(agent_ids))
+
+    visit_or = [{"coop_id": coop_id}, {"cooperative_id": coop_id}]
+    if ObjectId.is_valid(coop_id):
+        visit_or.extend([{"coop_id": ObjectId(coop_id)}, {"cooperative_id": ObjectId(coop_id)}])
+    if agent_ids:
+        visit_or.append({"agent_id": {"$in": agent_ids}})
+    visits_cq = {"$or": visit_or}
+
     # --- REDD+ KPIs ---
     redd_kpis = None
     if features.get("redd_avance") or features.get("redd_simplifie"):
-        cq = coop_id_query(coop_id)
-        visits = await db.redd_tracking_visits.find(cq, {"_id": 0}).to_list(2000)
+        visits = await db.redd_tracking_visits.find(visits_cq, {"_id": 0}).to_list(2000)
         total_visits = len(visits)
         avg_redd = round(sum(v.get("redd_score", 0) for v in visits) / max(total_visits, 1), 1)
         avg_conf = round(sum(v.get("conformity_pct", 0) for v in visits) / max(total_visits, 1))
@@ -233,7 +247,7 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
             level_dist[lvl] = level_dist.get(lvl, 0) + 1
 
         # MRV data from ars_farmer_data
-        farmers_q = {"$or": [{"coop_id": coop_id}, {"cooperative_id": coop_id}]}
+        farmers_q = visits_cq
         farmers_data = await db.ars_farmer_data.find(farmers_q, {"_id": 0}).to_list(2000)
         total_farmers = len(farmers_data)
         practices_adoption = {}
@@ -289,7 +303,7 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
     # --- SSRTE KPIs ---
     ssrte_kpis = None
     if features.get("alertes_ssrte"):
-        ssrte_q = coop_id_query(coop_id)
+        ssrte_q = visits_cq
 
         total_ssrte = await db.ssrte_visits.count_documents(ssrte_q)
 
@@ -351,7 +365,7 @@ async def get_dashboard_kpis(current_user: dict = Depends(get_current_user)):
 
     # --- ICI KPIs (always available) ---
     ici_kpis = None
-    ici_q = coop_id_query(coop_id)
+    ici_q = visits_cq
 
     total_cases = await db.ssrte_cases.count_documents(ici_q)
     resolved = await db.ssrte_cases.count_documents({**ici_q, "status": {"$in": ["resolved", "closed"]}})
@@ -379,7 +393,24 @@ async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
     """Time-series data for dashboard charts (last 6 months) — acces complet gratuit"""
     verify_cooperative(current_user)
     coop_id = str(current_user["_id"])
-    cq = coop_id_query(coop_id)
+
+    # Build comprehensive query: match by coop_id/cooperative_id OR agent_id of coop's agents
+    agent_ids = []
+    # Get agents from coop_agents table
+    coop_agents_list = await db.coop_agents.find({"coop_id": coop_id}, {"user_id": 1}).to_list(100)
+    agent_ids.extend([a["user_id"] for a in coop_agents_list if a.get("user_id")])
+    # Get agents from users table
+    user_agents = await db.users.find({"cooperative_id": coop_id, "user_type": {"$in": ["field_agent", "agent_terrain"]}}, {"_id": 1}).to_list(100)
+    agent_ids.extend([str(a["_id"]) for a in user_agents])
+    agent_ids = list(set(agent_ids))
+
+    # Combined query: coop_id OR cooperative_id OR agent_id
+    or_conditions = [{"coop_id": coop_id}, {"cooperative_id": coop_id}]
+    if ObjectId.is_valid(coop_id):
+        or_conditions.extend([{"coop_id": ObjectId(coop_id)}, {"cooperative_id": ObjectId(coop_id)}])
+    if agent_ids:
+        or_conditions.append({"agent_id": {"$in": agent_ids}})
+    cq = {"$or": or_conditions}
 
     now = datetime.now(timezone.utc)
     months = []
@@ -395,12 +426,15 @@ async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
         next_y = m["year"] if m["month"] < 12 else m["year"] + 1
         end = datetime(next_y, next_m, 1, tzinfo=timezone.utc)
 
-        # REDD visits in this month (created_at is ISO string or datetime)
+        # REDD visits in this month (created_at can be ISO string or datetime, also check date_visite)
+        date_or = [
+            {"created_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}},
+            {"created_at": {"$gte": start, "$lt": end}},
+            {"date_visite": {"$gte": start.isoformat(), "$lt": end.isoformat()}},
+            {"date_visite": {"$gte": start, "$lt": end}},
+        ]
         pipeline = [
-            {"$match": {**cq, "$or": [
-                {"created_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}},
-                {"created_at": {"$gte": start, "$lt": end}},
-            ]}},
+            {"$match": {"$and": [cq, {"$or": date_or}]}},
             {"$group": {
                 "_id": None,
                 "count": {"$sum": 1},
@@ -425,11 +459,14 @@ async def get_dashboard_charts(current_user: dict = Depends(get_current_user)):
         next_y = m["year"] if m["month"] < 12 else m["year"] + 1
         end = datetime(next_y, next_m, 1, tzinfo=timezone.utc)
 
+        date_or_ssrte = [
+            {"created_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}},
+            {"created_at": {"$gte": start, "$lt": end}},
+            {"recorded_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}},
+            {"recorded_at": {"$gte": start, "$lt": end}},
+        ]
         pipeline = [
-            {"$match": {**cq, "$or": [
-                {"created_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}},
-                {"created_at": {"$gte": start, "$lt": end}},
-            ]}},
+            {"$match": {"$and": [cq, {"$or": date_or_ssrte}]}},
             {"$addFields": {
                 "_risk": {"$ifNull": ["$niveau_risque", "$risk_level"]},
                 "_enfants": {"$add": [
