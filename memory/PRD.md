@@ -160,11 +160,25 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (6 avr) Ajout du Simulateur USSD (calcul prime carbone *144*99#) dans le menu Accueil de l'agent terrain. Le simulateur affiche la liste des planteurs de l'agent et permet de composer le code USSD.
 - (6 avr) Nettoyage menu Plus agent terrain: supprime Photos Geolocalisees, Pratiques Durables, Rechercher Planteur (redondants avec fiches planteur et onglets existants).
 
+## Travail complete (6 avr suite 2)
+- (6 avr) MESSAGERIE PROFESSIONNELLE: Refonte complete du systeme de messagerie.
+  - Backend: Ajout POST /api/messaging/conversations/direct (conversations directes sans annonce marketplace)
+  - Backend: Ajout GET /api/messaging/contacts (contacts filtres par role: Admin voit tout, Coop voit ses agents/agriculteurs, Agent voit sa coop/planteurs, Agriculteur voit sa coop/agent/acheteurs)
+  - Backend: Ajout champ conversation_type (direct/marketplace) et subject dans les conversations
+  - Backend: Ajout user_type_label traduit en francais (Agriculteur, Cooperative, Agent Terrain, etc.) dans les reponses
+  - Backend: Fix dechiffrement messages (fallback vers content_plain quand la cle de chiffrement change)
+  - Frontend: Refonte complete de MessagingPage.jsx avec design professionnel palette GreenLink (#2d5a4d, #d4a574)
+  - Frontend: Dialog "Nouvelle conversation" avec recherche de contacts et badges de role
+  - Frontend: Support conversations directes et marketplace dans la meme interface
+  - Frontend: Ajout createDirectConversation() et getContacts() dans messagingApi.js
+  - Tests: 17/17 backend + tous les tests frontend passes (iteration 105)
+
 ## Backlog
 ### P0
 - Mettre a jour MONGO_URL dans les Secrets Emergent Dashboard (action utilisateur)
 - Configuration DNS domaine greenlink-agritech.com (action utilisateur GoDaddy)
 ### P1
+- Tests de securite: escalade de privileges, invalidation de session apres changement mot de passe
 - Indicateur taille stockage offline (IndexedDB) dans le profil agent
 ### P2
 - Passerelle SMS reelle Orange CI / MTN (MOCK)
@@ -173,6 +187,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - Refactoriser ussd.py
 - Nettoyage code mort (subscription files)
 - Nettoyer la gestion id vs _id dans MongoDB pour tous les anciens comptes
+- Set MESSAGE_ENCRYPTION_KEY dans backend/.env pour chiffrement persistant
 
 ## Credentials
 - Admin: `klenakan.eric@gmail.com` / `474Treckadzo`
