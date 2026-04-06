@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Filter, Clock, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Package, Filter, Clock, CheckCircle2, XCircle, Loader2, Plus } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -53,15 +53,21 @@ const MyHarvestsPage = () => {
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/farmer/dashboard')} data-testid="back-btn">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Retour
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Mes Recoltes</h1>
-            <p className="text-sm text-gray-500">{harvests.length} declaration(s)</p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/farmer/dashboard')} data-testid="back-btn">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Retour
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Mes Recoltes</h1>
+              <p className="text-sm text-gray-500">{harvests.length} declaration(s)</p>
+            </div>
           </div>
+          <Button onClick={() => navigate('/harvest-marketplace')} className="bg-emerald-600 hover:bg-emerald-700 h-9 text-xs" data-testid="declare-harvest-btn">
+            <Plus className="h-4 w-4 mr-1" />
+            Declarer
+          </Button>
         </div>
 
         {/* Stats */}
@@ -115,7 +121,11 @@ const MyHarvestsPage = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Aucune recolte trouvee</p>
+              <p className="text-gray-500 mb-4">Aucune recolte trouvee</p>
+              <Button onClick={() => navigate('/harvest-marketplace')} className="bg-emerald-600 hover:bg-emerald-700" data-testid="declare-first-harvest-btn">
+                <Plus className="h-4 w-4 mr-2" />
+                Declarer une recolte
+              </Button>
             </CardContent>
           </Card>
         ) : (
