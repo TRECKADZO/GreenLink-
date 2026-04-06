@@ -2,38 +2,39 @@
 Utiliser le même code développé sur GitHub (GreenLink). Implémenter tout le projet (reproduire le projet GreenLink Agritech avec le même code).
 PRODUCT REQUIREMENTS:
 1. Fix cooperative referral code bugs.
-2. Implement a Professional Cooperative Network monitoring tab in Super Admin.
-3. Clean up all test/demo data and keep only real data.
-4. Implement an Offline-First mode for the web version (similar to the Expo mobile app).
-5. Transform the Web views for Agent Terrain and Agriculteur (Farmer) to look and behave 100% like native mobile apps (Bottom Tabs, Mobile Shell, Feature parity via + tab).
-6. Security and Data Isolation audits and implementations across the platform.
+2. Clean up all test/demo data and keep only real data across all dashboards (Super Admin, Cooperative).
+3. Fix security and data isolation bugs (ensure cooperatives only see their own data, prevent Super Admin data leaks into coop dashboards).
+4. Implement Harvest validation flow (Cooperative validates member harvests and creates sales lots; independent farmers auto-validate).
+5. Improve the Web views for Agent Terrain and Agriculteur (Farmer) to match native mobile apps.
+6. Verify and improve the messaging system for all users.
 
-**User's preferred language**: French (You MUST respond in French only)
+**User's preferred language**: French (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in French only)
 
 **what currently exists?** 
-A full-stack agritech platform (FastAPI backend, React web frontend, MongoDB). The app features an offline-first architecture with IndexedDB and auto-sync mechanisms. In this session, a massive security and data isolation audit was completed: 25+ endpoints were secured, data is strictly isolated per agent (agents only see their assigned farmers and registrations), SSRTE risk levels are auto-calculated, and advanced security measures (Rate Limiting, JWT invalidation, Path Traversal protection, Security Headers) are actively running.
+A full-stack agritech platform (FastAPI backend, React web frontend, MongoDB). The app features an offline-first architecture with IndexedDB. In this session, significant work was completed around data isolation, real data integration, and harvest workflows. Super Admin and Cooperative dashboards now exclusively display real production data. Strict isolation ensures cooperatives only see their assigned farmers and registrations, and admin accounts no longer bleed into cooperative views. The harvest marketplace flow is fully functional (coop validation + lot creation vs. independent auto-validation). 
 
 **Last working item**: 
-    - Last item agent was working: Hiding the password reset code from the UI for users requesting a reset via email. The backend  was successfully updated to no longer return the  in the API response when an email is sent. The agent was just viewing  to remove the UI display of the simulation code.
+    - Last item agent was working: Investigating and improving the messaging system (). The user requested to verify the messaging functionality for all user types and improve it to be more professional. The agent was just looking at  and  when the session ended.
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? screenshot tool (Frontend testing to ensure the code is no longer displayed on the screen and the user is prompted to check their email).
+    - Which testing method agent to use? both (Testing agent v3 fork is recommended since this involves a full feature review of the real-time messaging system across multiple user types).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
-  Issue 1: Password reset code should only be sent via email, not displayed in the UI (Priority: P0)
-     - Attempted fixes: Backend  was modified successfully to hide the code. Agent was investigating  before session ended.
+  Issue 1: Verify and professionally improve the messaging system (Priority: P0)
+     - Attempted fixes: Agent only viewed the  file. No code changes made yet.
      - Next debug checklist: 
-        - Edit  line ~197 to remove the display of .
-        - Ensure the UI clearly tells the user to Check your email for the reset code without revealing it on screen.
-     - Why fix this issue and what will be achieved with the fix? Huge security vulnerability if the password reset OTP is returned in the API payload and displayed on the screen, allowing unauthorized account takeovers.
+        - Check  and backend messaging routes ( or similar).
+        - Verify real-time capabilities (WebSocket or polling).
+        - Improve UI/UX to look more professional across all user types (Admin, Coop, Agent, Farmer, Buyer).
+     - Why fix this issue and what will be achieved with the fix? Requested by user to ensure reliable and professional communication within the platform.
      - Status: IN PROGRESS
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Frontend
+     - Should Test frontend/backend/both after fix? both
      - Blocked on other issue: None
 
 **In progress Task List**: 
-None (Currently focused on the P0 issue above).
+  None
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
@@ -45,17 +46,26 @@ None (Currently focused on the P0 issue above).
     - P4: Refactor  and clean up dead code (subscription files).
 
 **Completed work in this session**
-- Fixed auto-sync for offline REDD forms when network is restored ( and  triggers) (DONE)
-- Improved offline Toast messages to clarify that auto-sync is pending (DONE)
-- Auto-calculated SSRTE risk levels based on form data (working offline) (DONE)
-- Saved and displayed complete SSRTE visit data (household, children, living conditions) in the Farmer History dashboard (DONE)
-- Filtered USSD recent registrations to only show registrations created by the logged-in agent (DONE)
-- Conducted massive Security Audit: Secured over 25 vulnerable/unprotected backend routes (, , , , ) (DONE)
-- Implemented Data Isolation: Agents strictly can only fetch SSRTE visits and family data for their assigned farmers (DONE)
-- Implemented High-Priority Security fixes: Added API Rate Limiting (slowapi), JWT invalidation/Blacklisting on logout, Path Traversal protection on file downloads, and HTTP Security Headers (DONE)
+- Masqué le code de réinitialisation du mot de passe dans l'UI pour les flux e-mail (Security P0) (DONE)
+- Ajout de l'intégration du simulateur USSD dans le dashboard web de l'agent terrain (DONE)
+- Auto-remplissage du tableau SSRTE de l'agent terrain avec ses données réelles et correction du routage du bouton Nouvelle Visite (DONE)
+- Nettoyage du menu Plus de l'agent terrain (suppression des doublons) (DONE)
+- Fix de la page blanche Parcelles (Agriculteur) et ajout du formulaire Nouvelle Parcelle inline (DONE)
+- Ajout du bouton Déclarer une récolte sur la page Mes Récoltes (DONE)
+- Création de la page  pour la gestion et validation des récoltes par la coopérative (DONE)
+- Logique métier Récoltes : Auto-validation pour les indépendants vs Validation Coop + Création de lot de vente (DONE)
+- Retrait du calcul de la prime carbone (+10%) dans le prix des récoltes (DONE)
+- Fix sécurité USSD : Isolation des inscriptions par coopérative (les coopératives ne voient plus les agriculteurs des autres) (DONE)
+- Fix sécurité Coopérative : Le Super Admin ne voit plus ses propres utilisateurs factices dans le dashboard coopérative (DONE)
+- Fix demandes de paiement carbone : Envoyées à la vraie coopérative (au lieu du Super Admin) via la collection  (DONE)
+- Dashboard Super Admin : Remplacement des compteurs démo par 16 métriques 100% réelles (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-   None.
+   - Issue 1: Emails sent via Resend are going to Spam.
+   - Debug checklist: Instruct user to configure SPF/DKIM/DMARC DNS records on GoDaddy for their domain .
+   - Why to solve this issue and what will be achieved with this? Ensures password resets and notifications reach users reliably.
+   - Should Test frontend/backend/both after fix: Backend (Manual verification)
+   - Is recurring issue? Y
 
 **Known issue recurrence from previous fork**
   - Issue recurrence in previous fork: None
@@ -66,86 +76,86 @@ None (Currently focused on the P0 issue above).
 
 
 **Key Technical Concepts**
-React (Web Frontend), FastAPI (Backend), MongoDB, Offline-first architecture (IndexedDB ), JWT Authentication, Security Hardening (Rate Limiting, Security Headers), Data Isolation.
+React (Web Frontend), FastAPI (Backend), MongoDB, Offline-first architecture (IndexedDB), Data Isolation (strict  and  filtering), Marketplace flow logic.
 
 **key DB schema**
-  - coop_agents: {_id, user_id, phone_number, assigned_farmers[]}
-  - redd_tracking_visits: {_id, farmer_id, agent_id, redd_score, compliance_level, offline}
-  - ssrte_visits: {_id, farmer_id, agent_id, niveau_risque, ...}
-  - token_blacklist: {token, expires_at} (New collection for invalidated JWTs)
+  - : {farmer_id, parcel_id, quantity_kg, statut (en_attente, validee, rejetee), validation_note}
+  - : {harvest_ids[], coop_id, total_quantity, price_per_kg}
+  - : {user_id, cooperative_id, message, type, read}
+  - : {coop_id, member_id}
 
 **changes in tech stack**
-  - Added  for rate-limiting on FastAPI routes.
+  - None
 
 **All files of reference** 
--  (Backend logic for JWT and password resets)
--  (Frontend component for resetting password)
--  (Rate limiting configuration)
--  (JWT creation/validation logic)
+-  (Target for current task)
+-  (New file for coop harvest management)
+-  (Updated with inline parcels)
+-  (Updated harvest auto-validation and parcel creation)
+-  (Updated with real system metrics)
+-  (Fixed  isolation)
+-  (Secured USSD registrations endpoint)
 
 **Areas that need refactoring**: 
- contains unused code that should be cleaned up later.
+-  contains dead subscription code that should be cleaned up.
 
 **key api endpoints**
-- 
-- 
-- 
-- 
+-  (Create sales lot)
+-  (Validate harvest)
+-  (Real metrics)
 
 **Critical Info for New Agent** 
 - INSTRUCT next agent to respond in French ONLY.
-- The  has already been removed from the backend response in  for email resets. You just need to remove the frontend logic that tries to display it.
-- Rate limiting is active. If you make too many API calls while testing, you will get a 429 Too Many Requests.
-- Always use yarn install v1.22.22
-[1/4] Resolving packages...
-success Already up-to-date.
-Done in 0.07s. for frontend dependencies.
-- Pass  in backend routes to ensure data isolation.
+- Do NOT use demo data for any charts, tables, or metrics. All dashboards must rely strictly on database queries.
+- When querying cooperative data, always ensure you match both by direct  (or ) AND by the  of agents belonging to that cooperative. (See  logic in ).
+- Super Admin accounts () should NOT be treated as cooperatives. Backend endpoints protecting coop data must explicitly block/handle admin appropriately to prevent data bleed.
+- The next immediate task is the messaging system (). The user wants a professional overhaul and verification of its functionality for all users.
 
 **documents and test reports created in this job**
-  - /app/memory/PRD.md
-  - /app/test_reports/iteration_104.json
+  -  (Updated extensively with recent feature completions)
+  -  (Contains admin, coop, agent, and farmer test accounts)
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. (Pending) *Les code de changement de mot de passe pour les inscriptions avec e-mail doit etre uniquement envoyé par email et non affiché comme actuellement* (Hide password reset code in UI).
- 2. (Done) *Oui* (Proceed with High-Priority security tests).
- 3. (Done) *Quel autre test de sécurité devrons faire ?* (Asked for more security tests).
- 4. (Done) *Chaque utilisateur ne voit que les informations dont il doit avoir accès* (Ensure data isolation per user).
- 5. (Done) *Vérifier les routes des utilisateurs dans tout le projet pour éviter les questions de sécurité et des données* (Requested security audit of all routes).
- 6. (Done) *Pourquoi ce historique d inscriptions d'agriculteurs s'affiche chez ce agent terrain alors qu'il ne.les a pas créé ?* + Image (Agent sees other agents' registrations).
- 7. (Done) *Pourquoi quand l'agent terrain complète une fiche de visite, les informations ne sont pas sauvegardé dans la fiche?* (SSRTE full data not saved/displayed).
- 8. (Done) *Au niveau de la fiche SSRTE, le niveau de risque doit pouvoir etre synchroniser meme en mode hors-ligne pour donner le vrai niveau de risque en fonction des informations collectés* + Image (Auto-calculate SSRTE risk level).
- 9. (Done) *Screenshot_20260405_170415_Chrome.jpg* (Offline save connection lost alert screenshot).
- 10. (Done) *Continue* (Approved the initial plan).
+ 1. (Pending) *Vérifier le fonctionnement de la messagerie de chaque utilisateurs et améliorer de façon professionnelle pour un meilleur fonctionnement* (Check and improve messaging system).
+ 2. (Done) *Dans le super Admin où je vois La liste des différents utilisateur ?* (Where is the user list in Super Admin?).
+ 3. (Done) *Mettre à jour tout les métriques du Super Admin avec les données réels ( pas de données démo ou tests)* (Use real metrics in Super admin).
+ 4. (Done) *La demande de paiement est adressée au super Admin et non a la coopérative.* (Fix payment request recipient).
+ 5. (Done) *Pourquoi cette fiche dus super admin avec toutes les coopératives inscrites apparaît dans le tableau de bord de la coopérative ?.La coopératives ne doit voir que les agriculteurs qu'elle a elle meme inscrites ou celle inscrites par ses agents terrain.* (Fix Super Admin data leaking into Coop dashboard).
+ 6. (Done) *Pourquoi tout ces agriculteurs sont visibles et présents dans cette coopération ? Alors qu'elle ne sont pas membr?. Corriger cette erreur de sécurité* (Fix USSD registration visibility security).
+ 7. (Done) *Pas de prime carbone 10% dans le prix* (Remove 10% carbon premium from harvest price).
+ 8. (Done) *Lorsque l'agriculteur est membre d une coopératives, ca déclaration de récolte est validé par sa coopératives... Lorsque l'agriculteur n est pas membre... directement sur le marcher* (Implement harvest validation vs direct marketplace routing).
+ 9. (Done) *Les tableaux et graphiques doivent utiliser les données réelles* (Use real data for cooperative charts).
+ 10. (Done) *Vérifier dans la version mobile, qui valide la déclaration de récolte de l'agriculteur ? Et implémenter dans la version web* (Implement harvest validation flow).
 
 **Project Health Check:**
-- Backend: Healthy (Secured and Rate-limited)
+- Backend: Healthy (Data isolation strictly enforced, real metrics active)
 - Frontend: Healthy
 - Database: Healthy
 
 **3rd Party Integrations** 
-- Resend (Email sending - configured with User API Key)
+- Resend (Email sending - Note: Domain DNS needs config for Spam issue)
 - Orange CI SMS (Currently Mocked)
 
 **Testing status**
-  - Testing agent used after significant changes: YES
+  - Testing agent used after significant changes: NO (Self-tested via bash/curl/screenshots extensively)
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: 
-  - Known regressions: None.
+  - Test files created: None this session
+  - Known regressions: None
 
 **Credentials to test flow:**
 Refer to .
 Admin:  / 
+Cooperative:  / 
 Agent:  / 
+Farmer:  / 
 
 **What agent forgot to execute**
-The agent modified the backend to hide the password reset code but the job terminated before they could modify  to remove the  UI rendering.
+The agent just started investigating the Messaging System improvements () but the context window ended before any changes or plans were made.
 
 **Debugging checklist for current issue**
-    Issue: Password reset code displayed on screen.
-
+    Issue: Improve and verify the Messaging system for all users
     Frontend files to check: 
-    - : Remove the  state and rendering logic entirely. The user should be forced to check their email for the code.
-  
+    - 
+    - 
     Backend files to check:
-    - : (Already fixed, verify lines ~580-605 if needed).</analysis>
+    - Messaging routes (likely in  or a dedicated ). Check WebSocket implementation or polling mechanism. Ensure data isolation applies here too so users only message appropriate contacts.</analysis>
