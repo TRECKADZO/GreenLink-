@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Shield, Users, MapPin, Leaf, Camera, FileText,
   Award, UserPlus, Search, Phone, ClipboardCheck,
@@ -487,6 +487,7 @@ const PhotosPanel = ({ farmer, onClose }) => {
 // ========= MAIN =========
 const AgentTerrainDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -502,6 +503,18 @@ const AgentTerrainDashboard = () => {
   const [showICIModal, setShowICIModal] = useState(false);
   const [showSSRTEModal, setShowSSRTEModal] = useState(false);
   const [showPhotosPanel, setShowPhotosPanel] = useState(false);
+  const [ssrteFlowActive, setSsrteFlowActive] = useState(false);
+
+  // Handle navigation state from SSRTE dashboard "Nouvelle Visite" button
+  useEffect(() => {
+    if (location.state?.action === 'ssrte') {
+      setTab('farmers');
+      setSsrteFlowActive(true);
+      toast.info('Sélectionnez un planteur pour la visite SSRTE');
+      // Clear the state to avoid re-triggering
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const loadDashboard = useCallback(async () => {
     try { const r = await fetch(`${API_URL}/api/field-agent/dashboard`, { headers: getAuthHeader() }); if (r.ok) setDashboard(await r.json()); } catch {} finally { setLoading(false); }
@@ -512,7 +525,17 @@ const AgentTerrainDashboard = () => {
   }, []);
   useEffect(() => { loadDashboard(); loadMyFarmers(); }, [loadDashboard, loadMyFarmers]);
 
-  const openFarmerProfile = (farmer) => { setSelectedFarmer(farmer); setTab('farmer-profile'); };
+  const openFarmerProfile = (farmer) => {
+    setSelectedFarmer(farmer);
+    // If SSRTE flow is active, directly open the SSRTE modal
+    if (ssrteFlowActive) {
+      setSsrteFlowActive(false);
+      setShowSSRTEModal(true);
+      setTab('farmer-profile');
+    } else {
+      setTab('farmer-profile');
+    }
+  };
   const handleFormAction = (formId) => {
     if (!selectedFarmer) return;
     const fId = selectedFarmer.id || '', fName = encodeURIComponent(selectedFarmer.full_name || ''), fPhone = encodeURIComponent(selectedFarmer.phone_number || '');

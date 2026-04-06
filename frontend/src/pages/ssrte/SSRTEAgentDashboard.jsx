@@ -18,9 +18,11 @@ import {
   CheckCircle, XCircle, Eye, TrendingUp, Home, FileText
 } from 'lucide-react';
 import { NotificationCenter } from '../../components/NotificationCenter';
+import { useNavigate } from 'react-router-dom';
 
 const SSRTEAgentDashboard = () => {
   const { user, token } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [visits, setVisits] = useState([]);
@@ -177,7 +179,7 @@ const SSRTEAgentDashboard = () => {
           <div className="flex gap-2 items-center">
             <NotificationCenter />
             <Button 
-              onClick={() => setShowVisitForm(true)}
+              onClick={() => navigate('/agent/terrain', { state: { action: 'ssrte', tab: 'planteurs' } })}
               className="bg-cyan-600 hover:bg-cyan-700"
               data-testid="new-visit-btn"
             >
@@ -419,7 +421,7 @@ const SSRTEAgentDashboard = () => {
               <CardContent className="space-y-3">
                 <Button 
                   className="w-full justify-start bg-slate-700 hover:bg-slate-600"
-                  onClick={() => setShowVisitForm(true)}
+                  onClick={() => navigate('/agent/terrain', { state: { action: 'ssrte', tab: 'planteurs' } })}
                 >
                   <Home className="h-4 w-4 mr-3 text-cyan-500" />
                   Nouvelle visite ménage

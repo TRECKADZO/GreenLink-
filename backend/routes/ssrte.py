@@ -993,8 +993,9 @@ async def get_ssrte_overview(
     elif current_user.get('user_type') == 'cooperative':
         query["cooperative_id"] = str(current_user["_id"])
     elif current_user.get('user_type') in ('field_agent', 'agent_terrain'):
-        # Pour les agents terrain, filtrer par recorded_by (leur propre user_id)
-        query["recorded_by"] = str(current_user["_id"])
+        # Pour les agents terrain, filtrer par agent_id OU recorded_by
+        uid = str(current_user["_id"])
+        query["$or"] = [{"agent_id": uid}, {"recorded_by": uid}]
     
     # Statistiques des visites (champs en francais)
     total_visits = await db.ssrte_visits.count_documents(query)
@@ -1006,10 +1007,11 @@ async def get_ssrte_overview(
     case_query = {}
     if "cooperative_id" in query:
         case_query["cooperative_id"] = query["cooperative_id"]
-    elif "recorded_by" in query:
+    elif "$or" in query:
+        uid = str(current_user["_id"])
         case_query["$or"] = [
-            {"recorded_by": query["recorded_by"]},
-            {"agent_id": query["recorded_by"]}
+            {"recorded_by": uid},
+            {"agent_id": uid}
         ]
     total_cases = await db.ssrte_cases.count_documents(case_query)
     cases_identified = await db.ssrte_cases.count_documents({**case_query, "status": "identified"})
@@ -1042,12 +1044,35 @@ async def get_ssrte_overview(
     prevalence_rate = (total_cases / total_visits * 100) if total_visits > 0 else 0
     resolution_rate = (cases_resolved / total_cases * 100) if total_cases > 0 else 0
     
-    # Visites ce mois (utiliser recorded_at, pas visit_date)
+    # Visites ce mois (checker recorded_at, created_at, visit_date)
     month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    monthly_visits = await db.ssrte_visits.count_documents({
-        **query,
-        "recorded_at": {"$gte": month_start}
-    })
+    month_date_filter = {"$gte": month_start}
+    monthly_query = {**query}
+    # Remove top-level $or to avoid conflict, build custom monthly filter
+    if "$or" in query:
+        # Field agent: combine agent filter with date filter
+        uid = str(current_user["_id"])
+        monthly_visits = await db.ssrte_visits.count_documents({
+            "$and": [
+                {"$or": [{"agent_id": uid}, {"recorded_by": uid}]},
+                {"$or": [
+                    {"recorded_at": month_date_filter},
+                    {"created_at": month_date_filter},
+                    {"visit_date": month_date_filter},
+                    {"date_visite": month_date_filter}
+                ]}
+            ]
+        })
+    else:
+        monthly_visits = await db.ssrte_visits.count_documents({
+            **query,
+            "$or": [
+                {"recorded_at": month_date_filter},
+                {"created_at": month_date_filter},
+                {"visit_date": month_date_filter},
+                {"date_visite": month_date_filter}
+            ]
+        })
     
     return {
         "visits": {
