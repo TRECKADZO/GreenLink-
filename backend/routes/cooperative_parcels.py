@@ -73,10 +73,19 @@ async def add_member_parcel(
     if parcel.arbres_petits is not None or parcel.arbres_moyens is not None or parcel.arbres_grands is not None:
         total_trees = (parcel.arbres_petits or 0) + (parcel.arbres_moyens or 0) + (parcel.arbres_grands or 0)
     
-    # Carbon score: base + surface bonus + certification bonus + tree bonus
-    tree_bonus = min(2.0, total_trees * 0.02) if total_trees > 0 else 0
-    carbon_score = round(min(9.5, 5.5 + (parcel.area_hectares * 0.3) + (1.5 if parcel.certification else 0) + tree_bonus), 1)
-    co2_captured = round(parcel.area_hectares * carbon_score * 2.5, 2)
+    # Unified carbon score calculation
+    from routes.carbon_score_engine import calculate_carbon_score
+    score_result = calculate_carbon_score(
+        area_hectares=parcel.area_hectares,
+        arbres_petits=parcel.arbres_petits or 0,
+        arbres_moyens=parcel.arbres_moyens or 0,
+        arbres_grands=parcel.arbres_grands or 0,
+        nombre_arbres=total_trees,
+        couverture_ombragee=parcel.couverture_ombragee or 0,
+        certification=parcel.certification,
+    )
+    carbon_score = score_result["score"]
+    co2_captured = score_result["co2_tonnes"]
     
     parcel_doc = {
         "member_id": str(member["_id"]),

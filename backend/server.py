@@ -50,6 +50,7 @@ from routes import redd_impact  # REDD+ Impact National metrics
 from routes import sync_batch  # Offline batch sync with conflict resolution
 from routes import cooperative_referral  # Système de parrainage coopératives
 from routes import discrepancy  # Gestion des écarts de vérification
+from routes.carbon_score_engine import _router as carbon_score_router
 from services.push_notifications import router as push_notifications_router
 
 
@@ -199,6 +200,7 @@ app.include_router(redd_impact.router)
 app.include_router(sync_batch.router)
 app.include_router(cooperative_referral.router)
 app.include_router(discrepancy.router, prefix="/api/ecarts", tags=["Ecarts"])
+app.include_router(carbon_score_router, prefix="/api/carbon-score", tags=["Score Carbone"])
 
 # Set database for cooperative_referral module
 cooperative_referral.set_database(db)

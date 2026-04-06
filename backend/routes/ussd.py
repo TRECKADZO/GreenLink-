@@ -207,59 +207,54 @@ def parse_answer(question, raw):
 def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -> dict:
     """
     Calculate carbon premium from USSD answers.
-    Uses allometric biomass coefficients:
-    - Grands (>12m): coef 1.0
-    - Moyens (8-12m): coef 0.7
-    - Petits (<8m): coef 0.3
+    Uses the unified carbon_score_engine for consistent scoring.
     """
     hectares = float(answers.get("hectares", 1))
     arbres_grands = int(answers.get("arbres_grands", 0))
     arbres_moyens = int(answers.get("arbres_moyens", 0))
     arbres_petits = int(answers.get("arbres_petits", 0))
-    
-    weighted_trees = (arbres_grands * 1.0) + (arbres_moyens * 0.7) + (arbres_petits * 0.3)
-    arbres_par_ha = weighted_trees / max(hectares, 0.1)
     total_trees = arbres_grands + arbres_moyens + arbres_petits
 
-    score = 4.0
-    if arbres_par_ha >= 80: score += 2.0
-    elif arbres_par_ha >= 50: score += 1.5
-    elif arbres_par_ha >= 20: score += 1.0
-    elif arbres_par_ha >= 5: score += 0.5
+    # Build practices list from USSD answers
+    pratiques = []
+    if answers.get("compost") == "oui":
+        pratiques.append("compostage")
+    if answers.get("agroforesterie") == "oui":
+        pratiques.append("agroforesterie")
+    if answers.get("couverture_sol") == "oui":
+        pratiques.append("couverture_sol")
 
-    grands_ratio = arbres_grands / max(total_trees, 1)
-    if grands_ratio >= 0.5: score += 0.5
-    elif grands_ratio >= 0.3: score += 0.3
+    # REDD+ practices from USSD answers
+    redd_prac = []
+    if answers.get("biochar") == "oui":
+        redd_prac.append({"code": "SOL_BIOCHAR", "category": "gestion_sols"})
+    if answers.get("zero_deforestation") == "oui":
+        redd_prac.append({"code": "ZD1", "category": "zero_deforestation"})
+    if answers.get("reboisement") == "oui":
+        redd_prac.append({"code": "REST1", "category": "restauration"})
 
-    if answers.get("engrais") == "oui" or answers.get("engrais_chimique") == "oui":
-        score -= 0.5
-    else:
-        score += 0.5
+    # Brulage / Engrais
+    brulage = answers.get("brulage") == "oui" if answers.get("brulage") else None
+    engrais = (answers.get("engrais") == "oui" or answers.get("engrais_chimique") == "oui") if (answers.get("engrais") or answers.get("engrais_chimique")) else None
 
-    if answers.get("brulage") == "oui":
-        score -= 1.5
-    else:
-        score += 0.5
-
-    if answers.get("compost") == "oui": score += 1.0
-    if answers.get("agroforesterie") == "oui": score += 1.0
-    if answers.get("couverture_sol") == "oui": score += 0.5
-
-    # REDD+ bonus
-    if answers.get("biochar") == "oui": score += 0.3
-    if answers.get("zero_deforestation") == "oui": score += 0.3
-    if answers.get("reboisement") == "oui": score += 0.4
-
-    # Age bonus
-    age = answers.get("age_cacaoyers", "mature")
-    if age == "mature": score += 0.5
-    elif age == "vieux": score += 0.3
-
-    score = max(0, min(10, round(score, 1)))
+    from routes.carbon_score_engine import calculate_carbon_score
+    result = calculate_carbon_score(
+        area_hectares=hectares,
+        arbres_petits=arbres_petits,
+        arbres_moyens=arbres_moyens,
+        arbres_grands=arbres_grands,
+        nombre_arbres=total_trees,
+        pratique_brulage=brulage,
+        engrais_chimique=engrais,
+        pratiques_ecologiques=pratiques,
+        redd_practices=redd_prac,
+        age_cacaoyers=answers.get("age_cacaoyers", "mature"),
+    )
+    score = result["score"]
     score_ratio = score / 10.0
 
     prix_rse_tonne = avg_rse_price
-    co2_per_ha = 2 + score_ratio * 6
+    co2_per_ha = result["co2_per_ha"]
     # Prime simplifiee (sans details de repartition)
     prime_par_ha = prix_rse_tonne * co2_per_ha * 0.49  # Part nette planteur
     prime_annuelle = prime_par_ha * hectares

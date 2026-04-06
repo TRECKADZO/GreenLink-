@@ -87,6 +87,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Saisie arbres par strate lors de la creation de parcelle (AddParcelPage + MemberParcelsPage modal + backend) avec bonus score carbone
 - (7 avr) GESTION DES ECARTS : Moteur de calcul automatique (surface, arbres par strate, brulage, couverture) + Classification (faible/moyen/important) + Impact prime carbone (0.95/0.80/0.50) + Dashboard cooperative + Notifications farmer + Validation coop + Tests 16/16 passes
 - (7 avr) Export PDF rapport ecarts par campagne (reportlab) + bouton Exporter PDF dans dashboard cooperative
+- (7 avr) FORMULE CARBONE UNIFIEE v2.0 : 1 seul moteur (carbon_score_engine.py) utilise partout (creation, verification, USSD). 10 criteres: base, densite arbres ponderee, couverture ombragee, brulage (-1.5), engrais chimiques (-0.5), pratiques eco, REDD+, age cacaoyers, surface, certification. API: POST /api/carbon-score/simulate + GET /api/carbon-score/decomposition
 
 ## Backlog
 ### P0

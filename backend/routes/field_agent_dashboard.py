@@ -820,9 +820,27 @@ async def verify_parcel_by_agent(
         arbres_moyens=arbres_moyens,
         arbres_grands=arbres_grands,
         redd_practices=redd_practices_adopted,
+        pratique_brulage=data.get("pratique_brulage"),
+        engrais_chimique=data.get("engrais_chimique"),
+        age_cacaoyers=data.get("age_cacaoyers"),
+        certification=parcel.get("certification"),
     )
     update_data["carbon_score"] = carbon_score
-    update_data["co2_captured_tonnes"] = round(area * carbon_score * 2.5, 2)
+
+    # Use unified CO2 calculation
+    from routes.carbon_score_engine import calculate_carbon_score
+    full_result = calculate_carbon_score(
+        area_hectares=area,
+        arbres_petits=arbres_petits, arbres_moyens=arbres_moyens, arbres_grands=arbres_grands,
+        nombre_arbres=nombre_arbres, couverture_ombragee=couverture_ombragee,
+        pratiques_ecologiques=pratiques, redd_practices=redd_practices_adopted,
+        pratique_brulage=data.get("pratique_brulage"), engrais_chimique=data.get("engrais_chimique"),
+        age_cacaoyers=data.get("age_cacaoyers"), certification=parcel.get("certification"),
+        existing_practices=parcel.get("farming_practices", []),
+    )
+    update_data["co2_captured_tonnes"] = full_result["co2_tonnes"]
+    update_data["carbon_score_details"] = full_result["details"]
+    update_data["carbon_score_recommandations"] = full_result["recommandations"]
     update_data["carbon_credits_earned"] = round(carbon_score * area * 0.5, 2)
 
     await db.parcels.update_one(
@@ -861,113 +879,25 @@ async def verify_parcel_by_agent(
 
 def _calculate_verified_carbon_score(nombre_arbres, couverture_ombragee, pratiques, area, existing_practices=None,
                                      arbres_petits=None, arbres_moyens=None, arbres_grands=None,
-                                     redd_practices=None):
+                                     redd_practices=None, pratique_brulage=None, engrais_chimique=None,
+                                     age_cacaoyers=None, certification=None):
     """
-    Recalculate carbon score using field-verified data with tree height categories
-    and REDD+ practices integration.
-    Base score 3.0, max 10.0.
-    
-    Tree biomass weighting (based on allometric equations AGB ~ f(D^2 * H)):
-    - Petits (< 8m): coefficient 0.3 (young trees, low biomass)
-    - Moyens (8-12m): coefficient 0.7 (maturing trees, moderate biomass)
-    - Grands (> 12m): coefficient 1.0 (mature trees, full biomass)
-    
-    REDD+ practices (21 practices, 5 categories):
-    - agroforesterie: AGF1-AGF4 (+0.3 each, max +1.2)
-    - zero_deforestation: ZD1-ZD4 (+0.3 each, max +1.2)
-    - gestion_sols: SOL1-SOL5 (+0.2 each, max +1.0)
-    - restauration: REST1-REST4 (+0.3 each, max +1.2)
-    - tracabilite: TRAC1-TRAC4 (+0.15 each, max +0.6)
+    Unified carbon score using the centralized engine.
+    Delegates to carbon_score_engine.calculate_carbon_score_simple().
     """
-    score = 3.0
-
-    # Calculate weighted tree count using biomass coefficients
-    COEFF_PETIT = 0.3
-    COEFF_MOYEN = 0.7
-    COEFF_GRAND = 1.0
-
-    n_petits = int(arbres_petits or 0)
-    n_moyens = int(arbres_moyens or 0)
-    n_grands = int(arbres_grands or 0)
-    
-    # If only total nombre_arbres provided (backward compat), treat as moyens
-    total_from_categories = n_petits + n_moyens + n_grands
-    if nombre_arbres and total_from_categories == 0:
-        n_moyens = int(nombre_arbres)
-        total_from_categories = n_moyens
-
-    weighted_trees = (n_petits * COEFF_PETIT) + (n_moyens * COEFF_MOYEN) + (n_grands * COEFF_GRAND)
-
-    # Tree biomass bonus (0-2 pts) based on weighted density per hectare
-    if total_from_categories > 0 and area > 0:
-        weighted_density = weighted_trees / area
-        if weighted_density >= 80:
-            score += 2.0
-        elif weighted_density >= 50:
-            score += 1.5
-        elif weighted_density >= 20:
-            score += 1.0
-        elif weighted_density >= 5:
-            score += 0.5
-
-    # Shade cover bonus (0-2 pts) - weighted by tree maturity
-    if couverture_ombragee is not None:
-        pct = float(couverture_ombragee)
-        # Bonus for having mature trees (grands > 12m) providing quality shade
-        mature_ratio = n_grands / total_from_categories if total_from_categories > 0 else 0
-        maturity_bonus = 0.3 * mature_ratio  # up to +0.3 bonus for having large trees
-        
-        if pct >= 60:
-            score += min(2.0 + maturity_bonus, 2.0)
-        elif pct >= 40:
-            score += min(1.5 + maturity_bonus, 2.0)
-        elif pct >= 20:
-            score += min(1.0 + maturity_bonus, 2.0)
-        elif pct >= 10:
-            score += min(0.5 + maturity_bonus, 2.0)
-
-    # Ecological practices bonus (0-2.5 pts, 0.5 each)
-    practice_scores = {
-        "compostage": 0.5,
-        "absence_pesticides": 0.5,
-        "gestion_dechets": 0.5,
-        "protection_cours_eau": 0.5,
-        "agroforesterie": 0.5,
-    }
-    all_practices = list(pratiques or []) + list(existing_practices or [])
-    seen = set()
-    for p in all_practices:
-        if p not in seen:
-            score += practice_scores.get(p, 0)
-            seen.add(p)
-
-    # REDD+ practices bonus (from field agent tracking visits)
-    redd_category_scores = {
-        "agroforesterie": 0.3,      # AGF1-AGF4: +0.3 each
-        "zero_deforestation": 0.3,   # ZD1-ZD4: +0.3 each
-        "gestion_sols": 0.2,         # SOL1-SOL5: +0.2 each
-        "restauration": 0.3,         # REST1-REST4: +0.3 each
-        "tracabilite": 0.15,         # TRAC1-TRAC4: +0.15 each
-    }
-    redd_category_caps = {
-        "agroforesterie": 1.2,
-        "zero_deforestation": 1.2,
-        "gestion_sols": 1.0,
-        "restauration": 1.2,
-        "tracabilite": 0.6,
-    }
-    if redd_practices:
-        category_totals = {}
-        for rp in redd_practices:
-            cat = rp.get("category", "")
-            if cat in redd_category_scores:
-                category_totals[cat] = category_totals.get(cat, 0) + redd_category_scores[cat]
-        for cat, total in category_totals.items():
-            capped = min(total, redd_category_caps.get(cat, 1.0))
-            score += capped
-
-    # Area bonus (0-0.5 pts)
-    if area >= 5:
-        score += 0.5
-
-    return round(min(score, 10.0), 1)
+    from routes.carbon_score_engine import calculate_carbon_score_simple
+    return calculate_carbon_score_simple(
+        area_hectares=area,
+        arbres_petits=arbres_petits,
+        arbres_moyens=arbres_moyens,
+        arbres_grands=arbres_grands,
+        nombre_arbres=nombre_arbres,
+        couverture_ombragee=couverture_ombragee,
+        pratiques_ecologiques=pratiques,
+        redd_practices=redd_practices,
+        existing_practices=existing_practices,
+        pratique_brulage=pratique_brulage,
+        engrais_chimique=engrais_chimique,
+        age_cacaoyers=age_cacaoyers,
+        certification=certification,
+    )
