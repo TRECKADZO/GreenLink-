@@ -97,6 +97,13 @@ const AdminDashboard = () => {
     fetchStats();
   }, [user, authLoading]);
 
+  /* Auto-refresh stats toutes les 60s */
+  useEffect(() => {
+    if (!user || user.user_type !== 'admin') return;
+    const interval = setInterval(fetchStats, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');

@@ -58,6 +58,28 @@ def decrypt_message(encrypted: str) -> str:
 
 ADMIN_DISPLAY_NAME = "GreenLink Support"
 
+def get_display_name(user_dict):
+    """Retourne le nom d'affichage approprié selon le type d'utilisateur"""
+    if not user_dict:
+        return "Utilisateur"
+    ut = user_dict.get("user_type", "")
+    if ut == "admin":
+        return ADMIN_DISPLAY_NAME
+    if ut == "cooperative":
+        # Pour les coopératives, priorité au nom de la coopérative
+        coop_name = user_dict.get("cooperative_name") or user_dict.get("nom_cooperative")
+        if coop_name:
+            return coop_name
+        fn = user_dict.get("full_name", "")
+        # Si le full_name ressemble déjà à un nom de coop, l'utiliser tel quel
+        if fn and any(kw in fn.lower() for kw in ["coop", "admin ", "responsable"]):
+            return fn
+        # Sinon, préfixer pour identifier clairement comme coopérative
+        if fn:
+            return f"Coop. {fn}"
+        return user_dict.get("email") or "Coopérative"
+    return user_dict.get("full_name") or user_dict.get("cooperative_name") or user_dict.get("email") or "Utilisateur"
+
 def mask_admin_name(user_dict, name_field="full_name"):
     """Remplace le nom de l'admin par un nom générique dans les réponses"""
     if user_dict and user_dict.get("user_type") == "admin":
@@ -724,10 +746,10 @@ async def get_contacts(
     user_id = current_user["_id"]
     user_type = current_user.get("user_type")
 
-    query = {"_id": {"$ne": ObjectId(user_id)}, "is_active": {"$ne": False}}
+    query = {"_id": {"$ne": ObjectId(user_id)}}
 
     if user_type == "admin":
-        # Admin peut contacter tout le monde
+        # Admin peut contacter tout le monde (y compris les comptes inactifs)
         pass
     elif user_type == "cooperative":
         # Coopérative peut contacter ses agents, ses agriculteurs, l'admin, et les acheteurs
@@ -799,6 +821,7 @@ async def get_contacts(
         name_filter = {"$or": [
             {"full_name": search_regex},
             {"cooperative_name": search_regex},
+            {"nom_cooperative": search_regex},
             {"email": search_regex},
             {"phone_number": search_regex}
         ]}
@@ -807,9 +830,10 @@ async def get_contacts(
         else:
             query.update(name_filter)
 
+    limit = 200 if user_type == "admin" else 50
     users = await db.users.find(query, {
         "password": 0, "hashed_password": 0
-    }).limit(50).to_list(50)
+    }).limit(limit).to_list(limit)
 
     # Obtenir les conversations existantes pour marquer les contacts
     existing_convos = await db.conversations.find({
@@ -837,7 +861,7 @@ async def get_contacts(
 
         result.append({
             "id": uid,
-            "name": u.get("full_name") or u.get("cooperative_name") or u.get("email") or "Utilisateur",
+            "name": get_display_name(u),
             "user_type": u.get("user_type"),
             "user_type_label": user_type_label,
             "avatar": u.get("avatar"),
@@ -893,10 +917,10 @@ async def get_conversations(
             "fournisseur": "Fournisseur", "carbon_auditor": "Auditeur Carbone"
         }.get(ut, ut)
 
-        # Masquer le nom admin
+        # Masquer le nom admin / Afficher nom coopérative
         other_name = conv["seller_name"] if is_buyer else conv["buyer_name"]
-        if ut == "admin":
-            other_name = ADMIN_DISPLAY_NAME
+        if other_user:
+            other_name = get_display_name(other_user)
 
         result.append({
             "conversation_id": conv["conversation_id"],
@@ -968,7 +992,7 @@ async def get_conversation(
         "listing": listing,
         "other_user": {
             "id": other_id,
-            "name": ADMIN_DISPLAY_NAME if ut == "admin" else (other_user.get("full_name") or other_user.get("cooperative_name") if other_user else "Utilisateur"),
+            "name": get_display_name(other_user) if other_user else "Utilisateur",
             "avatar": other_user.get("avatar") if other_user else None,
             "is_online": other_user.get("is_online", False) if other_user else False,
             "user_type": other_user.get("user_type") if other_user else None,
@@ -1007,12 +1031,12 @@ async def get_messages(
     messages = await db.messages.find(query).sort("created_at", -1).limit(limit).to_list(limit)
     messages.reverse()  # Ordre chronologique
     
-    # Identifier les IDs admin pour masquer les noms
-    admin_ids = set()
+    # Identifier les noms affichés pour chaque participant
+    display_names = {}
     for pid in [conversation["buyer_id"], conversation["seller_id"]]:
-        u = await db.users.find_one({"_id": ObjectId(pid)}, {"user_type": 1})
-        if u and u.get("user_type") == "admin":
-            admin_ids.add(pid)
+        u = await db.users.find_one({"_id": ObjectId(pid)}, {"user_type": 1, "full_name": 1, "cooperative_name": 1, "nom_cooperative": 1, "email": 1})
+        if u:
+            display_names[pid] = get_display_name(u)
 
     result = []
     for msg in messages:
@@ -1028,8 +1052,8 @@ async def get_messages(
         elif msg.get("content_plain"):
             content = msg["content_plain"]
         
-        # Masquer le nom admin
-        sender_name = ADMIN_DISPLAY_NAME if msg.get("sender_id") in admin_ids else msg.get("sender_name")
+        # Utiliser le nom d'affichage correct
+        sender_name = display_names.get(msg.get("sender_id"), msg.get("sender_name"))
 
         result.append({
             "message_id": msg["message_id"],

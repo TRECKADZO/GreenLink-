@@ -285,6 +285,13 @@ export default function MessagingPage() {
 
   useEffect(() => { if (token) loadConversations(); }, [token, loadConversations]);
 
+  /* ── Auto-refresh conversations every 30s ── */
+  useEffect(() => {
+    if (!token) return;
+    const interval = setInterval(loadConversations, 30000);
+    return () => clearInterval(interval);
+  }, [token, loadConversations]);
+
   /* ── Load single conversation ── */
   const loadConversation = useCallback(async (convId) => {
     setLoadingMessages(true);
