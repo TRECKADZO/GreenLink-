@@ -14,7 +14,8 @@ import {
 import {
   AlertTriangle, ChevronLeft, Filter, Search, Eye,
   CheckCircle, XCircle, ShieldAlert, TrendingDown, BarChart3,
-  ArrowUpRight, ArrowDownRight, Minus, MessageSquare, Loader2
+  ArrowUpRight, ArrowDownRight, Minus, MessageSquare, Loader2,
+  Download, FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -52,6 +53,7 @@ export default function DiscrepancyDashboard() {
   const [showValidateDialog, setShowValidateDialog] = useState(false);
   const [validateComment, setValidateComment] = useState('');
   const [validating, setValidating] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const fetchEcarts = useCallback(async () => {
     setLoading(true);
@@ -71,6 +73,25 @@ export default function DiscrepancyDashboard() {
   }, [filter]);
 
   useEffect(() => { fetchEcarts(); }, [fetchEcarts]);
+
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem('token');
+      let url = `${API_URL}/api/ecarts/export/pdf`;
+      if (filter) url += `?classification=${filter}`;
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) throw new Error('Erreur export');
+      const blob = await r.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `GreenLink_Ecarts_${new Date().toISOString().slice(0,10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast.success('Rapport PDF telecharge');
+    } catch { toast.error('Erreur lors de l\'export PDF'); }
+    setExporting(false);
+  };
 
   const filteredEcarts = ecarts.filter(e => {
     if (!search) return true;
@@ -104,14 +125,21 @@ export default function DiscrepancyDashboard() {
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6" data-testid="discrepancy-dashboard">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Gestion des Ecarts</h1>
-          <p className="text-sm text-gray-500">{total} ecart(s) enregistre(s) — Campagne 2025-2026</p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Gestion des Ecarts</h1>
+            <p className="text-sm text-gray-500">{total} ecart(s) enregistre(s) — Campagne 2025-2026</p>
+          </div>
         </div>
+        <Button onClick={handleExportPDF} disabled={exporting || total === 0}
+          variant="outline" className="gap-2" data-testid="export-pdf-btn">
+          {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          <span className="hidden sm:inline">Exporter PDF</span>
+        </Button>
       </div>
 
       {/* Stats Cards */}

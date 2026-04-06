@@ -86,6 +86,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Ajout decompte arbres ombrages par strate (Strate 1/2/3) dans fiche parcelle (MemberParcelsPage + ParcelsVerificationPage + API backend)
 - (7 avr) Saisie arbres par strate lors de la creation de parcelle (AddParcelPage + MemberParcelsPage modal + backend) avec bonus score carbone
 - (7 avr) GESTION DES ECARTS : Moteur de calcul automatique (surface, arbres par strate, brulage, couverture) + Classification (faible/moyen/important) + Impact prime carbone (0.95/0.80/0.50) + Dashboard cooperative + Notifications farmer + Validation coop + Tests 16/16 passes
+- (7 avr) Export PDF rapport ecarts par campagne (reportlab) + bouton Exporter PDF dans dashboard cooperative
 
 ## Backlog
 ### P0

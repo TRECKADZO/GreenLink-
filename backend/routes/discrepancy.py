@@ -3,9 +3,11 @@ Gestion des Ecarts - Discrepancy Management
 Compare declared vs measured data and classify discrepancies.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from datetime import datetime
 from bson import ObjectId
 from typing import Optional, List
+from io import BytesIO
 import logging
 
 from routes.auth import get_current_user
@@ -479,3 +481,186 @@ async def validate_discrepancy(
     )
 
     return {"message": f"Ecart {update['statut']}", "statut": update["statut"]}
+
+
+
+# ============= PDF EXPORT =============
+
+@router.get("/export/pdf")
+async def export_discrepancies_pdf(
+    classification: Optional[str] = Query(None),
+    campagne: Optional[str] = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Export PDF du rapport d'ecarts pour la cooperative."""
+    verify_cooperative_access(current_user)
+
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import cm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.platypus.flowables import HRFlowable
+
+    query = {}
+    if current_user.get("user_type") == "cooperative":
+        query["coop_id"] = current_user["_id"]
+    if classification:
+        query["classification_globale"] = classification
+    if campagne:
+        query["campagne"] = campagne
+
+    records = await db.discrepancies.find(query).sort("created_at", -1).to_list(500)
+
+    # Get cooperative name
+    coop_name = current_user.get("cooperative_name") or current_user.get("coop_name") or current_user.get("full_name", "Cooperative")
+    camp = campagne or CAMPAGNE_ACTUELLE
+
+    # Stats
+    stats = {"faible": 0, "moyen": 0, "important": 0, "total_perte": 0}
+    for r in records:
+        cl = r.get("classification_globale", "faible")
+        if cl in stats:
+            stats[cl] += 1
+        stats["total_perte"] += (r.get("prime_estimee_avant", 0) or 0) - (r.get("prime_estimee_apres", 0) or 0)
+
+    # Build PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=1.5*cm, rightMargin=1.5*cm, topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle('CustomTitle', parent=styles['Title'], fontSize=18, textColor=colors.HexColor('#1a5c2e'), spaceAfter=6)
+    subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=11, textColor=colors.HexColor('#555555'), spaceAfter=14)
+    section_style = ParagraphStyle('Section', parent=styles['Heading2'], fontSize=13, textColor=colors.HexColor('#1a5c2e'), spaceBefore=16, spaceAfter=8)
+    body_style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=9, leading=12)
+    small_style = ParagraphStyle('Small', parent=styles['Normal'], fontSize=8, textColor=colors.HexColor('#777777'))
+
+    elements = []
+
+    # Header
+    elements.append(Paragraph("GreenLink Agritech", title_style))
+    elements.append(Paragraph(f"Rapport des Ecarts de Verification — Campagne {camp}", subtitle_style))
+    elements.append(Paragraph(f"Cooperative: {coop_name}", body_style))
+    elements.append(Paragraph(f"Date d'export: {datetime.utcnow().strftime('%d/%m/%Y %H:%M')}", small_style))
+    elements.append(Spacer(1, 12))
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#1a5c2e')))
+    elements.append(Spacer(1, 14))
+
+    # Summary stats
+    elements.append(Paragraph("Resume des ecarts", section_style))
+    summary_data = [
+        ["Classification", "Nombre", "Seuil", "Impact Prime"],
+        ["Faible (< 15%)", str(stats["faible"]), "Correction automatique", "Ajustee legerement (x0.95)"],
+        ["Moyen (15% - 30%)", str(stats["moyen"]), "Validation cooperative requise", "Ajustee moderement (x0.80)"],
+        ["Important (> 30%)", str(stats["important"]), "Verification renforcee", "Reduite/suspendue (x0.50)"],
+        ["TOTAL", str(len(records)), "", f"{int(stats['total_perte']):,} XOF de perte estimee".replace(",", " ")],
+    ]
+    summary_table = Table(summary_data, colWidths=[3.8*cm, 2*cm, 5.5*cm, 5.5*cm])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a5c2e')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#e6f5ec')),
+        ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor('#fff8e6')),
+        ('BACKGROUND', (0, 3), (-1, 3), colors.HexColor('#fde8e8')),
+        ('BACKGROUND', (0, 4), (-1, 4), colors.HexColor('#f0f0f0')),
+        ('FONTNAME', (0, 4), (-1, 4), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
+        ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 18))
+
+    # Detailed records
+    if records:
+        elements.append(Paragraph("Detail des ecarts par parcelle", section_style))
+
+        for idx, rec in enumerate(records):
+            cls = rec.get("classification_globale", "faible")
+            cls_color = {"faible": '#22c55e', "moyen": '#f59e0b', "important": '#ef4444'}.get(cls, '#888')
+            bg_color = {"faible": '#f0fdf4', "moyen": '#fffbeb', "important": '#fef2f2'}.get(cls, '#f9f9f9')
+
+            # Parcel header
+            header_text = f"{idx+1}. {rec.get('farmer_name', 'Inconnu')} — {rec.get('parcelle_location', 'N/A')}"
+            elements.append(Paragraph(header_text, ParagraphStyle('PH', parent=body_style, fontSize=10, fontName='Helvetica-Bold', textColor=colors.HexColor(cls_color))))
+            meta_text = (
+                f"Agent: {rec.get('agent_name', 'N/A')} | "
+                f"Date: {rec.get('created_at', datetime.utcnow()).strftime('%d/%m/%Y') if isinstance(rec.get('created_at'), datetime) else str(rec.get('created_at', ''))[:10]} | "
+                f"Statut: {rec.get('statut', 'N/A')}"
+            )
+            elements.append(Paragraph(meta_text, small_style))
+            elements.append(Spacer(1, 4))
+
+            # Ecarts table
+            ecarts = rec.get("ecarts", [])
+            if ecarts:
+                detail_data = [["Donnee", "Declare", "Mesure", "Ecart (%)", "Niveau"]]
+                for e in ecarts:
+                    d_val = str(e.get("declare", "-"))
+                    m_val = str(e.get("mesure", "-"))
+                    pct = f"{e.get('ecart_pct', 0)}%"
+                    lvl = (e.get("classification", "")).capitalize()
+                    detail_data.append([e.get("label", ""), d_val, m_val, pct, lvl])
+
+                detail_table = Table(detail_data, colWidths=[5.5*cm, 2.5*cm, 2.5*cm, 2.5*cm, 3.5*cm])
+                detail_style_cmds = [
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#374151')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTSIZE', (0, 0), (-1, -1), 7.5),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor('#dddddd')),
+                    ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ]
+                for row_idx, e in enumerate(ecarts, start=1):
+                    row_cls = e.get("classification", "faible")
+                    row_bg = {"faible": '#f0fdf4', "moyen": '#fffbeb', "important": '#fef2f2'}.get(row_cls, '#ffffff')
+                    detail_style_cmds.append(('BACKGROUND', (0, row_idx), (-1, row_idx), colors.HexColor(row_bg)))
+
+                detail_table.setStyle(TableStyle(detail_style_cmds))
+                elements.append(detail_table)
+
+            # Prime impact
+            prime_avant = int(rec.get("prime_estimee_avant", 0))
+            prime_apres = int(rec.get("prime_estimee_apres", 0))
+            impact_text = f"Prime: {prime_avant:,} XOF -> {prime_apres:,} XOF ({rec.get('impact_prime', '')})".replace(",", " ")
+            elements.append(Paragraph(impact_text, ParagraphStyle('Impact', parent=small_style, textColor=colors.HexColor(cls_color), fontName='Helvetica-Bold')))
+
+            # Agent comment
+            comment = rec.get("commentaire_agent", "")
+            if comment:
+                elements.append(Paragraph(f'Commentaire agent: "{comment}"', ParagraphStyle('Comment', parent=small_style, fontName='Helvetica-Oblique')))
+
+            elements.append(Spacer(1, 10))
+            elements.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#e5e5e5')))
+            elements.append(Spacer(1, 6))
+
+    else:
+        elements.append(Paragraph("Aucun ecart enregistre pour cette campagne.", body_style))
+
+    # Footer
+    elements.append(Spacer(1, 20))
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#1a5c2e')))
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph(
+        f"Ce rapport est genere automatiquement par GreenLink Agritech. "
+        f"Les ecarts sont calcules en comparant les declarations des planteurs avec les mesures des agents terrain. "
+        f"L'objectif est d'encourager l'exactitude des declarations tout en maintenant la confiance.",
+        ParagraphStyle('Footer', parent=small_style, fontSize=7, textColor=colors.HexColor('#999999'))
+    ))
+
+    doc.build(elements)
+    buffer.seek(0)
+
+    filename = f"GreenLink_Ecarts_{camp.replace('-','_')}_{datetime.utcnow().strftime('%Y%m%d')}.pdf"
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
