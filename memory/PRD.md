@@ -89,6 +89,9 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Export PDF rapport ecarts par campagne (reportlab) + bouton Exporter PDF dans dashboard cooperative
 - (7 avr) FORMULE CARBONE UNIFIEE v2.0 : 1 seul moteur (carbon_score_engine.py) utilise partout (creation, verification, USSD). 10 criteres: base, densite arbres ponderee, couverture ombragee, brulage (-1.5), engrais chimiques (-0.5), pratiques eco, REDD+, age cacaoyers, surface, certification. API: POST /api/carbon-score/simulate + GET /api/carbon-score/decomposition
 
+## Travail complete (7 avr suite)
+- (7 avr) BUG FIX USSD "Age cacaoyers": Variable arbres_par_ha non definie dans calculate_ussd_carbon_premium() causait une erreur pour la derniere question du flux USSD (toutes les 3 options 1/2/3). Corrige en ajoutant arbres_par_ha = total_trees / max(hectares, 0.01). Tests: 8/8 backend + frontend USSD simulator verifies (iteration_108)
+
 ## Backlog
 ### P0
 - Mettre a jour MONGO_URL dans les Secrets Emergent Dashboard (action utilisateur)
