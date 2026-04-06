@@ -82,6 +82,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Indicateur stockage IndexedDB dans onglet Plus agent terrain
 - (7 avr) Section "Securite" dans la page Profil (modifier mot de passe)
 - (7 avr) Tests de securite: 5 tests backend passes (test_security_privilege_escalation.py)
+- (7 avr) Bug fix: Cooperatives invisibles dans messagerie admin — get_display_name verifie maintenant coop_name + 12 cooperatives corrigees en DB
 
 ## Backlog
 ### P0

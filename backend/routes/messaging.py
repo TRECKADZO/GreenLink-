@@ -67,8 +67,9 @@ def get_display_name(user_dict):
         return ADMIN_DISPLAY_NAME
     if ut == "cooperative":
         # Pour les coopératives, priorité au nom de la coopérative
-        coop_name = user_dict.get("cooperative_name") or user_dict.get("nom_cooperative")
-        if coop_name:
+        coop_name = (user_dict.get("cooperative_name") or user_dict.get("coop_name")
+                     or user_dict.get("nom_cooperative"))
+        if coop_name and coop_name.strip() and coop_name.strip().lower() != "none":
             return coop_name
         fn = user_dict.get("full_name", "")
         # Si le full_name ressemble déjà à un nom de coop, l'utiliser tel quel
@@ -78,7 +79,7 @@ def get_display_name(user_dict):
         if fn:
             return f"Coop. {fn}"
         return user_dict.get("email") or "Coopérative"
-    return user_dict.get("full_name") or user_dict.get("cooperative_name") or user_dict.get("email") or "Utilisateur"
+    return user_dict.get("full_name") or user_dict.get("cooperative_name") or user_dict.get("coop_name") or user_dict.get("email") or "Utilisateur"
 
 def mask_admin_name(user_dict, name_field="full_name"):
     """Remplace le nom de l'admin par un nom générique dans les réponses"""
