@@ -372,7 +372,7 @@ class TestUSSDPaymentRequestRSE:
         """Test POST /api/ussd/callback (menu 2*1) creates request with RSE fields"""
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": f"test_rse_iteration63_{os.urandom(4).hex()}",
-            "serviceCode": "*123*45#",
+            "serviceCode": "*144*99#",
             "phoneNumber": USSD_TEST_PHONE,
             "text": "2*1"
         })

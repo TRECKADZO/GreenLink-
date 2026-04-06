@@ -18,7 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../config';
 import api from '../../services/api';
 
-const USSD_CODE = '*123*45#';
+const USSD_CODE = '*144*99#';
 const SMS_NUMBER = '1234';
 
 const USSDSimulatorScreen = () => {

@@ -181,7 +181,7 @@ class TestCarbonPremiumsAdminWorkflow:
         # This simulates a farmer navigating to menu 2 (carbon premiums) then option 1 (request payment)
         response = requests.post(f"{BASE_URL}/api/ussd/callback", json={
             "sessionId": "test_session_carbon_premium_62",
-            "serviceCode": "*123*45#",
+            "serviceCode": "*144*99#",
             "phoneNumber": TEST_FARMER_PHONE,
             "text": "2*1"
         })

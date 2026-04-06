@@ -99,7 +99,7 @@ async def check_and_set_admissibility(parcel_id: str, carbon_score: float, farme
         notif = {
             "user_id": farmer_id,
             "title": "Prime Carbone - Admissible",
-            "message": f"Votre parcelle est admissible a la prime carbone (score {carbon_score}/10). Prime estimee: {prime_farmer:,.0f} XOF. Faites votre demande via *123*45#",
+            "message": f"Votre parcelle est admissible a la prime carbone (score {carbon_score}/10). Prime estimee: {prime_farmer:,.0f} XOF. Faites votre demande via *144*99#",
             "type": "carbon_admissible",
             "action_url": "/farmer/carbon-score",
             "created_at": datetime.utcnow(),

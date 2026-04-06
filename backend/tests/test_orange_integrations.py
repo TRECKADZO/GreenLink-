@@ -327,7 +327,7 @@ class TestUSSDCallbackEndpoint:
         """USSD callback should return a valid response"""
         payload = {
             "sessionId": "test_session_001",
-            "serviceCode": "*123*45#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250787761023",
             "text": ""
         }
@@ -343,7 +343,7 @@ class TestUSSDCallbackEndpoint:
         """USSD callback should return session_id"""
         payload = {
             "sessionId": "test_session_002",
-            "serviceCode": "*123*45#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250787761023",
             "text": ""
         }
@@ -362,7 +362,7 @@ class TestUSSDCallbackEndpoint:
         """USSD callback should return text response"""
         payload = {
             "sessionId": "test_session_003",
-            "serviceCode": "*123*45#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250787761023",
             "text": ""
         }
@@ -383,7 +383,7 @@ class TestUSSDCallbackEndpoint:
         """USSD callback should return continue_session field"""
         payload = {
             "sessionId": "test_session_004",
-            "serviceCode": "*123*45#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250787761023",
             "text": ""
         }
@@ -403,7 +403,7 @@ class TestUSSDCallbackEndpoint:
         # Test menu option 1 (Mes parcelles)
         payload = {
             "sessionId": "test_session_005",
-            "serviceCode": "*123*45#",
+            "serviceCode": "*144*99#",
             "phoneNumber": "+2250787761023",
             "text": "1"
         }

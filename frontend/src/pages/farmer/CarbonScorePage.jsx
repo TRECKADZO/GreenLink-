@@ -262,7 +262,7 @@ const CarbonScorePage = () => {
                     <p className="text-sm font-semibold text-emerald-800">
                       {premiumData.parcelles_admissibles} parcelle(s) admissible(s)
                     </p>
-                    <p className="text-xs text-emerald-600">Composez *123*45# puis 2 &rarr; 1 pour demander votre prime</p>
+                    <p className="text-xs text-emerald-600">Composez *144*99# puis 2 &rarr; 1 pour demander votre prime</p>
                   </div>
                 </CardContent>
               </Card>
@@ -323,7 +323,7 @@ const CarbonScorePage = () => {
             ) : (
               <Card>
                 <CardContent className="p-4 text-center text-sm text-gray-500">
-                  Aucune demande de prime. {score >= 6 ? 'Composez *123*45# (option 2→1) pour faire votre demande.' : `Score minimum requis : 6.0/10 (actuel : ${score.toFixed(1)})`}
+                  Aucune demande de prime. {score >= 6 ? 'Composez *144*99# (option 2→1) pour faire votre demande.' : `Score minimum requis : 6.0/10 (actuel : ${score.toFixed(1)})`}
                 </CardContent>
               </Card>
             )}

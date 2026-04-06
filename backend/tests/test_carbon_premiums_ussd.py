@@ -232,7 +232,7 @@ class TestUSSDAPI:
             f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": "test_main_menu",
-                "serviceCode": "*123*45#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": FARMER_PHONE,
                 "text": ""
             }
@@ -253,7 +253,7 @@ class TestUSSDAPI:
             f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": "test_option1",
-                "serviceCode": "*123*45#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": FARMER_PHONE,
                 "text": "1"
             }
@@ -275,7 +275,7 @@ class TestUSSDAPI:
             f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": "test_option2",
-                "serviceCode": "*123*45#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": FARMER_PHONE,
                 "text": "2"
             }
@@ -296,7 +296,7 @@ class TestUSSDAPI:
             f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": "test_option3",
-                "serviceCode": "*123*45#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": FARMER_PHONE,
                 "text": "3"
             }
@@ -317,7 +317,7 @@ class TestUSSDAPI:
             f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": "test_option4",
-                "serviceCode": "*123*45#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": FARMER_PHONE,
                 "text": "4"
             }
@@ -338,7 +338,7 @@ class TestUSSDAPI:
             f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": "test_option5",
-                "serviceCode": "*123*45#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": FARMER_PHONE,
                 "text": "5"
             }
@@ -359,7 +359,7 @@ class TestUSSDAPI:
             f"{BASE_URL}/api/ussd/callback",
             json={
                 "sessionId": "test_option6",
-                "serviceCode": "*123*45#",
+                "serviceCode": "*144*99#",
                 "phoneNumber": FARMER_PHONE,
                 "text": "6"
             }

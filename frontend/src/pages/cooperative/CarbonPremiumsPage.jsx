@@ -129,7 +129,7 @@ const CarbonPremiumsPage = () => {
                   <ArrowRight className="h-3 w-3" />
                   <Badge className="bg-emerald-800/50 text-emerald-300 border-emerald-600/30">2. Score &ge; 6.0 = Admissible</Badge>
                   <ArrowRight className="h-3 w-3" />
-                  <Badge className="bg-emerald-800/50 text-emerald-300 border-emerald-600/30">3. Demande USSD (*123*45#)</Badge>
+                  <Badge className="bg-emerald-800/50 text-emerald-300 border-emerald-600/30">3. Demande USSD (*144*99#)</Badge>
                   <ArrowRight className="h-3 w-3" />
                   <Badge className="bg-emerald-800/50 text-emerald-300 border-emerald-600/30">4. Validation Super Admin</Badge>
                   <ArrowRight className="h-3 w-3" />
@@ -267,7 +267,7 @@ const CarbonPremiumsPage = () => {
                 <CardContent className="py-12 text-center">
                   <Wallet className="h-10 w-10 mx-auto mb-3 text-gray-600" />
                   <p className="text-gray-400">Aucune demande de prime{statusFilter !== 'all' ? ` avec statut "${statusFilter}"` : ''}</p>
-                  <p className="text-sm text-gray-500 mt-1">Les planteurs admissibles peuvent faire leur demande via USSD *123*45#</p>
+                  <p className="text-sm text-gray-500 mt-1">Les planteurs admissibles peuvent faire leur demande via USSD *144*99#</p>
                 </CardContent>
               </Card>
             )}

@@ -20,9 +20,9 @@ db = client[db_name]
 # SMS Templates in French and local languages
 SMS_TEMPLATES = {
     "carbon_premium_eligible": {
-        "francais": "GreenLink: Félicitations {name}! Votre parcelle {parcel_id} a un score carbone de {score}/10. Vous êtes éligible à la prime de 10% sur vos ventes! Tapez *123*45# pour plus d'infos.",
-        "baoule": "GreenLink: {name}, wo parcelle {parcel_id} le carbone score {score}/10. A ti kpa! 10% prime wo ta nian. *123*45#",
-        "dioula": "GreenLink: {name}, i ka parcelle {parcel_id} carbone score ye {score}/10. A ka nyi! 10% prime bè i soro. *123*45#"
+        "francais": "GreenLink: Félicitations {name}! Votre parcelle {parcel_id} a un score carbone de {score}/10. Vous êtes éligible à la prime de 10% sur vos ventes! Tapez *144*99# pour plus d'infos.",
+        "baoule": "GreenLink: {name}, wo parcelle {parcel_id} le carbone score {score}/10. A ti kpa! 10% prime wo ta nian. *144*99#",
+        "dioula": "GreenLink: {name}, i ka parcelle {parcel_id} carbone score ye {score}/10. A ka nyi! 10% prime bè i soro. *144*99#"
     },
     "harvest_payment": {
         "francais": "GreenLink: Paiement de {amount} XOF envoyé sur votre {payment_method}. Ref: {ref}. Prime carbone incluse: {premium} XOF.",
