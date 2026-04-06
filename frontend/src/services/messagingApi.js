@@ -34,6 +34,41 @@ export const messagingApi = {
   },
 
   /**
+   * Créer une conversation directe (sans annonce)
+   */
+  createDirectConversation: async (recipientId, initialMessage, subject = null) => {
+    try {
+      const response = await axios.post(`${API}/conversations/direct`, {
+        recipient_id: recipientId,
+        initial_message: initialMessage,
+        subject
+      }, { headers: getAuthHeaders() });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating direct conversation:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Récupérer les contacts disponibles
+   */
+  getContacts: async (search = null) => {
+    try {
+      const params = {};
+      if (search) params.search = search;
+      const response = await axios.get(`${API}/contacts`, {
+        params,
+        headers: getAuthHeaders()
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Récupérer la liste des conversations
    */
   getConversations: async (archived = false) => {

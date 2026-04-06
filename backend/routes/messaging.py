@@ -70,6 +70,12 @@ class ConversationCreate(BaseModel):
     recipient_id: str
     initial_message: str
 
+class DirectConversationCreate(BaseModel):
+    """Créer une conversation directe (sans annonce)"""
+    recipient_id: str
+    initial_message: str
+    subject: Optional[str] = None
+
 class ReportMessage(BaseModel):
     """Signaler un message"""
     message_id: str
@@ -550,6 +556,254 @@ async def create_conversation(
     }
 
 
+@router.post("/conversations/direct")
+async def create_direct_conversation(
+    data: DirectConversationCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Créer une conversation directe entre deux utilisateurs (sans annonce)"""
+    user_id = current_user["_id"]
+    recipient_id = data.recipient_id
+
+    if user_id == recipient_id:
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas vous envoyer de message")
+
+    # Vérifier que le destinataire existe
+    recipient = await db.users.find_one({"_id": ObjectId(recipient_id)}, {"password": 0})
+    if not recipient:
+        raise HTTPException(status_code=404, detail="Destinataire non trouvé")
+
+    # Vérifier si une conversation directe existe déjà entre ces deux utilisateurs
+    existing = await db.conversations.find_one({
+        "conversation_type": "direct",
+        "$or": [
+            {"buyer_id": user_id, "seller_id": recipient_id},
+            {"buyer_id": recipient_id, "seller_id": user_id}
+        ]
+    })
+    if existing:
+        return {"conversation_id": existing["conversation_id"], "existing": True}
+
+    # Vérifier le blocage
+    block = await db.blocked_users.find_one({
+        "$or": [
+            {"blocker_id": recipient_id, "blocked_id": user_id},
+            {"blocker_id": user_id, "blocked_id": recipient_id}
+        ]
+    })
+    if block:
+        raise HTTPException(status_code=403, detail="Communication bloquée avec cet utilisateur")
+
+    sender = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
+    conversation_id = f"CONV-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+
+    sender_name = sender.get("full_name") or sender.get("cooperative_name") or "Utilisateur"
+    recipient_name = recipient.get("full_name") or recipient.get("cooperative_name") or "Utilisateur"
+
+    conversation_doc = {
+        "conversation_id": conversation_id,
+        "conversation_type": "direct",
+        "subject": data.subject,
+        "listing_id": None,
+        "listing_title": None,
+        "listing_photo": None,
+        "buyer_id": user_id,
+        "buyer_name": sender_name,
+        "buyer_avatar": sender.get("avatar") if sender else None,
+        "seller_id": recipient_id,
+        "seller_name": recipient_name,
+        "seller_avatar": recipient.get("avatar") if recipient else None,
+        "last_message": data.initial_message[:100],
+        "last_message_at": datetime.now(timezone.utc),
+        "last_sender_id": user_id,
+        "messages_count": 1,
+        "is_archived_buyer": False,
+        "is_archived_seller": False,
+        "created_at": datetime.now(timezone.utc)
+    }
+
+    await db.conversations.insert_one(conversation_doc)
+
+    message_id = f"MSG-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{str(uuid.uuid4())[:6].upper()}"
+    await db.messages.insert_one({
+        "message_id": message_id,
+        "conversation_id": conversation_id,
+        "sender_id": user_id,
+        "sender_name": sender_name,
+        "recipient_id": recipient_id,
+        "content": encrypt_message(data.initial_message),
+        "content_plain": data.initial_message,
+        "message_type": "text",
+        "is_read": False,
+        "is_pinned": False,
+        "is_deleted": False,
+        "created_at": datetime.now(timezone.utc)
+    })
+
+    # Notifier le destinataire
+    await messaging_manager.send_to_user(recipient_id, {
+        "type": "new_conversation",
+        "conversation": {
+            "conversation_id": conversation_id,
+            "sender_name": sender_name,
+            "initial_message": data.initial_message
+        }
+    })
+
+    await db.notifications.insert_one({
+        "user_id": recipient_id,
+        "title": "Nouveau message",
+        "message": f"{sender_name} vous a envoyé un message",
+        "type": "new_message",
+        "action_url": f"/messages/{conversation_id}",
+        "created_at": datetime.now(timezone.utc),
+        "is_read": False
+    })
+
+    return {
+        "conversation_id": conversation_id,
+        "existing": False,
+        "message": "Conversation créée avec succès"
+    }
+
+
+@router.get("/contacts")
+async def get_contacts(
+    current_user: dict = Depends(get_current_user),
+    search: Optional[str] = None
+):
+    """Récupérer les contacts disponibles selon le rôle de l'utilisateur"""
+    user_id = current_user["_id"]
+    user_type = current_user.get("user_type")
+
+    query = {"_id": {"$ne": ObjectId(user_id)}, "is_active": {"$ne": False}}
+
+    if user_type == "admin":
+        # Admin peut contacter tout le monde
+        pass
+    elif user_type == "cooperative":
+        # Coopérative peut contacter ses agents, ses agriculteurs, l'admin, et les acheteurs
+        coop_id = user_id
+        # Chercher les agents de cette coopérative
+        agent_ids = []
+        agents_cursor = db.users.find({"user_type": "field_agent", "cooperative_id": coop_id}, {"_id": 1})
+        async for a in agents_cursor:
+            agent_ids.append(a["_id"])
+
+        # Chercher les agriculteurs membres
+        member_ids = []
+        members_cursor = db.coop_members.find({"coop_id": coop_id}, {"member_id": 1})
+        async for m in members_cursor:
+            try:
+                member_ids.append(ObjectId(m["member_id"]))
+            except Exception:
+                pass
+
+        query["$or"] = [
+            {"_id": {"$in": agent_ids + member_ids}},
+            {"user_type": {"$in": ["admin", "acheteur", "buyer"]}}
+        ]
+    elif user_type == "field_agent":
+        # Agent peut contacter sa coopérative et ses agriculteurs assignés
+        coop_id = current_user.get("cooperative_id")
+        assigned = current_user.get("assigned_farmers", [])
+        assigned_oids = []
+        for fid in assigned:
+            try:
+                assigned_oids.append(ObjectId(fid))
+            except Exception:
+                pass
+
+        targets = assigned_oids
+        if coop_id:
+            try:
+                targets.append(ObjectId(coop_id))
+            except Exception:
+                pass
+
+        query["$or"] = [
+            {"_id": {"$in": targets}},
+            {"user_type": "admin"}
+        ]
+    elif user_type == "producteur":
+        # Agriculteur peut contacter sa coopérative, son agent, et les acheteurs
+        # Trouver la coop de cet agriculteur
+        membership = await db.coop_members.find_one({"member_id": user_id})
+        targets = []
+        if membership:
+            try:
+                targets.append(ObjectId(membership["coop_id"]))
+            except Exception:
+                pass
+
+        # Trouver l'agent qui l'a inscrit
+        agent = await db.users.find_one({"user_type": "field_agent", "assigned_farmers": user_id}, {"_id": 1})
+        if agent:
+            targets.append(agent["_id"])
+
+        query["$or"] = [
+            {"_id": {"$in": targets}},
+            {"user_type": {"$in": ["admin", "acheteur", "buyer", "cooperative"]}}
+        ]
+    else:
+        # Autres types (acheteur, etc.) — tout le monde sauf eux-mêmes
+        pass
+
+    if search:
+        search_regex = {"$regex": search, "$options": "i"}
+        name_filter = {"$or": [
+            {"full_name": search_regex},
+            {"cooperative_name": search_regex},
+            {"email": search_regex},
+            {"phone_number": search_regex}
+        ]}
+        if "$or" in query:
+            query = {"$and": [query, name_filter]}
+        else:
+            query.update(name_filter)
+
+    users = await db.users.find(query, {
+        "password": 0, "hashed_password": 0
+    }).limit(50).to_list(50)
+
+    # Obtenir les conversations existantes pour marquer les contacts
+    existing_convos = await db.conversations.find({
+        "$or": [{"buyer_id": user_id}, {"seller_id": user_id}]
+    }, {"buyer_id": 1, "seller_id": 1, "conversation_id": 1}).to_list(200)
+
+    existing_map = {}
+    for c in existing_convos:
+        other = c["seller_id"] if c["buyer_id"] == user_id else c["buyer_id"]
+        existing_map[other] = c["conversation_id"]
+
+    result = []
+    for u in users:
+        uid = str(u["_id"])
+        user_type_label = {
+            "admin": "Administrateur",
+            "cooperative": "Coopérative",
+            "field_agent": "Agent Terrain",
+            "producteur": "Agriculteur",
+            "acheteur": "Acheteur",
+            "buyer": "Acheteur",
+            "fournisseur": "Fournisseur",
+            "carbon_auditor": "Auditeur Carbone"
+        }.get(u.get("user_type", ""), u.get("user_type", ""))
+
+        result.append({
+            "id": uid,
+            "name": u.get("full_name") or u.get("cooperative_name") or u.get("email") or "Utilisateur",
+            "user_type": u.get("user_type"),
+            "user_type_label": user_type_label,
+            "avatar": u.get("avatar"),
+            "is_online": u.get("is_online", False),
+            "existing_conversation": existing_map.get(uid)
+        })
+
+    return result
+
+
+
 @router.get("/conversations")
 async def get_conversations(
     current_user: dict = Depends(get_current_user),
@@ -585,8 +839,19 @@ async def get_conversations(
         other_id = conv["seller_id"] if is_buyer else conv["buyer_id"]
         other_user = await db.users.find_one({"_id": ObjectId(other_id)}, {"password": 0, "_id": 0})
         
+        # Get user_type_label
+        ut = other_user.get("user_type", "") if other_user else ""
+        user_type_label = {
+            "admin": "Administrateur", "cooperative": "Coopérative",
+            "field_agent": "Agent Terrain", "producteur": "Agriculteur",
+            "acheteur": "Acheteur", "buyer": "Acheteur",
+            "fournisseur": "Fournisseur", "carbon_auditor": "Auditeur Carbone"
+        }.get(ut, ut)
+
         result.append({
             "conversation_id": conv["conversation_id"],
+            "conversation_type": conv.get("conversation_type", "marketplace"),
+            "subject": conv.get("subject"),
             "listing_id": conv.get("listing_id"),
             "listing_title": conv.get("listing_title"),
             "listing_photo": conv.get("listing_photo"),
@@ -595,7 +860,8 @@ async def get_conversations(
                 "name": conv["seller_name"] if is_buyer else conv["buyer_name"],
                 "avatar": conv.get("seller_avatar") if is_buyer else conv.get("buyer_avatar"),
                 "is_online": other_user.get("is_online", False) if other_user else False,
-                "user_type": other_user.get("user_type") if other_user else None
+                "user_type": other_user.get("user_type") if other_user else None,
+                "user_type_label": user_type_label
             },
             "last_message": conv.get("last_message"),
             "last_message_at": conv.get("last_message_at").isoformat() if conv.get("last_message_at") else None,
@@ -637,8 +903,18 @@ async def get_conversation(
         if listing:
             listing["_id"] = str(listing["_id"])
     
+    ut = other_user.get("user_type", "") if other_user else ""
+    user_type_label = {
+        "admin": "Administrateur", "cooperative": "Coopérative",
+        "field_agent": "Agent Terrain", "producteur": "Agriculteur",
+        "acheteur": "Acheteur", "buyer": "Acheteur",
+        "fournisseur": "Fournisseur", "carbon_auditor": "Auditeur Carbone"
+    }.get(ut, ut)
+
     return {
         "conversation_id": conversation["conversation_id"],
+        "conversation_type": conversation.get("conversation_type", "marketplace"),
+        "subject": conversation.get("subject"),
         "listing": listing,
         "other_user": {
             "id": other_id,
@@ -646,6 +922,7 @@ async def get_conversation(
             "avatar": other_user.get("avatar") if other_user else None,
             "is_online": other_user.get("is_online", False) if other_user else False,
             "user_type": other_user.get("user_type") if other_user else None,
+            "user_type_label": user_type_label,
             "location": other_user.get("location") if other_user else None
         },
         "created_at": conversation.get("created_at").isoformat() if conversation.get("created_at") else None
@@ -682,12 +959,24 @@ async def get_messages(
     
     result = []
     for msg in messages:
+        # Try to decrypt, fallback to content_plain if decryption fails
+        content = ""
+        if msg.get("content"):
+            decrypted = decrypt_message(msg["content"])
+            # If decryption failed (returned same encrypted string), use content_plain
+            if decrypted == msg["content"] and msg.get("content_plain"):
+                content = msg["content_plain"]
+            else:
+                content = decrypted
+        elif msg.get("content_plain"):
+            content = msg["content_plain"]
+        
         result.append({
             "message_id": msg["message_id"],
             "sender_id": msg["sender_id"],
             "sender_name": msg.get("sender_name"),
             "sender_avatar": msg.get("sender_avatar"),
-            "content": decrypt_message(msg["content"]) if msg.get("content") else "",
+            "content": content,
             "message_type": msg.get("message_type", "text"),
             "attachment_url": msg.get("attachment_url"),
             "attachment_name": msg.get("attachment_name"),
