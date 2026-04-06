@@ -451,6 +451,15 @@ async def get_farmer_history(
 ):
     """Historique complet ICI + SSRTE d'un agriculteur"""
     
+    # Verify agent can access this farmer
+    user_type = current_user.get('user_type')
+    user_id = str(current_user.get('_id', ''))
+    if user_type == 'field_agent':
+        agent_record = await db.coop_agents.find_one({"user_id": user_id})
+        assigned = [str(f) for f in (agent_record.get("assigned_farmers", []) if agent_record else [])]
+        if assigned and farmer_id not in assigned:
+            raise HTTPException(status_code=403, detail="Ce planteur n'est pas dans votre perimetre")
+    
     ici_profile = await db.ici_profiles.find_one(
         {"farmer_id": farmer_id}, {"_id": 0}
     )
@@ -505,6 +514,16 @@ async def get_farmer_history(
 @router.get("/farmers/{farmer_id}/family-data")
 async def get_farmer_family_data(farmer_id: str, request: Request, current_user: dict = Depends(get_admin_or_coop_user)):
     """Retourne les donnees familiales connues d'un planteur (ICI + SSRTE) pour pre-remplissage."""
+    
+    # Verify agent can access this farmer
+    user_type = current_user.get('user_type')
+    user_id = str(current_user.get('_id', ''))
+    if user_type == 'field_agent':
+        agent_record = await db.coop_agents.find_one({"user_id": user_id})
+        assigned = [str(f) for f in (agent_record.get("assigned_farmers", []) if agent_record else [])]
+        if assigned and farmer_id not in assigned:
+            raise HTTPException(status_code=403, detail="Ce planteur n'est pas dans votre perimetre")
+    
     result = {
         "farmer_id": farmer_id,
         "taille_menage": 0,
@@ -560,9 +579,34 @@ async def get_ssrte_visits(
     limit: int = 50,
     current_user: dict = Depends(get_admin_or_coop_user)
 ):
-    """Liste des visites SSRTE"""
+    """Liste des visites SSRTE - filtree par role utilisateur"""
+    
+    user_type = current_user.get('user_type')
+    user_id = str(current_user.get('_id', ''))
     
     query = {}
+    
+    # Filtrage par role: agent ne voit que ses visites, coop voit sa cooperative
+    if user_type == 'field_agent':
+        # Agent: only their own visits
+        agent_record = await db.coop_agents.find_one({"user_id": user_id})
+        assigned = agent_record.get("assigned_farmers", []) if agent_record else []
+        if assigned:
+            query["farmer_id"] = {"$in": [str(f) for f in assigned]}
+        else:
+            query["agent_id"] = user_id
+    elif user_type == 'cooperative':
+        # Coop: only visits for their cooperative's farmers
+        coop_id = current_user.get('cooperative_id') or current_user.get('coop_id')
+        if coop_id:
+            members = await db.coop_members.find({"cooperative_id": str(coop_id)}).to_list(1000)
+            farmer_ids = [str(m.get("farmer_id", m.get("user_id", ""))) for m in members]
+            if farmer_ids:
+                query["farmer_id"] = {"$in": farmer_ids}
+            else:
+                query["farmer_id"] = "__none__"
+    # admin/super_admin: no filter, sees everything
+    
     if farmer_id:
         query["farmer_id"] = farmer_id
     if niveau_risque:
@@ -667,9 +711,27 @@ async def get_ici_alerts(
     limit: int = 50,
     current_user: dict = Depends(get_admin_or_coop_user)
 ):
-    """Liste des alertes ICI"""
+    """Liste des alertes ICI - filtree par role utilisateur"""
+    
+    user_type = current_user.get('user_type')
+    user_id = str(current_user.get('_id', ''))
     
     query = {}
+    
+    # Filtrage par role
+    if user_type == 'field_agent':
+        agent_record = await db.coop_agents.find_one({"user_id": user_id})
+        assigned = agent_record.get("assigned_farmers", []) if agent_record else []
+        if assigned:
+            query["farmer_id"] = {"$in": [str(f) for f in assigned]}
+        else:
+            query["agent_id"] = user_id
+    elif user_type == 'cooperative':
+        coop_id = current_user.get('cooperative_id') or current_user.get('coop_id')
+        if coop_id:
+            query["cooperative_id"] = str(coop_id)
+    # admin/super_admin: no filter
+    
     if status:
         query["status"] = status
     if severity:

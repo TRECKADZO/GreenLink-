@@ -2337,10 +2337,16 @@ async def get_ussd_stats(current_user: dict = Depends(get_current_user)):
 
 @router.get("/registrations")
 async def get_ussd_registrations(limit: int = 50, skip: int = 0, agent_id: str = None, current_user: dict = Depends(get_current_user)):
-    """Get USSD registrations. If agent_id is provided, filter by that agent only."""
+    """Get USSD registrations. Agents only see their own, admin/coop see all or filtered."""
     try:
+        user_type = current_user.get('user_type', '')
+        user_id = str(current_user.get('_id', ''))
+        
         query = {}
-        if agent_id:
+        # Auto-filter by agent for field_agents
+        if user_type == 'field_agent':
+            query["registered_by_agent"] = agent_id or user_id
+        elif agent_id:
             query["registered_by_agent"] = agent_id
         
         registrations = await db.ussd_registrations.find(
