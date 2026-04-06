@@ -21,7 +21,7 @@
       },
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://agritech-platform-7.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://greenlink-agritech.preview.emergentagent.com"
       }
     },
     "production": {
@@ -35,7 +35,7 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://agritech-platform-7.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://greenlink-agritech.preview.emergentagent.com"
       }
     },
     "production-apk": {
@@ -46,7 +46,7 @@
       },
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://agritech-platform-7.preview.emergentagent.com"
+        "EXPO_PUBLIC_API_URL": "https://greenlink-agritech.preview.emergentagent.com"
       }
     }
   },

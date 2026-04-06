@@ -1,6 +1,4 @@
-<analysis>Here is the handover summary for the next AI engineer based on the previous session's LLM message history.
-
-**original_problem_statement**: 
+<analysis>**original_problem_statement**: 
 Utiliser le même code développé sur GitHub (GreenLink). Implémenter tout le projet (reproduire le projet GreenLink Agritech avec le même code).
 PRODUCT REQUIREMENTS:
 1. Fix cooperative referral code bugs.
@@ -10,55 +8,59 @@ PRODUCT REQUIREMENTS:
 5. Improve the Web views for Agent Terrain and Agriculteur.
 6. Verify and professionally improve the messaging system for all users.
 
-**User's preferred language**: French (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in French only).
+**User's preferred language**: French (INSTRUCT next agent to respond in French only)
 
 **what currently exists?** 
-A full-stack agritech platform (FastAPI backend, React frontend, MongoDB). The application features an offline-first architecture with IndexedDB, robust data isolation by user roles, harvest validation workflows, USSD simulation (), a carbon premium calculator, and a secure real-time messaging system equipped with Web Push notifications and end-to-end encryption fallbacks.
+A full-stack agritech platform (FastAPI backend, React frontend, MongoDB). Features an offline-first architecture with IndexedDB, robust data isolation, harvest validation, USSD simulation (), real-time messaging with Web Push, a new unified Carbon Premium Calculator, and an automated Discrepancy Management (Gestion des Écarts) system for field agent parcel verifications with PDF reporting.
 
 **Last working item**: 
-    - Last item agent was working: Making the cooperative name () field strictly mandatory in the registration form () to prevent cooperatives from being created without a proper organization name.
-    - Status: COMPLETED
-    - Agent Testing Done: Y
-    - Which testing method agent to use? Screenshot tool.
+    - Last item agent was working: Debugging a USSD flow bug where the user selection 2 for the Age moyen de vos cacaoyers (Question 13/13 or 14/14) is marked as an invalid response and abruptly halts the flow, jumping straight to registration completion.
+    - Status: IN PROGRESS
+    - Agent Testing Done: N
+    - Which testing method agent to use? backend testing via curl / manual USSD simulator UI testing in frontend.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
-  Issue 1: Emails sent via Resend are going to Spam.
-     - Attempted fixes: None in this session.
-     - Next debug checklist: Instruct the user to configure SPF/DKIM/DMARC DNS records on GoDaddy for their domain .
-     - Why fix this issue and what will be achieved with the fix? Ensures password resets and critical notifications reach users reliably.
+  Issue 1: USSD Age cacaoyers Input Validation Bug (Priority: P0)
+     - Attempted fixes: Grepped  to locate the question definitions (). The fork occurred before implementing the fix.
+     - Next debug checklist: Check  in the  logic (around the  or  handling) to see why input 2 or 3 is being rejected or why the state machine transitions incorrectly at this final step.
+     - Why fix this issue and what will be achieved with the fix? Allows farmers to complete the USSD registration and carbon scoring accurately.
+     - Status: IN PROGRESS
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Both (verify logic backend, test on frontend USSD simulator).
+     - Blocked on other issue: None.
+
+  Issue 2: Emails sent via Resend are going to Spam (Priority: P2)
+     - Attempted fixes: None.
+     - Next debug checklist: Instruct the user to configure SPF/DKIM/DMARC DNS records on GoDaddy for their domain.
+     - Why fix this issue? Reliable password resets and notifications.
      - Status: BLOCKED (Awaiting user DNS configuration)
      - Is recurring issue? Y
      - Should Test frontend/backend/both after fix? Backend (Manual verification)
-     - Blocked on other issue: User DNS action required.
 
 **In progress Task List**: 
-  None.
+  None
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - P1: Security Tests: Test privilege escalation (can an agent change their  to admin?) and verify session invalidation after password change.
-    - P1: Add an offline storage size indicator in the field agent user profile to allow them to clear their IndexedDB cache safely.
+    - P1: Real SMS Gateway integration (Orange CI / MTN) (currently mocked).
+    - P1: Support for local languages (Baoulé/Dioula).
     
     Future Tasks:
-    - P2: Real SMS Gateway integration (Orange CI / MTN) and support for local languages (currently mocked).
-    - P3: Refactor  (file is over 2700 lines with duplicate menu logic) and clean up dead code.
+    - P2: Refactor  (file is over 2700 lines with duplicate menu logic and messy state management) and clean up dead code.
 
 **Completed work in this session**
-- Refonte complète de la messagerie (Page, API, WebSockets) avec intégration de Web Push Notifications (VAPID) (DONE)
-- Configuration de  pour le chiffrement persistant des messages (DONE)
-- Masquage du Super Admin (Eric Klenakan) dans la messagerie, remplacé par GreenLink Support (DONE)
-- Ajout du bouton Valider et de l'endpoint d'activation pour les agents terrain en attente () (DONE)
-- Ajout de l'option USSD 9. Changer mon PIN avec unification de la recherche PIN sur toutes les collections (users, coop_members, ussd_registrations) (DONE)
-- Mise à jour des strates d'arbres dans le calculateur carbone et le USSD (Strate 1: 3-5m, Strate 2: 5-30m, Strate 3: >30m) (DONE)
-- Refactoring global des vieux codes USSD  et  remplacés par  (DONE)
-- Ajout des certifications ARS (ARS 1000-1/2/3, Rainforest, Fairtrade, Bio, etc.) au formulaire de création de lots (DONE)
-- Tableau de bord Super Admin : Ajout de la colonne Coopérative dans la gestion des utilisateurs (DONE)
-- Messagerie Admin : Affichage formaté Coop. [Nom] pour les coopératives et polling de rafraîchissement (30s) (DONE)
-- Rendu du nom de la coopérative obligatoire dans le formulaire d'inscription () (DONE)
+- Added explicit protection against privilege escalation in  (, , etc. are now blocked) (DONE)
+- Added  endpoint and integrated it into the Profile UI page (DONE)
+- Added IndexedDB storage indicator on the Agent Terrain Plus tab (DONE)
+- Fixed missing cooperative names in Super Admin Messaging (now uses  instead of falling back to the individual's name) (DONE)
+- Implemented Tree Strata (Strate 1/2/3) inputs during parcel creation and display on Parcel Details page (DONE)
+- Implemented Discrepancy Management (Gestion des Écarts): Automatically compares declared vs measured parcel data, classifies the discrepancy (faible/moyen/important), adjusts the carbon premium, and displays a dedicated Cooperative Dashboard (DONE)
+- Added PDF export functionality for the Discrepancy Dashboard using  (DONE)
+- Created a Unified Carbon Score Engine () to standardize the premium formula across parcel creation, agent verification, and USSD (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-   - Issue 1: None missed. The agent addressed all user queries comprehensively.
+None
 
 **Known issue recurrence from previous fork**
   - Issue recurrence in previous fork: None
@@ -69,57 +71,53 @@ A full-stack agritech platform (FastAPI backend, React frontend, MongoDB). The a
 
 
 **Key Technical Concepts**
-React (Web Frontend), FastAPI (Backend), WebSockets (Real-time Messaging), Web Push Notifications (VAPID / Service Workers), IndexedDB (Offline-first), Data Isolation, USSD State Machine ().
+React, FastAPI, MongoDB, ReportLab (PDF Generation), USSD State Machine, IndexedDB, WebSockets, Real-time messaging, Web Push Notifications.
 
 **key DB schema**
-  - : {conversation_id, sender_id, content, content_plain, message_type}
-  - : {conversation_id, conversation_type, participants[], subject}
-  -  /  / : Unified pin handling ().
+  - : {farmer_id, area_hectares, nombre_arbres, arbres_petits, arbres_moyens, arbres_grands, couverture_ombragee, verification_status, carbon_score}
+  - : {parcel_id, farmer_id, agent_id, classification, ecarts_details[], statut, prime_ajustee, created_at}
 
 **changes in tech stack**
-  - Added , , and  for backend push notification handling.
+  -  is now actively used for generating PDF reports in the backend.
 
 **All files of reference** 
--  (Overhauled messaging endpoints & WebSockets)
--  (Redesigned UI with Web Push prompt)
--  (Updated with Option 9 for PIN changes and string replacements)
--  (Added agent validation flow)
--  (Added Cooperative column)
--  (Made  mandatory)
--  (Updated tree strata logic)
--  (New push subscription handler)
+-  (Created: Centralizes carbon score logic to prevent discrepancies across the app)
+-  (Created: Handles logic for comparing agent measurements vs farmer declarations and PDF export)
+-  (Created: UI for the discrepancy management)
+-  (Updated to use unified carbon score, currently has the  validation bug)
+-  &  (Updated to accept tree strata inputs)
+-  &  (Updated for change password functionality)
+-  (Created: Security test suite)
 
 **Areas that need refactoring**: 
-- : The file exceeds 2700 lines. The  string is hardcoded in over 10 different state blocks, making it highly prone to bugs when adding new menu options (as seen during the PIN change implementation).
+- : Still exceeds 2700 lines and is highly prone to bugs (as evidenced by the current  issue).
 
 **key api endpoints**
--  (Create direct conversation)
--  (Register service worker push token)
--  (Activate pending agent)
--  (USSD simulator main entry point)
+- 
+- 
+- 
+- 
+- 
 
 **Critical Info for New Agent** 
 - INSTRUCT next agent to respond in French ONLY.
-- **Messaging App**: The Super Admin user Eric Klenakan is strictly masked. His display name is hardcoded to output as GreenLink Support to regular users, and he is filtered out of the global contact list to prevent spam.
-- **USSD Logic**: The active USSD code for the application is strictly . Do not revert to  or .
-- **Tree Strata**: Carbon calculators now use: Strate 3 (>30m), Strate 2 (5-30m), Strate 1 (3-5m). Do not use the old Grands/Moyens/Petits terminology.
+- The Carbon Premium calculation is now strictly centralized in . Do NOT write custom scoring formulas in other endpoints; always call .
+- The active USSD code for the application is strictly .
+- When a field agent verifies a parcel (), it automatically calls the discrepancy engine.
 
 **documents and test reports created in this job**
-  -  (Testing subagent report for the messaging system overhaul).
-  -  (Updated).
-  -  (Checked, intact).
+  -  (Security feature tests)
+  -  (Discrepancy engine tests)
+  -  (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. (Done) *Dans fiche de création des coopératives rendre l'ajout du nom de la coopérative obligatoires...* (Made cooperative name mandatory in the registration form).
- 2. (Done) *Dans la pages utilisateurs du Super Admin ajouter la colonne nom de la coopérative...* (Added Cooperative column in Admin User Management).
- 3. (Done) *Dans la messagerie du Super admin, les coopératives doivent apparaître avec le nom de la Coopérative... Mettre a jour automatiquement...* (Fixed admin cooperative names and added auto-refresh polling).
- 4. (Done) *Dans les questionnaires de calcul de primes carbone remplacer les strate de taille d arbres par : Espèces de strate 3...* (Updated tree strata terminology across frontend and backend).
- 5. (Done) *Donner la possibilité a l agriculteurs de changer son code Pin USSD* (Added Option 9 to USSD menu for PIN change).
- 6. (Done) *Dans le tableau de bord agriculteurs / coopérative je ne vois pas de section gestion et suivi des agent terrain...* (Directed user to existing Quick Actions panel).
- 7. (Done) *Comment de valide l'inscription d'un agent terrain avec le statut en attente ?* (Created agent validation endpoint and Valider button).
- 8. (Done) *Dans la messagerie, ne plus afficher le nom Eric Klenakan* (Masked Super Admin name to GreenLink Support).
- 9. (Done) *Il existe encore des code 144*45# remplace par le 144*99# / Sur cette page encore oui 123*45#* (Found and replaced all old USSD codes).
- 10. (Done) *Remplacer les certification Cacao durable 1, et 3 par : ARS 1000-1 Bronze...* (Updated ARS certifications in Lots creation).
+ 1. (Done) *Au moins une coopératives a été créé aujourd'hui mais je les trouvent pas dans ma liste d envoie de message...*
+ 2. (Done) *Dans la fiche information de la parcelles, pourquoi ne ne voyons pas le décompte des arbres ombragés selon les différentes strates?*
+ 3. (Done) *Voulez-vous ajouter la possibilite pour l'agent terrain de saisir le decompte d'arbres...* -> *Oui*
+ 4. (Done) *Implémente la fonctionnalité Gestion des écarts dans GreenLink Agritech avec les règles suivantes...*
+ 5. (Done) *Souhaitez-vous ajouter un rapport PDF exportable des ecarts par campagne...* -> *Oui*
+ 6. (Done) *Valider la formule de calcul du score carbone si elle prends en compte tout les éléments pour une meilleure pratique durable*
+ 7. **(Pending)** *(Uploads Screenshot) Corriger erreurs* (Shows USSD bug where response 2 to Age cacaoyers is rejected).
 
 **Project Health Check:**
 - Backend: Healthy
@@ -128,15 +126,15 @@ React (Web Frontend), FastAPI (Backend), WebSockets (Real-time Messaging), Web P
 - Mocked: Orange CI SMS & Orange Money.
 
 **3rd Party Integrations** 
-- Resend (Email sending - Note: Domain DNS needs config)
-- Web Push API (Native push notifications via VAPID - Implemented manually)
+- Resend (Email sending - Domain DNS pending)
+- Web Push API (Native push notifications via VAPID)
 - Orange CI SMS / Money (Mocked)
 
 **Testing status**
-  - Testing agent used after significant changes: YES (iteration 105 for Messaging overhaul).
+  - Testing agent used after significant changes: YES (iteration 106, 107)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: 
-  - Known regressions: None
+  - Known regressions:  validation for choice3 (age_cacaoyers) is failing.
 
 **Credentials to test flow:**
 Refer to .
@@ -146,4 +144,10 @@ Agent:  /
 Farmer:  / 
 
 **What agent forgot to execute**
-Nothing. All requests from the session were executed and verified properly.</analysis>
+The agent started investigating the USSD Age cacaoyers bug based on the final user screenshot but the session forked before any code changes could be made. Start directly by fixing this bug.
+
+**Debugging checklist for current issue**
+    Issue: USSD simulator rejects valid input 2 or 3 for question Age moyen de vos cacaoyers and skips to the end of the flow.
+    Backend files to check: 
+      - 
+      - Search for  and the logic around  inside the  method. Check the dictionary bounds or regex matching for the selected choice.</analysis>

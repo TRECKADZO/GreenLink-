@@ -214,6 +214,7 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     arbres_moyens = int(answers.get("arbres_moyens", 0))
     arbres_petits = int(answers.get("arbres_petits", 0))
     total_trees = arbres_grands + arbres_moyens + arbres_petits
+    arbres_par_ha = total_trees / max(hectares, 0.01)
 
     # Build practices list from USSD answers
     pratiques = []
