@@ -357,12 +357,13 @@ const CoopHarvestsPage = () => {
                 <label className="text-xs text-gray-500 mb-1.5 block">Certifications ARS</label>
                 <div className="space-y-2">
                   {[
+                    { id: 'ARS 1000-1', label: 'ARS 1000-1 Bronze', desc: 'Certification Cacao Durable - Niveau Bronze' },
+                    { id: 'ARS 1000-2', label: 'ARS 1000-2 Argent', desc: 'Certification Cacao Durable - Niveau Argent' },
+                    { id: 'ARS 1000-3', label: 'ARS 1000-3 Or', desc: 'Certification Cacao Durable - Niveau Or' },
                     { id: 'rainforest_alliance', label: 'Rainforest Alliance', desc: 'Agriculture durable et protection des ecosystemes' },
-                    { id: 'fairtrade', label: 'Fairtrade / Commerce Equitable', desc: 'Prix equitable et conditions de travail decentes' },
-                    { id: 'bio_organic', label: 'Agriculture Biologique (Bio)', desc: 'Sans pesticides ni engrais chimiques' },
                     { id: 'utz', label: 'UTZ Certified', desc: 'Agriculture responsable et tracabilite' },
-                    { id: 'iso_14001', label: 'ISO 14001', desc: 'Systeme de management environnemental' },
-                    { id: 'global_gap', label: 'GlobalG.A.P.', desc: 'Bonnes pratiques agricoles internationales' },
+                    { id: 'fairtrade', label: 'Fairtrade', desc: 'Prix equitable et conditions de travail decentes' },
+                    { id: 'bio_organic', label: 'Bio/Organic', desc: 'Sans pesticides ni engrais chimiques' },
                   ].map(cert => (
                     <label key={cert.id} className="flex items-start gap-2.5 p-2 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 cursor-pointer transition-colors" data-testid={`cert-${cert.id}`}>
                       <input type="checkbox" checked={lotForm.certifications.includes(cert.id)}
