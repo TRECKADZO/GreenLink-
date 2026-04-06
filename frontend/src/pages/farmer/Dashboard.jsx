@@ -33,7 +33,7 @@ const FarmerHome = ({ user, stats, navigate, onTabChange }) => {
   const scoreBarColor = carbonScore >= 7 ? 'bg-emerald-500' : carbonScore >= 5 ? 'bg-amber-500' : 'bg-red-500';
 
   const menuItems = [
-    { num: '1', label: 'Mes Parcelles', sub: `${stats?.total_parcelles || 0} parcelle(s) declaree(s)`, icon: MapPin, color: 'bg-emerald-500', action: () => navigate('/farmer/parcels/new') },
+    { num: '1', label: 'Mes Parcelles', sub: `${stats?.total_parcelles || 0} parcelle(s) declaree(s)`, icon: MapPin, color: 'bg-emerald-500', action: () => onTabChange('parcels') },
     { num: '2', label: 'Mes Recoltes', sub: 'Suivez vos declarations', icon: Package, color: 'bg-amber-500', action: () => navigate('/farmer/my-harvests') },
     { num: '3', label: 'Declarer une Recolte', sub: 'Enregistrez votre production', icon: TrendingUp, color: 'bg-blue-500', action: () => navigate('/harvest-marketplace') },
     { num: '4', label: 'Marketplace Intrants', sub: 'Achetez intrants & equipements', icon: ShoppingCart, color: 'bg-orange-500', action: () => navigate('/marketplace'), highlight: true },
@@ -344,6 +344,114 @@ const FarmerMoreTab = ({ navigate, stats }) => {
   );
 };
 
+// ========= PARCELLES (Farmer's parcels tab) =========
+const FarmerParcelsTab = ({ navigate }) => {
+  const [parcels, setParcels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+  useEffect(() => {
+    const fetchParcels = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_URL}/api/greenlink/parcels/my-parcels`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) setParcels(await res.json());
+      } catch (err) {
+        console.error('Error fetching parcels:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchParcels();
+  }, [API_URL]);
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'verified': return { text: 'Verifiee', bg: 'bg-emerald-100 text-emerald-700' };
+      case 'rejected': return { text: 'Rejetee', bg: 'bg-red-100 text-red-700' };
+      default: return { text: 'En attente', bg: 'bg-amber-100 text-amber-700' };
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-green-500 animate-spin mb-3" />
+        <p className="text-sm text-gray-400">Chargement des parcelles...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 space-y-4" data-testid="farmer-parcels-tab">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-bold text-gray-800">Mes Parcelles</h2>
+        <span className="text-xs text-gray-400">{parcels.length} parcelle(s)</span>
+      </div>
+
+      {parcels.length === 0 ? (
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
+          <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-sm font-medium text-gray-600">Aucune parcelle declaree</p>
+          <p className="text-xs text-gray-400 mt-1">Vos parcelles apparaitront ici une fois declarees par votre agent terrain</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {/* Summary Stats */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-green-50 rounded-xl p-3 text-center border border-green-100">
+              <p className="text-xl font-bold text-green-700">{parcels.length}</p>
+              <p className="text-[9px] text-green-500">Parcelles</p>
+            </div>
+            <div className="bg-blue-50 rounded-xl p-3 text-center border border-blue-100">
+              <p className="text-xl font-bold text-blue-700">{parcels.reduce((s, p) => s + (p.superficie || 0), 0).toFixed(1)}</p>
+              <p className="text-[9px] text-blue-500">Hectares</p>
+            </div>
+            <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
+              <p className="text-xl font-bold text-emerald-700">{parcels.filter(p => p.statut_verification === 'verified').length}</p>
+              <p className="text-[9px] text-emerald-500">Verifiees</p>
+            </div>
+          </div>
+
+          {/* Parcels List */}
+          {parcels.map((parcel) => {
+            const badge = getStatusBadge(parcel.statut_verification);
+            return (
+              <div key={parcel.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100" data-testid={`parcel-${parcel.id}`}>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{parcel.nom || parcel.localisation || 'Parcelle'}</p>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${badge.bg}`}>{badge.text}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-0.5">{parcel.village || parcel.region || 'N/A'}</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-[10px] text-gray-500"><strong>{parcel.superficie || 0}</strong> ha</span>
+                      <span className="text-[10px] text-gray-500"><strong>{parcel.type_culture || 'cacao'}</strong></span>
+                      {parcel.nombre_arbres > 0 && <span className="text-[10px] text-gray-500"><strong>{parcel.nombre_arbres}</strong> arbres</span>}
+                      {parcel.score_carbone > 0 && (
+                        <span className="text-[10px] text-emerald-600 font-medium">Score: {parcel.score_carbone}/10</span>
+                      )}
+                    </div>
+                    {parcel.coordonnees_gps && (
+                      <p className="text-[9px] text-gray-300 mt-1">GPS: {typeof parcel.coordonnees_gps === 'object' ? `${parcel.coordonnees_gps.lat?.toFixed(4)}, ${parcel.coordonnees_gps.lng?.toFixed(4)}` : parcel.coordonnees_gps}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ========= MAIN FARMER DASHBOARD =========
 const FarmerDashboard = () => {
   const { user, loading: authLoading, logout } = useAuth();
@@ -387,7 +495,7 @@ const FarmerDashboard = () => {
     switch (tabId) {
       case 'home': setActiveTab('home'); break;
       case 'dashboard': setActiveTab('dashboard'); break;
-      case 'parcels': navigate('/farmer/parcels/new'); break;
+      case 'parcels': setActiveTab('parcels'); break;
       case 'carbon': navigate('/farmer/carbon-score'); break;
       case 'more': setActiveTab('more'); break;
       default: setActiveTab(tabId);
@@ -423,6 +531,10 @@ const FarmerDashboard = () => {
 
       {activeTab === 'dashboard' && (
         <FarmerDashboardTab stats={stats} smsHistory={smsHistory} onSendSummary={sendWeeklySummary} sendingSummary={sendingSummary} navigate={navigate} />
+      )}
+
+      {activeTab === 'parcels' && (
+        <FarmerParcelsTab navigate={navigate} />
       )}
 
       {activeTab === 'more' && (
