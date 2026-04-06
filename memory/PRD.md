@@ -149,7 +149,8 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 ## Travail complete (6 avr suite)
 - (6 avr) FIX SECURITE P0: Code de reinitialisation mot de passe n'est plus affiche dans l'UI pour les utilisateurs email. Backend renvoie delivery_method=email sans simulation_code. Frontend affiche uniquement "Verifiez votre boite de reception et vos spams". Code visible uniquement en mode simulation SMS (utilisateurs sans email, SMS pas encore configure).
 - (6 avr) FIX Tableau SSRTE Agent: Les stats etaient a 0 car le filtre backend utilisait uniquement `recorded_by` au lieu de `agent_id OR recorded_by`. Corrige dans `/api/ssrte/stats/overview`. Les visites mensuelles checkent maintenant `recorded_at`, `created_at`, `visit_date`, et `date_visite`.
-- (6 avr) Bouton "Nouvelle Visite" SSRTE: redirige maintenant vers la selection du planteur (liste agent terrain) au lieu d'ouvrir un formulaire vide. Selection du planteur ouvre automatiquement le modal SSRTE.
+- (6 avr) Ajout du Simulateur USSD (calcul prime carbone *144*99#) dans le menu Accueil de l'agent terrain. Le simulateur affiche la liste des planteurs de l'agent et permet de composer le code USSD.
+- (6 avr) Nettoyage menu Plus agent terrain: supprime Photos Geolocalisees, Pratiques Durables, Rechercher Planteur (redondants avec fiches planteur et onglets existants).
 
 ## Backlog
 ### P0

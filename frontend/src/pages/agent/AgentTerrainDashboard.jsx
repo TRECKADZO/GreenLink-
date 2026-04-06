@@ -18,6 +18,7 @@ import { NotificationCenter } from '../../components/NotificationCenter';
 import ICIProfileModal from '../cooperative/ICIProfileModal';
 import SSRTEVisitModal from '../cooperative/SSRTEVisitModal';
 import FarmerHistorySection from './FarmerHistorySection';
+import USSDSimulator from '../../components/USSDSimulator';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 
@@ -45,7 +46,7 @@ const TABS = [
 ];
 
 // ========= ACCUEIL =========
-const HomeTab = ({ info, myFarmers, onTabChange, navigate }) => {
+const HomeTab = ({ info, myFarmers, onTabChange, navigate, onShowUSSD }) => {
   const { isOnline, lastSync, pendingCount, syncAll, syncing } = useOffline();
   const { user, logout } = useAuth();
 
@@ -53,6 +54,7 @@ const HomeTab = ({ info, myFarmers, onTabChange, navigate }) => {
     { num: '1', label: 'Mes Planteurs', sub: `${myFarmers.length} agriculteur(s) — Toutes les fiches`, icon: Users, color: 'bg-emerald-500', action: () => onTabChange('farmers') },
     { num: '2', label: 'Inscrire un Planteur', sub: 'Enregistrement rapide', icon: UserPlus, color: 'bg-blue-500', action: () => onTabChange('inscriptions') },
     { num: '3', label: 'Pratiques Durables', sub: 'Guide des 21 pratiques', icon: Leaf, color: 'bg-green-600', action: () => navigate('/guide-redd'), highlight: true },
+    { num: '4', label: 'Simulateur USSD', sub: 'Calcul prime carbone *144*99#', icon: Phone, color: 'bg-purple-600', action: () => onShowUSSD() },
   ];
 
   const formatSync = () => {
@@ -501,6 +503,7 @@ const AgentTerrainDashboard = () => {
   const [showSSRTEModal, setShowSSRTEModal] = useState(false);
   const [showPhotosPanel, setShowPhotosPanel] = useState(false);
   const [ssrteFlowActive, setSsrteFlowActive] = useState(false);
+  const [showUSSDSimulator, setShowUSSDSimulator] = useState(false);
 
   // Handle navigation state from SSRTE dashboard "Nouvelle Visite" button
   useEffect(() => {
@@ -581,7 +584,7 @@ const AgentTerrainDashboard = () => {
       ) : null}
       refreshing={refreshing}
     >
-      {tab === 'home' && <HomeTab info={info} myFarmers={myFarmers} onTabChange={setTab} navigate={navigate} />}
+      {tab === 'home' && <HomeTab info={info} myFarmers={myFarmers} onTabChange={setTab} navigate={navigate} onShowUSSD={() => setShowUSSDSimulator(true)} />}
       {tab === 'dashboard' && <DashboardTab dashboard={dashboard} myFarmers={myFarmers} onTabChange={setTab} />}
       {tab === 'more' && <MoreTab navigate={navigate} onTabChange={setTab} />}
       {tab === 'inscriptions' && <AgentRegistrationForm />}
@@ -664,6 +667,23 @@ const AgentTerrainDashboard = () => {
 
       <ICIProfileModal open={showICIModal} onOpenChange={setShowICIModal} farmer={selectedFarmer} onSaved={() => loadMyFarmers()} />
       <SSRTEVisitModal open={showSSRTEModal} onOpenChange={setShowSSRTEModal} farmer={selectedFarmer} onSaved={() => loadMyFarmers()} />
+
+      {/* Simulateur USSD - Calcul prime carbone */}
+      {showUSSDSimulator && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" data-testid="ussd-simulator-overlay">
+          <div className="w-full max-w-md max-h-[90vh] overflow-auto">
+            <USSDSimulator 
+              title="Simulateur USSD *144*99#" 
+              onClose={() => setShowUSSDSimulator(false)} 
+              members={myFarmers.map(f => ({
+                id: f._id || f.id,
+                full_name: f.full_name,
+                phone_number: f.phone_number
+              }))} 
+            />
+          </div>
+        </div>
+      )}
     </MobileAppShell>
   );
 };
