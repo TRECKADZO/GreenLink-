@@ -172,6 +172,12 @@ async def get_member_parcels(
             "statut_verification": p.get("verification_status", "pending"),
             "verifie_le": p.get("verified_at"),
             "verifie_par": p.get("verified_by"),
+            "nombre_arbres": p.get("nombre_arbres", 0),
+            "arbres_strate1": p.get("arbres_petits", 0),
+            "arbres_strate2": p.get("arbres_moyens", 0),
+            "arbres_strate3": p.get("arbres_grands", 0),
+            "couverture_ombragee": p.get("couverture_ombragee", 0),
+            "pratiques_ecologiques": p.get("pratiques_ecologiques", []),
             "cree_le": p.get("created_at", "")
         } for p in parcels]
     }
@@ -320,6 +326,11 @@ async def get_all_coop_parcels(
             "verifie_le": p.get("verified_at"),
             "verifie_par": p.get("verified_by"),
             "notes_verification": p.get("verification_notes"),
+            "nombre_arbres": p.get("nombre_arbres", 0),
+            "arbres_strate1": p.get("arbres_petits", 0),
+            "arbres_strate2": p.get("arbres_moyens", 0),
+            "arbres_strate3": p.get("arbres_grands", 0),
+            "couverture_ombragee": p.get("couverture_ombragee", 0),
             "cree_le": p.get("created_at", "")
         })
     
@@ -524,6 +535,12 @@ async def get_parcel_details(
         "photos_verification": parcel.get("verification_photos", []),
         "verifie_le": parcel.get("verified_at"),
         "nom_verificateur": verifier.get("full_name", "Agent") if verifier else parcel.get("verifier_name"),
+        "nombre_arbres": parcel.get("nombre_arbres", 0),
+        "arbres_strate1": parcel.get("arbres_petits", 0),
+        "arbres_strate2": parcel.get("arbres_moyens", 0),
+        "arbres_strate3": parcel.get("arbres_grands", 0),
+        "couverture_ombragee": parcel.get("couverture_ombragee", 0),
+        "pratiques_ecologiques": parcel.get("pratiques_ecologiques", []),
         "cree_le": parcel.get("created_at"),
         "conforme_eudr": parcel.get("eudr_compliant", True)
     }

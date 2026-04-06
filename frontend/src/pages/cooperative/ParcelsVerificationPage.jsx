@@ -229,6 +229,33 @@ export default function ParcelsVerificationPage() {
                             <p className="font-medium">{parcel.score_carbone}/10</p>
                           </div>
                         </div>
+
+                        {/* Arbres ombragés par strate */}
+                        {(parcel.nombre_arbres > 0 || parcel.arbres_strate1 > 0 || parcel.arbres_strate2 > 0 || parcel.arbres_strate3 > 0) && (
+                          <div className="mt-3 grid grid-cols-4 gap-2 text-sm">
+                            <div className="p-2 bg-green-50 rounded text-center">
+                              <p className="text-xs text-green-600">Total arbres</p>
+                              <p className="font-bold text-green-800">{parcel.nombre_arbres || ((parcel.arbres_strate1 || 0) + (parcel.arbres_strate2 || 0) + (parcel.arbres_strate3 || 0))}</p>
+                            </div>
+                            <div className="p-2 bg-emerald-50 rounded text-center">
+                              <p className="text-xs text-emerald-600">Strate 3 (&gt;30m)</p>
+                              <p className="font-bold text-emerald-800">{parcel.arbres_strate3 || 0}</p>
+                            </div>
+                            <div className="p-2 bg-emerald-50 rounded text-center">
+                              <p className="text-xs text-emerald-600">Strate 2 (5-30m)</p>
+                              <p className="font-bold text-emerald-700">{parcel.arbres_strate2 || 0}</p>
+                            </div>
+                            <div className="p-2 bg-emerald-50 rounded text-center">
+                              <p className="text-xs text-emerald-600">Strate 1 (3-5m)</p>
+                              <p className="font-bold text-emerald-600">{parcel.arbres_strate1 || 0}</p>
+                            </div>
+                          </div>
+                        )}
+                        {parcel.couverture_ombragee > 0 && (
+                          <div className="mt-1 text-xs text-green-700">
+                            Couverture ombragée: <span className="font-semibold">{parcel.couverture_ombragee}%</span>
+                          </div>
+                        )}
                         
                         {parcel.coordonnees_gps && (
                           <div className="mt-2 text-xs text-gray-500">

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { offlineCooperativeApi as cooperativeApi } from '../../services/offlineCooperativeApi';
 import { 
   MapPin, Plus, ChevronLeft, Leaf, Trash2,
-  Navigation, CheckCircle, FileText, Scale
+  Navigation, CheckCircle, FileText, Scale, TreePine
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -240,6 +240,39 @@ const MemberParcelsPage = () => {
                       <p className="font-medium text-teal-700">{parcel.co2_capture} T</p>
                     </div>
                   </div>
+
+                  {/* Arbres ombragés par strate */}
+                  {(parcel.nombre_arbres > 0 || parcel.arbres_strate1 > 0 || parcel.arbres_strate2 > 0 || parcel.arbres_strate3 > 0) && (
+                    <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-100" data-testid={`parcel-trees-${parcel.id}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <TreePine className="h-4 w-4 text-green-700" />
+                        <p className="text-xs font-semibold text-green-800">Arbres ombragés — {parcel.nombre_arbres || ((parcel.arbres_strate1 || 0) + (parcel.arbres_strate2 || 0) + (parcel.arbres_strate3 || 0))} total</p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="p-1.5 bg-white rounded border border-green-200">
+                          <p className="text-lg font-bold text-green-800">{parcel.arbres_strate3 || 0}</p>
+                          <p className="text-[10px] text-green-600 font-medium">Strate 3</p>
+                          <p className="text-[9px] text-gray-400">&gt;30m</p>
+                        </div>
+                        <div className="p-1.5 bg-white rounded border border-green-200">
+                          <p className="text-lg font-bold text-green-700">{parcel.arbres_strate2 || 0}</p>
+                          <p className="text-[10px] text-green-600 font-medium">Strate 2</p>
+                          <p className="text-[9px] text-gray-400">5-30m</p>
+                        </div>
+                        <div className="p-1.5 bg-white rounded border border-green-200">
+                          <p className="text-lg font-bold text-green-600">{parcel.arbres_strate1 || 0}</p>
+                          <p className="text-[10px] text-green-600 font-medium">Strate 1</p>
+                          <p className="text-[9px] text-gray-400">3-5m</p>
+                        </div>
+                      </div>
+                      {parcel.couverture_ombragee > 0 && (
+                        <div className="mt-2 flex items-center justify-between text-xs">
+                          <span className="text-green-700">Couverture ombragée</span>
+                          <span className="font-semibold text-green-800">{parcel.couverture_ombragee}%</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   <div className="mt-3 flex items-center gap-2">
                     {parcel.certification && (
