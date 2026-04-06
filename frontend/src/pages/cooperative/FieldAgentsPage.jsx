@@ -149,6 +149,16 @@ const FieldAgentsPage = () => {
     }
   };
 
+  const handleActivateAgent = async (agent) => {
+    try {
+      await cooperativeApi.activateAgent(agent.id);
+      toast.success(`Agent ${agent.full_name} activé avec succès`);
+      fetchAgents();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Erreur lors de l'activation");
+    }
+  };
+
   const filteredAgents = agents.filter(agent =>
     agent.full_name?.toLowerCase().includes(search.toLowerCase()) ||
     agent.phone_number?.includes(search) ||
@@ -233,6 +243,11 @@ const FieldAgentsPage = () => {
                         <p className="text-xs text-gray-500">{agent.ssrte_visits_count || 0} visites SSRTE</p>
                       </div>
                       {getStatusBadge(agent)}
+                      {!agent.account_activated && (
+                        <Button size="sm" onClick={() => handleActivateAgent(agent)} data-testid={`activate-btn-${agent.id}`} className="bg-green-600 hover:bg-green-700 text-white">
+                          <CheckCircle className="h-4 w-4 mr-1" />Valider
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" onClick={() => openAssignModal(agent)} data-testid={`assign-btn-${agent.id}`} className="text-cyan-700 border-cyan-200 hover:bg-cyan-50">
                         <UserPlus className="h-4 w-4 mr-1" />Attribuer
                       </Button>

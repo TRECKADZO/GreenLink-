@@ -174,6 +174,13 @@ export const cooperativeApi = {
   },
 
   // Farmer Attribution
+  activateAgent: async (agentId) => {
+    const response = await axios.put(`${API}/agents/${agentId}/activate`, {}, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
   getAssignedFarmers: async (agentId) => {
     const response = await axios.get(`${API}/agents/${agentId}/assigned-farmers`, {
       headers: getAuthHeader()

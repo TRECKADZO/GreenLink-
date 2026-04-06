@@ -179,6 +179,7 @@ export const offlineCooperativeApi = {
   // Pass-through: Field Agents management
   getAgents: cooperativeApi.getAgents,
   createAgent: cooperativeApi.createAgent,
+  activateAgent: cooperativeApi.activateAgent,
   getAssignedFarmers: cooperativeApi.getAssignedFarmers,
   assignFarmers: cooperativeApi.assignFarmers,
   unassignFarmers: cooperativeApi.unassignFarmers,

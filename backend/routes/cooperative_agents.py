@@ -90,6 +90,34 @@ async def create_agent(
     }
 
 
+@router.put("/agents/{agent_id}/activate")
+async def activate_agent(agent_id: str, current_user: dict = Depends(get_current_user)):
+    """Valider/activer un agent terrain (statut En attente -> Activé)"""
+    coop_id = current_user["_id"]
+
+    agent = await db.coop_agents.find_one({"_id": ObjectId(agent_id), "coop_id": coop_id})
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+
+    if agent.get("account_activated"):
+        return {"message": "Agent déjà activé"}
+
+    await db.coop_agents.update_one(
+        {"_id": ObjectId(agent_id)},
+        {"$set": {"account_activated": True, "is_active": True}}
+    )
+
+    # Aussi activer le compte utilisateur lié si existant
+    if agent.get("user_id"):
+        await db.users.update_one(
+            {"_id": ObjectId(agent["user_id"])},
+            {"$set": {"is_active": True, "account_activated": True}}
+        )
+
+    return {"message": f"Agent {agent.get('full_name', '')} activé avec succès"}
+
+
+
 @router.get("/agents/{agent_id}/assigned-farmers")
 async def get_assigned_farmers(agent_id: str, current_user: dict = Depends(get_current_user)):
     """Liste des fermiers assignés à un agent terrain"""
