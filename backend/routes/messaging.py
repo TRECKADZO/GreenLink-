@@ -822,6 +822,7 @@ async def get_contacts(
         name_filter = {"$or": [
             {"full_name": search_regex},
             {"cooperative_name": search_regex},
+            {"coop_name": search_regex},
             {"nom_cooperative": search_regex},
             {"email": search_regex},
             {"phone_number": search_regex}
