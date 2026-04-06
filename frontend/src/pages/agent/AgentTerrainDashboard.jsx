@@ -209,9 +209,6 @@ const MoreTab = ({ navigate, onTabChange }) => {
       title: 'Outils Terrain',
       items: [
         { label: 'Tableau SSRTE', desc: 'Suivi des visites SSRTE', icon: ClipboardCheck, color: 'bg-cyan-500', route: '/agent/ssrte' },
-        { label: 'Photos Geolocalisees', desc: 'Capturer avec position GPS', icon: Camera, color: 'bg-pink-500', action: () => toast.info('Utilisez la camera de votre appareil puis uploadez via le formulaire parcelle') },
-        { label: 'Pratiques Durables', desc: '21 pratiques REDD+', icon: Leaf, color: 'bg-emerald-500', route: '/guide-redd' },
-        { label: 'Rechercher Planteur', desc: 'Par telephone', icon: Search, color: 'bg-gray-500', action: () => onTabChange('search') },
       ]
     },
     {
