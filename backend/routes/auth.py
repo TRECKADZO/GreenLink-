@@ -183,6 +183,7 @@ async def register(user_data: UserCreate):
             dept = getattr(user_data, 'department', '') or getattr(user_data, 'headquarters_region', '') or ''
             coop_code = await generate_coop_code(dept, coop_name)
             user_dict["coop_name"] = coop_name
+            user_dict["cooperative_name"] = coop_name
             user_dict["coop_code"] = coop_code
             user_dict["registration_number"] = getattr(user_data, 'registration_number', None)
             user_dict["certifications"] = getattr(user_data, 'certifications', [])

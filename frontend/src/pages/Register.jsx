@@ -165,6 +165,15 @@ const Register = () => {
       return;
     }
 
+    if (formData.userType === 'cooperative' && !formData.coopName.trim()) {
+      toast({
+        title: 'Nom de la cooperative obligatoire',
+        description: 'Veuillez saisir le nom de votre cooperative avant de continuer',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setLoading(true);
 
     // Prepare ICI data for producers
