@@ -836,6 +836,17 @@ async def verify_parcel_by_agent(
         farmer_id = str(parcel.get("farmer_id", ""))
         await check_and_set_admissibility(parcel_id, carbon_score, farmer_id, area)
 
+        # === GESTION DES ECARTS ===
+        from routes.discrepancy import create_discrepancy_record
+        disc_result = await create_discrepancy_record(
+            parcel_id=parcel_id,
+            parcel=parcel,
+            agent_data=data,
+            agent_id=str(current_user["_id"]),
+            agent_name=current_user.get("full_name", "Agent"),
+            coop_id=str(parcel.get("coop_id", ""))
+        )
+
     status_labels = {"verified": "verifiee", "rejected": "rejetee", "needs_correction": "a corriger"}
 
     return {
@@ -843,7 +854,8 @@ async def verify_parcel_by_agent(
         "parcel_id": parcel_id,
         "verification_status": v_status,
         "carbon_score": carbon_score,
-        "verified_at": update_data["verified_at"].isoformat()
+        "verified_at": update_data["verified_at"].isoformat(),
+        "ecart": disc_result if v_status == "verified" and disc_result else None
     }
 
 

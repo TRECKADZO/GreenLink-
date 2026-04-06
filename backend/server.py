@@ -49,6 +49,7 @@ from routes import rse_dashboard  # RSE Dashboard enrichi
 from routes import redd_impact  # REDD+ Impact National metrics
 from routes import sync_batch  # Offline batch sync with conflict resolution
 from routes import cooperative_referral  # Système de parrainage coopératives
+from routes import discrepancy  # Gestion des écarts de vérification
 from services.push_notifications import router as push_notifications_router
 
 
@@ -197,6 +198,7 @@ app.include_router(coop_subscriptions.router)
 app.include_router(redd_impact.router)
 app.include_router(sync_batch.router)
 app.include_router(cooperative_referral.router)
+app.include_router(discrepancy.router, prefix="/api/ecarts", tags=["Ecarts"])
 
 # Set database for cooperative_referral module
 cooperative_referral.set_database(db)

@@ -40,6 +40,7 @@ const categories = [
       { icon: TreePine, label: 'Naturalisation', path: '/cooperative/parcels/verification', color: 'text-[#6B7280]' },
       { icon: AlertTriangle, label: 'SSRTE / ICI', path: '/cooperative/ssrte', color: 'text-[#6B7280]' },
       { icon: UserCircle, label: 'Inscriptions', path: '/cooperative/inscriptions', color: 'text-[#6B7280]' },
+      { icon: Target, label: 'Ecarts', path: '/cooperative/ecarts', color: 'text-[#DC2626]' },
     ],
   },
   {

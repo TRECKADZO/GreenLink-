@@ -88,6 +88,7 @@ import AddParcelPage from "./pages/cooperative/AddParcelPage";
 import CarbonPremiumsPage from "./pages/cooperative/CarbonPremiumsPage";
 import CarbonSubmissionsPage from "./pages/cooperative/CarbonSubmissionsPage";
 import ParcelsVerificationPage from "./pages/cooperative/ParcelsVerificationPage";
+import DiscrepancyDashboard from "./pages/cooperative/DiscrepancyDashboard";
 import AgentProgressPage from "./pages/cooperative/AgentProgressPage";
 import USSDRegistrationsPage from "./pages/cooperative/USSDRegistrationsPage";
 import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
@@ -228,6 +229,7 @@ function App() {
               <Route path="/cooperative/add-parcel" element={<AddParcelPage />} />
               <Route path="/cooperative/parcels" element={<ParcelsVerificationPage />} />
               <Route path="/cooperative/parcels/verification" element={<ParcelsVerificationPage />} />
+              <Route path="/cooperative/ecarts" element={<DiscrepancyDashboard />} />
               <Route path="/cooperative/lots" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/lots/new" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />
