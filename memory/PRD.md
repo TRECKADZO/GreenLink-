@@ -149,7 +149,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 ## Travail complete (6 avr suite)
 - (6 avr) FIX SECURITE P0: Code de reinitialisation mot de passe n'est plus affiche dans l'UI pour les utilisateurs email. Backend renvoie delivery_method=email sans simulation_code. Frontend affiche uniquement "Verifiez votre boite de reception et vos spams". Code visible uniquement en mode simulation SMS (utilisateurs sans email, SMS pas encore configure).
 - (6 avr) FIX Tableau SSRTE Agent: Les stats etaient a 0 car le filtre backend utilisait uniquement `recorded_by` au lieu de `agent_id OR recorded_by`. Corrige dans `/api/ssrte/stats/overview`. Les visites mensuelles checkent maintenant `recorded_at`, `created_at`, `visit_date`, et `date_visite`.
-- (6 avr) Logique metier recoltes implementee:
+- (6 avr) Dashboard Super Admin: toutes les metriques remplacees par des donnees reelles (36 users, 12 coops, 54 planteurs, 7 agents, 18 parcelles/69.4ha, 25 REDD+, 16 SSRTE, 18 recoltes, 14 inscriptions USSD, 9 listings marketplace, 2 demandes paiement). Plus aucune donnee demo.
   - Agriculteur membre cooperative: declare -> en_attente -> cooperative valide -> cooperative cree lot de vente -> marketplace
   - Agriculteur independant: declare -> auto-validee -> auto-publiee directement sur marketplace
   - Endpoint POST /api/cooperative/harvests/create-lot pour creer des lots de vente a partir de recoltes validees

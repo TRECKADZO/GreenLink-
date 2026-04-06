@@ -111,23 +111,86 @@ async def delete_partner(
 
 @router.get("/admin/stats")
 async def get_admin_stats(admin: dict = Depends(get_admin_user)):
-    """Get platform statistics"""
+    """Get comprehensive platform statistics from real data"""
+    # Users
     users_count = await db.users.count_documents({})
-    products_count = await db.products.count_documents({})
-    orders_count = await db.orders.count_documents({})
-    partners_count = await db.partners.count_documents({})
-    
-    # Users by type
     user_types = await db.users.aggregate([
         {"$group": {"_id": "$user_type", "count": {"$sum": 1}}}
-    ]).to_list(10)
-    
+    ]).to_list(20)
+    users_by_type = {ut["_id"]: ut["count"] for ut in user_types if ut["_id"]}
+
+    # Cooperatives
+    total_cooperatives = await db.users.count_documents({"user_type": {"$in": ["cooperative", "cooperative_admin"]}})
+
+    # Farmers / Planteurs (from coop_members and users)
+    total_members = await db.coop_members.count_documents({})
+    total_farmer_users = await db.users.count_documents({"user_type": {"$in": ["producteur", "producer", "farmer"]}})
+
+    # Agents terrain
+    total_agents = await db.users.count_documents({"user_type": {"$in": ["field_agent", "agent_terrain"]}})
+    total_coop_agents = await db.coop_agents.count_documents({})
+
+    # Parcelles
+    total_parcelles = await db.parcels.count_documents({})
+    parcels_verified = await db.parcels.count_documents({"statut_verification": "verified"})
+    # Superficie totale
+    pipeline_surface = [{"$group": {"_id": None, "total": {"$sum": {"$ifNull": ["$area_hectares", 0]}}}}]
+    surface_result = await db.parcels.aggregate(pipeline_surface).to_list(1)
+    total_hectares = surface_result[0]["total"] if surface_result else 0
+
+    # REDD visits
+    total_redd_visits = await db.redd_tracking_visits.count_documents({})
+    pipeline_redd = [{"$group": {"_id": None, "co2": {"$sum": {"$ifNull": ["$co2_tonnes", 0]}}, "score": {"$avg": {"$ifNull": ["$redd_score", 0]}}}}]
+    redd_result = await db.redd_tracking_visits.aggregate(pipeline_redd).to_list(1)
+    total_co2 = round(redd_result[0]["co2"], 2) if redd_result else 0
+    avg_redd_score = round(redd_result[0]["score"], 1) if redd_result else 0
+
+    # SSRTE visits
+    total_ssrte_visits = await db.ssrte_visits.count_documents({})
+    ssrte_high_risk = await db.ssrte_visits.count_documents({"niveau_risque": {"$in": ["critique", "eleve"]}})
+
+    # USSD registrations
+    total_registrations = await db.ussd_registrations.count_documents({})
+
+    # Harvests
+    total_harvests = await db.harvests.count_documents({})
+    harvests_pending = await db.harvests.count_documents({"statut": "en_attente"})
+    harvests_validated = await db.harvests.count_documents({"statut": "validee"})
+
+    # Marketplace listings
+    total_listings = await db.harvest_listings.count_documents({"status": "active"})
+
+    # Partners
+    partners_count = await db.partners.count_documents({})
+
+    # Payment requests
+    payment_requests = await db.payment_requests.count_documents({})
+    payment_pending = await db.payment_requests.count_documents({"status": "pending"})
+
     return {
         "total_users": users_count,
-        "total_products": products_count,
-        "total_orders": orders_count,
+        "total_cooperatives": total_cooperatives,
+        "total_members": total_members,
+        "total_farmer_users": total_farmer_users,
+        "total_agents": total_agents,
+        "total_coop_agents": total_coop_agents,
+        "total_parcelles": total_parcelles,
+        "parcels_verified": parcels_verified,
+        "total_hectares": round(total_hectares, 1),
+        "total_redd_visits": total_redd_visits,
+        "total_co2_tonnes": total_co2,
+        "avg_redd_score": avg_redd_score,
+        "total_ssrte_visits": total_ssrte_visits,
+        "ssrte_high_risk": ssrte_high_risk,
+        "total_registrations": total_registrations,
+        "total_harvests": total_harvests,
+        "harvests_pending": harvests_pending,
+        "harvests_validated": harvests_validated,
+        "total_listings": total_listings,
         "total_partners": partners_count,
-        "users_by_type": {ut["_id"]: ut["count"] for ut in user_types}
+        "payment_requests": payment_requests,
+        "payment_pending": payment_pending,
+        "users_by_type": users_by_type
     }
 
 

@@ -394,6 +394,90 @@ const AdminDashboard = () => {
           </div>
 
           {/* Stats Cards Row */}
+          <div className="grid md:grid-cols-4 gap-4 mb-4">
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <Users className="w-8 h-8 text-green-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Utilisateurs</p>
+                  <p className="text-2xl font-bold">{stats.total_users}</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <Building2 className="w-8 h-8 text-orange-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Cooperatives</p>
+                  <p className="text-2xl font-bold">{stats.total_cooperatives || 0}</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <Users className="w-8 h-8 text-emerald-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Planteurs inscrits</p>
+                  <p className="text-2xl font-bold">{stats.total_members || 0}</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <MapPin className="w-8 h-8 text-blue-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Agents Terrain</p>
+                  <p className="text-2xl font-bold">{stats.total_agents || 0}</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Platform Metrics */}
+          <div className="grid md:grid-cols-4 gap-4 mb-4">
+            <Card className="p-4 border-l-4 border-l-green-500">
+              <div className="flex items-center gap-3">
+                <MapPin className="w-8 h-8 text-green-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Parcelles</p>
+                  <p className="text-2xl font-bold">{stats.total_parcelles || 0}</p>
+                  <p className="text-xs text-gray-400">{stats.total_hectares || 0} ha | {stats.parcels_verified || 0} verifiees</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4 border-l-4 border-l-teal-500">
+              <div className="flex items-center gap-3">
+                <Leaf className="w-8 h-8 text-teal-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Visites REDD+</p>
+                  <p className="text-2xl font-bold">{stats.total_redd_visits || 0}</p>
+                  <p className="text-xs text-gray-400">{stats.total_co2_tonnes || 0}t CO2 | Score moy. {stats.avg_redd_score || 0}/10</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4 border-l-4 border-l-cyan-500">
+              <div className="flex items-center gap-3">
+                <Baby className="w-8 h-8 text-cyan-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Visites SSRTE</p>
+                  <p className="text-2xl font-bold">{stats.total_ssrte_visits || 0}</p>
+                  <p className="text-xs text-red-400">{stats.ssrte_high_risk || 0} cas risque eleve/critique</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4 border-l-4 border-l-amber-500">
+              <div className="flex items-center gap-3">
+                <Package className="w-8 h-8 text-amber-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Recoltes</p>
+                  <p className="text-2xl font-bold">{stats.total_harvests || 0}</p>
+                  <p className="text-xs text-gray-400">{stats.harvests_pending || 0} en attente | {stats.harvests_validated || 0} validees</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Additional metrics row */}
           <div className="grid md:grid-cols-4 gap-4 mb-8">
             <Card className="p-4">
               <div className="flex items-center gap-3">
@@ -406,28 +490,29 @@ const AdminDashboard = () => {
             </Card>
             <Card className="p-4">
               <div className="flex items-center gap-3">
-                <Users className="w-8 h-8 text-green-600" />
+                <Globe className="w-8 h-8 text-purple-600" />
                 <div>
-                  <p className="text-sm text-gray-600">Utilisateurs</p>
-                  <p className="text-2xl font-bold">{stats.total_users}</p>
+                  <p className="text-sm text-gray-600">Inscriptions USSD</p>
+                  <p className="text-2xl font-bold">{stats.total_registrations || 0}</p>
                 </div>
               </div>
             </Card>
             <Card className="p-4">
               <div className="flex items-center gap-3">
-                <Package className="w-8 h-8 text-purple-600" />
+                <DollarSign className="w-8 h-8 text-emerald-600" />
                 <div>
-                  <p className="text-sm text-gray-600">Produits</p>
-                  <p className="text-2xl font-bold">{stats.total_products}</p>
+                  <p className="text-sm text-gray-600">Listings Marketplace</p>
+                  <p className="text-2xl font-bold">{stats.total_listings || 0}</p>
                 </div>
               </div>
             </Card>
             <Card className="p-4">
               <div className="flex items-center gap-3">
-                <Building2 className="w-8 h-8 text-orange-600" />
+                <Banknote className="w-8 h-8 text-rose-600" />
                 <div>
-                  <p className="text-sm text-gray-600">Coopératives</p>
-                  <p className="text-2xl font-bold">{stats.users_by_type?.cooperative || 0}</p>
+                  <p className="text-sm text-gray-600">Demandes paiement</p>
+                  <p className="text-2xl font-bold">{stats.payment_requests || 0}</p>
+                  <p className="text-xs text-amber-500">{stats.payment_pending || 0} en attente</p>
                 </div>
               </div>
             </Card>
