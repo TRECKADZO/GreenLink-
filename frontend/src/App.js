@@ -92,6 +92,7 @@ import AgentProgressPage from "./pages/cooperative/AgentProgressPage";
 import USSDRegistrationsPage from "./pages/cooperative/USSDRegistrationsPage";
 import CooperativeSSRTEDashboard from "./pages/cooperative/SSRTEDashboard";
 import MRVDashboard from "./pages/cooperative/MRVDashboard";
+import CoopHarvestsPage from "./pages/cooperative/CoopHarvestsPage";
 import REDDGuidePage from "./pages/REDDGuidePage";
 import REDDTrackingPage from "./pages/cooperative/REDDTrackingPage";
 import CooperativeReferralPage from "./pages/cooperative/CooperativeReferralPage";
@@ -231,6 +232,7 @@ function App() {
               <Route path="/cooperative/lots/new" element={<CooperativeLotsPage />} />
               <Route path="/cooperative/distributions" element={<CooperativeDistributionsPage />} />
               <Route path="/cooperative/reports" element={<CooperativeReportsPage />} />
+              <Route path="/cooperative/harvests" element={<CoopHarvestsPage />} />
               <Route path="/cooperative/carbon-premiums" element={<CarbonPremiumsPage />} />
               <Route path="/cooperative/carbon-submissions" element={<CarbonSubmissionsPage />} />
               <Route path="/cooperative/carbon-submit" element={<CreateCarbonListing />} />

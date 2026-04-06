@@ -19,7 +19,7 @@ const categories = [
     title: 'Commerce',
     items: [
       { icon: Package, label: 'Ventes', path: '/cooperative/lots', color: 'text-[#92400E]' },
-      { icon: Store, label: 'Recoltes', path: '/marketplace/harvest', color: 'text-[#92400E]' },
+      { icon: Store, label: 'Recoltes', path: '/cooperative/harvests', color: 'text-[#92400E]' },
       { icon: Package, label: 'Intrants', path: '/marketplace', color: 'text-[#92400E]' },
       { icon: Clock, label: 'Commandes', path: '/buyer/orders', color: 'text-[#92400E]' },
     ],
