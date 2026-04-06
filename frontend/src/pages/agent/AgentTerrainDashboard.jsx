@@ -6,7 +6,7 @@ import {
   Target, Star, AlertTriangle, Eye, Loader2, ArrowLeft,
   ChevronRight, User, CheckCircle2, Home, RefreshCw,
   BarChart3, LogOut, MoreHorizontal, Bell, Settings,
-  Compass, Grid3X3
+  Compass, Grid3X3, HardDrive, Trash2, Database
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -203,6 +203,90 @@ const DashboardTab = ({ dashboard, myFarmers, onTabChange }) => {
 };
 
 // ========= ONGLET PLUS =========
+const StorageIndicator = () => {
+  const [storage, setStorage] = useState(null);
+  const [clearing, setClearing] = useState(false);
+
+  useEffect(() => {
+    estimateStorage();
+  }, []);
+
+  const estimateStorage = async () => {
+    try {
+      // Use StorageManager API if available
+      if (navigator.storage && navigator.storage.estimate) {
+        const est = await navigator.storage.estimate();
+        const usedMB = (est.usage || 0) / (1024 * 1024);
+        const quotaMB = (est.quota || 0) / (1024 * 1024);
+        setStorage({ usedMB, quotaMB, percentage: quotaMB > 0 ? (usedMB / quotaMB) * 100 : 0 });
+      } else {
+        setStorage({ usedMB: 0, quotaMB: 0, percentage: 0, unsupported: true });
+      }
+    } catch {
+      setStorage({ usedMB: 0, quotaMB: 0, percentage: 0, error: true });
+    }
+  };
+
+  const clearCache = async () => {
+    if (!window.confirm('Supprimer toutes les donnees hors-ligne ? Les donnees en attente de synchronisation seront perdues.')) return;
+    setClearing(true);
+    try {
+      const dbs = await window.indexedDB.databases?.() || [];
+      for (const dbInfo of dbs) {
+        if (dbInfo.name) window.indexedDB.deleteDatabase(dbInfo.name);
+      }
+      await estimateStorage();
+      toast.success('Cache hors-ligne vide');
+    } catch {
+      toast.error('Erreur lors du nettoyage');
+    }
+    setClearing(false);
+  };
+
+  if (!storage) return null;
+
+  const formatSize = (mb) => mb < 1 ? `${(mb * 1024).toFixed(0)} Ko` : `${mb.toFixed(1)} Mo`;
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4" data-testid="storage-indicator">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+          <Database className="w-5 h-5 text-slate-600" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-gray-800">Stockage hors-ligne</p>
+          <p className="text-[10px] text-gray-400">
+            {storage.unsupported ? 'Non disponible' : storage.error ? 'Erreur' : `${formatSize(storage.usedMB)} utilise`}
+          </p>
+        </div>
+        <button
+          onClick={clearCache}
+          disabled={clearing}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-500 text-xs font-medium active:bg-red-100 transition-colors disabled:opacity-50"
+          data-testid="clear-cache-btn"
+        >
+          {clearing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+          <span>Vider</span>
+        </button>
+      </div>
+      {!storage.unsupported && !storage.error && (
+        <div>
+          <div className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
+            <span>{formatSize(storage.usedMB)}</span>
+            <span>{formatSize(storage.quotaMB)}</span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${storage.percentage > 80 ? 'bg-red-500' : storage.percentage > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+              style={{ width: `${Math.min(storage.percentage, 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const MoreTab = ({ navigate, onTabChange }) => {
   const { user, logout } = useAuth();
 
@@ -247,6 +331,8 @@ const MoreTab = ({ navigate, onTabChange }) => {
           </div>
         </div>
       ))}
+
+      <StorageIndicator />
 
       <button onClick={logout}
         className="w-full flex items-center justify-center gap-2 p-4 bg-red-50 rounded-2xl text-red-500 text-sm font-medium active:bg-red-100 transition-colors border border-red-100"

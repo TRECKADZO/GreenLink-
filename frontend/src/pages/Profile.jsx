@@ -38,6 +38,9 @@ const Profile = () => {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [changePwdData, setChangePwdData] = useState({ current: '', newPwd: '', confirm: '' });
+  const [changingPwd, setChangingPwd] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [iciProfile, setIciProfile] = useState(null);
@@ -251,6 +254,35 @@ const Profile = () => {
       setDeleting(false);
       setShowDeleteModal(false);
     }
+  };
+
+  const handleChangePassword = async () => {
+    if (changePwdData.newPwd !== changePwdData.confirm) {
+      toast({ title: 'Erreur', description: 'Les mots de passe ne correspondent pas', variant: 'destructive' });
+      return;
+    }
+    if (changePwdData.newPwd.length < 6) {
+      toast({ title: 'Erreur', description: 'Le mot de passe doit contenir au moins 6 caracteres', variant: 'destructive' });
+      return;
+    }
+    setChangingPwd(true);
+    try {
+      const token = localStorage.getItem('token');
+      const r = await fetch(`${API_URL}/api/auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ current_password: changePwdData.current, new_password: changePwdData.newPwd })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || 'Erreur');
+      // Update token
+      if (data.access_token) localStorage.setItem('token', data.access_token);
+      toast({ title: 'Succes', description: 'Mot de passe modifie avec succes' });
+      setShowChangePassword(false);
+      setChangePwdData({ current: '', newPwd: '', confirm: '' });
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
+    } finally { setChangingPwd(false); }
   };
 
   const getUserTypeIcon = () => {
@@ -685,6 +717,40 @@ const Profile = () => {
               </>
             )}
           </div>
+        </Card>
+
+        {/* Change Password */}
+        <Card className="p-6 mt-6" data-testid="change-password-section">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            Securite
+          </h3>
+          {!showChangePassword ? (
+            <Button variant="outline" onClick={() => setShowChangePassword(true)} data-testid="show-change-password-btn">
+              Modifier mon mot de passe
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <Label>Mot de passe actuel</Label>
+                <Input type="password" value={changePwdData.current} onChange={e => setChangePwdData(d => ({ ...d, current: e.target.value }))} data-testid="current-password-input" />
+              </div>
+              <div>
+                <Label>Nouveau mot de passe</Label>
+                <Input type="password" value={changePwdData.newPwd} onChange={e => setChangePwdData(d => ({ ...d, newPwd: e.target.value }))} data-testid="new-password-input" />
+              </div>
+              <div>
+                <Label>Confirmer le nouveau mot de passe</Label>
+                <Input type="password" value={changePwdData.confirm} onChange={e => setChangePwdData(d => ({ ...d, confirm: e.target.value }))} data-testid="confirm-password-input" />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setShowChangePassword(false); setChangePwdData({ current: '', newPwd: '', confirm: '' }); }}>Annuler</Button>
+                <Button onClick={handleChangePassword} disabled={changingPwd || !changePwdData.current || !changePwdData.newPwd || !changePwdData.confirm} className="bg-emerald-600 hover:bg-emerald-700" data-testid="submit-change-password-btn">
+                  {changingPwd ? 'Modification...' : 'Confirmer'}
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Danger Zone - Delete Account */}

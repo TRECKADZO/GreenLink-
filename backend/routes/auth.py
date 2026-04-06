@@ -96,9 +96,9 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     pwd_changed = user.get("password_changed_at")
     if token_iat and pwd_changed:
         if isinstance(pwd_changed, datetime):
-            pwd_ts = pwd_changed.timestamp()
+            pwd_ts = int(pwd_changed.timestamp())
         else:
-            pwd_ts = datetime.fromisoformat(str(pwd_changed)).timestamp()
+            pwd_ts = int(datetime.fromisoformat(str(pwd_changed)).timestamp())
         if token_iat < pwd_ts:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -424,6 +424,11 @@ async def update_profile(
     # Only update fields that are provided
     update_data = {k: v for k, v in profile_data.dict(exclude_unset=True).items() if v is not None}
     
+    # SECURITY: Strip any privileged fields that must never be updated via profile
+    FORBIDDEN_FIELDS = {"user_type", "is_active", "hashed_password", "password", "roles",
+                        "password_changed_at", "referral_code", "sponsor_id", "id", "_id"}
+    update_data = {k: v for k, v in update_data.items() if k not in FORBIDDEN_FIELDS}
+    
     if not update_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -724,6 +729,85 @@ async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
         })
     return {"message": "Deconnexion reussie"}
 
+
+# ============= CHANGE PASSWORD (AUTHENTICATED) =============
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.post("/change-password")
+async def change_password(
+    data: ChangePasswordRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Authenticated password change. Requires current password.
+    Invalidates the current token after change.
+    """
+    # Verify current password
+    stored_hash = current_user.get("hashed_password", "")
+    if not stored_hash or not verify_password(data.current_password, stored_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mot de passe actuel incorrect"
+        )
+    
+    # Validate new password
+    if len(data.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le nouveau mot de passe doit contenir au moins 6 caracteres"
+        )
+    
+    if data.current_password == data.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le nouveau mot de passe doit etre different de l'ancien"
+        )
+    
+    new_hash = get_password_hash(data.new_password)
+    now = datetime.utcnow()
+    
+    result = await db.users.update_one(
+        {"_id": ObjectId(current_user["_id"])},
+        {"$set": {
+            "hashed_password": new_hash,
+            "password_changed_at": now,
+            "updated_at": now
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la mise a jour"
+        )
+    
+    # Blacklist current token so user must re-authenticate
+    token = credentials.credentials
+    payload = verify_token(token)
+    if payload:
+        exp = payload.get("exp", 0)
+        await db.token_blacklist.insert_one({
+            "token": token,
+            "user_id": payload.get("sub"),
+            "expires_at": datetime.utcfromtimestamp(exp),
+            "created_at": now
+        })
+    
+    # Issue a fresh token
+    new_token = create_access_token(data={"sub": current_user["_id"]})
+    
+    logger.info(f"[CHANGE PASSWORD] Password changed for user {current_user['_id']}")
+    
+    return {
+        "message": "Mot de passe modifie avec succes",
+        "success": True,
+        "access_token": new_token,
+        "token_type": "bearer"
+    }
 
 
 # ============= ADMIN PASSWORD HEALTH CHECK & REPAIR =============
