@@ -54,6 +54,16 @@ def decrypt_message(encrypted: str) -> str:
     except Exception:
         return encrypted
 
+# ============= HELPERS =============
+
+ADMIN_DISPLAY_NAME = "GreenLink Support"
+
+def mask_admin_name(user_dict, name_field="full_name"):
+    """Remplace le nom de l'admin par un nom générique dans les réponses"""
+    if user_dict and user_dict.get("user_type") == "admin":
+        return ADMIN_DISPLAY_NAME
+    return user_dict.get(name_field) or user_dict.get("cooperative_name") or "Utilisateur" if user_dict else "Utilisateur"
+
 # ============= MODELS =============
 
 class MessageCreate(BaseModel):
@@ -883,6 +893,11 @@ async def get_conversations(
             "fournisseur": "Fournisseur", "carbon_auditor": "Auditeur Carbone"
         }.get(ut, ut)
 
+        # Masquer le nom admin
+        other_name = conv["seller_name"] if is_buyer else conv["buyer_name"]
+        if ut == "admin":
+            other_name = ADMIN_DISPLAY_NAME
+
         result.append({
             "conversation_id": conv["conversation_id"],
             "conversation_type": conv.get("conversation_type", "marketplace"),
@@ -892,7 +907,7 @@ async def get_conversations(
             "listing_photo": conv.get("listing_photo"),
             "other_user": {
                 "id": other_id,
-                "name": conv["seller_name"] if is_buyer else conv["buyer_name"],
+                "name": other_name,
                 "avatar": conv.get("seller_avatar") if is_buyer else conv.get("buyer_avatar"),
                 "is_online": other_user.get("is_online", False) if other_user else False,
                 "user_type": other_user.get("user_type") if other_user else None,
@@ -953,7 +968,7 @@ async def get_conversation(
         "listing": listing,
         "other_user": {
             "id": other_id,
-            "name": other_user.get("full_name") or other_user.get("cooperative_name") if other_user else "Utilisateur",
+            "name": ADMIN_DISPLAY_NAME if ut == "admin" else (other_user.get("full_name") or other_user.get("cooperative_name") if other_user else "Utilisateur"),
             "avatar": other_user.get("avatar") if other_user else None,
             "is_online": other_user.get("is_online", False) if other_user else False,
             "user_type": other_user.get("user_type") if other_user else None,
@@ -992,6 +1007,13 @@ async def get_messages(
     messages = await db.messages.find(query).sort("created_at", -1).limit(limit).to_list(limit)
     messages.reverse()  # Ordre chronologique
     
+    # Identifier les IDs admin pour masquer les noms
+    admin_ids = set()
+    for pid in [conversation["buyer_id"], conversation["seller_id"]]:
+        u = await db.users.find_one({"_id": ObjectId(pid)}, {"user_type": 1})
+        if u and u.get("user_type") == "admin":
+            admin_ids.add(pid)
+
     result = []
     for msg in messages:
         # Try to decrypt, fallback to content_plain if decryption fails
@@ -1006,10 +1028,13 @@ async def get_messages(
         elif msg.get("content_plain"):
             content = msg["content_plain"]
         
+        # Masquer le nom admin
+        sender_name = ADMIN_DISPLAY_NAME if msg.get("sender_id") in admin_ids else msg.get("sender_name")
+
         result.append({
             "message_id": msg["message_id"],
             "sender_id": msg["sender_id"],
-            "sender_name": msg.get("sender_name"),
+            "sender_name": sender_name,
             "sender_avatar": msg.get("sender_avatar"),
             "content": content,
             "message_type": msg.get("message_type", "text"),
