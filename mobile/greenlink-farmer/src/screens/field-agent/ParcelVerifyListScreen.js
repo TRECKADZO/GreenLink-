@@ -24,11 +24,16 @@ const STATUS_BADGES = {
 
 const ParcelVerifyListScreen = ({ navigation }) => {
   const { token } = useAuth();
+  const [mode, setMode] = useState('verify'); // 'verify' or 'declare'
+  // Verify state
   const [parcels, setParcels] = useState([]);
   const [stats, setStats] = useState({ pending: 0, needs_correction: 0, verified: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('pending');
+  // Declare state
+  const [farmers, setFarmers] = useState([]);
+  const [loadingFarmers, setLoadingFarmers] = useState(false);
 
   const fetchParcels = useCallback(async () => {
     try {
@@ -44,12 +49,35 @@ const ParcelVerifyListScreen = ({ navigation }) => {
     }
   }, [token, activeTab]);
 
-  useEffect(() => { fetchParcels(); }, [fetchParcels]);
+  const fetchFarmers = useCallback(async () => {
+    setLoadingFarmers(true);
+    try {
+      const res = await api.get('/field-agent/assigned-farmers');
+      setFarmers(res.data.farmers || []);
+    } catch (e) {
+      console.warn('Fetch farmers error:', e);
+    } finally {
+      setLoadingFarmers(false);
+    }
+  }, [token]);
 
-  const onRefresh = () => { setRefreshing(true); fetchParcels(); };
+  useEffect(() => {
+    if (mode === 'verify') fetchParcels();
+    else fetchFarmers();
+  }, [mode, fetchParcels, fetchFarmers]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    if (mode === 'verify') fetchParcels();
+    else fetchFarmers();
+  };
 
   const handleParcelPress = (parcel) => {
     navigation.navigate('ParcelVerifyForm', { parcel, onVerified: fetchParcels });
+  };
+
+  const handleDeclarePress = (farmer) => {
+    navigation.navigate('ParcelDeclareForm', { farmer, onDeclared: fetchFarmers });
   };
 
   const renderStatusBadge = (status) => {
@@ -62,6 +90,8 @@ const ParcelVerifyListScreen = ({ navigation }) => {
     );
   };
 
+  const total = (stats.pending || 0) + (stats.needs_correction || 0) + (stats.verified || 0) + (stats.rejected || 0);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -70,102 +100,160 @@ const ParcelVerifyListScreen = ({ navigation }) => {
           <Ionicons name="arrow-back" size={22} color="#1e293b" />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Verification parcelles</Text>
+          <Text style={styles.headerTitle}>
+            {mode === 'verify' ? 'Verification parcelles' : 'Declarer une parcelle'}
+          </Text>
           <Text style={styles.headerSub}>
-            {stats.pending} en attente | {stats.needs_correction} a corriger
+            {mode === 'verify'
+              ? `${stats.pending} en attente | ${stats.needs_correction} a corriger`
+              : `${farmers.length} agriculteurs assignes`}
           </Text>
         </View>
       </View>
 
-      {/* Stats Cards */}
-      <View style={styles.statsRow}>
-        {STATUS_TABS.map(tab => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[styles.statCard, activeTab === tab.id && { borderColor: tab.color, borderWidth: 2 }]}
-            onPress={() => setActiveTab(tab.id)}
-          >
-            <Text style={[styles.statCount, { color: tab.color }]}>
-              {tab.id === 'all'
-                ? (stats.pending || 0) + (stats.needs_correction || 0) + (stats.verified || 0) + (stats.rejected || 0)
-                : stats[tab.id] || 0}
-            </Text>
-            <Text style={styles.statLabel}>{tab.label}</Text>
-          </TouchableOpacity>
-        ))}
+      {/* Mode Toggle */}
+      <View style={styles.toggleRow}>
+        <TouchableOpacity
+          style={[styles.toggleBtn, mode === 'verify' && styles.toggleActive]}
+          onPress={() => setMode('verify')}
+        >
+          <Ionicons name="clipboard-outline" size={16} color={mode === 'verify' ? '#059669' : '#94a3b8'} />
+          <Text style={[styles.toggleText, mode === 'verify' && styles.toggleTextActive]}>Verifier</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.toggleBtn, mode === 'declare' && styles.toggleActive]}
+          onPress={() => setMode('declare')}
+        >
+          <Ionicons name="map-outline" size={16} color={mode === 'declare' ? '#059669' : '#94a3b8'} />
+          <Text style={[styles.toggleText, mode === 'declare' && styles.toggleTextActive]}>Declarer</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Parcels List */}
-      <ScrollView
-        style={styles.list}
-        contentContainerStyle={{ paddingBottom: 30 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#059669']} />}
-      >
-        {loading ? (
-          <ActivityIndicator size="large" color="#059669" style={{ marginTop: 40 }} />
-        ) : parcels.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="checkmark-done-circle" size={56} color="#d1fae5" />
-            <Text style={styles.emptyTitle}>Aucune parcelle</Text>
-            <Text style={styles.emptyText}>
-              {activeTab === 'pending' ? 'Toutes les parcelles ont ete verifiees' : 'Aucun resultat'}
-            </Text>
+      {mode === 'verify' ? (
+        <>
+          {/* Stats Cards */}
+          <View style={styles.statsRow}>
+            {STATUS_TABS.map(tab => (
+              <TouchableOpacity
+                key={tab.id}
+                style={[styles.statCard, activeTab === tab.id && { borderColor: tab.color, borderWidth: 2 }]}
+                onPress={() => setActiveTab(tab.id)}
+              >
+                <Text style={[styles.statCount, { color: tab.color }]}>
+                  {tab.id === 'all' ? total : stats[tab.id] || 0}
+                </Text>
+                <Text style={styles.statLabel}>{tab.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        ) : (
-          parcels.map((p) => (
-            <TouchableOpacity
-              key={p.id}
-              style={styles.parcelCard}
-              onPress={() => handleParcelPress(p)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.cardTop}>
-                <View style={styles.cardIcon}>
-                  <Ionicons name="map" size={20} color="#059669" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.farmerName}>{p.nom_producteur}</Text>
-                  <Text style={styles.village}>
-                    <Ionicons name="location-outline" size={12} color="#94a3b8" />
-                    {' '}{p.village || p.location || 'Non specifie'}
-                  </Text>
-                </View>
-                {renderStatusBadge(p.verification_status)}
-              </View>
 
-              <View style={styles.cardDetails}>
-                <View style={styles.detailItem}>
-                  <Ionicons name="resize-outline" size={14} color="#64748b" />
-                  <Text style={styles.detailText}>{p.superficie} ha</Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Ionicons name="leaf-outline" size={14} color="#64748b" />
-                  <Text style={styles.detailText}>{p.type_culture || 'cacao'}</Text>
-                </View>
-                {p.coordonnees_gps && (
-                  <View style={styles.detailItem}>
-                    <Ionicons name="navigate-outline" size={14} color="#059669" />
-                    <Text style={[styles.detailText, { color: '#059669' }]}>GPS</Text>
-                  </View>
-                )}
-                {p.score_carbone > 0 && (
-                  <View style={styles.detailItem}>
-                    <Ionicons name="analytics-outline" size={14} color="#6366f1" />
-                    <Text style={[styles.detailText, { color: '#6366f1' }]}>Score: {p.score_carbone}</Text>
-                  </View>
-                )}
+          {/* Parcels List */}
+          <ScrollView
+            style={styles.list}
+            contentContainerStyle={{ paddingBottom: 30 }}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#059669']} />}
+          >
+            {loading ? (
+              <ActivityIndicator size="large" color="#059669" style={{ marginTop: 40 }} />
+            ) : parcels.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="checkmark-done-circle" size={56} color="#d1fae5" />
+                <Text style={styles.emptyTitle}>Aucune parcelle</Text>
+                <Text style={styles.emptyText}>
+                  {activeTab === 'pending' ? 'Toutes les parcelles ont ete verifiees' : 'Aucun resultat'}
+                </Text>
               </View>
-
-              {p.statut_verification !== 'verified' && (
+            ) : (
+              parcels.map((p) => (
+                <TouchableOpacity key={p.id} style={styles.parcelCard} onPress={() => handleParcelPress(p)} activeOpacity={0.7}>
+                  <View style={styles.cardTop}>
+                    <View style={styles.cardIcon}>
+                      <Ionicons name="map" size={20} color="#059669" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.farmerName}>{p.nom_producteur}</Text>
+                      <Text style={styles.village}>
+                        <Ionicons name="location-outline" size={12} color="#94a3b8" />
+                        {' '}{p.village || p.location || 'Non specifie'}
+                      </Text>
+                    </View>
+                    {renderStatusBadge(p.verification_status)}
+                  </View>
+                  <View style={styles.cardDetails}>
+                    <View style={styles.detailItem}>
+                      <Ionicons name="resize-outline" size={14} color="#64748b" />
+                      <Text style={styles.detailText}>{p.superficie} ha</Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Ionicons name="leaf-outline" size={14} color="#64748b" />
+                      <Text style={styles.detailText}>{p.type_culture || 'cacao'}</Text>
+                    </View>
+                    {p.coordonnees_gps && (
+                      <View style={styles.detailItem}>
+                        <Ionicons name="navigate-outline" size={14} color="#059669" />
+                        <Text style={[styles.detailText, { color: '#059669' }]}>GPS</Text>
+                      </View>
+                    )}
+                    {p.score_carbone > 0 && (
+                      <View style={styles.detailItem}>
+                        <Ionicons name="analytics-outline" size={14} color="#6366f1" />
+                        <Text style={[styles.detailText, { color: '#6366f1' }]}>Score: {p.score_carbone}</Text>
+                      </View>
+                    )}
+                  </View>
+                  {p.statut_verification !== 'verified' && (
+                    <View style={styles.cardAction}>
+                      <Ionicons name="arrow-forward" size={16} color="#059669" />
+                      <Text style={styles.actionText}>Verifier sur le terrain</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
+        </>
+      ) : (
+        /* DECLARE MODE - Farmers list */
+        <ScrollView
+          style={styles.list}
+          contentContainerStyle={{ paddingBottom: 30 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#059669']} />}
+        >
+          {loadingFarmers ? (
+            <ActivityIndicator size="large" color="#059669" style={{ marginTop: 40 }} />
+          ) : farmers.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="people-outline" size={56} color="#d1fae5" />
+              <Text style={styles.emptyTitle}>Aucun agriculteur assigne</Text>
+            </View>
+          ) : (
+            farmers.map((f) => (
+              <TouchableOpacity key={f.id} style={styles.parcelCard} onPress={() => handleDeclarePress(f)} activeOpacity={0.7}>
+                <View style={styles.cardTop}>
+                  <View style={[styles.cardIcon, { backgroundColor: '#e0e7ff' }]}>
+                    <Ionicons name="person" size={20} color="#4f46e5" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.farmerName}>{f.full_name}</Text>
+                    <Text style={styles.village}>
+                      <Ionicons name="location-outline" size={12} color="#94a3b8" />
+                      {' '}{f.village || 'N/A'} | {f.phone_number}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ fontSize: 11, color: '#64748b' }}>{f.parcels_count} parcelle{f.parcels_count !== 1 ? 's' : ''}</Text>
+                    {f.pending_count > 0 && <Text style={{ fontSize: 10, color: '#f59e0b' }}>{f.pending_count} en attente</Text>}
+                  </View>
+                </View>
                 <View style={styles.cardAction}>
-                  <Ionicons name="arrow-forward" size={16} color="#059669" />
-                  <Text style={styles.actionText}>Verifier sur le terrain</Text>
+                  <Ionicons name="add-circle-outline" size={16} color="#4f46e5" />
+                  <Text style={[styles.actionText, { color: '#4f46e5' }]}>Declarer une parcelle</Text>
                 </View>
-              )}
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -176,6 +264,11 @@ const styles = StyleSheet.create({
   backBtn: { padding: 4 },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#1e293b' },
   headerSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  toggleRow: { flexDirection: 'row', margin: 12, backgroundColor: '#f1f5f9', borderRadius: 10, padding: 3 },
+  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 8 },
+  toggleActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+  toggleText: { fontSize: 13, fontWeight: '600', color: '#94a3b8' },
+  toggleTextActive: { color: '#059669' },
   statsRow: { flexDirection: 'row', padding: 12, gap: 8 },
   statCard: { flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
   statCount: { fontSize: 20, fontWeight: '800' },

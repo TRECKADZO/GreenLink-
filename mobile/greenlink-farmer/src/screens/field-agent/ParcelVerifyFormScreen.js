@@ -188,9 +188,12 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* Parcel Info */}
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Informations parcelle</Text>
+        {/* VALEURS DECLAREES (read-only) */}
+        <View style={[styles.infoCard, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <Ionicons name="document-text-outline" size={16} color="#3b82f6" />
+            <Text style={[styles.infoTitle, { color: '#1d4ed8', marginBottom: 0 }]}>Valeurs declarees</Text>
+          </View>
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
               <Ionicons name="person-outline" size={16} color="#64748b" />
@@ -215,6 +218,24 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
               <Text style={styles.infoValue}>{parcel.type_culture || 'cacao'}</Text>
             </View>
           </View>
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <Ionicons name="git-branch-outline" size={16} color="#64748b" />
+              <Text style={styles.infoLabel}>Arbres (S3/S2/S1)</Text>
+              <Text style={styles.infoValue}>{parcel.arbres_grands || 0}/{parcel.arbres_moyens || 0}/{parcel.arbres_petits || 0} = {(parcel.arbres_grands || 0) + (parcel.arbres_moyens || 0) + (parcel.arbres_petits || 0)}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Ionicons name="cloudy-outline" size={16} color="#64748b" />
+              <Text style={styles.infoLabel}>Couverture</Text>
+              <Text style={styles.infoValue}>{parcel.couverture_ombragee || 0}%</Text>
+            </View>
+          </View>
+          {parcel.score_carbone > 0 && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+              <Ionicons name="analytics" size={14} color="#059669" />
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#059669' }}>Score carbone: {parcel.score_carbone}/10</Text>
+            </View>
+          )}
           {parcel.coordonnees_gps && (
             <View style={styles.gpsExisting}>
               <Ionicons name="navigate" size={14} color="#6366f1" />
@@ -223,6 +244,12 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
               </Text>
             </View>
           )}
+        </View>
+
+        {/* SECTION: VALEURS MESUREES */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 16, marginBottom: 8, paddingHorizontal: 4 }}>
+          <Ionicons name="clipboard-outline" size={16} color="#059669" />
+          <Text style={{ fontSize: 14, fontWeight: '700', color: '#059669', textTransform: 'uppercase', letterSpacing: 0.5 }}>Valeurs mesurees sur le terrain</Text>
         </View>
 
         {/* GPS Verification */}

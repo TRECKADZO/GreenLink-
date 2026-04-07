@@ -115,6 +115,7 @@ const FarmerICIFormScreen = safeRequire(() => require('./screens/field-agent/Far
 const FarmerProfileScreen = safeRequire(() => require('./screens/field-agent/FarmerProfileScreen'), 'FarmerProfileScreen');
 const ParcelVerifyListScreen = safeRequire(() => require('./screens/field-agent/ParcelVerifyListScreen'), 'ParcelVerifyListScreen');
 const ParcelVerifyFormScreen = safeRequire(() => require('./screens/field-agent/ParcelVerifyFormScreen'), 'ParcelVerifyFormScreen');
+const ParcelDeclareFormScreen = safeRequire(() => require('./screens/field-agent/ParcelDeclareFormScreen'), 'ParcelDeclareFormScreen');
 
 // Auditor
 const AuditorDashboardScreen = safeRequire(() => require('./screens/auditor/AuditorDashboardScreen'), 'AuditorDashboardScreen');
@@ -224,6 +225,7 @@ function AppNavigator() {
       <Stack.Screen name="FarmerProfile" component={FarmerProfileScreen} />
       <Stack.Screen name="ParcelVerifyList" component={ParcelVerifyListScreen} />
       <Stack.Screen name="ParcelVerifyForm" component={ParcelVerifyFormScreen} />
+      <Stack.Screen name="ParcelDeclareForm" component={ParcelDeclareFormScreen} />
       <Stack.Screen name="VisitsHistory" component={CoopReportsScreen} />
       
       <Stack.Screen name="AuditorDashboard" component={AuditorDashboardScreen} />

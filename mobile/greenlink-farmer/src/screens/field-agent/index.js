@@ -8,3 +8,4 @@ export { default as SSRTEAgentDashboard } from './SSRTEAgentDashboard';
 export { default as ParcelVerificationScreen } from './ParcelVerificationScreen';
 export { default as ParcelVerifyListScreen } from './ParcelVerifyListScreen';
 export { default as ParcelVerifyFormScreen } from './ParcelVerifyFormScreen';
+export { default as ParcelDeclareFormScreen } from './ParcelDeclareFormScreen';
