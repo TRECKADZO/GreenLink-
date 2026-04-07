@@ -4,7 +4,7 @@
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 import logging
 
@@ -566,6 +566,53 @@ async def save_geotagged_photo(
     }
 
 
+
+@router.get("/assigned-farmers")
+async def get_assigned_farmers_with_parcels(
+    current_user: dict = Depends(get_current_user)
+):
+    """Liste des agriculteurs assignes avec leur nombre de parcelles."""
+    verify_field_agent(current_user)
+    user_id = str(current_user.get("_id"))
+
+    agent_doc = await db.coop_agents.find_one({"user_id": user_id})
+    if not agent_doc:
+        phone = current_user.get("phone_number", "")
+        agent_doc = await db.coop_agents.find_one({"phone_number": phone})
+    if not agent_doc:
+        return {"farmers": []}
+
+    assigned_ids = agent_doc.get("assigned_farmers", [])
+    if not assigned_ids:
+        return {"farmers": []}
+
+    farmers = []
+    for fid in assigned_ids:
+        try:
+            member = await db.coop_members.find_one({"_id": ObjectId(fid)})
+        except Exception:
+            continue
+        if not member:
+            continue
+        parcel_count = await db.parcels.count_documents({
+            "$or": [{"member_id": fid}, {"farmer_id": fid}]
+        })
+        pending_count = await db.parcels.count_documents({
+            "$or": [{"member_id": fid}, {"farmer_id": fid}],
+            "verification_status": {"$in": ["pending", "needs_correction", None]}
+        })
+        farmers.append({
+            "id": str(member["_id"]),
+            "full_name": member.get("full_name", ""),
+            "phone_number": member.get("phone_number", ""),
+            "village": member.get("village", ""),
+            "parcels_count": parcel_count,
+            "pending_count": pending_count,
+        })
+
+    return {"farmers": farmers}
+
+
 @router.get("/farmer-parcels/{farmer_id}")
 async def get_farmer_parcels_agent(
     farmer_id: str,
@@ -585,21 +632,70 @@ async def add_farmer_parcel_agent(
     current_user: dict = Depends(get_current_user)
 ):
     """Declarer une parcelle pour un agriculteur (pour agents terrain)"""
+    verify_field_agent(current_user)
+
+    area = float(data.get("area_hectares", 0))
+    arbres_grands = int(data.get("arbres_grands", 0) or 0)
+    arbres_moyens = int(data.get("arbres_moyens", 0) or 0)
+    arbres_petits = int(data.get("arbres_petits", 0) or 0)
+    nombre_arbres = arbres_grands + arbres_moyens + arbres_petits
+    couverture = float(data.get("couverture_ombragee", 0) or 0)
+
+    # Calculate carbon score
+    from routes.carbon_score_engine import calculate_carbon_score
+    score_result = calculate_carbon_score(
+        area_hectares=area,
+        nombre_arbres=nombre_arbres,
+        arbres_petits=arbres_petits,
+        arbres_moyens=arbres_moyens,
+        arbres_grands=arbres_grands,
+        couverture_ombragee=couverture,
+        pratiques_ecologiques=[],
+    )
+
+    gps_lat = data.get("gps_lat")
+    gps_lng = data.get("gps_lng")
+    gps_coordinates = None
+    if gps_lat and gps_lng:
+        gps_coordinates = {"lat": float(gps_lat), "lng": float(gps_lng)}
+
+    # Get farmer's coop_id
+    farmer_doc = await db.coop_members.find_one({"_id": ObjectId(farmer_id)})
+    coop_id = ""
+    if farmer_doc:
+        coop_id = farmer_doc.get("coop_id", "")
+
     parcel_doc = {
         "member_id": farmer_id,
         "farmer_id": farmer_id,
+        "coop_id": coop_id,
+        "location": data.get("location", ""),
         "village": data.get("village", ""),
-        "area_hectares": data.get("area_hectares", 0),
+        "department": data.get("department", ""),
+        "area_hectares": area,
         "crop_type": data.get("crop_type", "cacao"),
+        "certification": data.get("certification", ""),
+        "nombre_arbres": nombre_arbres,
+        "arbres_grands": arbres_grands,
+        "arbres_moyens": arbres_moyens,
+        "arbres_petits": arbres_petits,
+        "couverture_ombragee": couverture,
+        "carbon_score": score_result.get("score", 0),
+        "gps_coordinates": gps_coordinates,
         "notes": data.get("notes", ""),
-        "gps_coordinates": data.get("gps_coordinates"),
         "declared_by": str(current_user["_id"]),
+        "declared_by_role": "agent_terrain",
         "agent_name": current_user.get("full_name", ""),
-        "status": "pending",
-        "created_at": datetime.utcnow(),
+        "verification_status": "pending",
+        "created_at": datetime.now(timezone.utc),
     }
     result = await db.parcels.insert_one(parcel_doc)
-    return {"message": "Parcelle declaree", "parcel_id": str(result.inserted_id)}
+    parcel_doc.pop("_id", None)
+    return {
+        "message": "Parcelle declaree avec succes",
+        "parcel_id": str(result.inserted_id),
+        "carbon_score": score_result.get("score", 0),
+    }
 
 
 
