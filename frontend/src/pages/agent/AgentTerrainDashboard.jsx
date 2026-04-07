@@ -6,7 +6,8 @@ import {
   Target, Star, AlertTriangle, Eye, Loader2, ArrowLeft,
   ChevronRight, User, CheckCircle2, Home, RefreshCw,
   BarChart3, LogOut, MoreHorizontal, Bell, Settings,
-  Compass, Grid3X3, HardDrive, Trash2, Database
+  Compass, Grid3X3, HardDrive, Trash2, Database,
+  Navigation, TrendingUp, Clock, X, Check, AlertCircle
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -19,6 +20,7 @@ import ICIProfileModal from '../cooperative/ICIProfileModal';
 import SSRTEVisitModal from '../cooperative/SSRTEVisitModal';
 import FarmerHistorySection from './FarmerHistorySection';
 import USSDSimulator from '../../components/USSDSimulator';
+import { Textarea } from '../../components/ui/textarea';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 
@@ -39,7 +41,7 @@ const FARMER_FORMS = [
 
 const TABS = [
   { id: 'home', label: 'Accueil', icon: Home },
-  { id: 'dashboard', label: 'Tableau', icon: BarChart3 },
+  { id: 'verify', label: 'Verifier', icon: ClipboardCheck },
   { id: 'farmers', label: 'Planteurs', icon: Users },
   { id: 'inscriptions', label: 'Inscrire', icon: UserPlus },
   { id: 'more', label: 'Plus', icon: Grid3X3 },
@@ -287,6 +289,316 @@ const StorageIndicator = () => {
   );
 };
 
+// ========= VERIFICATION PARCELLES =========
+const ECOLOGICAL_PRACTICES = [
+  { id: 'compostage', label: 'Compostage' },
+  { id: 'absence_pesticides', label: 'Absence de pesticides chimiques' },
+  { id: 'gestion_dechets', label: 'Gestion des dechets' },
+  { id: 'protection_cours_eau', label: 'Protection cours d\'eau' },
+  { id: 'agroforesterie', label: 'Agroforesterie' },
+];
+
+const VERIFY_STATUSES = [
+  { id: 'verified', label: 'Conforme', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-300' },
+  { id: 'needs_correction', label: 'A corriger', icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-300' },
+  { id: 'rejected', label: 'Non conforme', icon: X, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-300' },
+];
+
+const VerificationFormModal = ({ parcel, open, onClose, onVerified }) => {
+  const [status, setStatus] = useState('verified');
+  const [notes, setNotes] = useState('');
+  const [correctedArea, setCorrectedArea] = useState('');
+  const [treesPetits, setTreesPetits] = useState('');
+  const [treesMoyens, setTreesMoyens] = useState('');
+  const [treesGrands, setTreesGrands] = useState('');
+  const [selectedPractices, setSelectedPractices] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [gps, setGps] = useState(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+
+  const totalTrees = (parseInt(treesPetits) || 0) + (parseInt(treesMoyens) || 0) + (parseInt(treesGrands) || 0);
+
+  const getGPS = () => {
+    if (!navigator.geolocation) return;
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setGps({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) }); setGpsLoading(false); },
+      () => { toast.error('GPS non disponible'); setGpsLoading(false); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  useEffect(() => { if (open) getGPS(); }, [open]);
+
+  const togglePractice = (id) => setSelectedPractices(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  const handleSubmit = async () => {
+    if (!parcel) return;
+    setSubmitting(true);
+    try {
+      const body = {
+        verification_status: status,
+        verification_notes: notes,
+        pratiques_ecologiques: selectedPractices,
+      };
+      if (gps) { body.gps_lat = gps.lat; body.gps_lng = gps.lng; }
+      if (correctedArea) body.corrected_area_hectares = parseFloat(correctedArea);
+      if (treesPetits) body.arbres_petits = parseInt(treesPetits);
+      if (treesMoyens) body.arbres_moyens = parseInt(treesMoyens);
+      if (treesGrands) body.arbres_grands = parseInt(treesGrands);
+      if (totalTrees > 0) body.nombre_arbres = totalTrees;
+
+      const r = await fetch(`${API_URL}/api/field-agent/parcels/${parcel.id}/verify`, {
+        method: 'PUT', headers: { ...getAuthHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        toast.success(d.message || 'Parcelle verifiee');
+        onVerified?.();
+        onClose();
+      } else {
+        const err = await r.json().catch(() => ({}));
+        toast.error(err.detail || 'Erreur de verification');
+      }
+    } catch { toast.error('Erreur reseau'); }
+    setSubmitting(false);
+  };
+
+  if (!open || !parcel) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center" data-testid="verify-form-modal">
+      <div className="w-full max-w-lg max-h-[92vh] bg-white rounded-t-2xl sm:rounded-2xl overflow-y-auto animate-in slide-in-from-bottom">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between z-10">
+          <div>
+            <h2 className="text-base font-bold text-gray-900">Verification terrain</h2>
+            <p className="text-xs text-gray-400">{parcel.nom_producteur} - {parcel.village || 'N/A'}</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center" data-testid="verify-form-close"><X className="w-4 h-4 text-gray-500" /></button>
+        </div>
+
+        <div className="p-4 space-y-5">
+          {/* Parcel Info */}
+          <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-3 text-sm">
+            <MapPin className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <div className="flex-1">
+              <span className="font-medium">{parcel.superficie} ha</span>
+              <span className="text-gray-400 mx-2">|</span>
+              <span>{parcel.type_culture}</span>
+              {parcel.score_carbone > 0 && <><span className="text-gray-400 mx-2">|</span><span className="text-emerald-600 font-medium">Score: {parcel.score_carbone}</span></>}
+            </div>
+          </div>
+
+          {/* GPS */}
+          <div className="flex items-center gap-2">
+            <Navigation className="w-4 h-4 text-blue-500" />
+            {gps ? (
+              <span className="text-xs text-emerald-600 font-medium">{gps.lat}, {gps.lng}</span>
+            ) : (
+              <button onClick={getGPS} disabled={gpsLoading} className="text-xs text-blue-600 underline">
+                {gpsLoading ? 'Localisation...' : 'Capturer GPS'}
+              </button>
+            )}
+          </div>
+
+          {/* Status Selection */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Verdict</label>
+            <div className="grid grid-cols-3 gap-2">
+              {VERIFY_STATUSES.map(s => (
+                <button key={s.id} onClick={() => setStatus(s.id)}
+                  className={`p-3 rounded-xl border-2 text-center transition-all ${status === s.id ? `${s.bg} ${s.border}` : 'border-gray-100 bg-white'}`}
+                  data-testid={`verify-status-${s.id}`}>
+                  <s.icon className={`w-5 h-5 mx-auto mb-1 ${status === s.id ? s.color : 'text-gray-300'}`} />
+                  <span className={`text-xs font-medium ${status === s.id ? s.color : 'text-gray-400'}`}>{s.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Corrected Area */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">Superficie mesuree (ha)</label>
+            <Input type="number" step="0.1" placeholder={`Declaree: ${parcel.superficie} ha`} value={correctedArea} onChange={e => setCorrectedArea(e.target.value)}
+              className="h-11 rounded-xl" data-testid="verify-corrected-area" />
+          </div>
+
+          {/* Tree Categories */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Decompte arbres ombrages</label>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1">Strate 1 (&lt;5m)</p>
+                <Input type="number" placeholder="0" value={treesPetits} onChange={e => setTreesPetits(e.target.value)}
+                  className="h-10 rounded-xl text-center" data-testid="verify-trees-petits" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1">Strate 2 (5-30m)</p>
+                <Input type="number" placeholder="0" value={treesMoyens} onChange={e => setTreesMoyens(e.target.value)}
+                  className="h-10 rounded-xl text-center" data-testid="verify-trees-moyens" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1">Strate 3 (&gt;30m)</p>
+                <Input type="number" placeholder="0" value={treesGrands} onChange={e => setTreesGrands(e.target.value)}
+                  className="h-10 rounded-xl text-center" data-testid="verify-trees-grands" />
+              </div>
+            </div>
+            {totalTrees > 0 && <p className="text-xs text-emerald-600 mt-1.5 font-medium">Total: {totalTrees} arbres</p>}
+          </div>
+
+          {/* Ecological Practices */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Pratiques ecologiques observees</label>
+            <div className="space-y-1.5">
+              {ECOLOGICAL_PRACTICES.map(p => (
+                <button key={p.id} onClick={() => togglePractice(p.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left text-sm transition-all ${selectedPractices.includes(p.id) ? 'bg-emerald-50 border border-emerald-200' : 'bg-white border border-gray-100'}`}
+                  data-testid={`practice-${p.id}`}>
+                  <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${selectedPractices.includes(p.id) ? 'bg-emerald-500' : 'border border-gray-300'}`}>
+                    {selectedPractices.includes(p.id) && <Check className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <span className={selectedPractices.includes(p.id) ? 'text-emerald-700 font-medium' : 'text-gray-600'}>{p.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">Notes / Observations</label>
+            <Textarea placeholder="Observations sur la parcelle..." value={notes} onChange={e => setNotes(e.target.value)}
+              className="rounded-xl min-h-[80px] resize-none" data-testid="verify-notes" />
+          </div>
+
+          {/* Submit */}
+          <Button onClick={handleSubmit} disabled={submitting}
+            className={`w-full h-12 rounded-xl text-base font-medium ${status === 'verified' ? 'bg-emerald-600 hover:bg-emerald-700' : status === 'needs_correction' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-red-500 hover:bg-red-600'}`}
+            data-testid="verify-submit-btn">
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
+            {submitting ? 'Envoi...' : status === 'verified' ? 'Valider la parcelle' : status === 'needs_correction' ? 'Demander correction' : 'Rejeter la parcelle'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const STATUS_CONFIG = {
+  pending: { label: 'En attente', color: 'text-amber-600', bg: 'bg-amber-50', icon: Clock },
+  needs_correction: { label: 'A corriger', color: 'text-orange-600', bg: 'bg-orange-50', icon: AlertCircle },
+  verified: { label: 'Verifiee', color: 'text-emerald-600', bg: 'bg-emerald-50', icon: CheckCircle2 },
+  rejected: { label: 'Rejetee', color: 'text-red-600', bg: 'bg-red-50', icon: X },
+};
+
+const VerificationTab = () => {
+  const [parcels, setParcels] = useState([]);
+  const [stats, setStats] = useState({ pending: 0, needs_correction: 0, verified: 0 });
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('pending');
+  const [selectedParcel, setSelectedParcel] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+
+  const loadParcels = useCallback(async () => {
+    setLoading(true);
+    try {
+      const statusParam = filter === 'all' ? 'all' : filter === 'pending' ? '' : filter;
+      const r = await fetch(`${API_URL}/api/field-agent/parcels-to-verify${statusParam ? `?status_filter=${statusParam}` : ''}`, { headers: getAuthHeader() });
+      if (r.ok) {
+        const d = await r.json();
+        setParcels(d.parcels || []);
+        setStats(d.stats || {});
+      }
+    } catch { toast.error('Erreur de chargement'); }
+    setLoading(false);
+  }, [filter]);
+
+  useEffect(() => { loadParcels(); }, [loadParcels]);
+
+  const total = (stats.pending || 0) + (stats.needs_correction || 0) + (stats.verified || 0) + (stats.rejected || 0);
+  const filters = [
+    { id: 'pending', label: 'A verifier', count: stats.pending || 0, color: 'text-amber-600' },
+    { id: 'needs_correction', label: 'A corriger', count: stats.needs_correction || 0, color: 'text-red-500' },
+    { id: 'verified', label: 'Verifiees', count: stats.verified || 0, color: 'text-emerald-600' },
+    { id: 'all', label: 'Toutes', count: total, color: 'text-gray-700' },
+  ];
+
+  return (
+    <div className="p-4 space-y-4" data-testid="verification-tab">
+      <div>
+        <h2 className="text-base font-bold text-gray-800">Verification parcelles</h2>
+        <p className="text-xs text-gray-400">{stats.pending || 0} en attente | {stats.needs_correction || 0} a corriger</p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-4 gap-2">
+        {filters.map(f => (
+          <button key={f.id} onClick={() => setFilter(f.id)}
+            className={`rounded-xl p-2.5 text-center transition-all border-2 ${filter === f.id ? 'border-amber-400 bg-white shadow-sm' : 'border-transparent bg-white'}`}
+            data-testid={`filter-${f.id}`}>
+            <p className={`text-lg font-bold ${f.color}`}>{f.count}</p>
+            <p className="text-[10px] text-gray-500 leading-tight">{f.label}</p>
+          </button>
+        ))}
+      </div>
+
+      {/* Parcel List */}
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>
+      ) : parcels.length === 0 ? (
+        <div className="text-center py-12">
+          <CheckCircle2 className="w-12 h-12 mx-auto text-gray-200 mb-3" />
+          <p className="text-sm text-gray-400">{filter === 'pending' ? 'Aucune parcelle en attente' : 'Aucune parcelle'}</p>
+        </div>
+      ) : (
+        <div className="space-y-3" data-testid="parcels-list">
+          {parcels.map(p => {
+            const sc = STATUS_CONFIG[p.statut_verification] || STATUS_CONFIG.pending;
+            const StatusIcon = sc.icon;
+            return (
+              <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" data-testid={`parcel-card-${p.id}`}>
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900" data-testid="parcel-farmer-name">{p.nom_producteur}</p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1"><MapPin className="w-3 h-3" />{p.village || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <span className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${sc.bg} ${sc.color}`}>
+                      <StatusIcon className="w-3.5 h-3.5" />{sc.label}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-3">
+                    <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5" />{p.superficie} ha</span>
+                    <span className="flex items-center gap-1"><Leaf className="w-3.5 h-3.5" />{p.type_culture}</span>
+                    {p.coordonnees_gps && <span className="flex items-center gap-1 text-blue-500"><Navigation className="w-3.5 h-3.5" />GPS</span>}
+                    {p.score_carbone > 0 && <span className="flex items-center gap-1 text-emerald-600"><TrendingUp className="w-3.5 h-3.5" />Score: {p.score_carbone}</span>}
+                  </div>
+                </div>
+
+                {p.statut_verification !== 'verified' && (
+                  <button onClick={() => { setSelectedParcel(p); setShowForm(true); }}
+                    className="w-full flex items-center justify-center gap-2 py-3 border-t border-gray-100 text-emerald-600 font-medium text-sm active:bg-emerald-50 transition-colors"
+                    data-testid={`verify-btn-${p.id}`}>
+                    <ChevronRight className="w-4 h-4" />Verifier sur le terrain
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <VerificationFormModal parcel={selectedParcel} open={showForm} onClose={() => { setShowForm(false); setSelectedParcel(null); }} onVerified={loadParcels} />
+    </div>
+  );
+};
+
 const MoreTab = ({ navigate, onTabChange }) => {
   const { user, logout } = useAuth();
 
@@ -294,6 +606,7 @@ const MoreTab = ({ navigate, onTabChange }) => {
     {
       title: 'Outils Terrain',
       items: [
+        { label: 'Tableau de bord', desc: 'Statistiques et objectifs', icon: BarChart3, color: 'bg-emerald-500', action: () => onTabChange('dashboard') },
         { label: 'Tableau SSRTE', desc: 'Suivi des visites SSRTE', icon: ClipboardCheck, color: 'bg-cyan-500', route: '/agent/ssrte' },
       ]
     },
@@ -671,6 +984,7 @@ const AgentTerrainDashboard = () => {
       refreshing={refreshing}
     >
       {tab === 'home' && <HomeTab info={info} myFarmers={myFarmers} onTabChange={setTab} navigate={navigate} onShowUSSD={() => setShowUSSDSimulator(true)} />}
+      {tab === 'verify' && <VerificationTab />}
       {tab === 'dashboard' && <DashboardTab dashboard={dashboard} myFarmers={myFarmers} onTabChange={setTab} />}
       {tab === 'more' && <MoreTab navigate={navigate} onTabChange={setTab} />}
       {tab === 'inscriptions' && <AgentRegistrationForm />}

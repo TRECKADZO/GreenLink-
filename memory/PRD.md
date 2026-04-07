@@ -95,6 +95,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) BUG FIX Page Messagerie: Ajout guards token aux useEffects (loadConversation, deep-link marketplace) pour eviter les appels API et toasts d'erreur quand l'utilisateur n'est pas connecte.
 - (7 avr) Amelioration messages d'erreur login: message specifique pour rate-limit (429) et meilleur message reseau.
 - (7 avr) BUILD APK: Build EAS preview (profile preview) genere avec succes. APK: https://expo.dev/artifacts/eas/scLtMPJCFQk8tkBh9Shgid.apk
+- (7 avr) FEATURE: Verification Parcelles Web - Ajout de l'onglet "Verifier" dans le dashboard Agent Terrain web, identique a la version mobile (liste parcelles avec filtres, formulaire de verification avec GPS, arbres par strates, pratiques ecologiques, verdict). Endpoints: /api/field-agent/parcels-to-verify et /api/field-agent/parcels/{id}/verify.
 
 ## Backlog
 ### P0
