@@ -598,7 +598,7 @@ async def get_carbon_analytics(
             {"farmer_id": {"$in": member_ids + member_user_ids}},
             {"member_id": {"$in": member_ids}}
         ]
-    }).sort("carbon_score", -1).to_list(500)
+    }).to_list(500)
 
     config = await db.carbon_config.find_one({"key": "default_price"})
     price_per_tonne = config.get("value", 15000) if config else 15000
@@ -684,6 +684,11 @@ async def get_carbon_analytics(
             "statut_verification": p.get("verification_status", "pending"),
             "created_at": p.get("created_at", ""),
         })
+
+    # Sort by recalculated score descending and assign rank
+    result_parcels.sort(key=lambda x: x["score"], reverse=True)
+    for i, rp in enumerate(result_parcels, 1):
+        rp["rang"] = i
 
     avg_score = round(sum(scores) / len(scores), 1) if scores else 0
 

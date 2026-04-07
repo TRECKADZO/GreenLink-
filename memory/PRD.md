@@ -101,6 +101,10 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 
 ## Travail complete (7 avr suite 2)
 - (7 avr) AUTO-CALCUL COUVERTURE OMBRAGEE: Estimation automatique a partir du nombre d'arbres par strate (S1 Petits=10m² canopee, S2 Moyens=30m², S3 Grands=90m²) et surface parcelle. Formule: (grands*90 + moyens*30 + petits*10) / (area_ha*10000) * 100, plafonnee a 100%. Endpoint GET /api/carbon-score/estimate-couverture. Calcul client-side dans AddParcelPage, AgentTerrainDashboard (Declaration + Verification). Mobile ParcelVerifyFormScreen corrige (coefficients par strate au lieu de 80m²/arbre generique). Tests iteration_110: 16/16 backend + 100% frontend.
+- (7 avr) TABLEAU DE BORD ANALYTIQUES SCORE CARBONE: Dashboard visuel complet pour Cooperative (/cooperative/carbon-analytics) et Farmer (/farmer/carbon-score ameliore). 
+  - Cooperative: KPIs (score moyen, CO2 total, primes farmer/coop), graphique barres par parcelle, camembert distribution niveaux, radar decomposition moyenne, tableau classement expandable avec decomposition + recommandations par parcelle, tri par score/prime/CO2.
+  - Farmer: 3 onglets (Vue generale, Graphiques, Classement). Vue generale = jauge score + decomposition + pratiques + primes. Graphiques = barres scores, radar profil, barres estimation primes XOF. Classement = parcelles ordonnees avec details expandables.
+  - Backend: GET /api/cooperative/carbon-analytics (calcul dynamique via carbon_score_engine, estimation primes avec prix CO2 configurable). Tests iteration_111: 15/15 backend + 100% frontend.
 
 ## Backlog
 ### P0
