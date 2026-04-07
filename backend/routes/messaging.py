@@ -761,12 +761,14 @@ async def get_contacts(
         async for a in agents_cursor:
             agent_ids.append(a["_id"])
 
-        # Chercher les agriculteurs membres
+        # Chercher les agriculteurs membres (user_id field in coop_members)
         member_ids = []
-        members_cursor = db.coop_members.find({"coop_id": coop_id}, {"member_id": 1})
+        members_cursor = db.coop_members.find({"coop_id": coop_id}, {"user_id": 1})
         async for m in members_cursor:
             try:
-                member_ids.append(ObjectId(m["member_id"]))
+                uid = m.get("user_id")
+                if uid:
+                    member_ids.append(ObjectId(uid))
             except Exception:
                 pass
 
@@ -775,7 +777,8 @@ async def get_contacts(
             {"user_type": {"$in": ["acheteur", "buyer"]}}
         ]
     elif user_type == "field_agent":
-        # Agent peut contacter sa coopérative et ses agriculteurs assignés
+        # Agent peut contacter sa coopérative, ses agriculteurs assignés,
+        # et les agriculteurs membres de sa coopérative
         coop_id = current_user.get("cooperative_id")
         assigned = current_user.get("assigned_farmers", [])
         assigned_oids = []
@@ -785,18 +788,33 @@ async def get_contacts(
             except Exception:
                 pass
 
-        targets = assigned_oids
+        targets = list(assigned_oids)
         if coop_id:
             try:
                 targets.append(ObjectId(coop_id))
             except Exception:
                 pass
+            # Also include farmers from the same cooperative (user_id field)
+            coop_members_cursor = db.coop_members.find({"coop_id": coop_id}, {"user_id": 1})
+            async for m in coop_members_cursor:
+                try:
+                    uid = m.get("user_id")
+                    if uid:
+                        mid = ObjectId(uid)
+                        if mid not in targets:
+                            targets.append(mid)
+                except Exception:
+                    pass
 
-        query["_id"] = {"$in": targets} if targets else {"$in": []}
+        query["_id"] = {"$ne": ObjectId(user_id)}
+        if targets:
+            query["_id"] = {"$in": [t for t in targets if t != ObjectId(user_id)]}
+        else:
+            query["_id"] = {"$in": []}
     elif user_type == "producteur":
         # Agriculteur peut contacter sa coopérative, son agent, et les acheteurs
         # Trouver la coop de cet agriculteur
-        membership = await db.coop_members.find_one({"member_id": user_id})
+        membership = await db.coop_members.find_one({"user_id": user_id})
         targets = []
         if membership:
             try:
