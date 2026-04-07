@@ -94,6 +94,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) BUG FIX Middleware CORS: Ordre des middlewares inverse (RateLimitMiddleware au-dessus de CORSMiddleware). Les reponses 429 rate-limit n'avaient pas de headers CORS, causant ERR_NETWORK dans le navigateur. Fix: CORSMiddleware maintenant en couche externe.
 - (7 avr) BUG FIX Page Messagerie: Ajout guards token aux useEffects (loadConversation, deep-link marketplace) pour eviter les appels API et toasts d'erreur quand l'utilisateur n'est pas connecte.
 - (7 avr) Amelioration messages d'erreur login: message specifique pour rate-limit (429) et meilleur message reseau.
+- (7 avr) BUILD APK: Build EAS preview (profile preview) genere avec succes. APK: https://expo.dev/artifacts/eas/scLtMPJCFQk8tkBh9Shgid.apk
 
 ## Backlog
 ### P0
