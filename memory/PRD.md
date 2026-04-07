@@ -13,21 +13,22 @@ Utiliser le meme code developpe sur GitHub (GreenLink). Implementer tout le proj
 7. Generate mobile native implementation prompts for handoff to another developer
 
 ## Architecture
-- **Backend**: FastAPI (Python) + MongoDB
-- **Frontend**: React (Vite/CRA)
+- **Backend**: FastAPI (Python) + MongoDB (greenlink_production on Atlas)
+- **Frontend**: React (CRA)
 - **Mobile**: Expo React Native
-- **Database**: MongoDB
+- **Database**: MongoDB Atlas
 
 ## Completed Tasks
-- Fixed auto-calculated "Couverture ombragee" (Shade Cover) 404 API error
+- Fixed auto-calculated "Couverture ombragee" 404 API error
 - Fixed mobile strata formula in ParcelVerifyFormScreen.js
-- Created Carbon Score Analytics Dashboard for Cooperatives (CarbonScoreAnalytics.jsx)
+- Created Carbon Score Analytics Dashboard for Cooperatives
 - Upgraded Farmer's Carbon Score page with charts and history
 - Upgraded Farmer's Web Parcel Declaration form to match Field Agent's form
 - Generated complete Mobile App Specification (MOBILE_SPEC.md)
-- Generated Field Agent Parcel Verification mobile prompt
-- Generated REDD+ Guide & USSD Simulator mobile prompts
-- Generated Messaging System mobile prompt
+- Generated Field Agent, REDD+ Guide, USSD Simulator, and Messaging mobile prompts
+- Fixed shade cover fallback formula (80 -> 35 m2)
+- **Fixed messaging contacts loading**: Changed `member_id` to `user_id` for coop_members queries (cooperative, field_agent, producteur roles)
+- **Fixed test agent**: Set cooperative_id for testagent@test.ci
 
 ## Pending Issues
 - P2: Emails sent via Resend going to Spam (BLOCKED: awaiting user DNS config SPF/DKIM/DMARC)
