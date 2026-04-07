@@ -96,6 +96,7 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) Amelioration messages d'erreur login: message specifique pour rate-limit (429) et meilleur message reseau.
 - (7 avr) BUILD APK: Build EAS preview (profile preview) genere avec succes. APK: https://expo.dev/artifacts/eas/scLtMPJCFQk8tkBh9Shgid.apk
 - (7 avr) FEATURE: Verification Parcelles Web - Ajout de l'onglet "Verifier" dans le dashboard Agent Terrain web, identique a la version mobile (liste parcelles avec filtres, formulaire de verification avec GPS, arbres par strates, pratiques ecologiques, verdict). Endpoints: /api/field-agent/parcels-to-verify et /api/field-agent/parcels/{id}/verify.
+- (7 avr) FEATURE: Deux modes Agent Terrain (Verifier/Declarer). Mode Verifier: valeurs declarees (lecture seule) vs valeurs mesurees cote-a-cote. Mode Declarer: formulaire identique a celui de la cooperative (nom parcelle, village, departement, superficie, culture, certification, arbres par strate, couverture, GPS). Endpoint: GET /api/field-agent/assigned-farmers et POST /api/field-agent/farmer-parcels/{id}. Tests iteration_109: Backend 92% + Frontend 100%.
 
 ## Backlog
 ### P0
