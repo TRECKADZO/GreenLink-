@@ -97,6 +97,7 @@ import CoopHarvestsPage from "./pages/cooperative/CoopHarvestsPage";
 import REDDGuidePage from "./pages/REDDGuidePage";
 import REDDTrackingPage from "./pages/cooperative/REDDTrackingPage";
 import CooperativeReferralPage from "./pages/cooperative/CooperativeReferralPage";
+import CarbonScoreAnalytics from "./pages/cooperative/CarbonScoreAnalytics";
 
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
@@ -247,6 +248,7 @@ function App() {
               <Route path="/cooperative/mrv" element={<MRVDashboard />} />
               <Route path="/cooperative/referral" element={<CooperativeReferralPage />} />
               <Route path="/cooperative/parrainage" element={<CooperativeReferralPage />} />
+              <Route path="/cooperative/carbon-analytics" element={<CarbonScoreAnalytics />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
 

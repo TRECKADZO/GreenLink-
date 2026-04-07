@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Plus, Users, Shield, Target, Package, Store,
   DollarSign, Leaf, FileText, TreePine, AlertTriangle,
-  UserCircle, Clock, Smartphone, ChevronDown, Gift
+  UserCircle, Clock, Smartphone, ChevronDown, Gift, BarChart3
 } from 'lucide-react';
 
 const categories = [
@@ -28,7 +28,7 @@ const categories = [
     title: 'Carbone & Durabilite',
     items: [
       { icon: DollarSign, label: 'Primes', path: '/cooperative/carbon-premiums', color: 'text-[#065F46]' },
-      { icon: Leaf, label: 'Tonnage', path: '/cooperative/carbon-submissions', color: 'text-[#065F46]' },
+      { icon: BarChart3, label: 'Analytiques', path: '/cooperative/carbon-analytics', color: 'text-[#065F46]' },
       { icon: Leaf, label: 'MRV & Suivi', path: '/cooperative/mrv', color: 'text-[#065F46]' },
       { icon: DollarSign, label: 'Distributions', path: '/cooperative/distributions', color: 'text-[#065F46]' },
     ],

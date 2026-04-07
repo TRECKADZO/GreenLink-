@@ -570,3 +570,152 @@ async def get_parcel_details(
         "cree_le": parcel.get("created_at"),
         "conforme_eudr": parcel.get("eudr_compliant", True)
     }
+
+
+
+@router.get("/carbon-analytics")
+async def get_carbon_analytics(
+    current_user: dict = Depends(get_current_user),
+):
+    """Tableau de bord analytique des scores carbone pour la cooperative"""
+    from routes.carbon_score_engine import calculate_carbon_score, estimate_couverture_ombragee
+
+    verify_cooperative(current_user)
+    coop_id = str(current_user["_id"])
+    coop_oid = ObjectId(coop_id) if ObjectId.is_valid(coop_id) else None
+
+    member_or = [{"coop_id": coop_id}, {"cooperative_id": coop_id}]
+    if coop_oid:
+        member_or.extend([{"coop_id": coop_oid}, {"cooperative_id": coop_oid}])
+    members = await db.coop_members.find({"$or": member_or}).to_list(10000)
+    member_map = {str(m["_id"]): m for m in members}
+    member_ids = list(member_map.keys())
+    member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+
+    parcels = await db.parcels.find({
+        "$or": [
+            {"coop_id": coop_id},
+            {"farmer_id": {"$in": member_ids + member_user_ids}},
+            {"member_id": {"$in": member_ids}}
+        ]
+    }).sort("carbon_score", -1).to_list(500)
+
+    config = await db.carbon_config.find_one({"key": "default_price"})
+    price_per_tonne = config.get("value", 15000) if config else 15000
+    FEES_RATE = 0.30
+    FARMER_SHARE = 0.70
+    COOP_SHARE = 0.05
+
+    result_parcels = []
+    total_co2 = 0
+    total_prime_farmer = 0
+    total_prime_coop = 0
+    total_area = 0
+    scores = []
+    decomposition_sums = {
+        "densite_arbres": 0, "couverture_ombragee": 0, "brulage": 0,
+        "engrais_chimique": 0, "pratiques_ecologiques": 0, "redd_practices": 0,
+        "age_cacaoyers": 0, "surface": 0, "certification": 0, "base": 0,
+    }
+    count_with_score = 0
+
+    for rank, p in enumerate(parcels, 1):
+        area = p.get("area_hectares", 0) or 0
+        n_p = p.get("arbres_petits", 0) or 0
+        n_m = p.get("arbres_moyens", 0) or 0
+        n_g = p.get("arbres_grands", 0) or 0
+        couv = p.get("couverture_ombragee", 0) or 0
+
+        calc = calculate_carbon_score(
+            area_hectares=area,
+            arbres_petits=n_p, arbres_moyens=n_m, arbres_grands=n_g,
+            nombre_arbres=p.get("nombre_arbres", 0),
+            couverture_ombragee=couv,
+            pratique_brulage=p.get("pratique_brulage"),
+            engrais_chimique=p.get("engrais_chimique"),
+            pratiques_ecologiques=p.get("pratiques_ecologiques", []),
+            redd_practices=p.get("redd_practices", []),
+            age_cacaoyers=p.get("age_cacaoyers"),
+            certification=p.get("certification"),
+            existing_practices=p.get("farming_practices", []),
+        )
+
+        score = calc["score"]
+        co2 = calc["co2_tonnes"]
+        gross = co2 * price_per_tonne
+        net = gross * (1 - FEES_RATE)
+        prime_farmer = round(net * FARMER_SHARE)
+        prime_coop = round(net * COOP_SHARE)
+
+        total_co2 += co2
+        total_prime_farmer += prime_farmer
+        total_prime_coop += prime_coop
+        total_area += area
+        scores.append(score)
+
+        if score > 0:
+            count_with_score += 1
+            for k in decomposition_sums:
+                decomposition_sums[k] += calc["details"].get(k, 0)
+
+        mid = p.get("member_id") or p.get("farmer_id", "")
+        member = member_map.get(str(mid))
+        farmer_name = member.get("full_name", "Inconnu") if member else p.get("farmer_name", "Inconnu")
+
+        result_parcels.append({
+            "id": str(p["_id"]),
+            "rang": rank,
+            "nom_parcelle": p.get("location", p.get("village", f"Parcelle {rank}")),
+            "village": p.get("village", ""),
+            "producteur": farmer_name,
+            "superficie_ha": round(area, 2),
+            "score": score,
+            "niveau": calc["niveau"],
+            "co2_tonnes": co2,
+            "prime_farmer_xof": prime_farmer,
+            "prime_coop_xof": prime_coop,
+            "couverture_ombragee": couv,
+            "arbres_petits": n_p,
+            "arbres_moyens": n_m,
+            "arbres_grands": n_g,
+            "total_arbres": n_p + n_m + n_g,
+            "decomposition": calc["details"],
+            "recommandations": calc["recommandations"],
+            "statut_verification": p.get("verification_status", "pending"),
+            "created_at": p.get("created_at", ""),
+        })
+
+    avg_score = round(sum(scores) / len(scores), 1) if scores else 0
+
+    decomposition_avg = {}
+    if count_with_score > 0:
+        for k, v in decomposition_sums.items():
+            decomposition_avg[k] = round(v / count_with_score, 2)
+
+    distribution = {"excellent": 0, "tres_bon": 0, "bon": 0, "en_progression": 0, "insuffisant": 0}
+    for s in scores:
+        if s >= 8:
+            distribution["excellent"] += 1
+        elif s >= 6:
+            distribution["tres_bon"] += 1
+        elif s >= 4:
+            distribution["bon"] += 1
+        elif s >= 2:
+            distribution["en_progression"] += 1
+        else:
+            distribution["insuffisant"] += 1
+
+    return {
+        "resume": {
+            "total_parcelles": len(parcels),
+            "score_moyen": avg_score,
+            "total_co2_tonnes": round(total_co2, 2),
+            "total_prime_farmer_xof": total_prime_farmer,
+            "total_prime_coop_xof": total_prime_coop,
+            "total_superficie_ha": round(total_area, 1),
+            "prix_tonne_co2_xof": price_per_tonne,
+        },
+        "distribution": distribution,
+        "decomposition_moyenne": decomposition_avg,
+        "parcelles": result_parcels,
+    }
