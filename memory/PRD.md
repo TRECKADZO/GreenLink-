@@ -99,18 +99,21 @@ Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperat
 - (7 avr) FEATURE: Deux modes Agent Terrain (Verifier/Declarer). Mode Verifier: valeurs declarees (lecture seule) vs valeurs mesurees cote-a-cote. Mode Declarer: formulaire identique a celui de la cooperative (nom parcelle, village, departement, superficie, culture, certification, arbres par strate, couverture, GPS). Endpoint: GET /api/field-agent/assigned-farmers et POST /api/field-agent/farmer-parcels/{id}. Tests iteration_109: Backend 92% + Frontend 100%.
 - (7 avr) MOBILE OTA: Memes ajouts verification/declaration parcelles dans la version mobile. ParcelVerifyListScreen (toggle Verifier/Declarer), ParcelVerifyFormScreen (section Valeurs declarees), ParcelDeclareFormScreen (nouveau). Update OTA ID: c571e9b7-102b-4e23-bcc0-23d687df2002. PAS DE NOUVEL APK REQUIS.
 
+## Travail complete (7 avr suite 2)
+- (7 avr) AUTO-CALCUL COUVERTURE OMBRAGEE: Estimation automatique a partir du nombre d'arbres par strate (S1 Petits=10m² canopee, S2 Moyens=30m², S3 Grands=90m²) et surface parcelle. Formule: (grands*90 + moyens*30 + petits*10) / (area_ha*10000) * 100, plafonnee a 100%. Endpoint GET /api/carbon-score/estimate-couverture. Calcul client-side dans AddParcelPage, AgentTerrainDashboard (Declaration + Verification). Mobile ParcelVerifyFormScreen corrige (coefficients par strate au lieu de 80m²/arbre generique). Tests iteration_110: 16/16 backend + 100% frontend.
+
 ## Backlog
 ### P0
 - Mettre a jour MONGO_URL dans les Secrets Emergent Dashboard (action utilisateur)
 - Configuration DNS domaine greenlink-agritech.com (action utilisateur GoDaddy) — emails Resend en spam
 
 ### P1
-- ~~Tests de securite: escalade de privileges, invalidation de session~~ DONE
-- ~~Indicateur taille stockage offline (IndexedDB) dans le profil agent~~ DONE
-
-### P2
 - Passerelle SMS reelle Orange CI / MTN (MOCK)
 - Langues locales (Baoule/Dioula) mobile
+
+### P2
+- Nettoyage donnees test/demo dans tous les dashboards
+- Flux de validation des recoltes
 
 ### P3
 - Refactoriser ussd.py (~2700 lignes)
