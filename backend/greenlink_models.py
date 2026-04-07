@@ -8,12 +8,18 @@ class ParcelBase(BaseModel):
     farmer_name: Optional[str] = ""
     phone_number: Optional[str] = ""
     location: str = ""
+    village: Optional[str] = ""
     region: Optional[str] = ""  # Bouafle, Daloa, Soubre, etc.
     department: Optional[str] = ""  # Alias for region from mobile form
     crop_type: str = ""  # cacao, anacarde
+    certification: Optional[str] = ""  # Rainforest Alliance, UTZ, Fairtrade, Bio
     area_hectares: Optional[float] = None
     size: Optional[float] = None  # Alias for area_hectares from mobile form
     trees_count: Optional[int] = 0
+    arbres_grands: Optional[int] = 0  # Strate 3 (>30m)
+    arbres_moyens: Optional[int] = 0  # Strate 2 (5-30m)
+    arbres_petits: Optional[int] = 0  # Strate 1 (3-5m)
+    couverture_ombragee: Optional[float] = 0  # % shade cover
     farming_practices: Optional[List[str]] = []  # agroforesterie, compost, zero_pesticides, etc.
     has_shade_trees: Optional[bool] = False
     uses_organic_fertilizer: Optional[bool] = False
@@ -23,6 +29,7 @@ class ParcelBase(BaseModel):
     longitude: Optional[float] = None
     planting_year: Optional[int] = None
     photos: Optional[List[str]] = []
+    notes: Optional[str] = ""
     language: str = "francais"  # francais, baoule, dioula, senoufo
     member_id: Optional[str] = None  # ID du membre proprietaire (pour cooperatives)
     member_name: Optional[str] = None

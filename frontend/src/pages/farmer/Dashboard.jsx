@@ -346,18 +346,51 @@ const FarmerMoreTab = ({ navigate, stats, onTabChange }) => {
 };
 
 // ========= PARCELLES (Farmer's parcels tab) =========
+const DEPARTMENTS_FARMER = [
+  'Abidjan', 'Abengourou', 'Aboisso', 'Adzope', 'Agboville',
+  'Bangolo', 'Bouafle', 'Bouake', 'Daloa', 'Divo',
+  'Gagnoa', 'Korhogo', 'Man', 'San-Pedro', 'Soubre',
+  'Yamoussoukro', 'Autre'
+];
+const CROP_TYPES_FARMER = [
+  { id: 'cacao', label: 'Cacao' }, { id: 'cafe', label: 'Cafe' },
+  { id: 'anacarde', label: 'Anacarde' }, { id: 'hevea', label: 'Hevea' },
+  { id: 'palmier', label: 'Palmier' },
+];
+const CERTIFICATIONS_FARMER = [
+  { id: '', label: 'Aucune' }, { id: 'Rainforest Alliance', label: 'Rainforest Alliance' },
+  { id: 'UTZ', label: 'UTZ Certified' }, { id: 'Fairtrade', label: 'Fairtrade' }, { id: 'Bio', label: 'Bio' },
+];
+const estimateCouvertureFarmer = (grands, moyens, petits, areaHa) => {
+  const g = parseInt(grands) || 0, m = parseInt(moyens) || 0, p = parseInt(petits) || 0;
+  const area = Math.max(parseFloat(areaHa) || 0.01, 0.01) * 10000;
+  return Math.min(100, Math.round(((g * 90) + (m * 30) + (p * 10)) / area * 1000) / 10);
+};
+
 const FarmerParcelsTab = ({ navigate }) => {
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    location: '', region: '', crop_type: 'cacao', area_hectares: '',
-    trees_count: '', has_shade_trees: false, uses_organic_fertilizer: false,
-    has_erosion_control: false, planting_year: ''
+    location: '', village: '', department: '', crop_type: 'cacao', certification: '',
+    area_hectares: '', arbres_grands: '', arbres_moyens: '', arbres_petits: '',
+    couverture_ombragee: '', planting_year: '', notes: '',
+    has_shade_trees: false, uses_organic_fertilizer: false, has_erosion_control: false,
   });
   const API_URL = process.env.REACT_APP_BACKEND_URL;
   const getToken = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
+
+  const setField = (k, v) => {
+    const next = { ...form, [k]: v };
+    if (['arbres_grands', 'arbres_moyens', 'arbres_petits', 'area_hectares'].includes(k)) {
+      const est = estimateCouvertureFarmer(next.arbres_grands, next.arbres_moyens, next.arbres_petits, next.area_hectares);
+      if (est > 0) next.couverture_ombragee = String(est);
+    }
+    setForm(next);
+  };
+
+  const totalTrees = (parseInt(form.arbres_grands) || 0) + (parseInt(form.arbres_moyens) || 0) + (parseInt(form.arbres_petits) || 0);
 
   const fetchParcels = async () => {
     try {
@@ -378,10 +411,22 @@ const FarmerParcelsTab = ({ navigate }) => {
     setSubmitting(true);
     try {
       const payload = {
-        ...form,
+        location: form.location,
+        village: form.village,
+        department: form.department,
+        region: form.department,
+        crop_type: form.crop_type,
+        certification: form.certification,
         area_hectares: parseFloat(form.area_hectares) || 0,
-        trees_count: parseInt(form.trees_count) || 0,
+        arbres_grands: parseInt(form.arbres_grands) || 0,
+        arbres_moyens: parseInt(form.arbres_moyens) || 0,
+        arbres_petits: parseInt(form.arbres_petits) || 0,
+        couverture_ombragee: parseFloat(form.couverture_ombragee) || 0,
         planting_year: parseInt(form.planting_year) || null,
+        notes: form.notes,
+        has_shade_trees: form.has_shade_trees,
+        uses_organic_fertilizer: form.uses_organic_fertilizer,
+        has_erosion_control: form.has_erosion_control,
       };
       const res = await fetch(`${API_URL}/api/greenlink/parcels`, {
         method: 'POST',
@@ -391,7 +436,7 @@ const FarmerParcelsTab = ({ navigate }) => {
       if (res.ok) {
         toast.success('Parcelle declaree avec succes');
         setShowForm(false);
-        setForm({ location: '', region: '', crop_type: 'cacao', area_hectares: '', trees_count: '', has_shade_trees: false, uses_organic_fertilizer: false, has_erosion_control: false, planting_year: '' });
+        setForm({ location: '', village: '', department: '', crop_type: 'cacao', certification: '', area_hectares: '', arbres_grands: '', arbres_moyens: '', arbres_petits: '', couverture_ombragee: '', planting_year: '', notes: '', has_shade_trees: false, uses_organic_fertilizer: false, has_erosion_control: false });
         setLoading(true);
         fetchParcels();
       } else {
@@ -432,56 +477,106 @@ const FarmerParcelsTab = ({ navigate }) => {
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-4 shadow-sm border border-emerald-200 space-y-3" data-testid="add-parcel-form">
           <p className="text-sm font-semibold text-emerald-800">Declarer une parcelle</p>
-          <div>
-            <label className="text-xs text-gray-500">Localisation / Village *</label>
-            <input value={form.location} onChange={e => setForm(p => ({...p, location: e.target.value}))} placeholder="Ex: Daloa, Vavoua..." className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none" data-testid="parcel-location" />
-          </div>
+
+          {/* Localisation section */}
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-2">Localisation</p>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-gray-500">Region</label>
-              <select value={form.region} onChange={e => setForm(p => ({...p, region: e.target.value}))} className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-region">
-                <option value="">Selectionner</option>
-                {['Bouafle', 'Daloa', 'Soubre', 'San Pedro', 'Gagnoa', 'Duekoue', 'Man', 'Guiglo', 'Abengourou', 'Abidjan'].map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              <label className="text-xs text-gray-500">Nom parcelle *</label>
+              <input value={form.location} onChange={e => setField('location', e.target.value)} placeholder="Parcelle Nord" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none" data-testid="parcel-location" />
             </div>
             <div>
-              <label className="text-xs text-gray-500">Culture</label>
-              <select value={form.crop_type} onChange={e => setForm(p => ({...p, crop_type: e.target.value}))} className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-crop">
-                <option value="cacao">Cacao</option>
-                <option value="anacarde">Anacarde</option>
-                <option value="cafe">Cafe</option>
-                <option value="hevea">Hevea</option>
-                <option value="palmier">Palmier</option>
-              </select>
+              <label className="text-xs text-gray-500">Village</label>
+              <input value={form.village} onChange={e => setField('village', e.target.value)} placeholder="Ex: Kossou" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-village" />
             </div>
           </div>
+          <div>
+            <label className="text-xs text-gray-500">Departement</label>
+            <select value={form.department} onChange={e => setField('department', e.target.value)} className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-department">
+              <option value="">-- Choisir --</option>
+              {DEPARTMENTS_FARMER.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+
+          {/* Caracteristiques section */}
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-2">Caracteristiques</p>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-gray-500">Superficie (ha) *</label>
-              <input type="number" step="0.1" value={form.area_hectares} onChange={e => setForm(p => ({...p, area_hectares: e.target.value}))} placeholder="Ex: 3.5" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-area" />
+              <input type="number" step="0.1" value={form.area_hectares} onChange={e => setField('area_hectares', e.target.value)} placeholder="3.5" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-area" />
             </div>
             <div>
-              <label className="text-xs text-gray-500">Nombre d'arbres</label>
-              <input type="number" value={form.trees_count} onChange={e => setForm(p => ({...p, trees_count: e.target.value}))} placeholder="Ex: 500" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-trees" />
+              <label className="text-xs text-gray-500">Culture *</label>
+              <select value={form.crop_type} onChange={e => setField('crop_type', e.target.value)} className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-crop">
+                {CROP_TYPES_FARMER.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
             </div>
           </div>
-          <div>
-            <label className="text-xs text-gray-500">Annee de plantation</label>
-            <input type="number" value={form.planting_year} onChange={e => setForm(p => ({...p, planting_year: e.target.value}))} placeholder="Ex: 2015" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-year" />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500">Certification</label>
+              <select value={form.certification} onChange={e => setField('certification', e.target.value)} className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-certification">
+                {CERTIFICATIONS_FARMER.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500">Annee de plantation</label>
+              <input type="number" value={form.planting_year} onChange={e => setField('planting_year', e.target.value)} placeholder="2015" className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-year" />
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-xs text-gray-500">Pratiques agricoles</label>
+
+          {/* Arbres par strate */}
+          <div className="border-t pt-3">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Arbres ombrages par strate</p>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1 text-center">Strate 3 (&gt;30m)</p>
+                <input type="number" min="0" value={form.arbres_grands} onChange={e => setField('arbres_grands', e.target.value)} placeholder="0" className="w-full px-2 py-2 rounded-xl border border-gray-200 text-sm text-center focus:border-emerald-400 outline-none" data-testid="parcel-arbres-grands" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1 text-center">Strate 2 (5-30m)</p>
+                <input type="number" min="0" value={form.arbres_moyens} onChange={e => setField('arbres_moyens', e.target.value)} placeholder="0" className="w-full px-2 py-2 rounded-xl border border-gray-200 text-sm text-center focus:border-emerald-400 outline-none" data-testid="parcel-arbres-moyens" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1 text-center">Strate 1 (3-5m)</p>
+                <input type="number" min="0" value={form.arbres_petits} onChange={e => setField('arbres_petits', e.target.value)} placeholder="0" className="w-full px-2 py-2 rounded-xl border border-gray-200 text-sm text-center focus:border-emerald-400 outline-none" data-testid="parcel-arbres-petits" />
+              </div>
+            </div>
+            {totalTrees > 0 && <p className="text-xs text-emerald-600 mt-1.5 font-medium">Total: {totalTrees} arbres</p>}
+          </div>
+
+          {/* Couverture ombragee */}
+          <div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500">Couverture ombragee (%)</label>
+              {parseFloat(form.couverture_ombragee) > 0 && (
+                <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">Auto-calcul</span>
+              )}
+            </div>
+            <input type="number" min="0" max="100" step="0.5" value={form.couverture_ombragee} onChange={e => setField('couverture_ombragee', e.target.value)} placeholder="0" className="w-24 mt-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none" data-testid="parcel-couverture" />
+          </div>
+
+          {/* Pratiques durables */}
+          <div className="border-t pt-3 space-y-2">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pratiques durables</p>
             {[
               { key: 'has_shade_trees', label: 'Arbres ombrageurs (agroforesterie)' },
               { key: 'uses_organic_fertilizer', label: 'Engrais organique / compost' },
               { key: 'has_erosion_control', label: 'Controle de l\'erosion' },
             ].map(p => (
               <label key={p.key} className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form[p.key]} onChange={e => setForm(prev => ({...prev, [p.key]: e.target.checked}))} className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                <input type="checkbox" checked={form[p.key]} onChange={e => setField(p.key, e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
                 <span className="text-xs text-gray-700">{p.label}</span>
               </label>
             ))}
           </div>
+
+          {/* Notes */}
+          <div>
+            <label className="text-xs text-gray-500">Notes / Observations</label>
+            <textarea value={form.notes} onChange={e => setField('notes', e.target.value)} placeholder="Observations sur la parcelle..." rows={2} className="w-full mt-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-emerald-400 outline-none resize-none" data-testid="parcel-notes" />
+          </div>
+
           <Button type="submit" disabled={submitting} className="w-full bg-emerald-600 hover:bg-emerald-700 h-11 rounded-xl" data-testid="submit-parcel-btn">
             {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Declaration...</> : <><Plus className="w-4 h-4 mr-2" />Declarer ma parcelle</>}
           </Button>

@@ -74,10 +74,22 @@ async def declare_parcel(
     parcel_dict["is_active"] = True
     parcel_dict["verification_status"] = "pending"
     
-    # Calculate carbon score based on practices
-    carbon_score = calculate_carbon_score(parcel_dict["farming_practices"], area)
+    # Calculate carbon score using comprehensive engine
+    from routes.carbon_score_engine import calculate_carbon_score as calc_full_score
+    score_result = calc_full_score(
+        area_hectares=area,
+        arbres_petits=parcel_dict.get("arbres_petits", 0) or 0,
+        arbres_moyens=parcel_dict.get("arbres_moyens", 0) or 0,
+        arbres_grands=parcel_dict.get("arbres_grands", 0) or 0,
+        nombre_arbres=parcel_dict.get("trees_count", 0) or 0,
+        couverture_ombragee=parcel_dict.get("couverture_ombragee", 0) or 0,
+        pratiques_ecologiques=parcel_dict.get("farming_practices", []),
+        certification=parcel_dict.get("certification"),
+        existing_practices=parcel_dict.get("farming_practices", []),
+    )
+    carbon_score = score_result["score"]
     parcel_dict["carbon_score"] = carbon_score
-    parcel_dict["carbon_credits_earned"] = carbon_score * area * 0.5  # tonnes CO2
+    parcel_dict["carbon_credits_earned"] = score_result.get("co2_tonnes", carbon_score * area * 0.5)
     
     # Clean up alias fields before storing
     for key in ["size", "department", "has_shade_trees", "uses_organic_fertilizer", "has_erosion_control"]:
