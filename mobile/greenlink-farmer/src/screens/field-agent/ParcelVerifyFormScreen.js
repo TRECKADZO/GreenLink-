@@ -50,12 +50,16 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
   // Total trees from categories
   const totalTrees = (parseInt(treesPetits) || 0) + (parseInt(treesMoyens) || 0) + (parseInt(treesGrands) || 0);
 
-  // Auto-calculate shade cover from tree count and parcel area
-  const CANOPY_M2_PER_TREE = 80; // average shade tree canopy ~80m²
+  // Auto-calculate shade cover from tree counts per strata and parcel area
   const parcelArea = correctedArea ? parseFloat(correctedArea) : (parcel?.superficie || 0);
-  const autoShadeCover = (totalTrees > 0 && parcelArea > 0)
-    ? Math.min(((totalTrees * CANOPY_M2_PER_TREE) / (parcelArea * 10000)) * 100, 100)
-    : 0;
+  const autoShadeCover = (() => {
+    const g = parseInt(treesGrands) || 0;
+    const m = parseInt(treesMoyens) || 0;
+    const p = parseInt(treesPetits) || 0;
+    if ((g + m + p) === 0 || parcelArea <= 0) return 0;
+    const totalCrown = (g * 90) + (m * 30) + (p * 10);
+    return Math.min(100, Math.round((totalCrown / (parcelArea * 10000)) * 1000) / 10);
+  })();
   const effectiveShadeCover = shadeOverride !== '' ? parseFloat(shadeOverride) : autoShadeCover;
 
   // Weighted biomass for preview
@@ -408,7 +412,7 @@ const ParcelVerifyFormScreen = ({ navigation, route }) => {
                     {autoShadeCover.toFixed(1)}%
                   </Text>
                   <Text style={styles.shadeAutoFormula}>
-                    {totalTrees} arbres x 80m² canopée / {parcelArea} ha
+                    S3:{parseInt(treesGrands)||0}x90 + S2:{parseInt(treesMoyens)||0}x30 + S1:{parseInt(treesPetits)||0}x10 / {parcelArea}ha
                   </Text>
                   <View style={styles.shadeIndicator}>
                     <View style={[styles.shadeBar, { width: `${Math.min(autoShadeCover, 100)}%` }]} />

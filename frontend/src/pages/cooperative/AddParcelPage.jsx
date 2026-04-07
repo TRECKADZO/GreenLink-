@@ -65,6 +65,25 @@ const AddParcelPage = () => {
     couverture_ombragee: ''
   });
 
+  // Auto-estimate shade cover from tree counts
+  const estimateCouverture = (data) => {
+    const g = parseInt(data.arbres_grands) || 0;
+    const m = parseInt(data.arbres_moyens) || 0;
+    const p = parseInt(data.arbres_petits) || 0;
+    const area = Math.max(parseFloat(data.area_hectares) || 0.01, 0.01) * 10000;
+    const totalCrown = (g * 90) + (m * 30) + (p * 10);
+    return Math.min(100, Math.round((totalCrown / area) * 1000) / 10);
+  };
+
+  const handleFieldChange = (field, value) => {
+    const next = { ...formData, [field]: value };
+    if (['arbres_grands', 'arbres_moyens', 'arbres_petits', 'area_hectares'].includes(field)) {
+      const est = estimateCouverture(next);
+      if (est > 0) next.couverture_ombragee = String(est);
+    }
+    setFormData(next);
+  };
+
   useEffect(() => {
     if (!isFromAgent) {
       const fetchMembers = async () => {
@@ -279,7 +298,7 @@ const AddParcelPage = () => {
                     step="0.1"
                     min="0.1"
                     value={formData.area_hectares}
-                    onChange={(e) => setFormData({...formData, area_hectares: e.target.value})}
+                    onChange={(e) => handleFieldChange('area_hectares', e.target.value)}
                     placeholder="Ex: 2.5"
                     required
                     data-testid="parcel-area-input"
@@ -342,7 +361,7 @@ const AddParcelPage = () => {
                       type="number"
                       min="0"
                       value={formData.arbres_grands}
-                      onChange={(e) => setFormData({...formData, arbres_grands: e.target.value})}
+                      onChange={(e) => handleFieldChange('arbres_grands', e.target.value)}
                       placeholder="0"
                       data-testid="arbres-strate3-input"
                     />
@@ -354,7 +373,7 @@ const AddParcelPage = () => {
                       type="number"
                       min="0"
                       value={formData.arbres_moyens}
-                      onChange={(e) => setFormData({...formData, arbres_moyens: e.target.value})}
+                      onChange={(e) => handleFieldChange('arbres_moyens', e.target.value)}
                       placeholder="0"
                       data-testid="arbres-strate2-input"
                     />
@@ -366,7 +385,7 @@ const AddParcelPage = () => {
                       type="number"
                       min="0"
                       value={formData.arbres_petits}
-                      onChange={(e) => setFormData({...formData, arbres_petits: e.target.value})}
+                      onChange={(e) => handleFieldChange('arbres_petits', e.target.value)}
                       placeholder="0"
                       data-testid="arbres-strate1-input"
                     />
@@ -378,7 +397,12 @@ const AddParcelPage = () => {
                   </div>
                 )}
                 <div className="max-w-xs">
-                  <Label htmlFor="couverture_ombragee" className="text-sm text-gray-600">Couverture ombragee (%)</Label>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Label htmlFor="couverture_ombragee" className="text-sm text-gray-600">Couverture ombragee (%)</Label>
+                    {parseFloat(formData.couverture_ombragee) > 0 && (
+                      <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">Auto-calcul</span>
+                    )}
+                  </div>
                   <Input
                     id="couverture_ombragee"
                     type="number"
@@ -386,7 +410,7 @@ const AddParcelPage = () => {
                     max="100"
                     step="0.5"
                     value={formData.couverture_ombragee}
-                    onChange={(e) => setFormData({...formData, couverture_ombragee: e.target.value})}
+                    onChange={(e) => handleFieldChange('couverture_ombragee', e.target.value)}
                     placeholder="Ex: 40"
                     data-testid="couverture-ombragee-input"
                   />

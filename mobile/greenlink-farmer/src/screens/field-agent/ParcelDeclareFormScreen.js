@@ -50,7 +50,22 @@ const ParcelDeclareFormScreen = ({ navigation, route }) => {
   const [showDeptPicker, setShowDeptPicker] = useState(false);
   const [showCertPicker, setShowCertPicker] = useState(false);
 
-  const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const estimateCouv = (data) => {
+    const g = parseInt(data.arbres_grands) || 0;
+    const m = parseInt(data.arbres_moyens) || 0;
+    const p = parseInt(data.arbres_petits) || 0;
+    const area = Math.max(parseFloat(data.area_hectares) || 0.01, 0.01) * 10000;
+    return Math.min(100, Math.round(((g * 90 + m * 30 + p * 10) / area) * 1000) / 10);
+  };
+
+  const setField = (k, v) => {
+    const next = { ...form, [k]: v };
+    if (['arbres_grands', 'arbres_moyens', 'arbres_petits', 'area_hectares'].includes(k)) {
+      const est = estimateCouv(next);
+      if (est > 0) next.couverture_ombragee = String(est);
+    }
+    setForm(next);
+  };
   const totalTrees = (parseInt(form.arbres_grands) || 0) + (parseInt(form.arbres_moyens) || 0) + (parseInt(form.arbres_petits) || 0);
 
   useEffect(() => { getLocation(); }, []);
@@ -214,7 +229,14 @@ const ParcelDeclareFormScreen = ({ navigation, route }) => {
         {totalTrees > 0 && <Text style={{ fontSize: 13, color: '#059669', fontWeight: '600', marginTop: 4 }}>Total: {totalTrees} arbres</Text>}
 
         {/* Couverture */}
-        <Text style={styles.label}>Couverture ombragee (%)</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
+          <Text style={styles.label}>Couverture ombragee (%)</Text>
+          {parseFloat(form.couverture_ombragee) > 0 && (
+            <View style={{ backgroundColor: '#d1fae5', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 }}>
+              <Text style={{ fontSize: 9, fontWeight: '700', color: '#059669' }}>Auto-calcul</Text>
+            </View>
+          )}
+        </View>
         <TextInput style={[styles.input, { maxWidth: 150 }]} value={form.couverture_ombragee} onChangeText={v => setField('couverture_ombragee', v)} keyboardType="decimal-pad" placeholder="40" />
 
         {/* GPS */}

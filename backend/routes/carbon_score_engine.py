@@ -56,6 +56,31 @@ REDD_CAPS = {
 }
 MAX_REDD = 2.5
 
+# Crown area per tree strata (m²) for shade cover estimation
+CROWN_AREA_STRATE3 = 90   # >30m trees - large canopy
+CROWN_AREA_STRATE2 = 30   # 5-30m trees - medium canopy
+CROWN_AREA_STRATE1 = 10   # 3-5m trees - small canopy
+
+
+def estimate_couverture_ombragee(
+    arbres_petits: int = 0,
+    arbres_moyens: int = 0,
+    arbres_grands: int = 0,
+    area_hectares: float = 0,
+) -> float:
+    """
+    Estime la couverture ombragee (%) a partir du decompte d'arbres par strate.
+    Formule: somme(arbres * surface_couronne_par_strate) / surface_parcelle_m2 * 100
+    """
+    n_p = int(arbres_petits or 0)
+    n_m = int(arbres_moyens or 0)
+    n_g = int(arbres_grands or 0)
+    area_m2 = max(float(area_hectares or 0), 0.01) * 10000
+
+    total_crown = (n_g * CROWN_AREA_STRATE3) + (n_m * CROWN_AREA_STRATE2) + (n_p * CROWN_AREA_STRATE1)
+    pct = (total_crown / area_m2) * 100
+    return round(min(pct, 100.0), 1)
+
 
 def calculate_carbon_score(
     area_hectares: float = 0,
@@ -330,4 +355,19 @@ async def get_score_decomposition():
             {"nom": "En Progression", "seuil": "2-4", "description": "Debut du parcours durable"},
             {"nom": "Insuffisant", "seuil": "0-2", "description": "Pratiques non durables detectees"},
         ]
+    }
+
+
+@_router.get("/estimate-couverture")
+async def estimate_shade_cover(
+    arbres_petits: int = 0,
+    arbres_moyens: int = 0,
+    arbres_grands: int = 0,
+    area_hectares: float = 1,
+):
+    """Estime la couverture ombragee a partir du decompte d'arbres par strate."""
+    pct = estimate_couverture_ombragee(arbres_petits, arbres_moyens, arbres_grands, area_hectares)
+    return {
+        "couverture_estimee": pct,
+        "formule": f"(S3:{arbres_grands}x{CROWN_AREA_STRATE3} + S2:{arbres_moyens}x{CROWN_AREA_STRATE2} + S1:{arbres_petits}x{CROWN_AREA_STRATE1}) / ({area_hectares}ha x 10000m2) x 100",
     }

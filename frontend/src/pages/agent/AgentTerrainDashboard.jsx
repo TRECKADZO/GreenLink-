@@ -334,6 +334,16 @@ const STATUS_CONFIG = {
   rejected: { label: 'Rejetee', color: 'text-red-600', bg: 'bg-red-50', icon: X },
 };
 
+// ========= AUTO-ESTIMATE SHADE COVER =========
+const estimateCouverture = (grands, moyens, petits, areaHa) => {
+  const g = parseInt(grands) || 0;
+  const m = parseInt(moyens) || 0;
+  const p = parseInt(petits) || 0;
+  const area = Math.max(parseFloat(areaHa) || 0.01, 0.01) * 10000;
+  const totalCrown = (g * 90) + (m * 30) + (p * 10); // m² crown per strata
+  return Math.min(100, Math.round((totalCrown / area) * 1000) / 10);
+};
+
 // ========= GPS HOOK =========
 const useGPS = (auto) => {
   const [gps, setGps] = useState(null);
@@ -430,9 +440,14 @@ const ParcelFormFields = ({ form, setField, gps, gpsLoading, captureGPS, readOnl
 
       {/* Couverture */}
       <div>
-        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Couverture ombragee (%)</label>
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Couverture ombragee (%)</label>
+          {!readOnly && parseFloat(form.couverture_ombragee) > 0 && (
+            <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">Auto-calcul</span>
+          )}
+        </div>
         <Input type="number" min="0" max="100" step="0.5" value={form.couverture_ombragee} onChange={e => setField('couverture_ombragee', e.target.value)} disabled={readOnly}
-          className="h-10 rounded-xl text-sm max-w-[160px]" data-testid="form-couverture" />
+          className="h-10 rounded-xl text-sm max-w-[160px] mt-1" data-testid="form-couverture" />
       </div>
 
       {/* GPS */}
@@ -466,7 +481,15 @@ const DeclarationFormModal = ({ farmer, open, onClose, onDeclared }) => {
     if (open && farmer) setForm(f => ({ ...f, village: farmer.village || '' }));
   }, [open, farmer]);
 
-  const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const setField = (k, v) => {
+    const next = { ...form, [k]: v };
+    setForm(next);
+    // Auto-estimate shade cover when tree counts or area change
+    if (['arbres_grands', 'arbres_moyens', 'arbres_petits', 'area_hectares'].includes(k)) {
+      const est = estimateCouverture(next.arbres_grands, next.arbres_moyens, next.arbres_petits, next.area_hectares);
+      if (est > 0) setForm(f => ({ ...f, [k]: v, couverture_ombragee: String(est) }));
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.location || !form.village || !form.area_hectares) { toast.error('Remplissez les champs obligatoires'); return; }
@@ -530,7 +553,16 @@ const VerificationFormModal = ({ parcel, open, onClose, onVerified }) => {
   const [submitting, setSubmitting] = useState(false);
   const { gps, loading: gpsLoading, capture: captureGPS } = useGPS(open);
 
-  const setMField = (k, v) => setMeasured(f => ({ ...f, [k]: v }));
+  const setMField = (k, v) => {
+    const next = { ...measured, [k]: v };
+    setMeasured(next);
+    // Auto-estimate shade cover from measured tree counts
+    if (['arbres_grands', 'arbres_moyens', 'arbres_petits', 'area_hectares'].includes(k)) {
+      const area = next.area_hectares || declared.area_hectares || 1;
+      const est = estimateCouverture(next.arbres_grands, next.arbres_moyens, next.arbres_petits, area);
+      if (est > 0) setMeasured(f => ({ ...f, [k]: v, couverture_ombragee: String(est) }));
+    }
+  };
   const togglePractice = (id) => setSelectedPractices(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const handleSubmit = async () => {
@@ -638,7 +670,12 @@ const VerificationFormModal = ({ parcel, open, onClose, onVerified }) => {
               </div>
               {totalMeasured > 0 && <p className="text-xs text-emerald-600 font-medium">Total mesure: {totalMeasured} arbres (declare: {totalDeclared})</p>}
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">Couverture ombragee mesuree (%)</label>
+                <div className="flex items-center gap-2 mb-1">
+                  <label className="text-xs text-gray-400">Couverture ombragee mesuree (%)</label>
+                  {parseFloat(measured.couverture_ombragee) > 0 && (
+                    <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">Auto-calcul</span>
+                  )}
+                </div>
                 <Input type="number" step="0.5" min="0" max="100" placeholder={`Declaree: ${declared.couverture_ombragee}%`} value={measured.couverture_ombragee} onChange={e => setMField('couverture_ombragee', e.target.value)}
                   className="h-10 rounded-xl text-sm max-w-[180px]" data-testid="verify-measured-couverture" />
               </div>

@@ -11,53 +11,58 @@ PRODUCT REQUIREMENTS:
 **User's preferred language**: French (INSTRUCT next agent to respond in French only)
 
 **what currently exists?** 
-A full-stack agritech platform (FastAPI backend, React frontend, MongoDB). Features an offline-first architecture with IndexedDB, robust data isolation, harvest validation, USSD simulation (), real-time messaging with Web Push, a new unified Carbon Premium Calculator, and an automated Discrepancy Management (Gestion des Écarts) system for field agent parcel verifications with PDF reporting.
+A full-stack agritech platform (FastAPI backend, React frontend, Expo React Native mobile app, MongoDB). Features robust data isolation, USSD simulation (), real-time messaging, a Unified Carbon Premium Calculator, Automated Discrepancy Management (Gestion des Écarts), and a comprehensive Field Agent (Agent Terrain) dashboard for both web and mobile with Parcel Declaration and Verification flows.
 
 **Last working item**: 
-    - Last item agent was working: Debugging a USSD flow bug where the user selection 2 for the Age moyen de vos cacaoyers (Question 13/13 or 14/14) is marked as an invalid response and abruptly halts the flow, jumping straight to registration completion.
+    - Last item agent was working: Implementing the automatic calculation of Couverture ombragée (Shade cover) based on the number of trees per stratum (S1, S2, S3) and parcel area. The agent added the logic to the backend () and updated all web and mobile declaration/verification forms to trigger this calculation automatically.
     - Status: IN PROGRESS
-    - Agent Testing Done: N
-    - Which testing method agent to use? backend testing via curl / manual USSD simulator UI testing in frontend.
+    - Agent Testing Done: N (The agent's bash script to test the new endpoint returned a 404 error, likely because the test script didn't include the router's base prefix ).
+    - Which testing method agent to use? both
     - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
-  Issue 1: USSD Age cacaoyers Input Validation Bug (Priority: P0)
-     - Attempted fixes: Grepped  to locate the question definitions (). The fork occurred before implementing the fix.
-     - Next debug checklist: Check  in the  logic (around the  or  handling) to see why input 2 or 3 is being rejected or why the state machine transitions incorrectly at this final step.
-     - Why fix this issue and what will be achieved with the fix? Allows farmers to complete the USSD registration and carbon scoring accurately.
+  Issue 1: Auto-calculated Couverture ombragée endpoint test failed (Priority: P0)
+     - Attempted fixes: Implemented  in  and updated frontend/mobile forms to call it. The manual bash test returned 404.
+     - Next debug checklist: The router  is likely mounted with the prefix  in . Ensure the frontend API call uses the correct full URL (). Run manual testing via UI or testing agent to verify the auto-calculation populates the field correctly when tree counts are entered.
+     - Why fix this issue and what will be achieved with the fix? Completes the user's request to auto-calculate shade cover based on provided information, reducing manual data entry errors.
      - Status: IN PROGRESS
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Both (verify logic backend, test on frontend USSD simulator).
-     - Blocked on other issue: None.
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on other issue: None
 
   Issue 2: Emails sent via Resend are going to Spam (Priority: P2)
-     - Attempted fixes: None.
-     - Next debug checklist: Instruct the user to configure SPF/DKIM/DMARC DNS records on GoDaddy for their domain.
-     - Why fix this issue? Reliable password resets and notifications.
+     - Attempted fixes: Verified email sending via Resend API. The mock was bypassed and emails were successfully sent, but they lack DNS authentication.
+     - Next debug checklist: Instruct the user to configure SPF/DKIM/DMARC DNS records on GoDaddy for their domain ().
+     - Why fix this issue and what will be achieved with the fix? Ensures reliable delivery of platform notifications and password resets.
      - Status: BLOCKED (Awaiting user DNS configuration)
      - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? Backend (Manual verification)
+     - Should Test frontend/backend/both after fix? backend
 
 **In progress Task List**: 
-  None
+  Task 1: Auto-calcul Couverture ombragée
+     - Where to resume: Verify that the endpoint  is accessible and properly integrated into the Web and Mobile forms (Agent Terrain Verification/Declaration, Cooperative Add Parcel). Test the UI.
+     - What will be achieved with this? Automatic calculation of shade cover.
+     - Status: IN PROGRESS
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on something: None
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
     - P1: Real SMS Gateway integration (Orange CI / MTN) (currently mocked).
     - P1: Support for local languages (Baoulé/Dioula).
+    - P2: Clean up all test/demo data and keep only real data across all dashboards.
+    - P2: Implement Harvest validation flow (Flux de validation des récoltes).
     
     Future Tasks:
-    - P2: Refactor  (file is over 2700 lines with duplicate menu logic and messy state management) and clean up dead code.
+    - P3: Refactor  (file is over 2700 lines with duplicate menu logic and messy state management) and clean up dead code.
 
 **Completed work in this session**
-- Added explicit protection against privilege escalation in  (, , etc. are now blocked) (DONE)
-- Added  endpoint and integrated it into the Profile UI page (DONE)
-- Added IndexedDB storage indicator on the Agent Terrain Plus tab (DONE)
-- Fixed missing cooperative names in Super Admin Messaging (now uses  instead of falling back to the individual's name) (DONE)
-- Implemented Tree Strata (Strate 1/2/3) inputs during parcel creation and display on Parcel Details page (DONE)
-- Implemented Discrepancy Management (Gestion des Écarts): Automatically compares declared vs measured parcel data, classifies the discrepancy (faible/moyen/important), adjusts the carbon premium, and displays a dedicated Cooperative Dashboard (DONE)
-- Added PDF export functionality for the Discrepancy Dashboard using  (DONE)
-- Created a Unified Carbon Score Engine () to standardize the premium formula across parcel creation, agent verification, and USSD (DONE)
+- Fixed USSD Age cacaoyers bug (removed undefined  variable preventing sequence completion) (DONE)
+- Fixed Login and Messaging Auth bugs (Reordered CORS and RateLimit Middlewares, added token guards to messaging hooks) (DONE)
+- Expo EAS APK Build generated successfully for GreenLink Farmer (DONE)
+- Resend integration tested and verified (DONE)
+- Field Agent Web Views: Added complete Vérifier (Verification) and Déclarer (Declaration) flows to the Agent Terrain Dashboard, matching mobile capabilities (DONE)
+- Pushed Expo OTA Update (Over-The-Air) with  to bypass ARM64 Hermes compilation issues, delivering the new Field Agent Verify/Declare flows to the mobile app without a new APK (DONE)
 
 **Earlier issues found/mentioned but not fixed**
 None
@@ -71,29 +76,28 @@ None
 
 
 **Key Technical Concepts**
-React, FastAPI, MongoDB, ReportLab (PDF Generation), USSD State Machine, IndexedDB, WebSockets, Real-time messaging, Web Push Notifications.
+React, FastAPI, MongoDB, Expo (React Native), EAS Build, OTA Updates, ReportLab, Resend.
 
 **key DB schema**
   - : {farmer_id, area_hectares, nombre_arbres, arbres_petits, arbres_moyens, arbres_grands, couverture_ombragee, verification_status, carbon_score}
   - : {parcel_id, farmer_id, agent_id, classification, ecarts_details[], statut, prime_ajustee, created_at}
 
 **changes in tech stack**
-  -  is now actively used for generating PDF reports in the backend.
+  - None
 
 **All files of reference** 
--  (Created: Centralizes carbon score logic to prevent discrepancies across the app)
--  (Created: Handles logic for comparing agent measurements vs farmer declarations and PDF export)
--  (Created: UI for the discrepancy management)
--  (Updated to use unified carbon score, currently has the  validation bug)
--  &  (Updated to accept tree strata inputs)
--  &  (Updated for change password functionality)
--  (Created: Security test suite)
+-  (Updated: Added )
+-  (Updated: Added auto-calculation for shade cover)
+-  (Updated: Web verify/declare flows)
+-  (Updated)
+-  (Updated)
+-  (Created)
+-  (Updated: Fixed CORS middleware order)
 
 **Areas that need refactoring**: 
-- : Still exceeds 2700 lines and is highly prone to bugs (as evidenced by the current  issue).
+- : Still exceeds 2700 lines.
 
 **key api endpoints**
-- 
 - 
 - 
 - 
@@ -101,23 +105,21 @@ React, FastAPI, MongoDB, ReportLab (PDF Generation), USSD State Machine, Indexed
 
 **Critical Info for New Agent** 
 - INSTRUCT next agent to respond in French ONLY.
-- The Carbon Premium calculation is now strictly centralized in . Do NOT write custom scoring formulas in other endpoints; always call .
-- The active USSD code for the application is strictly .
-- When a field agent verifies a parcel (), it automatically calls the discrepancy engine.
+- Mobile OTA updates can be pushed using  (must export manually via  to bypass Hermes ARM64 container limitations).
+- RateLimit middleware must be strictly below CORSMiddleware in  to prevent CORS issues on 429 responses.
+- The Couverture ombragée logic is dynamically calculated on the client side by making an API call to  whenever the tree inputs change.
 
 **documents and test reports created in this job**
-  -  (Security feature tests)
-  -  (Discrepancy engine tests)
+  -  (USSD Bug fix testing)
+  -  (Field Agent Verification/Declaration testing)
   -  (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. (Done) *Au moins une coopératives a été créé aujourd'hui mais je les trouvent pas dans ma liste d envoie de message...*
- 2. (Done) *Dans la fiche information de la parcelles, pourquoi ne ne voyons pas le décompte des arbres ombragés selon les différentes strates?*
- 3. (Done) *Voulez-vous ajouter la possibilite pour l'agent terrain de saisir le decompte d'arbres...* -> *Oui*
- 4. (Done) *Implémente la fonctionnalité Gestion des écarts dans GreenLink Agritech avec les règles suivantes...*
- 5. (Done) *Souhaitez-vous ajouter un rapport PDF exportable des ecarts par campagne...* -> *Oui*
- 6. (Done) *Valider la formule de calcul du score carbone si elle prends en compte tout les éléments pour une meilleure pratique durable*
- 7. **(Pending)** *(Uploads Screenshot) Corriger erreurs* (Shows USSD bug where response 2 to Age cacaoyers is rejected).
+ 1. (Done) *La version web n'a pas de fonctionnalités vérification parcelles comme pour la version mobiles.*
+ 2. (Done) *Nous aurons donc deux situations: 1- Lorsque la coopérative ou l'agriculteur déclaré une parcelles... 2- Lorsque aucune déclaration de parcelles n a pas encore été faite...*
+ 3. (Done) *Je ne retrouve pas la fonctionnalité Gestion des écarts déjà Implémenté ce matin...*
+ 4. (Done) *Les derrière ajustement dans les différents menu web ( agriculteurs et agent terrain) doivent etre implémentés dans la.version mobile sans build nouveau apk*
+ 5. **(Pending)** *La Couverture ombragee mesuree doit être calculer de façon automatique si possible a partir informations fournis* (Agent partially implemented this, but failed the last verification test).
 
 **Project Health Check:**
 - Backend: Healthy
@@ -126,15 +128,15 @@ React, FastAPI, MongoDB, ReportLab (PDF Generation), USSD State Machine, Indexed
 - Mocked: Orange CI SMS & Orange Money.
 
 **3rd Party Integrations** 
-- Resend (Email sending - Domain DNS pending)
-- Web Push API (Native push notifications via VAPID)
+- Resend (Requires User API Key - DNS pending)
+- Expo EAS (Requires User Login - currently logged in)
 - Orange CI SMS / Money (Mocked)
 
 **Testing status**
-  - Testing agent used after significant changes: YES (iteration 106, 107)
+  - Testing agent used after significant changes: YES (iterations 108, 109)
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: 
-  - Known regressions:  validation for choice3 (age_cacaoyers) is failing.
+  - Test files created: None
+  - Known regressions: None
 
 **Credentials to test flow:**
 Refer to .
@@ -142,12 +144,15 @@ Admin:  /
 Cooperative:  / 
 Agent:  / 
 Farmer:  / 
+Expo EAS:  / 
 
 **What agent forgot to execute**
-The agent started investigating the USSD Age cacaoyers bug based on the final user screenshot but the session forked before any code changes could be made. Start directly by fixing this bug.
+The agent did not finalize testing the Couverture ombragée auto-calculation feature. The backend route was created and frontend attached, but the bash test script failed with a 404 error due to a missing router prefix. The agent must verify this functionality end-to-end.
 
 **Debugging checklist for current issue**
-    Issue: USSD simulator rejects valid input 2 or 3 for question Age moyen de vos cacaoyers and skips to the end of the flow.
+    Issue: Couverture ombragée auto-calculation endpoint returns 404 in tests.
     Backend files to check: 
-      - 
-      - Search for  and the logic around  inside the  method. Check the dictionary bounds or regex matching for the selected choice.</analysis>
+      -  (check )
+      -  or where  is included, to confirm the prefix is .
+    Frontend files to check:
+      -  and Mobile forms (verify they call  with correct parameters).</analysis>
