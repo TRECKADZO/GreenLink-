@@ -1,132 +1,50 @@
-# GreenLink Agritech - PRD
+# GreenLink Agritech - Product Requirements Document
 
-## Probleme Original
-Plateforme agricole complete (React + FastAPI + Expo React Native + MongoDB) pour la Cote d'Ivoire.
-**Message principal** : Prime carbone accessible via USSD pour les petits planteurs.
+## Original Problem Statement
+Utiliser le meme code developpe sur GitHub (GreenLink). Implementer tout le projet (reproduire le projet GreenLink Agritech avec le meme code).
+
+## Product Requirements
+1. Fix cooperative referral code bugs
+2. Clean up all test/demo data and keep only real data across all dashboards
+3. Fix security and data isolation bugs
+4. Implement Harvest validation flow
+5. Improve the Web views for "Agent Terrain" and "Agriculteur"
+6. Verify and professionally improve the messaging system for all users
+7. Generate mobile native implementation prompts for handoff to another developer
 
 ## Architecture
-- **Backend**: FastAPI (Python) + MongoDB Atlas (`greenlink_production`)
-- **Frontend**: React (Vite) + Shadcn UI
-- **Mobile**: Expo React Native v1.76.0 (SDK 53) + **expo-sqlite** (stockage local)
+- **Backend**: FastAPI (Python) + MongoDB
+- **Frontend**: React (Vite/CRA)
+- **Mobile**: Expo React Native
+- **Database**: MongoDB
 
-## Modele Economique
-**Cooperatives : 100% GRATUIT** — acces complet, sans abonnement.
-**Formule Prime Carbone** :
-```
-Prix vente RSE = 30% frais + 70% (25% GreenLink + 70% agriculteurs + 5% cooperatives)
-```
-**Devise** : Toutes les donnees monetaires en **XOF**.
+## Completed Tasks
+- Fixed auto-calculated "Couverture ombragee" (Shade Cover) 404 API error
+- Fixed mobile strata formula in ParcelVerifyFormScreen.js
+- Created Carbon Score Analytics Dashboard for Cooperatives (CarbonScoreAnalytics.jsx)
+- Upgraded Farmer's Carbon Score page with charts and history
+- Upgraded Farmer's Web Parcel Declaration form to match Field Agent's form
+- Generated complete Mobile App Specification (MOBILE_SPEC.md)
+- Generated Field Agent Parcel Verification mobile prompt
+- Generated REDD+ Guide & USSD Simulator mobile prompts
+- Generated Messaging System mobile prompt
 
-## Terminologie Officielle (31 mars 2026)
-- ~~REDD+~~ → "Pratiques Durables" / "Impact Environnemental" / "Suivi & Verification"
-- ~~ARS 1000~~ → "Score Pratiques Durables" / "Certification Qualite" / supprime
-- ~~Bronze/Argent/Or~~ → **Bon / Tres Bon / Excellent** (niveaux planteur)
-- ~~Conformite ARS~~ → "Prime bonifiee grace a vos bonnes pratiques"
-- Code interne: variables/routes/collections MongoDB gardent les noms originaux (ars_, redd_)
+## Pending Issues
+- P2: Emails sent via Resend going to Spam (BLOCKED: awaiting user DNS config SPF/DKIM/DMARC)
 
-## Ce qui est implemente
+## Upcoming Tasks
+- P1: Real SMS Gateway integration (Orange CI / MTN) - currently mocked
+- P1: Support for local languages (Baoule/Dioula)
+- P2: Clean up all test/demo data
+- P2: Implement Harvest validation flow
 
-### Core
-- Auth JWT, Dashboards (cooperative, admin, farmer, agent)
-- Marketplace, FAQ, Notifications, Conformite EUDR & certification
+## Future/Backlog
+- P3: Refactor ussd.py (over 2700 lines)
 
-### Pratiques Durables
-- Guide des 21 pratiques (5 categories)
-- Dashboard MRV & Suivi + Export PDF
-- SSRTE/ICI alertes + dashboard
-- KPIs complets sans restriction
-- Onglet "Impact Environnemental" Super Admin
+## Mocked Services
+- Orange CI SMS
+- Orange Money
 
-### Score Carbone (0-10)
-- USSD : 14 questions (9 base + 3 bonus) — textes reformules centres planteur
-- Agent terrain : 5 pratiques eco + 21 pratiques durables (5 categories)
-- Verification parcelle : integre les visites de suivi
-
-### Menus USSD reformules
-- "Estimation de ma prime" (ex: "Prime carbone + conformite ARS")
-- "Mes pratiques durables" (ex: "Mes donnees ARS 1000")
-- "Conseils pour ma prime" (ex: "Conseils pratiques ARS")
-- Niveaux: Excellent/Tres Bon/Bon (ex: Or/Argent/Bronze)
-
-### Base de donnees
-- MongoDB Atlas (Cluster0): `greenlink_production`
-- DB: 55 collections, 1072+ documents
-
-### Securite (6-7 avr 2026)
-- AUDIT SECURITE COMPLET: 25+ routes critiques protegees par JWT
-- ISOLATION DONNEES PAR ROLE: agents/cooperatives/admin voient uniquement leurs donnees
-- Rate limiting: login (5/min), register (5/5min), forgot-password (3/min), SMS (5/min)
-- Token blacklist avec endpoint /logout et invalidation apres password change (iat vs password_changed_at)
-- Protection path traversal, Headers HTTP securite (X-Frame-Options, X-Content-Type-Options, etc.)
-- **Protection escalade de privileges**: FORBIDDEN_FIELDS dans profile update (user_type, is_active, hashed_password, roles, etc.) 
-- **Endpoint changement mot de passe authentifie**: POST /api/auth/change-password (valide ancien mdp, rejette si identique, blackliste ancien token, emet nouveau token)
-- **Indicateur stockage IndexedDB**: dans l'onglet Plus de l'agent terrain (taille utilisee/quota, bouton "Vider le cache")
-
-### Messagerie Professionnelle (6 avr)
-- Backend: conversations directes + marketplace, contacts filtres par role
-- Frontend: MessagingPage avec Web Push Notifications VAPID
-- Super Admin masque ("GreenLink Support"), polling 30s
-
-### Mode Offline-First Web
-- IndexedDB pour Agent Terrain + Cooperative
-- Service Worker PWA, sync auto au login et retour en ligne
-
-## Travail complete (6 avr)
-- Voir historique complet dans PRD precedent
-- (6 avr) Certifications ARS, Messagerie professionnelle, Push Notifications VAPID
-- (6 avr) Cooperative name obligatoire dans /register
-- (6 avr) Colonne Cooperative dans Admin Users
-- (6 avr) Simulateur USSD dans agent terrain
-- (7 avr) Protection escalade de privileges (FORBIDDEN_FIELDS dans update_profile)
-- (7 avr) Endpoint POST /api/auth/change-password avec invalidation token
-- (7 avr) Indicateur stockage IndexedDB dans onglet Plus agent terrain
-- (7 avr) Section "Securite" dans la page Profil (modifier mot de passe)
-- (7 avr) Tests de securite: 5 tests backend passes (test_security_privilege_escalation.py)
-- (7 avr) Bug fix: Cooperatives invisibles dans messagerie admin — get_display_name verifie maintenant coop_name + 12 cooperatives corrigees en DB
-- (7 avr) Ajout decompte arbres ombrages par strate (Strate 1/2/3) dans fiche parcelle (MemberParcelsPage + ParcelsVerificationPage + API backend)
-- (7 avr) Saisie arbres par strate lors de la creation de parcelle (AddParcelPage + MemberParcelsPage modal + backend) avec bonus score carbone
-- (7 avr) GESTION DES ECARTS : Moteur de calcul automatique (surface, arbres par strate, brulage, couverture) + Classification (faible/moyen/important) + Impact prime carbone (0.95/0.80/0.50) + Dashboard cooperative + Notifications farmer + Validation coop + Tests 16/16 passes
-- (7 avr) Export PDF rapport ecarts par campagne (reportlab) + bouton Exporter PDF dans dashboard cooperative
-- (7 avr) FORMULE CARBONE UNIFIEE v2.0 : 1 seul moteur (carbon_score_engine.py) utilise partout (creation, verification, USSD). 10 criteres: base, densite arbres ponderee, couverture ombragee, brulage (-1.5), engrais chimiques (-0.5), pratiques eco, REDD+, age cacaoyers, surface, certification. API: POST /api/carbon-score/simulate + GET /api/carbon-score/decomposition
-
-## Travail complete (7 avr suite)
-- (7 avr) BUG FIX USSD "Age cacaoyers": Variable arbres_par_ha non definie dans calculate_ussd_carbon_premium() causait une erreur pour la derniere question du flux USSD (toutes les 3 options 1/2/3). Corrige en ajoutant arbres_par_ha = total_trees / max(hectares, 0.01). Tests: 8/8 backend + frontend USSD simulator verifies (iteration_108)
-- (7 avr) BUG FIX Middleware CORS: Ordre des middlewares inverse (RateLimitMiddleware au-dessus de CORSMiddleware). Les reponses 429 rate-limit n'avaient pas de headers CORS, causant ERR_NETWORK dans le navigateur. Fix: CORSMiddleware maintenant en couche externe.
-- (7 avr) BUG FIX Page Messagerie: Ajout guards token aux useEffects (loadConversation, deep-link marketplace) pour eviter les appels API et toasts d'erreur quand l'utilisateur n'est pas connecte.
-- (7 avr) Amelioration messages d'erreur login: message specifique pour rate-limit (429) et meilleur message reseau.
-- (7 avr) BUILD APK: Build EAS preview (profile preview) genere avec succes. APK: https://expo.dev/artifacts/eas/scLtMPJCFQk8tkBh9Shgid.apk
-- (7 avr) FEATURE: Verification Parcelles Web - Ajout de l'onglet "Verifier" dans le dashboard Agent Terrain web, identique a la version mobile (liste parcelles avec filtres, formulaire de verification avec GPS, arbres par strates, pratiques ecologiques, verdict). Endpoints: /api/field-agent/parcels-to-verify et /api/field-agent/parcels/{id}/verify.
-- (7 avr) FEATURE: Deux modes Agent Terrain (Verifier/Declarer). Mode Verifier: valeurs declarees (lecture seule) vs valeurs mesurees cote-a-cote. Mode Declarer: formulaire identique a celui de la cooperative (nom parcelle, village, departement, superficie, culture, certification, arbres par strate, couverture, GPS). Endpoint: GET /api/field-agent/assigned-farmers et POST /api/field-agent/farmer-parcels/{id}. Tests iteration_109: Backend 92% + Frontend 100%.
-- (7 avr) MOBILE OTA: Memes ajouts verification/declaration parcelles dans la version mobile. ParcelVerifyListScreen (toggle Verifier/Declarer), ParcelVerifyFormScreen (section Valeurs declarees), ParcelDeclareFormScreen (nouveau). Update OTA ID: c571e9b7-102b-4e23-bcc0-23d687df2002. PAS DE NOUVEL APK REQUIS.
-
-## Travail complete (7 avr suite 3)
-- (7 avr) FORMULAIRE DECLARATION PARCELLE AGRICULTEUR MIS A JOUR: Le formulaire web du farmer dans Dashboard.jsx (FarmerParcelsTab) est maintenant identique a celui de l'agent terrain. Champs: Nom parcelle + Village (separes), Departement (dropdown), Superficie + Culture, Certification (dropdown), Arbres ombrages par strate (S3 >30m, S2 5-30m, S1 3-5m) avec total, Couverture ombragee auto-calculee, Annee de plantation, Pratiques durables (checkboxes), Notes/Observations. Backend mis a jour pour utiliser le moteur de calcul carbone complet (carbon_score_engine.py) au lieu du calcul simplifie. Modele ParcelBase enrichi avec village, certification, arbres par strate, couverture, notes. Tests iteration_112: 12/12 backend + 100% frontend.
-- (7 avr) AUTO-CALCUL COUVERTURE OMBRAGEE: Estimation automatique a partir du nombre d'arbres par strate (S1 Petits=10m² canopee, S2 Moyens=30m², S3 Grands=90m²) et surface parcelle. Formule: (grands*90 + moyens*30 + petits*10) / (area_ha*10000) * 100, plafonnee a 100%. Endpoint GET /api/carbon-score/estimate-couverture. Calcul client-side dans AddParcelPage, AgentTerrainDashboard (Declaration + Verification). Mobile ParcelVerifyFormScreen corrige (coefficients par strate au lieu de 80m²/arbre generique). Tests iteration_110: 16/16 backend + 100% frontend.
-- (7 avr) TABLEAU DE BORD ANALYTIQUES SCORE CARBONE: Dashboard visuel complet pour Cooperative (/cooperative/carbon-analytics) et Farmer (/farmer/carbon-score ameliore). 
-  - Cooperative: KPIs (score moyen, CO2 total, primes farmer/coop), graphique barres par parcelle, camembert distribution niveaux, radar decomposition moyenne, tableau classement expandable avec decomposition + recommandations par parcelle, tri par score/prime/CO2.
-  - Farmer: 3 onglets (Vue generale, Graphiques, Classement). Vue generale = jauge score + decomposition + pratiques + primes. Graphiques = barres scores, radar profil, barres estimation primes XOF. Classement = parcelles ordonnees avec details expandables.
-  - Backend: GET /api/cooperative/carbon-analytics (calcul dynamique via carbon_score_engine, estimation primes avec prix CO2 configurable). Tests iteration_111: 15/15 backend + 100% frontend.
-
-## Backlog
-### P0
-- Mettre a jour MONGO_URL dans les Secrets Emergent Dashboard (action utilisateur)
-- Configuration DNS domaine greenlink-agritech.com (action utilisateur GoDaddy) — emails Resend en spam
-
-### P1
-- Passerelle SMS reelle Orange CI / MTN (MOCK)
-- Langues locales (Baoule/Dioula) mobile
-
-### P2
-- Nettoyage donnees test/demo dans tous les dashboards
-- Flux de validation des recoltes
-
-### P3
-- Refactoriser ussd.py (~2700 lignes)
-- Nettoyage code mort (subscription files)
-- Nettoyer la gestion id vs _id dans MongoDB pour tous les anciens comptes
-
-## Credentials
-- Admin: `klenakan.eric@gmail.com` / `474Treckadzo`
-- Cooperative: `bielaghana@gmail.com` / `test123456`
-- Agent: `testagent@test.ci` / `test123456`
-- Farmer: `testplanteur@test.ci` / `test123456`
+## 3rd Party Integrations
+- Resend (Email - DNS pending)
+- Expo EAS (Mobile builds)

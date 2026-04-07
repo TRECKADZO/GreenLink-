@@ -7,43 +7,36 @@ PRODUCT REQUIREMENTS:
 4. Implement Harvest validation flow.
 5. Improve the Web views for Agent Terrain and Agriculteur.
 6. Verify and professionally improve the messaging system for all users.
+*Current Focus*: The user is asking the agent to generate detailed functional specifications and prompts based on existing Web features (REDD+ Guide, USSD Simulator) so they can be handed off to another developer to build the Native Mobile version.
 
-**User's preferred language**: French (INSTRUCT next agent to respond in French only)
+**User's preferred language**: French (INSTRUCT next agent to respond in French ONLY).
 
 **what currently exists?** 
-A full-stack agritech platform (FastAPI backend, React frontend, Expo React Native mobile app, MongoDB). Features robust data isolation, USSD simulation (), real-time messaging, a Unified Carbon Premium Calculator, Automated Discrepancy Management (Gestion des Écarts), and a comprehensive Field Agent (Agent Terrain) dashboard for both web and mobile with Parcel Declaration and Verification flows.
+A full-stack agritech platform (FastAPI backend, React frontend, Expo React Native mobile app, MongoDB). The application features robust data isolation, real-time messaging, USSD simulation, Unified Carbon Premium Calculator, Field Agent Verification flows, and a newly implemented Carbon Score Analytics Dashboard for both Cooperatives and Farmers. A comprehensive  documentation file was recently generated detailing the entire mobile architecture and APIs.
 
 **Last working item**: 
-    - Last item agent was working: Implementing the automatic calculation of Couverture ombragée (Shade cover) based on the number of trees per stratum (S1, S2, S3) and parcel area. The agent added the logic to the backend () and updated all web and mobile declaration/verification forms to trigger this calculation automatically.
+    - Last item agent was working: Extracting the exact logic, UI structure, and API endpoints from the Web versions of the REDD+ Guide / Tracking and the USSD Simulator to generate a detailed implementation prompt for a mobile native developer.
     - Status: IN PROGRESS
-    - Agent Testing Done: N (The agent's bash script to test the new endpoint returned a 404 error, likely because the test script didn't include the router's base prefix ).
-    - Which testing method agent to use? both
-    - User Testing Done: N
+    - Agent Testing Done: N/A (This is a documentation/prompt generation task)
+    - Which testing method agent to use? NA
+    - User Testing Done: N/A
 
 **All Pending/In progress Issue list**: 
-  Issue 1: Auto-calculated Couverture ombragée endpoint test failed (Priority: P0)
-     - Attempted fixes: Implemented  in  and updated frontend/mobile forms to call it. The manual bash test returned 404.
-     - Next debug checklist: The router  is likely mounted with the prefix  in . Ensure the frontend API call uses the correct full URL (). Run manual testing via UI or testing agent to verify the auto-calculation populates the field correctly when tree counts are entered.
-     - Why fix this issue and what will be achieved with the fix? Completes the user's request to auto-calculate shade cover based on provided information, reducing manual data entry errors.
-     - Status: IN PROGRESS
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? both
-     - Blocked on other issue: None
-
-  Issue 2: Emails sent via Resend are going to Spam (Priority: P2)
+  Issue 1: Emails sent via Resend are going to Spam (Priority: P2)
      - Attempted fixes: Verified email sending via Resend API. The mock was bypassed and emails were successfully sent, but they lack DNS authentication.
      - Next debug checklist: Instruct the user to configure SPF/DKIM/DMARC DNS records on GoDaddy for their domain ().
      - Why fix this issue and what will be achieved with the fix? Ensures reliable delivery of platform notifications and password resets.
      - Status: BLOCKED (Awaiting user DNS configuration)
      - Is recurring issue? Y
      - Should Test frontend/backend/both after fix? backend
+     - Blocked on other issue: None
 
 **In progress Task List**: 
-  Task 1: Auto-calcul Couverture ombragée
-     - Where to resume: Verify that the endpoint  is accessible and properly integrated into the Web and Mobile forms (Agent Terrain Verification/Declaration, Cooperative Add Parcel). Test the UI.
-     - What will be achieved with this? Automatic calculation of shade cover.
+  Task 1: Generate Implementation Prompt for REDD+ Guide and USSD Simulator
+     - Where to resume: The agent has just read , , and . You need to synthesize this code into a clear, structured prompt (similar to the previous Field Agent prompt) that a mobile developer can use to implement these features in React Native.
+     - What will be achieved with this? The user will have the exact specifications to build the native mobile equivalents of these web features.
      - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? both
+     - Should Test frontend/backend/both after fix? NA
      - Blocked on something: None
 
 **Upcoming and Future Tasks**
@@ -57,12 +50,11 @@ A full-stack agritech platform (FastAPI backend, React frontend, Expo React Nati
     - P3: Refactor  (file is over 2700 lines with duplicate menu logic and messy state management) and clean up dead code.
 
 **Completed work in this session**
-- Fixed USSD Age cacaoyers bug (removed undefined  variable preventing sequence completion) (DONE)
-- Fixed Login and Messaging Auth bugs (Reordered CORS and RateLimit Middlewares, added token guards to messaging hooks) (DONE)
-- Expo EAS APK Build generated successfully for GreenLink Farmer (DONE)
-- Resend integration tested and verified (DONE)
-- Field Agent Web Views: Added complete Vérifier (Verification) and Déclarer (Declaration) flows to the Agent Terrain Dashboard, matching mobile capabilities (DONE)
-- Pushed Expo OTA Update (Over-The-Air) with  to bypass ARM64 Hermes compilation issues, delivering the new Field Agent Verify/Declare flows to the mobile app without a new APK (DONE)
+- Fixed auto-calculated Couverture ombragée (Shade Cover) 404 API error (corrected  prefix) and fixed mobile strata formula in  (DONE)
+- Created a comprehensive Carbon Score Analytics Dashboard for Cooperatives () and upgraded the Farmer's Carbon Score page with charts and history (DONE)
+- Upgraded Farmer's Web Parcel Declaration form () to exactly match the Field Agent's form, including Strate 1/2/3 trees, shade cover auto-calculation, and certification fields. Updated  Pydantic model and backend route (DONE)
+- Generated a complete, 797-line Mobile App Specification document () containing all features, roles, and 150+ API endpoints (DONE)
+- Generated a detailed technical prompt for building the Field Agent Parcel Verification/Declaration mobile screens (DONE)
 
 **Earlier issues found/mentioned but not fixed**
 None
@@ -76,50 +68,57 @@ None
 
 
 **Key Technical Concepts**
-React, FastAPI, MongoDB, Expo (React Native), EAS Build, OTA Updates, ReportLab, Resend.
+React, FastAPI, Pydantic, MongoDB, React Native (Expo), Markdown Documentation Generation.
 
 **key DB schema**
-  - : {farmer_id, area_hectares, nombre_arbres, arbres_petits, arbres_moyens, arbres_grands, couverture_ombragee, verification_status, carbon_score}
-  - : {parcel_id, farmer_id, agent_id, classification, ecarts_details[], statut, prime_ajustee, created_at}
+  - : {farmer_id, location, village, department, area_hectares, arbres_grands, arbres_moyens, arbres_petits, couverture_ombragee, certification, carbon_score, ...}
 
 **changes in tech stack**
   - None
 
 **All files of reference** 
--  (Updated: Added )
--  (Updated: Added auto-calculation for shade cover)
--  (Updated: Web verify/declare flows)
--  (Updated)
--  (Updated)
+-  (Created: Complete mobile rebuild specifications)
 -  (Created)
--  (Updated: Fixed CORS middleware order)
+-  (Updated)
+-  (Updated)
+-  (Updated)
+-  (Updated)
+-  (Updated)
+-  (Read for prompt generation)
+-  (Read for prompt generation)
+-  (Read for prompt generation)
 
 **Areas that need refactoring**: 
-- : Still exceeds 2700 lines.
+-  (over 2700 lines)
 
 **key api endpoints**
-- 
-- 
+-  (Farmer declaration)
 - 
 - 
 
 **Critical Info for New Agent** 
 - INSTRUCT next agent to respond in French ONLY.
-- Mobile OTA updates can be pushed using  (must export manually via  to bypass Hermes ARM64 container limitations).
-- RateLimit middleware must be strictly below CORSMiddleware in  to prevent CORS issues on 429 responses.
-- The Couverture ombragée logic is dynamically calculated on the client side by making an API call to  whenever the tree inputs change.
+- The user is currently requesting *text prompts* to be printed in the chat. These prompts are meant to be copied and pasted to another developer working on a React Native mobile app. Ensure the output is formatted cleanly using Markdown code blocks, detailing the UI layout, logic, and exact API endpoints based on the web components you just read.
+- You have already read , , and . Do an internal summary and then provide the requested prompt to the user immediately.
 
 **documents and test reports created in this job**
-  -  (USSD Bug fix testing)
-  -  (Field Agent Verification/Declaration testing)
-  -  (Updated)
+  - 
+  - 
+  - 
+  - 
+  - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. (Done) *La version web n'a pas de fonctionnalités vérification parcelles comme pour la version mobiles.*
- 2. (Done) *Nous aurons donc deux situations: 1- Lorsque la coopérative ou l'agriculteur déclaré une parcelles... 2- Lorsque aucune déclaration de parcelles n a pas encore été faite...*
- 3. (Done) *Je ne retrouve pas la fonctionnalité Gestion des écarts déjà Implémenté ce matin...*
- 4. (Done) *Les derrière ajustement dans les différents menu web ( agriculteurs et agent terrain) doivent etre implémentés dans la.version mobile sans build nouveau apk*
- 5. **(Pending)** *La Couverture ombragee mesuree doit être calculer de façon automatique si possible a partir informations fournis* (Agent partially implemented this, but failed the last verification test).
+ 1. (Done) *Oui* (User agreed to create carbon analytics dashboard)
+ 2. (Done) *1-c, 2-les 3, 3-toutes les options, 4-non*
+ 3. (Done) *[Uploaded screenshot] La fiche de déclaration de parcelles dans le tableau de bord agriculteur doit etre mis a jour pour etre identique a celle de déclaration de parcelles chez l'agent...*
+ 4. (Done) *Please provide me with the native mobile features prompt for the mobile version of the project...*
+ 5. (Done) *servir de prompt à un autre agent/développeur qui reconstruirait l'app mobile depuis zéro. inclue les endpoints API...*
+ 6. (Done) *Comment je télécharge le document complet ?*
+ 7. (Done) *Copier depuis le chat*
+ 8. (Done) *Je ne vois pas le.document complet*
+ 9. (Done) *donner moi le prompt exact de la fiche de declaration de parcelles et de la focntionalité verifier dans la version web de l,agent terrain pour l'implementer dans la version mobile native a donner a un autre dev*
+ 10. **(Pending)** *le prompt complet du guide redd+ et la simulation USSD a implementer de la version web de l,agriculteur et agent terrain a implementer comme mobile native pour un dev*
 
 **Project Health Check:**
 - Backend: Healthy
@@ -133,7 +132,7 @@ React, FastAPI, MongoDB, Expo (React Native), EAS Build, OTA Updates, ReportLab,
 - Orange CI SMS / Money (Mocked)
 
 **Testing status**
-  - Testing agent used after significant changes: YES (iterations 108, 109)
+  - Testing agent used after significant changes: YES (iterations 110, 111, 112)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None
   - Known regressions: None
@@ -147,12 +146,12 @@ Farmer:  /
 Expo EAS:  / 
 
 **What agent forgot to execute**
-The agent did not finalize testing the Couverture ombragée auto-calculation feature. The backend route was created and frontend attached, but the bash test script failed with a 404 error due to a missing router prefix. The agent must verify this functionality end-to-end.
+The agent started viewing the files for the REDD+ Guide, Tracking, and USSD Simulator but hit the context limit before generating and returning the requested prompt to the user.
 
 **Debugging checklist for current issue**
-    Issue: Couverture ombragée auto-calculation endpoint returns 404 in tests.
-    Backend files to check: 
-      -  (check )
-      -  or where  is included, to confirm the prefix is .
-    Frontend files to check:
-      -  and Mobile forms (verify they call  with correct parameters).</analysis>
+    Issue: Provide prompt for REDD+ Guide and USSD Simulator for Native Mobile Dev.
+    Files to synthesize (already read in context):
+      - 
+      - 
+      - 
+    Action: Analyze the logic (e.g., USSD dial pad, *144*99# trigger, REDD+ practices lists) and output a clean Markdown prompt.</analysis>

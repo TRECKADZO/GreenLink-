@@ -343,13 +343,13 @@ class TestCORSConfiguration:
         response = requests.options(
             f"{BASE_URL}/api/auth/login",
             headers={
-                "Origin": "https://shade-cover-calc.preview.emergentagent.com",
+                "Origin": "https://redd-carbon-track.preview.emergentagent.com",
                 "Access-Control-Request-Method": "POST"
             }
         )
         # Should allow the origin
         cors_origin = response.headers.get("access-control-allow-origin", "")
-        assert cors_origin in ["*", "https://shade-cover-calc.preview.emergentagent.com"], \
+        assert cors_origin in ["*", "https://redd-carbon-track.preview.emergentagent.com"], \
             f"CORS origin not properly configured: {cors_origin}"
         print(f"PASS: CORS configured, allow-origin={cors_origin}")
 
