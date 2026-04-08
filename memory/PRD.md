@@ -13,7 +13,7 @@ Utiliser le meme code developpe sur GitHub (GreenLink). Implementer tout le proj
 7. Generate mobile native implementation prompts for handoff to another developer
 
 ## Architecture
-- **Backend**: FastAPI (Python) + MongoDB (greenlink_production on Atlas)
+- **Backend**: FastAPI (Python) + MongoDB Atlas (greenlink_production)
 - **Frontend**: React (CRA)
 - **Mobile**: Expo React Native
 - **Database**: MongoDB Atlas
@@ -27,8 +27,10 @@ Utiliser le meme code developpe sur GitHub (GreenLink). Implementer tout le proj
 - Generated complete Mobile App Specification (MOBILE_SPEC.md)
 - Generated Field Agent, REDD+ Guide, USSD Simulator, and Messaging mobile prompts
 - Fixed shade cover fallback formula (80 -> 35 m2)
-- **Fixed messaging contacts loading**: Changed `member_id` to `user_id` for coop_members queries (cooperative, field_agent, producteur roles)
-- **Fixed test agent**: Set cooperative_id for testagent@test.ci
+- Fixed messaging contacts loading (member_id -> user_id in coop_members queries)
+- Fixed test agent cooperative_id
+- **Fixed ICI profile history refresh**: Added historyRefreshKey to auto-reload FarmerHistorySection after ICI/SSRTE form submission
+- **Enriched history API**: Added total_visites_ssrte, date_derniere_visite_ssrte, dernier_niveau_risque_ssrte to ici_profile in /history endpoint
 
 ## Pending Issues
 - P2: Emails sent via Resend going to Spam (BLOCKED: awaiting user DNS config SPF/DKIM/DMARC)
@@ -45,7 +47,3 @@ Utiliser le meme code developpe sur GitHub (GreenLink). Implementer tout le proj
 ## Mocked Services
 - Orange CI SMS
 - Orange Money
-
-## 3rd Party Integrations
-- Resend (Email - DNS pending)
-- Expo EAS (Mobile builds)

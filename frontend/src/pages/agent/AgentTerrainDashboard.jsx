@@ -1207,6 +1207,7 @@ const AgentTerrainDashboard = () => {
   const [showICIModal, setShowICIModal] = useState(false);
   const [showSSRTEModal, setShowSSRTEModal] = useState(false);
   const [showPhotosPanel, setShowPhotosPanel] = useState(false);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
   const [ssrteFlowActive, setSsrteFlowActive] = useState(false);
   const [showUSSDSimulator, setShowUSSDSimulator] = useState(false);
 
@@ -1366,13 +1367,13 @@ const AgentTerrainDashboard = () => {
               </button>);
             })}
           </div>
-          <FarmerHistorySection farmer={selectedFarmer} />
+          <FarmerHistorySection farmer={selectedFarmer} key={`history-${selectedFarmer?.id}-${historyRefreshKey}`} />
         </div>
         )
       )}
 
-      <ICIProfileModal open={showICIModal} onOpenChange={setShowICIModal} farmer={selectedFarmer} onSaved={() => loadMyFarmers()} />
-      <SSRTEVisitModal open={showSSRTEModal} onOpenChange={setShowSSRTEModal} farmer={selectedFarmer} onSaved={() => loadMyFarmers()} />
+      <ICIProfileModal open={showICIModal} onOpenChange={setShowICIModal} farmer={selectedFarmer} onSaved={() => { loadMyFarmers(); setHistoryRefreshKey(k => k + 1); }} />
+      <SSRTEVisitModal open={showSSRTEModal} onOpenChange={setShowSSRTEModal} farmer={selectedFarmer} onSaved={() => { loadMyFarmers(); setHistoryRefreshKey(k => k + 1); }} />
 
       {/* Simulateur USSD - Calcul prime carbone */}
       {showUSSDSimulator && (

@@ -502,6 +502,12 @@ async def get_farmer_history(
         elif latest > previous:
             risk_evolution = "degradation"
     
+    # Enrich ici_profile with SSRTE summary for frontend display
+    if ici_profile and visits_list:
+        ici_profile["total_visites_ssrte"] = len(visits_list)
+        ici_profile["date_derniere_visite_ssrte"] = visits_list[0].get("date_visite") or visits_list[0].get("recorded_at")
+        ici_profile["dernier_niveau_risque_ssrte"] = visits_list[0].get("niveau_risque", "faible")
+
     return {
         "farmer_id": farmer_id,
         "ici_profile": ici_profile,
