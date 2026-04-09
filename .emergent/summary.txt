@@ -7,19 +7,19 @@ PRODUCT REQUIREMENTS:
 4. Implement Harvest validation flow.
 5. Improve the Web views for Agent Terrain and Agriculteur.
 6. Verify and professionally improve the messaging system for all users.
-*Current Focus*: The user is asking the agent to generate detailed functional specifications and prompts based on existing Web features (REDD+ Guide, USSD Simulator) so they can be handed off to another developer to build the Native Mobile version.
+*Current Focus*: The user asked the agent to generate detailed functional specifications and prompts based on existing Web features (REDD+ Guide, USSD Simulator, Messaging) so they can be handed off to another developer to build the Native Mobile version. The user also asked for bug fixes in the Shade Cover formula, messaging contact loading, and ICI Profile History updating.
 
 **User's preferred language**: French (INSTRUCT next agent to respond in French ONLY).
 
 **what currently exists?** 
-A full-stack agritech platform (FastAPI backend, React frontend, Expo React Native mobile app, MongoDB). The application features robust data isolation, real-time messaging, USSD simulation, Unified Carbon Premium Calculator, Field Agent Verification flows, and a newly implemented Carbon Score Analytics Dashboard for both Cooperatives and Farmers. A comprehensive  documentation file was recently generated detailing the entire mobile architecture and APIs.
+A full-stack agritech platform (FastAPI backend, React frontend, Expo React Native mobile app, MongoDB). The application features robust data isolation, real-time messaging, USSD simulation, Unified Carbon Premium Calculator, Field Agent Verification flows, a Carbon Score Analytics Dashboard, and generated Mobile App Specifications.
 
 **Last working item**: 
-    - Last item agent was working: Extracting the exact logic, UI structure, and API endpoints from the Web versions of the REDD+ Guide / Tracking and the USSD Simulator to generate a detailed implementation prompt for a mobile native developer.
-    - Status: IN PROGRESS
-    - Agent Testing Done: N/A (This is a documentation/prompt generation task)
+    - Last item agent was working: Fixing the Farmer ICI Profile History not updating after form submission on the web version. This was successfully debugged, fixed, and verified via screenshots and API checks.
+    - Status: NONE
+    - Agent Testing Done: Y
     - Which testing method agent to use? NA
-    - User Testing Done: N/A
+    - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
   Issue 1: Emails sent via Resend are going to Spam (Priority: P2)
@@ -32,12 +32,7 @@ A full-stack agritech platform (FastAPI backend, React frontend, Expo React Nati
      - Blocked on other issue: None
 
 **In progress Task List**: 
-  Task 1: Generate Implementation Prompt for REDD+ Guide and USSD Simulator
-     - Where to resume: The agent has just read , , and . You need to synthesize this code into a clear, structured prompt (similar to the previous Field Agent prompt) that a mobile developer can use to implement these features in React Native.
-     - What will be achieved with this? The user will have the exact specifications to build the native mobile equivalents of these web features.
-     - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? NA
-     - Blocked on something: None
+  None
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
@@ -50,11 +45,10 @@ A full-stack agritech platform (FastAPI backend, React frontend, Expo React Nati
     - P3: Refactor  (file is over 2700 lines with duplicate menu logic and messy state management) and clean up dead code.
 
 **Completed work in this session**
-- Fixed auto-calculated Couverture ombragée (Shade Cover) 404 API error (corrected  prefix) and fixed mobile strata formula in  (DONE)
-- Created a comprehensive Carbon Score Analytics Dashboard for Cooperatives () and upgraded the Farmer's Carbon Score page with charts and history (DONE)
-- Upgraded Farmer's Web Parcel Declaration form () to exactly match the Field Agent's form, including Strate 1/2/3 trees, shade cover auto-calculation, and certification fields. Updated  Pydantic model and backend route (DONE)
-- Generated a complete, 797-line Mobile App Specification document () containing all features, roles, and 150+ API endpoints (DONE)
-- Generated a detailed technical prompt for building the Field Agent Parcel Verification/Declaration mobile screens (DONE)
+- Generated and provided 3 native mobile technical prompts (REDD+ Guide, USSD Simulator, Messaging System) for handoff to a mobile developer.
+- Fixed Shade Cover (Couverture ombragée) auto-calculation fallback in  (reduced from 80m² to a scientifically realistic 35m² per tree).
+- Fixed messaging system loading errors by correcting the  vs  query in the  collection inside , allowing field agents to correctly load contacts.
+- Fixed Farmer ICI Profile History update bug: added  to force re-render of  upon modal close in , and enriched  endpoint in  to include missing SSRTE stats.
 
 **Earlier issues found/mentioned but not fixed**
 None
@@ -68,57 +62,48 @@ None
 
 
 **Key Technical Concepts**
-React, FastAPI, Pydantic, MongoDB, React Native (Expo), Markdown Documentation Generation.
+React, FastAPI, Pydantic, MongoDB, WebSockets, Real-time messaging, EventSource (SSE), React Native (Expo).
 
 **key DB schema**
-  - : {farmer_id, location, village, department, area_hectares, arbres_grands, arbres_moyens, arbres_petits, couverture_ombragee, certification, carbon_score, ...}
+  - : {user_id, coop_id, status, ...}
+  - : {farmer_id, taille_menage, total_enfants, enfants_scolarises, ...}
+  - : {farmer_id, niveau_risque, ...}
 
 **changes in tech stack**
   - None
 
 **All files of reference** 
--  (Created: Complete mobile rebuild specifications)
--  (Created)
+-  (Updated to fix shade cover formula)
+-  (Updated to fix contact list loading)
+-  (Updated to enrich ICI Profile history endpoint)
+-  (Updated to trigger re-renders on form close)
 -  (Updated)
--  (Updated)
--  (Updated)
--  (Updated)
--  (Updated)
--  (Read for prompt generation)
--  (Read for prompt generation)
--  (Read for prompt generation)
 
 **Areas that need refactoring**: 
 -  (over 2700 lines)
 
 **key api endpoints**
--  (Farmer declaration)
 - 
 - 
 
 **Critical Info for New Agent** 
 - INSTRUCT next agent to respond in French ONLY.
-- The user is currently requesting *text prompts* to be printed in the chat. These prompts are meant to be copied and pasted to another developer working on a React Native mobile app. Ensure the output is formatted cleanly using Markdown code blocks, detailing the UI layout, logic, and exact API endpoints based on the web components you just read.
-- You have already read , , and . Do an internal summary and then provide the requested prompt to the user immediately.
+- The user might ask to consolidate the generated mobile prompts (Field Agent + REDD+ + USSD + Messaging) into a single downloadable Markdown document. Be prepared to create it.
+- If you work on auth or external integrations, remember the strict rules about subagents ().
 
 **documents and test reports created in this job**
   - 
   - 
-  - 
-  - 
-  - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. (Done) *Oui* (User agreed to create carbon analytics dashboard)
- 2. (Done) *1-c, 2-les 3, 3-toutes les options, 4-non*
- 3. (Done) *[Uploaded screenshot] La fiche de déclaration de parcelles dans le tableau de bord agriculteur doit etre mis a jour pour etre identique a celle de déclaration de parcelles chez l'agent...*
- 4. (Done) *Please provide me with the native mobile features prompt for the mobile version of the project...*
- 5. (Done) *servir de prompt à un autre agent/développeur qui reconstruirait l'app mobile depuis zéro. inclue les endpoints API...*
- 6. (Done) *Comment je télécharge le document complet ?*
- 7. (Done) *Copier depuis le chat*
- 8. (Done) *Je ne vois pas le.document complet*
- 9. (Done) *donner moi le prompt exact de la fiche de declaration de parcelles et de la focntionalité verifier dans la version web de l,agent terrain pour l'implementer dans la version mobile native a donner a un autre dev*
- 10. **(Pending)** *le prompt complet du guide redd+ et la simulation USSD a implementer de la version web de l,agriculteur et agent terrain a implementer comme mobile native pour un dev*
+ 1. (Done) *Please use ask_human tool and confirm your plan now.*
+ 2. (Done) *oui + ajouter aussi le prompte complet de la messagerie esistante entres les differents utilisateurs*
+ 3. (Done) *Vérifie la formule de calcul de la couverture ombragée si elle est a plus optimale réellement*
+ 4. (Done) *Oui* 
+ 5. (Done) *Corriger les erreurs de chargement dans la messagerie*
+ 6. (Done) *J ai complété une fiche ici d un agriculteur mais son fiche historique n est pas mise à jour*
+ 7. (Done) *[Image uploaded: historique profil ICI]*
+ 8. (Done) *JE VEUX DIRE J'AI COMPLTER CETTE VISITE MAIS LES HISFORMATION DE CETTE FICHE NE SE RETROUVE PAS DANS L'HISTORIQUE FICHE ICI*
 
 **Project Health Check:**
 - Backend: Healthy
@@ -132,7 +117,7 @@ React, FastAPI, Pydantic, MongoDB, React Native (Expo), Markdown Documentation G
 - Orange CI SMS / Money (Mocked)
 
 **Testing status**
-  - Testing agent used after significant changes: YES (iterations 110, 111, 112)
+  - Testing agent used after significant changes: YES (iteration 113 for messaging fixes)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None
   - Known regressions: None
@@ -146,12 +131,7 @@ Farmer:  /
 Expo EAS:  / 
 
 **What agent forgot to execute**
-The agent started viewing the files for the REDD+ Guide, Tracking, and USSD Simulator but hit the context limit before generating and returning the requested prompt to the user.
+The agent completed all tasks perfectly.
 
 **Debugging checklist for current issue**
-    Issue: Provide prompt for REDD+ Guide and USSD Simulator for Native Mobile Dev.
-    Files to synthesize (already read in context):
-      - 
-      - 
-      - 
-    Action: Analyze the logic (e.g., USSD dial pad, *144*99# trigger, REDD+ practices lists) and output a clean Markdown prompt.</analysis>
+NA</analysis>

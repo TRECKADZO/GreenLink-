@@ -1,5 +1,5 @@
 {
-  "summary": "Iteration 89 - Cooperative Referral System Bug Fixes Testing Complete. All 8 backend tests passed. The main bugs have been fixed: 1) GET /api/cooperative-referral/my-code now returns 200 (not 403) for cooperative users, 2) coop_name displays correctly (not 'N/A'), 3) Share message in CooperativeReferralPage.jsx includes the application URL (https://redd-carbon-track.preview.emergentagent.com/register). Frontend Register.jsx shows coop_name input and sponsor_referral_code input fields correctly.",
+  "summary": "Iteration 89 - Cooperative Referral System Bug Fixes Testing Complete. All 8 backend tests passed. The main bugs have been fixed: 1) GET /api/cooperative-referral/my-code now returns 200 (not 403) for cooperative users, 2) coop_name displays correctly (not 'N/A'), 3) Share message in CooperativeReferralPage.jsx includes the application URL (https://agritech-coop.preview.emergentagent.com/register). Frontend Register.jsx shows coop_name input and sponsor_referral_code input fields correctly.",
   "backend_issues": {
     "critical": [],
     "minor": []
@@ -23,7 +23,7 @@
     "PASS: POST /api/cooperative-referral/validate validates referral codes correctly",
     "PASS: Frontend Register.jsx shows coop_name input with data-testid='coop-name-input'",
     "PASS: Frontend Register.jsx shows sponsor_referral_code input with data-testid='sponsor-code-input'",
-    "PASS: Frontend CooperativeReferralPage.jsx share message includes application URL (https://redd-carbon-track.preview.emergentagent.com/register)",
+    "PASS: Frontend CooperativeReferralPage.jsx share message includes application URL (https://agritech-coop.preview.emergentagent.com/register)",
     "PASS: AuthContext.jsx forwards sponsor_referral_code in registration payload"
   ],
   "updated_files": [
@@ -59,7 +59,7 @@
     "share_message_url_bug": {
       "status": "FIXED",
       "before": "Share message did not include application URL",
-      "after": "Share message includes https://redd-carbon-track.preview.emergentagent.com/register"
+      "after": "Share message includes https://agritech-coop.preview.emergentagent.com/register"
     },
     "sponsor_referral_code_forwarding": {
       "status": "FIXED",

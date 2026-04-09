@@ -4,7 +4,7 @@ GreenLink Agritech — Tests de securite P1
 """
 import httpx
 
-API_URL = "https://redd-carbon-track.preview.emergentagent.com"
+API_URL = "https://agritech-coop.preview.emergentagent.com"
 
 ADMIN_EMAIL = "klenakan.eric@gmail.com"
 ADMIN_PASSWORD = "474Treckadzo"
