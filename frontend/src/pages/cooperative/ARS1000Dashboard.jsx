@@ -188,9 +188,9 @@ const PDCTab = ({ onRefresh }) => {
 
   const handleDownloadPDC = async (pdcId, farmerName) => {
     try {
-      toast.info('Génération du PDF en cours...');
+      toast.info('Generation du PDF en cours...');
       const res = await fetch(`${API_URL}/api/ars1000/pdf/pdc/${pdcId}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
-      if (!res.ok) throw new Error('Erreur lors de la génération');
+      if (!res.ok) throw new Error('Erreur lors de la generation');
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -200,9 +200,29 @@ const PDCTab = ({ onRefresh }) => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      toast.success('PDF téléchargé');
+      toast.success('PDF telecharge');
     } catch (e) {
-      toast.error(e.message || 'Erreur téléchargement PDF');
+      toast.error(e.message || 'Erreur telechargement PDF');
+    }
+  };
+
+  const handleDownloadExcel = async (pdcId, farmerName) => {
+    try {
+      toast.info('Generation Excel en cours...');
+      const res = await fetch(`${API_URL}/api/admin/analytics/ars1000/export/excel/${pdcId}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      if (!res.ok) throw new Error('Erreur lors de la generation');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PDC_ARS1000_${farmerName || 'planteur'}_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Excel telecharge');
+    } catch (e) {
+      toast.error(e.message || 'Erreur telechargement Excel');
     }
   };
 
@@ -294,6 +314,9 @@ const PDCTab = ({ onRefresh }) => {
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" onClick={() => handleDownloadPDC(pdc.id, `${pdc.identification?.nom}_${pdc.identification?.prenoms}`)} data-testid={`download-pdc-${pdc.id}`}>
                     <Download className="w-3.5 h-3.5 mr-1" /> PDF
+                  </Button>
+                  <Button size="sm" variant="outline" className="border-green-200 text-green-700 hover:bg-green-50" onClick={() => handleDownloadExcel(pdc.id, `${pdc.identification?.nom}_${pdc.identification?.prenoms}`)} data-testid={`download-excel-${pdc.id}`}>
+                    <Download className="w-3.5 h-3.5 mr-1" /> Excel
                   </Button>
                   {pdc.statut === 'soumis' && (
                     <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleValidate(pdc.id)} data-testid={`validate-pdc-${pdc.id}`}>

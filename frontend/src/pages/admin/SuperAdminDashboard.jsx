@@ -37,6 +37,8 @@ const SuperAdminDashboard = () => {
   const [marketplaceStats, setMarketplaceStats] = useState(null);
   const [reddImpact, setReddImpact] = useState(null);
   const [reddLoading, setReddLoading] = useState(false);
+  const [ars1000Data, setArs1000Data] = useState(null);
+  const [ars1000Loading, setArs1000Loading] = useState(false);
 
   const fetchDashboard = async () => {
     try {
@@ -82,6 +84,20 @@ const SuperAdminDashboard = () => {
         }
       };
       fetchRedd();
+    }
+    if (activeTab === 'ars1000' && !ars1000Data) {
+      const fetchArs = async () => {
+        setArs1000Loading(true);
+        try {
+          const data = await analyticsApi.getArs1000Stats();
+          setArs1000Data(data);
+        } catch (error) {
+          console.error('Error fetching ARS 1000 stats:', error);
+        } finally {
+          setArs1000Loading(false);
+        }
+      };
+      fetchArs();
     }
   }, [activeTab]);
 
@@ -324,6 +340,7 @@ const SuperAdminDashboard = () => {
             <TabsTrigger value="redd-impact" className="data-[state=active]:bg-green-600" data-testid="redd-impact-tab">Impact Environnemental</TabsTrigger>
             <TabsTrigger value="onboarding" className="data-[state=active]:bg-cyan-600">Onboarding</TabsTrigger>
             <TabsTrigger value="coop-network" className="data-[state=active]:bg-teal-600" data-testid="coop-network-tab-trigger">Réseau Coopératives</TabsTrigger>
+            <TabsTrigger value="ars1000" className="data-[state=active]:bg-lime-600" data-testid="ars1000-tab-trigger">ARS 1000</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW TAB */}
@@ -652,6 +669,10 @@ const SuperAdminDashboard = () => {
 
           <TabsContent value="coop-network">
             <CooperativeNetworkTab />
+          </TabsContent>
+
+          <TabsContent value="ars1000">
+            <ARS1000Tab data={ars1000Data} loading={ars1000Loading} />
           </TabsContent>
         </Tabs>
       </div>
@@ -1805,5 +1826,256 @@ const ReddImpactTab = ({ data, loading }) => {
     </div>
   );
 };
+
+// ======== ARS 1000 TAB ========
+const ARS1000Tab = ({ data, loading }) => {
+  if (loading || !data) {
+    return (
+      <div className="text-center py-12">
+        <Sprout className="h-12 w-12 text-lime-500 mx-auto mb-4 animate-pulse" />
+        <p className="text-slate-400">Chargement des metriques ARS 1000...</p>
+      </div>
+    );
+  }
+
+  const { pdc, recoltes, certifications, reclamations, agroforesterie, top_cooperatives } = data;
+  const ficheLabels = {
+    identification: 'F1: Identification',
+    epargne: 'F1: Epargne',
+    menage_detail: 'F2: Menage',
+    exploitation: 'F3: Exploitation',
+    cultures: 'F3: Cultures',
+    inventaire_arbres: 'F4: Inventaire',
+    arbres_ombrage_resume: 'F5: Ombrage',
+    materiel_detail: 'F6: Materiel',
+    matrice_strategique_detail: 'F7: Strategie',
+    programme_annuel: 'F7: Programme',
+  };
+
+  const statusColors = {
+    brouillon: 'bg-slate-500/20 text-slate-400',
+    en_cours: 'bg-blue-500/20 text-blue-400',
+    visite_terrain: 'bg-amber-500/20 text-amber-400',
+    complete_agent: 'bg-cyan-500/20 text-cyan-400',
+    valide: 'bg-emerald-500/20 text-emerald-400',
+  };
+
+  const gradeColors = { A: 'text-emerald-400', B: 'text-blue-400', C: 'text-amber-400', D: 'text-red-400' };
+
+  return (
+    <div className="space-y-6" data-testid="ars1000-tab">
+      {/* Row 1: Key ARS 1000 Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="p-4 rounded-xl bg-gradient-to-br from-lime-900/50 to-slate-800 border border-lime-700/30">
+          <p className="text-lime-400 text-xs font-medium">PDC Total</p>
+          <p className="text-3xl font-bold text-white">{pdc?.total || 0}</p>
+          <p className="text-slate-400 text-xs mt-1">{pdc?.visites_terrain || 0} visites terrain</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-900/50 to-slate-800 border border-emerald-700/30">
+          <p className="text-emerald-400 text-xs font-medium">Conformite Moy.</p>
+          <p className="text-3xl font-bold" style={{ color: (pdc?.conformite_moyenne || 0) >= 80 ? '#10b981' : (pdc?.conformite_moyenne || 0) >= 50 ? '#f59e0b' : '#ef4444' }}>
+            {pdc?.conformite_moyenne || 0}%
+          </p>
+          <p className="text-slate-400 text-xs mt-1">Min {pdc?.conformite_min || 0}% / Max {pdc?.conformite_max || 0}%</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-amber-900/50 to-slate-800 border border-amber-700/30">
+          <p className="text-amber-400 text-xs font-medium">Declarations Recolte</p>
+          <p className="text-3xl font-bold text-white">{recoltes?.total_declarations || 0}</p>
+          <p className="text-slate-400 text-xs mt-1">{recoltes?.total_kg_validated || 0} kg valides</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-yellow-900/50 to-slate-800 border border-yellow-700/30">
+          <p className="text-yellow-400 text-xs font-medium">Certifications</p>
+          <p className="text-3xl font-bold text-white">{certifications?.total || 0}</p>
+          <div className="flex gap-1 mt-1">
+            {Object.entries(certifications?.by_level || {}).map(([lvl, count]) => (
+              <Badge key={lvl} className={`text-[9px] ${lvl === 'or' ? 'bg-yellow-600/30 text-yellow-300' : lvl === 'argent' ? 'bg-slate-500/30 text-slate-300' : 'bg-amber-600/30 text-amber-300'}`}>
+                {lvl}: {count}
+              </Badge>
+            ))}
+          </div>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-green-900/50 to-slate-800 border border-green-700/30">
+          <p className="text-green-400 text-xs font-medium">Arbres Inventories</p>
+          <p className="text-3xl font-bold text-white">{agroforesterie?.total_arbres_inventories || 0}</p>
+          <p className="text-slate-400 text-xs mt-1">{agroforesterie?.total_ombrage || 0} ombrage</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-rose-900/50 to-slate-800 border border-rose-700/30">
+          <p className="text-rose-400 text-xs font-medium">Reclamations</p>
+          <p className="text-3xl font-bold text-white">{reclamations?.total || 0}</p>
+          <p className="text-slate-400 text-xs mt-1">{reclamations?.by_status?.ouverte || 0} ouvertes</p>
+        </div>
+      </div>
+
+      {/* Row 2: PDC Deep Dive */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Conformity Distribution */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white text-sm flex items-center gap-2">
+              <Shield className="h-5 w-5 text-lime-500" />
+              Distribution Conformite PDC
+            </CardTitle>
+            <CardDescription className="text-slate-400">Repartition qualitative des PDC ARS 1000-1</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { label: 'Excellent (80%+)', key: 'excellent', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
+                { label: 'Bon (60-79%)', key: 'bon', color: 'bg-blue-500', textColor: 'text-blue-400' },
+                { label: 'Moyen (40-59%)', key: 'moyen', color: 'bg-amber-500', textColor: 'text-amber-400' },
+                { label: 'Faible (<40%)', key: 'faible', color: 'bg-red-500', textColor: 'text-red-400' },
+              ].map(({ label, key, color, textColor }) => {
+                const count = pdc?.distribution?.[key] || 0;
+                const pct = pdc?.total > 0 ? Math.round((count / pdc.total) * 100) : 0;
+                return (
+                  <div key={key} className="flex items-center gap-3">
+                    <span className={`text-xs w-28 flex-shrink-0 ${textColor}`}>{label}</span>
+                    <div className="flex-1 bg-slate-700 rounded-full h-4 overflow-hidden">
+                      <div className={`h-full rounded-full ${color} transition-all duration-700`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-sm font-bold text-white w-12 text-right">{count}</span>
+                    <span className="text-xs text-slate-500 w-10">({pct}%)</span>
+                  </div>
+                );
+              })}
+            </div>
+            {/* PDC Status breakdown */}
+            <div className="mt-4 pt-4 border-t border-slate-700">
+              <p className="text-xs text-slate-400 mb-2">Par statut</p>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(pdc?.by_status || {}).map(([st, count]) => (
+                  <Badge key={st} className={`text-[10px] ${statusColors[st] || 'bg-slate-500/20 text-slate-400'}`}>
+                    {st.replace('_', ' ')}: {count}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Fiche Completion Heatmap */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white text-sm flex items-center gap-2">
+              <FileText className="h-5 w-5 text-blue-500" />
+              Taux de Remplissage par Fiche
+            </CardTitle>
+            <CardDescription className="text-slate-400">% de PDC ayant complete chaque fiche (7 fiches ARS 1000-1)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {Object.entries(pdc?.fiches_completion_pct || {}).map(([key, pct]) => {
+                const barColor = pct >= 80 ? '#10b981' : pct >= 50 ? '#f59e0b' : pct >= 25 ? '#f97316' : '#ef4444';
+                return (
+                  <div key={key} className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-400 w-28 flex-shrink-0">{ficheLabels[key] || key}</span>
+                    <div className="flex-1 bg-slate-700 rounded-full h-3 overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+                    </div>
+                    <span className="text-xs font-bold w-12 text-right" style={{ color: barColor }}>{pct}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 3: Recoltes + Top Coops */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recoltes Quality */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white text-sm flex items-center gap-2">
+              <Package className="h-5 w-5 text-amber-500" />
+              Qualite des Recoltes (ARS 1000-2)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {Object.entries(recoltes?.by_status || {}).map(([st, count]) => (
+                <div key={st} className={`p-3 rounded-lg border text-center ${st === 'validee' ? 'bg-emerald-900/20 border-emerald-700/30' : st === 'rejetee' ? 'bg-red-900/20 border-red-700/30' : 'bg-blue-900/20 border-blue-700/30'}`}>
+                  <p className={`text-xs ${st === 'validee' ? 'text-emerald-400' : st === 'rejetee' ? 'text-red-400' : 'text-blue-400'}`}>{st}</p>
+                  <p className="text-2xl font-bold text-white">{count}</p>
+                </div>
+              ))}
+            </div>
+            <div className="pt-3 border-t border-slate-700">
+              <p className="text-xs text-slate-400 mb-2">Distribution par Grade</p>
+              <div className="flex flex-wrap gap-3">
+                {Object.entries(recoltes?.grade_distribution || {}).sort().map(([grade, count]) => (
+                  <div key={grade} className="flex items-center gap-2 bg-slate-700/50 rounded-lg px-3 py-2">
+                    <span className={`text-lg font-bold ${gradeColors[grade] || 'text-slate-300'}`}>{grade}</span>
+                    <span className="text-sm text-white">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Top Cooperatives */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white text-sm flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-teal-500" />
+              Top Cooperatives (par PDC)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {(top_cooperatives || []).length === 0 ? (
+                <p className="text-slate-500 text-sm text-center py-4">Aucune donnee</p>
+              ) : (top_cooperatives || []).map((coop, i) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-700/30 border border-slate-600/30">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-bold text-slate-500 w-6">#{i + 1}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{coop.name}</p>
+                      <p className="text-[10px] text-slate-400">{coop.pdc_count} PDC</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold" style={{ color: coop.avg_conformite >= 80 ? '#10b981' : coop.avg_conformite >= 50 ? '#f59e0b' : '#ef4444' }}>
+                      {coop.avg_conformite}%
+                    </p>
+                    <p className="text-[9px] text-slate-500">conformite moy.</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 4: Reclamations summary */}
+      <Card className="bg-gradient-to-r from-slate-800 to-slate-900 border-slate-700">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <Activity className="h-5 w-5 text-rose-500" />
+            Registre Reclamations, Risques et Impartialite
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Ouvertes', key: 'ouverte', color: 'from-blue-900/50 border-blue-700/30', text: 'text-blue-400' },
+              { label: 'En cours', key: 'en_cours', color: 'from-amber-900/50 border-amber-700/30', text: 'text-amber-400' },
+              { label: 'Resolues', key: 'resolue', color: 'from-emerald-900/50 border-emerald-700/30', text: 'text-emerald-400' },
+              { label: 'Fermees', key: 'fermee', color: 'from-slate-700/50 border-slate-600/30', text: 'text-slate-400' },
+            ].map(({ label, key, color, text }) => (
+              <div key={key} className={`p-4 rounded-xl bg-gradient-to-br ${color} to-slate-800 border text-center`}>
+                <p className={`${text} text-xs font-medium`}>{label}</p>
+                <p className="text-3xl font-bold text-white">{reclamations?.by_status?.[key] || 0}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+
 
 export default SuperAdminDashboard;

@@ -84,7 +84,18 @@ export const analyticsApi = {
       headers: getAuthHeader()
     });
     return response.data;
-  }
+  },
+
+  // ARS 1000 Stats
+  getArs1000Stats: async () => {
+    const response = await axios.get(`${BACKEND_URL}/api/admin/analytics/ars1000/stats`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  },
+
+  // ARS 1000 Excel Export
+  getArs1000ExcelUrl: (pdcId) => `${BACKEND_URL}/api/admin/analytics/ars1000/export/excel/${pdcId}`
 };
 
 export default analyticsApi;
