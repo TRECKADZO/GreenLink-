@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { MobileAppShell } from '../../components/MobileAppShell';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import {
   FileText, User, Home, MapPin, TreePine, Wrench,
-  Target, Calendar, PenLine, CheckCircle2, ChevronRight,
-  ChevronLeft, Loader2, Save, Send, ArrowLeft, Leaf
+  Target, CheckCircle2, ChevronRight, ChevronLeft,
+  Loader2, Save, Send, ArrowLeft, Plus, Trash2, Calendar
 } from 'lucide-react';
 import { GeoSelectCI } from '../../components/GeoSelectCI';
 
@@ -17,341 +16,532 @@ const getToken = () => localStorage.getItem('token');
 const authHeaders = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
 const STEPS = [
-  { id: 'identification', label: 'Identification', icon: User },
-  { id: 'menage', label: 'Ménage', icon: Home },
-  { id: 'parcelles', label: 'Parcelles', icon: MapPin },
-  { id: 'arbres', label: 'Arbres Ombrage', icon: TreePine },
-  { id: 'materiel', label: 'Matériel', icon: Wrench },
-  { id: 'strategie', label: 'Stratégie', icon: Target },
+  { id: 'fiche1', label: 'Fiche 1: Identification', icon: User },
+  { id: 'fiche2', label: 'Fiche 2: Ménage', icon: Home },
+  { id: 'fiche3', label: 'Fiche 3: Exploitation', icon: MapPin },
+  { id: 'fiche4', label: 'Fiche 4: Inventaire Arbres', icon: TreePine },
+  { id: 'fiche5', label: 'Fiche 5: Arbres Ombrage', icon: TreePine },
+  { id: 'fiche6', label: 'Fiche 6: Matériel', icon: Wrench },
+  { id: 'fiche7', label: 'Fiche 7: Planification', icon: Target },
   { id: 'resume', label: 'Résumé', icon: FileText },
 ];
 
-// ============= STEP COMPONENTS =============
+const INITIAL_FORM = {
+  // Fiche 1
+  identification: {
+    nom: '', prenoms: '', contact_tel: '', code_national: '', code_groupe: '',
+    nom_entite: '', code_entite: '', delegation_regionale: '',
+    region: '', department: '', sous_prefecture: '', village: '', campement: '',
+    genre: '', date_naissance: '', statut_foncier: '',
+  },
+  epargne: {
+    mobile_money: { compte: false, argent_compte: false, financement: false, montant: '' },
+    microfinance: { compte: false, argent_compte: false, financement: false, montant: '' },
+    banque: { compte: false, argent_compte: false, financement: false, montant: '' },
+    autres: { compte: false, argent_compte: false, financement: false, montant: '', precision: '' },
+  },
+  // Fiche 2
+  menage: [
+    { type: 'Propriétaire de l\'exploitation', nombre: '', a_ecole: '', aucun: '', primaire: '', secondaire: '', universitaire: '', plein_temps: '', occasionnel: '' },
+    { type: 'Gérant ou représentant', nombre: '', a_ecole: '', aucun: '', primaire: '', secondaire: '', universitaire: '', plein_temps: '', occasionnel: '' },
+    { type: 'Conjoints', nombre: '', a_ecole: '', aucun: '', primaire: '', secondaire: '', universitaire: '', plein_temps: '', occasionnel: '' },
+    { type: 'Enfants 0-6 ans', nombre: '', a_ecole: '', aucun: '', primaire: '', secondaire: '', universitaire: '', plein_temps: '', occasionnel: '' },
+    { type: 'Enfants 6-18 ans', nombre: '', a_ecole: '', aucun: '', primaire: '', secondaire: '', universitaire: '', plein_temps: '', occasionnel: '' },
+    { type: 'Enfants +18 ans', nombre: '', a_ecole: '', aucun: '', primaire: '', secondaire: '', universitaire: '', plein_temps: '', occasionnel: '' },
+    { type: 'Manoeuvres', nombre: '', a_ecole: '', aucun: '', primaire: '', secondaire: '', universitaire: '', plein_temps: '', occasionnel: '' },
+    { type: 'Autres', nombre: '', a_ecole: '', aucun: '', primaire: '', secondaire: '', universitaire: '', plein_temps: '', occasionnel: '' },
+  ],
+  // Fiche 3
+  exploitation: {
+    superficie_totale_ha: '', superficie_cultivee_ha: '', superficie_foret_ha: '',
+    superficie_jachere_ha: '', source_eau: '', type_source_eau: '',
+  },
+  cultures: [
+    { nom: 'Cacao - Parcelle 1', superficie: '', annee_creation: '', source_materiel: '', production_kg: '', revenu_fcfa: '' },
+  ],
+  // Fiche 4
+  inventaire_arbres: [],
+  // Fiche 5
+  arbres_ombrage: { strate1: '', strate2: '', strate3: '', total: '' },
+  // Fiche 6
+  materiel: [
+    { type: 'Matériel de traitement', designation: 'Pulvérisateur', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Matériel de traitement', designation: 'Atomiseur', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Matériel de traitement', designation: 'EPI', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Matériel de transport', designation: 'Tricycle', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Matériel de transport', designation: 'Brouette', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Matériel de transport', designation: 'Camion/camionnette', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Moyen de déplacement', designation: 'Vélo', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Moyen de déplacement', designation: 'Moto', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Moyen de déplacement', designation: 'Voiture', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Matériel de séchage', designation: 'Claie/Séco', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Matériel de séchage', designation: 'Aire cimentée', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Matériel de séchage', designation: 'Séchoir solaire', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Matériel de fermentation', designation: 'Bac de fermentation', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Petit outillage', designation: 'Machette/émondoir', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Petit outillage', designation: 'Matériel de récolte', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+    { type: 'Petit outillage', designation: 'Tronçonneuse', quantite: '', annee: '', cout: '', bon: '', acceptable: '', mauvais: '' },
+  ],
+  // Fiche 7
+  matrice_strategique: [
+    { axe: 'Axe 1: Réhabilitation du verger', objectifs: '', activites: '', cout: '', a1: false, a2: false, a3: false, a4: false, a5: false, responsable: '', partenaires: '' },
+    { axe: 'Axe 2: Gestion du swollen shoot', objectifs: '', activites: '', cout: '', a1: false, a2: false, a3: false, a4: false, a5: false, responsable: '', partenaires: '' },
+    { axe: 'Axe 3: Diversification espaces vides', objectifs: '', activites: '', cout: '', a1: false, a2: false, a3: false, a4: false, a5: false, responsable: '', partenaires: '' },
+    { axe: 'Axe 4: Gestion arbres compagnons', objectifs: '', activites: '', cout: '', a1: false, a2: false, a3: false, a4: false, a5: false, responsable: '', partenaires: '' },
+    { axe: 'Axe 5: Gestion technique exploitation', objectifs: '', activites: '', cout: '', a1: false, a2: false, a3: false, a4: false, a5: false, responsable: '', partenaires: '' },
+    { axe: 'Axe 6: Gestion financière exploitation', objectifs: '', activites: '', cout: '', a1: false, a2: false, a3: false, a4: false, a5: false, responsable: '', partenaires: '' },
+  ],
+  programme_annuel: [
+    { axe: 'Axe 1', activite: '', sous_activite: '', indicateur: '', t1: false, t2: false, t3: false, t4: false, execution: '', appui: '', cout: '' },
+  ],
+};
 
-const IdentificationStep = ({ data, onChange }) => {
-  const update = (field, value) => onChange({ ...data, [field]: value });
+const SOURCE_MATERIEL_OPTIONS = ['SATMACI/ANADER/CNRA', 'Tout venant', 'Pépiniériste privé'];
+
+// ============= FICHE 1: IDENTIFICATION =============
+const Fiche1 = ({ data, epargne, onChange, onEpargneChange }) => {
+  const update = (f, v) => onChange({ ...data, [f]: v });
+  const updateEp = (cat, f, v) => onEpargneChange({ ...epargne, [cat]: { ...epargne[cat], [f]: v } });
+
   return (
-    <div className="space-y-3" data-testid="step-identification">
-      <h3 className="font-bold text-gray-900">Identification du Producteur</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="space-y-4" data-testid="fiche1">
+      <h3 className="font-bold text-gray-900 text-sm border-b pb-2">FICHE 1 : IDENTIFICATION DU PRODUCTEUR</h3>
+      <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Nom', field: 'nom', required: true },
-          { label: 'Prénoms', field: 'prenoms', required: true },
-          { label: 'Date de naissance', field: 'date_naissance', type: 'date' },
-          { label: 'Genre', field: 'genre', type: 'select', options: ['Homme', 'Femme'] },
-          { label: "N° d'identification", field: 'numero_identification' },
-          { label: 'Téléphone', field: 'telephone', type: 'tel' },
-          { label: 'Localité', field: 'localite' },
-          { label: 'Village', field: 'village' },
-          { label: 'Statut foncier', field: 'statut_foncier', type: 'select', options: ['Propriétaire', 'Métayer', 'Locataire'] },
-        ].map(({ label, field, type, options, required }) => (
-          <div key={field}>
-            <label className="text-xs text-gray-600 font-medium block mb-1">{label} {required && <span className="text-red-500">*</span>}</label>
-            {type === 'select' ? (
-              <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full" value={data[field] || ''} onChange={(e) => update(field, e.target.value)} data-testid={`id-${field}`}>
-                <option value="">Sélectionner</option>
-                {options.map(o => <option key={o} value={o.toLowerCase()}>{o}</option>)}
-              </select>
-            ) : (
-              <Input type={type || 'text'} value={data[field] || ''} onChange={(e) => update(field, e.target.value)} data-testid={`id-${field}`} />
-            )}
+          { l: 'Nom', f: 'nom', req: true }, { l: 'Prénoms', f: 'prenoms', req: true },
+          { l: 'Contact (Tél)', f: 'contact_tel', type: 'tel' },
+          { l: 'Code National du producteur', f: 'code_national' },
+          { l: 'Code Groupe', f: 'code_groupe' },
+          { l: 'Nom Entité reconnue', f: 'nom_entite' },
+          { l: 'Code Entité reconnue', f: 'code_entite' },
+          { l: 'Date de naissance', f: 'date_naissance', type: 'date' },
+          { l: 'Village', f: 'village' }, { l: 'Campement', f: 'campement' },
+        ].map(({ l, f, type, req }) => (
+          <div key={f}>
+            <label className="text-[10px] text-gray-500 font-medium block mb-1">{l} {req && <span className="text-red-500">*</span>}</label>
+            <Input type={type || 'text'} value={data[f] || ''} onChange={(e) => update(f, e.target.value)} className="h-8 text-xs" data-testid={`f1-${f}`} />
           </div>
         ))}
+        <div>
+          <label className="text-[10px] text-gray-500 font-medium block mb-1">Genre</label>
+          <select className="border rounded-lg px-2 py-1.5 text-xs w-full" value={data.genre || ''} onChange={(e) => update('genre', e.target.value)} data-testid="f1-genre">
+            <option value="">--</option><option value="homme">Homme</option><option value="femme">Femme</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-500 font-medium block mb-1">Statut foncier</label>
+          <select className="border rounded-lg px-2 py-1.5 text-xs w-full" value={data.statut_foncier || ''} onChange={(e) => update('statut_foncier', e.target.value)} data-testid="f1-statut-foncier">
+            <option value="">--</option><option value="proprietaire">Propriétaire</option><option value="metayer">Métayer</option><option value="locataire">Locataire</option>
+          </select>
+        </div>
       </div>
-      {/* Sélection géographique en cascade */}
-      <div className="mt-2 pt-3 border-t border-gray-100">
-        <label className="text-xs text-gray-600 font-medium block mb-2">Localisation administrative</label>
-        <GeoSelectCI
-          region={data.region || ''}
-          departement={data.department || ''}
-          sousPrefecture={data.sous_prefecture || ''}
-          onChange={(field, value) => update(field, value)}
-        />
+      <div className="mt-2 pt-2 border-t">
+        <label className="text-[10px] text-gray-500 font-medium block mb-2">Délégation Régionale du Conseil Café-Cacao</label>
+        <GeoSelectCI region={data.region || ''} departement={data.department || ''} sousPrefecture={data.sous_prefecture || ''} onChange={(f, v) => update(f, v)} />
       </div>
-      <div className="flex items-center gap-2 mt-2">
-        <input type="checkbox" checked={data.membre_groupe || false} onChange={(e) => update('membre_groupe', e.target.checked)} />
-        <label className="text-sm text-gray-700">Membre d'un groupe de producteurs</label>
+
+      {/* Épargne */}
+      <div className="mt-3 pt-3 border-t">
+        <h4 className="font-semibold text-xs text-gray-800 mb-2">Situation de l'épargne</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[10px] border-collapse">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="border p-1.5 text-left">Épargne</th>
+                <th className="border p-1.5 text-center">Compte</th>
+                <th className="border p-1.5 text-center">Argent sur compte</th>
+                <th className="border p-1.5 text-center">Financement</th>
+                <th className="border p-1.5 text-center">Montant (FCFA)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {['mobile_money', 'microfinance', 'banque', 'autres'].map(cat => (
+                <tr key={cat}>
+                  <td className="border p-1.5 font-medium capitalize">{cat.replace('_', ' ')}</td>
+                  <td className="border p-1 text-center"><input type="checkbox" checked={epargne[cat]?.compte || false} onChange={(e) => updateEp(cat, 'compte', e.target.checked)} /></td>
+                  <td className="border p-1 text-center"><input type="checkbox" checked={epargne[cat]?.argent_compte || false} onChange={(e) => updateEp(cat, 'argent_compte', e.target.checked)} /></td>
+                  <td className="border p-1 text-center"><input type="checkbox" checked={epargne[cat]?.financement || false} onChange={(e) => updateEp(cat, 'financement', e.target.checked)} /></td>
+                  <td className="border p-1"><Input type="number" value={epargne[cat]?.montant || ''} onChange={(e) => updateEp(cat, 'montant', e.target.value)} className="h-6 text-[10px]" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 };
 
-const MenageStep = ({ data, onChange }) => {
-  const update = (field, value) => onChange({ ...data, [field]: value });
+// ============= FICHE 2: MENAGE =============
+const Fiche2 = ({ data, onChange }) => {
+  const updateRow = (i, f, v) => { const n = [...data]; n[i] = { ...n[i], [f]: v }; onChange(n); };
   return (
-    <div className="space-y-3" data-testid="step-menage">
-      <h3 className="font-bold text-gray-900">Composition du Ménage</h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {[
-          { label: 'Taille du ménage', field: 'taille_menage', type: 'number' },
-          { label: 'Nombre de femmes', field: 'nombre_femmes', type: 'number' },
-          { label: "Nombre d'enfants (<18)", field: 'nombre_enfants', type: 'number' },
-          { label: 'Enfants scolarisés', field: 'enfants_scolarises', type: 'number' },
-          { label: 'Travailleurs permanents', field: 'travailleurs_permanents', type: 'number' },
-          { label: 'Travailleurs temporaires', field: 'travailleurs_temporaires', type: 'number' },
-          { label: 'Dépenses mensuelles (FCFA)', field: 'depenses_mensuelles', type: 'number' },
-        ].map(({ label, field, type }) => (
-          <div key={field}>
-            <label className="text-xs text-gray-600 font-medium block mb-1">{label}</label>
-            <Input type={type} value={data[field] || ''} onChange={(e) => update(field, type === 'number' ? Number(e.target.value) : e.target.value)} data-testid={`men-${field}`} />
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-4 mt-2">
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={data.acces_banque || false} onChange={(e) => update('acces_banque', e.target.checked)} />
-          Accès compte bancaire
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={data.mobile_money || false} onChange={(e) => update('mobile_money', e.target.checked)} />
-          Mobile Money
-        </label>
-      </div>
-    </div>
-  );
-};
-
-const ParcellesStep = ({ data, onChange }) => {
-  const addParcelle = () => onChange([...data, { nom_parcelle: '', superficie_ha: 0, latitude: null, longitude: null, annee_creation: null, age_arbres_ans: null, densite_arbres_ha: null, variete_cacao: '', rendement_estime_kg_ha: 0, etat_sanitaire: '', cultures_associees: [] }]);
-  const updateParcelle = (i, field, value) => { const arr = [...data]; arr[i] = { ...arr[i], [field]: value }; onChange(arr); };
-  const removeParcelle = (i) => onChange(data.filter((_, idx) => idx !== i));
-
-  return (
-    <div className="space-y-4" data-testid="step-parcelles">
-      <div className="flex items-center justify-between">
-        <h3 className="font-bold text-gray-900">Parcelles Cacaoyères</h3>
-        <Button size="sm" variant="outline" onClick={addParcelle} data-testid="add-parcelle-btn">+ Ajouter</Button>
-      </div>
-      {data.length === 0 && <p className="text-sm text-gray-400 text-center py-6">Ajoutez au moins une parcelle</p>}
-      {data.map((p, i) => (
-        <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-700">Parcelle {i + 1}</p>
-            <button className="text-red-500 text-xs" onClick={() => removeParcelle(i)}>Supprimer</button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              { label: 'Nom de la parcelle', field: 'nom_parcelle' },
-              { label: 'Superficie (ha)', field: 'superficie_ha', type: 'number' },
-              { label: 'Latitude', field: 'latitude', type: 'number' },
-              { label: 'Longitude', field: 'longitude', type: 'number' },
-              { label: 'Année de création', field: 'annee_creation', type: 'number' },
-              { label: 'Âge des arbres (ans)', field: 'age_arbres_ans', type: 'number' },
-              { label: 'Densité (arbres/ha)', field: 'densite_arbres_ha', type: 'number' },
-              { label: 'Variété cacao', field: 'variete_cacao' },
-              { label: 'Rendement estimé (kg/ha)', field: 'rendement_estime_kg_ha', type: 'number' },
-            ].map(({ label, field, type }) => (
-              <div key={field}>
-                <label className="text-xs text-gray-600 block mb-1">{label}</label>
-                <Input type={type || 'text'} value={p[field] ?? ''} onChange={(e) => updateParcelle(i, field, type === 'number' ? Number(e.target.value) : e.target.value)} data-testid={`parc-${i}-${field}`} />
-              </div>
+    <div className="space-y-3" data-testid="fiche2">
+      <h3 className="font-bold text-gray-900 text-sm border-b pb-2">FICHE 2 : SITUATION DU MÉNAGE</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[10px] border-collapse min-w-[700px]">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border p-1.5 text-left" rowSpan={2}>Membre du ménage</th>
+              <th className="border p-1.5 text-center" rowSpan={2}>Nombre</th>
+              <th className="border p-1.5 text-center" rowSpan={2}>A l'école</th>
+              <th className="border p-1.5 text-center" colSpan={4}>Niveau d'instruction</th>
+              <th className="border p-1.5 text-center" colSpan={2}>Temps travail plantation</th>
+            </tr>
+            <tr className="bg-gray-50">
+              <th className="border p-1 text-center">Aucun</th><th className="border p-1 text-center">Primaire</th>
+              <th className="border p-1 text-center">Second.</th><th className="border p-1 text-center">Univ.</th>
+              <th className="border p-1 text-center">Plein tps</th><th className="border p-1 text-center">Occas.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, i) => (
+              <tr key={i}>
+                <td className="border p-1.5 font-medium">{row.type}</td>
+                {['nombre', 'a_ecole', 'aucun', 'primaire', 'secondaire', 'universitaire', 'plein_temps', 'occasionnel'].map(f => (
+                  <td key={f} className="border p-0.5"><Input type="number" min={0} value={row[f] || ''} onChange={(e) => updateRow(i, f, e.target.value)} className="h-6 text-[10px] text-center w-full border-0" /></td>
+                ))}
+              </tr>
             ))}
-            <div>
-              <label className="text-xs text-gray-600 block mb-1">État sanitaire</label>
-              <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full" value={p.etat_sanitaire || ''} onChange={(e) => updateParcelle(i, 'etat_sanitaire', e.target.value)}>
-                <option value="">Sélectionner</option>
-                <option value="bon">Bon</option>
-                <option value="moyen">Moyen</option>
-                <option value="mauvais">Mauvais</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
-const ArbresStep = ({ data, onChange }) => {
-  const update = (field, value) => onChange({ ...data, [field]: value });
-  const especesStr = (data.especes || []).join(', ');
-  const handleEspeces = (val) => update('especes', val.split(',').map(s => s.trim()).filter(Boolean));
-
-  // Auto-calculate conformity
-  const densite = data.densite_par_ha || 0;
-  const nbEspeces = (data.especes || []).length;
-  const densiteOk = densite >= 25 && densite <= 40;
-  const especesOk = nbEspeces >= 3;
-  const stratesOk = (data.strate_haute || 0) > 0 && (data.strate_moyenne || 0) > 0 && (data.strate_basse || 0) > 0;
-  const conforme = densiteOk && especesOk && stratesOk;
+// ============= FICHE 3: EXPLOITATION =============
+const Fiche3 = ({ exploitation, cultures, onExploitationChange, onCulturesChange }) => {
+  const updateExp = (f, v) => onExploitationChange({ ...exploitation, [f]: v });
+  const updateCulture = (i, f, v) => { const n = [...cultures]; n[i] = { ...n[i], [f]: v }; onCulturesChange(n); };
+  const addCulture = () => onCulturesChange([...cultures, { nom: '', superficie: '', annee_creation: '', source_materiel: '', production_kg: '', revenu_fcfa: '' }]);
+  const removeCulture = (i) => onCulturesChange(cultures.filter((_, idx) => idx !== i));
 
   return (
-    <div className="space-y-3" data-testid="step-arbres">
-      <h3 className="font-bold text-gray-900">Arbres d'Ombrage - Agroforesterie</h3>
-      
-      <div className={`rounded-xl p-3 ${conforme ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
-        <p className="text-sm font-semibold">{conforme ? '✓ Conforme ARS 1000' : '! Non conforme - Ajustez les paramètres'}</p>
-        <div className="flex gap-3 mt-2 text-xs">
-          <span className={densiteOk ? 'text-green-700' : 'text-red-600'}>Densité: {densite}/ha (25-40)</span>
-          <span className={especesOk ? 'text-green-700' : 'text-red-600'}>Espèces: {nbEspeces} (min 3)</span>
-          <span className={stratesOk ? 'text-green-700' : 'text-red-600'}>3 strates</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div className="space-y-4" data-testid="fiche3">
+      <h3 className="font-bold text-gray-900 text-sm border-b pb-2">FICHE 3 : DESCRIPTION DE L'EXPLOITATION</h3>
+      <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Nombre total d\'arbres', field: 'nombre_total', type: 'number' },
-          { label: 'Densité par hectare', field: 'densite_par_ha', type: 'number' },
-          { label: 'Strate haute (nb)', field: 'strate_haute', type: 'number' },
-          { label: 'Strate moyenne (nb)', field: 'strate_moyenne', type: 'number' },
-          { label: 'Strate basse (nb)', field: 'strate_basse', type: 'number' },
-        ].map(({ label, field, type }) => (
-          <div key={field}>
-            <label className="text-xs text-gray-600 font-medium block mb-1">{label}</label>
-            <Input type={type} value={data[field] || ''} onChange={(e) => update(field, Number(e.target.value))} data-testid={`arb-${field}`} />
+          { l: 'Superficie totale (ha)', f: 'superficie_totale_ha' },
+          { l: 'Superficie cultivée (ha)', f: 'superficie_cultivee_ha' },
+          { l: 'Superficie forêt (ha)', f: 'superficie_foret_ha' },
+          { l: 'Superficie jachère (ha)', f: 'superficie_jachere_ha' },
+        ].map(({ l, f }) => (
+          <div key={f}>
+            <label className="text-[10px] text-gray-500 font-medium block mb-1">{l}</label>
+            <Input type="number" step="0.01" value={exploitation[f] || ''} onChange={(e) => updateExp(f, e.target.value)} className="h-8 text-xs" data-testid={`f3-${f}`} />
           </div>
         ))}
-        <div className="md:col-span-2">
-          <label className="text-xs text-gray-600 font-medium block mb-1">Espèces (séparées par des virgules)</label>
-          <Input value={especesStr} onChange={(e) => handleEspeces(e.target.value)} placeholder="Fraké, Fromager, Iroko..." data-testid="arb-especes" />
+        <div>
+          <label className="text-[10px] text-gray-500 font-medium block mb-1">Source d'eau</label>
+          <select className="border rounded-lg px-2 py-1.5 text-xs w-full" value={exploitation.source_eau || ''} onChange={(e) => updateExp('source_eau', e.target.value)} data-testid="f3-source-eau">
+            <option value="">--</option><option value="oui">Oui</option><option value="non">Non</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-500 font-medium block mb-1">Type de source</label>
+          <select className="border rounded-lg px-2 py-1.5 text-xs w-full" value={exploitation.type_source_eau || ''} onChange={(e) => updateExp('type_source_eau', e.target.value)} data-testid="f3-type-eau">
+            <option value="">--</option><option value="riviere">Rivière</option><option value="marigot">Marigot</option><option value="puits">Puits</option><option value="forage">Forage</option><option value="source">Source naturelle</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Cultures table */}
+      <div className="mt-3 pt-3 border-t">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="font-semibold text-xs text-gray-800">Cultures</h4>
+          <Button size="sm" variant="outline" onClick={addCulture} data-testid="add-culture-btn"><Plus className="w-3 h-3 mr-1" /> Ajouter</Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[10px] border-collapse min-w-[600px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="border p-1.5 text-left">Culture</th>
+                <th className="border p-1.5 text-center">Superficie (ha)</th>
+                <th className="border p-1.5 text-center">Année création</th>
+                <th className="border p-1.5 text-center">Source matériel végétal</th>
+                <th className="border p-1.5 text-center">Production (kg)</th>
+                <th className="border p-1.5 text-center">Revenu (FCFA)</th>
+                <th className="border p-1 w-8"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {cultures.map((c, i) => (
+                <tr key={i}>
+                  <td className="border p-0.5"><Input value={c.nom || ''} onChange={(e) => updateCulture(i, 'nom', e.target.value)} className="h-6 text-[10px] border-0" placeholder="Cacao P1" /></td>
+                  <td className="border p-0.5"><Input type="number" step="0.01" value={c.superficie || ''} onChange={(e) => updateCulture(i, 'superficie', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                  <td className="border p-0.5"><Input type="number" value={c.annee_creation || ''} onChange={(e) => updateCulture(i, 'annee_creation', e.target.value)} className="h-6 text-[10px] border-0 text-center" placeholder="2010" /></td>
+                  <td className="border p-0.5">
+                    <select className="text-[10px] w-full h-6 border-0" value={c.source_materiel || ''} onChange={(e) => updateCulture(i, 'source_materiel', e.target.value)}>
+                      <option value="">--</option>
+                      {SOURCE_MATERIEL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </td>
+                  <td className="border p-0.5"><Input type="number" value={c.production_kg || ''} onChange={(e) => updateCulture(i, 'production_kg', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                  <td className="border p-0.5"><Input type="number" value={c.revenu_fcfa || ''} onChange={(e) => updateCulture(i, 'revenu_fcfa', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                  <td className="border p-0.5 text-center"><button onClick={() => removeCulture(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   );
 };
 
-const MaterielStep = ({ data, onChange }) => {
-  const outilsStr = (data.outils || []).join(', ');
-  const protStr = (data.equipements_protection || []).join(', ');
-  const phytoStr = (data.produits_phytosanitaires || []).join(', ');
-  const engraisStr = (data.engrais || []).join(', ');
-
-  const handleArray = (field, val) => onChange({ ...data, [field]: val.split(',').map(s => s.trim()).filter(Boolean) });
+// ============= FICHE 4: INVENTAIRE ARBRES =============
+const Fiche4 = ({ data, onChange }) => {
+  const addArbre = () => onChange([...data, { nom_botanique: '', nom_local: '', circonference: '', longitude: '', latitude: '', origine: 'preserve', decision: 'maintenir' }]);
+  const updateArbre = (i, f, v) => { const n = [...data]; n[i] = { ...n[i], [f]: v }; onChange(n); };
+  const removeArbre = (i) => onChange(data.filter((_, idx) => idx !== i));
 
   return (
-    <div className="space-y-3" data-testid="step-materiel">
-      <h3 className="font-bold text-gray-900">Matériel Agricole</h3>
-      <div className="space-y-3">
-        {[
-          { label: 'Outils (machette, sécateur, etc.)', field: 'outils', value: outilsStr },
-          { label: 'Équipements de protection (bottes, gants, etc.)', field: 'equipements_protection', value: protStr },
-          { label: 'Produits phytosanitaires', field: 'produits_phytosanitaires', value: phytoStr },
-          { label: 'Engrais utilisés', field: 'engrais', value: engraisStr },
-        ].map(({ label, field, value }) => (
-          <div key={field}>
-            <label className="text-xs text-gray-600 font-medium block mb-1">{label}</label>
-            <Input value={value} onChange={(e) => handleArray(field, e.target.value)} placeholder="Séparés par des virgules" data-testid={`mat-${field}`} />
-          </div>
-        ))}
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={data.acces_intrants || false} onChange={(e) => onChange({ ...data, acces_intrants: e.target.checked })} />
-          Accès facilité aux intrants
-        </label>
+    <div className="space-y-3" data-testid="fiche4">
+      <h3 className="font-bold text-gray-900 text-sm border-b pb-2">FICHE 4 : SITUATION DES ARBRES AUTRES QUE LE CACAOYER</h3>
+      <div className="flex justify-end">
+        <Button size="sm" variant="outline" onClick={addArbre} data-testid="add-arbre-btn"><Plus className="w-3 h-3 mr-1" /> Ajouter arbre</Button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[10px] border-collapse min-w-[700px]">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border p-1.5 text-center w-8">N°</th>
+              <th className="border p-1.5 text-center">Nom botanique</th>
+              <th className="border p-1.5 text-center">Nom local</th>
+              <th className="border p-1.5 text-center">Circonf. (cm)</th>
+              <th className="border p-1.5 text-center">Longitude</th>
+              <th className="border p-1.5 text-center">Latitude</th>
+              <th className="border p-1.5 text-center">Origine</th>
+              <th className="border p-1.5 text-center">Décision</th>
+              <th className="border p-1 w-6"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.length === 0 ? (
+              <tr><td colSpan={9} className="border p-3 text-center text-gray-400">Cliquez "Ajouter arbre" pour commencer l'inventaire</td></tr>
+            ) : data.map((a, i) => (
+              <tr key={i}>
+                <td className="border p-1 text-center font-medium">{i + 1}</td>
+                <td className="border p-0.5"><Input value={a.nom_botanique || ''} onChange={(e) => updateArbre(i, 'nom_botanique', e.target.value)} className="h-6 text-[10px] border-0" placeholder="Terminalia..." /></td>
+                <td className="border p-0.5"><Input value={a.nom_local || ''} onChange={(e) => updateArbre(i, 'nom_local', e.target.value)} className="h-6 text-[10px] border-0" placeholder="Fraké" /></td>
+                <td className="border p-0.5"><Input type="number" value={a.circonference || ''} onChange={(e) => updateArbre(i, 'circonference', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                <td className="border p-0.5"><Input type="number" step="0.00001" value={a.longitude || ''} onChange={(e) => updateArbre(i, 'longitude', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                <td className="border p-0.5"><Input type="number" step="0.00001" value={a.latitude || ''} onChange={(e) => updateArbre(i, 'latitude', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                <td className="border p-0.5">
+                  <select className="text-[10px] w-full h-6 border-0" value={a.origine || 'preserve'} onChange={(e) => updateArbre(i, 'origine', e.target.value)}>
+                    <option value="preserve">Préservé</option><option value="plante">Planté</option>
+                  </select>
+                </td>
+                <td className="border p-0.5">
+                  <select className="text-[10px] w-full h-6 border-0" value={a.decision || 'maintenir'} onChange={(e) => updateArbre(i, 'decision', e.target.value)}>
+                    <option value="maintenir">A maintenir</option><option value="eliminer">A éliminer</option>
+                  </select>
+                </td>
+                <td className="border p-0.5 text-center"><button onClick={() => removeArbre(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[10px] text-gray-500 italic">Tirer les conclusions sur la conformité ou non de la parcelle vis-à-vis des recommandations sur l'agroforesterie.</p>
+    </div>
+  );
+};
+
+// ============= FICHE 5: ARBRES D'OMBRAGE =============
+const Fiche5 = ({ data, onChange }) => {
+  const update = (f, v) => {
+    const n = { ...data, [f]: v };
+    n.total = (parseInt(n.strate1) || 0) + (parseInt(n.strate2) || 0) + (parseInt(n.strate3) || 0);
+    onChange(n);
+  };
+  return (
+    <div className="space-y-3" data-testid="fiche5">
+      <h3 className="font-bold text-gray-900 text-sm border-b pb-2">FICHE 5 : ARBRES D'OMBRAGE (Résumé)</h3>
+      <table className="w-full text-xs border-collapse max-w-md">
+        <tbody>
+          <tr><td className="border p-2 font-medium bg-gray-50">Nombre d'arbres strate 1 (basse, 3-5m)</td><td className="border p-1 w-24"><Input type="number" value={data.strate1 || ''} onChange={(e) => update('strate1', e.target.value)} className="h-7 text-xs text-center border-0" data-testid="f5-strate1" /></td></tr>
+          <tr><td className="border p-2 font-medium bg-gray-50">Nombre d'arbres strate 2 (moyenne, 10-20m)</td><td className="border p-1 w-24"><Input type="number" value={data.strate2 || ''} onChange={(e) => update('strate2', e.target.value)} className="h-7 text-xs text-center border-0" data-testid="f5-strate2" /></td></tr>
+          <tr><td className="border p-2 font-medium bg-gray-50">Nombre d'arbres strate 3 (haute, &gt;30m)</td><td className="border p-1 w-24"><Input type="number" value={data.strate3 || ''} onChange={(e) => update('strate3', e.target.value)} className="h-7 text-xs text-center border-0" data-testid="f5-strate3" /></td></tr>
+          <tr className="bg-green-50"><td className="border p-2 font-bold">Total arbres d'ombrage</td><td className="border p-2 text-center font-bold text-green-700">{data.total || 0}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// ============= FICHE 6: MATERIEL =============
+const Fiche6 = ({ data, onChange }) => {
+  const updateRow = (i, f, v) => { const n = [...data]; n[i] = { ...n[i], [f]: v }; onChange(n); };
+  let lastType = '';
+  return (
+    <div className="space-y-3" data-testid="fiche6">
+      <h3 className="font-bold text-gray-900 text-sm border-b pb-2">FICHE 6 : MATÉRIEL AGRICOLE ET ÉQUIPEMENTS</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[10px] border-collapse min-w-[700px]">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border p-1.5 text-left">Type</th>
+              <th className="border p-1.5 text-left">Désignation</th>
+              <th className="border p-1.5 text-center">Qté</th>
+              <th className="border p-1.5 text-center">Année</th>
+              <th className="border p-1.5 text-center">Coût (FCFA)</th>
+              <th className="border p-1.5 text-center">Bon</th>
+              <th className="border p-1.5 text-center">Accept.</th>
+              <th className="border p-1.5 text-center">Mauvais</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, i) => {
+              const showType = row.type !== lastType;
+              lastType = row.type;
+              return (
+                <tr key={i}>
+                  <td className="border p-1.5 font-medium">{showType ? row.type : ''}</td>
+                  <td className="border p-1.5">{row.designation}</td>
+                  <td className="border p-0.5"><Input type="number" min={0} value={row.quantite || ''} onChange={(e) => updateRow(i, 'quantite', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                  <td className="border p-0.5"><Input type="number" value={row.annee || ''} onChange={(e) => updateRow(i, 'annee', e.target.value)} className="h-6 text-[10px] border-0 text-center" placeholder="2024" /></td>
+                  <td className="border p-0.5"><Input type="number" value={row.cout || ''} onChange={(e) => updateRow(i, 'cout', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                  <td className="border p-0.5"><Input type="number" min={0} value={row.bon || ''} onChange={(e) => updateRow(i, 'bon', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                  <td className="border p-0.5"><Input type="number" min={0} value={row.acceptable || ''} onChange={(e) => updateRow(i, 'acceptable', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                  <td className="border p-0.5"><Input type="number" min={0} value={row.mauvais || ''} onChange={(e) => updateRow(i, 'mauvais', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
 
-const StrategieStep = ({ data, onChange }) => {
-  const update = (field, value) => onChange({ ...data, [field]: value });
-  const risquesStr = (data.risques_identifies || []).join(', ');
-  const actionsStr = (data.actions_prioritaires || []).join(', ');
+// ============= FICHE 7: PLANIFICATION =============
+const Fiche7 = ({ matrice, programme, onMatriceChange, onProgrammeChange }) => {
+  const updateM = (i, f, v) => { const n = [...matrice]; n[i] = { ...n[i], [f]: v }; onMatriceChange(n); };
+  const updateP = (i, f, v) => { const n = [...programme]; n[i] = { ...n[i], [f]: v }; onProgrammeChange(n); };
+  const addProgramme = () => onProgrammeChange([...programme, { axe: '', activite: '', sous_activite: '', indicateur: '', t1: false, t2: false, t3: false, t4: false, execution: '', appui: '', cout: '' }]);
 
   return (
-    <div className="space-y-3" data-testid="step-strategie">
-      <h3 className="font-bold text-gray-900">Matrice Stratégique - Plan de Développement</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <label className="text-xs text-gray-600 font-medium block mb-1">Objectif rendement (kg/ha)</label>
-          <Input type="number" value={data.objectif_rendement_kg_ha || ''} onChange={(e) => update('objectif_rendement_kg_ha', Number(e.target.value))} data-testid="strat-objectif" />
-        </div>
-        <div>
-          <label className="text-xs text-gray-600 font-medium block mb-1">Horizon (années)</label>
-          <Input type="number" value={data.horizon_annees || 5} onChange={(e) => update('horizon_annees', Number(e.target.value))} data-testid="strat-horizon" />
-        </div>
-        <div>
-          <label className="text-xs text-gray-600 font-medium block mb-1">Coût total estimé (FCFA)</label>
-          <Input type="number" value={data.cout_total_estime || ''} onChange={(e) => update('cout_total_estime', Number(e.target.value))} data-testid="strat-cout" />
-        </div>
-      </div>
+    <div className="space-y-6" data-testid="fiche7">
+      {/* Matrice stratégique */}
       <div>
-        <label className="text-xs text-gray-600 font-medium block mb-1">Risques identifiés (séparés par des virgules)</label>
-        <Input value={risquesStr} onChange={(e) => update('risques_identifies', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} placeholder="Maladies, sécheresse..." data-testid="strat-risques" />
+        <h3 className="font-bold text-gray-900 text-sm border-b pb-2">FICHE 7a : MATRICE DE PLANIFICATION STRATÉGIQUE</h3>
+        <div className="overflow-x-auto mt-2">
+          <table className="w-full text-[10px] border-collapse min-w-[800px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="border p-1.5 text-left">Axes stratégiques</th>
+                <th className="border p-1.5 text-center">Objectifs</th>
+                <th className="border p-1.5 text-center">Activités</th>
+                <th className="border p-1.5 text-center">Coût</th>
+                <th className="border p-1 text-center w-7">A1</th><th className="border p-1 text-center w-7">A2</th>
+                <th className="border p-1 text-center w-7">A3</th><th className="border p-1 text-center w-7">A4</th><th className="border p-1 text-center w-7">A5</th>
+                <th className="border p-1.5 text-center">Responsable</th>
+                <th className="border p-1.5 text-center">Partenaires</th>
+              </tr>
+            </thead>
+            <tbody>
+              {matrice.map((row, i) => (
+                <tr key={i}>
+                  <td className="border p-1.5 font-medium text-[9px]">{row.axe}</td>
+                  <td className="border p-0.5"><Input value={row.objectifs || ''} onChange={(e) => updateM(i, 'objectifs', e.target.value)} className="h-6 text-[10px] border-0" /></td>
+                  <td className="border p-0.5"><Input value={row.activites || ''} onChange={(e) => updateM(i, 'activites', e.target.value)} className="h-6 text-[10px] border-0" /></td>
+                  <td className="border p-0.5"><Input type="number" value={row.cout || ''} onChange={(e) => updateM(i, 'cout', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                  {['a1','a2','a3','a4','a5'].map(a => (
+                    <td key={a} className="border p-0.5 text-center"><input type="checkbox" checked={row[a] || false} onChange={(e) => updateM(i, a, e.target.checked)} /></td>
+                  ))}
+                  <td className="border p-0.5"><Input value={row.responsable || ''} onChange={(e) => updateM(i, 'responsable', e.target.value)} className="h-6 text-[10px] border-0" /></td>
+                  <td className="border p-0.5"><Input value={row.partenaires || ''} onChange={(e) => updateM(i, 'partenaires', e.target.value)} className="h-6 text-[10px] border-0" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Programme annuel */}
       <div>
-        <label className="text-xs text-gray-600 font-medium block mb-1">Actions prioritaires</label>
-        <Input value={actionsStr} onChange={(e) => update('actions_prioritaires', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} placeholder="Renouvellement, taille, fertilisation..." data-testid="strat-actions" />
+        <div className="flex items-center justify-between border-b pb-2">
+          <h3 className="font-bold text-gray-900 text-sm">FICHE 7b : PROGRAMME ANNUEL D'ACTION</h3>
+          <Button size="sm" variant="outline" onClick={addProgramme}><Plus className="w-3 h-3 mr-1" /> Ajouter</Button>
+        </div>
+        <div className="overflow-x-auto mt-2">
+          <table className="w-full text-[10px] border-collapse min-w-[800px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="border p-1.5 text-left">Axe</th>
+                <th className="border p-1.5 text-center">Activité</th>
+                <th className="border p-1.5 text-center">Sous-activité</th>
+                <th className="border p-1.5 text-center">Indicateurs</th>
+                <th className="border p-1 text-center w-7">T1</th><th className="border p-1 text-center w-7">T2</th>
+                <th className="border p-1 text-center w-7">T3</th><th className="border p-1 text-center w-7">T4</th>
+                <th className="border p-1.5 text-center">Exécution</th>
+                <th className="border p-1.5 text-center">Appui</th>
+                <th className="border p-1.5 text-center">Coût</th>
+              </tr>
+            </thead>
+            <tbody>
+              {programme.map((row, i) => (
+                <tr key={i}>
+                  <td className="border p-0.5">
+                    <select className="text-[10px] w-full h-6 border-0" value={row.axe || ''} onChange={(e) => updateP(i, 'axe', e.target.value)}>
+                      <option value="">--</option>
+                      {matrice.map((m, j) => <option key={j} value={`Axe ${j+1}`}>{`Axe ${j+1}`}</option>)}
+                    </select>
+                  </td>
+                  <td className="border p-0.5"><Input value={row.activite || ''} onChange={(e) => updateP(i, 'activite', e.target.value)} className="h-6 text-[10px] border-0" /></td>
+                  <td className="border p-0.5"><Input value={row.sous_activite || ''} onChange={(e) => updateP(i, 'sous_activite', e.target.value)} className="h-6 text-[10px] border-0" /></td>
+                  <td className="border p-0.5"><Input value={row.indicateur || ''} onChange={(e) => updateP(i, 'indicateur', e.target.value)} className="h-6 text-[10px] border-0" /></td>
+                  {['t1','t2','t3','t4'].map(t => (
+                    <td key={t} className="border p-0.5 text-center"><input type="checkbox" checked={row[t] || false} onChange={(e) => updateP(i, t, e.target.checked)} /></td>
+                  ))}
+                  <td className="border p-0.5"><Input value={row.execution || ''} onChange={(e) => updateP(i, 'execution', e.target.value)} className="h-6 text-[10px] border-0" /></td>
+                  <td className="border p-0.5"><Input value={row.appui || ''} onChange={(e) => updateP(i, 'appui', e.target.value)} className="h-6 text-[10px] border-0" /></td>
+                  <td className="border p-0.5"><Input type="number" value={row.cout || ''} onChange={(e) => updateP(i, 'cout', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 };
 
-const ResumeStep = ({ formData, conformite }) => {
-  const { identification, menage, parcelles, arbres_ombrage, matrice_strategique } = formData;
+// ============= RESUME =============
+const Resume = ({ formData }) => {
+  const { identification: id, arbres_ombrage: ao } = formData;
+  const totalMenage = (formData.menage || []).reduce((s, r) => s + (parseInt(r.nombre) || 0), 0);
+  const totalCultures = (formData.cultures || []).length;
+  const totalArbres = (formData.inventaire_arbres || []).length;
+  const totalMateriel = (formData.materiel || []).filter(m => parseInt(m.quantite) > 0).length;
+
   return (
-    <div className="space-y-4" data-testid="step-resume">
-      <h3 className="font-bold text-gray-900">Résumé du PDC</h3>
-      
-      {/* Conformité */}
-      <div className={`rounded-xl p-4 border-2 ${conformite >= 80 ? 'bg-green-50 border-green-300' : conformite >= 50 ? 'bg-amber-50 border-amber-300' : 'bg-red-50 border-red-300'}`}>
-        <div className="flex items-center gap-3">
-          <div className={`text-3xl font-bold ${conformite >= 80 ? 'text-green-700' : conformite >= 50 ? 'text-amber-700' : 'text-red-700'}`}>
-            {conformite}%
-          </div>
-          <div>
-            <p className="font-semibold text-gray-800">Conformité PDC</p>
-            <p className="text-xs text-gray-500">Selon les exigences ARS 1000-1</p>
-          </div>
-        </div>
-        <div className="h-3 bg-white/60 rounded-full mt-3 overflow-hidden">
-          <div className={`h-full rounded-full ${conformite >= 80 ? 'bg-green-500' : conformite >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${conformite}%` }} />
-        </div>
-      </div>
-
-      {/* Résumé sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <p className="text-xs text-gray-500 mb-1">Producteur</p>
-          <p className="font-semibold text-sm">{identification.nom} {identification.prenoms}</p>
-          <p className="text-xs text-gray-500">{identification.village} - {identification.region}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <p className="text-xs text-gray-500 mb-1">Ménage</p>
-          <p className="font-semibold text-sm">{menage.taille_menage} personnes</p>
-          <p className="text-xs text-gray-500">{menage.nombre_enfants} enfants, {menage.enfants_scolarises} scolarisés</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <p className="text-xs text-gray-500 mb-1">Parcelles</p>
-          <p className="font-semibold text-sm">{parcelles.length} parcelle(s)</p>
-          <p className="text-xs text-gray-500">{parcelles.reduce((s, p) => s + (p.superficie_ha || 0), 0).toFixed(2)} ha total</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <p className="text-xs text-gray-500 mb-1">Arbres d'ombrage</p>
-          <p className="font-semibold text-sm">{arbres_ombrage.nombre_total} arbres</p>
-          <p className="text-xs text-gray-500">{(arbres_ombrage.especes || []).length} espèces, {arbres_ombrage.densite_par_ha}/ha</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-3 md:col-span-2">
-          <p className="text-xs text-gray-500 mb-1">Objectif Stratégique</p>
-          <p className="font-semibold text-sm">{matrice_strategique.objectif_rendement_kg_ha} kg/ha en {matrice_strategique.horizon_annees} ans</p>
-          <p className="text-xs text-gray-500">Coût estimé: {(matrice_strategique.cout_total_estime || 0).toLocaleString()} FCFA</p>
-        </div>
+    <div className="space-y-3" data-testid="resume">
+      <h3 className="font-bold text-gray-900 text-sm border-b pb-2">RÉSUMÉ DU PDC</h3>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-lg border p-3"><p className="text-[10px] text-gray-400">Producteur</p><p className="text-sm font-semibold">{id?.nom} {id?.prenoms}</p><p className="text-[10px] text-gray-400">{id?.village}, {id?.sous_prefecture}</p></div>
+        <div className="bg-white rounded-lg border p-3"><p className="text-[10px] text-gray-400">Ménage</p><p className="text-sm font-semibold">{totalMenage} membres</p></div>
+        <div className="bg-white rounded-lg border p-3"><p className="text-[10px] text-gray-400">Cultures</p><p className="text-sm font-semibold">{totalCultures} lignes</p><p className="text-[10px] text-gray-400">{formData.exploitation?.superficie_totale_ha || 0} ha total</p></div>
+        <div className="bg-white rounded-lg border p-3"><p className="text-[10px] text-gray-400">Inventaire arbres</p><p className="text-sm font-semibold">{totalArbres} arbres</p></div>
+        <div className="bg-white rounded-lg border p-3"><p className="text-[10px] text-gray-400">Arbres ombrage</p><p className="text-sm font-semibold">{ao?.total || 0} total</p><p className="text-[10px] text-gray-400">S1:{ao?.strate1||0} S2:{ao?.strate2||0} S3:{ao?.strate3||0}</p></div>
+        <div className="bg-white rounded-lg border p-3"><p className="text-[10px] text-gray-400">Matériel</p><p className="text-sm font-semibold">{totalMateriel} équipements</p></div>
+        <div className="bg-white rounded-lg border p-3 col-span-2"><p className="text-[10px] text-gray-400">Axes stratégiques renseignés</p><p className="text-sm font-semibold">{(formData.matrice_strategique || []).filter(a => a.objectifs).length} / 6</p></div>
       </div>
     </div>
   );
 };
 
-
-// ============= MAIN PDC FORM =============
+// ============= MAIN PAGE =============
 export default function FarmerPDCPage() {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
+  const [formData, setFormData] = useState(INITIAL_FORM);
   const [existingPDC, setExistingPDC] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [formData, setFormData] = useState({
-    identification: { nom: '', prenoms: '', date_naissance: '', genre: '', numero_identification: '', telephone: '', localite: '', village: '', sous_prefecture: '', department: '', region: '', membre_groupe: false, statut_foncier: '' },
-    menage: { taille_menage: 0, nombre_femmes: 0, nombre_enfants: 0, enfants_scolarises: 0, travailleurs_permanents: 0, travailleurs_temporaires: 0, sources_revenus_autres: [], depenses_mensuelles: 0, acces_banque: false, mobile_money: false },
-    parcelles: [],
-    arbres_ombrage: { nombre_total: 0, densite_par_ha: 0, especes: [], nombre_especes: 0, strate_haute: 0, strate_moyenne: 0, strate_basse: 0, conforme_agroforesterie: false },
-    materiel_agricole: { outils: [], equipements_protection: [], produits_phytosanitaires: [], engrais: [], acces_intrants: false },
-    matrice_strategique: { objectif_rendement_kg_ha: 0, horizon_annees: 5, investissements_prevus: [], risques_identifies: [], actions_prioritaires: [], cout_total_estime: 0 },
-    notes: '',
-  });
-
-  const [conformite, setConformite] = useState(0);
-
-  // Load existing PDC
   const loadPDC = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/api/ars1000/pdc/my-pdc`, { headers: authHeaders() });
@@ -359,204 +549,143 @@ export default function FarmerPDCPage() {
         const data = await res.json();
         if (data) {
           setExistingPDC(data);
-          setFormData({
-            identification: data.identification || formData.identification,
-            menage: data.menage || formData.menage,
-            parcelles: data.parcelles || [],
-            arbres_ombrage: data.arbres_ombrage || formData.arbres_ombrage,
-            materiel_agricole: data.materiel_agricole || formData.materiel_agricole,
-            matrice_strategique: data.matrice_strategique || formData.matrice_strategique,
-            notes: data.notes || '',
-          });
-          setConformite(data.pourcentage_conformite || 0);
+          setFormData(prev => ({
+            ...prev,
+            identification: { ...prev.identification, ...data.identification },
+            epargne: data.epargne || prev.epargne,
+            menage: data.menage_detail || prev.menage,
+            exploitation: data.exploitation || prev.exploitation,
+            cultures: data.cultures?.length ? data.cultures : prev.cultures,
+            inventaire_arbres: data.inventaire_arbres || [],
+            arbres_ombrage: data.arbres_ombrage_resume || prev.arbres_ombrage,
+            materiel: data.materiel_detail || prev.materiel,
+            matrice_strategique: data.matrice_strategique_detail || prev.matrice_strategique,
+            programme_annuel: data.programme_annuel?.length ? data.programme_annuel : prev.programme_annuel,
+          }));
         }
       }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { loadPDC(); }, [loadPDC]);
 
-  // Pre-fill from user data
-  useEffect(() => {
-    if (!existingPDC && user && !loading) {
-      setFormData(prev => ({
-        ...prev,
-        identification: {
-          ...prev.identification,
-          nom: user.full_name?.split(' ')[0] || '',
-          prenoms: user.full_name?.split(' ').slice(1).join(' ') || '',
-          telephone: user.phone_number || '',
-        }
-      }));
-    }
-  }, [user, existingPDC, loading]);
-
   const handleSave = async () => {
     setSaving(true);
     try {
-      const body = { ...formData };
-      body.arbres_ombrage.nombre_especes = (body.arbres_ombrage.especes || []).length;
-      const densiteOk = body.arbres_ombrage.densite_par_ha >= 25 && body.arbres_ombrage.densite_par_ha <= 40;
-      const especesOk = body.arbres_ombrage.nombre_especes >= 3;
-      const stratesOk = body.arbres_ombrage.strate_haute > 0 && body.arbres_ombrage.strate_moyenne > 0 && body.arbres_ombrage.strate_basse > 0;
-      body.arbres_ombrage.conforme_agroforesterie = densiteOk && especesOk && stratesOk;
+      const payload = {
+        identification: formData.identification,
+        epargne: formData.epargne,
+        menage_detail: formData.menage,
+        menage: {
+          taille_menage: formData.menage.reduce((s, r) => s + (parseInt(r.nombre) || 0), 0),
+          nombre_enfants: ['Enfants 0-6 ans', 'Enfants 6-18 ans', 'Enfants +18 ans'].reduce((s, t) => s + (parseInt(formData.menage.find(m => m.type === t)?.nombre) || 0), 0),
+        },
+        exploitation: formData.exploitation,
+        cultures: formData.cultures,
+        parcelles: formData.cultures.filter(c => c.nom?.toLowerCase().includes('cacao')).map(c => ({
+          nom_parcelle: c.nom, superficie_ha: parseFloat(c.superficie) || 0,
+          variete_cacao: c.source_materiel, rendement_estime_kg_ha: parseFloat(c.production_kg) || 0,
+        })),
+        inventaire_arbres: formData.inventaire_arbres,
+        arbres_ombrage_resume: formData.arbres_ombrage,
+        arbres_ombrage: {
+          nombre_total: parseInt(formData.arbres_ombrage.total) || 0,
+          strate_haute: parseInt(formData.arbres_ombrage.strate3) || 0,
+          strate_moyenne: parseInt(formData.arbres_ombrage.strate2) || 0,
+          strate_basse: parseInt(formData.arbres_ombrage.strate1) || 0,
+          nombre_especes: new Set(formData.inventaire_arbres.map(a => a.nom_local || a.nom_botanique).filter(Boolean)).size,
+          especes: [...new Set(formData.inventaire_arbres.map(a => a.nom_local || a.nom_botanique).filter(Boolean))],
+        },
+        materiel_detail: formData.materiel,
+        materiel_agricole: {
+          outils: formData.materiel.filter(m => parseInt(m.quantite) > 0).map(m => m.designation),
+        },
+        matrice_strategique_detail: formData.matrice_strategique,
+        matrice_strategique: {
+          objectif_rendement_kg_ha: 0,
+          horizon_annees: 5,
+          actions_prioritaires: formData.matrice_strategique.filter(a => a.activites).map(a => a.activites),
+        },
+        programme_annuel: formData.programme_annuel,
+      };
 
       let res;
       if (existingPDC) {
-        res = await fetch(`${API_URL}/api/ars1000/pdc/${existingPDC.id}`, {
-          method: 'PUT', headers: authHeaders(), body: JSON.stringify(body),
-        });
+        res = await fetch(`${API_URL}/api/ars1000/pdc/${existingPDC.id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
       } else {
-        res = await fetch(`${API_URL}/api/ars1000/pdc`, {
-          method: 'POST', headers: authHeaders(), body: JSON.stringify(body),
-        });
+        res = await fetch(`${API_URL}/api/ars1000/pdc`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
       }
 
-      if (!res.ok) {
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(existingPDC ? 'PDC mis à jour' : 'PDC créé');
+        if (!existingPDC && data.id) setExistingPDC(data);
+      } else {
         const err = await res.json();
-        throw new Error(err.detail || 'Erreur');
+        toast.error(err.detail || 'Erreur');
       }
-
-      const result = await res.json();
-      setExistingPDC(result);
-      setConformite(result.pourcentage_conformite || 0);
-      toast.success('PDC sauvegardé');
-    } catch (e) {
-      toast.error(e.message || 'Erreur lors de la sauvegarde');
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) { toast.error('Erreur réseau'); }
+    finally { setSaving(false); }
   };
 
-  const handleSubmit = async () => {
-    if (!existingPDC) {
-      toast.error('Sauvegardez d\'abord votre PDC');
-      return;
-    }
-    try {
-      const res = await fetch(`${API_URL}/api/ars1000/pdc/${existingPDC.id}/submit`, {
-        method: 'POST', headers: authHeaders(),
-      });
-      if (!res.ok) throw new Error((await res.json()).detail);
-      toast.success('PDC soumis pour validation');
-      loadPDC();
-    } catch (e) {
-      toast.error(e.message || 'Erreur');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="animate-spin w-8 h-8 text-green-600" />
-      </div>
-    );
-  }
+  if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-green-600" /></div>;
 
   const isValidated = existingPDC?.statut === 'valide';
-  const isSubmitted = existingPDC?.statut === 'soumis';
 
   return (
-    <div className="min-h-screen bg-gray-50" data-testid="farmer-pdc-page">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-lg">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <div>
-                <h1 className="text-base font-bold text-gray-900">Mon PDC - Plan de Développement</h1>
-                <p className="text-xs text-gray-500">ARS 1000-1 | Cacao Durable</p>
-              </div>
-            </div>
-            {existingPDC && (
-              <Badge className={existingPDC.statut === 'valide' ? 'bg-green-100 text-green-700' : existingPDC.statut === 'soumis' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}>
-                {existingPDC.statut}
-              </Badge>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto px-4 py-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">Plan de Développement de la Cacaoyère</h1>
+            <p className="text-xs text-gray-500">Certification ARS 1000 - Cacao Durable</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {existingPDC && <Badge className={isValidated ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}>{existingPDC.statut}</Badge>}
+            {!isValidated && (
+              <Button size="sm" onClick={handleSave} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white" data-testid="save-pdc-btn">
+                {saving ? <Loader2 className="animate-spin w-4 h-4 mr-1" /> : <Save className="w-4 h-4 mr-1" />} Sauvegarder
+              </Button>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Conformité bar */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-4 py-2">
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500">Conformité:</span>
-            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className={`h-full rounded-full transition-all ${conformite >= 80 ? 'bg-green-500' : conformite >= 50 ? 'bg-amber-500' : 'bg-red-400'}`} style={{ width: `${conformite}%` }} />
-            </div>
-            <span className="text-sm font-bold text-gray-700">{conformite}%</span>
-          </div>
+        {/* Steps nav */}
+        <div className="flex gap-1 mb-4 overflow-x-auto pb-2">
+          {STEPS.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <button key={s.id} onClick={() => setStep(i)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${step === i ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-green-50 border'}`}
+                data-testid={`step-${s.id}`}>
+                <Icon className="w-3.5 h-3.5" />{s.label}
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      {/* Steps indicator */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-4 py-2 flex gap-1 overflow-x-auto scrollbar-hide">
-          {STEPS.map((s, i) => (
-            <button
-              key={s.id}
-              onClick={() => setStep(i)}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                step === i ? 'bg-green-600 text-white' : i < step ? 'bg-green-100 text-green-700' : 'text-gray-400 hover:bg-gray-100'
-              }`}
-              data-testid={`step-btn-${s.id}`}
-            >
-              <s.icon className="w-3.5 h-3.5" />
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-          {step === 0 && <IdentificationStep data={formData.identification} onChange={(d) => setFormData({ ...formData, identification: d })} />}
-          {step === 1 && <MenageStep data={formData.menage} onChange={(d) => setFormData({ ...formData, menage: d })} />}
-          {step === 2 && <ParcellesStep data={formData.parcelles} onChange={(d) => setFormData({ ...formData, parcelles: d })} />}
-          {step === 3 && <ArbresStep data={formData.arbres_ombrage} onChange={(d) => setFormData({ ...formData, arbres_ombrage: d })} />}
-          {step === 4 && <MaterielStep data={formData.materiel_agricole} onChange={(d) => setFormData({ ...formData, materiel_agricole: d })} />}
-          {step === 5 && <StrategieStep data={formData.matrice_strategique} onChange={(d) => setFormData({ ...formData, matrice_strategique: d })} />}
-          {step === 6 && <ResumeStep formData={formData} conformite={conformite} />}
+        {/* Content */}
+        <div className="bg-white rounded-2xl border shadow-sm p-5 mb-4">
+          {step === 0 && <Fiche1 data={formData.identification} epargne={formData.epargne} onChange={id => setFormData(f => ({ ...f, identification: id }))} onEpargneChange={ep => setFormData(f => ({ ...f, epargne: ep }))} />}
+          {step === 1 && <Fiche2 data={formData.menage} onChange={m => setFormData(f => ({ ...f, menage: m }))} />}
+          {step === 2 && <Fiche3 exploitation={formData.exploitation} cultures={formData.cultures} onExploitationChange={e => setFormData(f => ({ ...f, exploitation: e }))} onCulturesChange={c => setFormData(f => ({ ...f, cultures: c }))} />}
+          {step === 3 && <Fiche4 data={formData.inventaire_arbres} onChange={d => setFormData(f => ({ ...f, inventaire_arbres: d }))} />}
+          {step === 4 && <Fiche5 data={formData.arbres_ombrage} onChange={d => setFormData(f => ({ ...f, arbres_ombrage: d }))} />}
+          {step === 5 && <Fiche6 data={formData.materiel} onChange={d => setFormData(f => ({ ...f, materiel: d }))} />}
+          {step === 6 && <Fiche7 matrice={formData.matrice_strategique} programme={formData.programme_annuel} onMatriceChange={d => setFormData(f => ({ ...f, matrice_strategique: d }))} onProgrammeChange={d => setFormData(f => ({ ...f, programme_annuel: d }))} />}
+          {step === 7 && <Resume formData={formData} />}
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-4">
-          <Button
-            variant="outline"
-            onClick={() => setStep(Math.max(0, step - 1))}
-            disabled={step === 0}
-            data-testid="prev-step-btn"
-          >
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} data-testid="prev-step-btn">
             <ChevronLeft className="w-4 h-4 mr-1" /> Précédent
           </Button>
-
-          <div className="flex gap-2">
-            {!isValidated && (
-              <Button variant="outline" onClick={handleSave} disabled={saving} data-testid="save-pdc-btn">
-                {saving ? <Loader2 className="animate-spin w-4 h-4 mr-1" /> : <Save className="w-4 h-4 mr-1" />}
-                Sauvegarder
-              </Button>
-            )}
-
-            {step === STEPS.length - 1 ? (
-              !isValidated && !isSubmitted && existingPDC && (
-                <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleSubmit} data-testid="submit-pdc-btn">
-                  <Send className="w-4 h-4 mr-1" /> Soumettre pour validation
-                </Button>
-              )
-            ) : (
-              <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setStep(Math.min(STEPS.length - 1, step + 1))} data-testid="next-step-btn">
-                Suivant <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            )}
-          </div>
+          <Button onClick={() => setStep(Math.min(STEPS.length - 1, step + 1))} disabled={step === STEPS.length - 1} className="bg-green-600 hover:bg-green-700 text-white" data-testid="next-step-btn">
+            Suivant <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
         </div>
       </div>
     </div>
