@@ -126,6 +126,7 @@ import { OfflineBanner } from "./components/OfflineBanner";
 
 // Agent Terrain
 import AgentTerrainDashboard from "./pages/agent/AgentTerrainDashboard";
+import AgentVisitePDC from "./pages/agent/AgentVisitePDC";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 // Notifications (shared)
@@ -262,6 +263,7 @@ function App() {
               <Route path="/agent/ssrte" element={<SSRTEAgentDashboard />} />
               <Route path="/agent/terrain" element={<AgentTerrainDashboard />} />
               <Route path="/agent/search" element={<AgentTerrainDashboard />} />
+              <Route path="/agent/visite-pdc" element={<AgentVisitePDC />} />
               <Route path="/ssrte/realtime" element={<SSRTERealTimeDashboard />} />
               <Route path="/ssrte/alerts" element={<SSRTERealTimeDashboard />} />
 

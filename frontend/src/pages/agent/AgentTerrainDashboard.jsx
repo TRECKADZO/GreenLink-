@@ -31,6 +31,7 @@ const getAuthHeader = () => {
 };
 
 const FARMER_FORMS = [
+  { id: 'pdc', label: 'Visite Terrain PDC', desc: 'Plan de Developpement Cacaoyer (ARS 1000)', icon: Shield, color: 'bg-green-700' },
   { id: 'ici', label: 'Fiche ICI', desc: 'Evaluation initiale: famille, enfants, education', icon: FileText, color: 'bg-violet-500' },
   { id: 'ssrte', label: 'Visite SSRTE', desc: 'Observation travail enfants, risques, remediation', icon: ClipboardCheck, color: 'bg-cyan-500' },
   { id: 'redd', label: 'Fiche Environnementale', desc: '21 pratiques durables (agroforesterie, sols)', icon: Leaf, color: 'bg-emerald-500' },
@@ -914,6 +915,7 @@ const MoreTab = ({ navigate, onTabChange }) => {
       items: [
         { label: 'Tableau de bord', desc: 'Statistiques et objectifs', icon: BarChart3, color: 'bg-emerald-500', action: () => onTabChange('dashboard') },
         { label: 'Tableau SSRTE', desc: 'Suivi des visites SSRTE', icon: ClipboardCheck, color: 'bg-cyan-500', route: '/agent/ssrte' },
+        { label: 'Visites PDC', desc: 'Plans de Developpement ARS 1000', icon: Shield, color: 'bg-green-700', action: () => onTabChange('farmers') },
       ]
     },
     {
@@ -1246,6 +1248,7 @@ const AgentTerrainDashboard = () => {
     if (!selectedFarmer) return;
     const fId = selectedFarmer.id || '', fName = encodeURIComponent(selectedFarmer.full_name || ''), fPhone = encodeURIComponent(selectedFarmer.phone_number || '');
     switch (formId) {
+      case 'pdc': navigate(`/agent/visite-pdc?farmer_id=${fId}&farmer_name=${fName}`); break;
       case 'ici': setShowICIModal(true); break;
       case 'ssrte': setShowSSRTEModal(true); break;
       case 'redd': navigate(`/redd/tracking?farmer=${fName}&phone=${fPhone}&id=${fId}`); break;

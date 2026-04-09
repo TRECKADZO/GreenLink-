@@ -486,3 +486,171 @@ async def submit_pdc(pdc_id: str, current_user: dict = Depends(get_current_user)
 
     updated = await db.pdc.find_one({"_id": ObjectId(pdc_id)})
     return serialize_pdc(updated)
+
+
+# ============= AGENT TERRAIN VISIT WORKFLOW =============
+
+class VisiteTerrainData(BaseModel):
+    farmer_id: str
+    identification: PDCIdentification = PDCIdentification()
+    menage: PDCMenage = PDCMenage()
+    parcelles: List[PDCParcelle] = []
+    arbres_ombrage: PDCArbresOmbrage = PDCArbresOmbrage()
+    materiel_agricole: PDCMaterielAgricole = PDCMaterielAgricole()
+    matrice_strategique: PDCMatriceStrategique = PDCMatriceStrategique()
+    matrices_annuelles: List[PDCMatriceAnnuelle] = []
+    pratiques_durables: dict = {}
+    inventaire_arbres: List[dict] = []  # [{espece, circonference_cm, lat, lng, decision}]
+    photos_parcelle: List[str] = []  # URLs des photos uploadées
+    signature_planteur: Optional[dict] = None  # {data: base64, nom, date}
+    signature_agent: Optional[dict] = None
+    notes: str = ""
+
+
+@router.post("/agent-visit")
+async def create_or_update_agent_visit(
+    data: VisiteTerrainData,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Agent terrain : créer ou mettre à jour un PDC lors d'une visite terrain.
+    Si un PDC existe déjà pour ce planteur, on le met à jour.
+    Sinon, on en crée un nouveau avec statut 'visite_terrain'.
+    """
+    user_type = current_user.get("user_type", "")
+    if user_type not in ("field_agent", "agent_terrain", "cooperative", "admin"):
+        raise HTTPException(status_code=403, detail="Accès réservé aux agents terrain")
+
+    user_id = str(current_user["_id"])
+    coop_id = current_user.get("cooperative_id", "")
+    if user_type == "cooperative":
+        coop_id = user_id
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Build signatures
+    signatures = []
+    if data.signature_planteur:
+        signatures.append({
+            "signataire": data.signature_planteur.get("nom", ""),
+            "role": "planteur",
+            "date_signature": data.signature_planteur.get("date", now),
+            "signature_data": data.signature_planteur.get("data", ""),
+        })
+    if data.signature_agent:
+        signatures.append({
+            "signataire": data.signature_agent.get("nom", current_user.get("full_name", "")),
+            "role": "agent_terrain",
+            "date_signature": data.signature_agent.get("date", now),
+            "signature_data": data.signature_agent.get("data", ""),
+        })
+
+    pdc_data = {
+        "identification": data.identification.model_dump(),
+        "menage": data.menage.model_dump(),
+        "parcelles": [p.model_dump() for p in data.parcelles],
+        "arbres_ombrage": data.arbres_ombrage.model_dump(),
+        "materiel_agricole": data.materiel_agricole.model_dump(),
+        "matrice_strategique": data.matrice_strategique.model_dump(),
+        "matrices_annuelles": [m.model_dump() for m in data.matrices_annuelles],
+        "pratiques_durables": data.pratiques_durables,
+        "inventaire_arbres": data.inventaire_arbres,
+        "photos_parcelle": data.photos_parcelle,
+        "signatures": signatures,
+        "notes": data.notes,
+        "updated_at": now,
+        "last_visit_by": user_id,
+        "last_visit_at": now,
+    }
+
+    # Check existing PDC for farmer
+    existing = await db.pdc.find_one({
+        "farmer_id": data.farmer_id,
+        "statut": {"$ne": "archive"}
+    })
+
+    if existing:
+        # Update existing
+        pdc_data["pourcentage_conformite"] = calculate_pdc_conformite({**existing, **pdc_data})
+        await db.pdc.update_one(
+            {"_id": existing["_id"]},
+            {"$set": pdc_data}
+        )
+        updated = await db.pdc.find_one({"_id": existing["_id"]})
+        return serialize_pdc(updated)
+    else:
+        # Create new
+        doc = {
+            "farmer_id": data.farmer_id,
+            "coop_id": coop_id,
+            "created_by": user_id,
+            **pdc_data,
+            "statut": "visite_terrain",
+            "pourcentage_conformite": 0,
+            "created_at": now,
+            "validated_at": None,
+            "validated_by": None,
+        }
+        doc["pourcentage_conformite"] = calculate_pdc_conformite(doc)
+        result = await db.pdc.insert_one(doc)
+        doc["_id"] = result.inserted_id
+        return serialize_pdc(doc)
+
+
+@router.post("/{pdc_id}/complete-visit")
+async def complete_agent_visit(
+    pdc_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Terminer la visite terrain : passe le PDC en statut 'complete_agent'
+    et envoie une notification à la coopérative pour validation finale.
+    """
+    user_type = current_user.get("user_type", "")
+    if user_type not in ("field_agent", "agent_terrain", "cooperative", "admin"):
+        raise HTTPException(status_code=403, detail="Accès réservé aux agents terrain")
+
+    if not ObjectId.is_valid(pdc_id):
+        raise HTTPException(status_code=400, detail="ID invalide")
+
+    pdc = await db.pdc.find_one({"_id": ObjectId(pdc_id)})
+    if not pdc:
+        raise HTTPException(status_code=404, detail="PDC introuvable")
+
+    now = datetime.now(timezone.utc).isoformat()
+    user_id = str(current_user["_id"])
+
+    # Update status
+    await db.pdc.update_one(
+        {"_id": ObjectId(pdc_id)},
+        {"$set": {
+            "statut": "complete_agent",
+            "completed_by_agent": user_id,
+            "completed_at": now,
+            "updated_at": now,
+        }}
+    )
+
+    # Send notification to cooperative
+    coop_id = pdc.get("coop_id", "")
+    farmer_name = f"{pdc.get('identification', {}).get('nom', '')} {pdc.get('identification', {}).get('prenoms', '')}".strip()
+    agent_name = current_user.get("full_name", "Agent")
+
+    if coop_id:
+        notification = {
+            "user_id": coop_id,
+            "type": "pdc_complete_agent",
+            "title": "PDC complété par un agent terrain",
+            "message": f"L'agent {agent_name} a complété le PDC de {farmer_name or 'un planteur'}. Validation et cachet en attente.",
+            "data": {"pdc_id": pdc_id, "farmer_id": pdc.get("farmer_id", "")},
+            "read": False,
+            "created_at": now,
+        }
+        await db.notifications.insert_one(notification)
+
+    updated = await db.pdc.find_one({"_id": ObjectId(pdc_id)})
+    return {
+        "pdc": serialize_pdc(updated),
+        "notification_sent": bool(coop_id),
+        "message": "Visite terrain terminée. Notification envoyée à la coopérative."
+    }
