@@ -1,29 +1,27 @@
 <analysis>**original_problem_statement**: 
 Utiliser le même code développé sur GitHub (GreenLink). Implémenter tout le projet (reproduire le projet GreenLink Agritech avec le même code).
-PRODUCT REQUIREMENTS:
-1. Fix cooperative referral code bugs.
-2. Clean up all test/demo data and keep only real data across all dashboards.
-3. Fix security and data isolation bugs.
-4. Implement Harvest validation flow.
-5. Improve the Web views for Agent Terrain and Agriculteur.
-6. Verify and professionally improve the messaging system for all users.
-*Current Focus*: The user asked the agent to generate detailed functional specifications and prompts based on existing Web features (REDD+ Guide, USSD Simulator, Messaging) so they can be handed off to another developer to build the Native Mobile version. The user also asked for bug fixes in the Shade Cover formula, messaging contact loading, and ICI Profile History updating.
+PRODUCT REQUIREMENTS: 
+1. Integrate the ARS 1000 Sustainable Cocoa Certification modules (PDC, Traceability Lots, Certification Tracking, Agroforestry) based on official documentation without breaking existing features.
+2. Build Cooperative and Farmer dashboards to support these modules.
+3. Build a Field Agent Visite Terrain workflow for PDC completion (offline-capable, GPS, tree inventory, signature).
+4. Build a smart recommendation system for shade tree planting to achieve compliance.
+5. Implement automatic PDF generation for the 10-page official PDC, audit reports, and traceability sheets.
 
 **User's preferred language**: French (INSTRUCT next agent to respond in French ONLY).
 
 **what currently exists?** 
-A full-stack agritech platform (FastAPI backend, React frontend, Expo React Native mobile app, MongoDB). The application features robust data isolation, real-time messaging, USSD simulation, Unified Carbon Premium Calculator, Field Agent Verification flows, a Carbon Score Analytics Dashboard, and generated Mobile App Specifications.
+A full-stack agritech platform (FastAPI, React, MongoDB). The application now includes the ARS 1000 modules: PDC CRUD operations, Agent Terrain PDC visit workflow, Traceability Lots, Certification tracking, and a comprehensive Agroforestry module (Database of 54 species, Nursery calendar, Diagnostic tool, Environmental protection tracking). All of these have been tested and verified via the testing subagent.
 
 **Last working item**: 
-    - Last item agent was working: Fixing the Farmer ICI Profile History not updating after form submission on the web version. This was successfully debugged, fixed, and verified via screenshots and API checks.
-    - Status: NONE
-    - Agent Testing Done: Y
-    - Which testing method agent to use? NA
+    - Last item agent was working: Implementing the smart recommendation system for shade trees and the automatic PDF generation (official 10-page ARS 1000 PDC format, test reports, and traceability sheets). The agent verified  is installed and just created the file  before the session ended.
+    - Status: IN PROGRESS
+    - Agent Testing Done: N
+    - Which testing method agent to use? both (curl for the PDF backend endpoint + screenshot to verify the download button on the frontend, followed by  for the recommendation system).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
   Issue 1: Emails sent via Resend are going to Spam (Priority: P2)
-     - Attempted fixes: Verified email sending via Resend API. The mock was bypassed and emails were successfully sent, but they lack DNS authentication.
+     - Attempted fixes: Verified email sending via Resend API in a previous session. Mocks were bypassed, but they lack DNS authentication.
      - Next debug checklist: Instruct the user to configure SPF/DKIM/DMARC DNS records on GoDaddy for their domain ().
      - Why fix this issue and what will be achieved with the fix? Ensures reliable delivery of platform notifications and password resets.
      - Status: BLOCKED (Awaiting user DNS configuration)
@@ -32,23 +30,30 @@ A full-stack agritech platform (FastAPI backend, React frontend, Expo React Nati
      - Blocked on other issue: None
 
 **In progress Task List**: 
-  None
+  Task 1: Smart recommendation system for shade trees & Automatic PDF generation (Priority: P0)
+     - Where to resume: Build out the PDF generation logic inside  using . Implement the tree recommendation logic (suggesting trees based on missing strata/species to hit ARS 1000 compliance) in the backend and expose it in . Add a download PDF button on the frontend dashboards.
+     - What will be achieved with this? Agents get real-time tree suggestions to meet compliance. Cooperatives can download and print the official 10-page ARS 1000 PDC and traceability sheets.
+     - Status: IN PROGRESS
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on something: None
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
     - P1: Real SMS Gateway integration (Orange CI / MTN) (currently mocked).
     - P1: Support for local languages (Baoulé/Dioula).
     - P2: Clean up all test/demo data and keep only real data across all dashboards.
-    - P2: Implement Harvest validation flow (Flux de validation des récoltes).
+    - P2: Implement Harvest validation flow (Flux de validation des récoltes) + Declaration récolte & contrôles qualité simples à la ferme (ARS 1000-2).
+    - P2: Registre réclamations, risques et impartialité in the Cooperative Dashboard.
     
     Future Tasks:
     - P3: Refactor  (file is over 2700 lines with duplicate menu logic and messy state management) and clean up dead code.
 
 **Completed work in this session**
-- Generated and provided 3 native mobile technical prompts (REDD+ Guide, USSD Simulator, Messaging System) for handoff to a mobile developer.
-- Fixed Shade Cover (Couverture ombragée) auto-calculation fallback in  (reduced from 80m² to a scientifically realistic 35m² per tree).
-- Fixed messaging system loading errors by correcting the  vs  query in the  collection inside , allowing field agents to correctly load contacts.
-- Fixed Farmer ICI Profile History update bug: added  to force re-render of  upon modal close in , and enriched  endpoint in  to include missing SSRTE stats.
+- Created , , and  backend routes.
+- Created Cooperative ARS 1000 Dashboard with 8 tabs ().
+- Created Farmer PDC Page ().
+- Implemented the Field Agent Visite Terrain workflow for PDC, including GPS and shade tree inventory ().
+- Implemented 6 Agroforestry modules and species database (, , ).
 
 **Earlier issues found/mentioned but not fixed**
 None
@@ -62,22 +67,25 @@ None
 
 
 **Key Technical Concepts**
-React, FastAPI, Pydantic, MongoDB, WebSockets, Real-time messaging, EventSource (SSE), React Native (Expo).
+React, FastAPI, Pydantic, MongoDB,  (for PDF generation), Geolocation, Canvas Signature.
 
 **key DB schema**
-  - : {user_id, coop_id, status, ...}
-  - : {farmer_id, taille_menage, total_enfants, enfants_scolarises, ...}
-  - : {farmer_id, niveau_risque, ...}
+  - : {farmer_id, coop_id, statut, conformite, arbres_ombrage, matrices_strategique, ...}
+  - : {lot_id, parcelle_id, poids, contrôles_qualite, rapport_essai, ...}
+  - : {coop_id, niveau, cycle_audit, pourcentage_conformite_global, ...}
 
 **changes in tech stack**
-  - None
+  - Use of  package (already installed in requirements) for backend PDF generation.
 
 **All files of reference** 
--  (Updated to fix shade cover formula)
--  (Updated to fix contact list loading)
--  (Updated to enrich ICI Profile history endpoint)
--  (Updated to trigger re-renders on form close)
--  (Updated)
+- 
+- 
+- 
+- 
+-  (Empty/stubbed - work resumes here)
+- 
+- 
+- 
 
 **Areas that need refactoring**: 
 -  (over 2700 lines)
@@ -85,25 +93,30 @@ React, FastAPI, Pydantic, MongoDB, WebSockets, Real-time messaging, EventSource 
 **key api endpoints**
 - 
 - 
+- 
+- 
+- *To be implemented:* 
 
 **Critical Info for New Agent** 
 - INSTRUCT next agent to respond in French ONLY.
-- The user might ask to consolidate the generated mobile prompts (Field Agent + REDD+ + USSD + Messaging) into a single downloadable Markdown document. Be prepared to create it.
-- If you work on auth or external integrations, remember the strict rules about subagents ().
+- You must resume work exactly on  to generate the 10-page ARS 1000 formatted PDC PDF. Use .
+- Ensure the smart shade tree recommendation system relies on the newly built 54-species database logic in .
+- Do not remove or comment out existing mocked SMS/Money variables in the environment.
 
 **documents and test reports created in this job**
+  - 
+  - 
   - 
   - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
  1. (Done) *Please use ask_human tool and confirm your plan now.*
- 2. (Done) *oui + ajouter aussi le prompte complet de la messagerie esistante entres les differents utilisateurs*
- 3. (Done) *Vérifie la formule de calcul de la couverture ombragée si elle est a plus optimale réellement*
- 4. (Done) *Oui* 
- 5. (Done) *Corriger les erreurs de chargement dans la messagerie*
- 6. (Done) *J ai complété une fiche ici d un agriculteur mais son fiche historique n est pas mise à jour*
- 7. (Done) *[Image uploaded: historique profil ICI]*
- 8. (Done) *JE VEUX DIRE J'AI COMPLTER CETTE VISITE MAIS LES HISFORMATION DE CETTE FICHE NE SE RETROUVE PAS DANS L'HISTORIQUE FICHE ICI*
+ 2. (Done) *User uploaded 5 ARS 1000 PDF documents and requested full implementation of PDC, lots, certification, agroforestry...*
+ 3. (Done) *oui*
+ 4. (Done) *oui + Workflow « Visite Terrain » à implémenter web...*
+ 5. (Done) *User uploaded 1 artifact(s) about agroforestry guidelines...*
+ 6. (Done) *1- tous 2-c est vous l'expert en dev 3- les deux*
+ 7. (Pending) *oui + ajoute la génération PDF automatique du PDC officiel (10 pages format ARS 1000) avec rapport d'essai et fiche traçabilité téléchargeables* (Agent was working on this when the session ended).
 
 **Project Health Check:**
 - Backend: Healthy
@@ -113,11 +126,10 @@ React, FastAPI, Pydantic, MongoDB, WebSockets, Real-time messaging, EventSource 
 
 **3rd Party Integrations** 
 - Resend (Requires User API Key - DNS pending)
-- Expo EAS (Requires User Login - currently logged in)
 - Orange CI SMS / Money (Mocked)
 
 **Testing status**
-  - Testing agent used after significant changes: YES (iteration 113 for messaging fixes)
+  - Testing agent used after significant changes: YES (iterations 114, 115, 116)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None
   - Known regressions: None
@@ -128,10 +140,11 @@ Admin:  /
 Cooperative:  / 
 Agent:  / 
 Farmer:  / 
-Expo EAS:  / 
 
 **What agent forgot to execute**
-The agent completed all tasks perfectly.
+None. The agent correctly acknowledged the user's latest request and created the file for PDF generation but was interrupted due to context limits. Work must simply resume from there.
 
 **Debugging checklist for current issue**
-NA</analysis>
+    Issue: Implement Smart Recommendation System & PDF Generation
+    Backend files to check: , 
+    Frontend files to check: , </analysis>

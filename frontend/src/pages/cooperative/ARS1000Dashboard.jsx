@@ -9,7 +9,8 @@ import {
   CheckCircle2, Clock, Search, ChevronRight, Plus,
   BarChart3, Loader2, Eye, PenLine, ArrowLeft,
   Award, Leaf, ClipboardCheck, Scale, MessageSquareWarning,
-  XCircle, ArrowUpRight, Filter, BookOpen, Sprout, Droplets
+  XCircle, ArrowUpRight, Filter, BookOpen, Sprout, Droplets,
+  Download
 } from 'lucide-react';
 import { GuideEspeces, CalendrierPepiniere, DiagnosticParcelle, ProtectionEnvironnementale } from '../shared/AgroforesterieModules';
 
@@ -183,6 +184,26 @@ const PDCTab = ({ onRefresh }) => {
     }
   };
 
+  const handleDownloadPDC = async (pdcId, farmerName) => {
+    try {
+      toast.info('Génération du PDF en cours...');
+      const res = await fetch(`${API_URL}/api/ars1000/pdf/pdc/${pdcId}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      if (!res.ok) throw new Error('Erreur lors de la génération');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PDC_${farmerName || 'planteur'}_${new Date().toISOString().slice(0,10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('PDF téléchargé');
+    } catch (e) {
+      toast.error(e.message || 'Erreur téléchargement PDF');
+    }
+  };
+
   const statusColors = {
     brouillon: 'bg-gray-100 text-gray-600',
     soumis: 'bg-blue-100 text-blue-700',
@@ -269,6 +290,9 @@ const PDCTab = ({ onRefresh }) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handleDownloadPDC(pdc.id, `${pdc.identification?.nom}_${pdc.identification?.prenoms}`)} data-testid={`download-pdc-${pdc.id}`}>
+                    <Download className="w-3.5 h-3.5 mr-1" /> PDF
+                  </Button>
                   {pdc.statut === 'soumis' && (
                     <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleValidate(pdc.id)} data-testid={`validate-pdc-${pdc.id}`}>
                       <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Valider
@@ -316,6 +340,46 @@ const LotsTab = () => {
       loadLots();
     } catch (e) {
       toast.error('Erreur lors de la génération');
+    }
+  };
+
+  const handleDownloadRapportEssai = async (lotId, lotCode) => {
+    try {
+      toast.info('Génération du rapport d\'essai PDF...');
+      const res = await fetch(`${API_URL}/api/ars1000/pdf/rapport-essai/${lotId}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      if (!res.ok) throw new Error('Erreur lors de la génération');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Rapport_Essai_${lotCode || 'lot'}_${new Date().toISOString().slice(0,10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Rapport d\'essai téléchargé');
+    } catch (e) {
+      toast.error(e.message || 'Erreur téléchargement');
+    }
+  };
+
+  const handleDownloadTracabilite = async (lotId, lotCode) => {
+    try {
+      toast.info('Génération de la fiche traçabilité PDF...');
+      const res = await fetch(`${API_URL}/api/ars1000/pdf/tracabilite/${lotId}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      if (!res.ok) throw new Error('Erreur lors de la génération');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Tracabilite_${lotCode || 'lot'}_${new Date().toISOString().slice(0,10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Fiche traçabilité téléchargée');
+    } catch (e) {
+      toast.error(e.message || 'Erreur téléchargement');
     }
   };
 
@@ -375,9 +439,15 @@ const LotsTab = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handleDownloadRapportEssai(lot.id, lot.lot_code)} data-testid={`download-rapport-${lot.id}`}>
+                    <Download className="w-3.5 h-3.5 mr-1" /> Rapport
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDownloadTracabilite(lot.id, lot.lot_code)} data-testid={`download-tracabilite-${lot.id}`}>
+                    <Download className="w-3.5 h-3.5 mr-1" /> Traçabilité
+                  </Button>
                   {!lot.rapport_essai && (
                     <Button size="sm" variant="outline" onClick={() => handleGenerateRapport(lot.id)} data-testid={`generate-rapport-${lot.id}`}>
-                      <FileText className="w-3.5 h-3.5 mr-1" /> Rapport
+                      <FileText className="w-3.5 h-3.5 mr-1" /> Générer
                     </Button>
                   )}
                   {lot.rapport_essai && (

@@ -53,6 +53,7 @@ from routes import discrepancy  # Gestion des écarts de vérification
 from routes.carbon_score_engine import _router as carbon_score_router
 from services.push_notifications import router as push_notifications_router
 from routes import ars1000_pdc, ars1000_lots, ars1000_certification, ars1000_agroforesterie
+from routes import ars1000_pdf
 
 
 ROOT_DIR = Path(__file__).parent
@@ -206,6 +207,7 @@ app.include_router(ars1000_pdc.router)
 app.include_router(ars1000_lots.router)
 app.include_router(ars1000_certification.router)
 app.include_router(ars1000_agroforesterie.router)
+app.include_router(ars1000_pdf.router)
 
 # Set database for cooperative_referral module
 cooperative_referral.set_database(db)
@@ -215,7 +217,7 @@ if CORS_ORIGINS:
     allowed_origins = [o.strip() for o in CORS_ORIGINS.split(',') if o.strip()]
 else:
     allowed_origins = [
-        "https://agritech-coop.preview.emergentagent.com",
+        "https://greenlink-pdc.preview.emergentagent.com",
         "http://localhost:3000",
         "http://localhost:8001",
         "https://greenlink-agritech.com",

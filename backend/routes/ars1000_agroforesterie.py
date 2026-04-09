@@ -395,6 +395,292 @@ async def diagnostic_cooperative(current_user: dict = Depends(get_current_user))
     }
 
 
+# ============= RECOMMANDATION INTELLIGENTE =============
+
+def recommander_arbres(parcelle_data: dict, arbres_data: dict, inventaire: list = None) -> dict:
+    """
+    Système de recommandation intelligent d'arbres d'ombrage.
+    Analyse les manques par rapport aux critères ARS 1000 et suggère des espèces
+    spécifiques avec quantités, strates cibles et calendrier de plantation.
+    """
+    superficie_ha = parcelle_data.get("superficie_ha", 0) or 1
+    total_arbres = arbres_data.get("nombre_total", 0)
+    especes = arbres_data.get("especes", [])
+    densite = total_arbres / max(superficie_ha, 0.01)
+    nb_especes = len(especes)
+    strate_haute = arbres_data.get("strate_haute", 0)
+    strate_moyenne = arbres_data.get("strate_moyenne", 0)
+    strate_basse = arbres_data.get("strate_basse", 0)
+
+    # Run diagnostic first
+    diag = diagnostic_agroforesterie(parcelle_data, arbres_data, inventaire)
+
+    recommendations = []
+    plan_plantation = []
+    arbres_a_planter = 0
+
+    # Existing species (lowercase)
+    especes_existantes = set()
+    if inventaire:
+        for a in inventaire:
+            especes_existantes.add((a.get("espece", "") or "").strip().lower())
+    for e in especes:
+        especes_existantes.add(e.strip().lower())
+
+    # 1. DENSITY CHECK
+    if densite < 25:
+        manquant = int((25 - densite) * superficie_ha)
+        arbres_a_planter += manquant
+        recommendations.append({
+            "critere": "densite",
+            "priorite": "haute",
+            "message": f"Planter {manquant} arbres pour atteindre la densité minimale de 25 arbres/ha",
+            "arbres_necessaires": manquant,
+        })
+    elif densite > 40:
+        excedent = int((densite - 40) * superficie_ha)
+        recommendations.append({
+            "critere": "densite",
+            "priorite": "moyenne",
+            "message": f"Eclaircir {excedent} arbres pour réduire la densité sous 40 arbres/ha",
+            "arbres_a_retirer": excedent,
+        })
+
+    # 2. STRATE 3 (haute > 30m) CHECK
+    has_strate3 = strate_haute > 0
+    if inventaire:
+        sci_s3 = {e["nom_scientifique"].lower() for e in ESPECES_STRATE3}
+        local_s3 = set()
+        for e in ESPECES_STRATE3:
+            for n in e["nom_local"].lower().split(","):
+                local_s3.add(n.strip())
+        for a in inventaire:
+            nom = (a.get("espece", "") or "").strip().lower()
+            if nom in sci_s3 or nom in local_s3:
+                has_strate3 = True
+                break
+
+    if not has_strate3:
+        # Suggest best strate 3 species (bois d'oeuvre priority = economic value)
+        suggested_s3 = []
+        for sp in ESPECES_STRATE3:
+            if sp["nom_scientifique"].lower() not in especes_existantes and sp["nom_local"].lower().split(",")[0].strip() not in especes_existantes:
+                suggested_s3.append(sp)
+            if len(suggested_s3) >= 3:
+                break
+
+        recommendations.append({
+            "critere": "strate3",
+            "priorite": "haute",
+            "message": "Aucun arbre de strate 3 (>30m) détecté. Planter au minimum 1 espèce de strate haute.",
+            "especes_suggerees": [{
+                "id": s["id"],
+                "nom_scientifique": s["nom_scientifique"],
+                "nom_local": s["nom_local"],
+                "hauteur_max_m": s["hauteur_max_m"],
+                "usages": s["usages"],
+                "duree_pepiniere_mois": s["duree_pepiniere_mois"],
+                "reproduction": s["reproduction"],
+            } for s in suggested_s3],
+            "quantite_min": max(2, int(superficie_ha * 3)),
+        })
+        if not suggested_s3:
+            suggested_s3 = ESPECES_STRATE3[:3]
+        for sp in suggested_s3[:2]:
+            qty = max(1, int(superficie_ha * 2))
+            plan_plantation.append({
+                "espece": sp["nom_local"].split(",")[0].strip(),
+                "nom_scientifique": sp["nom_scientifique"],
+                "strate": "3 (haute, >30m)",
+                "quantite": qty,
+                "pepiniere_mois": sp["duree_pepiniere_mois"],
+                "reproduction": sp["reproduction"],
+            })
+            arbres_a_planter += qty
+
+    # 3. SPECIES DIVERSITY CHECK (min 3)
+    if nb_especes < 3:
+        manquant_sp = 3 - nb_especes
+        suggested_div = []
+        # Suggest from strate 2 (fruitiers = diversification revenus)
+        for sp in ESPECES_STRATE2:
+            nom_lower = sp["nom_scientifique"].lower()
+            local_lower = sp["nom_local"].lower().split(",")[0].strip()
+            if nom_lower not in especes_existantes and local_lower not in especes_existantes:
+                suggested_div.append(sp)
+            if len(suggested_div) >= manquant_sp + 1:
+                break
+
+        recommendations.append({
+            "critere": "diversite",
+            "priorite": "haute",
+            "message": f"Ajouter {manquant_sp} espèce(s) différente(s) pour atteindre le minimum de 3",
+            "especes_suggerees": [{
+                "id": s["id"],
+                "nom_scientifique": s["nom_scientifique"],
+                "nom_local": s["nom_local"],
+                "usages": s["usages"],
+                "duree_pepiniere_mois": s["duree_pepiniere_mois"],
+            } for s in suggested_div],
+        })
+        for sp in suggested_div[:manquant_sp]:
+            qty = max(2, int(superficie_ha * 2))
+            plan_plantation.append({
+                "espece": sp["nom_local"].split(",")[0].strip(),
+                "nom_scientifique": sp["nom_scientifique"],
+                "strate": f"2 (moyenne, {sp['hauteur_max_m']}m max)",
+                "quantite": qty,
+                "pepiniere_mois": sp["duree_pepiniere_mois"],
+                "reproduction": sp["reproduction"],
+            })
+            arbres_a_planter += qty
+
+    # 4. TWO STRATE CHECK
+    strates_actives = sum([strate_haute > 0, strate_moyenne > 0, strate_basse > 0])
+    if strates_actives < 2:
+        missing_strates = []
+        if strate_moyenne == 0:
+            missing_strates.append("moyenne")
+        if strate_basse == 0:
+            missing_strates.append("basse")
+        if strate_haute == 0:
+            missing_strates.append("haute")
+
+        sugg_strate = []
+        if "basse" in missing_strates:
+            for sp in ESPECES_STRATE1:
+                if sp["nom_scientifique"].lower() not in especes_existantes:
+                    sugg_strate.append(sp)
+                if len(sugg_strate) >= 2:
+                    break
+            for sp in sugg_strate:
+                qty = max(3, int(superficie_ha * 4))
+                plan_plantation.append({
+                    "espece": sp["nom_local"].split(",")[0].strip(),
+                    "nom_scientifique": sp["nom_scientifique"],
+                    "strate": "1 (basse, 3-5m)",
+                    "quantite": qty,
+                    "pepiniere_mois": sp["duree_pepiniere_mois"],
+                    "reproduction": sp["reproduction"],
+                })
+                arbres_a_planter += qty
+
+        if "moyenne" in missing_strates:
+            sugg_m = []
+            for sp in ESPECES_STRATE2:
+                if sp["nom_scientifique"].lower() not in especes_existantes:
+                    sugg_m.append(sp)
+                if len(sugg_m) >= 2:
+                    break
+            for sp in sugg_m:
+                qty = max(2, int(superficie_ha * 3))
+                plan_plantation.append({
+                    "espece": sp["nom_local"].split(",")[0].strip(),
+                    "nom_scientifique": sp["nom_scientifique"],
+                    "strate": f"2 (moyenne, {sp['hauteur_max_m']}m max)",
+                    "quantite": qty,
+                    "pepiniere_mois": sp["duree_pepiniere_mois"],
+                    "reproduction": sp["reproduction"],
+                })
+                arbres_a_planter += qty
+
+        recommendations.append({
+            "critere": "strates",
+            "priorite": "moyenne",
+            "message": f"Strates manquantes : {', '.join(missing_strates)}. Diversifier la canopée.",
+        })
+
+    # 5. BLACKLISTED SPECIES CHECK
+    especes_interdites_noms = get_especes_interdites_names()
+    blacklisted_found = []
+    if inventaire:
+        for a in inventaire:
+            nom = (a.get("espece", "") or "").strip().lower()
+            if nom in especes_interdites_noms:
+                blacklisted_found.append(a.get("espece", ""))
+    for e in especes:
+        if e.strip().lower() in especes_interdites_noms:
+            blacklisted_found.append(e)
+
+    if blacklisted_found:
+        remplacement = []
+        for sp in ESPECES_STRATE2[:3]:
+            remplacement.append({"nom": sp["nom_local"], "nom_scientifique": sp["nom_scientifique"]})
+        recommendations.append({
+            "critere": "especes_interdites",
+            "priorite": "critique",
+            "message": f"Retirer les espèces interdites : {', '.join(set(blacklisted_found))}",
+            "especes_a_retirer": list(set(blacklisted_found)),
+            "remplacement_suggere": remplacement,
+        })
+
+    # 6. BORDER PLANTING SUGGESTION
+    if densite < 30 and superficie_ha >= 1:
+        recommendations.append({
+            "critere": "bordure",
+            "priorite": "basse",
+            "message": "Planter des espèces de bordure (Teck, Gmelina) pour protéger la parcelle et augmenter la densité",
+            "especes_suggerees": [{
+                "nom": sp["nom_local"],
+                "nom_scientifique": sp["nom_scientifique"],
+                "usages": sp["usages"],
+            } for sp in ESPECES_BORDURE[:3]],
+        })
+
+    # Build timeline
+    if plan_plantation:
+        plan_plantation.sort(key=lambda x: x["pepiniere_mois"])
+
+    # Score impact projection
+    projected_total = total_arbres + arbres_a_planter
+    projected_densite = projected_total / max(superficie_ha, 0.01)
+    projected_nb_especes = nb_especes + sum(1 for p in plan_plantation if p["espece"].lower() not in especes_existantes)
+
+    return {
+        "diagnostic": diag,
+        "recommendations": recommendations,
+        "plan_plantation": plan_plantation,
+        "total_arbres_a_planter": arbres_a_planter,
+        "projection": {
+            "densite_actuelle": round(densite, 1),
+            "densite_projetee": round(projected_densite, 1),
+            "especes_actuelles": nb_especes,
+            "especes_projetees": projected_nb_especes,
+            "score_actuel": diag["score"],
+            "score_projete": min(100, diag["score"] + len([r for r in recommendations if r["priorite"] in ("haute", "critique")]) * 15),
+        },
+        "conforme_apres_plan": projected_densite >= 25 and projected_densite <= 40 and projected_nb_especes >= 3,
+    }
+
+
+@router.get("/recommandations/farmer/{farmer_id}")
+async def get_recommandations_farmer(farmer_id: str, current_user: dict = Depends(get_current_user)):
+    """Recommandations intelligentes d'arbres d'ombrage pour un planteur"""
+    pdc = await db.pdc.find_one({"farmer_id": farmer_id, "statut": {"$ne": "archive"}})
+    if not pdc:
+        raise HTTPException(status_code=404, detail="PDC introuvable pour ce planteur")
+
+    total_ha = sum(p.get("superficie_ha", 0) for p in pdc.get("parcelles", []))
+    parcelle = {"superficie_ha": total_ha or 1}
+    arbres = pdc.get("arbres_ombrage", {})
+    inventaire = pdc.get("inventaire_arbres", [])
+
+    result = recommander_arbres(parcelle, arbres, inventaire)
+    result["farmer_id"] = farmer_id
+    result["pdc_id"] = str(pdc["_id"])
+    result["farmer_name"] = f"{pdc.get('identification', {}).get('nom', '')} {pdc.get('identification', {}).get('prenoms', '')}"
+    return result
+
+
+@router.post("/recommandations")
+async def get_recommandations(data: dict, current_user: dict = Depends(get_current_user)):
+    """Recommandations intelligentes basées sur des données brutes"""
+    parcelle = data.get("parcelle", {})
+    arbres = data.get("arbres", {})
+    inventaire = data.get("inventaire", [])
+    return recommander_arbres(parcelle, arbres, inventaire)
+
+
 # ============= CALENDRIER PÉPINIÈRE =============
 
 @router.get("/pepiniere/calendrier")

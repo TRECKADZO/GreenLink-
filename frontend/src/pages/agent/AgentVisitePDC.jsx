@@ -10,7 +10,8 @@ import {
   User, Home, MapPin, TreePine, Wrench, Target,
   FileText, Camera, PenLine, CheckCircle2, ChevronRight,
   ChevronLeft, Loader2, Save, Send, ArrowLeft, Leaf,
-  Navigation, Plus, Trash2, X, Check, Eye
+  Navigation, Plus, Trash2, X, Check, Eye, Download,
+  Lightbulb, AlertTriangle
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -456,6 +457,114 @@ const InventaireArbresStep = ({ arbresOmbrage, onArbresChange, inventaire, onInv
   );
 };
 
+// ======== SMART RECOMMENDATIONS PANEL ========
+const RecommandationsPanel = ({ farmerId }) => {
+  const [recs, setRecs] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const loadRecs = async () => {
+    if (recs) { setExpanded(!expanded); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/ars1000/agroforesterie/recommandations/farmer/${farmerId}`, { headers: authHeaders() });
+      if (res.ok) {
+        setRecs(await res.json());
+        setExpanded(true);
+      } else {
+        toast.error('Impossible de charger les recommandations');
+      }
+    } catch (e) { toast.error('Erreur réseau'); }
+    finally { setLoading(false); }
+  };
+
+  const prioriteColors = { critique: 'bg-red-100 text-red-700 border-red-200', haute: 'bg-amber-100 text-amber-700 border-amber-200', moyenne: 'bg-blue-100 text-blue-700 border-blue-200', basse: 'bg-gray-100 text-gray-600 border-gray-200' };
+  const prioriteLabels = { critique: 'Critique', haute: 'Haute', moyenne: 'Moyenne', basse: 'Basse' };
+
+  return (
+    <div className="mt-4" data-testid="recommandations-panel">
+      <Button
+        variant="outline"
+        className="w-full border-green-200 text-green-700 hover:bg-green-50"
+        onClick={loadRecs}
+        disabled={loading}
+        data-testid="load-recommandations-btn"
+      >
+        {loading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Lightbulb className="w-4 h-4 mr-2" />}
+        {expanded ? 'Masquer les recommandations' : 'Recommandations intelligentes'}
+      </Button>
+
+      {expanded && recs && (
+        <div className="mt-3 space-y-3">
+          {/* Score projection */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-3 border border-green-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-green-800">Projection après plan</span>
+              <Badge className="bg-green-600 text-white">{recs.projection?.score_projete}% projete</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              <div><span className="text-gray-500">Densité actuelle:</span> <b>{recs.projection?.densite_actuelle}/ha</b></div>
+              <div><span className="text-gray-500">Densité projetée:</span> <b className="text-green-700">{recs.projection?.densite_projetee}/ha</b></div>
+              <div><span className="text-gray-500">Espèces actuelles:</span> <b>{recs.projection?.especes_actuelles}</b></div>
+              <div><span className="text-gray-500">Espèces projetées:</span> <b className="text-green-700">{recs.projection?.especes_projetees}</b></div>
+            </div>
+            {recs.total_arbres_a_planter > 0 && (
+              <p className="text-xs text-green-700 mt-2 font-medium">
+                Total a planter : {recs.total_arbres_a_planter} arbres
+              </p>
+            )}
+          </div>
+
+          {/* Recommendations */}
+          {recs.recommendations?.map((rec, i) => (
+            <div key={i} className={`rounded-xl p-3 border ${prioriteColors[rec.priorite] || prioriteColors.basse}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <Badge className={prioriteColors[rec.priorite]}>{prioriteLabels[rec.priorite]}</Badge>
+                <span className="text-[10px] text-gray-500">{rec.critere}</span>
+              </div>
+              <p className="text-xs font-medium">{rec.message}</p>
+              {rec.especes_suggerees && (
+                <div className="mt-2 space-y-1">
+                  <p className="text-[10px] font-semibold text-gray-600">Espèces suggérées :</p>
+                  {rec.especes_suggerees.map((sp, j) => (
+                    <div key={j} className="bg-white/70 rounded-lg px-2 py-1 text-[10px]">
+                      <b>{sp.nom_local || sp.nom}</b> <i className="text-gray-400">({sp.nom_scientifique})</i>
+                      {sp.usages && <span className="ml-1 text-gray-500">| {sp.usages.join(', ')}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Plantation plan */}
+          {recs.plan_plantation?.length > 0 && (
+            <div className="bg-white rounded-xl border border-green-100 p-3">
+              <p className="text-xs font-bold text-green-800 mb-2">Plan de plantation recommande</p>
+              <div className="space-y-1">
+                {recs.plan_plantation.map((p, i) => (
+                  <div key={i} className="flex items-center justify-between text-[10px] bg-green-50 rounded-lg px-2 py-1">
+                    <div>
+                      <b>{p.espece}</b> <span className="text-gray-400">({p.nom_scientifique})</span>
+                      <span className="ml-1 text-gray-500">Strate {p.strate}</span>
+                    </div>
+                    <div className="text-right">
+                      <b className="text-green-700">{p.quantite} arbres</b>
+                      <span className="ml-1 text-gray-400">{p.pepiniere_mois} mois pépinière</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 // ======== STEP: MATERIEL ========
 const MaterielStep = ({ data, onChange }) => {
   const toStr = (arr) => (arr || []).join(', ');
@@ -628,8 +737,30 @@ const SignaturesStep = ({ sigPlanteur, onSigPlanteur, sigAgent, onSigAgent, farm
 };
 
 // ======== STEP: RESUME ========
-const ResumeStep = ({ formData, inventaire, photos, sigPlanteur, sigAgent, conformite }) => {
+const ResumeStep = ({ formData, inventaire, photos, sigPlanteur, sigAgent, conformite, pdcId }) => {
   const { identification: id, menage, parcelles, arbres_ombrage, matrice_strategique: strat } = formData;
+
+  const handleDownloadPDF = async () => {
+    if (!pdcId) { toast.error('Sauvegardez d\'abord le PDC'); return; }
+    try {
+      toast.info('Génération du PDF en cours...');
+      const res = await fetch(`${API_URL}/api/ars1000/pdf/pdc/${pdcId}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      if (!res.ok) throw new Error('Erreur lors de la génération');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PDC_${id.nom}_${id.prenoms}_${new Date().toISOString().slice(0,10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('PDF téléchargé');
+    } catch (e) {
+      toast.error(e.message || 'Erreur téléchargement PDF');
+    }
+  };
+
   return (
     <div className="space-y-3" data-testid="visit-step-resume">
       <h3 className="font-bold text-gray-900 text-sm">Résumé de la Visite</h3>
@@ -637,6 +768,19 @@ const ResumeStep = ({ formData, inventaire, photos, sigPlanteur, sigAgent, confo
         <p className="text-3xl font-bold text-center">{conformite}%</p>
         <p className="text-xs text-center text-gray-600">Conformité ARS 1000-1</p>
       </div>
+
+      {/* PDF Download Button */}
+      {pdcId && (
+        <Button
+          variant="outline"
+          className="w-full border-green-300 text-green-700 hover:bg-green-50"
+          onClick={handleDownloadPDF}
+          data-testid="visit-download-pdf"
+        >
+          <Download className="w-4 h-4 mr-2" /> Télécharger le PDC officiel (PDF)
+        </Button>
+      )}
+
       <div className="grid grid-cols-2 gap-2 text-sm">
         <div className="bg-white rounded-lg border p-2"><p className="text-[10px] text-gray-400">Producteur</p><p className="font-semibold">{id.nom} {id.prenoms}</p><p className="text-[10px] text-gray-400">{id.village}</p></div>
         <div className="bg-white rounded-lg border p-2"><p className="text-[10px] text-gray-400">Ménage</p><p className="font-semibold">{menage.taille_menage} pers.</p><p className="text-[10px] text-gray-400">{menage.nombre_enfants} enfants</p></div>
@@ -869,12 +1013,15 @@ export default function AgentVisitePDC() {
           {step === 0 && <IdentificationStep data={formData.identification} onChange={(d) => setFormData({ ...formData, identification: d })} farmer={farmer} />}
           {step === 1 && <MenageStep data={formData.menage} onChange={(d) => setFormData({ ...formData, menage: d })} />}
           {step === 2 && <ParcellesStep data={formData.parcelles} onChange={(d) => setFormData({ ...formData, parcelles: d })} />}
-          {step === 3 && <InventaireArbresStep arbresOmbrage={formData.arbres_ombrage} onArbresChange={(d) => setFormData({ ...formData, arbres_ombrage: d })} inventaire={inventaire} onInventaireChange={setInventaire} />}
+          {step === 3 && <>
+            <InventaireArbresStep arbresOmbrage={formData.arbres_ombrage} onArbresChange={(d) => setFormData({ ...formData, arbres_ombrage: d })} inventaire={inventaire} onInventaireChange={setInventaire} />
+            {farmerId && <RecommandationsPanel farmerId={farmerId} />}
+          </>}
           {step === 4 && <MaterielStep data={formData.materiel_agricole} onChange={(d) => setFormData({ ...formData, materiel_agricole: d })} />}
           {step === 5 && <StrategieStep data={formData.matrice_strategique} onChange={(d) => setFormData({ ...formData, matrice_strategique: d })} />}
           {step === 6 && <PhotosStep photos={photos} onPhotosChange={setPhotos} />}
           {step === 7 && <SignaturesStep sigPlanteur={sigPlanteur} onSigPlanteur={setSigPlanteur} sigAgent={sigAgent} onSigAgent={setSigAgent} farmerName={farmerName} agentName={user?.full_name || ''} />}
-          {step === 8 && <ResumeStep formData={formData} inventaire={inventaire} photos={photos} sigPlanteur={sigPlanteur} sigAgent={sigAgent} conformite={conformite} />}
+          {step === 8 && <ResumeStep formData={formData} inventaire={inventaire} photos={photos} sigPlanteur={sigPlanteur} sigAgent={sigAgent} conformite={conformite} pdcId={existingPDC?.id} />}
         </div>
 
         {/* Navigation */}
