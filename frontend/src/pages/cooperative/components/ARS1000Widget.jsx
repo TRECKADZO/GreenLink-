@@ -39,7 +39,7 @@ export const ARS1000Widget = () => {
   return (
     <div
       className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-      onClick={() => navigate('/cooperative/ars-1000')}
+      onClick={() => navigate('/cooperative/ars1000')}
       data-testid="ars1000-widget"
     >
       {/* Header gradient */}
