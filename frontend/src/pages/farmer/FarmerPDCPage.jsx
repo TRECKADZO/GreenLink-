@@ -10,6 +10,7 @@ import {
   Target, Calendar, PenLine, CheckCircle2, ChevronRight,
   ChevronLeft, Loader2, Save, Send, ArrowLeft, Leaf
 } from 'lucide-react';
+import { GeoSelectCI } from '../../components/GeoSelectCI';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getToken = () => localStorage.getItem('token');
@@ -42,9 +43,6 @@ const IdentificationStep = ({ data, onChange }) => {
           { label: 'Téléphone', field: 'telephone', type: 'tel' },
           { label: 'Localité', field: 'localite' },
           { label: 'Village', field: 'village' },
-          { label: 'Sous-préfecture', field: 'sous_prefecture' },
-          { label: 'Département', field: 'department' },
-          { label: 'Région', field: 'region' },
           { label: 'Statut foncier', field: 'statut_foncier', type: 'select', options: ['Propriétaire', 'Métayer', 'Locataire'] },
         ].map(({ label, field, type, options, required }) => (
           <div key={field}>
@@ -59,6 +57,16 @@ const IdentificationStep = ({ data, onChange }) => {
             )}
           </div>
         ))}
+      </div>
+      {/* Sélection géographique en cascade */}
+      <div className="mt-2 pt-3 border-t border-gray-100">
+        <label className="text-xs text-gray-600 font-medium block mb-2">Localisation administrative</label>
+        <GeoSelectCI
+          region={data.region || ''}
+          departement={data.department || ''}
+          sousPrefecture={data.sous_prefecture || ''}
+          onChange={(field, value) => update(field, value)}
+        />
       </div>
       <div className="flex items-center gap-2 mt-2">
         <input type="checkbox" checked={data.membre_groupe || false} onChange={(e) => update('membre_groupe', e.target.checked)} />

@@ -13,14 +13,10 @@ import {
   CheckCircle, Loader2, TreePine
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
+import { GeoSelectCI } from '../../components/GeoSelectCI';
+import { REGIONS_CI, getDepartements, getSousPrefectures } from '../../data/divisionsCI';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
-
-const VILLAGES = [
-  'Daloa', 'Soubre', 'Abengourou', 'Gagnoa', 'Divo', 'San Pedro',
-  'Abidjan', 'Bouake', 'Yamoussoukro', 'Man', 'Korhogo', 'Issia',
-  'Oume', 'Lakota', 'Sinfra', 'Vavoua', 'Duékoué', 'Guiglo', 'Autre'
-];
 
 const RegisterFarmerPage = () => {
   const navigate = useNavigate();
@@ -37,7 +33,10 @@ const RegisterFarmerPage = () => {
     hectares: '',
     pin: '',
     pin_confirm: '',
-    email: ''
+    email: '',
+    region: '',
+    department: '',
+    sous_prefecture: '',
   });
 
   const handleChange = (field, value) => {
@@ -69,7 +68,7 @@ const RegisterFarmerPage = () => {
       toast.error('Numero de telephone requis');
       return;
     }
-    if (!form.village && !form.village_custom) {
+    if (!form.village) {
       toast.error('Village requis');
       return;
     }
@@ -84,7 +83,7 @@ const RegisterFarmerPage = () => {
 
     setLoading(true);
     try {
-      const village = form.village === 'Autre' ? form.village_custom : form.village;
+      const village = form.village;
       const res = await fetch(`${API_URL}/api/ussd/register-web`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,7 +94,10 @@ const RegisterFarmerPage = () => {
           village: village,
           pin: form.pin,
           hectares: form.hectares ? parseFloat(form.hectares) : null,
-          email: form.email || null
+          email: form.email || null,
+          region: form.region || null,
+          department: form.department || null,
+          sous_prefecture: form.sous_prefecture || null,
         })
       });
       
@@ -242,30 +244,56 @@ const RegisterFarmerPage = () => {
                 <p className="text-xs text-gray-500">Le code planteur sera genere automatiquement.</p>
               </div>
 
+              {/* Localisation géographique */}
+              <div className="space-y-1.5">
+                <Label className="text-sm text-gray-300">
+                  <MapPin className="w-3.5 h-3.5 inline mr-1" /> Localisation *
+                </Label>
+                <div className="space-y-2">
+                  <select
+                    className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm w-full text-white"
+                    value={form.region}
+                    onChange={(e) => setForm(prev => ({ ...prev, region: e.target.value, department: '', sous_prefecture: '' }))}
+                    data-testid="register-region-select"
+                  >
+                    <option value="">-- Region --</option>
+                    {REGIONS_CI.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  <select
+                    className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm w-full text-white"
+                    value={form.department}
+                    onChange={(e) => setForm(prev => ({ ...prev, department: e.target.value, sous_prefecture: '' }))}
+                    disabled={!form.region}
+                    data-testid="register-departement-select"
+                  >
+                    <option value="">-- Departement --</option>
+                    {getDepartements(form.region).map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                  <select
+                    className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm w-full text-white"
+                    value={form.sous_prefecture}
+                    onChange={(e) => setForm(prev => ({ ...prev, sous_prefecture: e.target.value }))}
+                    disabled={!form.department}
+                    data-testid="register-sous-prefecture-select"
+                  >
+                    <option value="">-- Sous-prefecture --</option>
+                    {getSousPrefectures(form.region, form.department).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+
               {/* Village */}
               <div className="space-y-1.5">
                 <Label className="text-sm text-gray-300">
-                  <MapPin className="w-3.5 h-3.5 inline mr-1" /> Village / Localite *
+                  Village / Localite *
                 </Label>
-                <Select value={form.village} onValueChange={(v) => handleChange('village', v)}>
-                  <SelectTrigger data-testid="register-village-select" className="bg-gray-800/50 border-gray-700 text-white">
-                    <SelectValue placeholder="Selectionnez votre localite" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    {VILLAGES.map(v => (
-                      <SelectItem key={v} value={v} className="text-gray-200 hover:bg-gray-700">{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form.village === 'Autre' && (
-                  <Input
-                    data-testid="register-village-custom-input"
-                    placeholder="Tapez votre village"
-                    value={form.village_custom}
-                    onChange={(e) => handleChange('village_custom', e.target.value)}
-                    className="mt-2 bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
-                  />
-                )}
+                <Input
+                  data-testid="register-village-input"
+                  placeholder="Nom du village"
+                  value={form.village}
+                  onChange={(e) => handleChange('village', e.target.value)}
+                  className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+                />
               </div>
 
               {/* Hectares */}

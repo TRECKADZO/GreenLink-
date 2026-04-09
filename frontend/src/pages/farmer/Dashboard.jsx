@@ -13,7 +13,7 @@ import {
   MessageSquare, Send, Store, Leaf, Package, BarChart3, Home,
   ChevronRight, RefreshCw, Loader2, ShoppingCart, FileText,
   CheckCircle2, LogOut, AlertTriangle, Star, User, Bell,
-  Grid3X3
+  Grid3X3, TreePine
 } from 'lucide-react';
 
 const TABS = [

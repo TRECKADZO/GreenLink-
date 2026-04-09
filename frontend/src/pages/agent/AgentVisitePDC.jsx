@@ -14,6 +14,8 @@ import {
   Lightbulb, AlertTriangle
 } from 'lucide-react';
 
+import { GeoSelectCI } from '../../components/GeoSelectCI';
+
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getToken = () => localStorage.getItem('token');
 const authHeaders = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
@@ -180,9 +182,6 @@ const IdentificationStep = ({ data, onChange, farmer }) => {
           { label: "N° d'identification", field: 'numero_identification' },
           { label: 'Localité', field: 'localite' },
           { label: 'Village', field: 'village' },
-          { label: 'Sous-préfecture', field: 'sous_prefecture' },
-          { label: 'Département', field: 'department' },
-          { label: 'Région', field: 'region' },
         ].map(({ label, field, type }) => (
           <div key={field}>
             <label className="text-[10px] text-gray-500 font-medium block mb-1">{label}</label>
@@ -206,6 +205,16 @@ const IdentificationStep = ({ data, onChange, farmer }) => {
             <option value="locataire">Locataire</option>
           </select>
         </div>
+      </div>
+      {/* Sélection géographique en cascade */}
+      <div className="mt-2 pt-2 border-t border-gray-100">
+        <label className="text-[10px] text-gray-500 font-medium block mb-2">Localisation administrative</label>
+        <GeoSelectCI
+          region={data.region || ''}
+          departement={data.department || ''}
+          sousPrefecture={data.sous_prefecture || ''}
+          onChange={(field, value) => update(field, value)}
+        />
       </div>
     </div>
   );
