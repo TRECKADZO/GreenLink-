@@ -1,25 +1,23 @@
-# Test Credentials - GreenLink Agritech
+# Test Credentials
 
-## Admin Account
+## Admin
 - Email: klenakan.eric@gmail.com
 - Password: 474Treckadzo
 
-## Cooperative Test Accounts
-- Sponsor: sponsor-coop-e2e@test.ci / test123456
-- Child: child-coop-e2e@test.ci / test123456
-
-## User's Cooperative Account
-- Email: boidigsproplus@gmail.com
-- Password: (set by user, unknown)
-
-## Test Farmer (Producteur) Account
-- Email: testplanteur@test.ci
+## Cooperative
+- Email: bielaghana@gmail.com
 - Password: test123456
-- Phone: +2250101010101
-- User Type: producteur
 
-## Test Field Agent Account
+## Agent Terrain
 - Email: testagent@test.ci
 - Password: test123456
-- Phone: +2250202020202
-- User Type: field_agent
+
+## Planteur
+- Email: testplanteur@test.ci
+- Password: test123456
+
+## Login
+- Endpoint: POST /api/auth/login
+- Body: {"identifier": "<email>", "password": "<password>"}
+- Response key: access_token
+- Note: Rate limiter blocks after 5 attempts for 5min. Restart backend to clear.
