@@ -435,6 +435,49 @@ export const ProtectionEnvironnementale = () => {
 
   return (
     <div className="space-y-4" data-testid="protection-env">
+      {/* Score conformite environnementale */}
+      {mesures.length > 0 && (
+        <div className="rounded-2xl p-5 bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200" data-testid="protection-score">
+          {(() => {
+            const coursEau = mesures.filter(m => m.type_protection === 'cours_eau');
+            const coursEauConforme = coursEau.filter(m => m.conforme_distance_eau);
+            const hasReforestation = mesures.some(m => m.type_protection === 'reforestation');
+            const hasAntiErosion = mesures.some(m => m.type_protection === 'anti_erosion');
+            const checks = [
+              { label: 'Distance cours d\'eau >= 10m', ok: coursEau.length === 0 || coursEauConforme.length === coursEau.length, requis: 'ARS 1000 Art. 4.3' },
+              { label: 'Mesures anti-erosion en place', ok: hasAntiErosion, requis: 'ARS 1000 Art. 4.4' },
+              { label: 'Reboisement compensatoire', ok: hasReforestation, requis: 'ARS 1000 Art. 4.5' },
+              { label: 'Pas de cultures en zone tampon', ok: !mesures.some(m => m.type_protection === 'zone_risque'), requis: 'ARS 1000 Art. 4.6' },
+            ];
+            const scoreEnv = Math.round((checks.filter(c => c.ok).length / checks.length) * 100);
+            return (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${scoreEnv >= 75 ? 'bg-green-500' : scoreEnv >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}>
+                      <span className="text-xl font-bold text-white">{scoreEnv}%</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-lg text-gray-900">Conformite Environnementale</p>
+                      <p className="text-sm text-gray-600">{mesures.length} mesure(s) enregistree(s)</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  {checks.map((c, i) => (
+                    <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${c.ok ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                      {c.ok ? <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" /> : <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />}
+                      <span className="text-xs flex-1">{c.label}</span>
+                      <span className="text-[9px] text-gray-400">{c.requis}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      )}
+
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-4 gap-2">

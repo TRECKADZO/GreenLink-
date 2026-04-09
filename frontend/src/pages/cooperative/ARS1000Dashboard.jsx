@@ -10,7 +10,7 @@ import {
   BarChart3, Loader2, Eye, PenLine, ArrowLeft,
   Award, Leaf, ClipboardCheck, Scale, MessageSquareWarning,
   XCircle, ArrowUpRight, Filter, BookOpen, Sprout, Droplets,
-  Download, Wheat, Trash2, Edit, ShieldCheck, TrendingUp, Lightbulb
+  Download, Wheat, Trash2, Edit, ShieldCheck, TrendingUp, Lightbulb, User
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 import { GuideEspeces, CalendrierPepiniere, DiagnosticParcelle, ProtectionEnvironnementale } from '../shared/AgroforesterieModules';
@@ -1130,6 +1130,21 @@ const RecoltesTab = () => {
   const gradeColors = { A: 'bg-green-100 text-green-700', B: 'bg-blue-100 text-blue-700', C: 'bg-amber-100 text-amber-700', D: 'bg-red-100 text-red-700' };
   const statutColors = { en_attente: 'bg-amber-100 text-amber-700', validee: 'bg-green-100 text-green-700', rejetee: 'bg-red-100 text-red-700' };
   const statutLabels = { en_attente: 'En attente', validee: 'Validée', rejetee: 'Rejetée' };
+  const PRIX_GRADE = { A: 1250, B: 1100, C: 900, D: 700 };
+
+  // Calculs enrichis
+  const revenuEstime = declarations.filter(d => d.statut === 'validee').reduce((sum, d) => {
+    const grade = d.grade_ferme?.grade || 'D';
+    return sum + ((d.quantite_kg || 0) * (PRIX_GRADE[grade] || 700));
+  }, 0);
+  const gradeDistribution = declarations.reduce((acc, d) => {
+    const g = d.grade_ferme?.grade || '?';
+    acc[g] = (acc[g] || 0) + 1;
+    return acc;
+  }, {});
+  const alertesQualite = declarations.filter(d =>
+    d.grade_ferme?.grade === 'D' || d.controle_qualite?.corps_etrangers || d.controle_qualite?.feves_moisies
+  );
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="animate-spin w-8 h-8 text-green-600" /></div>;
 
@@ -1138,27 +1153,73 @@ const RecoltesTab = () => {
       {/* Analytics Dashboard */}
       <RecoltesAnalytics />
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Stats enrichies */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="bg-white rounded-xl border p-4 shadow-sm">
           <p className="text-xs text-gray-500">En attente</p>
           <p className="text-2xl font-bold text-amber-600">{stats.en_attente || 0}</p>
           <p className="text-[10px] text-gray-400">{Math.round(stats.total_kg_attente || 0)} kg</p>
         </div>
         <div className="bg-white rounded-xl border p-4 shadow-sm">
-          <p className="text-xs text-gray-500">Validées</p>
+          <p className="text-xs text-gray-500">Validees</p>
           <p className="text-2xl font-bold text-green-600">{stats.validee || 0}</p>
           <p className="text-[10px] text-gray-400">{Math.round(stats.total_kg_valide || 0)} kg</p>
         </div>
         <div className="bg-white rounded-xl border p-4 shadow-sm">
-          <p className="text-xs text-gray-500">Rejetées</p>
+          <p className="text-xs text-gray-500">Rejetees</p>
           <p className="text-2xl font-bold text-red-600">{stats.rejetee || 0}</p>
         </div>
         <div className="bg-white rounded-xl border p-4 shadow-sm">
           <p className="text-xs text-gray-500">Total kg</p>
           <p className="text-2xl font-bold text-gray-900">{Math.round(stats.total_kg || 0)}</p>
         </div>
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-4 shadow-sm" data-testid="revenu-estime-card">
+          <p className="text-xs text-green-700 font-medium">Revenu estime</p>
+          <p className="text-xl font-bold text-green-800">{(revenuEstime / 1000000).toFixed(1)}M</p>
+          <p className="text-[10px] text-green-600">{revenuEstime.toLocaleString()} FCFA</p>
+        </div>
+        <div className={`rounded-xl border p-4 shadow-sm ${alertesQualite.length > 0 ? 'bg-red-50 border-red-200' : 'bg-white'}`} data-testid="alertes-qualite-card">
+          <p className="text-xs text-gray-500">Alertes qualite</p>
+          <p className={`text-2xl font-bold ${alertesQualite.length > 0 ? 'text-red-600' : 'text-gray-400'}`}>{alertesQualite.length}</p>
+          <p className="text-[10px] text-gray-400">Grade D / defauts</p>
+        </div>
       </div>
+
+      {/* Prix indicatif par grade */}
+      <div className="bg-white rounded-xl border p-4 shadow-sm">
+        <p className="text-xs font-bold text-gray-600 mb-2">Prix indicatif par grade (FCFA/kg) et distribution</p>
+        <div className="flex flex-wrap gap-3">
+          {Object.entries(PRIX_GRADE).map(([grade, prix]) => (
+            <div key={grade} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${gradeColors[grade]}`}>
+              <span className="font-bold">Grade {grade}</span>
+              <span className="text-sm">{prix} FCFA/kg</span>
+              <Badge className="bg-white/50 text-[10px]">{gradeDistribution[grade] || 0} decl.</Badge>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Alertes qualite */}
+      {alertesQualite.length > 0 && (
+        <div className="bg-red-50 rounded-xl border-2 border-red-200 p-4" data-testid="alertes-qualite-section">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            <p className="font-bold text-red-800 text-sm">{alertesQualite.length} declaration(s) avec problemes qualite</p>
+          </div>
+          <div className="space-y-1">
+            {alertesQualite.slice(0, 5).map(d => (
+              <div key={d.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-1.5 text-xs">
+                <span className="font-medium">{d.farmer_name}</span>
+                <div className="flex items-center gap-2">
+                  <Badge className={gradeColors[d.grade_ferme?.grade]}>Grade {d.grade_ferme?.grade}</Badge>
+                  {d.controle_qualite?.corps_etrangers && <Badge className="bg-red-200 text-red-800 text-[9px]">Corps etrangers</Badge>}
+                  {d.controle_qualite?.feves_moisies && <Badge className="bg-red-200 text-red-800 text-[9px]">Moisies</Badge>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-2">
@@ -1351,22 +1412,67 @@ const RegistresTab = ({ dashboard, onRefresh }) => {
       {/* Stats rapides */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white rounded-xl border p-4 shadow-sm">
-          <p className="text-xs text-gray-500">Non-conformités</p>
+          <p className="text-xs text-gray-500">Non-conformites</p>
           <p className="text-2xl font-bold text-amber-600">{cert?.non_conformites?.length || 0}</p>
+          <p className="text-[10px] text-gray-400">{(cert?.non_conformites || []).filter(nc => nc.type === 'majeure').length} majeure(s)</p>
         </div>
         <div className="bg-white rounded-xl border p-4 shadow-sm">
-          <p className="text-xs text-gray-500">Réclamations ouvertes</p>
+          <p className="text-xs text-gray-500">Reclamations ouvertes</p>
           <p className="text-2xl font-bold text-blue-600">{(cert?.reclamations || []).filter(r => r.statut === 'ouverte' || !r.statut).length}</p>
+          <p className="text-[10px] text-gray-400">{(cert?.reclamations || []).filter(r => r.priorite === 'haute').length} haute priorite</p>
         </div>
         <div className="bg-white rounded-xl border p-4 shadow-sm">
           <p className="text-xs text-gray-500">Risques actifs</p>
           <p className="text-2xl font-bold text-purple-600">{(cert?.risques || []).filter(r => r.statut !== 'ferme' && r.statut !== 'attenue').length}</p>
+          <p className="text-[10px] text-gray-400">sur {(cert?.risques || []).length} total</p>
         </div>
         <div className="bg-white rounded-xl border p-4 shadow-sm">
-          <p className="text-xs text-gray-500">Déclarations impartialité</p>
+          <p className="text-xs text-gray-500">Declarations impartialite</p>
           <p className="text-2xl font-bold text-green-600">{declarations.length}</p>
         </div>
       </div>
+
+      {/* Matrice de risques visuelle */}
+      {(cert?.risques || []).length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm" data-testid="matrice-risques">
+          <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-3"><Shield className="w-5 h-5 text-purple-500" /> Matrice de Risques (Probabilite x Gravite)</h3>
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-6 gap-0.5 min-w-[400px]" style={{ gridTemplateColumns: '60px repeat(5, 1fr)' }}>
+              {/* Header row */}
+              <div className="text-[9px] text-gray-400 text-right pr-1 font-medium flex items-end justify-end pb-1">Prob./Grav.</div>
+              {[1,2,3,4,5].map(g => (
+                <div key={g} className="text-[10px] text-center font-bold text-gray-500 pb-1">G{g}</div>
+              ))}
+              {/* Rows: probability 5 to 1 */}
+              {[5,4,3,2,1].map(p => (
+                <React.Fragment key={p}>
+                  <div className="text-[10px] text-right pr-1 font-bold text-gray-500 flex items-center justify-end">P{p}</div>
+                  {[1,2,3,4,5].map(g => {
+                    const level = p * g;
+                    const bg = level >= 15 ? 'bg-red-500' : level >= 8 ? 'bg-amber-400' : level >= 4 ? 'bg-yellow-300' : 'bg-green-300';
+                    const risquesInCell = (cert?.risques || []).filter(r => (r.probabilite || 3) === p && (r.gravite || 3) === g);
+                    return (
+                      <div key={g} className={`${bg} rounded-md h-10 flex items-center justify-center relative`} title={`P${p}xG${g}=${level}`}>
+                        {risquesInCell.length > 0 && (
+                          <div className="w-6 h-6 bg-white rounded-full shadow-md flex items-center justify-center">
+                            <span className="text-[10px] font-bold text-gray-800">{risquesInCell.length}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-3 mt-3 text-[10px]">
+            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-green-300" /> Faible</div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-yellow-300" /> Modere</div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-amber-400" /> Eleve</div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-red-500" /> Critique</div>
+          </div>
+        </div>
+      )}
 
       {/* Non-conformités */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
@@ -1538,6 +1644,145 @@ const RegistresTab = ({ dashboard, onRefresh }) => {
   );
 };
 
+// ======== DIAGNOSTIC CONFORMITE PDC ========
+const DiagnosticConformitePDC = () => {
+  const [pdcs, setPdcs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/ars1000/pdc/cooperative/all?limit=100`, { headers: authHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          setPdcs(data.pdcs || data || []);
+        }
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    };
+    load();
+  }, []);
+
+  const ficheChecks = [
+    { key: 'identification', label: 'F1: Identification', check: (p) => p.identification?.nom && p.identification?.prenoms },
+    { key: 'epargne', label: 'F1: Epargne', check: (p) => !!p.epargne },
+    { key: 'menage', label: 'F2: Menage', check: (p) => Array.isArray(p.menage_detail) && p.menage_detail.length > 0 },
+    { key: 'exploitation', label: 'F3: Exploitation', check: (p) => p.exploitation?.superficie_totale_ha },
+    { key: 'cultures', label: 'F3: Cultures', check: (p) => Array.isArray(p.cultures) && p.cultures.length > 0 },
+    { key: 'inventaire', label: 'F4: Inventaire arbres', check: (p) => Array.isArray(p.inventaire_arbres) && p.inventaire_arbres.length > 0 },
+    { key: 'ombrage', label: 'F5: Ombrage', check: (p) => !!p.arbres_ombrage_resume || (p.arbres_ombrage?.nombre_total > 0) },
+    { key: 'materiel', label: 'F6: Materiel', check: (p) => Array.isArray(p.materiel_detail) && p.materiel_detail.length > 0 },
+    { key: 'strategie', label: 'F7: Strategie', check: (p) => Array.isArray(p.matrice_strategique_detail) && p.matrice_strategique_detail.length > 0 },
+    { key: 'programme', label: 'F7: Programme', check: (p) => Array.isArray(p.programme_annuel) && p.programme_annuel.length > 0 },
+  ];
+
+  const pdcsWithScore = pdcs.map(p => {
+    const checks = ficheChecks.map(fc => ({ ...fc, ok: fc.check(p) }));
+    const score = Math.round((checks.filter(c => c.ok).length / checks.length) * 100);
+    return { ...p, ficheChecks: checks, ficheScore: score };
+  });
+
+  const avgScore = pdcsWithScore.length > 0 ? Math.round(pdcsWithScore.reduce((s, p) => s + p.ficheScore, 0) / pdcsWithScore.length) : 0;
+  const complete = pdcsWithScore.filter(p => p.ficheScore === 100).length;
+  const incomplete = pdcsWithScore.filter(p => p.ficheScore < 100).length;
+
+  const ficheGlobal = ficheChecks.map(fc => ({
+    ...fc,
+    pct: pdcs.length > 0 ? Math.round((pdcs.filter(p => fc.check(p)).length / pdcs.length) * 100) : 0,
+  }));
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="animate-spin w-8 h-8 text-green-600" /></div>;
+
+  return (
+    <div className="space-y-5" data-testid="diagnostic-conformite-pdc">
+      <div className="rounded-2xl p-5 bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200">
+        <div className="flex items-center gap-4 mb-4">
+          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${avgScore >= 80 ? 'bg-green-500' : avgScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}>
+            <span className="text-2xl font-bold text-white">{avgScore}%</span>
+          </div>
+          <div>
+            <p className="font-bold text-lg text-gray-900">Diagnostic Conformite PDC</p>
+            <p className="text-sm text-gray-600">Taux de remplissage moyen des 7 fiches ARS 1000</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white rounded-xl p-3 text-center border border-indigo-100">
+            <p className="text-xl font-bold text-indigo-700">{pdcs.length}</p>
+            <p className="text-[10px] text-gray-500">PDC Total</p>
+          </div>
+          <div className="bg-white rounded-xl p-3 text-center border border-green-100">
+            <CheckCircle2 className="w-5 h-5 text-green-600 mx-auto mb-0.5" />
+            <p className="text-xl font-bold text-green-700">{complete}</p>
+            <p className="text-[10px] text-gray-500">100% complets</p>
+          </div>
+          <div className="bg-white rounded-xl p-3 text-center border border-amber-100">
+            <AlertTriangle className="w-5 h-5 text-amber-500 mx-auto mb-0.5" />
+            <p className="text-xl font-bold text-amber-600">{incomplete}</p>
+            <p className="text-[10px] text-gray-500">Incomplets</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border p-5 shadow-sm">
+        <h3 className="font-bold text-sm text-gray-900 mb-3 flex items-center gap-2"><FileText className="w-4 h-4 text-indigo-500" /> Remplissage par Fiche (tous planteurs)</h3>
+        <div className="space-y-2">
+          {ficheGlobal.map(f => {
+            const barColor = f.pct >= 80 ? '#10b981' : f.pct >= 50 ? '#f59e0b' : f.pct >= 25 ? '#f97316' : '#ef4444';
+            return (
+              <div key={f.key} className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 w-32 flex-shrink-0">{f.label}</span>
+                <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${f.pct}%`, backgroundColor: barColor }} />
+                </div>
+                <span className="text-xs font-bold w-10 text-right" style={{ color: barColor }}>{f.pct}%</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border p-5 shadow-sm">
+        <h3 className="font-bold text-sm text-gray-900 mb-3 flex items-center gap-2"><User className="w-4 h-4 text-purple-500" /> Diagnostic par Planteur</h3>
+        <div className="space-y-2">
+          {pdcsWithScore.sort((a, b) => a.ficheScore - b.ficheScore).map((p) => {
+            const scoreColor = p.ficheScore >= 80 ? 'text-green-600' : p.ficheScore >= 50 ? 'text-amber-600' : 'text-red-600';
+            const scoreBg = p.ficheScore >= 80 ? 'bg-green-100' : p.ficheScore >= 50 ? 'bg-amber-100' : 'bg-red-100';
+            const filled = p.ficheChecks.filter(c => c.ok).length;
+            const nom = p.identification?.nom || 'Planteur';
+            const prenoms = p.identification?.prenoms || '';
+            return (
+              <details key={p.id} className={`rounded-xl border overflow-hidden ${p.ficheScore < 50 ? 'border-red-200' : 'border-gray-100'}`} data-testid={`pdc-diag-${p.id}`}>
+                <summary className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${scoreBg}`}>
+                    <span className={`text-xs font-bold ${scoreColor}`}>{p.ficheScore}%</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-gray-900 truncate">{nom} {prenoms}</p>
+                    <p className="text-[10px] text-gray-400">{filled}/{ficheChecks.length} fiches | {p.statut}</p>
+                  </div>
+                  <Badge className={p.statut === 'valide' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}>{p.statut}</Badge>
+                </summary>
+                <div className="px-3 pb-3 border-t pt-2">
+                  <div className="grid grid-cols-2 gap-1">
+                    {p.ficheChecks.map(c => (
+                      <div key={c.key} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] ${c.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        {c.ok ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                        {c.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </details>
+            );
+          })}
+          {pdcsWithScore.length === 0 && <p className="text-center text-gray-400 text-sm py-6">Aucun PDC</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
 // ============= MAIN PAGE =============
 export default function ARS1000Dashboard() {
@@ -1604,7 +1849,7 @@ export default function ARS1000Dashboard() {
         {activeTab === 'recoltes' && <RecoltesTab />}
         {activeTab === 'agroforesterie' && <AgroforesterieTab />}
         {activeTab === 'especes' && <GuideEspeces />}
-        {activeTab === 'diagnostic' && <DiagnosticParcelle isCooperative={true} />}
+        {activeTab === 'diagnostic' && <DiagnosticConformitePDC />}
         {activeTab === 'protection' && <ProtectionEnvironnementale />}
         {activeTab === 'registres' && <RegistresTab dashboard={certDashboard} onRefresh={loadCertification} />}
       </div>

@@ -16,13 +16,13 @@ Reproduire le projet GreenLink Agritech (plateforme agritech Cote d'Ivoire) et i
 5. **Visite Terrain Agent (7 Fiches)** - Workflow 10 etapes (7 fiches + Photos + Signatures + Resume), GPS, recommandations
 6. **Generation PDF + Export Excel** - PDC 10 pages PDF, Excel 7 onglets par planteur
 7. **Menus geographiques** - Regions, Departements, Sous-prefectures CI en cascade
-8. **Declarations Recolte (ARS 1000-2)** - Controles qualite ferme, validation cooperative
-9. **Registre Reclamations/Risques/Impartialite**
-10. **Tableau de bord analytique recoltes** - Graphiques recharts
-11. **Widget ARS 1000** - Widget certification cooperative
-12. **Onglet ARS 1000 Super Admin** - Metriques qualitatives: conformite, fiches, recoltes, certifications, cooperatives
-13. **Diagnostic Cooperatif Agroforesterie** - Score cooperatif, diagnostic par planteur, criteres ARS 1000, recommandations, alertes non-conformes
-14. **Protection environnementale parcelles**
+8. **Declarations Recolte (ARS 1000-2)** - Controles qualite, validation cooperative, **revenu estime par grade** (A=1250, B=1100, C=900, D=700 FCFA/kg), **alertes qualite** (grade D, corps etrangers, moisies)
+9. **Registre Reclamations/Risques/Impartialite** - Stats enrichies (priorite, majeures), **matrice de risques visuelle** 5x5 (probabilite x gravite)
+10. **Diagnostic Conformite PDC** - Score moyen cooperatif, taux de remplissage par fiche (10 barres), diagnostic par planteur avec expansion
+11. **Protection Environnementale** - **Score conformite environnementale**, checklist ARS 1000 (Art. 4.3-4.6: distance eau, anti-erosion, reboisement, zone tampon)
+12. **Widget ARS 1000** - Widget certification cooperative
+13. **Onglet ARS 1000 Super Admin** - Metriques qualitatives: conformite, fiches, recoltes, certifications, cooperatives
+14. **Tableau de bord analytique recoltes** - Graphiques recharts
 
 ## Architecture
 - Backend: FastAPI + MongoDB | Frontend: React + Tailwind + Shadcn UI + Recharts
