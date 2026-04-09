@@ -10,7 +10,7 @@ import {
   BarChart3, Loader2, Eye, PenLine, ArrowLeft,
   Award, Leaf, ClipboardCheck, Scale, MessageSquareWarning,
   XCircle, ArrowUpRight, Filter, BookOpen, Sprout, Droplets,
-  Download, Wheat, Trash2, Edit, ShieldCheck, TrendingUp
+  Download, Wheat, Trash2, Edit, ShieldCheck, TrendingUp, Lightbulb
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 import { GuideEspeces, CalendrierPepiniere, DiagnosticParcelle, ProtectionEnvironnementale } from '../shared/AgroforesterieModules';
@@ -594,24 +594,28 @@ const CreateLotForm = ({ onSuccess }) => {
 // ============= AGROFORESTERIE TAB =============
 const AgroforesterieTab = () => {
   const [stats, setStats] = useState(null);
-  const [arbres, setArbres] = useState([]);
+  const [diagnostic, setDiagnostic] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [diagLoading, setDiagLoading] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState('overview');
 
   const loadData = useCallback(async () => {
     try {
-      const [statsRes, arbresRes] = await Promise.all([
+      const [statsRes, diagRes] = await Promise.all([
         fetch(`${API_URL}/api/ars1000/certification/arbres-ombrage/stats`, { headers: authHeaders() }),
-        fetch(`${API_URL}/api/ars1000/certification/arbres-ombrage?limit=50`, { headers: authHeaders() }),
+        fetch(`${API_URL}/api/ars1000/agroforesterie/diagnostic/cooperative`, { headers: authHeaders() }),
       ]);
       setStats(await statsRes.json());
-      const ad = await arbresRes.json();
-      setArbres(ad.arbres || []);
+      if (diagRes.ok) setDiagnostic(await diagRes.json());
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const nonConformes = (diagnostic?.diagnostics || []).filter(d => !d.conforme);
+  const conformes = (diagnostic?.diagnostics || []).filter(d => d.conforme);
 
   return (
     <div className="space-y-4" data-testid="agroforesterie-tab">
@@ -619,92 +623,275 @@ const AgroforesterieTab = () => {
         <div className="flex justify-center py-12"><Loader2 className="animate-spin w-8 h-8 text-green-600" /></div>
       ) : (
         <>
-          {/* Conformity Status */}
-          {stats && (
-            <div className={`rounded-2xl p-5 border-2 ${stats.conforme_agroforesterie ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-              <div className="flex items-center gap-3 mb-3">
-                {stats.conforme_agroforesterie ? (
-                  <CheckCircle2 className="w-8 h-8 text-green-600" />
-                ) : (
-                  <AlertTriangle className="w-8 h-8 text-amber-600" />
-                )}
-                <div>
-                  <p className="font-bold text-lg">{stats.conforme_agroforesterie ? 'Conforme ARS 1000' : 'Non conforme'}</p>
-                  <p className="text-sm text-gray-600">Agroforesterie - Arbres d'ombrage</p>
-                </div>
-              </div>
+          {/* Sub-tab navigation */}
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+            {[
+              { id: 'overview', label: 'Vue globale', icon: TreePine },
+              { id: 'diagnostic', label: 'Diagnostic par planteur', icon: Search },
+              { id: 'alertes', label: `Alertes (${nonConformes.length})`, icon: AlertTriangle },
+            ].map(tab => (
+              <button key={tab.id} onClick={() => setActiveSubTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all ${activeSubTab === tab.id ? 'bg-white shadow-sm text-green-700' : 'text-gray-500 hover:text-gray-700'}`}
+                data-testid={`agro-subtab-${tab.id}`}>
+                <tab.icon className="w-3.5 h-3.5" />{tab.label}
+              </button>
+            ))}
+          </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-                <div className="bg-white/80 rounded-lg p-3 text-center">
-                  <p className="text-xl font-bold text-gray-900">{stats.total_arbres}</p>
-                  <p className="text-xs text-gray-500">Total arbres</p>
-                </div>
-                <div className={`bg-white/80 rounded-lg p-3 text-center ${stats.conformite_details?.densite_ok ? '' : 'ring-2 ring-red-300'}`}>
-                  <p className="text-xl font-bold text-gray-900">{stats.densite_par_ha}</p>
-                  <p className="text-xs text-gray-500">Densité/ha</p>
-                  <p className="text-[10px] text-gray-400">Requis: 25-40</p>
-                </div>
-                <div className={`bg-white/80 rounded-lg p-3 text-center ${stats.conformite_details?.especes_ok ? '' : 'ring-2 ring-red-300'}`}>
-                  <p className="text-xl font-bold text-gray-900">{stats.nombre_especes}</p>
-                  <p className="text-xs text-gray-500">Espèces</p>
-                  <p className="text-[10px] text-gray-400">Requis: min 3</p>
-                </div>
-                <div className="bg-white/80 rounded-lg p-3 text-center">
-                  <p className="text-xl font-bold text-gray-900">{stats.superficie_totale_ha || 0}</p>
-                  <p className="text-xs text-gray-500">Superficie (ha)</p>
-                </div>
-              </div>
+          {/* ============== VUE GLOBALE ============== */}
+          {activeSubTab === 'overview' && (
+            <div className="space-y-4">
+              {/* Score cooperatif */}
+              {diagnostic && (
+                <div className="rounded-2xl p-5 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${diagnostic.score_moyen >= 80 ? 'bg-green-500' : diagnostic.score_moyen >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}>
+                        <span className="text-xl font-bold text-white">{diagnostic.score_moyen}%</span>
+                      </div>
+                      <div>
+                        <p className="font-bold text-lg text-gray-900">Score Agroforesterie Cooperatif</p>
+                        <p className="text-sm text-gray-600">{diagnostic.total_pdcs} planteur(s) analyses</p>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* 3 Strates */}
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                <div className="bg-white/60 rounded-lg p-2 text-center">
-                  <p className="text-sm font-bold text-green-800">{stats.strate_haute}</p>
-                  <p className="text-[10px] text-gray-500">Strate haute</p>
-                </div>
-                <div className="bg-white/60 rounded-lg p-2 text-center">
-                  <p className="text-sm font-bold text-green-700">{stats.strate_moyenne}</p>
-                  <p className="text-[10px] text-gray-500">Strate moyenne</p>
-                </div>
-                <div className="bg-white/60 rounded-lg p-2 text-center">
-                  <p className="text-sm font-bold text-green-600">{stats.strate_basse}</p>
-                  <p className="text-[10px] text-gray-500">Strate basse</p>
-                </div>
-              </div>
+                  {/* Conformes vs Non-conformes */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-white rounded-xl p-4 text-center border border-green-100">
+                      <CheckCircle2 className="w-6 h-6 text-green-600 mx-auto mb-1" />
+                      <p className="text-2xl font-bold text-green-700">{diagnostic.conformes}</p>
+                      <p className="text-xs text-gray-500">Conformes</p>
+                      {diagnostic.total_pdcs > 0 && <p className="text-[10px] text-green-600 font-medium">{Math.round((diagnostic.conformes / diagnostic.total_pdcs) * 100)}%</p>}
+                    </div>
+                    <div className="bg-white rounded-xl p-4 text-center border border-red-100">
+                      <AlertTriangle className="w-6 h-6 text-red-500 mx-auto mb-1" />
+                      <p className="text-2xl font-bold text-red-600">{diagnostic.non_conformes}</p>
+                      <p className="text-xs text-gray-500">Non-conformes</p>
+                      {diagnostic.total_pdcs > 0 && <p className="text-[10px] text-red-500 font-medium">{Math.round((diagnostic.non_conformes / diagnostic.total_pdcs) * 100)}%</p>}
+                    </div>
+                  </div>
 
-              {/* Conformity checklist */}
-              <div className="mt-3 space-y-1">
-                {stats.conformite_details && Object.entries({
-                  'Densité (25-40 arbres/ha)': stats.conformite_details.densite_ok,
-                  'Espèces (min 3)': stats.conformite_details.especes_ok,
-                  'Strates (3 niveaux)': stats.conformite_details.strates_ok,
-                }).map(([label, ok]) => (
-                  <div key={label} className="flex items-center gap-2 text-sm">
-                    {ok ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-red-500" />}
-                    <span className={ok ? 'text-green-800' : 'text-red-700'}>{label}</span>
+                  {/* Barre de conformite visuelle */}
+                  {diagnostic.total_pdcs > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1">
+                        <span>Taux de conformite</span>
+                        <span className="font-bold text-green-700">{Math.round((diagnostic.conformes / diagnostic.total_pdcs) * 100)}%</span>
+                      </div>
+                      <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-1000" style={{ width: `${(diagnostic.conformes / diagnostic.total_pdcs) * 100}%` }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Stats arbres (existant) */}
+              {stats && (
+                <div className={`rounded-2xl p-5 border-2 ${stats.conforme_agroforesterie ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    {stats.conforme_agroforesterie ? <CheckCircle2 className="w-6 h-6 text-green-600" /> : <AlertTriangle className="w-6 h-6 text-amber-600" />}
+                    <div>
+                      <p className="font-bold">{stats.conforme_agroforesterie ? 'Ombrage Conforme ARS 1000' : 'Ombrage Non conforme'}</p>
+                      <p className="text-xs text-gray-500">Inventaire central arbres d'ombrage</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white/80 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-gray-900">{stats.total_arbres}</p>
+                      <p className="text-xs text-gray-500">Total arbres</p>
+                    </div>
+                    <div className={`bg-white/80 rounded-lg p-3 text-center ${stats.conformite_details?.densite_ok ? '' : 'ring-2 ring-red-300'}`}>
+                      <p className="text-xl font-bold text-gray-900">{stats.densite_par_ha}</p>
+                      <p className="text-xs text-gray-500">Densite/ha</p>
+                      <p className="text-[10px] text-gray-400">Requis: 25-40</p>
+                    </div>
+                    <div className={`bg-white/80 rounded-lg p-3 text-center ${stats.conformite_details?.especes_ok ? '' : 'ring-2 ring-red-300'}`}>
+                      <p className="text-xl font-bold text-gray-900">{stats.nombre_especes}</p>
+                      <p className="text-xs text-gray-500">Especes</p>
+                      <p className="text-[10px] text-gray-400">Requis: min 3</p>
+                    </div>
+                    <div className="bg-white/80 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-gray-900">{stats.superficie_totale_ha || 0}</p>
+                      <p className="text-xs text-gray-500">Superficie (ha)</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mt-3">
+                    {[
+                      { label: 'Strate haute', val: stats.strate_haute, color: 'text-green-800' },
+                      { label: 'Strate moyenne', val: stats.strate_moyenne, color: 'text-green-700' },
+                      { label: 'Strate basse', val: stats.strate_basse, color: 'text-green-600' },
+                    ].map(s => (
+                      <div key={s.label} className="bg-white/60 rounded-lg p-2 text-center">
+                        <p className={`text-sm font-bold ${s.color}`}>{s.val}</p>
+                        <p className="text-[10px] text-gray-500">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 space-y-1">
+                    {stats.conformite_details && Object.entries({
+                      'Densite (25-40 arbres/ha)': stats.conformite_details.densite_ok,
+                      'Especes (min 3)': stats.conformite_details.especes_ok,
+                      'Strates (3 niveaux)': stats.conformite_details.strates_ok,
+                    }).map(([label, ok]) => (
+                      <div key={label} className="flex items-center gap-2 text-sm">
+                        {ok ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-red-500" />}
+                        <span className={ok ? 'text-green-800' : 'text-red-700'}>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Top problemes frequents */}
+              {diagnostic?.problemes_frequents?.length > 0 && (
+                <div className="bg-white rounded-xl border border-amber-200 p-4">
+                  <h4 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-500" /> Problemes les plus frequents
+                  </h4>
+                  <div className="space-y-2">
+                    {diagnostic.problemes_frequents.map((p, i) => (
+                      <div key={i} className="flex items-center justify-between bg-amber-50 rounded-lg px-3 py-2">
+                        <p className="text-xs text-amber-800 flex-1">{p.probleme}...</p>
+                        <Badge className="bg-amber-200 text-amber-800 text-[10px] ml-2">{p.count} planteur(s)</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Ajout arbres + especes */}
+              <div className="flex justify-between items-center">
+                <h3 className="font-semibold text-gray-900">Inventaire des Arbres</h3>
+                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowAdd(!showAdd)} data-testid="add-arbre-btn">
+                  <Plus className="w-4 h-4 mr-1" /> Ajouter
+                </Button>
+              </div>
+              {showAdd && <AddArbreForm onSuccess={() => { setShowAdd(false); loadData(); }} />}
+              {stats?.especes && stats.especes.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {stats.especes.map((esp, i) => (
+                    <Badge key={i} className="bg-green-100 text-green-700">{esp}</Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ============== DIAGNOSTIC PAR PLANTEUR ============== */}
+          {activeSubTab === 'diagnostic' && (
+            <div className="space-y-3" data-testid="agro-diagnostic-tab">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900 text-sm">Diagnostic individuel des planteurs</h3>
+                <Badge className="bg-gray-100 text-gray-600 text-[10px]">{(diagnostic?.diagnostics || []).length} planteur(s)</Badge>
+              </div>
+              {(diagnostic?.diagnostics || []).length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <TreePine className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Aucun PDC avec donnees agroforesterie</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {(diagnostic?.diagnostics || []).map((diag, i) => (
+                    <DiagnosticFarmerCard key={diag.pdc_id || i} diag={diag} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ============== ALERTES NON-CONFORMES ============== */}
+          {activeSubTab === 'alertes' && (
+            <div className="space-y-3" data-testid="agro-alertes-tab">
+              {nonConformes.length === 0 ? (
+                <div className="text-center py-12">
+                  <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                  <p className="font-semibold text-green-700">Tous les planteurs sont conformes !</p>
+                  <p className="text-sm text-gray-500 mt-1">Aucune alerte agroforesterie</p>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="w-5 h-5 text-red-600" />
+                      <p className="font-bold text-red-800">{nonConformes.length} planteur(s) necessitent une intervention</p>
+                    </div>
+                    <p className="text-xs text-red-600">Ces planteurs ne respectent pas les criteres ARS 1000 d'agroforesterie. Une visite terrain est recommandee.</p>
+                  </div>
+                  {nonConformes.map((diag, i) => (
+                    <DiagnosticFarmerCard key={diag.pdc_id || i} diag={diag} alert />
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+// Carte diagnostic par planteur
+const DiagnosticFarmerCard = ({ diag, alert }) => {
+  const [expanded, setExpanded] = useState(false);
+  const scoreColor = diag.score >= 80 ? 'text-green-600' : diag.score >= 50 ? 'text-amber-600' : 'text-red-600';
+  const scoreBg = diag.score >= 80 ? 'bg-green-100' : diag.score >= 50 ? 'bg-amber-100' : 'bg-red-100';
+  const criteres = diag.criteres || {};
+  const recs = diag.recommandations || [];
+  const nbFailed = Object.values(criteres).filter(c => !c.conforme).length;
+
+  return (
+    <div className={`rounded-xl border-2 overflow-hidden transition-all ${alert ? 'border-red-200 bg-red-50/30' : diag.conforme ? 'border-green-100 bg-white' : 'border-amber-200 bg-amber-50/30'}`} data-testid={`diag-farmer-${diag.pdc_id}`}>
+      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50/50 transition-colors">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${scoreBg}`}>
+          <span className={`text-sm font-bold ${scoreColor}`}>{diag.score}%</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-gray-900 truncate">{diag.farmer_name || 'Planteur'}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            {diag.conforme ? (
+              <Badge className="bg-green-100 text-green-700 text-[9px]">Conforme</Badge>
+            ) : (
+              <Badge className="bg-red-100 text-red-700 text-[9px]">Non conforme</Badge>
+            )}
+            {nbFailed > 0 && <span className="text-[10px] text-gray-400">{nbFailed} critere(s) echoue(s)</span>}
+          </div>
+        </div>
+        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+      </button>
+
+      {expanded && (
+        <div className="px-3 pb-3 border-t border-gray-100 pt-3 space-y-3">
+          {/* Criteres ARS 1000 */}
+          <div>
+            <p className="text-[10px] text-gray-400 font-medium mb-1.5">CRITERES ARS 1000 AGROFORESTERIE</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {Object.entries(criteres).map(([key, crit]) => (
+                <div key={key} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs ${crit.conforme ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                  {crit.conforme ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 text-green-600" /> : <XCircle className="w-3.5 h-3.5 flex-shrink-0 text-red-500" />}
+                  <span className="flex-1">{crit.label}</span>
+                  <span className="font-medium text-[10px]">{crit.valeur}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recommandations */}
+          {recs.length > 0 && (
+            <div>
+              <p className="text-[10px] text-gray-400 font-medium mb-1.5">RECOMMANDATIONS</p>
+              <div className="space-y-1">
+                {recs.map((rec, i) => (
+                  <div key={i} className="flex items-start gap-2 bg-amber-50 rounded-lg px-2.5 py-1.5">
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800">{rec}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
-
-          <div className="flex justify-between items-center">
-            <h3 className="font-semibold text-gray-900">Inventaire des Arbres</h3>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowAdd(!showAdd)} data-testid="add-arbre-btn">
-              <Plus className="w-4 h-4 mr-1" /> Ajouter
-            </Button>
-          </div>
-
-          {showAdd && <AddArbreForm onSuccess={() => { setShowAdd(false); loadData(); }} />}
-
-          {/* Species list */}
-          {stats?.especes && stats.especes.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {stats.especes.map((esp, i) => (
-                <Badge key={i} className="bg-green-100 text-green-700">{esp}</Badge>
-              ))}
-            </div>
-          )}
-        </>
+        </div>
       )}
     </div>
   );
