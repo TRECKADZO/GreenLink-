@@ -17,6 +17,7 @@ import { USSDPanel } from './components/USSDPanel';
 import { AlertsBanner } from './components/AlertsBanner';
 import { REDDWidget } from './components/REDDWidget';
 import { SSRTEWidget } from './components/SSRTEWidget';
+import { ARS1000Widget } from './components/ARS1000Widget';
 import { REDDEvolutionChart } from './components/REDDEvolutionChart';
 import { SSRTETrendsChart } from './components/SSRTETrendsChart';
 import { RiskByZoneChart } from './components/RiskByZoneChart';
@@ -145,6 +146,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <REDDWidget redd={kpiData?.redd} />
               <SSRTEWidget ssrte={kpiData?.ssrte} ici={kpiData?.ici} />
+              <ARS1000Widget />
             </div>
 
             {/* Charts Section */}

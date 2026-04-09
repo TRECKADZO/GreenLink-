@@ -278,6 +278,14 @@ const FarmerMoreTab = ({ navigate, stats, onTabChange }) => {
       ]
     },
     {
+      title: 'ARS 1000 & Environnement',
+      items: [
+        { label: 'Mon PDC', desc: 'Plan de Developpement Cacaoyere', icon: FileText, color: 'bg-green-700', route: '/farmer/pdc' },
+        { label: 'Mes Reclamations', desc: 'Soumettre une reclamation', icon: MessageSquare, color: 'bg-red-500', route: '/farmer/reclamations' },
+        { label: 'Protection Env.', desc: 'Mesures environnementales', icon: Leaf, color: 'bg-teal-600', route: '/farmer/protection-env' },
+      ]
+    },
+    {
       title: 'Mon Compte',
       items: [
         { label: 'Mon Profil', desc: 'Informations personnelles', icon: User, color: 'bg-blue-500', route: '/profile' },

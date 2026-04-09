@@ -39,6 +39,8 @@ import CarbonScorePage from "./pages/farmer/CarbonScorePage";
 import RegisterFarmerPage from "./pages/farmer/RegisterFarmerPage";
 import FarmerPDCPage from "./pages/farmer/FarmerPDCPage";
 import DeclarationRecoltePage from "./pages/farmer/DeclarationRecoltePage";
+import FarmerReclamationsPage from "./pages/farmer/FarmerReclamationsPage";
+import FarmerProtectionEnvPage from "./pages/farmer/FarmerProtectionEnvPage";
 
 // Buyer Routes
 import BuyerDashboard from "./pages/buyer/Dashboard";
@@ -180,6 +182,8 @@ function App() {
               <Route path="/farmer/inscription" element={<RegisterFarmerPage />} />
               <Route path="/farmer/pdc" element={<FarmerPDCPage />} />
               <Route path="/farmer/declaration-recolte" element={<DeclarationRecoltePage />} />
+              <Route path="/farmer/reclamations" element={<FarmerReclamationsPage />} />
+              <Route path="/farmer/protection-env" element={<FarmerProtectionEnvPage />} />
               <Route path="/guide-agroforesterie" element={<GuideAgroforesteriePage />} />
               <Route path="/carbon-payments" element={<CarbonPaymentsDashboard />} />
 

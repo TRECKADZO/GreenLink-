@@ -10,8 +10,9 @@ import {
   BarChart3, Loader2, Eye, PenLine, ArrowLeft,
   Award, Leaf, ClipboardCheck, Scale, MessageSquareWarning,
   XCircle, ArrowUpRight, Filter, BookOpen, Sprout, Droplets,
-  Download, Wheat, Trash2, Edit, ShieldCheck
+  Download, Wheat, Trash2, Edit, ShieldCheck, TrendingUp
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 import { GuideEspeces, CalendrierPepiniere, DiagnosticParcelle, ProtectionEnvironnementale } from '../shared/AgroforesterieModules';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -754,6 +755,129 @@ const AddArbreForm = ({ onSuccess }) => {
 };
 
 // ============= RECOLTES TAB =============
+const GRADE_COLORS_CHART = ['#16a34a', '#2563eb', '#d97706', '#dc2626'];
+const GRADE_LABELS = { A: 'Excellente', B: 'Bonne', C: 'Acceptable', D: 'Insuffisante' };
+
+const RecoltesAnalytics = () => {
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/ars1000/recoltes/analytics`, { headers: authHeaders() });
+        if (res.ok) setAnalytics(await res.json());
+      } catch (e) { /* */ }
+      finally { setLoading(false); }
+    };
+    load();
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 className="animate-spin w-6 h-6 text-green-600" /></div>;
+  if (!analytics) return null;
+
+  const gradeData = (analytics.distribution_grades || []).map(g => ({
+    name: `Grade ${g.grade}`, value: g.count, kg: g.total_kg,
+    label: GRADE_LABELS[g.grade] || g.grade
+  }));
+
+  return (
+    <div className="space-y-4 mb-6" data-testid="recoltes-analytics">
+      <div className="flex items-center gap-2 mb-2">
+        <TrendingUp className="w-5 h-5 text-green-600" />
+        <h3 className="font-bold text-gray-900">Tableau de bord analytique</h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Volume par campagne */}
+        {analytics.volume_par_campagne?.length > 0 && (
+          <div className="bg-white rounded-xl border p-4 shadow-sm">
+            <p className="text-xs font-bold text-gray-600 mb-3">Volume par campagne (kg)</p>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={analytics.volume_par_campagne}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="campagne" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} />
+                <Tooltip formatter={(v) => [`${v} kg`, 'Volume']} />
+                <Bar dataKey="total_kg" fill="#16a34a" radius={[4, 4, 0, 0]} name="Total kg" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Distribution grades */}
+        {gradeData.length > 0 && (
+          <div className="bg-white rounded-xl border p-4 shadow-sm">
+            <p className="text-xs font-bold text-gray-600 mb-3">Distribution des grades qualité</p>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={gradeData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                  {gradeData.map((_, i) => <Cell key={i} fill={GRADE_COLORS_CHART[i % GRADE_COLORS_CHART.length]} />)}
+                </Pie>
+                <Tooltip formatter={(v, name, props) => [`${v} décl. (${props.payload.kg} kg)`, props.payload.label]} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Evolution mensuelle */}
+        {analytics.evolution_mensuelle?.length > 0 && (
+          <div className="bg-white rounded-xl border p-4 shadow-sm">
+            <p className="text-xs font-bold text-gray-600 mb-3">Evolution mensuelle</p>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={analytics.evolution_mensuelle}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="mois" tick={{ fontSize: 10 }} />
+                <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                <Tooltip />
+                <Line yAxisId="left" type="monotone" dataKey="total_kg" stroke="#16a34a" strokeWidth={2} name="Volume (kg)" dot={{ r: 3 }} />
+                <Line yAxisId="right" type="monotone" dataKey="avg_qualite" stroke="#2563eb" strokeWidth={2} name="Qualité (%)" dot={{ r: 3 }} />
+                <Legend wrapperStyle={{ fontSize: 10 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Qualité par parcelle */}
+        {analytics.qualite_par_parcelle?.length > 0 && (
+          <div className="bg-white rounded-xl border p-4 shadow-sm">
+            <p className="text-xs font-bold text-gray-600 mb-3">Qualité moyenne par parcelle</p>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={analytics.qualite_par_parcelle.slice(0, 8)} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} />
+                <YAxis dataKey="parcelle" type="category" tick={{ fontSize: 9 }} width={80} />
+                <Tooltip formatter={(v) => [`${v}%`, 'Qualité']} />
+                <Bar dataKey="avg_qualite" fill="#2563eb" radius={[0, 4, 4, 0]} name="Qualité %" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+
+      {/* Top planteurs */}
+      {analytics.top_planteurs?.length > 0 && (
+        <div className="bg-white rounded-xl border p-4 shadow-sm">
+          <p className="text-xs font-bold text-gray-600 mb-3">Top 10 Planteurs (par volume validé)</p>
+          <div className="space-y-2">
+            {analytics.top_planteurs.map((p, i) => (
+              <div key={i} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                <span className="text-xs font-bold text-gray-400 w-5">#{i + 1}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{p.nom}</p>
+                  <p className="text-[10px] text-gray-500">{p.count} déclarations | Qualité moy: {p.avg_qualite}%</p>
+                </div>
+                <span className="text-sm font-bold text-green-700">{Math.round(p.total_kg)} kg</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const RecoltesTab = () => {
   const [declarations, setDeclarations] = useState([]);
   const [stats, setStats] = useState({});
@@ -801,6 +925,9 @@ const RecoltesTab = () => {
 
   return (
     <div className="space-y-6" data-testid="recoltes-tab">
+      {/* Analytics Dashboard */}
+      <RecoltesAnalytics />
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white rounded-xl border p-4 shadow-sm">

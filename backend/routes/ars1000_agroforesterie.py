@@ -722,6 +722,8 @@ class ProtectionEnvCreate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     parcelle_id: Optional[str] = None
+    parcelle_nom: Optional[str] = None
+    farmer_id: Optional[str] = None
     mesures_prises: List[str] = []
     distance_cours_eau_m: Optional[float] = None
     superficie_reboisee_ha: Optional[float] = None
@@ -734,14 +736,22 @@ async def add_protection_env(data: ProtectionEnvCreate, current_user: dict = Dep
     user_id = str(current_user["_id"])
     user_type = current_user.get("user_type", "")
     coop_id = ""
+    farmer_id = data.farmer_id or ""
     if user_type == "cooperative":
         coop_id = user_id
     elif user_type in ("field_agent", "agent_terrain"):
         coop_id = current_user.get("cooperative_id", "")
+    elif user_type in ("farmer", "planteur", "producteur"):
+        farmer_id = user_id
+        member = await db.coop_members.find_one({"user_id": user_id})
+        if member:
+            coop_id = str(member.get("coop_id", ""))
 
     now = datetime.now(timezone.utc).isoformat()
     doc = {
         "coop_id": coop_id,
+        "farmer_id": farmer_id,
+        "parcelle_nom": data.parcelle_nom or "",
         "created_by": user_id,
         "type_protection": data.type_protection,
         "description": data.description,
@@ -771,6 +781,8 @@ async def get_protection_env(current_user: dict = Depends(get_current_user)):
         query["coop_id"] = user_id
     elif user_type in ("field_agent", "agent_terrain"):
         query["coop_id"] = current_user.get("cooperative_id", "")
+    elif user_type in ("farmer", "planteur", "producteur"):
+        query["farmer_id"] = user_id
 
     docs = await db.protection_environnementale.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
 

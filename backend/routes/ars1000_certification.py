@@ -225,12 +225,26 @@ async def get_certification_dashboard(current_user: dict = Depends(get_current_u
     # NC counts
     nc_ouvertes = len([nc for nc in cert.get("non_conformites", []) if nc.get("statut") == "ouverte"])
 
+    # PDC validés
+    pdc_valides = await db.pdc.count_documents({"coop_id": coop_id, "statut": "valide"})
+
+    # Total récoltes kg
+    recolte_agg = await db.ars1000_declarations_recoltes.aggregate([
+        {"$match": {"coop_id": coop_id, "statut": "validee"}},
+        {"$group": {"_id": None, "total_kg": {"$sum": "$quantite_kg"}}}
+    ]).to_list(1)
+    total_kg_recoltes = recolte_agg[0]["total_kg"] if recolte_agg else 0
+
     return {
         "certification": serialize_certification(cert),
         "niveau_suggere": suggested_niveau,
         "niveau_info": get_certification_requirements(suggested_niveau),
+        "total_pdc": total_pdcs,
+        "pdc_valides": pdc_valides,
+        "total_kg_recoltes": total_kg_recoltes,
         "stats": {
             "total_pdcs": total_pdcs,
+            "pdc_valides": pdc_valides,
             "conformite_ars1": pdc_pct,
             "total_lots": total_lots,
             "conformite_ars2": qualite_pct,
@@ -238,6 +252,7 @@ async def get_certification_dashboard(current_user: dict = Depends(get_current_u
             "total_arbres_ombrage": total_arbres,
             "nombre_especes": nb_especes,
             "nc_ouvertes": nc_ouvertes,
+            "total_kg_recoltes": total_kg_recoltes,
         }
     }
 
@@ -302,14 +317,25 @@ async def add_non_conformite(nc: NonConformite, current_user: dict = Depends(get
 
 @router.post("/reclamation")
 async def add_reclamation(rec: Reclamation, current_user: dict = Depends(get_current_user)):
-    """Ajouter une réclamation"""
-    verify_cooperative(current_user)
-    coop_id = str(current_user["_id"])
+    """Ajouter une réclamation (coopérative ou agriculteur)"""
+    user_type = current_user.get("user_type", "")
+    user_id = str(current_user["_id"])
+
+    if user_type in ("cooperative", "admin"):
+        coop_id = user_id
+    elif user_type in ("farmer", "planteur", "producteur"):
+        member = await db.coop_members.find_one({"user_id": user_id})
+        coop_id = str(member.get("coop_id", "")) if member else ""
+    else:
+        raise HTTPException(status_code=403, detail="Non autorisé")
 
     rec_data = rec.model_dump()
     rec_data["date_reclamation"] = rec_data.get("date_reclamation") or datetime.now(timezone.utc).isoformat()
     rec_data["id"] = str(ObjectId())
     rec_data["statut"] = "ouverte"
+    rec_data["farmer_id"] = user_id if user_type in ("farmer", "planteur", "producteur") else ""
+    rec_data["farmer_name"] = current_user.get("full_name", "") if user_type in ("farmer", "planteur", "producteur") else ""
+    rec_data["source"] = "agriculteur" if user_type in ("farmer", "planteur", "producteur") else "cooperative"
 
     now = datetime.now(timezone.utc).isoformat()
     await db.certification.update_one(
@@ -322,6 +348,22 @@ async def add_reclamation(rec: Reclamation, current_user: dict = Depends(get_cur
     )
 
     return {"message": "Réclamation enregistrée", "reclamation": rec_data}
+
+
+@router.get("/reclamations/farmer")
+async def get_farmer_reclamations(current_user: dict = Depends(get_current_user)):
+    """Réclamations d'un agriculteur"""
+    user_id = str(current_user["_id"])
+    member = await db.coop_members.find_one({"user_id": user_id})
+    coop_id = str(member.get("coop_id", "")) if member else ""
+
+    cert = await db.certification.find_one({"coop_id": coop_id})
+    if not cert:
+        return {"reclamations": []}
+
+    all_recs = cert.get("reclamations", [])
+    farmer_recs = [r for r in all_recs if r.get("farmer_id") == user_id]
+    return {"reclamations": farmer_recs}
 
 
 @router.post("/risque")

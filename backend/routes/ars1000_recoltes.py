@@ -367,3 +367,70 @@ async def get_declaration(decl_id: str, current_user: dict = Depends(get_current
         raise HTTPException(status_code=404, detail="Déclaration introuvable")
 
     return serialize_declaration(decl)
+
+
+@router.get("/analytics")
+async def get_analytics(current_user: dict = Depends(get_current_user)):
+    """Tableau de bord analytique des récoltes"""
+    user_id = str(current_user["_id"])
+    user_type = current_user.get("user_type", "")
+
+    query = {}
+    if user_type in ("farmer", "planteur", "producteur"):
+        query["farmer_id"] = user_id
+    elif user_type == "cooperative":
+        query["coop_id"] = user_id
+
+    # Volume par campagne
+    vol_pipeline = [
+        {"$match": query},
+        {"$group": {"_id": "$campagne", "total_kg": {"$sum": "$quantite_kg"}, "count": {"$sum": 1}, "validees": {"$sum": {"$cond": [{"$eq": ["$statut", "validee"]}, 1, 0]}}}},
+        {"$sort": {"_id": 1}}
+    ]
+    vol_data = await db.ars1000_declarations_recoltes.aggregate(vol_pipeline).to_list(20)
+
+    # Qualité moyenne par parcelle
+    qual_pipeline = [
+        {"$match": {**query, "grade_ferme.pourcentage": {"$exists": True}}},
+        {"$group": {"_id": "$parcelle_nom", "avg_qualite": {"$avg": "$grade_ferme.pourcentage"}, "count": {"$sum": 1}, "total_kg": {"$sum": "$quantite_kg"}}},
+        {"$sort": {"avg_qualite": -1}}
+    ]
+    qual_data = await db.ars1000_declarations_recoltes.aggregate(qual_pipeline).to_list(50)
+
+    # Distribution des grades
+    grade_pipeline = [
+        {"$match": query},
+        {"$group": {"_id": "$grade_ferme.grade", "count": {"$sum": 1}, "total_kg": {"$sum": "$quantite_kg"}}},
+        {"$sort": {"_id": 1}}
+    ]
+    grade_data = await db.ars1000_declarations_recoltes.aggregate(grade_pipeline).to_list(10)
+
+    # Evolution mensuelle (derniers 12 mois)
+    monthly_pipeline = [
+        {"$match": query},
+        {"$addFields": {"month": {"$substr": ["$date_recolte", 0, 7]}}},
+        {"$group": {"_id": "$month", "total_kg": {"$sum": "$quantite_kg"}, "count": {"$sum": 1}, "avg_qualite": {"$avg": "$grade_ferme.pourcentage"}}},
+        {"$sort": {"_id": 1}},
+        {"$limit": 12}
+    ]
+    monthly_data = await db.ars1000_declarations_recoltes.aggregate(monthly_pipeline).to_list(12)
+
+    # Top planteurs (pour coop)
+    top_farmers = []
+    if user_type in ("cooperative", "admin"):
+        top_pipeline = [
+            {"$match": {**query, "statut": "validee"}},
+            {"$group": {"_id": "$farmer_name", "total_kg": {"$sum": "$quantite_kg"}, "count": {"$sum": 1}, "avg_qualite": {"$avg": "$grade_ferme.pourcentage"}}},
+            {"$sort": {"total_kg": -1}},
+            {"$limit": 10}
+        ]
+        top_farmers = await db.ars1000_declarations_recoltes.aggregate(top_pipeline).to_list(10)
+
+    return {
+        "volume_par_campagne": [{"campagne": v["_id"], "total_kg": round(v["total_kg"], 1), "count": v["count"], "validees": v.get("validees", 0)} for v in vol_data],
+        "qualite_par_parcelle": [{"parcelle": q["_id"] or "N/A", "avg_qualite": round(q["avg_qualite"], 1), "count": q["count"], "total_kg": round(q["total_kg"], 1)} for q in qual_data],
+        "distribution_grades": [{"grade": g["_id"] or "N/A", "count": g["count"], "total_kg": round(g["total_kg"], 1)} for g in grade_data],
+        "evolution_mensuelle": [{"mois": m["_id"] or "N/A", "total_kg": round(m["total_kg"], 1), "count": m["count"], "avg_qualite": round(m["avg_qualite"] or 0, 1)} for m in monthly_data],
+        "top_planteurs": [{"nom": t["_id"] or "N/A", "total_kg": round(t["total_kg"], 1), "count": t["count"], "avg_qualite": round(t["avg_qualite"] or 0, 1)} for t in top_farmers],
+    }
+
