@@ -30,6 +30,7 @@ Reproduire le projet GreenLink Agritech (plateforme agritech Cote d'Ivoire) et i
    - PDC officiel 10 pages (format ARS 1000-1)
    - Rapport d'essai (ARS 1000-2)
    - Fiche traceabilite lot
+8. **Menus deroulants geographiques** - Regions, Departements, Sous-prefectures de Cote d'Ivoire en cascade (PDC planteur + visite agent + inscription)
 
 ## Architecture technique
 - Backend: FastAPI + MongoDB (Motor async)
@@ -39,22 +40,11 @@ Reproduire le projet GreenLink Agritech (plateforme agritech Cote d'Ivoire) et i
 - Paiement: Orange Money (MOCKE)
 - Email: Resend (DNS pending)
 
-## Endpoints cles API
-- `POST /api/auth/login` (identifier, password)
-- `GET/POST /api/ars1000/pdc` - CRUD PDC
-- `POST /api/ars1000/pdc/agent-visit` - Visite terrain
-- `GET /api/ars1000/pdf/pdc/{id}` - PDF PDC 10 pages
-- `GET /api/ars1000/pdf/rapport-essai/{lot_id}` - PDF rapport essai
-- `GET /api/ars1000/pdf/tracabilite/{lot_id}` - PDF traceabilite
-- `POST /api/ars1000/agroforesterie/recommandations` - Recommandations brutes
-- `GET /api/ars1000/agroforesterie/recommandations/farmer/{id}` - Recommandations planteur
-- `GET /api/ars1000/agroforesterie/especes` - Base especes
-
-## Statut actuel
-- Backend: Sain
-- Frontend: Sain
-- Database: Sain
-- SMS/Money: MOCKE (Orange CI)
+## Fichiers cles
+- `/app/frontend/src/data/divisionsCI.js` - Donnees divisions administratives CI
+- `/app/frontend/src/components/GeoSelectCI.jsx` - Composant reutilisable selection geographique
+- `/app/backend/routes/ars1000_pdf.py` - Generation PDF
+- `/app/backend/routes/ars1000_agroforesterie.py` - Recommandations + especes
 
 ## Backlog
 - P1: Integration SMS reel (Orange CI / MTN)
