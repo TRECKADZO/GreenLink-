@@ -9,8 +9,9 @@ import {
   CheckCircle2, Clock, Search, ChevronRight, Plus,
   BarChart3, Loader2, Eye, PenLine, ArrowLeft,
   Award, Leaf, ClipboardCheck, Scale, MessageSquareWarning,
-  XCircle, ArrowUpRight, Filter
+  XCircle, ArrowUpRight, Filter, BookOpen, Sprout, Droplets
 } from 'lucide-react';
+import { GuideEspeces, CalendrierPepiniere, DiagnosticParcelle, ProtectionEnvironnementale } from '../shared/AgroforesterieModules';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -23,6 +24,9 @@ const TABS = [
   { id: 'pdc', label: 'Tous les PDC', icon: FileText },
   { id: 'lots', label: 'Traçabilité', icon: Package },
   { id: 'agroforesterie', label: 'Agroforesterie', icon: TreePine },
+  { id: 'especes', label: 'Guide Espèces', icon: BookOpen },
+  { id: 'diagnostic', label: 'Diagnostic', icon: Search },
+  { id: 'protection', label: 'Protection Env.', icon: Droplets },
   { id: 'registres', label: 'Registres', icon: Scale },
 ];
 
@@ -894,6 +898,9 @@ export default function ARS1000Dashboard() {
         {activeTab === 'pdc' && <PDCTab onRefresh={loadCertification} />}
         {activeTab === 'lots' && <LotsTab />}
         {activeTab === 'agroforesterie' && <AgroforesterieTab />}
+        {activeTab === 'especes' && <GuideEspeces />}
+        {activeTab === 'diagnostic' && <DiagnosticParcelle isCooperative={true} />}
+        {activeTab === 'protection' && <ProtectionEnvironnementale />}
         {activeTab === 'registres' && <RegistresTab dashboard={certDashboard} />}
       </div>
     </div>

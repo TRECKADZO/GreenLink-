@@ -274,6 +274,7 @@ const FarmerMoreTab = ({ navigate, stats, onTabChange }) => {
         { label: 'Boutique Intrants', desc: 'Acheter intrants et equipements', icon: ShoppingCart, color: 'bg-orange-500', route: '/marketplace' },
         { label: 'Primes Carbone', desc: 'Simulateur et paiements', icon: DollarSign, color: 'bg-purple-500', route: '/farmer/carbon-payments' },
         { label: 'Pratiques Durables', desc: '21 pratiques REDD+ evaluees', icon: Leaf, color: 'bg-green-600', route: '/guide-redd' },
+        { label: 'Guide Agroforesterie', desc: 'Especes, pepiniere, diagnostic', icon: TreePine, color: 'bg-emerald-700', route: '/guide-agroforesterie' },
       ]
     },
     {

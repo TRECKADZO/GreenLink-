@@ -132,6 +132,7 @@ import PWAInstallPrompt from "./components/PWAInstallPrompt";
 // Notifications (shared)
 import NotificationsPage from "./pages/NotificationsPage";
 import AdminNotifications from "./pages/admin/Notifications";
+import GuideAgroforesteriePage from "./pages/shared/GuideAgroforesteriePage";
 
 function App() {
   return (
@@ -177,6 +178,7 @@ function App() {
               <Route path="/farmer/carbon-score" element={<CarbonScorePage />} />
               <Route path="/farmer/inscription" element={<RegisterFarmerPage />} />
               <Route path="/farmer/pdc" element={<FarmerPDCPage />} />
+              <Route path="/guide-agroforesterie" element={<GuideAgroforesteriePage />} />
               <Route path="/carbon-payments" element={<CarbonPaymentsDashboard />} />
 
               {/* Buyer/Acheteur Routes */}
