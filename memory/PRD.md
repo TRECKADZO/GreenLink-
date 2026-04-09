@@ -17,18 +17,16 @@ Reproduire le projet GreenLink Agritech (plateforme agritech Cote d'Ivoire) et i
 6. **Recommandation Intelligente** - Suggestions especes, plan plantation, projection score
 7. **Generation PDF** - PDC 10 pages, rapport essai, fiche traceabilite
 8. **Menus geographiques** - Regions, Departements, Sous-prefectures CI en cascade
-9. **Declarations Recolte (ARS 1000-2)** - Formulaire planteur avec controles qualite ferme (Grade A/B/C/D), flux validation cooperative (valider/rejeter)
-10. **Registre Reclamations/Risques/Impartialite** - Gestion statuts (ouverte->en_cours->resolue), suppression, declarations impartialite signees
+9. **Declarations Recolte (ARS 1000-2)** - Formulaire planteur avec controles qualite ferme (Grade A/B/C/D), flux validation cooperative
+10. **Registre Reclamations/Risques/Impartialite** - Gestion statuts, suppression, declarations impartialite
+11. **Tableau de bord analytique recoltes** - Graphiques recharts (volume/campagne, qualite/parcelle, distribution grades, evolution mensuelle, top planteurs)
+12. **Widget ARS 1000** - Widget certification sur dashboard principal cooperative (niveau, conformite %, PDC, kg recoltes)
+13. **Reclamations agriculteur** - Les planteurs peuvent soumettre des reclamations depuis leur dashboard, la cooperative les traite
+14. **Protection environnementale parcelles** - Mesures liees aux parcelles des agriculteurs (cours d'eau, anti-erosion, reforestation, zone risque)
 
 ## Architecture
-- Backend: FastAPI + MongoDB | Frontend: React + Tailwind + Shadcn UI
+- Backend: FastAPI + MongoDB | Frontend: React + Tailwind + Shadcn UI + Recharts
 - PDF: ReportLab | SMS: Orange CI (MOCKE) | Paiement: Orange Money (MOCKE) | Email: Resend (DNS pending)
-
-## Fichiers cles
-- `/app/backend/routes/ars1000_recoltes.py` - Declarations recolte
-- `/app/backend/routes/ars1000_certification.py` - Reclamations, risques, impartialite
-- `/app/frontend/src/pages/farmer/DeclarationRecoltePage.jsx` - Page declaration planteur
-- `/app/frontend/src/pages/cooperative/ARS1000Dashboard.jsx` - Dashboard 9 onglets
 
 ## Backlog
 - P1: Integration SMS reel (Orange CI / MTN)
