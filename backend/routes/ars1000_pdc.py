@@ -6,7 +6,7 @@ Gestion complète des PDC selon la norme ARS 1000-1
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query, status
-from typing import Optional, List
+from typing import Optional, List, Any
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from bson import ObjectId
@@ -105,27 +105,45 @@ class PDCSignature(BaseModel):
 
 class PDCCreate(BaseModel):
     farmer_id: Optional[str] = None
-    identification: PDCIdentification = PDCIdentification()
-    menage: PDCMenage = PDCMenage()
-    parcelles: List[PDCParcelle] = []
-    arbres_ombrage: PDCArbresOmbrage = PDCArbresOmbrage()
-    materiel_agricole: PDCMaterielAgricole = PDCMaterielAgricole()
-    matrice_strategique: PDCMatriceStrategique = PDCMatriceStrategique()
-    matrices_annuelles: List[PDCMatriceAnnuelle] = []
+    identification: dict = {}
+    epargne: Optional[dict] = None
+    menage: dict = {}
+    menage_detail: Optional[list] = None
+    exploitation: Optional[dict] = None
+    cultures: Optional[list] = None
+    parcelles: List[dict] = []
+    arbres_ombrage: dict = {}
+    arbres_ombrage_resume: Optional[dict] = None
+    inventaire_arbres: Optional[list] = None
+    materiel_agricole: dict = {}
+    materiel_detail: Optional[list] = None
+    matrice_strategique: dict = {}
+    matrice_strategique_detail: Optional[list] = None
+    programme_annuel: Optional[list] = None
+    matrices_annuelles: List[dict] = []
     pratiques_durables: dict = {}
-    signatures: List[PDCSignature] = []
+    signatures: List[dict] = []
     notes: str = ""
 
 class PDCUpdate(BaseModel):
-    identification: Optional[PDCIdentification] = None
-    menage: Optional[PDCMenage] = None
-    parcelles: Optional[List[PDCParcelle]] = None
-    arbres_ombrage: Optional[PDCArbresOmbrage] = None
-    materiel_agricole: Optional[PDCMaterielAgricole] = None
-    matrice_strategique: Optional[PDCMatriceStrategique] = None
-    matrices_annuelles: Optional[List[PDCMatriceAnnuelle]] = None
+    identification: Optional[dict] = None
+    epargne: Optional[dict] = None
+    menage: Optional[dict] = None
+    menage_detail: Optional[list] = None
+    exploitation: Optional[dict] = None
+    cultures: Optional[list] = None
+    parcelles: Optional[List[dict]] = None
+    arbres_ombrage: Optional[dict] = None
+    arbres_ombrage_resume: Optional[dict] = None
+    inventaire_arbres: Optional[list] = None
+    materiel_agricole: Optional[dict] = None
+    materiel_detail: Optional[list] = None
+    matrice_strategique: Optional[dict] = None
+    matrice_strategique_detail: Optional[list] = None
+    programme_annuel: Optional[list] = None
+    matrices_annuelles: Optional[List[dict]] = None
     pratiques_durables: Optional[dict] = None
-    signatures: Optional[List[PDCSignature]] = None
+    signatures: Optional[List[dict]] = None
     notes: Optional[str] = None
 
 
@@ -136,57 +154,94 @@ def calculate_pdc_conformite(pdc: dict) -> float:
     total_fields = 0
     filled_fields = 0
 
-    # Identification (10 champs)
+    # Identification (10 champs - supports both old and new field names)
     ident = pdc.get("identification", {})
-    for f in ["nom", "prenoms", "genre", "numero_identification", "telephone",
-              "localite", "village", "sous_prefecture", "department", "region"]:
+    for f_pair in [
+        ("nom",), ("prenoms",), ("genre",),
+        ("numero_identification", "code_national"),
+        ("telephone", "contact_tel"),
+        ("localite", "village"), ("village",),
+        ("sous_prefecture",), ("department",), ("region",),
+    ]:
         total_fields += 1
-        if ident.get(f):
+        if any(ident.get(f) for f in f_pair):
             filled_fields += 1
 
-    # Ménage (5 champs clés)
+    # Ménage (check summary dict or detail array)
     menage = pdc.get("menage", {})
-    for f in ["taille_menage", "nombre_enfants", "enfants_scolarises",
-              "travailleurs_permanents", "acces_banque"]:
-        total_fields += 1
-        if menage.get(f) is not None and menage.get(f) != 0 and menage.get(f) != "":
+    menage_detail = pdc.get("menage_detail")
+    total_fields += 3
+    if isinstance(menage, dict) and menage.get("taille_menage", 0) > 0:
+        filled_fields += 1
+    elif isinstance(menage_detail, list) and len(menage_detail) > 0:
+        total_m = sum(int(r.get("nombre", 0) or 0) for r in menage_detail)
+        if total_m > 0:
             filled_fields += 1
+    if isinstance(menage, dict) and menage.get("nombre_enfants", 0) > 0:
+        filled_fields += 1
+    elif isinstance(menage_detail, list):
+        enfants = sum(int(r.get("nombre", 0) or 0) for r in menage_detail if "Enfants" in r.get("type", ""))
+        if enfants > 0:
+            filled_fields += 1
+    # Épargne
+    epargne = pdc.get("epargne", {})
+    if epargne and any(epargne.get(k, {}).get("compte") for k in ["mobile_money", "microfinance", "banque"]):
+        filled_fields += 1
 
-    # Parcelles (au moins 1 parcelle avec GPS)
+    # Exploitation & Cultures
+    exploitation = pdc.get("exploitation", {})
+    cultures = pdc.get("cultures", [])
     parcelles = pdc.get("parcelles", [])
     total_fields += 3
-    if len(parcelles) > 0:
+    if exploitation.get("superficie_totale_ha") or (len(parcelles) > 0):
         filled_fields += 1
-        p = parcelles[0]
+    if len(cultures) > 0 or len(parcelles) > 0:
+        filled_fields += 1
+        p = (parcelles[0] if parcelles else cultures[0]) if (parcelles or cultures) else {}
         if p.get("latitude") and p.get("longitude"):
-            filled_fields += 1
-        if p.get("superficie_ha", 0) > 0:
             filled_fields += 1
 
     # Arbres ombrage
     arbres = pdc.get("arbres_ombrage", {})
+    arbres_resume = pdc.get("arbres_ombrage_resume", {})
     total_fields += 3
-    if arbres.get("nombre_total", 0) > 0:
+    total_arbres = arbres.get("nombre_total", 0) or (int(arbres_resume.get("total", 0) or 0) if arbres_resume else 0)
+    if total_arbres > 0:
         filled_fields += 1
     if arbres.get("nombre_especes", 0) >= 3:
         filled_fields += 1
-    if arbres.get("conforme_agroforesterie"):
+    inv_arbres = pdc.get("inventaire_arbres", [])
+    if len(inv_arbres) >= 3 or arbres.get("conforme_agroforesterie"):
         filled_fields += 1
 
     # Matériel agricole
     mat = pdc.get("materiel_agricole", {})
+    mat_detail = pdc.get("materiel_detail", [])
     total_fields += 2
     if len(mat.get("outils", [])) > 0:
+        filled_fields += 1
+    elif isinstance(mat_detail, list) and any(int(m.get("quantite", 0) or 0) > 0 for m in mat_detail):
         filled_fields += 1
     if len(mat.get("equipements_protection", [])) > 0:
         filled_fields += 1
 
     # Matrice stratégique
     strat = pdc.get("matrice_strategique", {})
+    strat_detail = pdc.get("matrice_strategique_detail", [])
     total_fields += 2
     if strat.get("objectif_rendement_kg_ha", 0) > 0:
         filled_fields += 1
+    elif isinstance(strat_detail, list) and any(r.get("objectifs") for r in strat_detail):
+        filled_fields += 1
     if len(strat.get("actions_prioritaires", [])) > 0:
+        filled_fields += 1
+    elif isinstance(strat_detail, list) and any(r.get("activites") for r in strat_detail):
+        filled_fields += 1
+
+    # Programme annuel
+    prog = pdc.get("programme_annuel", [])
+    total_fields += 1
+    if isinstance(prog, list) and any(r.get("activite") for r in prog):
         filled_fields += 1
 
     # Signatures
@@ -207,11 +262,20 @@ def serialize_pdc(pdc: dict) -> dict:
         "farmer_id": pdc.get("farmer_id", ""),
         "coop_id": pdc.get("coop_id", ""),
         "identification": pdc.get("identification", {}),
+        "epargne": pdc.get("epargne"),
         "menage": pdc.get("menage", {}),
+        "menage_detail": pdc.get("menage_detail"),
+        "exploitation": pdc.get("exploitation"),
+        "cultures": pdc.get("cultures"),
         "parcelles": pdc.get("parcelles", []),
         "arbres_ombrage": pdc.get("arbres_ombrage", {}),
+        "arbres_ombrage_resume": pdc.get("arbres_ombrage_resume"),
+        "inventaire_arbres": pdc.get("inventaire_arbres"),
         "materiel_agricole": pdc.get("materiel_agricole", {}),
+        "materiel_detail": pdc.get("materiel_detail"),
         "matrice_strategique": pdc.get("matrice_strategique", {}),
+        "matrice_strategique_detail": pdc.get("matrice_strategique_detail"),
+        "programme_annuel": pdc.get("programme_annuel"),
         "matrices_annuelles": pdc.get("matrices_annuelles", []),
         "pratiques_durables": pdc.get("pratiques_durables", {}),
         "signatures": pdc.get("signatures", []),
@@ -222,6 +286,7 @@ def serialize_pdc(pdc: dict) -> dict:
         "updated_at": pdc.get("updated_at", ""),
         "validated_at": pdc.get("validated_at"),
         "validated_by": pdc.get("validated_by"),
+        "photos_parcelle": pdc.get("photos_parcelle", []),
     }
 
 
@@ -260,15 +325,24 @@ async def create_pdc(data: PDCCreate, current_user: dict = Depends(get_current_u
         "farmer_id": farmer_id,
         "coop_id": coop_id,
         "created_by": user_id,
-        "identification": data.identification.model_dump(),
-        "menage": data.menage.model_dump(),
-        "parcelles": [p.model_dump() for p in data.parcelles],
-        "arbres_ombrage": data.arbres_ombrage.model_dump(),
-        "materiel_agricole": data.materiel_agricole.model_dump(),
-        "matrice_strategique": data.matrice_strategique.model_dump(),
-        "matrices_annuelles": [m.model_dump() for m in data.matrices_annuelles],
+        "identification": data.identification,
+        "epargne": data.epargne,
+        "menage": data.menage,
+        "menage_detail": data.menage_detail,
+        "exploitation": data.exploitation,
+        "cultures": data.cultures,
+        "parcelles": data.parcelles,
+        "arbres_ombrage": data.arbres_ombrage,
+        "arbres_ombrage_resume": data.arbres_ombrage_resume,
+        "inventaire_arbres": data.inventaire_arbres,
+        "materiel_agricole": data.materiel_agricole,
+        "materiel_detail": data.materiel_detail,
+        "matrice_strategique": data.matrice_strategique,
+        "matrice_strategique_detail": data.matrice_strategique_detail,
+        "programme_annuel": data.programme_annuel,
+        "matrices_annuelles": data.matrices_annuelles,
         "pratiques_durables": data.pratiques_durables,
-        "signatures": [s.model_dump() for s in data.signatures],
+        "signatures": data.signatures,
         "notes": data.notes,
         "statut": "brouillon",
         "pourcentage_conformite": 0,
@@ -326,12 +400,7 @@ async def update_pdc(pdc_id: str, data: PDCUpdate, current_user: dict = Depends(
 
     update_data = {}
     for field, value in data.model_dump(exclude_none=True).items():
-        if isinstance(value, list):
-            update_data[field] = [v.model_dump() if hasattr(v, 'model_dump') else v for v in value]
-        elif hasattr(value, 'model_dump'):
-            update_data[field] = value.model_dump()
-        else:
-            update_data[field] = value
+        update_data[field] = value
 
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
 
@@ -492,17 +561,25 @@ async def submit_pdc(pdc_id: str, current_user: dict = Depends(get_current_user)
 
 class VisiteTerrainData(BaseModel):
     farmer_id: str
-    identification: PDCIdentification = PDCIdentification()
-    menage: PDCMenage = PDCMenage()
-    parcelles: List[PDCParcelle] = []
-    arbres_ombrage: PDCArbresOmbrage = PDCArbresOmbrage()
-    materiel_agricole: PDCMaterielAgricole = PDCMaterielAgricole()
-    matrice_strategique: PDCMatriceStrategique = PDCMatriceStrategique()
-    matrices_annuelles: List[PDCMatriceAnnuelle] = []
+    identification: dict = {}
+    epargne: Optional[dict] = None
+    menage: dict = {}
+    menage_detail: Optional[list] = None
+    exploitation: Optional[dict] = None
+    cultures: Optional[list] = None
+    parcelles: List[dict] = []
+    arbres_ombrage: dict = {}
+    arbres_ombrage_resume: Optional[dict] = None
+    inventaire_arbres: List[dict] = []
+    materiel_agricole: dict = {}
+    materiel_detail: Optional[list] = None
+    matrice_strategique: dict = {}
+    matrice_strategique_detail: Optional[list] = None
+    programme_annuel: Optional[list] = None
+    matrices_annuelles: List[dict] = []
     pratiques_durables: dict = {}
-    inventaire_arbres: List[dict] = []  # [{espece, circonference_cm, lat, lng, decision}]
-    photos_parcelle: List[str] = []  # URLs des photos uploadées
-    signature_planteur: Optional[dict] = None  # {data: base64, nom, date}
+    photos_parcelle: List[str] = []
+    signature_planteur: Optional[dict] = None
     signature_agent: Optional[dict] = None
     notes: str = ""
 
@@ -546,15 +623,23 @@ async def create_or_update_agent_visit(
         })
 
     pdc_data = {
-        "identification": data.identification.model_dump(),
-        "menage": data.menage.model_dump(),
-        "parcelles": [p.model_dump() for p in data.parcelles],
-        "arbres_ombrage": data.arbres_ombrage.model_dump(),
-        "materiel_agricole": data.materiel_agricole.model_dump(),
-        "matrice_strategique": data.matrice_strategique.model_dump(),
-        "matrices_annuelles": [m.model_dump() for m in data.matrices_annuelles],
-        "pratiques_durables": data.pratiques_durables,
+        "identification": data.identification,
+        "epargne": data.epargne,
+        "menage": data.menage,
+        "menage_detail": data.menage_detail,
+        "exploitation": data.exploitation,
+        "cultures": data.cultures,
+        "parcelles": data.parcelles,
+        "arbres_ombrage": data.arbres_ombrage,
+        "arbres_ombrage_resume": data.arbres_ombrage_resume,
         "inventaire_arbres": data.inventaire_arbres,
+        "materiel_agricole": data.materiel_agricole,
+        "materiel_detail": data.materiel_detail,
+        "matrice_strategique": data.matrice_strategique,
+        "matrice_strategique_detail": data.matrice_strategique_detail,
+        "programme_annuel": data.programme_annuel,
+        "matrices_annuelles": data.matrices_annuelles,
+        "pratiques_durables": data.pratiques_durables,
         "photos_parcelle": data.photos_parcelle,
         "signatures": signatures,
         "notes": data.notes,

@@ -551,16 +551,16 @@ export default function FarmerPDCPage() {
           setExistingPDC(data);
           setFormData(prev => ({
             ...prev,
-            identification: { ...prev.identification, ...data.identification },
+            identification: { ...prev.identification, ...(data.identification || {}) },
             epargne: data.epargne || prev.epargne,
-            menage: data.menage_detail || prev.menage,
+            menage: Array.isArray(data.menage_detail) ? data.menage_detail : (Array.isArray(data.menage) ? data.menage : prev.menage),
             exploitation: data.exploitation || prev.exploitation,
-            cultures: data.cultures?.length ? data.cultures : prev.cultures,
-            inventaire_arbres: data.inventaire_arbres || [],
+            cultures: Array.isArray(data.cultures) && data.cultures.length ? data.cultures : prev.cultures,
+            inventaire_arbres: Array.isArray(data.inventaire_arbres) ? data.inventaire_arbres : [],
             arbres_ombrage: data.arbres_ombrage_resume || prev.arbres_ombrage,
-            materiel: data.materiel_detail || prev.materiel,
-            matrice_strategique: data.matrice_strategique_detail || prev.matrice_strategique,
-            programme_annuel: data.programme_annuel?.length ? data.programme_annuel : prev.programme_annuel,
+            materiel: Array.isArray(data.materiel_detail) ? data.materiel_detail : prev.materiel,
+            matrice_strategique: Array.isArray(data.matrice_strategique_detail) ? data.matrice_strategique_detail : prev.matrice_strategique,
+            programme_annuel: Array.isArray(data.programme_annuel) && data.programme_annuel.length ? data.programme_annuel : prev.programme_annuel,
           }));
         }
       }
