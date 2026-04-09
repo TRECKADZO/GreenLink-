@@ -264,7 +264,7 @@ const FarmerMoreTab = ({ navigate, stats, onTabChange }) => {
       items: [
         { label: 'Mes Parcelles', desc: 'Declarer et gerer mes parcelles', icon: MapPin, color: 'bg-emerald-500', action: () => onTabChange('parcels') },
         { label: 'Mes Recoltes', desc: 'Suivre mes declarations', icon: Package, color: 'bg-amber-500', route: '/farmer/my-harvests' },
-        { label: 'Declarer une Recolte', desc: 'Enregistrer ma production', icon: TrendingUp, color: 'bg-blue-500', route: '/harvest-marketplace' },
+        { label: 'Declarer une Recolte', desc: 'Enregistrer ma production', icon: TrendingUp, color: 'bg-blue-500', route: '/farmer/declaration-recolte' },
         { label: 'Mes Commandes', desc: 'Historique de mes achats', icon: FileText, color: 'bg-gray-500', route: '/buyer/orders' },
       ]
     },

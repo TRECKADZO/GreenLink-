@@ -38,6 +38,7 @@ import MyHarvestsPage from "./pages/farmer/MyHarvestsPage";
 import CarbonScorePage from "./pages/farmer/CarbonScorePage";
 import RegisterFarmerPage from "./pages/farmer/RegisterFarmerPage";
 import FarmerPDCPage from "./pages/farmer/FarmerPDCPage";
+import DeclarationRecoltePage from "./pages/farmer/DeclarationRecoltePage";
 
 // Buyer Routes
 import BuyerDashboard from "./pages/buyer/Dashboard";
@@ -178,6 +179,7 @@ function App() {
               <Route path="/farmer/carbon-score" element={<CarbonScorePage />} />
               <Route path="/farmer/inscription" element={<RegisterFarmerPage />} />
               <Route path="/farmer/pdc" element={<FarmerPDCPage />} />
+              <Route path="/farmer/declaration-recolte" element={<DeclarationRecoltePage />} />
               <Route path="/guide-agroforesterie" element={<GuideAgroforesteriePage />} />
               <Route path="/carbon-payments" element={<CarbonPaymentsDashboard />} />
 

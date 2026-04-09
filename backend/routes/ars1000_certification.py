@@ -508,3 +508,155 @@ async def get_arbres_stats(
             "strates_requises": "3 strates (haute, moyenne, basse)",
         }
     }
+
+
+# ============= GESTION STATUTS RECLAMATIONS/RISQUES =============
+
+@router.put("/reclamation/{rec_id}/status")
+async def update_reclamation_status(rec_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Modifier le statut d'une réclamation (ouverte -> en_cours -> resolue/fermee)"""
+    user_type = current_user.get("user_type", "")
+    if user_type not in ("cooperative", "admin"):
+        raise HTTPException(status_code=403, detail="Non autorisé")
+
+    coop_id = str(current_user["_id"]) if user_type == "cooperative" else ""
+    new_status = body.get("statut", "")
+    if new_status not in ("ouverte", "en_cours", "resolue", "fermee"):
+        raise HTTPException(status_code=400, detail="Statut invalide")
+
+    actions = body.get("actions_prises", "")
+    now = datetime.now(timezone.utc).isoformat()
+
+    result = await db.certification.update_one(
+        {"coop_id": coop_id, "reclamations.id": rec_id},
+        {"$set": {
+            "reclamations.$.statut": new_status,
+            "reclamations.$.actions_prises": actions,
+            "reclamations.$.date_resolution": now if new_status in ("resolue", "fermee") else "",
+            "updated_at": now,
+        }}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Réclamation introuvable")
+
+    return {"message": f"Statut mis à jour: {new_status}", "id": rec_id}
+
+
+@router.delete("/reclamation/{rec_id}")
+async def delete_reclamation(rec_id: str, current_user: dict = Depends(get_current_user)):
+    """Supprimer une réclamation"""
+    user_type = current_user.get("user_type", "")
+    if user_type not in ("cooperative", "admin"):
+        raise HTTPException(status_code=403, detail="Non autorisé")
+
+    coop_id = str(current_user["_id"]) if user_type == "cooperative" else ""
+
+    result = await db.certification.update_one(
+        {"coop_id": coop_id},
+        {"$pull": {"reclamations": {"id": rec_id}}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Réclamation introuvable")
+
+    return {"message": "Réclamation supprimée"}
+
+
+@router.put("/risque/{risque_id}/status")
+async def update_risque_status(risque_id: str, body: dict, current_user: dict = Depends(get_current_user)):
+    """Modifier le statut d'un risque"""
+    user_type = current_user.get("user_type", "")
+    if user_type not in ("cooperative", "admin"):
+        raise HTTPException(status_code=403, detail="Non autorisé")
+
+    coop_id = str(current_user["_id"]) if user_type == "cooperative" else ""
+    new_status = body.get("statut", "")
+    if new_status not in ("identifie", "en_traitement", "attenue", "ferme"):
+        raise HTTPException(status_code=400, detail="Statut invalide")
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    result = await db.certification.update_one(
+        {"coop_id": coop_id, "risques.id": risque_id},
+        {"$set": {
+            "risques.$.statut": new_status,
+            "risques.$.date_mise_a_jour": now,
+            "updated_at": now,
+        }}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Risque introuvable")
+
+    return {"message": f"Statut risque mis à jour: {new_status}", "id": risque_id}
+
+
+@router.delete("/risque/{risque_id}")
+async def delete_risque(risque_id: str, current_user: dict = Depends(get_current_user)):
+    """Supprimer un risque"""
+    user_type = current_user.get("user_type", "")
+    if user_type not in ("cooperative", "admin"):
+        raise HTTPException(status_code=403, detail="Non autorisé")
+
+    coop_id = str(current_user["_id"]) if user_type == "cooperative" else ""
+
+    result = await db.certification.update_one(
+        {"coop_id": coop_id},
+        {"$pull": {"risques": {"id": risque_id}}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Risque introuvable")
+
+    return {"message": "Risque supprimé"}
+
+
+# ============= DECLARATION IMPARTIALITE =============
+
+class DeclarationImpartialite(BaseModel):
+    signataire_nom: str = ""
+    signataire_fonction: str = ""
+    engagement: str = "Je m'engage à exercer mes activités en toute impartialité"
+    conflits_interets: str = ""
+    mesures_preventives: str = ""
+
+@router.post("/impartialite")
+async def add_declaration_impartialite(data: DeclarationImpartialite, current_user: dict = Depends(get_current_user)):
+    """Ajouter une déclaration d'impartialité"""
+    user_type = current_user.get("user_type", "")
+    if user_type not in ("cooperative", "admin"):
+        raise HTTPException(status_code=403, detail="Non autorisé")
+
+    coop_id = str(current_user["_id"]) if user_type == "cooperative" else ""
+    now = datetime.now(timezone.utc).isoformat()
+
+    decl = data.model_dump()
+    decl["id"] = str(ObjectId())
+    decl["date_signature"] = now
+    decl["signe_par"] = str(current_user["_id"])
+
+    await db.certification.update_one(
+        {"coop_id": coop_id},
+        {
+            "$push": {"declarations_impartialite": decl},
+            "$set": {"updated_at": now}
+        },
+        upsert=True
+    )
+
+    return {"message": "Déclaration d'impartialité enregistrée", "declaration": decl}
+
+
+@router.get("/impartialite")
+async def get_declarations_impartialite(current_user: dict = Depends(get_current_user)):
+    """Liste des déclarations d'impartialité"""
+    user_type = current_user.get("user_type", "")
+    coop_id = str(current_user["_id"]) if user_type == "cooperative" else ""
+
+    cert = await db.certification.find_one({"coop_id": coop_id})
+    if not cert:
+        return {"declarations": []}
+
+    return {"declarations": cert.get("declarations_impartialite", [])}
+
