@@ -35,13 +35,14 @@ const FarmerHome = ({ user, stats, navigate, onTabChange }) => {
 
   const menuItems = [
     { num: '1', label: 'Mes Parcelles', sub: `${stats?.total_parcelles || 0} parcelle(s) declaree(s)`, icon: MapPin, color: 'bg-emerald-500', action: () => onTabChange('parcels') },
-    { num: '2', label: 'Mes Recoltes', sub: 'Suivez vos declarations', icon: Package, color: 'bg-amber-500', action: () => navigate('/farmer/my-harvests') },
-    { num: '3', label: 'Declarer une Recolte', sub: 'Enregistrez votre production', icon: TrendingUp, color: 'bg-blue-500', action: () => navigate('/harvest-marketplace') },
-    { num: '4', label: 'Marketplace Intrants', sub: 'Achetez intrants & equipements', icon: ShoppingCart, color: 'bg-orange-500', action: () => navigate('/marketplace'), highlight: true },
-    { num: '5', label: 'Mon Score Carbone', sub: `Score: ${carbonScore.toFixed(1)}/10`, icon: Award, color: 'bg-teal-500', action: () => navigate('/farmer/carbon-score') },
-    { num: '5b', label: 'Pratiques Durables', sub: 'Guide des 21 pratiques eligibles', icon: Leaf, color: 'bg-green-600', action: () => navigate('/guide-redd'), highlight: true },
-    { num: '6', label: 'Mes Commandes', sub: 'Historique des achats', icon: FileText, color: 'bg-gray-500', action: () => navigate('/buyer/orders') },
-    { num: '7', label: 'Primes Carbone', sub: 'Simulateur et paiements', icon: DollarSign, color: 'bg-purple-500', action: () => navigate('/farmer/carbon-payments') },
+    { num: '2', label: 'Mon PDC', sub: 'Plan de Developpement Cacaoyer', icon: FileText, color: 'bg-green-700', action: () => navigate('/farmer/pdc') },
+    { num: '3', label: 'Mes Recoltes', sub: 'Suivez vos declarations', icon: Package, color: 'bg-amber-500', action: () => navigate('/farmer/my-harvests') },
+    { num: '4', label: 'Declarer une Recolte', sub: 'Enregistrez votre production', icon: TrendingUp, color: 'bg-blue-500', action: () => navigate('/harvest-marketplace') },
+    { num: '5', label: 'Marketplace Intrants', sub: 'Achetez intrants & equipements', icon: ShoppingCart, color: 'bg-orange-500', action: () => navigate('/marketplace'), highlight: true },
+    { num: '6', label: 'Mon Score Carbone', sub: `Score: ${carbonScore.toFixed(1)}/10`, icon: Award, color: 'bg-teal-500', action: () => navigate('/farmer/carbon-score') },
+    { num: '6b', label: 'Pratiques Durables', sub: 'Guide des 21 pratiques eligibles', icon: Leaf, color: 'bg-green-600', action: () => navigate('/guide-redd'), highlight: true },
+    { num: '7', label: 'Mes Commandes', sub: 'Historique des achats', icon: FileText, color: 'bg-gray-500', action: () => navigate('/buyer/orders') },
+    { num: '8', label: 'Primes Carbone', sub: 'Simulateur et paiements', icon: DollarSign, color: 'bg-purple-500', action: () => navigate('/farmer/carbon-payments') },
   ];
 
   return (

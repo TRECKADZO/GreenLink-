@@ -36,6 +36,7 @@ const categories = [
   {
     title: 'Conformite',
     items: [
+      { icon: Shield, label: 'ARS 1000', path: '/cooperative/ars1000', color: 'text-[#065F46]' },
       { icon: FileText, label: 'EUDR', path: '/cooperative/reports', color: 'text-[#6B7280]' },
       { icon: TreePine, label: 'Naturalisation', path: '/cooperative/parcels/verification', color: 'text-[#6B7280]' },
       { icon: AlertTriangle, label: 'SSRTE / ICI', path: '/cooperative/ssrte', color: 'text-[#6B7280]' },

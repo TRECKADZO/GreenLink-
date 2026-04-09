@@ -52,6 +52,7 @@ from routes import cooperative_referral  # Système de parrainage coopératives
 from routes import discrepancy  # Gestion des écarts de vérification
 from routes.carbon_score_engine import _router as carbon_score_router
 from services.push_notifications import router as push_notifications_router
+from routes import ars1000_pdc, ars1000_lots, ars1000_certification
 
 
 ROOT_DIR = Path(__file__).parent
@@ -201,6 +202,9 @@ app.include_router(sync_batch.router)
 app.include_router(cooperative_referral.router)
 app.include_router(discrepancy.router, prefix="/api/ecarts", tags=["Ecarts"])
 app.include_router(carbon_score_router, prefix="/api/carbon-score", tags=["Score Carbone"])
+app.include_router(ars1000_pdc.router)
+app.include_router(ars1000_lots.router)
+app.include_router(ars1000_certification.router)
 
 # Set database for cooperative_referral module
 cooperative_referral.set_database(db)
