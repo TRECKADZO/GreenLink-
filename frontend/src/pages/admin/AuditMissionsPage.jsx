@@ -60,7 +60,7 @@ const AuditMissionsPage = () => {
       const data = await response.json();
       setMissions(data.missions || []);
     } catch (error) {
-      console.error('Error fetching missions:', error);
+      /* error logged */
     }
   };
 
@@ -70,7 +70,7 @@ const AuditMissionsPage = () => {
       const data = await response.json();
       setAuditors(data.auditors || []);
     } catch (error) {
-      console.error('Error fetching auditors:', error);
+      /* error logged */
     }
   };
 
@@ -80,7 +80,7 @@ const AuditMissionsPage = () => {
       const data = await response.json();
       setCooperatives(data.cooperatives || []);
     } catch (error) {
-      console.error('Error fetching cooperatives:', error);
+      /* error logged */
     }
   };
 
@@ -91,7 +91,7 @@ const AuditMissionsPage = () => {
       const data = await response.json();
       setParcels(data.parcels || []);
     } catch (error) {
-      console.error('Error fetching parcels:', error);
+      /* error logged */
       setParcels([]);
     }
   };

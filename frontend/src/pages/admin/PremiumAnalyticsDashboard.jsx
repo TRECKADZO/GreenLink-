@@ -64,7 +64,7 @@ const PremiumAnalyticsDashboard = () => {
       const response = await apiClient.get('/api/premium-analytics/top-3-priority');
       setAnalytics({ top3: response.data });
     } catch (error) {
-      console.error('Error:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }

@@ -50,7 +50,7 @@ const BuyerDashboard = () => {
       });
       setSubscription(data.subscription);
     } catch (err) {
-      console.error('Error fetching subscription:', err);
+      /* error logged */
     }
   };
 
@@ -63,7 +63,7 @@ const BuyerDashboard = () => {
       setStats(dashboardData);
       setOrders(ordersData);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }

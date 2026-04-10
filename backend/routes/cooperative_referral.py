@@ -10,7 +10,7 @@ Ce module gère le parrainage entre coopératives :
 Le service est entièrement gratuit - aucune récompense matérielle n'est liée au parrainage.
 """
 
-import random
+import secrets
 import string
 from datetime import datetime
 from typing import Optional, List
@@ -127,7 +127,7 @@ def generate_referral_code(region: str = "", coop_name: str = "") -> str:
                 region_code = region_code.ljust(3, "X")
     
     # Générer 4 chiffres aléatoires
-    random_digits = "".join(random.choices(string.digits, k=4))
+    random_digits = "".join(secrets.choice(string.digits) for _ in range(4))
     
     return f"GL-COOP-{region_code}-{random_digits}"
 
@@ -169,7 +169,7 @@ async def ensure_referral_code(user_id: str) -> str:
             break
     else:
         # Ajouter un suffixe si nécessaire
-        new_code = f"{new_code}-{random.randint(10, 99)}"
+        new_code = f"{new_code}-{secrets.randbelow(90) + 10}"
     
     # Sauvegarder le code
     user_mongo_id = user.get("_id")

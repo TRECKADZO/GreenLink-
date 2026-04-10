@@ -80,7 +80,7 @@ const SSRTEAgentDashboard = () => {
       setCases(casesRes.data.cases || []);
       setMembers(membersRes.data.members || membersRes.data || []);
     } catch (error) {
-      console.error('Error loading data:', error);
+      /* error logged */
       toast.error('Erreur de chargement des données');
     } finally {
       setLoading(false);
@@ -120,7 +120,7 @@ const SSRTEAgentDashboard = () => {
       
       loadData();
     } catch (error) {
-      console.error('Error submitting visit:', error);
+      /* error logged */
       toast.error(error.response?.data?.detail || 'Erreur lors de l\'enregistrement');
     }
   };

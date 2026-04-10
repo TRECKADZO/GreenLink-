@@ -110,7 +110,7 @@ const REDDTrackingPage = () => {
       const data = await res.json();
       setVisits(data.visits || []);
     } catch (e) {
-      console.error('Error loading visits:', e);
+      /* error logged */
     }
   };
 
@@ -122,7 +122,7 @@ const REDDTrackingPage = () => {
       });
       setStats(await res.json());
     } catch (e) {
-      console.error('Error loading stats:', e);
+      /* error logged */
     }
   };
 

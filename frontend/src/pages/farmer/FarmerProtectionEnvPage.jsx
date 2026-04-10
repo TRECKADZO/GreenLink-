@@ -45,7 +45,7 @@ export default function FarmerProtectionEnvPage() {
         setMesures(data.mesures || []);
         setStats(data.par_type || {});
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
   };
 
@@ -197,7 +197,7 @@ export default function FarmerProtectionEnvPage() {
                   <p className="text-xs text-gray-700">{m.description}</p>
                   {m.mesures_prises?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {m.mesures_prises.map((mp, j) => <Badge key={j} className="bg-gray-100 text-gray-600 text-[10px]">{mp}</Badge>)}
+                      {m.mesures_prises.map((mp) => <Badge key={mp} className="bg-gray-100 text-gray-600 text-[10px]">{mp}</Badge>)}
                     </div>
                   )}
                   {m.distance_cours_eau_m && <p className="text-[10px] text-gray-400 mt-1">Distance: {m.distance_cours_eau_m}m</p>}

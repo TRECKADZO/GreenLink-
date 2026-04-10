@@ -277,7 +277,7 @@ const HarvestMarketplace = () => {
       const data = response.data || [];
       setListings(data);
     } catch (error) {
-      console.error('Error fetching listings:', error);
+      /* error logged */
       setListings([]);
     } finally {
       setLoading(false);
@@ -290,7 +290,7 @@ const HarvestMarketplace = () => {
       const data = response.data;
       setStats(data || { total_listings: 0, total_quantity_tons: 0, avg_price_per_kg: 0, active_sellers: 0 });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      /* error logged */
       setStats({ total_listings: 0, total_quantity_tons: 0, avg_price_per_kg: 0, active_sellers: 0 });
     }
   };

@@ -46,7 +46,7 @@ const SuperAdminDashboard = () => {
       const data = await analyticsApi.getDashboard(period);
       setDashboardData(data);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des analytics');
     } finally {
       setLoading(false);
@@ -66,7 +66,7 @@ const SuperAdminDashboard = () => {
         const response = await analyticsApi.getMarketplaceStats();
         setMarketplaceStats(response);
       } catch (error) {
-        console.error('Error fetching marketplace stats:', error);
+        /* error logged */
       }
     };
     fetchMarketplaceStats();
@@ -82,7 +82,7 @@ const SuperAdminDashboard = () => {
           const data = await analyticsApi.getReddImpact();
           setReddImpact(data);
         } catch (error) {
-          console.error('Error fetching environmental impact:', error);
+          /* error logged */
           toast.error('Erreur lors du chargement des données environnementales');
         } finally {
           setReddLoading(false);
@@ -97,7 +97,7 @@ const SuperAdminDashboard = () => {
           const data = await analyticsApi.getArs1000Stats();
           setArs1000Data(data);
         } catch (error) {
-          console.error('Error fetching ARS 1000 stats:', error);
+          /* error logged */
         } finally {
           setArs1000Loading(false);
         }

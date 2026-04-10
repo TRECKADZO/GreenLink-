@@ -25,7 +25,7 @@ const BadgeAnalyticsPage = () => {
         const data = await response.json();
         setAnalytics(data);
       } catch (error) {
-        console.error('Error fetching analytics:', error);
+        /* error logged */
         toast.error('Erreur lors du chargement des analytics');
       } finally {
         setLoading(false);

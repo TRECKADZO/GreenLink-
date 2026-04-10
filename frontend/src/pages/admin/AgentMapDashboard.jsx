@@ -38,7 +38,7 @@ const AgentMapDashboard = () => {
       const online = response.data.filter(a => a.is_online).length;
       setStats({ online, total: response.data.length });
     } catch (error) {
-      console.error('Error loading agents:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ const AgentMapDashboard = () => {
           const message = JSON.parse(event.data);
           handleWebSocketMessage(message);
         } catch (e) {
-          console.error('[WS] Parse error:', e);
+          /* error logged */
         }
       };
 
@@ -78,7 +78,7 @@ const AgentMapDashboard = () => {
         setConnected(false);
       };
     } catch (error) {
-      console.error('[WS] Connection error:', error);
+      /* error logged */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);

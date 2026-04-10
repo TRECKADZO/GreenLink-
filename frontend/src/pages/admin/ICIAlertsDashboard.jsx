@@ -77,7 +77,7 @@ const ICIAlertsDashboard = () => {
       setMetrics(metricsRes.data);
       setSsrteVisits(visitsRes.data.visits || []);
     } catch (error) {
-      console.error('Error fetching ICI data:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);

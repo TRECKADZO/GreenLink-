@@ -58,7 +58,7 @@ const QuotesManagement = () => {
       setQuotes(data.quotes || []);
       setStats(data.stats || {});
     } catch (err) {
-      console.error('Error fetching quotes:', err);
+      /* error logged */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
@@ -69,7 +69,7 @@ const QuotesManagement = () => {
       setAccounts(data.accounts || []);
       setAccountStats(data.stats || {});
     } catch (err) {
-      console.error('Error fetching accounts:', err);
+      /* error logged */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

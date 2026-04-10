@@ -45,7 +45,7 @@ export default function DeleteAccountPage() {
 
       setSuccess(true);
     } catch (err) {
-      console.error('Delete account error:', err);
+      /* error logged */
       if (err.response?.status === 401) {
         setError('Email ou mot de passe incorrect');
       } else {

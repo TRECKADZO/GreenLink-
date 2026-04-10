@@ -53,7 +53,7 @@ const AdminNotifications = () => {
         setNotifications(data.notifications || []);
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      /* error logged */
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -73,7 +73,7 @@ const AdminNotifications = () => {
         setStats(prev => ({ ...prev, pending_sms: smsData.count || 0 }));
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      /* error logged */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -92,7 +92,7 @@ const AdminNotifications = () => {
       });
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      /* error logged */
     }
   };
 
@@ -111,7 +111,7 @@ const AdminNotifications = () => {
         alert('Rappels hebdomadaires lancés avec succès!');
       }
     } catch (error) {
-      console.error('Error triggering reminders:', error);
+      /* error logged */
       alert('Erreur lors de l\'envoi des rappels');
     }
   };

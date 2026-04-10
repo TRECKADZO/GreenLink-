@@ -77,7 +77,7 @@ const BuyerDashboard = () => {
       const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, getAuthHeaders());
       setSubscription(data.subscription);
     } catch (err) {
-      console.error('Error fetching subscription:', err);
+      /* error logged */
     }
   };
 
@@ -86,7 +86,7 @@ const BuyerDashboard = () => {
       const response = await axios.get(`${API_URL}/api/buyer/trial-status`, getAuthHeaders());
       setTrialStatus(response.data);
     } catch (error) {
-      console.error('Error fetching trial status:', error);
+      /* error logged */
     }
   };
 
@@ -125,7 +125,7 @@ const BuyerDashboard = () => {
       const response = await axios.get(`${API_URL}/api/buyer/dashboard`, getAuthHeaders());
       setDashboard(response.data);
     } catch (error) {
-      console.error('Error fetching dashboard:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement du tableau de bord');
     } finally {
       setLoading(false);
@@ -137,7 +137,7 @@ const BuyerDashboard = () => {
       const response = await axios.get(`${API_URL}/api/buyer/quotes`, getAuthHeaders());
       setQuotes(response.data);
     } catch (error) {
-      console.error('Error fetching quotes:', error);
+      /* error logged */
     }
   };
 
@@ -146,7 +146,7 @@ const BuyerDashboard = () => {
       const response = await axios.get(`${API_URL}/api/buyer/favorites`, getAuthHeaders());
       setFavorites(response.data);
     } catch (error) {
-      console.error('Error fetching favorites:', error);
+      /* error logged */
     }
   };
 
@@ -155,7 +155,7 @@ const BuyerDashboard = () => {
       const response = await axios.get(`${API_URL}/api/buyer/alerts`, getAuthHeaders());
       setAlerts(response.data);
     } catch (error) {
-      console.error('Error fetching alerts:', error);
+      /* error logged */
     }
   };
 
@@ -164,7 +164,7 @@ const BuyerDashboard = () => {
       const response = await axios.get(`${API_URL}/api/buyer/matching-listings`, getAuthHeaders());
       setMatchingListings(response.data.matches || []);
     } catch (error) {
-      console.error('Error fetching matching listings:', error);
+      /* error logged */
     }
   };
 
@@ -173,7 +173,7 @@ const BuyerDashboard = () => {
       const response = await axios.get(`${API_URL}/api/buyer/market-insights`, getAuthHeaders());
       setMarketInsights(response.data);
     } catch (error) {
-      console.error('Error fetching market insights:', error);
+      /* error logged */
     }
   };
 

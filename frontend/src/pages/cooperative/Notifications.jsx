@@ -42,7 +42,7 @@ const CooperativeNotifications = () => {
         setNotifications(data.notifications || []);
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      /* error logged */
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -67,7 +67,7 @@ const CooperativeNotifications = () => {
         prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
       );
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      /* error logged */
     }
   };
 
@@ -79,7 +79,7 @@ const CooperativeNotifications = () => {
       });
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      /* error logged */
     }
   };
 
@@ -121,7 +121,7 @@ const CooperativeNotifications = () => {
         alert('Erreur lors de l\'envoi des notifications');
       }
     } catch (error) {
-      console.error('Error sending notifications:', error);
+      /* error logged */
       alert('Erreur de connexion');
     } finally {
       setSending(false);

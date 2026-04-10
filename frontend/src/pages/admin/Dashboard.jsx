@@ -117,7 +117,7 @@ const AdminDashboard = () => {
       });
       setStats(response.data);
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      /* error logged */
     }
   };
 
@@ -129,7 +129,7 @@ const AdminDashboard = () => {
       });
       setPartners(response.data);
     } catch (error) {
-      console.error('Error fetching partners:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }

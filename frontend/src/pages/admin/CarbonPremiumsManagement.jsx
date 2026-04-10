@@ -57,7 +57,7 @@ const CarbonPremiumsManagement = () => {
     try {
       const res = await fetch(`${API}/api/admin/carbon-premiums/stats`, { headers });
       if (res.ok) setStats(await res.json());
-    } catch (e) { console.error('Stats error', e); }
+    } catch (e) { /* error */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -69,7 +69,7 @@ const CarbonPremiumsManagement = () => {
         setConfig(data);
         setNewRate(String(data.taux_par_hectare || 5000));
       }
-    } catch (e) { console.error('Config error', e); }
+    } catch (e) { /* error */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -82,7 +82,7 @@ const CarbonPremiumsManagement = () => {
         setRequests(data.requests || []);
         setTotal(data.total || 0);
       }
-    } catch (e) { console.error('Requests error', e); }
+    } catch (e) { /* error */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
@@ -18,7 +18,17 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchOrders = useCallback(async () => {
+    try {
+      const data = await marketplaceApi.getMyOrders();
+      setOrders(data);
+    } catch (_err) {
+      /* fetch error */
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -26,19 +36,7 @@ const Orders = () => {
       return;
     }
     fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, navigate]);
-
-  const fetchOrders = async () => {
-    try {
-      const data = await marketplaceApi.getMyOrders();
-      setOrders(data);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, authLoading, navigate, fetchOrders]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {

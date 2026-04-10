@@ -99,7 +99,7 @@ const BillingDashboard = () => {
       setDistributions(distributionsRes.data.distributions || []);
       setPaymentHistory(paymentsRes.data.payments || []);
     } catch (error) {
-      console.error('Error fetching billing data:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);

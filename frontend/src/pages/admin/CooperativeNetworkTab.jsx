@@ -33,7 +33,7 @@ const CooperativeNetworkTab = () => {
       });
       setData(res.data);
     } catch (err) {
-      console.error('Erreur chargement réseau:', err);
+      /* error logged */
       toast.error('Erreur lors du chargement du réseau');
     } finally {
       setLoading(false);

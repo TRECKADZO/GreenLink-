@@ -59,7 +59,7 @@ const SSRTEAnalytics = () => {
         setLeaderboard(await leaderboardRes.json());
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);

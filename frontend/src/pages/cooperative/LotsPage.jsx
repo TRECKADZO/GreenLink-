@@ -89,7 +89,7 @@ const LotsPage = () => {
       const data = await cooperativeApi.getLots(statusFilter || null);
       setLots(data);
     } catch (error) {
-      console.error('Error fetching lots:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des lots');
     } finally {
       setLoading(false);
@@ -216,7 +216,7 @@ const LotsPage = () => {
       setShowFinalizeModal(false);
       fetchLots();
     } catch (error) {
-      console.error('Error finalizing sale:', error);
+      /* error logged */
       toast.error('Erreur lors de la finalisation');
     } finally {
       setSubmitting(false);

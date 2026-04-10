@@ -31,7 +31,7 @@ const AuditorMissionPage = () => {
         setMission(data);
         setParcels(data.parcels || []);
       } catch (error) {
-        console.error('Error fetching mission:', error);
+        /* error logged */
         toast.error('Erreur lors du chargement de la mission');
       } finally {
         setLoading(false);

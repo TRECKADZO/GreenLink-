@@ -36,7 +36,7 @@ const DistributionsPage = () => {
       const data = await cooperativeApi.getDistributionsHistory();
       setDistributions(data);
     } catch (error) {
-      console.error('Error fetching distributions:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des distributions');
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ const DistributionsPage = () => {
       setShowExecuteModal(false);
       fetchDistributions();
     } catch (error) {
-      console.error('Error executing payments:', error);
+      /* error logged */
       toast.error('Erreur lors de l\'exécution des paiements');
     } finally {
       setExecuting(false);

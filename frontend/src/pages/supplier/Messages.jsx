@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
@@ -22,7 +22,6 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -30,44 +29,40 @@ const Messages = () => {
       return;
     }
     fetchConversations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, fetchConversations]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.conversation_id);
-      // Auto-refresh messages every 5 seconds
       const interval = setInterval(() => {
         fetchMessages(selectedConversation.conversation_id);
       }, 5000);
       return () => clearInterval(interval);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedConversation]);
+  }, [selectedConversation, fetchMessages]);
 
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       const data = await marketplaceApi.getConversations();
       setConversations(data);
-      if (data.length > 0 && !selectedConversation) {
-        setSelectedConversation(data[0]);
+      if (data.length > 0) {
+        setSelectedConversation(prev => prev || data[0]);
       }
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
+    } catch (_err) {
+      /* error */
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchMessages = async (conversationId) => {
+  const fetchMessages = useCallback(async (conversationId) => {
     try {
       const data = await marketplaceApi.getMessages(conversationId);
       setMessages(data);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
+    } catch (_err) {
+      /* error */
     }
-  };
+  }, []);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();

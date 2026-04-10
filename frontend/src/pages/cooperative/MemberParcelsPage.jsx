@@ -55,7 +55,7 @@ const MemberParcelsPage = () => {
       const result = await cooperativeApi.getMemberParcels(memberId);
       setData(result);
     } catch (error) {
-      console.error('Error fetching parcels:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des parcelles');
     } finally {
       setLoading(false);

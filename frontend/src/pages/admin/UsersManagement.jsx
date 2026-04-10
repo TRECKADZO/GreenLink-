@@ -1,5 +1,5 @@
 import { tokenService } from "../../services/tokenService";
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../../components/Navbar';
@@ -91,18 +91,7 @@ const UsersManagement = () => {
     return badges[status] || badges.active;
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user || user.user_type !== 'admin') {
-      navigate('/');
-      return;
-    }
-    fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, page, userTypeFilter, sortBy, sortOrder, navigate]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const token = tokenService.getToken();
@@ -128,7 +117,7 @@ const UsersManagement = () => {
       setTotal(response.data.total);
       setSelectedUsers([]);
       setSelectAll(false);
-    } catch (error) {
+    } catch (_err) {
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les utilisateurs',
@@ -137,7 +126,16 @@ const UsersManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit, sortBy, sortOrder, userTypeFilter, search, toast]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user || user.user_type !== 'admin') {
+      navigate('/');
+      return;
+    }
+    fetchUsers();
+  }, [user, authLoading, navigate, fetchUsers]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -312,11 +310,14 @@ const UsersManagement = () => {
         </html>
       `;
       
-      // Open print dialog
+      // Open print dialog with safe DOM manipulation
       const printWindow = window.open('', '_blank');
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.print();
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.print();
+      }
       
       toast({
         title: 'Export PDF',

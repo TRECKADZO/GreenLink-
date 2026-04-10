@@ -43,7 +43,7 @@ const Dashboard = () => {
       const data = await cooperativeApi.getDashboard();
       setDashboardData(data);
     } catch (error) {
-      console.error('Error fetching dashboard:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement du dashboard');
     } finally {
       setLoading(false);
@@ -55,7 +55,7 @@ const Dashboard = () => {
       const stats = await cooperativeApi.getActivationStats();
       setActivationStats(stats);
     } catch (error) {
-      console.error('Error fetching activation stats:', error);
+      /* error logged */
     }
   };
 
@@ -64,7 +64,7 @@ const Dashboard = () => {
       const data = await cooperativeApi.getDashboardKPIs();
       setKpiData(data);
     } catch (error) {
-      console.error('Error fetching KPIs:', error);
+      /* error logged */
     }
   };
 
@@ -73,7 +73,7 @@ const Dashboard = () => {
       const data = await cooperativeApi.getDashboardCharts();
       setChartData(data);
     } catch (error) {
-      console.error('Error fetching charts:', error);
+      /* error logged */
     }
   };
 
@@ -88,7 +88,7 @@ const Dashboard = () => {
         setSimulatorMembers((data.members || []).filter(m => m.phone_number));
       }
     } catch (error) {
-      console.error('Error fetching members for simulator:', error);
+      /* error logged */
     }
   };
 

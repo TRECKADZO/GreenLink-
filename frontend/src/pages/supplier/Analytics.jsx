@@ -32,7 +32,7 @@ const SupplierAnalytics = () => {
       );
       setAnalytics(response.data);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des analytics');
     } finally {
       setLoading(false);

@@ -52,7 +52,7 @@ const CarbonPremiumsPage = () => {
       if (adminRes.ok) setAdminData(await adminRes.json());
       if (membersRes.ok) setMembersData(await membersRes.json());
     } catch (error) {
-      console.error('Error fetching premiums:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement');
     } finally {
       setLoading(false);

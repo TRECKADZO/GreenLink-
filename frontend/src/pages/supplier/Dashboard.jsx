@@ -1,5 +1,5 @@
 import { tokenService } from "../../services/tokenService";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
@@ -31,7 +31,33 @@ const SupplierDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchSubscription = useCallback(async () => {
+    try {
+      const token = tokenService.getToken();
+      const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSubscription(data.subscription);
+    } catch (_err) {
+      /* subscription fetch error */
+    }
+  }, []);
+
+  const fetchDashboardStats = useCallback(async () => {
+    try {
+      const data = await marketplaceApi.getDashboardStats();
+      setStats(data);
+    } catch (_err) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les statistiques',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -43,39 +69,9 @@ const SupplierDashboard = () => {
       navigate('/');
       return;
     }
-
     fetchDashboardStats();
     fetchSubscription();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, navigate, toast]);
-
-  const fetchSubscription = async () => {
-    try {
-      const token = tokenService.getToken();
-      const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSubscription(data.subscription);
-    } catch (err) {
-      console.error('Error fetching subscription:', err);
-    }
-  };
-
-  const fetchDashboardStats = async () => {
-    try {
-      const data = await marketplaceApi.getDashboardStats();
-      setStats(data);
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les statistiques',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, authLoading, navigate, toast, fetchDashboardStats, fetchSubscription]);
 
   if (loading || !stats) {
     return (

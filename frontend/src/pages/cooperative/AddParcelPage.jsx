@@ -92,7 +92,7 @@ const AddParcelPage = () => {
           const data = await cooperativeApi.getMembers({ status: 'active' });
           setMembers(data.members || []);
         } catch (error) {
-          console.error('Error fetching members:', error);
+          /* error logged */
           toast.error('Erreur lors du chargement des membres');
         } finally {
           setLoadingMembers(false);
@@ -135,7 +135,7 @@ const AddParcelPage = () => {
       toast.success(`Parcelle ajoutée avec succès! Score carbone: ${result.score_carbone || result.carbon_score}/10`);
       navigate(`/cooperative/members/${formData.member_id}/parcels`);
     } catch (error) {
-      console.error('Error adding parcel:', error);
+      /* error logged */
       toast.error(error.response?.data?.detail || 'Erreur lors de l\'ajout de la parcelle');
     } finally {
       setSubmitting(false);

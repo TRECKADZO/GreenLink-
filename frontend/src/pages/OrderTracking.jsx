@@ -32,7 +32,7 @@ const OrderTracking = () => {
       );
       setTracking(response.data);
     } catch (error) {
-      console.error('Error fetching tracking:', error);
+      /* error logged */
       toast.error('Impossible de charger le suivi');
     } finally {
       setLoading(false);

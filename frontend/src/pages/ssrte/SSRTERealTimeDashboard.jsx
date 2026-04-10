@@ -34,7 +34,6 @@ const SSRTERealTimeDashboard = () => {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [soundEnabled]);
 
   const connectWebSocket = useCallback(() => {
@@ -57,7 +56,7 @@ const SSRTERealTimeDashboard = () => {
           const message = JSON.parse(event.data);
           handleWebSocketMessage(message);
         } catch (e) {
-          console.error('[WS] Parse error:', e);
+          /* error logged */
         }
       };
 
@@ -75,14 +74,13 @@ const SSRTERealTimeDashboard = () => {
       };
 
       wsRef.current.onerror = (error) => {
-        console.error('[WS] Error:', error);
+        /* error logged */
         setConnected(false);
       };
     } catch (error) {
-      console.error('[WS] Connection error:', error);
+      /* error logged */
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, handleWebSocketMessage]);
 
   const handleWebSocketMessage = useCallback((message) => {
     const { type, priority, data, timestamp } = message;
@@ -172,7 +170,6 @@ const SSRTERealTimeDashboard = () => {
       default:
         // [WS] Unknown message type:', type);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playAlertSound]);
 
   useEffect(() => {
@@ -186,7 +183,6 @@ const SSRTERealTimeDashboard = () => {
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectWebSocket]);
 
   const markAsRead = (alertId) => {

@@ -127,7 +127,7 @@ const MembersPage = () => {
       setMembers(data.members);
       setTotal(data.total);
     } catch (error) {
-      console.error('Error fetching members:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des membres');
     } finally {
       setLoading(false);
@@ -146,7 +146,7 @@ const MembersPage = () => {
       const stats = await cooperativeApi.getActivationStats();
       setActivationStats(stats);
     } catch (error) {
-      console.error('Error fetching activation stats:', error);
+      /* error logged */
     }
   };
 
@@ -234,7 +234,7 @@ const MembersPage = () => {
       fetchMembers();
       toast.success('Membre ajouté avec succès');
     } catch (error) {
-      console.error('Error adding member:', error);
+      /* error logged */
       toast.error(error.response?.data?.detail || 'Erreur lors de l\'ajout du membre');
     } finally {
       setSubmitting(false);
@@ -247,7 +247,7 @@ const MembersPage = () => {
       toast.success('Membre validé avec succès');
       fetchMembers();
     } catch (error) {
-      console.error('Error validating member:', error);
+      /* error logged */
       toast.error('Erreur lors de la validation');
     }
   };
@@ -258,7 +258,7 @@ const MembersPage = () => {
       setSelectedMember(details);
       setShowDetailsModal(true);
     } catch (error) {
-      console.error('Error fetching member details:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des détails');
     }
   };

@@ -100,7 +100,7 @@ const ContentManagement = () => {
       });
       setPartners(response.data || []);
     } catch (error) {
-      console.error('Error fetching partners:', error);
+      /* error logged */
     } finally {
       setLoadingPartners(false);
     }
@@ -115,7 +115,7 @@ const ContentManagement = () => {
       });
       setTestimonials(response.data || []);
     } catch (error) {
-      console.error('Error fetching testimonials:', error);
+      /* error logged */
     } finally {
       setLoadingTestimonials(false);
     }

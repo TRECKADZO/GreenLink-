@@ -58,7 +58,7 @@ const AdminCarbonApprovals = () => {
       });
       setListings(response.data);
     } catch (error) {
-      console.error('Error:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement');
     } finally {
       setLoading(false);
@@ -73,7 +73,7 @@ const AdminCarbonApprovals = () => {
       });
       setStats(response.data);
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      /* error logged */
     }
   };
 

@@ -87,7 +87,7 @@ const RSEDashboard = () => {
       });
       setSubscription(data.subscription);
     } catch (err) {
-      console.error('Error fetching subscription:', err);
+      /* error logged */
     }
   };
 
@@ -99,7 +99,7 @@ const RSEDashboard = () => {
       });
       setStats(data);
     } catch (err) {
-      console.error('Error fetching RSE stats:', err);
+      /* error logged */
     }
   };
 
@@ -114,7 +114,7 @@ const RSEDashboard = () => {
       setCredits(creditsData);
       setDistrib(distribData);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }

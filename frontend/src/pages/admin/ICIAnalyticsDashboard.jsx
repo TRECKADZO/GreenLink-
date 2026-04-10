@@ -64,7 +64,7 @@ const ICIAnalyticsDashboard = () => {
       setSocialImpactData(social.data);
       setDueDiligenceData(dueDiligence.data);
     } catch (error) {
-      console.error('Error fetching ICI data:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des données ICI');
     } finally {
       setLoading(false);

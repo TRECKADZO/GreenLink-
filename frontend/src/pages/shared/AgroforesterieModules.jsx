@@ -37,7 +37,7 @@ export const GuideEspeces = () => {
       setEspeces(data.especes_compatibles || []);
       setInterdites(data.especes_interdites || []);
       setStrates(data.strates || {});
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, strateFilter, usageFilter]);
@@ -183,7 +183,7 @@ export const CalendrierPepiniere = () => {
         const data = await res.json();
         setCalendrier(data.calendrier || []);
         setStats(data.stats || null);
-      } catch (e) { console.error(e); }
+      } catch (e) { /* error */ }
       finally { setLoading(false); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -273,7 +273,7 @@ export const DiagnosticParcelle = ({ farmerId, isCooperative = false }) => {
           const res = await fetch(`${API_URL}/api/ars1000/agroforesterie/diagnostic/farmer/${farmerId}`, { headers });
           if (res.ok) setDiagnostic(await res.json());
         }
-      } catch (e) { console.error(e); }
+      } catch (e) { /* error */ }
       finally { setLoading(false); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -404,7 +404,7 @@ export const ProtectionEnvironnementale = () => {
     try {
       const res = await fetch(`${API_URL}/api/ars1000/agroforesterie/protection-env`, { headers });
       if (res.ok) { const d = await res.json(); setMesures(d.mesures || []); setStats(d.par_type || null); }
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

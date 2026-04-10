@@ -16,7 +16,7 @@ from routes.notifications import notify_sse_clients
 from datetime import datetime, timedelta
 from bson import ObjectId
 import uuid
-import random
+import secrets
 import hashlib
 import asyncio
 
@@ -517,7 +517,7 @@ async def request_payment(
         raise HTTPException(status_code=404, detail="Récolte non trouvée")
     
     # Simulate mobile money payment
-    transaction_id = f"OM{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{random.randint(1000, 9999)}"
+    transaction_id = f"OM{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{secrets.randbelow(9000) + 1000}"
     
     await db.harvests.update_one(
         {"_id": ObjectId(payment.harvest_id)},
@@ -828,7 +828,7 @@ async def purchase_carbon_credits(
     purchase_dict["status"] = "completed"
     
     # Generate certificate
-    cert_number = f"GRC{datetime.utcnow().year}{random.randint(10000, 99999)}"
+    cert_number = f"GRC{datetime.utcnow().year}{secrets.randbelow(90000) + 10000}"
     purchase_dict["certificate_url"] = f"/certificates/{cert_number}.pdf"
     
     if purchase.retirement_requested:

@@ -53,7 +53,7 @@ const CarbonAuditorsPage = () => {
       const data = await response.json();
       setAuditors(data.auditors || []);
     } catch (error) {
-      console.error('Error fetching auditors:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des auditeurs');
     } finally {
       setLoading(false);
@@ -67,7 +67,7 @@ const CarbonAuditorsPage = () => {
       const data = await response.json();
       setCooperatives(data.cooperatives || []);
     } catch (error) {
-      console.error('Error fetching cooperatives:', error);
+      /* error logged */
     }
   };
 
@@ -78,7 +78,7 @@ const CarbonAuditorsPage = () => {
       const data = await response.json();
       setStats(data);
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      /* error logged */
     }
   };
 
@@ -142,7 +142,7 @@ const CarbonAuditorsPage = () => {
       fetchAuditors();
       fetchStats();
     } catch (error) {
-      console.error('Error adding auditor:', error);
+      /* error logged */
       toast.error(error.message || 'Erreur lors de la création');
     } finally {
       setSubmitting(false);

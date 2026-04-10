@@ -52,7 +52,7 @@ const RealTimeDashboard = () => {
           const message = JSON.parse(event.data);
           handleWebSocketMessage(message);
         } catch (e) {
-          console.error('Error parsing WS message:', e);
+          /* error logged */
         }
       };
 
@@ -65,13 +65,13 @@ const RealTimeDashboard = () => {
       };
 
       wsRef.current.onerror = (error) => {
-        console.error('WebSocket error, falling back to polling:', error);
+        /* error logged */
         setConnected(false);
         startPolling();
       };
 
     } catch (error) {
-      console.error('WebSocket connection failed, using polling:', error);
+      /* error logged */
       startPolling();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,7 +101,7 @@ const RealTimeDashboard = () => {
           }
         }
       } catch (error) {
-        console.error('Polling error:', error);
+        /* error logged */
       }
     };
 

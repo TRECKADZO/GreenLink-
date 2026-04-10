@@ -488,7 +488,7 @@ const Fiche7 = ({ matrice, programme, onMatriceChange, onProgrammeChange }) => {
                   <td className="border p-0.5">
                     <select className="text-[10px] w-full h-6 border-0" value={row.axe || ''} onChange={(e) => updateP(i, 'axe', e.target.value)}>
                       <option value="">--</option>
-                      {matrice.map((m, j) => <option key={j} value={`Axe ${j+1}`}>{`Axe ${j+1}`}</option>)}
+                      {matrice.map((m, j) => <option key={`axe-${j}`} value={`Axe ${j+1}`}>{`Axe ${j+1}`}</option>)}
                     </select>
                   </td>
                   <td className="border p-0.5"><Input value={row.activite || ''} onChange={(e) => updateP(i, 'activite', e.target.value)} className="h-6 text-[10px] border-0" /></td>
@@ -565,7 +565,7 @@ export default function FarmerPDCPage() {
           }));
         }
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

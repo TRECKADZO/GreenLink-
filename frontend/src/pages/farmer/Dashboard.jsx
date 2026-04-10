@@ -407,7 +407,7 @@ const FarmerParcelsTab = ({ navigate }) => {
     try {
       const res = await fetch(`${API_URL}/api/greenlink/parcels/my-parcels`, { headers: getToken() });
       if (res.ok) setParcels(await res.json());
-    } catch (err) { console.error('Error:', err); }
+    } catch (err) { /* error */ }
     finally { setLoading(false); }
   };
 
@@ -680,7 +680,7 @@ const FarmerDashboard = () => {
 
   const fetchDashboard = async () => {
     try { setStats(await greenlinkApi.getFarmerDashboard()); }
-    catch (error) { console.error('Error:', error); }
+    catch (error) { /* error */ }
     finally { setLoading(false); }
   };
 

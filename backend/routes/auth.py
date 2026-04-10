@@ -192,14 +192,15 @@ async def register(user_data: UserCreate):
             user_dict["commission_rate"] = getattr(user_data, 'commission_rate', 0.10)
             user_dict["orange_money_business"] = getattr(user_data, 'orange_money_business', None)
             
-            # Générer automatiquement le code de parrainage unique
-            import random, string
+            # Generer automatiquement le code de parrainage unique
+            import secrets
+            import string
             region_code = dept[:3].upper() if dept else coop_name[:3].upper() if coop_name else "COO"
-            random_digits = "".join(random.choices(string.digits, k=4))
+            random_digits = "".join(secrets.choice(string.digits) for _ in range(4))
             referral_code = f"GL-COOP-{region_code}-{random_digits}"
-            # S'assurer de l'unicité
+            # S'assurer de l'unicite
             while await db.users.find_one({"referral_code": referral_code}):
-                random_digits = "".join(random.choices(string.digits, k=4))
+                random_digits = "".join(secrets.choice(string.digits) for _ in range(4))
                 referral_code = f"GL-COOP-{region_code}-{random_digits}"
             user_dict["referral_code"] = referral_code
             user_dict["referral_code_created_at"] = datetime.utcnow()

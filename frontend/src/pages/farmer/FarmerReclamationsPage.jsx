@@ -35,7 +35,7 @@ export default function FarmerReclamationsPage() {
         const data = await res.json();
         setReclamations(data.reclamations || []);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
   };
 

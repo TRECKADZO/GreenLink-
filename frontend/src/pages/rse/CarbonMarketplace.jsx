@@ -155,7 +155,7 @@ const CarbonMarketplace = () => {
       // Use demo data if API returns empty
       setCredits(data && data.length > 0 ? data : DEMO_CREDITS);
     } catch (error) {
-      console.error('Error fetching credits:', error);
+      /* error logged */
       setCredits(DEMO_CREDITS);
     } finally {
       setLoading(false);

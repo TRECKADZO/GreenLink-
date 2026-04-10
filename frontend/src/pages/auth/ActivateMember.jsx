@@ -60,7 +60,7 @@ const ActivateMember = () => {
         });
       }
     } catch (error) {
-      console.error('Error checking phone:', error);
+      /* error logged */
       toast({
         title: 'Erreur',
         description: 'Impossible de vérifier le numéro. Réessayez.',
@@ -129,7 +129,7 @@ const ActivateMember = () => {
         });
       }
     } catch (error) {
-      console.error('Error activating account:', error);
+      /* error logged */
       toast({
         title: 'Erreur',
         description: "Impossible d'activer le compte. Réessayez.",

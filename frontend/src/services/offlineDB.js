@@ -338,7 +338,7 @@ export async function clearAllOfflineData() {
       const tx = db.transaction(store, 'readwrite');
       await tx.store.clear();
       await tx.done;
-    } catch (e) { console.warn(`[OfflineDB] Store "${store}" clear failed:`, e.message); }
+    } catch (e) { /* warning */ }
   }
 }
 
@@ -370,7 +370,7 @@ export async function getCoopMembersCount() {
   try {
     const db = await getDB();
     return db.count(STORES.COOP_MEMBERS);
-  } catch (e) { console.warn('[OfflineDB] Count failed:', e.message); return 0; }
+  } catch (e) { /* warning */ return 0; }
 }
 
 export async function searchCoopMemberByName(name) {
@@ -450,7 +450,7 @@ export async function syncCooperativeData(apiUrl, token) {
       await saveCoopMembers(members);
       membersCount = members.length;
     }
-  } catch (e) { console.warn('[OfflineSync] Members failed:', e); }
+  } catch (e) { /* warning */ }
 
   // 2. Lots
   try {
@@ -459,7 +459,7 @@ export async function syncCooperativeData(apiUrl, token) {
       const data = await res.json();
       await saveCoopLots(data.lots || data || []);
     }
-  } catch (e) { console.warn('[OfflineSync] Lots failed:', e); }
+  } catch (e) { /* warning */ }
 
   // 3. Dashboard
   try {
@@ -468,7 +468,7 @@ export async function syncCooperativeData(apiUrl, token) {
       const data = await res.json();
       await saveCoopDashboard(data);
     }
-  } catch (e) { console.warn('[OfflineSync] Dashboard failed:', e); }
+  } catch (e) { /* warning */ }
 
   // 4. KPIs
   try {
@@ -477,7 +477,7 @@ export async function syncCooperativeData(apiUrl, token) {
       const data = await res.json();
       await saveCoopDashboardKPIs(data);
     }
-  } catch (e) { console.warn('[OfflineSync] KPIs failed:', e); }
+  } catch (e) { /* warning */ }
 
   // 5. Update meta
   const syncTimestamp = new Date().toISOString();

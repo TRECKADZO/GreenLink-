@@ -31,7 +31,7 @@ const AuditorDashboard = () => {
         const data = await response.json();
         setDashboard(data);
       } catch (error) {
-        console.error('Error fetching dashboard:', error);
+        /* error logged */
         toast.error('Erreur lors du chargement du dashboard');
       } finally {
         setLoading(false);

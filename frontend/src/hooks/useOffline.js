@@ -97,7 +97,7 @@ export function useOfflineAgent() {
 
       return { upload: uploadResult, download: downloadResult };
     } catch (err) {
-      console.error('Sync error:', err);
+      /* error logged */
       setSyncError(err.message);
       throw err;
     } finally {

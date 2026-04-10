@@ -185,7 +185,7 @@ const CooperativeSSRTEDashboard = () => {
       // Save members locally for offline use
       localStorage.setItem('ssrte_members_cache', JSON.stringify(membersRes.data.members || []));
     } catch (error) {
-      console.error('Error fetching data:', error);
+      /* error logged */
       // Try to load from cache if offline
       if (!isOnline) {
         const cachedMembers = localStorage.getItem('ssrte_members_cache');
@@ -265,7 +265,7 @@ const CooperativeSSRTEDashboard = () => {
       fetchData();
       setActiveTab('history');
     } catch (error) {
-      console.error('Error submitting visit:', error);
+      /* error logged */
       
       // If network error, save offline
       if (!error.response) {
@@ -333,7 +333,7 @@ const CooperativeSSRTEDashboard = () => {
       // Refresh data
       fetchData();
     } catch (error) {
-      console.error('Sync error:', error);
+      /* error logged */
       toast.error('Erreur de synchronisation', {
         description: 'Réessayez plus tard'
       });

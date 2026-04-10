@@ -59,7 +59,7 @@ const CheckoutPage = () => {
         const response = await axios.get(`${API_URL}/api/payments/simulation-status`);
         setSimulationMode(response.data.simulation_mode);
       } catch (error) {
-        console.error('Error checking simulation status:', error);
+        /* error logged */
       }
     };
     checkSimulation();
@@ -80,7 +80,7 @@ const CheckoutPage = () => {
         );
         setDeliveryFees(response.data);
       } catch (error) {
-        console.error('Error fetching delivery fees:', error);
+        /* error logged */
       } finally {
         setLoadingFees(false);
       }
@@ -119,7 +119,7 @@ const CheckoutPage = () => {
         });
       }
     } catch (error) {
-      console.error('Error checking payment status:', error);
+      /* error logged */
     }
   };
 

@@ -179,7 +179,7 @@ const LotsTab = () => {
       const res = await fetch(`${API_URL}/api/ars1000/lots`, { headers: authHeaders() });
       const data = await res.json();
       setLots(data.lots || []);
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -188,7 +188,7 @@ const LotsTab = () => {
     try {
       const res = await fetch(`${API_URL}/api/ars1000/lots/stats/overview`, { headers: authHeaders() });
       setStats(await res.json());
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -444,7 +444,7 @@ const AgroforesterieTab = () => {
       ]);
       setStats(await statsRes.json());
       if (diagRes.ok) setDiagnostic(await diagRes.json());
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -943,7 +943,7 @@ const RecoltesTab = () => {
         setDeclarations(data.declarations || []);
         setStats(data.stats || {});
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
@@ -1496,7 +1496,7 @@ const DiagnosticConformitePDC = () => {
           const data = await res.json();
           setPdcs(data.pdcs || data || []);
         }
-      } catch (e) { console.error(e); }
+      } catch (e) { /* error */ }
       finally { setLoading(false); }
     };
     load();
@@ -1635,7 +1635,7 @@ export default function ARS1000Dashboard() {
     try {
       const res = await fetch(`${API_URL}/api/ars1000/certification/dashboard`, { headers: authHeaders() });
       if (res.ok) setCertDashboard(await res.json());
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

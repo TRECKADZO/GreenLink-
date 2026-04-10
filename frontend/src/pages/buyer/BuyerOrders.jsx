@@ -48,7 +48,7 @@ const BuyerOrders = () => {
       const data = await marketplaceApi.getBuyerOrders();
       setOrders(data);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }

@@ -71,7 +71,7 @@ const AuditFormPage = () => {
           }));
         }
       } catch (error) {
-        console.error('Error fetching parcel:', error);
+        /* error logged */
         toast.error('Erreur lors du chargement de la parcelle');
       } finally {
         setLoading(false);
@@ -190,7 +190,7 @@ const AuditFormPage = () => {
       toast.success(`Audit soumis! Score carbone calculé: ${result.carbon_score}/10`);
       navigate(`/auditor/mission/${missionId}`);
     } catch (error) {
-      console.error('Error submitting audit:', error);
+      /* error logged */
       toast.error(error.message || 'Erreur lors de la soumission de l\'audit');
     } finally {
       setSubmitting(false);

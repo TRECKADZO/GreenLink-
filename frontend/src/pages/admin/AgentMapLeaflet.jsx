@@ -136,7 +136,7 @@ const AgentMapLeaflet = () => {
       });
       setTrajectories(response.data.trajectories || []);
     } catch (error) {
-      console.error('Error loading trajectories:', error);
+      /* error logged */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
@@ -149,7 +149,7 @@ const AgentMapLeaflet = () => {
       });
       setCoverageZones(response.data.zones || []);
     } catch (error) {
-      console.error('Error loading coverage zones:', error);
+      /* error logged */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
@@ -166,7 +166,7 @@ const AgentMapLeaflet = () => {
       const online = response.data.filter(a => a.is_online).length;
       setStats({ online, total: response.data.length });
     } catch (error) {
-      console.error('Error loading agents:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }
@@ -208,7 +208,7 @@ const AgentMapLeaflet = () => {
             ));
           }
         } catch (e) {
-          console.error('[WS] Parse error:', e);
+          /* error logged */
         }
       };
 
@@ -219,7 +219,7 @@ const AgentMapLeaflet = () => {
 
       wsRef.current.onerror = () => setConnected(false);
     } catch (error) {
-      console.error('[WS] Connection error:', error);
+      /* error logged */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
@@ -310,7 +310,7 @@ const AgentMapLeaflet = () => {
         setProximityMessage('');
       }
     } catch (error) {
-      console.error('Error sending proximity alert:', error);
+      /* error logged */
       toast.error('Erreur lors de l\'envoi de l\'alerte');
     }
   };

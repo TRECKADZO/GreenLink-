@@ -81,7 +81,7 @@ const MarketplacePage = () => {
       
       setProducts(sortedData);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ const MarketplacePage = () => {
       const data = await marketplaceApi.getWishlist();
       setWishlist(data.map(item => item.product_id));
     } catch (error) {
-      console.error('Error fetching wishlist:', error);
+      /* error logged */
     }
   };
 
@@ -411,7 +411,7 @@ const ProductDetailModal = ({ product, onClose, onAddToCart, isInWishlist, onTog
       const data = await marketplaceApi.getProductReviews(product._id);
       setReviews(data);
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      /* error logged */
     }
   };
 

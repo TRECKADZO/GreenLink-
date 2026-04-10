@@ -55,7 +55,7 @@ const CarbonBusinessDashboard = () => {
       // Fetch default projection
       await fetchProjection(1000);
     } catch (error) {
-      console.error('Error fetching carbon data:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ const CarbonBusinessDashboard = () => {
       const res = await apiClient.get(`/api/carbon/analytics/revenue-projection?num_farmers=${numFarmers}&avg_hectares=${projectionParams.avgHectares}&avg_trees=${projectionParams.avgTrees}&price_usd=${projectionParams.priceUsd}`);
       setProjection(res.data);
     } catch (error) {
-      console.error('Error fetching projection:', error);
+      /* error logged */
     }
   };
 

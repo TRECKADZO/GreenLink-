@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
@@ -51,23 +51,11 @@ const MyProducts = () => {
     specifications: {}
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user || user.user_type !== 'fournisseur') {
-      navigate('/');
-      return;
-    }
-    fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, navigate]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const data = await marketplaceApi.getMyProducts();
       setProducts(data);
-    } catch (error) {
-      console.error('Error fetching products:', error);
+    } catch (_err) {
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les produits',
@@ -76,7 +64,16 @@ const MyProducts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user || user.user_type !== 'fournisseur') {
+      navigate('/');
+      return;
+    }
+    fetchProducts();
+  }, [user, authLoading, navigate, fetchProducts]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];

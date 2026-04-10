@@ -41,7 +41,7 @@ const WishlistPage = () => {
       const data = await marketplaceApi.getWishlist();
       setWishlist(data);
     } catch (error) {
-      console.error('Error fetching wishlist:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }

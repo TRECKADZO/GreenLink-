@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timedelta
-import random
+import secrets
 import string
 from services.orange_sms import orange_sms
 from routes.auth import get_current_user
@@ -28,7 +28,7 @@ class SendSMSRequest(BaseModel):
 
 def generate_otp(length: int = 6) -> str:
     """Generate a random numeric OTP code"""
-    return ''.join(random.choices(string.digits, k=length))
+    return ''.join(secrets.choice(string.digits) for _ in range(length))
 
 def clean_phone_number(phone: str) -> str:
     """Normalize phone number format"""

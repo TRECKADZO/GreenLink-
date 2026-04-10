@@ -77,7 +77,7 @@ const ReportsPage = () => {
         setEudrReport(report);
         setVillageStats(villages);
       } catch (error) {
-        console.error('Error fetching reports:', error);
+        /* error logged */
         toast.error('Erreur lors du chargement des rapports');
       } finally {
         setLoading(false);

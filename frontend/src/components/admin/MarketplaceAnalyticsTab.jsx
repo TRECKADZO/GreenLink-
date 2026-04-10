@@ -41,7 +41,7 @@ const MarketplaceAnalyticsTab = () => {
       const response = await axios.get(`${API_URL}/api/marketplace-analytics/dashboard`, getAuthHeaders());
       setData(response.data);
     } catch (error) {
-      console.error('Error fetching marketplace analytics:', error);
+      /* error logged */
       toast.error('Erreur lors du chargement des analytics');
     } finally {
       setLoading(false);

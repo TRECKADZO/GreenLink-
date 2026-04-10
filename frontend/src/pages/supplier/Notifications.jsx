@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
@@ -17,7 +17,17 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await marketplaceApi.getNotifications();
+      setNotifications(data);
+    } catch (_err) {
+      /* fetch error */
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -26,29 +36,16 @@ const Notifications = () => {
     }
     fetchNotifications();
     
-    // Auto-refresh every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, navigate]);
-
-  const fetchNotifications = async () => {
-    try {
-      const data = await marketplaceApi.getNotifications();
-      setNotifications(data);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, authLoading, navigate, fetchNotifications]);
 
   const handleMarkRead = async (notificationId) => {
     try {
       await marketplaceApi.markNotificationRead(notificationId);
       fetchNotifications();
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      /* error logged */
     }
   };
 

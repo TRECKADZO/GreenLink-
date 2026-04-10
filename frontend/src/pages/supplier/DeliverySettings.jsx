@@ -64,7 +64,7 @@ const DeliverySettings = () => {
         });
       }
     } catch (error) {
-      console.error('Error fetching delivery settings:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }

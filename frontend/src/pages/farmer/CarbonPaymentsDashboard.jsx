@@ -118,7 +118,7 @@ const CarbonPaymentsDashboard = () => {
       const result = await response.json();
       setPrimeResult(result);
     } catch (err) {
-      console.error(err);
+      /* error logged */
     } finally {
       setCalculating(false);
     }

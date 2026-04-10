@@ -58,7 +58,7 @@ export default function DeclarationRecoltePage() {
         const data = await res.json();
         setDeclarations(data.declarations || []);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { /* error */ }
     finally { setLoading(false); }
   };
 

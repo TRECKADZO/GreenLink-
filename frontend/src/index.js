@@ -15,7 +15,6 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then((reg) => {
-        console.log('[PWA] Service Worker enregistré:', reg.scope);
 
         // Écouter les messages du SW pour Background Sync
         navigator.serviceWorker.addEventListener('message', (event) => {

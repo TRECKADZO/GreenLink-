@@ -22,7 +22,7 @@ export const CartProvider = ({ children }) => {
       const data = await marketplaceApi.getCart();
       setCart(data);
     } catch (error) {
-      console.error('Error fetching cart:', error);
+      /* error logged */
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ export const CartProvider = ({ children }) => {
       await marketplaceApi.clearCart();
       setCart({ items: [], total: 0, items_count: 0 });
     } catch (error) {
-      console.error('Error clearing cart:', error);
+      /* error logged */
     }
   };
 

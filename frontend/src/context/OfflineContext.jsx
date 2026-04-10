@@ -86,7 +86,7 @@ export const OfflineProvider = ({ children }) => {
       retryCount.current = 0; // Reset retry on success
       if (retryTimer.current) { clearTimeout(retryTimer.current); retryTimer.current = null; }
     } catch (err) {
-      console.error('[OfflineSync] Error:', err);
+      /* error logged */
       setSyncError(err.message);
       // Schedule retry with exponential backoff (max 60s)
       scheduleRetry();

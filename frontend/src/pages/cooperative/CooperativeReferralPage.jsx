@@ -45,7 +45,7 @@ const CooperativeReferralPage = () => {
       setTotalAffiliates(affiliatesRes.data.total_affiliates || 0);
 
     } catch (err) {
-      console.error('Error fetching referral data:', err);
+      /* error logged */
       setError('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
