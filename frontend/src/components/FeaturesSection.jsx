@@ -7,88 +7,88 @@ import { getIconComponent } from '../utils/iconMapper';
 // Fallback mock data
 const mockFeatures = [
   {
+    icon: 'Wallet',
+    title: 'Primes Carbone',
+    description: 'Recevez des paiements Orange Money bases sur votre score carbone : jusqu\'a 60 000 XOF/ha pour les meilleures pratiques durables.',
+    badge: 'Prime',
+    badgeColor: 'bg-amber-100 text-amber-700'
+  },
+  {
+    icon: 'BarChart3',
+    title: 'Score Carbone & MRV',
+    description: 'Score environnemental sur 10 avec 21 pratiques evaluees, MRV en temps reel, export MRV et alignement EUDR.',
+    badge: 'Carbone',
+    badgeColor: 'bg-emerald-100 text-emerald-700'
+  },
+  {
+    icon: 'Award',
+    title: 'Audits & Verification',
+    description: 'Auditeurs independants, visites terrain en 10 etapes (7 fiches + Photos + Signatures), GPS et verification des parcelles.',
+    badge: 'Audit',
+    badgeColor: 'bg-purple-100 text-purple-700'
+  },
+  {
     icon: 'Shield',
     title: 'Certification ARS 1000',
-    description: 'Norme Africaine pour le Cacao Durable : PDC 7 fiches, certification Bronze/Argent/Or, audits de conformité et suivi coopératif complet.',
+    description: 'Norme Africaine pour le Cacao Durable : PDC 7 fiches, certification Bronze/Argent/Or, audits de conformite et suivi cooperatif complet.',
     badge: 'ARS 1000',
     badgeColor: 'bg-yellow-100 text-yellow-700'
   },
   {
     icon: 'TreePine',
     title: 'Diagnostic Agroforestier',
-    description: '54 espèces référencées, diagnostic visuel coopératif, alertes non-conformes par planteur, score d\'ombrage et recommandations intelligentes.',
+    description: '54 especes referencees, diagnostic visuel cooperatif, alertes non-conformes par planteur, score d\'ombrage et recommandations intelligentes.',
     badge: 'Agroforesterie',
     badgeColor: 'bg-emerald-100 text-emerald-700'
   },
   {
-    icon: 'FileText',
-    title: 'Export PDF & Excel',
-    description: 'Génération automatique de PDC 10 pages PDF, fichiers Excel 7 onglets par planteur, rapports d\'essai et fiches de traçabilité.',
-    badge: 'Documents',
-    badgeColor: 'bg-blue-100 text-blue-700'
-  },
-  {
-    icon: 'Package',
-    title: 'Traçabilité des Lots',
-    description: 'Contrôles qualité ARS 1000-2 : humidité, tamisage, épreuve de coupe, grading A/B/C/D et rapports d\'essai certifiés.',
-    badge: 'Qualité',
-    badgeColor: 'bg-teal-100 text-teal-700'
-  },
-  {
-    icon: 'Wheat',
-    title: 'Gestion des Récoltes',
-    description: 'Déclarations de récolte, validation coopérative, revenu estimé par grade (1250 FCFA/kg Grade A), alertes qualité et analytics.',
-    badge: 'Récoltes',
-    badgeColor: 'bg-amber-100 text-amber-700'
-  },
-  {
-    icon: 'AlertTriangle',
-    title: 'Matrice de Risques',
-    description: 'Matrice visuelle 5x5 (probabilité x gravité), registre de réclamations, suivi d\'impartialité et gestion des non-conformités.',
-    badge: 'Risques',
-    badgeColor: 'bg-red-100 text-red-700'
-  },
-  {
     icon: 'Leaf',
     title: 'Protection Environnementale',
-    description: 'Score de conformité environnementale, checklist ARS 1000 (distance eau, anti-érosion, reboisement, zone tampon).',
+    description: 'Score de conformite environnementale, checklist ARS 1000 (distance eau, anti-erosion, reboisement, zone tampon).',
     badge: 'Environnement',
     badgeColor: 'bg-green-100 text-green-700'
   },
   {
-    icon: 'BarChart3',
-    title: 'Durabilité & Crédits Carbone',
-    description: 'Score environnemental sur 10 avec 21 pratiques évaluées, MRV en temps réel, export MRV et alignement EUDR.',
-    badge: 'Carbone',
-    badgeColor: 'bg-emerald-100 text-emerald-700'
+    icon: 'Package',
+    title: 'Tracabilite des Lots',
+    description: 'Controles qualite ARS 1000-2 : humidite, tamisage, epreuve de coupe, grading A/B/C/D et rapports d\'essai certifies.',
+    badge: 'Qualite',
+    badgeColor: 'bg-teal-100 text-teal-700'
+  },
+  {
+    icon: 'Wheat',
+    title: 'Gestion des Recoltes',
+    description: 'Declarations de recolte, validation cooperative, revenu estime par grade (1250 FCFA/kg Grade A), alertes qualite et analytics.',
+    badge: 'Recoltes',
+    badgeColor: 'bg-amber-100 text-amber-700'
+  },
+  {
+    icon: 'FileText',
+    title: 'Export PDF & Excel',
+    description: 'Generation automatique de PDC 10 pages PDF, fichiers Excel 7 onglets par planteur, rapports d\'essai et fiches de tracabilite.',
+    badge: 'Documents',
+    badgeColor: 'bg-blue-100 text-blue-700'
+  },
+  {
+    icon: 'AlertTriangle',
+    title: 'Matrice de Risques',
+    description: 'Matrice visuelle 5x5 (probabilite x gravite), registre de reclamations, suivi d\'impartialite et gestion des non-conformites.',
+    badge: 'Risques',
+    badgeColor: 'bg-red-100 text-red-700'
   },
   {
     icon: 'Smartphone',
     title: 'USSD & Mobile',
-    description: 'Accès USSD (*144*99#) pour les planteurs sans smartphone, application mobile agents terrain, collecte hors-ligne.',
+    description: 'Acces USSD (*144*99#) pour les planteurs sans smartphone, application mobile agents terrain, collecte hors-ligne.',
     badge: 'Mobile',
     badgeColor: 'bg-orange-100 text-orange-700'
   },
   {
     icon: 'Building2',
-    title: 'Tableau de Bord Coopérative',
-    description: 'Dashboard complet multi-rôles, gestion des membres, parcelles, primes carbone, conformité SSRTE/ICI et analytics avancés.',
+    title: 'Tableau de Bord Cooperative',
+    description: 'Dashboard complet multi-roles, gestion des membres, parcelles, primes carbone, conformite SSRTE/ICI et analytics avances.',
     badge: 'Pro',
     badgeColor: 'bg-slate-100 text-slate-700'
-  },
-  {
-    icon: 'Wallet',
-    title: 'Primes Carbone',
-    description: 'Paiements Orange Money basés sur le score carbone : jusqu\'à 60 000 XOF/ha pour les meilleures pratiques durables.',
-    badge: 'Paiement',
-    badgeColor: 'bg-amber-100 text-amber-700'
-  },
-  {
-    icon: 'Award',
-    title: 'Audits & Vérification',
-    description: 'Auditeurs indépendants, visites terrain en 10 étapes (7 fiches + Photos + Signatures), GPS et vérification des parcelles.',
-    badge: 'Audit',
-    badgeColor: 'bg-purple-100 text-purple-700'
   }
 ];
 
@@ -112,14 +112,14 @@ const FeaturesSection = () => {
     <section className="py-16 sm:py-24 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-10 sm:mb-16">
-          <Badge className="mb-3 sm:mb-4 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors duration-300">
-            Fonctionnalités
+          <Badge className="mb-3 sm:mb-4 bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors duration-300">
+            Prime Carbone & Outils
           </Badge>
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
-            Plateforme ARS 1000 complète
+            Gagnez plus avec vos pratiques durables
           </h2>
           <p className="text-sm sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-2">
-            Certification cacao durable, traçabilité des lots, diagnostic agroforestier, export PDF/Excel et analytics avancés
+            Primes carbone Orange Money, certification ARS 1000, tracabilite des lots, diagnostic agroforestier et analytics avances
           </p>
         </div>
         

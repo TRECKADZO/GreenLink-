@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Sprout, ArrowRight, Leaf, Shield, Award } from 'lucide-react';
+import { Sprout, ArrowRight, Leaf, Shield, Award, Wallet, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import CarbonCalculator from './CarbonCalculator';
@@ -17,35 +17,35 @@ const HeroSection = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-16 sm:pb-24 flex flex-col items-center justify-center min-h-screen">
         <Badge 
           variant="secondary" 
-          className="mb-5 sm:mb-8 bg-white/10 backdrop-blur-sm text-white border-white/20 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm hover:bg-white/20 transition-all duration-300"
+          className="mb-5 sm:mb-8 bg-[#d4a574]/20 backdrop-blur-sm text-white border-[#d4a574]/30 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm hover:bg-[#d4a574]/30 transition-all duration-300"
         >
-          <Sprout className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-          Plateforme ARS 1000 & Traçabilité Cacao
+          <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-[#d4a574]" />
+          Primes Carbone & Agriculture Durable
         </Badge>
         
         <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-center text-white mb-4 sm:mb-6 leading-tight animate-fade-in">
-          Certification &<br />
-          <span className="text-[#d4a574]">Cacao Durable ARS 1000</span>
+          Primes Carbone pour<br />
+          <span className="text-[#d4a574]">l'Agriculture Durable</span>
         </h1>
         
         <p className="text-sm sm:text-lg lg:text-xl text-white/90 text-center max-w-4xl mb-6 sm:mb-8 leading-relaxed px-2">
-          Coopératives, producteurs et auditeurs : gérez vos PDC, obtenez la certification Bronze/Argent/Or, 
-          suivez la traçabilité des lots et assurez la conformité ARS 1000, EUDR & SSRTE/ICI.
+          Recevez jusqu'a <span className="text-[#d4a574] font-semibold">60 000 XOF/ha</span> sur Orange Money grace a vos pratiques durables.
+          Score carbone, certification ARS 1000 et tracabilite complete de votre cacao.
         </p>
 
-        {/* Quick stats */}
+        {/* Carbon premium highlight */}
         <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-8 sm:mb-10">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#d4a574]/20 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 border border-[#d4a574]/30">
+            <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4a574]" />
+            <span className="text-white font-medium text-xs sm:text-base">Prime Orange Money</span>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+            <span className="text-white font-medium text-xs sm:text-base">Score Carbone /10</span>
+          </div>
           <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
             <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
-            <span className="text-white font-medium text-xs sm:text-base">Norme ARS 1000</span>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
-            <Leaf className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
-            <span className="text-white font-medium text-xs sm:text-base">Agroforesterie</span>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#d4a574]/20 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 border border-[#d4a574]/30">
-            <Award className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4a574]" />
-            <span className="text-white font-medium text-xs sm:text-base">PDC 7 Fiches</span>
+            <span className="text-white font-medium text-xs sm:text-base">Certifie ARS 1000</span>
           </div>
         </div>
         
