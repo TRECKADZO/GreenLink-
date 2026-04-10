@@ -16,23 +16,32 @@ Reproduire le projet GreenLink Agritech (plateforme agritech Cote d'Ivoire) et i
 5. **Visite Terrain Agent (7 Fiches)** - Workflow 10 etapes (7 fiches + Photos + Signatures + Resume), GPS, recommandations
 6. **Generation PDF + Export Excel** - PDC 10 pages PDF, Excel 7 onglets par planteur
 7. **Menus geographiques** - Regions, Departements, Sous-prefectures CI en cascade
-8. **Declarations Recolte (ARS 1000-2)** - Controles qualite, validation cooperative, **revenu estime par grade** (A=1250, B=1100, C=900, D=700 FCFA/kg), **alertes qualite** (grade D, corps etrangers, moisies)
-9. **Registre Reclamations/Risques/Impartialite** - Stats enrichies (priorite, majeures), **matrice de risques visuelle** 5x5 (probabilite x gravite)
-10. **Diagnostic Conformite PDC** - Score moyen cooperatif, taux de remplissage par fiche (10 barres), diagnostic par planteur avec expansion
-11. **Protection Environnementale** - **Score conformite environnementale**, checklist ARS 1000 (Art. 4.3-4.6: distance eau, anti-erosion, reboisement, zone tampon)
+8. **Declarations Recolte (ARS 1000-2)** - Controles qualite, validation cooperative, revenu estime par grade, alertes qualite
+9. **Registre Reclamations/Risques/Impartialite** - Stats enrichies, matrice de risques visuelle 5x5
+10. **Diagnostic Conformite PDC** - Score moyen cooperatif, taux de remplissage par fiche
+11. **Protection Environnementale** - Score conformite environnementale, checklist ARS 1000
 12. **Widget ARS 1000** - Widget certification cooperative
-13. **Onglet ARS 1000 Super Admin** - Metriques qualitatives: conformite, fiches, recoltes, certifications, cooperatives
+13. **Onglet ARS 1000 Super Admin** - Metriques qualitatives
 14. **Tableau de bord analytique recoltes** - Graphiques recharts
 
 ## Architecture
 - Backend: FastAPI + MongoDB | Frontend: React + Tailwind + Shadcn UI + Recharts
 - PDF: ReportLab | Excel: openpyxl | SMS: Orange CI (MOCKE) | Paiement: Orange Money (MOCKE) | Email: Resend (DNS pending)
 
+## Bugs corriges recemment (10 avril 2026)
+- Bug P0: Bouton "Details" sur ParcelsVerificationPage - navigation vers route inexistante corrigee par modale Dialog
+- Mot de passe cooperative reset apres restauration seed data
+
+## Taches completees recemment (10 avril 2026)
+- Mise a jour page accueil (Hero + Features) avec modules ARS 1000
+
 ## Backlog
 - P1: Integration SMS reel (Orange CI / MTN)
 - P1: Support langues locales (Baoule/Dioula)
 - P2: Nettoyage donnees test/demo
+- P2: Emails Resend en spam (DNS SPF/DKIM/DMARC a configurer)
 - P3: Refactoring ussd.py (2700+ lignes)
 
 ## Problemes connus
 - Emails Resend en spam (DNS SPF/DKIM/DMARC a configurer)
+- Orange CI SMS et Orange Money sont MOCKES

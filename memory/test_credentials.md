@@ -20,4 +20,4 @@
 - Endpoint: POST /api/auth/login
 - Body: {"identifier": "<email>", "password": "<password>"}
 - Response key: access_token
-- Note: Rate limiter blocks after 5 attempts for 5min. Restart backend to clear.
+- Note: Rate limiter blocks after 30 attempts/minute. Restart backend to clear.
