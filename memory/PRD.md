@@ -14,11 +14,18 @@ Plateforme agritech Cote d'Ivoire - modules ARS 1000 pour certification cacao du
 - PDF officiel: carte statique + liste arbres + numerotation pages + header GreenLink
 - 8 fiches dynamiques, RBAC strict, validation cooperative
 
+### Migration PDC v1 -> v2 (11 avril 2026)
+- **Ancien systeme PDC supprime**: `ars1000_pdc.py`, `AgentVisitePDC.jsx`, `FarmerPDCPage.jsx`
+- **Routes redirigees**: `/farmer/pdc` et `/agent/visite-pdc` pointent vers `PDCListPage` (PDC v2)
+- **Navigation mise a jour**: Agent Terrain dashboard et Farmer dashboard redirigent vers PDC v2
+- **Backend nettoye**: routeur `ars1000_pdc` retire de `server.py`
+- Support `farmer_id` dans URL pour creation directe depuis dashboard agent
+
 ### Core Platform
 - Auth JWT, Dashboard multi-roles, Notifications, USSD, Score carbone, Marketplace
 
 ### ARS 1000
-- PDC v1, Lots Traceabilite, Certification, Agroforesterie, Visite Terrain
+- PDC v2 (seul actif), Lots Traceabilite, Certification, Agroforesterie, Visite Terrain
 - Declarations Recolte, Diagnostic Conformite, Protection Environnementale
 
 ## Architecture
