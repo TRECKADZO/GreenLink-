@@ -29,7 +29,7 @@ const HeroSection = () => {
         </h1>
         
         <p className="text-sm sm:text-lg lg:text-xl text-white/90 text-center max-w-4xl mb-6 sm:mb-8 leading-relaxed px-2">
-          Recevez jusqu'a <span className="text-[#d4a574] font-semibold">60 000 XOF/ha</span> sur Orange Money grace a vos pratiques durables.
+          Recevez des primes sur Orange Money grace a vos pratiques durables.
           Score carbone, certification ARS 1000 et tracabilite complete de votre cacao.
         </p>
 

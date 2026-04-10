@@ -9,7 +9,7 @@ const mockFeatures = [
   {
     icon: 'Wallet',
     title: 'Primes Carbone',
-    description: 'Recevez des paiements Orange Money bases sur votre score carbone : jusqu\'a 60 000 XOF/ha pour les meilleures pratiques durables.',
+    description: 'Recevez des paiements Orange Money bases sur votre score carbone pour vos meilleures pratiques durables.',
     badge: 'Prime',
     badgeColor: 'bg-amber-100 text-amber-700'
   },
