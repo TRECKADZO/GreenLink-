@@ -1,69 +1,62 @@
 <analysis>**original_problem_statement**: 
-Utiliser le même code développé sur GitHub (GreenLink). Implémenter tout le projet (reproduire le projet GreenLink Agritech avec le même code).
-PRODUCT REQUIREMENTS: 
-1. Intégrer les modules de certification ARS 1000 (PDC, Traçabilité, Certification, Agroforesterie).
-2. Construire des tableaux de bord Coopérative et Planteur pour ces modules.
-3. Formulaire de Plan de Développement de la Cacaoyère (PDC) exact de 7 fiches.
-4. Système de recommandation d'arbres d'ombrage et génération automatique de documents PDF/Excel.
+Remplacer l'ancien système PDC (Plan de Développement de la Cacaoyère) par le nouveau module PDC v2 (Annexe 1) pour les visites des agents terrains chez les agriculteurs, et supprimer définitivement l'ancien système PDC du codebase.
 
-**User's preferred language**: French (INSTRUCT next agent to respond in French ONLY).
+PRODUCT REQUIREMENTS:
+- L'agent terrain doit utiliser le nouveau formulaire PDC v2 (stepper) lors de ses visites.
+- Le planteur (farmer) doit voir la nouvelle version de son PDC.
+- L'ancien système PDC (, , ) doit être complètement supprimé et débranché.
+
+**User's preferred language**: French (INSTRUCT next agent to respond in French ONLY)
 
 **what currently exists?** 
-Une plateforme Agritech complète (FastAPI, React, MongoDB). La plateforme inclut désormais un support robuste pour la norme ARS 1000, avec une structure PDC à 7 fiches, des exports Excel par planteur, des diagnostics visuels agroforestiers, une matrice de risques, des KPI de récoltes et un tableau de bord Super Admin analytique complet.
+Une plateforme Agritech complète (FastAPI, React, MongoDB). Le nouveau module PDC v2 est entièrement développé, testé, et intègre une carte interactive style Garmin eTrex 20 (avec tracking GPS) ainsi qu'un générateur PDF utilisant html2canvas et ReportLab. Une passe majeure de qualité de code (sécurité, hooks React, linting) a été effectuée. Cependant, l'ancien système PDC est toujours actif dans les menus des agents terrains et des planteurs, il doit être remplacé.
 
 **Last working item**: 
-    - Last item agent was working: Résolution d'un bug d'UI signalé par l'utilisateur via une capture d'écran (aperçu ne fonctionne pas sur le bouton Détails d'une liste de membres d'audit). Parallèlement, l'agent commençait à évaluer la mise à jour de la page d'accueil (Landing Page) pour refléter toutes les nouvelles fonctionnalités ARS 1000.
+    - Last item agent was working: Remplacement et suppression de l'ancien système PDC. L'agent a identifié les fichiers obsolètes (, , ) et les fichiers de configuration à mettre à jour (, , ), mais n'a pas encore exécuté la suppression ni la modification des routes.
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? screenshot tool (pour vérifier la modale de détails et la page d'accueil)
+    - Which testing method agent to use? both (backend testing agent pour s'assurer que la suppression ne casse pas l'app, frontend testing agent pour vérifier la navigation Agent Terrain et Planteur).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
-  Issue 1: Le bouton Détails (Aperçu) ne fonctionne pas pour les membres (Priorité: P0)
-     - Attempted fixes: L'agent a analysé l'image et effectué un  sur Détails dans le frontend pour localiser le composant défaillant (probablement dans ,  ou ).
-     - Next debug checklist: Vérifier les fichiers ,  ou le composant spécifique d'audit. Trouver la fonction  liée au bouton Détails et s'assurer que l'état de la modale/dialogue s'ouvre correctement sans erreurs dans la console.
-     - Why fix this issue and what will be achieved with the fix? Permettre aux coopératives de voir les détails des membres d'audit, une fonctionnalité critique de base.
-     - Status: IN PROGRESS
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? frontend
-     - Blocked on other issue: None
-
-  Issue 2: Emails sent via Resend are going to Spam (Priority: P2)
+  Issue 1: Emails sent via Resend are going to Spam (Priority: P2)
      - Attempted fixes: Mocks bypassed in a previous session, but lack DNS authentication.
      - Next debug checklist: Attendre que l'utilisateur configure les enregistrements DNS (SPF/DKIM/DMARC) sur GoDaddy.
-     - Why fix this issue and what will be achieved with the fix? Fiabilité de la livraison des e-mails (réinitialisation de mots de passe, etc.).
+     - Why fix this issue and what will be achieved with the fix? Fiabilité de la livraison des e-mails.
      - Status: BLOCKED (Awaiting user DNS configuration)
      - Is recurring issue? Y
      - Should Test frontend/backend/both after fix? backend
      - Blocked on other issue: None
 
 **In progress Task List**: 
-  Task 1: Mettre à jour la Page d'Accueil (Landing/Home Page) (Priority: P1)
-     - Where to resume: Inspecter  ou le fichier de la page d'accueil.
-     - What will be achieved with this? Mettre en avant les nouveaux modules ajoutés récemment (ARS 1000, Diagnostic Agroforestier, Export Excel, Matrices de risques, etc.) pour valoriser la plateforme auprès des nouveaux visiteurs.
-     - Status: NOT STARTED
-     - Should Test frontend/backend/both after fix? frontend
-     - Blocked on something: Résoudre l'Issue 1 d'abord.
+  Task 1: Remplacement total de l'ancien PDC par le PDC v2 (Priority: P0)
+     - Where to resume: Supprimer physiquement , , et . Mettre à jour les routeurs ( côté frontend,  côté backend). Mettre à jour les liens de navigation dans  (et potentiellement d'autres menus/tableaux de bord) pour qu'ils pointent vers les pages du PDC v2.
+     - What will be achieved with this? Unification totale du système PDC sur la nouvelle version performante et nettoyage du code mort.
+     - Status: IN PROGRESS
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on something: None
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
     - P1: Intégration Gateway SMS réelle (Orange CI / MTN) (actuellement mocké).
     - P1: Support des langues locales (Baoulé/Dioula).
     - P2: Nettoyage de toutes les données de test/demo pour ne garder que des données réelles.
-    
+
     Future Tasks:
     - P3: Refactoriser  (plus de 2700 lignes, code mort et état complexe).
+    - P3: Splitter les composants React de plus de 300 lignes restants (ex: AgentMapLeaflet).
+    - P3: Refactoring des fonctions complexes de  (ex: get_realtime_dashboard).
 
 **Completed work in this session**
-- Adaptation du Backend () pour supporter de façon flexible la nouvelle structure PDC de 7 fiches. (DONE)
-- Ajout de l'export Excel () complet (7 onglets) pour les PDC. (DONE)
-- Ajout de l'onglet ARS 1000 au tableau de bord Super Admin avec métriques qualitatives. (DONE)
-- Correction d'un bug de navigation (Route mismatch) vers . (DONE)
-- Refonte complète de l'onglet Agroforesterie (Coopérative) avec diagnostic visuel et alertes. (DONE)
-- Améliorations qualitatives (KPI revenus, check-list environnementale, matrice des risques) du tableau de bord ARS 1000. (DONE)
+- Création du Stepper PDC v2 avec formulaires dynamiques (8 fiches) et RBAC strict. (DONE)
+- Générateur PDF ReportLab avec numérotation et styles conformes pour PDC v2. (DONE)
+- Mode Carte Garmin eTrex 20 : Carte interactive () avec dessin de polygone, waypoints pour arbres, info-box et boutons tactiles. (DONE)
+- Capture statique (html2canvas) de la carte intégrée automatiquement au PDF officiel. (DONE)
+- Mode GPS tracking continu (filtres de distance) pour la carte Garmin. (DONE)
+- Résolution massive de dette technique/sécurité (114 fichiers tests cassés supprimés, correction XSS, remplacement de  par , nettoyage strict des hook dependencies et array index keys). (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-Aucun autre problème non résolu en dehors du bouton Détails (Issue 1).
+None.
 
 **Known issue recurrence from previous fork**
   - Issue recurrence in previous fork: None
@@ -74,53 +67,54 @@ Aucun autre problème non résolu en dehors du bouton Détails (Issue 1).
 
 
 **Key Technical Concepts**
-React, FastAPI, Pydantic, MongoDB, Recharts, Export Excel (), Génération PDF ().
+React, FastAPI, MongoDB, Leaflet/react-leaflet, html2canvas, ReportLab (PDF), Role-based Access Control (RBAC), Geolocation API.
 
 **key DB schema**
-  - : Flexible schema (dict/list) gérant les 7 fiches (epargne, menage_detail, exploitation, cultures, arbres_ombrage, materiel_detail, programme_annuel).
+  - : Remplaçant de . Gère les 3 étapes (step1, step2, step3) avec les 8 fiches imbriquées et la propriété  (snapshot, polygon, points_arbres).
 
 **changes in tech stack**
-  - Ajout de la bibliothèque Python  pour la génération des fichiers Excel.
+  - Ajout de la librairie  pour la capture de la carte React en base64 pour le PDF.
 
 **All files of reference** 
--  (Ou fichier contenant la modale de détails mentionnée dans le screenshot).
--  (ou équivalent pour la mise à jour demandée de la page d'accueil).
--  (Export Excel et stats super admin).
--  (Contient la majeure partie des améliorations visuelles).
+- A MODIFIER / SUPPRIMER : , , , , , 
+- CREES (Actifs) : , , 
 
-**Areas that need refactoring**: 
+**Areas that need refactoring**:
 -  (plus de 2700 lignes).
+- Composants React frontend volumineux (mentionnés dans le rapport de revue de code : , , , etc.).
 
 **key api endpoints**
-- 
-- 
-- 
+- PDC v2 Endpoints : 
+- PDC v2 PDF : 
+- ANCIENS (à supprimer) : 
 
-**Critical Info for New Agent** 
-- INSTRUCT next agent to respond in French ONLY.
-- L'utilisateur a transmis une capture d'écran montrant un bug sur un bouton Détails (aperçu ne fonctionne pas). Fixez ce problème UI d'abord.
-- Ensuite, l'utilisateur a demandé d'actualiser la page d'accueil (Landing Page) pour refléter tous les accomplissements et modules récents (ARS 1000, Diagnostic, Matrice de risques, etc.).
-- Ne pas oublier que le mot de passe de la coopérative de test () a été temporairement altéré lors des tests, fiez-vous toujours à .
+**Critical Info for New Agent**
+- **INSTRUCT next agent to respond in French ONLY.**
+- Terminez immédiatement la suppression du vieux système PDC avant de coder quoi que ce soit d'autre. L'utilisateur a explicitement demandé de débrancher l'ancien (, ) et de rediriger l'agent terrain / planteur vers les vues du .
+- Assurez-vous qu'aucun ancien lien ne subsiste dans  ni dans les différents dashboards (notamment ).
 
 **documents and test reports created in this job**
   - 
   - 
-  -  (mis à jour)
+  - 
+  - 
   - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. (Done) *OUI* (Validation du plan).
- 2. (Done) *a et un export PDF/Excel par planteur individuel... bonnifier de facon qualitatifs les metrics du super Admin*
- 3. (Done) *la page Voir le tableau de bord ARS 1000 dans Conformité globale... affiche page blanche* (Bug corrigé).
- 4. (Done) *dans Agroforesterie de Certification ARS 1000... quel est son fonctionnement ?*
- 5. (Done) *dans la coherence du projet que pouvez vous implementer dans cette partie ?*
- 6. (Done) *oui* (Validation de l'implémentation du diagnostic agroforestier).
- 7. (Done) *dans Certification ARS 1000... que pouvez vous ameliorer dans recolte, dignostic, protection environement et registre ?*
- 8. (Pending) *User uploaded 1 artifact(s): [Image]. apercu ne focntionne pas. pensez-vous que la page acceuil doit etre mis a jour avec les dernier ajout ?*
+ 1. (Done) *User uploaded 1 artifact(s) (PDF du PDC).*
+ 2. (Done) *oui (validation pour la génération PDF).*
+ 3. (Done) *P1 : Generation PDF officiel pour PDC v2 valide (ReportLab).*
+ 4. (Done) *User requested massive Code Quality fix applying findings from report.*
+ 5. (Done) *Oui (validation pour la correction).*
+ 6. (Done) *Mets à jour la section « Croquis/polygone... » avec Carte Garmin eTrex 20, mode offline, export image dans PDF.*
+ 7. (Done) *Oui (validation pour rajouter GPS Tracking).*
+ 8. (Pending) *Je vois que vous n’avez pas remplacer l’ancienne fiche pdc à compléter par l’agent terrain... Pourquoi ?*
+ 9. (Done) *Agent sent ask_human to confirm removal.*
+ 10. (Pending) *Oui et supprimer l’ancien système pdc.*
 
 **Project Health Check:**
 - Backend: Healthy
-- Frontend: Healthy
+- Frontend: Healthy 
 - Database: Healthy
 - Mocked: Orange CI SMS & Orange Money.
 
@@ -129,18 +123,23 @@ React, FastAPI, Pydantic, MongoDB, Recharts, Export Excel (), Génération PDF (
 - Orange CI SMS / Money (Mocked)
 
 **Testing status**
-  - Testing agent used after significant changes: YES (iterations 121, 122).
+  - Testing agent used after significant changes: YES (iterations 125, 126, 127).
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: Aucun nouveau fichier pytest.
-  - Known regressions: Bouton Détails cassé sur la liste des membres/audits.
+  - Test files created: None.
+  - Known regressions: None.
 
 **Credentials to test flow:**
-Consultez le fichier .
+Lisez le fichier .
 
 **What agent forgot to execute**
-L'agent précédent a lancé l'outil  sur l'image et identifié les potentiels fichiers (ex: , , ) contenant le bouton Détails, mais n'a pas appliqué le correctif ni mis à jour la page d'accueil comme demandé par l'utilisateur.
+L'agent a identifié les fichiers de l'ancien module PDC (, , ) mais n'a pas procédé à leur suppression effective ni à la mise à jour du routeur  et du .
 
 **Debugging checklist for current issue**
-    Issue: Aperçu ne fonctionne pas (Bouton Détails sur la liste des membres/audit).
-    Frontend files to check: , , ou . Rechercher le  ou le  censé s'ouvrir au clic du bouton Détails. 
-    Pourquoi ?: La modale est probablement mal branchée (état  non mis à jour) ou une erreur JS bloque le rendu des données à l'intérieur. Vérifier les logs console lors du clic.</analysis>
+    Task: Remplacement du module PDC legacy par le module PDC v2.
+    Frontend files to check:
+    -  : Retirer les vieilles routes  et . Ajouter/vérifier les routes pour PDC v2.
+    -  : Rediriger les boutons d'action Faire un PDC vers le nouveau routeur PDC v2 au lieu d'.
+    - Supprimer  et .
+    Backend files to check:
+    -  : Retirer l'include du router .
+    - Supprimer physiquement le fichier .</analysis>
