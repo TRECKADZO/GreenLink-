@@ -56,6 +56,7 @@ from routes import ars1000_pdc, ars1000_lots, ars1000_certification, ars1000_agr
 from routes import ars1000_pdf
 from routes import ars1000_recoltes
 from routes import pdc_v2
+from routes import pdc_v2_pdf
 
 
 ROOT_DIR = Path(__file__).parent
@@ -213,6 +214,7 @@ app.include_router(ars1000_agroforesterie.router)
 app.include_router(ars1000_pdf.router)
 app.include_router(ars1000_recoltes.router)
 app.include_router(pdc_v2.router)
+app.include_router(pdc_v2_pdf.router)
 
 # Set database for cooperative_referral module
 cooperative_referral.set_database(db)

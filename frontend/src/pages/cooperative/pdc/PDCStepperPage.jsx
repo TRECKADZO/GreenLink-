@@ -10,7 +10,7 @@ import DynamicTable from './DynamicTable';
 import {
   ArrowLeft, ArrowRight, Save, CheckCircle2, Loader2,
   ClipboardList, Search as SearchIcon, Calendar, Lock,
-  FileText, ChevronDown, ChevronUp
+  FileText, ChevronDown, ChevronUp, Download
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -145,6 +145,28 @@ const PDCStepperPage = () => {
       toast.error(e.message || 'Erreur de validation');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const downloadPdf = async () => {
+    try {
+      toast.info('Generation du PDF en cours...');
+      const res = await fetch(`${API_URL}/api/pdc-v2/pdf/${id}`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` },
+      });
+      if (!res.ok) throw new Error('Erreur lors de la generation du PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PDC_${pdc?.farmer_name || 'planteur'}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('PDF telecharge');
+    } catch (e) {
+      toast.error(e.message || 'Erreur telechargement');
     }
   };
 
@@ -822,6 +844,15 @@ const PDCStepperPage = () => {
             </div>
           </div>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={downloadPdf}
+          className="border-[#1A3622] text-[#1A3622] hover:bg-[#E8F0EA]"
+          data-testid="pdc-download-pdf"
+        >
+          <Download className="w-4 h-4 mr-1" /> Telecharger PDF
+        </Button>
       </div>
 
       {/* Stepper */}
@@ -937,14 +968,24 @@ const PDCStepperPage = () => {
 
       {/* Validation banner */}
       {pdc.statut === 'valide' && (
-        <div className="bg-[#E8F0EA] border border-[#1A3622]/20 rounded-md p-4 flex items-center gap-3" data-testid="pdc-validated-banner">
-          <CheckCircle2 className="w-5 h-5 text-[#1A3622] flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-[#1A3622]">PDC Valide</p>
-            <p className="text-xs text-[#374151]">
-              Valide par {pdc.validated_by_name || 'l\'agronome'} le {pdc.validated_at ? new Date(pdc.validated_at).toLocaleDateString('fr-FR') : '-'}
-            </p>
+        <div className="bg-[#E8F0EA] border border-[#1A3622]/20 rounded-md p-4 flex items-center justify-between" data-testid="pdc-validated-banner">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-[#1A3622] flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-[#1A3622]">PDC Valide</p>
+              <p className="text-xs text-[#374151]">
+                Valide par {pdc.validated_by_name || 'l\'agronome'} le {pdc.validated_at ? new Date(pdc.validated_at).toLocaleDateString('fr-FR') : '-'}
+              </p>
+            </div>
           </div>
+          <Button
+            size="sm"
+            onClick={downloadPdf}
+            className="bg-[#1A3622] hover:bg-[#112417] text-white"
+            data-testid="pdc-download-pdf-validated"
+          >
+            <Download className="w-4 h-4 mr-1" /> Telecharger le PDF officiel
+          </Button>
         </div>
       )}
     </div>
