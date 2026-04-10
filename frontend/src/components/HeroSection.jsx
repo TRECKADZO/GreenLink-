@@ -20,32 +20,32 @@ const HeroSection = () => {
           className="mb-5 sm:mb-8 bg-white/10 backdrop-blur-sm text-white border-white/20 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm hover:bg-white/20 transition-all duration-300"
         >
           <Sprout className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-          Plateforme Carbone & Traçabilité
+          Plateforme ARS 1000 & Traçabilité Cacao
         </Badge>
         
         <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-center text-white mb-4 sm:mb-6 leading-tight animate-fade-in">
-          Primes Carbone pour<br />
-          <span className="text-[#d4a574]">l'Agriculture Durable</span>
+          Certification &<br />
+          <span className="text-[#d4a574]">Cacao Durable ARS 1000</span>
         </h1>
         
         <p className="text-sm sm:text-lg lg:text-xl text-white/90 text-center max-w-4xl mb-6 sm:mb-8 leading-relaxed px-2">
-          Coopératives, producteurs et auditeurs : gérez vos parcelles, recevez des primes carbone 
-          sur Orange Money et assurez la conformité EUDR, SSRTE/ICI & Cacao Durable.
+          Coopératives, producteurs et auditeurs : gérez vos PDC, obtenez la certification Bronze/Argent/Or, 
+          suivez la traçabilité des lots et assurez la conformité ARS 1000, EUDR & SSRTE/ICI.
         </p>
 
         {/* Quick stats */}
         <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-8 sm:mb-10">
           <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
             <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
-            <span className="text-white font-medium text-xs sm:text-base">Conforme EUDR</span>
+            <span className="text-white font-medium text-xs sm:text-base">Norme ARS 1000</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
             <Leaf className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
-            <span className="text-white font-medium text-xs sm:text-base">Traçabilité Carbone</span>
+            <span className="text-white font-medium text-xs sm:text-base">Agroforesterie</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 bg-[#d4a574]/20 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 border border-[#d4a574]/30">
             <Award className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4a574]" />
-            <span className="text-white font-medium text-xs sm:text-base">Certifie Qualite</span>
+            <span className="text-white font-medium text-xs sm:text-base">PDC 7 Fiches</span>
           </div>
         </div>
         

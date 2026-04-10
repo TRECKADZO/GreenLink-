@@ -8,7 +8,16 @@ import {
   BarChart3,
   UserPlus,
   ImagePlus,
-  TrendingUp
+  TrendingUp,
+  TreePine,
+  Leaf,
+  FileText,
+  Shield,
+  Smartphone,
+  Wallet,
+  Package,
+  Wheat,
+  AlertTriangle
 } from 'lucide-react';
 
 export const iconMap = {
@@ -21,7 +30,16 @@ export const iconMap = {
   BarChart3,
   UserPlus,
   ImagePlus,
-  TrendingUp
+  TrendingUp,
+  TreePine,
+  Leaf,
+  FileText,
+  Shield,
+  Smartphone,
+  Wallet,
+  Package,
+  Wheat,
+  AlertTriangle
 };
 
 export const getIconComponent = (iconName) => {

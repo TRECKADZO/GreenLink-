@@ -7,66 +7,88 @@ import { getIconComponent } from '../utils/iconMapper';
 // Fallback mock data
 const mockFeatures = [
   {
+    icon: 'Shield',
+    title: 'Certification ARS 1000',
+    description: 'Norme Africaine pour le Cacao Durable : PDC 7 fiches, certification Bronze/Argent/Or, audits de conformité et suivi coopératif complet.',
+    badge: 'ARS 1000',
+    badgeColor: 'bg-yellow-100 text-yellow-700'
+  },
+  {
     icon: 'TreePine',
-    title: 'Durabilite & Credits Carbone',
-    description: 'Alignement avec les pratiques durables reconnues (Programme Tai, BMC, FCPF). Score environnemental sur 10 avec 21 pratiques evaluees et export MRV.',
-    badge: 'Durable',
+    title: 'Diagnostic Agroforestier',
+    description: '54 espèces référencées, diagnostic visuel coopératif, alertes non-conformes par planteur, score d\'ombrage et recommandations intelligentes.',
+    badge: 'Agroforesterie',
     badgeColor: 'bg-emerald-100 text-emerald-700'
   },
   {
-    icon: 'Leaf',
-    title: 'Audits Carbone Certifies',
-    description: "Auditeurs independants evaluent vos parcelles pour la certification carbone et l'eligibilite aux primes environnementales",
-    badge: 'GreenLink',
-    badgeColor: 'bg-emerald-100 text-emerald-700'
+    icon: 'FileText',
+    title: 'Export PDF & Excel',
+    description: 'Génération automatique de PDC 10 pages PDF, fichiers Excel 7 onglets par planteur, rapports d\'essai et fiches de traçabilité.',
+    badge: 'Documents',
+    badgeColor: 'bg-blue-100 text-blue-700'
   },
   {
-    icon: 'Wallet',
-    title: 'Primes Carbone',
-    description: "Recevez des paiements Orange Money bases sur votre score carbone : jusqu'a 60 000 XOF/ha pour les meilleures pratiques",
-    badge: 'Nouveau',
+    icon: 'Package',
+    title: 'Traçabilité des Lots',
+    description: 'Contrôles qualité ARS 1000-2 : humidité, tamisage, épreuve de coupe, grading A/B/C/D et rapports d\'essai certifiés.',
+    badge: 'Qualité',
+    badgeColor: 'bg-teal-100 text-teal-700'
+  },
+  {
+    icon: 'Wheat',
+    title: 'Gestion des Récoltes',
+    description: 'Déclarations de récolte, validation coopérative, revenu estimé par grade (1250 FCFA/kg Grade A), alertes qualité et analytics.',
+    badge: 'Récoltes',
     badgeColor: 'bg-amber-100 text-amber-700'
   },
   {
+    icon: 'AlertTriangle',
+    title: 'Matrice de Risques',
+    description: 'Matrice visuelle 5x5 (probabilité x gravité), registre de réclamations, suivi d\'impartialité et gestion des non-conformités.',
+    badge: 'Risques',
+    badgeColor: 'bg-red-100 text-red-700'
+  },
+  {
+    icon: 'Leaf',
+    title: 'Protection Environnementale',
+    description: 'Score de conformité environnementale, checklist ARS 1000 (distance eau, anti-érosion, reboisement, zone tampon).',
+    badge: 'Environnement',
+    badgeColor: 'bg-green-100 text-green-700'
+  },
+  {
+    icon: 'BarChart3',
+    title: 'Durabilité & Crédits Carbone',
+    description: 'Score environnemental sur 10 avec 21 pratiques évaluées, MRV en temps réel, export MRV et alignement EUDR.',
+    badge: 'Carbone',
+    badgeColor: 'bg-emerald-100 text-emerald-700'
+  },
+  {
     icon: 'Smartphone',
-    title: 'Application Mobile',
-    description: 'Application mobile dediee pour les agents terrain et cooperatives. Collecte de donnees hors-ligne, synchronisation automatique',
+    title: 'USSD & Mobile',
+    description: 'Accès USSD (*144*99#) pour les planteurs sans smartphone, application mobile agents terrain, collecte hors-ligne.',
     badge: 'Mobile',
     badgeColor: 'bg-orange-100 text-orange-700'
   },
   {
-    icon: 'Shield',
-    title: 'Conformite SSRTE/ICI',
-    description: "Outils pour les cooperatives et agents de terrain pour le monitoring du travail des enfants selon les standards ICI",
-    badge: 'ICI',
-    badgeColor: 'bg-blue-100 text-blue-700'
-  },
-  {
-    icon: 'BarChart3',
-    title: 'MRV & Rapports PDF',
-    description: 'Monitoring, Rapportage et Verification en temps reel. Export PDF professionnel pour le programme juridictionnel Tai et le BMC.',
-    badge: 'MRV',
-    badgeColor: 'bg-teal-100 text-teal-700'
-  },
-  {
-    icon: 'Award',
-    title: 'Certification Cacao Durable',
-    description: "Norme Africaine pour le Cacao Durable : evaluez votre niveau Bronze, Argent ou Or via USSD et recevez des recommandations personnalisees",
-    badge: 'Qualite',
-    badgeColor: 'bg-yellow-100 text-yellow-700'
-  },
-  {
     icon: 'Building2',
-    title: 'Gestion Cooperative',
-    description: "Dashboard complet pour gerer membres, parcelles, primes et conformite EUDR avec export CSV et rapports PDF",
+    title: 'Tableau de Bord Coopérative',
+    description: 'Dashboard complet multi-rôles, gestion des membres, parcelles, primes carbone, conformité SSRTE/ICI et analytics avancés.',
     badge: 'Pro',
     badgeColor: 'bg-slate-100 text-slate-700'
   },
   {
-    icon: 'FileText',
-    title: 'Rapports & Analytics',
-    description: 'Tableaux de bord en temps reel, export de donnees, rapports de conformite et analyses de performance par region',
-    badge: null
+    icon: 'Wallet',
+    title: 'Primes Carbone',
+    description: 'Paiements Orange Money basés sur le score carbone : jusqu\'à 60 000 XOF/ha pour les meilleures pratiques durables.',
+    badge: 'Paiement',
+    badgeColor: 'bg-amber-100 text-amber-700'
+  },
+  {
+    icon: 'Award',
+    title: 'Audits & Vérification',
+    description: 'Auditeurs indépendants, visites terrain en 10 étapes (7 fiches + Photos + Signatures), GPS et vérification des parcelles.',
+    badge: 'Audit',
+    badgeColor: 'bg-purple-100 text-purple-700'
   }
 ];
 
@@ -92,10 +114,10 @@ const FeaturesSection = () => {
             Fonctionnalités
           </Badge>
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
-            Une plateforme tout-en-un
+            Plateforme ARS 1000 complète
           </h2>
           <p className="text-sm sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-2">
-            IA, analytics, marketplace B2B, vérification carbone et outils professionnels pour transformer l'agriculture ivoirienne
+            Certification cacao durable, traçabilité des lots, diagnostic agroforestier, export PDF/Excel et analytics avancés
           </p>
         </div>
         

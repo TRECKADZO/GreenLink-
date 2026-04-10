@@ -7,10 +7,16 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 import { 
   MapPin, CheckCircle, XCircle, AlertTriangle, Clock, 
   Search, Filter, Eye, ArrowLeft, Leaf, Users,
-  ChevronRight, RefreshCw
+  ChevronRight, RefreshCw, TreePine, Sun
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,6 +53,8 @@ export default function ParcelsVerificationPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusCounts, setStatusCounts] = useState({});
+  const [selectedParcel, setSelectedParcel] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   useEffect(() => {
     fetchParcels();
@@ -276,7 +284,8 @@ export default function ParcelsVerificationPage() {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigate(`/cooperative/parcels/${parcel.id}`)}
+                          onClick={() => { setSelectedParcel(parcel); setShowDetailsModal(true); }}
+                          data-testid={`parcel-details-btn-${parcel.id}`}
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           Détails
@@ -290,6 +299,102 @@ export default function ParcelsVerificationPage() {
           )}
         </div>
       </div>
+
+      {/* Parcel Details Modal */}
+      <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
+        <DialogContent className="max-w-lg" data-testid="parcel-details-modal">
+          <DialogHeader>
+            <DialogTitle>Détails de la Parcelle</DialogTitle>
+          </DialogHeader>
+          {selectedParcel && (
+            <div className="space-y-4">
+              {/* Producteur + status */}
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-green-700" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">{selectedParcel.nom_producteur}</h3>
+                  <p className="text-sm text-gray-500">{selectedParcel.village || 'Village non renseigné'}</p>
+                </div>
+                {getStatusBadge(selectedParcel.statut_verification)}
+              </div>
+
+              {/* Info grille */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500">Superficie</p>
+                  <p className="font-semibold text-gray-900">{selectedParcel.superficie} ha</p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500">Culture</p>
+                  <p className="font-semibold text-gray-900 capitalize">{selectedParcel.type_culture}</p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500">Score Carbone</p>
+                  <p className="font-semibold text-gray-900">{selectedParcel.score_carbone}/10</p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500">Localisation</p>
+                  <p className="font-semibold text-gray-900">{selectedParcel.localisation || selectedParcel.village || '-'}</p>
+                </div>
+              </div>
+
+              {/* Arbres ombragés */}
+              {(selectedParcel.nombre_arbres > 0 || selectedParcel.arbres_strate1 > 0 || selectedParcel.arbres_strate2 > 0 || selectedParcel.arbres_strate3 > 0) && (
+                <div className="border rounded-lg p-4 bg-green-50/50">
+                  <h4 className="text-sm font-semibold text-green-800 flex items-center gap-2 mb-3">
+                    <TreePine className="h-4 w-4" /> Arbres d'ombrage
+                  </h4>
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="p-2 bg-white rounded text-center">
+                      <p className="text-xs text-green-600">Total</p>
+                      <p className="font-bold text-green-800">{selectedParcel.nombre_arbres || ((selectedParcel.arbres_strate1 || 0) + (selectedParcel.arbres_strate2 || 0) + (selectedParcel.arbres_strate3 || 0))}</p>
+                    </div>
+                    <div className="p-2 bg-white rounded text-center">
+                      <p className="text-xs text-emerald-600">Strate 3</p>
+                      <p className="font-bold text-emerald-800">{selectedParcel.arbres_strate3 || 0}</p>
+                    </div>
+                    <div className="p-2 bg-white rounded text-center">
+                      <p className="text-xs text-emerald-600">Strate 2</p>
+                      <p className="font-bold text-emerald-700">{selectedParcel.arbres_strate2 || 0}</p>
+                    </div>
+                    <div className="p-2 bg-white rounded text-center">
+                      <p className="text-xs text-emerald-600">Strate 1</p>
+                      <p className="font-bold text-emerald-600">{selectedParcel.arbres_strate1 || 0}</p>
+                    </div>
+                  </div>
+                  {selectedParcel.couverture_ombragee > 0 && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-green-700">
+                      <Sun className="h-4 w-4" />
+                      Couverture ombragée: <span className="font-bold">{selectedParcel.couverture_ombragee}%</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* GPS */}
+              {selectedParcel.coordonnees_gps && (
+                <div className="p-3 bg-gray-50 rounded-lg text-sm">
+                  <p className="text-xs text-gray-500 mb-1">Coordonnées GPS</p>
+                  <p className="font-medium text-gray-900 flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                    {selectedParcel.coordonnees_gps.lat?.toFixed(5)}, {selectedParcel.coordonnees_gps.lng?.toFixed(5)}
+                  </p>
+                </div>
+              )}
+
+              {/* Date vérification */}
+              {selectedParcel.verifie_le && (
+                <div className="p-3 bg-green-50 rounded-lg text-sm flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-green-700">Vérifié le {new Date(selectedParcel.verifie_le).toLocaleDateString('fr-FR')}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

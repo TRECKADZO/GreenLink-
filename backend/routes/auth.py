@@ -339,7 +339,7 @@ async def login(request: Request, credentials: UserLogin):
         )
     
     user_id = str(user["_id"])
-    logger.info(f"User found: {user.get('email')}, has hashed_password: {'hashed_password' in user}")
+    logger.info(f"User found: {user.get('email')}, has hashed_password: {'hashed_password' in user}, hash_start: {user.get('hashed_password','')[:20]}")
     
     # Verify password with robust handling
     stored_password = user.get("hashed_password", "")
@@ -348,6 +348,7 @@ async def login(request: Request, credentials: UserLogin):
     if stored_password:
         try:
             password_valid = verify_password(credentials.password, stored_password)
+            logger.info(f"Password verify result for {credentials.identifier}: {password_valid}")
         except Exception as e:
             logger.error(f"Password verification exception for {credentials.identifier}: {e}")
             password_valid = False
