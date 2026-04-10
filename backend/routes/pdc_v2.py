@@ -278,6 +278,10 @@ async def save_step1(pdc_id: str, data: Step1Data, current_user: dict = Depends(
     if pdc.get("statut") == "valide":
         raise HTTPException(status_code=400, detail="PDC deja valide, modification impossible")
 
+    # Cooperative cannot modify step 1 once agent has submitted it
+    if user_type in STEP2_ROLES and pdc.get("current_step", 1) >= 2:
+        raise HTTPException(status_code=403, detail="L'etape 1 a ete soumise par l'agent terrain. Lecture seule pour l'agronome.")
+
     update = {"updated_at": datetime.now(timezone.utc).isoformat()}
     step1 = pdc.get("step1", {})
     if data.fiche1 is not None:

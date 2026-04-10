@@ -11,7 +11,7 @@ import ParcelMapGarmin from './ParcelMapGarmin';
 import {
   ArrowLeft, ArrowRight, Save, CheckCircle2, Loader2,
   ClipboardList, Search as SearchIcon, Calendar, Lock,
-  FileText, ChevronDown, ChevronUp, Download
+  FileText, ChevronDown, ChevronUp, Download, Eye, Info
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -41,7 +41,9 @@ const PDCStepperPage = () => {
   const isFarmer = ['farmer', 'planteur', 'producteur'].includes(userType);
   const readOnly = pdc?.statut === 'valide' || isFarmer;
 
-  const canEditStep1 = !readOnly && (isAgent || isCoopOrAdmin);
+  // Step 1 is read-only for cooperative once agent has submitted (current_step >= 2)
+  const step1SubmittedByAgent = (pdc?.current_step || 1) >= 2;
+  const canEditStep1 = !readOnly && (isAgent || (isCoopOrAdmin && !step1SubmittedByAgent));
   const canEditStep2 = !readOnly && isCoopOrAdmin;
   const canEditStep3 = !readOnly && isCoopOrAdmin;
   const canValidate = isCoopOrAdmin && pdc?.statut !== 'valide';
@@ -868,7 +870,43 @@ const PDCStepperPage = () => {
         </Button>
       </div>
 
-      {/* Stepper */}
+      {/* Workflow status banners */}
+      {isCoopOrAdmin && step1SubmittedByAgent && activeStep === 1 && pdc.statut !== 'valide' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 flex items-start gap-3" data-testid="step1-readonly-banner">
+          <Eye className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-blue-800">Mode lecture — Donnees collectees par l'agent terrain</p>
+            <p className="text-xs text-blue-600 mt-0.5">L'etape 1 a ete soumise. Consultez les donnees puis passez a l'etape 2 (Analyse) pour completer votre evaluation.</p>
+          </div>
+        </div>
+      )}
+      {isCoopOrAdmin && step1SubmittedByAgent && activeStep === 2 && pdc.statut !== 'valide' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start gap-3" data-testid="step2-active-banner">
+          <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Analyse des problemes — Annexe 2</p>
+            <p className="text-xs text-amber-600 mt-0.5">Analysez les donnees collectees par l'agent terrain (Etape 1) et renseignez vos conclusions.</p>
+          </div>
+        </div>
+      )}
+      {isCoopOrAdmin && activeStep === 3 && pdc.statut !== 'valide' && (
+        <div className="bg-purple-50 border border-purple-200 rounded-md p-3 flex items-start gap-3" data-testid="step3-active-banner">
+          <Info className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-purple-800">Planification — Annexe 3</p>
+            <p className="text-xs text-purple-600 mt-0.5">Definissez les axes strategiques, le programme d'actions et les moyens/couts. Validez pour rendre le PDC accessible au planteur.</p>
+          </div>
+        </div>
+      )}
+      {isFarmer && pdc.statut === 'valide' && (
+        <div className="bg-[#E8F0EA] border border-[#1A3622]/20 rounded-md p-3 flex items-start gap-3" data-testid="farmer-validated-banner">
+          <CheckCircle2 className="w-5 h-5 text-[#1A3622] flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-[#1A3622]">Votre Plan de Developpement Cacaoyer</p>
+            <p className="text-xs text-[#374151] mt-0.5">Ce plan a ete valide par l'agronome. Il contient la collecte terrain, l'analyse et la planification pour votre exploitation.</p>
+          </div>
+        </div>
+      )}
       <div className="bg-white border border-[#E5E5E0] rounded-md p-4" data-testid="pdc-stepper">
         <div className="flex items-center justify-between">
           {STEPS.map((step, idx) => {
