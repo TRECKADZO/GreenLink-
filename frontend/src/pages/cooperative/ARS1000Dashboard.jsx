@@ -1,5 +1,6 @@
 import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
@@ -145,193 +146,23 @@ const CertificationTab = ({ dashboard, onRefresh }) => {
   );
 };
 
-// ============= PDC TAB =============
-const PDCTab = ({ onRefresh }) => {
-  const [pdcs, setPdcs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [stats, setStats] = useState(null);
-
-  const loadPDCs = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (search) params.set('search', search);
-      if (statusFilter) params.set('statut', statusFilter);
-      const res = await fetch(`${API_URL}/api/ars1000/pdc/cooperative/all?${params}`, { headers: authHeaders() });
-      const data = await res.json();
-      setPdcs(data.pdcs || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, statusFilter]);
-
-  const loadStats = useCallback(async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/ars1000/pdc/cooperative/stats`, { headers: authHeaders() });
-      setStats(await res.json());
-    } catch (e) { console.error(e); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => { loadPDCs(); loadStats(); }, [loadPDCs, loadStats]);
-
-  const handleValidate = async (pdcId) => {
-    try {
-      await fetch(`${API_URL}/api/ars1000/pdc/${pdcId}/validate`, { method: 'POST', headers: authHeaders() });
-      toast.success('PDC validé avec succès');
-      loadPDCs(); loadStats();
-    } catch (e) {
-      toast.error('Erreur lors de la validation');
-    }
-  };
-
-  const handleDownloadPDC = async (pdcId, farmerName) => {
-    try {
-      toast.info('Generation du PDF en cours...');
-      const res = await fetch(`${API_URL}/api/ars1000/pdf/pdc/${pdcId}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
-      if (!res.ok) throw new Error('Erreur lors de la generation');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `PDC_${farmerName || 'planteur'}_${new Date().toISOString().slice(0,10)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success('PDF telecharge');
-    } catch (e) {
-      toast.error(e.message || 'Erreur telechargement PDF');
-    }
-  };
-
-  const handleDownloadExcel = async (pdcId, farmerName) => {
-    try {
-      toast.info('Generation Excel en cours...');
-      const res = await fetch(`${API_URL}/api/admin/analytics/ars1000/export/excel/${pdcId}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
-      if (!res.ok) throw new Error('Erreur lors de la generation');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `PDC_ARS1000_${farmerName || 'planteur'}_${new Date().toISOString().slice(0,10)}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success('Excel telecharge');
-    } catch (e) {
-      toast.error(e.message || 'Erreur telechargement Excel');
-    }
-  };
-
-  const statusColors = {
-    brouillon: 'bg-gray-100 text-gray-600',
-    soumis: 'bg-blue-100 text-blue-700',
-    valide: 'bg-green-100 text-green-700',
-    archive: 'bg-red-100 text-red-600',
-  };
-
+// ============= PDC TAB (v2 - Stepper) =============
+const PDCTab = () => {
+  const navigate = useNavigate();
   return (
     <div className="space-y-4" data-testid="pdc-tab">
-      {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {[
-            { label: 'Total', value: stats.total, color: 'gray' },
-            { label: 'Brouillons', value: stats.brouillons, color: 'gray' },
-            { label: 'Soumis', value: stats.soumis, color: 'blue' },
-            { label: 'Validés', value: stats.valides, color: 'green' },
-            { label: 'Conformité moy.', value: `${stats.pourcentage_conformite_moyen}%`, color: 'purple' },
-          ].map((s, i) => (
-            <div key={`el-${i}`} className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm text-center">
-              <p className="text-xl font-bold text-gray-900">{s.value}</p>
-              <p className="text-xs text-gray-500">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Rechercher un planteur..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-            data-testid="pdc-search"
-          />
-        </div>
-        <select
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          data-testid="pdc-status-filter"
+      <div className="bg-white border border-[#E5E5E0] rounded-md p-6 text-center">
+        <FileText className="w-10 h-10 text-[#1A3622] mx-auto mb-3" />
+        <h3 className="text-lg font-semibold text-[#1A3622] mb-1">Module PDC v2 - Stepper 3 Etapes</h3>
+        <p className="text-sm text-[#6B7280] mb-4">Gerez les Plans de Developpement de la Cacaoyere avec le nouveau workflow en 3 etapes (Collecte, Analyse, Planification).</p>
+        <Button
+          onClick={() => navigate('/cooperative/pdc-v2')}
+          className="bg-[#1A3622] hover:bg-[#112417] text-white"
+          data-testid="pdc-v2-open-btn"
         >
-          <option value="">Tous les statuts</option>
-          <option value="brouillon">Brouillon</option>
-          <option value="soumis">Soumis</option>
-          <option value="valide">Validé</option>
-        </select>
+          <FileText className="w-4 h-4 mr-2" /> Ouvrir le module PDC v2
+        </Button>
       </div>
-
-      {/* Liste */}
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="animate-spin w-8 h-8 text-green-600" /></div>
-      ) : pdcs.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Aucun PDC enregistré</p>
-          <p className="text-gray-400 text-xs mt-1">Les planteurs peuvent créer leur PDC depuis leur espace</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {pdcs.map(pdc => (
-            <div key={pdc.id} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow" data-testid={`pdc-item-${pdc.id}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {pdc.identification?.nom} {pdc.identification?.prenoms}
-                    </p>
-                    <Badge className={statusColors[pdc.statut] || statusColors.brouillon}>
-                      {pdc.statut}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    {pdc.identification?.village} - {pdc.parcelles?.length || 0} parcelle(s) - Conformité: {pdc.pourcentage_conformite}%
-                  </p>
-                  <div className="h-1.5 bg-gray-100 rounded-full mt-2 w-48">
-                    <div
-                      className={`h-full rounded-full transition-all ${pdc.pourcentage_conformite >= 80 ? 'bg-green-500' : pdc.pourcentage_conformite >= 50 ? 'bg-amber-500' : 'bg-red-400'}`}
-                      style={{ width: `${Math.min(pdc.pourcentage_conformite, 100)}%` }}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handleDownloadPDC(pdc.id, `${pdc.identification?.nom}_${pdc.identification?.prenoms}`)} data-testid={`download-pdc-${pdc.id}`}>
-                    <Download className="w-3.5 h-3.5 mr-1" /> PDF
-                  </Button>
-                  <Button size="sm" variant="outline" className="border-green-200 text-green-700 hover:bg-green-50" onClick={() => handleDownloadExcel(pdc.id, `${pdc.identification?.nom}_${pdc.identification?.prenoms}`)} data-testid={`download-excel-${pdc.id}`}>
-                    <Download className="w-3.5 h-3.5 mr-1" /> Excel
-                  </Button>
-                  {pdc.statut === 'soumis' && (
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleValidate(pdc.id)} data-testid={`validate-pdc-${pdc.id}`}>
-                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Valider
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

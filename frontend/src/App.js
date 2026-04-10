@@ -103,6 +103,8 @@ import REDDTrackingPage from "./pages/cooperative/REDDTrackingPage";
 import CooperativeReferralPage from "./pages/cooperative/CooperativeReferralPage";
 import CarbonScoreAnalytics from "./pages/cooperative/CarbonScoreAnalytics";
 import ARS1000Dashboard from "./pages/cooperative/ARS1000Dashboard";
+import PDCListPage from "./pages/cooperative/pdc/PDCListPage";
+import PDCStepperPage from "./pages/cooperative/pdc/PDCStepperPage";
 
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
@@ -262,6 +264,8 @@ function App() {
               <Route path="/cooperative/parrainage" element={<CooperativeReferralPage />} />
               <Route path="/cooperative/carbon-analytics" element={<CarbonScoreAnalytics />} />
               <Route path="/cooperative/ars1000" element={<ARS1000Dashboard />} />
+              <Route path="/cooperative/pdc-v2" element={<PDCListPage />} />
+              <Route path="/cooperative/pdc-v2/:id" element={<PDCStepperPage />} />
               <Route path="/cooperative/certification" element={<ARS1000Dashboard />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
