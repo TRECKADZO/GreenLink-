@@ -1,8 +1,12 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 GreenLink Agritech Platform - Comprehensive API Tests
+GreenLink Agritech Platform - Comprehensive API Tests
+Tests for: Authentication, Carbon Auditors, Cooperative Management, Missions
 Tests for: Authentication, Carbon Auditors, Cooperative Management, Missions
 """
-import pytest
 import requests
 import os
 import time
@@ -10,7 +14,7 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.preview.emergentagent.com').rstrip('/')
 
 # Test Credentials
-ADMIN_CREDENTIALS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDENTIALS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 COOP_CREDENTIALS = {"identifier": "coop-test@greenlink.ci", "password": "coop123"}
 AUDITOR_CREDENTIALS = {"identifier": "auditeur@greenlink.ci", "password": "audit123"}
 
@@ -25,7 +29,7 @@ class TestAuthentication:
         data = response.json()
         assert "access_token" in data
         assert data["user"]["user_type"] == "admin"
-        assert data["user"]["email"] == "klenakan.eric@gmail.com"
+        assert data["user"]["email"] == ADMIN_EMAIL
         print(f"✓ Admin login successful: {data['user']['full_name']}")
     
     def test_cooperative_login(self):

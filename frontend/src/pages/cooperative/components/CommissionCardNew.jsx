@@ -1,3 +1,4 @@
+import { tokenService } from "../../../services/tokenService";
 import React, { useState } from 'react';
 import { Pencil, Save, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,7 +18,7 @@ export const CommissionCardNew = ({ coopInfo, onUpdated }) => {
     }
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await fetch(`${API_URL}/api/cooperative/settings/commission-rate`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

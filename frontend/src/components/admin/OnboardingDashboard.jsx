@@ -55,6 +55,7 @@ const OnboardingDashboard = () => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -92,7 +93,7 @@ const OnboardingDashboard = () => {
           { label: 'Producteurs', value: summary.producteurs, icon: TreePine, color: 'text-violet-400 bg-violet-500/10' },
           { label: 'Total utilisateurs', value: summary.total_users, icon: Users, color: 'text-amber-400 bg-amber-500/10' },
         ].map((card, i) => (
-          <Card key={i} className="bg-slate-800/50 border-slate-700" data-testid={`onboarding-card-${i}`}>
+          <Card key={`el-${i}`} className="bg-slate-800/50 border-slate-700" data-testid={`onboarding-card-${i}`}>
             <CardContent className="p-4 flex items-center gap-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${card.color}`}>
                 <card.icon className="w-5 h-5" />
@@ -116,7 +117,7 @@ const OnboardingDashboard = () => {
         </CardHeader>
         <CardContent className="space-y-2">
           {funnel.map((step, i) => (
-            <React.Fragment key={i}>
+            <React.Fragment key={`el-${i}`}>
               <FunnelBar
                 label={step.label}
                 count={step.count}

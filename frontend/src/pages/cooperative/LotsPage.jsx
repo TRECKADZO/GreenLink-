@@ -96,8 +96,10 @@ const LotsPage = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchLots();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const handleCreateLot = async (e) => {
@@ -417,7 +419,7 @@ const LotsPage = () => {
                             </thead>
                             <tbody>
                               {contributors.map((c, idx) => (
-                                <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
+                                <tr key={`el-${idx}`} className="border-b last:border-0 hover:bg-gray-50">
                                   <td className="py-2 px-2 font-medium text-gray-900">{c.farmer_name}</td>
                                   <td className="py-2 px-2 text-center">{c.parcels_count}</td>
                                   <td className="py-2 px-2 text-right">{c.total_hectares}</td>

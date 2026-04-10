@@ -50,7 +50,7 @@ export const PracticesDonutChart = ({ practices }) => {
                 stroke="none"
               >
                 {data.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  <Cell key={`el-${i}`} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />

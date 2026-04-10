@@ -1,16 +1,21 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test French Key Harmonization - Iteration 52
+Test French Key Harmonization - Iteration 52
+Tests that all API response keys have been properly renamed from English to French.
 Tests that all API response keys have been properly renamed from English to French.
 """
+"""
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-COOPERATIVE_CREDS = {"identifier": "bielaghana@gmail.com", "password": "greenlink2024"}
+COOPERATIVE_CREDS = {"identifier": COOP_EMAIL, "password": "greenlink2024"}
 
 
 class TestAuthentication:

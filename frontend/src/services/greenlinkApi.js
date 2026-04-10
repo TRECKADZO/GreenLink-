@@ -1,10 +1,11 @@
 import axios from 'axios';
+import { tokenService } from './tokenService';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api/greenlink`;
 
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

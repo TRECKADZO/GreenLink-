@@ -1,16 +1,28 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Carbon Credit Listings API Tests - Iteration 22
+Carbon Credit Listings API Tests - Iteration 22
+Testing: Submission workflow, Approval flow, Stats, Marketplace visibility
 Testing: Submission workflow, Approval flow, Stats, Marketplace visibility
 
+
+Features Tested:
 Features Tested:
 1. POST /api/carbon-listings/submit - Cooperative submits carbon credits
+1. POST /api/carbon-listings/submit - Cooperative submits carbon credits
+2. GET /api/carbon-listings/pending - Admin sees pending submissions
 2. GET /api/carbon-listings/pending - Admin sees pending submissions
 3. PUT /api/carbon-listings/{id}/review - Admin approves/rejects
+3. PUT /api/carbon-listings/{id}/review - Admin approves/rejects
+4. GET /api/carbon-listings/stats - Public stats endpoint
 4. GET /api/carbon-listings/stats - Public stats endpoint
 5. GET /api/greenlink/carbon-credits - Approved credits appear on marketplace
+5. GET /api/greenlink/carbon-credits - Approved credits appear on marketplace
+"""
 """
 
-import pytest
 import requests
 import os
 import uuid
@@ -19,8 +31,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from review_request
 ADMIN_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 COOPERATIVE_CREDENTIALS = {

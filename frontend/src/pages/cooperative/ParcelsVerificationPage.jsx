@@ -56,8 +56,10 @@ export default function ParcelsVerificationPage() {
   const [selectedParcel, setSelectedParcel] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchParcels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const fetchParcels = async () => {

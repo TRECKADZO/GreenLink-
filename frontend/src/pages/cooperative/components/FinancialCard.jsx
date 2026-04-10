@@ -26,7 +26,7 @@ export const FinancialCard = ({ financial }) => {
       <div className="p-5">
         <div className="grid grid-cols-3 gap-3 mb-5">
           {items.map((item, i) => (
-            <div key={i} className={`p-3 rounded-md ${item.bg} text-center`}>
+            <div key={`el-${i}`} className={`p-3 rounded-md ${item.bg} text-center`}>
               <p className="text-[10px] tracking-[0.06em] uppercase font-bold text-[#6B7280] mb-1">{item.label}</p>
               <p className={`gl-heading text-lg font-bold ${item.color}`}>
                 {formatFCFA(item.value)}

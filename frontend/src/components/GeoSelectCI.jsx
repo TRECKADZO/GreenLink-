@@ -29,6 +29,7 @@ export const GeoSelectCI = ({
     if (!searchRegion) return REGIONS_CI;
     const q = searchRegion.toLowerCase();
     return REGIONS_CI.filter(r => r.toLowerCase().includes(q));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchRegion]);
 
   const departements = useMemo(() => getDepartements(region), [region]);
@@ -36,6 +37,7 @@ export const GeoSelectCI = ({
     if (!searchDep) return departements;
     const q = searchDep.toLowerCase();
     return departements.filter(d => d.toLowerCase().includes(q));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departements, searchDep]);
 
   const sousPrefectures = useMemo(() => getSousPrefectures(region, departement), [region, departement]);
@@ -43,6 +45,7 @@ export const GeoSelectCI = ({
     if (!searchSP) return sousPrefectures;
     const q = searchSP.toLowerCase();
     return sousPrefectures.filter(s => s.toLowerCase().includes(q));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sousPrefectures, searchSP]);
 
   // Reset dependent fields when parent changes
@@ -51,12 +54,14 @@ export const GeoSelectCI = ({
       onChange('department', '');
       onChange('sous_prefecture', '');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [region]);
 
   useEffect(() => {
     if (departement && sousPrefecture && !sousPrefectures.includes(sousPrefecture)) {
       onChange('sous_prefecture', '');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departement]);
 
   const isDark = variant === 'dark';

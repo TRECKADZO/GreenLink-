@@ -107,10 +107,12 @@ const Register = () => {
   const [validatingReferral, setValidatingReferral] = useState(false);
 
   // Effet pour sélectionner Email par défaut pour les coopératives
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (formData.userType === 'cooperative') {
       setContactMethod('email');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.userType]);
 
   // Get unique zones for filtering
@@ -142,6 +144,7 @@ const Register = () => {
   };
 
   // Debounce referral code validation
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (formData.userType === 'cooperative' && formData.sponsorReferralCode) {
       const timer = setTimeout(() => {
@@ -151,6 +154,7 @@ const Register = () => {
     } else {
       setReferralValidation(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.sponsorReferralCode, formData.userType]);
 
   const handleSubmit = async (e) => {

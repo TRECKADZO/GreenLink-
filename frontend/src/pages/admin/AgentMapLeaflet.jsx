@@ -89,6 +89,7 @@ const MapController = ({ center, zoom }) => {
     if (center) {
       map.setView(center, zoom);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center, zoom, map]);
   return null;
 };
@@ -137,6 +138,7 @@ const AgentMapLeaflet = () => {
     } catch (error) {
       console.error('Error loading trajectories:', error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
 
   // Charger les zones de couverture
@@ -149,6 +151,7 @@ const AgentMapLeaflet = () => {
     } catch (error) {
       console.error('Error loading coverage zones:', error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
 
   // Charger les positions des agents
@@ -167,6 +170,7 @@ const AgentMapLeaflet = () => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
 
   // Connexion WebSocket
@@ -217,6 +221,7 @@ const AgentMapLeaflet = () => {
     } catch (error) {
       console.error('[WS] Connection error:', error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
 
   useEffect(() => {
@@ -230,6 +235,7 @@ const AgentMapLeaflet = () => {
       clearInterval(interval);
       if (wsRef.current) wsRef.current.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadAgents, loadCoverageZones, loadTrajectories, connectWebSocket]);
 
   const getAgentTypeLabel = (type) => {
@@ -426,6 +432,7 @@ const AgentMapLeaflet = () => {
         clearInterval(replayIntervalRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ========== END REPLAY FUNCTIONS ==========
@@ -661,7 +668,7 @@ const AgentMapLeaflet = () => {
                 {/* Villes de référence */}
                 {showRegions && ivoireRegions.map((region, idx) => (
                   <Circle
-                    key={idx}
+                    key={`el-${idx}`}
                     center={[region.lat, region.lng]}
                     radius={region.type === 'capitale' ? 15000 : region.type === 'capitale_politique' ? 12000 : 8000}
                     pathOptions={{

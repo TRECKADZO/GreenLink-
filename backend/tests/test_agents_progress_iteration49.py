@@ -1,21 +1,29 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Suite for Agents Progress Dashboard and member_id/farmer_id Refactoring
+Test Suite for Agents Progress Dashboard and member_id/farmer_id Refactoring
+Iteration 49 - Tests for:
 Iteration 49 - Tests for:
 1. GET /api/cooperative/agents-progress endpoint
+1. GET /api/cooperative/agents-progress endpoint
+2. Parcel queries with string member_id
 2. Parcel queries with string member_id
 3. SSRTE uses farmer_id instead of member_id
+3. SSRTE uses farmer_id instead of member_id
+"""
 """
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-COOP_BIELAGHANA = {"identifier": "bielaghana@gmail.com", "password": "greenlink2024"}
+COOP_BIELAGHANA = {"identifier": COOP_EMAIL, "password": "greenlink2024"}
 COOP_TRAORE = {"identifier": "traore_eric@yahoo.fr", "password": "greenlink2024"}
-ADMIN_CREDS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 FIELD_AGENT_KONE = {"identifier": "+2250709005301", "password": "greenlink2024"}
 
 

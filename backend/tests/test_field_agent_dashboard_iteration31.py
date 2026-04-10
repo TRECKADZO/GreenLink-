@@ -1,8 +1,12 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test file for Field Agent Dashboard - Iteration 31
+Test file for Field Agent Dashboard - Iteration 31
+Tests: Agent terrain login, dashboard API, KPIs, performance score, search functionality, cooperative agents list
 Tests: Agent terrain login, dashboard API, KPIs, performance score, search functionality, cooperative agents list
 """
-import pytest
 import requests
 import os
 
@@ -10,7 +14,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 AGENT_TERRAIN = {"identifier": "+2250709005301", "password": "greenlink2024"}
-COOP_BIELAGHANA = {"identifier": "bielaghana@gmail.com", "password": "greenlink2024"}
+COOP_BIELAGHANA = {"identifier": COOP_EMAIL, "password": "greenlink2024"}
 
 
 class TestAgentTerrainLogin:

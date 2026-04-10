@@ -43,8 +43,10 @@ const DistributionsPage = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchDistributions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleDetail = async (distId) => {
@@ -255,7 +257,7 @@ const DistributionsPage = () => {
                             </thead>
                             <tbody>
                               {detailData.distributions.map((d, idx) => (
-                                <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
+                                <tr key={`el-${idx}`} className="border-b last:border-0 hover:bg-gray-50">
                                   <td className="py-2 px-3 font-medium text-gray-900">{d.nom_membre || 'Inconnu'}</td>
                                   <td className="py-2 px-3 text-center">{d.nombre_parcelles || 0}</td>
                                   <td className="py-2 px-3 text-right">{d.superficie_totale || 0}</td>

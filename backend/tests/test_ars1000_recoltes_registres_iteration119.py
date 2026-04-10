@@ -1,11 +1,18 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 119 - ARS 1000 Harvest Declarations & Registres Testing
+Iteration 119 - ARS 1000 Harvest Declarations & Registres Testing
+Tests for:
 Tests for:
 1. Harvest declaration flow (farmer creates -> coop validates/rejects)
+1. Harvest declaration flow (farmer creates -> coop validates/rejects)
+2. Enhanced registres (status management, delete, impartiality)
 2. Enhanced registres (status management, delete, impartiality)
 """
+"""
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -13,9 +20,9 @@ from datetime import datetime
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-COOP_CREDS = {"identifier": "bielaghana@gmail.com", "password": "test123456"}
+COOP_CREDS = {"identifier": COOP_EMAIL, "password": "test123456"}
 FARMER_CREDS = {"identifier": "testplanteur@test.ci", "password": "test123456"}
-ADMIN_CREDS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 
 
 class TestAuth:

@@ -72,6 +72,367 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
     return current_user
 
+# ============= HELPER FUNCTIONS FOR STRATEGIC DASHBOARD =============
+
+def _calculate_date_range(period: str):
+    """Calculate start date based on period."""
+    now = datetime.utcnow()
+    ranges = {
+        "month": timedelta(days=30),
+        "quarter": timedelta(days=90),
+        "year": timedelta(days=365),
+    }
+    delta = ranges.get(period)
+    return now - delta if delta else datetime(2020, 1, 1)
+
+
+async def _fetch_all_dashboard_data():
+    """Fetch all required collections for the strategic dashboard."""
+    users = await db.users.find({}, {"_id": 1, "user_type": 1, "full_name": 1, "coop_name": 1, "is_dual_role": 1, "roles": 1, "audits_completed": 1}).to_list(10000)
+    parcels = await db.parcels.find().to_list(10000)
+    harvests = await db.harvests.find().to_list(10000)
+    orders = await db.orders.find().to_list(10000)
+    carbon_credits = await db.carbon_credits.find().to_list(10000)
+    carbon_purchases = await db.carbon_purchases.find().to_list(10000)
+    coop_members = await db.coop_members.find().to_list(10000)
+    carbon_audits = await db.carbon_audits.find().to_list(10000)
+    audit_missions = await db.audit_missions.find().to_list(10000)
+    ssrte_visits = await db.ssrte_visits.find().to_list(10000)
+    ici_alerts = await db.ici_alerts.find().to_list(10000)
+    carbon_payments = await db.carbon_premium_payments.find().to_list(10000)
+    ici_profiles = await db.ici_profiles.find().to_list(100000)
+    return {
+        "users": users, "parcels": parcels, "harvests": harvests, "orders": orders,
+        "carbon_credits": carbon_credits, "carbon_purchases": carbon_purchases,
+        "coop_members": coop_members, "carbon_audits": carbon_audits,
+        "audit_missions": audit_missions, "ssrte_visits": ssrte_visits,
+        "ici_alerts": ici_alerts, "carbon_payments": carbon_payments,
+        "ici_profiles": ici_profiles,
+    }
+
+
+def _classify_users(users):
+    """Classify users by type."""
+    farmers = [u for u in users if u.get('user_type') == 'producteur']
+    cooperatives = [u for u in users if u.get('user_type') == 'cooperative']
+    carbon_auditors = [u for u in users if u.get('user_type') == 'carbon_auditor' or 'carbon_auditor' in u.get('roles', [])]
+    dual_role_agents = [u for u in users if u.get('is_dual_role') or (len(u.get('roles', [])) > 1)]
+    field_agents = [u for u in users if u.get('user_type') == 'field_agent']
+    return farmers, cooperatives, carbon_auditors, dual_role_agents, field_agents
+
+
+def _build_production_section(farmers, cooperatives, coop_members, parcels, harvests):
+    """Build production metrics (Section 1)."""
+    total_hectares = sum(p.get('area_hectares', 0) for p in parcels)
+    production_by_crop = {}
+    for h in harvests:
+        crop = h.get('crop_type', 'Cacao')
+        production_by_crop[crop] = production_by_crop.get(crop, 0) + h.get('quantity_kg', 0)
+    production_by_region = {}
+    for p in parcels:
+        region = p.get('region', 'Non spécifié')
+        production_by_region[region] = production_by_region.get(region, 0) + p.get('area_hectares', 0)
+    total_prod = sum(production_by_crop.values())
+    return {
+        "title": "Production Agricole Nationale",
+        "description": "Volumes et surfaces de production par filière",
+        "total_hectares": round(total_hectares, 2),
+        "total_farmers": len(farmers),
+        "total_cooperatives": len(cooperatives),
+        "total_coop_members": len(coop_members),
+        "production_by_crop_kg": production_by_crop,
+        "production_by_region_ha": production_by_region,
+        "average_yield_kg_per_ha": round(total_prod / max(total_hectares, 1), 2),
+        "year_over_year_growth": 12.5,
+        "forecast_next_quarter_tonnes": round(total_prod / 1000 * 1.08, 2)
+    }
+
+
+def _build_sustainability_section(parcels, carbon_credits, carbon_purchases):
+    """Build sustainability metrics (Section 2)."""
+    total_co2 = sum(p.get('co2_captured_tonnes', 0) for p in parcels)
+    total_hectares = sum(p.get('area_hectares', 0) for p in parcels)
+    total_carbon_credits = len(carbon_credits)
+    sold_credits = len([c for c in carbon_credits if c.get('status') == 'sold'])
+    carbon_revenue = sum(p.get('total_amount', 0) for p in carbon_purchases)
+    avg_carbon = round(sum(p.get('carbon_score', 0) for p in parcels) / max(len(parcels), 1), 2)
+    return {
+        "title": "Impact Environnemental & Crédits Carbone",
+        "description": "Métriques clés pour Banque Mondiale, FMI, ONG",
+        "total_co2_captured_tonnes": round(total_co2, 2),
+        "carbon_credits_generated": total_carbon_credits,
+        "carbon_credits_sold": sold_credits,
+        "carbon_credits_available": total_carbon_credits - sold_credits,
+        "carbon_revenue_xof": carbon_revenue,
+        "carbon_revenue_usd": round(carbon_revenue / 600, 2),
+        "average_carbon_score": avg_carbon,
+        "deforestation_free_rate": 98.5,
+        "reforestation_hectares": round(total_hectares * 0.05, 2),
+        "biodiversity_index": 7.8
+    }
+
+
+def _build_eudr_section(parcels, coop_members, cooperatives, ssrte_visits, ici_profiles):
+    """Build EUDR compliance section (Section 3)."""
+    geolocated = len([p for p in parcels if p.get('gps_coordinates')])
+    verified_parcels = [p for p in parcels if p.get("verification_status") == "verified"]
+    geo_polygon = [p for p in parcels if p.get("gps_polygon") or p.get("polygon_coordinates")]
+    geo_point = [p for p in parcels if (p.get("gps_coordinates") or p.get("location")) and not (p.get("gps_polygon") or p.get("polygon_coordinates"))]
+    geo_none = [p for p in parcels if not p.get("gps_coordinates") and not p.get("location") and not p.get("gps_polygon")]
+
+    high_risk_ssrte = [v for v in ssrte_visits if v.get("niveau_risque") in ["eleve", "critique"]]
+    child_labor_free_rate = round(100 - (len(high_risk_ssrte) / max(len(ssrte_visits), 1) * 100), 1) if ssrte_visits else 100
+    ici_coverage = round(len(ici_profiles) / max(len(coop_members), 1) * 100, 1)
+    verified_rate = round(len(verified_parcels) / max(len(parcels), 1) * 100, 1)
+    geo_rate = round(geolocated / max(len(parcels), 1) * 100, 2)
+    avg_carbon = round(sum(p.get('carbon_score', 0) for p in parcels) / max(len(parcels), 1), 2)
+
+    eudr_score = round(
+        geo_rate * 0.30 + verified_rate * 0.25 +
+        child_labor_free_rate * 0.20 + ici_coverage * 0.15 +
+        min(avg_carbon * 10, 100) * 0.10, 1
+    )
+
+    coop_compliance = _build_coop_compliance(cooperatives, coop_members, parcels, ssrte_visits)
+
+    return {
+        "title": "Conformite EUDR (UE 2023/1115)",
+        "description": "Tracabilite et conformite pour exportation UE",
+        "eudr_compliance_rate": eudr_score,
+        "total_parcels": len(parcels),
+        "geolocated_parcels": geolocated,
+        "geolocation_rate": geo_rate,
+        "geo_polygon_count": len(geo_polygon),
+        "geo_point_count": len(geo_point),
+        "geo_none_count": len(geo_none),
+        "verified_parcels": len(verified_parcels),
+        "verification_rate": verified_rate,
+        "deforestation_alerts": 0,
+        "deforestation_free_rate": 100.0,
+        "child_labor_free_rate": child_labor_free_rate,
+        "ici_coverage": ici_coverage,
+        "ssrte_visits_total": len(ssrte_visits),
+        "ssrte_high_risk": len(high_risk_ssrte),
+        "ici_profiles_total": len(ici_profiles),
+        "risk_level": "faible" if eudr_score >= 80 else "moyen" if eudr_score >= 50 else "eleve",
+        "risk_dimensions": [
+            {"name": "Geolocalisation", "score": geo_rate, "weight": 30},
+            {"name": "Verification terrain", "score": verified_rate, "weight": 25},
+            {"name": "Travail des enfants", "score": child_labor_free_rate, "weight": 20},
+            {"name": "Profilage ICI", "score": ici_coverage, "weight": 15},
+            {"name": "Score carbone", "score": min(avg_carbon * 10, 100), "weight": 10},
+        ],
+        "per_cooperative": coop_compliance,
+        "export_ready_percentage": round(eudr_score * 0.95, 1),
+        "certification_coverage": {
+            "rainforest_alliance": int(len(parcels) * 0.45),
+            "utz_certified": int(len(parcels) * 0.30),
+            "fairtrade": int(len(parcels) * 0.15),
+            "organic_bio": int(len(parcels) * 0.08)
+        },
+        "esg_summary": {
+            "environmental_score": min(avg_carbon * 10, 100),
+            "social_score": child_labor_free_rate,
+            "governance_score": round((verified_rate + ici_coverage) / 2, 1),
+        },
+    }
+
+
+def _build_coop_compliance(cooperatives, coop_members, parcels, ssrte_visits):
+    """Build per-cooperative compliance list."""
+    result = []
+    for coop in cooperatives:
+        coop_id_str = str(coop["_id"])
+        members = [m for m in coop_members if str(m.get("coop_id")) == coop_id_str]
+        member_user_ids = [m.get("user_id") for m in members if m.get("user_id")]
+        cp = [p for p in parcels if p.get("farmer_id") in member_user_ids]
+        coop_geo = len([p for p in cp if p.get("location") or p.get("gps_coordinates") or p.get("gps_polygon")])
+        coop_geo_rate = round(coop_geo / max(len(cp), 1) * 100, 1)
+        coop_ssrte = [v for v in ssrte_visits if v.get("cooperative_id") == coop_id_str]
+        coop_hr = [v for v in coop_ssrte if v.get("niveau_risque") in ["eleve", "critique"]]
+        coop_clf = round(100 - (len(coop_hr) / max(len(coop_ssrte), 1) * 100), 1) if coop_ssrte else 100
+        result.append({
+            "name": coop.get("coop_name") or coop.get("full_name", "Cooperative"),
+            "members": len(members),
+            "parcels": len(cp),
+            "geo_rate": coop_geo_rate,
+            "child_labor_free": coop_clf,
+            "risk": "faible" if coop_geo_rate >= 80 and coop_clf >= 90 else "moyen" if coop_geo_rate >= 50 else "eleve"
+        })
+    return result
+
+
+def _build_social_section(farmers, coop_members, parcels):
+    """Build social impact section (Section 4)."""
+    women_farmers = len([f for f in farmers if 'femme' in f.get('full_name', '').lower() or random.random() < 0.35])
+    youth_farmers = int(len(farmers) * 0.28)
+    farmers_banked = int(len(farmers) * 0.45)
+    return {
+        "title": "Impact Social & Développement Rural",
+        "description": "Métriques pour Gouvernement, Ministères, ONG",
+        "total_beneficiaries": len(farmers) + len(coop_members),
+        "direct_farmers": len(farmers),
+        "coop_members": len(coop_members),
+        "women_farmers": women_farmers,
+        "gender_equality_rate": round(women_farmers / max(len(farmers), 1) * 100, 2),
+        "youth_farmers_under_35": youth_farmers,
+        "youth_participation_rate": round(youth_farmers / max(len(farmers), 1) * 100, 2),
+        "farmers_with_bank_account": farmers_banked,
+        "financial_inclusion_rate": round(farmers_banked / max(len(farmers), 1) * 100, 2),
+        "average_annual_income_xof": 850000,
+        "income_increase_vs_2023": 23.5,
+        "poverty_reduction_impact": "Fort",
+        "jobs_created_direct": len(farmers),
+        "jobs_created_indirect": len(farmers) * 3,
+        "villages_covered": len(set(p.get('village', '') for p in parcels if p.get('village')))
+    }
+
+
+def _build_market_section(orders):
+    """Build market section (Section 5)."""
+    total_order_value = sum(o.get('total_amount', 0) for o in orders)
+    completed_orders = len([o for o in orders if o.get('status') == 'completed'])
+    return {
+        "title": "Données Marché & Commerce",
+        "description": "Pour Bourse Café-Cacao, Acheteurs Internationaux, OMC",
+        "total_transactions": len(orders),
+        "completed_transactions": completed_orders,
+        "total_volume_xof": total_order_value,
+        "total_volume_usd": round(total_order_value / 600, 2),
+        "average_prices_xof_per_kg": {
+            "cacao_premium": 1450, "cacao_standard": 1200,
+            "cafe_arabica": 2800, "cafe_robusta": 1600, "anacarde": 850
+        },
+        "premium_price_percentage": 18.5,
+        "price_trend_30_days": "+3.2%",
+        "export_destinations": {"europe": 65, "usa": 18, "asia": 12, "africa": 5},
+        "major_buyers_active": 12,
+        "contracts_in_negotiation": 8
+    }
+
+
+def _build_macroeconomic_section(farmers, harvests, orders):
+    """Build macroeconomic section (Section 6)."""
+    total_order_value = sum(o.get('total_amount', 0) for o in orders)
+    prod_by_crop = {}
+    for h in harvests:
+        crop = h.get('crop_type', 'Cacao')
+        prod_by_crop[crop] = prod_by_crop.get(crop, 0) + h.get('quantity_kg', 0)
+    return {
+        "title": "Indicateurs Macroéconomiques",
+        "description": "Pour FMI, Banque Mondiale, Gouvernement",
+        "contribution_pib_agricole": "4.2%",
+        "devises_generees_usd": round(total_order_value / 600 * 0.65, 2),
+        "balance_commerciale_impact": "Positif",
+        "emploi_secteur_agricole": len(farmers) + len(farmers) * 3,
+        "investissements_recus_xof": 2500000000,
+        "taux_croissance_secteur": 8.7,
+        "productivite_moyenne": round(sum(prod_by_crop.values()) / max(len(farmers), 1), 2)
+    }
+
+
+def _build_cooperatives_section(cooperatives, coop_members, carbon_payments):
+    """Build cooperatives performance section (Section 7)."""
+    total_premiums = sum(p.get('amount', 0) for p in carbon_payments)
+    return {
+        "title": "Performance des Coopératives",
+        "description": "Données agrégées des organisations paysannes",
+        "total_cooperatives": len(cooperatives),
+        "total_members": len(coop_members),
+        "average_members_per_coop": round(len(coop_members) / max(len(cooperatives), 1), 1),
+        "certified_cooperatives": int(len(cooperatives) * 0.75),
+        "total_premiums_distributed_xof": total_premiums,
+        "average_premium_per_farmer_xof": round(total_premiums / max(len(coop_members), 1), 0),
+        "cooperatives_with_warehouse": int(len(cooperatives) * 0.60),
+        "digital_payment_adoption": 78.5
+    }
+
+
+def _build_audit_section(carbon_auditors, dual_role_agents, carbon_audits, audit_missions):
+    """Build carbon auditors section (Section 8)."""
+    return {
+        "title": "Programme d'Audit Carbone GreenLink",
+        "description": "Suivi des auditeurs indépendants et vérifications terrain",
+        "total_auditors": len(carbon_auditors),
+        "dual_role_agents": len(dual_role_agents),
+        "total_audits_completed": len([a for a in carbon_audits if a.get('status') == 'completed']),
+        "audits_in_progress": len([a for a in carbon_audits if a.get('status') == 'in_progress']),
+        "total_missions": len(audit_missions),
+        "missions_completed": len([m for m in audit_missions if m.get('status') == 'completed']),
+        "missions_in_progress": len([m for m in audit_missions if m.get('status') in ['assigned', 'in_progress']]),
+        "parcels_audited": len(set(a.get('parcel_id') for a in carbon_audits if a.get('parcel_id'))),
+        "average_carbon_score": round(sum(a.get('carbon_score', 0) for a in carbon_audits) / max(len(carbon_audits), 1), 2),
+        "auditors_by_badge": {
+            "debutant": len([u for u in carbon_auditors if u.get('audits_completed', 0) < 10]),
+            "bronze": len([u for u in carbon_auditors if 10 <= u.get('audits_completed', 0) < 50]),
+            "argent": len([u for u in carbon_auditors if 50 <= u.get('audits_completed', 0) < 100]),
+            "or": len([u for u in carbon_auditors if u.get('audits_completed', 0) >= 100])
+        },
+        "approval_rate": round(len([a for a in carbon_audits if a.get('decision') == 'approved']) / max(len(carbon_audits), 1) * 100, 1)
+    }
+
+
+def _build_ssrte_section(field_agents, farmers, ssrte_visits, start_date):
+    """Build SSRTE monitoring section (Section 9)."""
+    return {
+        "title": "Suivi SSRTE (Travail des Enfants)",
+        "description": "Conformité ICI - International Cocoa Initiative",
+        "total_field_agents": len(field_agents),
+        "total_ssrte_visits": len(ssrte_visits),
+        "visits_this_period": len([v for v in ssrte_visits if v.get('visit_date') and isinstance(v.get('visit_date'), datetime) and v['visit_date'] >= start_date]),
+        "households_monitored": len(set(v.get('farmer_id') for v in ssrte_visits if v.get('farmer_id'))),
+        "children_identified": sum(v.get('children_observed', 0) for v in ssrte_visits),
+        "risk_distribution": {
+            "critical": len([v for v in ssrte_visits if v.get('risk_level') == 'critical']),
+            "high": len([v for v in ssrte_visits if v.get('risk_level') == 'high']),
+            "moderate": len([v for v in ssrte_visits if v.get('risk_level') == 'moderate']),
+            "low": len([v for v in ssrte_visits if v.get('risk_level') == 'low'])
+        },
+        "dangerous_tasks_reported": sum(len(v.get('dangerous_tasks', [])) for v in ssrte_visits),
+        "support_provided_count": sum(len(v.get('support_provided', [])) for v in ssrte_visits),
+        "remediation_rate": round(len([v for v in ssrte_visits if v.get('remediation_status') == 'completed']) / max(len(ssrte_visits), 1) * 100, 1),
+        "coverage_rate": round(len(set(v.get('farmer_id') for v in ssrte_visits)) / max(len(farmers), 1) * 100, 1)
+    }
+
+
+def _build_ici_alerts_section(ici_alerts):
+    """Build ICI alerts section (Section 10)."""
+    return {
+        "title": "Centre d'Alertes ICI",
+        "description": "Alertes et interventions protection de l'enfance",
+        "total_alerts": len(ici_alerts),
+        "active_alerts": len([a for a in ici_alerts if a.get('status') == 'active']),
+        "resolved_alerts": len([a for a in ici_alerts if a.get('status') == 'resolved']),
+        "alerts_by_severity": {
+            "critical": len([a for a in ici_alerts if a.get('severity') == 'critical']),
+            "high": len([a for a in ici_alerts if a.get('severity') == 'high']),
+            "medium": len([a for a in ici_alerts if a.get('severity') == 'medium']),
+            "low": len([a for a in ici_alerts if a.get('severity') == 'low'])
+        },
+        "average_resolution_time_hours": 48,
+        "alerts_acknowledged": len([a for a in ici_alerts if a.get('acknowledged')])
+    }
+
+
+def _build_carbon_premiums_section(carbon_payments):
+    """Build carbon premiums section (Section 11)."""
+    return {
+        "title": "Distribution des Primes Carbone",
+        "description": "Paiements aux producteurs basés sur le score carbone",
+        "total_payments": len(carbon_payments),
+        "total_amount_distributed_xof": sum(p.get('amount', 0) for p in carbon_payments),
+        "payments_completed": len([p for p in carbon_payments if p.get('status') == 'completed']),
+        "payments_pending": len([p for p in carbon_payments if p.get('status') == 'pending']),
+        "average_premium_xof": round(sum(p.get('amount', 0) for p in carbon_payments) / max(len(carbon_payments), 1), 0),
+        "beneficiaries_count": len(set(p.get('farmer_id') for p in carbon_payments if p.get('farmer_id'))),
+        "payment_methods": {
+            "orange_money": len([p for p in carbon_payments if p.get('payment_method') == 'orange_money']),
+            "bank_transfer": len([p for p in carbon_payments if p.get('payment_method') == 'bank_transfer']),
+            "cash": len([p for p in carbon_payments if p.get('payment_method') == 'cash'])
+        }
+    }
+
+
 # ============= STRATEGIC DASHBOARD =============
 
 @router.get("/dashboard")
@@ -83,347 +444,26 @@ async def get_strategic_dashboard(
     Tableau de bord stratégique pour décideurs
     Données agrégées pour: Gouvernements, Banque Mondiale, FMI, OMC, ONG
     """
-    
-    # Calculate date range
-    now = datetime.utcnow()
-    if period == "month":
-        start_date = now - timedelta(days=30)
-    elif period == "quarter":
-        start_date = now - timedelta(days=90)
-    elif period == "year":
-        start_date = now - timedelta(days=365)
-    else:
-        start_date = datetime(2020, 1, 1)
-    
-    # Get real data from database
-    users = await db.users.find().to_list(10000)
-    parcels = await db.parcels.find().to_list(10000)
-    harvests = await db.harvests.find().to_list(10000)
-    orders = await db.orders.find().to_list(10000)
-    carbon_credits = await db.carbon_credits.find().to_list(10000)
-    carbon_purchases = await db.carbon_purchases.find().to_list(10000)
-    coop_members = await db.coop_members.find().to_list(10000)
-    
-    # NEW: Get audit and SSRTE data
-    carbon_audits = await db.carbon_audits.find().to_list(10000)
-    audit_missions = await db.audit_missions.find().to_list(10000)
-    ssrte_visits = await db.ssrte_visits.find().to_list(10000)
-    ici_alerts = await db.ici_alerts.find().to_list(10000)
-    carbon_payments = await db.carbon_premium_payments.find().to_list(10000)
-    
-    # Calculate metrics
-    farmers = [u for u in users if u.get('user_type') == 'producteur']
-    cooperatives = [u for u in users if u.get('user_type') == 'cooperative']
-    
-    # NEW: Carbon Auditors metrics
-    carbon_auditors = [u for u in users if u.get('user_type') == 'carbon_auditor' or 'carbon_auditor' in u.get('roles', [])]
-    dual_role_agents = [u for u in users if u.get('is_dual_role') or (len(u.get('roles', [])) > 1)]
-    field_agents = [u for u in users if u.get('user_type') == 'field_agent']
-    
-    total_hectares = sum(p.get('area_hectares', 0) for p in parcels)
-    total_co2 = sum(p.get('co2_captured_tonnes', 0) for p in parcels)
-    geolocated = len([p for p in parcels if p.get('gps_coordinates')])
-    
-    # Production by crop
-    production_by_crop = {}
-    for h in harvests:
-        crop = h.get('crop_type', 'Cacao')
-        qty = h.get('quantity_kg', 0)
-        production_by_crop[crop] = production_by_crop.get(crop, 0) + qty
-    
-    # Production by region
-    production_by_region = {}
-    for p in parcels:
-        region = p.get('region', 'Non spécifié')
-        area = p.get('area_hectares', 0)
-        production_by_region[region] = production_by_region.get(region, 0) + area
-    
-    # Carbon metrics
-    total_carbon_credits = len(carbon_credits)
-    sold_credits = len([c for c in carbon_credits if c.get('status') == 'sold'])
-    carbon_revenue = sum(p.get('total_amount', 0) for p in carbon_purchases)
-    
-    # Social metrics
-    women_farmers = len([f for f in farmers if 'femme' in f.get('full_name', '').lower() or random.random() < 0.35])
-    youth_farmers = int(len(farmers) * 0.28)  # Estimated 28% youth
-    farmers_banked = int(len(farmers) * 0.45)  # 45% have Orange Money
-    
-    # Order metrics
-    total_order_value = sum(o.get('total_amount', 0) for o in orders)
-    completed_orders = len([o for o in orders if o.get('status') == 'completed'])
-    
-    # === EUDR Compliance calculations (real data) ===
-    verified_parcels = [p for p in parcels if p.get("verification_status") == "verified"]
-    geo_polygon = [p for p in parcels if p.get("gps_polygon") or p.get("polygon_coordinates")]
-    geo_point = [p for p in parcels if (p.get("gps_coordinates") or p.get("location")) and not (p.get("gps_polygon") or p.get("polygon_coordinates"))]
-    geo_none = [p for p in parcels if not p.get("gps_coordinates") and not p.get("location") and not p.get("gps_polygon")]
-    
-    high_risk_ssrte = [v for v in ssrte_visits if v.get("niveau_risque") in ["eleve", "critique"]]
-    ici_profiles = await db.ici_profiles.find().to_list(100000)
-    
-    child_labor_free_rate = round(100 - (len(high_risk_ssrte) / max(len(ssrte_visits), 1) * 100), 1) if ssrte_visits else 100
-    ici_coverage = round(len(ici_profiles) / max(len(coop_members), 1) * 100, 1)
-    verified_rate = round(len(verified_parcels) / max(len(parcels), 1) * 100, 1)
-    geo_rate = round(geolocated / max(len(parcels), 1) * 100, 2)
-    avg_carbon = round(sum(p.get('carbon_score', 0) for p in parcels) / max(len(parcels), 1), 2)
-    
-    eudr_score = round(
-        geo_rate * 0.30 + verified_rate * 0.25 +
-        child_labor_free_rate * 0.20 + ici_coverage * 0.15 +
-        min(avg_carbon * 10, 100) * 0.10
-    , 1)
-    
-    cooperatives_list = cooperatives
-    coop_compliance = []
-    for coop in cooperatives_list:
-        coop_id_str = str(coop["_id"])
-        coop_members_list = [m for m in coop_members if str(m.get("coop_id")) == coop_id_str]
-        coop_member_user_ids = [m.get("user_id") for m in coop_members_list if m.get("user_id")]
-        coop_parcels = [p for p in parcels if p.get("farmer_id") in coop_member_user_ids]
-        coop_geo = len([p for p in coop_parcels if p.get("location") or p.get("gps_coordinates") or p.get("gps_polygon")])
-        coop_geo_rate = round(coop_geo / max(len(coop_parcels), 1) * 100, 1)
-        coop_ssrte = [v for v in ssrte_visits if v.get("cooperative_id") == coop_id_str]
-        coop_hr = [v for v in coop_ssrte if v.get("niveau_risque") in ["eleve", "critique"]]
-        coop_clf = round(100 - (len(coop_hr) / max(len(coop_ssrte), 1) * 100), 1) if coop_ssrte else 100
-        coop_compliance.append({
-            "name": coop.get("coop_name") or coop.get("full_name", "Cooperative"),
-            "members": len(coop_members_list),
-            "parcels": len(coop_parcels),
-            "geo_rate": coop_geo_rate,
-            "child_labor_free": coop_clf,
-            "risk": "faible" if coop_geo_rate >= 80 and coop_clf >= 90 else "moyen" if coop_geo_rate >= 50 else "eleve"
-        })
-    
+    start_date = _calculate_date_range(period)
+    data = await _fetch_all_dashboard_data()
+
+    farmers, cooperatives, carbon_auditors, dual_role_agents, field_agents = _classify_users(data["users"])
+
     return {
         "generated_at": datetime.utcnow().isoformat(),
         "period": period,
         "currency": "XOF",
-        
-        # === SECTION 1: PRODUCTION NATIONALE ===
-        "production": {
-            "title": "Production Agricole Nationale",
-            "description": "Volumes et surfaces de production par filière",
-            "total_hectares": round(total_hectares, 2),
-            "total_farmers": len(farmers),
-            "total_cooperatives": len(cooperatives),
-            "total_coop_members": len(coop_members),
-            "production_by_crop_kg": production_by_crop,
-            "production_by_region_ha": production_by_region,
-            "average_yield_kg_per_ha": round(sum(production_by_crop.values()) / max(total_hectares, 1), 2),
-            "year_over_year_growth": 12.5,  # Placeholder
-            "forecast_next_quarter_tonnes": round(sum(production_by_crop.values()) / 1000 * 1.08, 2)
-        },
-        
-        # === SECTION 2: DURABILITÉ & CARBONE ===
-        "sustainability": {
-            "title": "Impact Environnemental & Crédits Carbone",
-            "description": "Métriques clés pour Banque Mondiale, FMI, ONG",
-            "total_co2_captured_tonnes": round(total_co2, 2),
-            "carbon_credits_generated": total_carbon_credits,
-            "carbon_credits_sold": sold_credits,
-            "carbon_credits_available": total_carbon_credits - sold_credits,
-            "carbon_revenue_xof": carbon_revenue,
-            "carbon_revenue_usd": round(carbon_revenue / 600, 2),
-            "average_carbon_score": round(sum(p.get('carbon_score', 0) for p in parcels) / max(len(parcels), 1), 2),
-            "deforestation_free_rate": 98.5,  # High compliance
-            "reforestation_hectares": round(total_hectares * 0.05, 2),
-            "biodiversity_index": 7.8
-        },
-        
-        # === SECTION 3: CONFORMITE EUDR ===
-        "eudr_compliance": {
-            "title": "Conformite EUDR (UE 2023/1115)",
-            "description": "Tracabilite et conformite pour exportation UE",
-            "eudr_compliance_rate": eudr_score,
-            "total_parcels": len(parcels),
-            "geolocated_parcels": geolocated,
-            "geolocation_rate": geo_rate,
-            "geo_polygon_count": len(geo_polygon),
-            "geo_point_count": len(geo_point),
-            "geo_none_count": len(geo_none),
-            "verified_parcels": len(verified_parcels),
-            "verification_rate": verified_rate,
-            "deforestation_alerts": 0,
-            "deforestation_free_rate": 100.0,
-            "child_labor_free_rate": child_labor_free_rate,
-            "ici_coverage": ici_coverage,
-            "ssrte_visits_total": len(ssrte_visits),
-            "ssrte_high_risk": len(high_risk_ssrte),
-            "ici_profiles_total": len(ici_profiles),
-            "risk_level": "faible" if eudr_score >= 80 else "moyen" if eudr_score >= 50 else "eleve",
-            "risk_dimensions": [
-                {"name": "Geolocalisation", "score": geo_rate, "weight": 30},
-                {"name": "Verification terrain", "score": verified_rate, "weight": 25},
-                {"name": "Travail des enfants", "score": child_labor_free_rate, "weight": 20},
-                {"name": "Profilage ICI", "score": ici_coverage, "weight": 15},
-                {"name": "Score carbone", "score": min(avg_carbon * 10, 100), "weight": 10},
-            ],
-            "per_cooperative": coop_compliance,
-            "export_ready_percentage": round(eudr_score * 0.95, 1),
-            "certification_coverage": {
-                "rainforest_alliance": int(len(parcels) * 0.45),
-                "utz_certified": int(len(parcels) * 0.30),
-                "fairtrade": int(len(parcels) * 0.15),
-                "organic_bio": int(len(parcels) * 0.08)
-            },
-            "esg_summary": {
-                "environmental_score": min(avg_carbon * 10, 100),
-                "social_score": child_labor_free_rate,
-                "governance_score": round((verified_rate + ici_coverage) / 2, 1),
-            },
-        },
-        
-        # === SECTION 4: IMPACT SOCIAL ===
-        "social_impact": {
-            "title": "Impact Social & Développement Rural",
-            "description": "Métriques pour Gouvernement, Ministères, ONG",
-            "total_beneficiaries": len(farmers) + len(coop_members),
-            "direct_farmers": len(farmers),
-            "coop_members": len(coop_members),
-            "women_farmers": women_farmers,
-            "gender_equality_rate": round(women_farmers / max(len(farmers), 1) * 100, 2),
-            "youth_farmers_under_35": youth_farmers,
-            "youth_participation_rate": round(youth_farmers / max(len(farmers), 1) * 100, 2),
-            "farmers_with_bank_account": farmers_banked,
-            "financial_inclusion_rate": round(farmers_banked / max(len(farmers), 1) * 100, 2),
-            "average_annual_income_xof": 850000,
-            "income_increase_vs_2023": 23.5,
-            "poverty_reduction_impact": "Fort",
-            "jobs_created_direct": len(farmers),
-            "jobs_created_indirect": len(farmers) * 3,
-            "villages_covered": len(set(p.get('village', '') for p in parcels if p.get('village')))
-        },
-        
-        # === SECTION 5: MARCHÉ & COMMERCE ===
-        "market": {
-            "title": "Données Marché & Commerce",
-            "description": "Pour Bourse Café-Cacao, Acheteurs Internationaux, OMC",
-            "total_transactions": len(orders),
-            "completed_transactions": completed_orders,
-            "total_volume_xof": total_order_value,
-            "total_volume_usd": round(total_order_value / 600, 2),
-            "average_prices_xof_per_kg": {
-                "cacao_premium": 1450,
-                "cacao_standard": 1200,
-                "cafe_arabica": 2800,
-                "cafe_robusta": 1600,
-                "anacarde": 850
-            },
-            "premium_price_percentage": 18.5,
-            "price_trend_30_days": "+3.2%",
-            "export_destinations": {
-                "europe": 65,
-                "usa": 18,
-                "asia": 12,
-                "africa": 5
-            },
-            "major_buyers_active": 12,
-            "contracts_in_negotiation": 8
-        },
-        
-        # === SECTION 6: INDICATEURS MACROÉCONOMIQUES ===
-        "macroeconomic": {
-            "title": "Indicateurs Macroéconomiques",
-            "description": "Pour FMI, Banque Mondiale, Gouvernement",
-            "contribution_pib_agricole": "4.2%",
-            "devises_generees_usd": round(total_order_value / 600 * 0.65, 2),
-            "balance_commerciale_impact": "Positif",
-            "emploi_secteur_agricole": len(farmers) + len(farmers) * 3,
-            "investissements_recus_xof": 2500000000,
-            "taux_croissance_secteur": 8.7,
-            "productivite_moyenne": round(sum(production_by_crop.values()) / max(len(farmers), 1), 2)
-        },
-        
-        # === SECTION 7: COOPÉRATIVES ===
-        "cooperatives": {
-            "title": "Performance des Coopératives",
-            "description": "Données agrégées des organisations paysannes",
-            "total_cooperatives": len(cooperatives),
-            "total_members": len(coop_members),
-            "average_members_per_coop": round(len(coop_members) / max(len(cooperatives), 1), 1),
-            "certified_cooperatives": int(len(cooperatives) * 0.75),
-            "total_premiums_distributed_xof": sum(p.get('amount', 0) for p in carbon_payments),
-            "average_premium_per_farmer_xof": round(sum(p.get('amount', 0) for p in carbon_payments) / max(len(coop_members), 1), 0),
-            "cooperatives_with_warehouse": int(len(cooperatives) * 0.60),
-            "digital_payment_adoption": 78.5
-        },
-        
-        # === SECTION 8: AUDITEURS CARBONE (NEW) ===
-        "carbon_auditors": {
-            "title": "Programme d'Audit Carbone GreenLink",
-            "description": "Suivi des auditeurs indépendants et vérifications terrain",
-            "total_auditors": len(carbon_auditors),
-            "dual_role_agents": len(dual_role_agents),
-            "total_audits_completed": len([a for a in carbon_audits if a.get('status') == 'completed']),
-            "audits_in_progress": len([a for a in carbon_audits if a.get('status') == 'in_progress']),
-            "total_missions": len(audit_missions),
-            "missions_completed": len([m for m in audit_missions if m.get('status') == 'completed']),
-            "missions_in_progress": len([m for m in audit_missions if m.get('status') in ['assigned', 'in_progress']]),
-            "parcels_audited": len(set(a.get('parcel_id') for a in carbon_audits if a.get('parcel_id'))),
-            "average_carbon_score": round(sum(a.get('carbon_score', 0) for a in carbon_audits) / max(len(carbon_audits), 1), 2),
-            "auditors_by_badge": {
-                "debutant": len([u for u in carbon_auditors if u.get('audits_completed', 0) < 10]),
-                "bronze": len([u for u in carbon_auditors if 10 <= u.get('audits_completed', 0) < 50]),
-                "argent": len([u for u in carbon_auditors if 50 <= u.get('audits_completed', 0) < 100]),
-                "or": len([u for u in carbon_auditors if u.get('audits_completed', 0) >= 100])
-            },
-            "approval_rate": round(len([a for a in carbon_audits if a.get('decision') == 'approved']) / max(len(carbon_audits), 1) * 100, 1)
-        },
-        
-        # === SECTION 9: SSRTE - TRAVAIL DES ENFANTS (NEW) ===
-        "ssrte_monitoring": {
-            "title": "Suivi SSRTE (Travail des Enfants)",
-            "description": "Conformité ICI - International Cocoa Initiative",
-            "total_field_agents": len(field_agents),
-            "total_ssrte_visits": len(ssrte_visits),
-            "visits_this_period": len([v for v in ssrte_visits if v.get('visit_date') and isinstance(v.get('visit_date'), datetime) and v['visit_date'] >= start_date]),
-            "households_monitored": len(set(v.get('farmer_id') for v in ssrte_visits if v.get('farmer_id'))),
-            "children_identified": sum(v.get('children_observed', 0) for v in ssrte_visits),
-            "risk_distribution": {
-                "critical": len([v for v in ssrte_visits if v.get('risk_level') == 'critical']),
-                "high": len([v for v in ssrte_visits if v.get('risk_level') == 'high']),
-                "moderate": len([v for v in ssrte_visits if v.get('risk_level') == 'moderate']),
-                "low": len([v for v in ssrte_visits if v.get('risk_level') == 'low'])
-            },
-            "dangerous_tasks_reported": sum(len(v.get('dangerous_tasks', [])) for v in ssrte_visits),
-            "support_provided_count": sum(len(v.get('support_provided', [])) for v in ssrte_visits),
-            "remediation_rate": round(len([v for v in ssrte_visits if v.get('remediation_status') == 'completed']) / max(len(ssrte_visits), 1) * 100, 1),
-            "coverage_rate": round(len(set(v.get('farmer_id') for v in ssrte_visits)) / max(len(farmers), 1) * 100, 1)
-        },
-        
-        # === SECTION 10: ALERTES ICI (NEW) ===
-        "ici_alerts": {
-            "title": "Centre d'Alertes ICI",
-            "description": "Alertes et interventions protection de l'enfance",
-            "total_alerts": len(ici_alerts),
-            "active_alerts": len([a for a in ici_alerts if a.get('status') == 'active']),
-            "resolved_alerts": len([a for a in ici_alerts if a.get('status') == 'resolved']),
-            "alerts_by_severity": {
-                "critical": len([a for a in ici_alerts if a.get('severity') == 'critical']),
-                "high": len([a for a in ici_alerts if a.get('severity') == 'high']),
-                "medium": len([a for a in ici_alerts if a.get('severity') == 'medium']),
-                "low": len([a for a in ici_alerts if a.get('severity') == 'low'])
-            },
-            "average_resolution_time_hours": 48,
-            "alerts_acknowledged": len([a for a in ici_alerts if a.get('acknowledged')])
-        },
-        
-        # === SECTION 11: PRIMES CARBONE (NEW) ===
-        "carbon_premiums": {
-            "title": "Distribution des Primes Carbone",
-            "description": "Paiements aux producteurs basés sur le score carbone",
-            "total_payments": len(carbon_payments),
-            "total_amount_distributed_xof": sum(p.get('amount', 0) for p in carbon_payments),
-            "payments_completed": len([p for p in carbon_payments if p.get('status') == 'completed']),
-            "payments_pending": len([p for p in carbon_payments if p.get('status') == 'pending']),
-            "average_premium_xof": round(sum(p.get('amount', 0) for p in carbon_payments) / max(len(carbon_payments), 1), 0),
-            "beneficiaries_count": len(set(p.get('farmer_id') for p in carbon_payments if p.get('farmer_id'))),
-            "payment_methods": {
-                "orange_money": len([p for p in carbon_payments if p.get('payment_method') == 'orange_money']),
-                "bank_transfer": len([p for p in carbon_payments if p.get('payment_method') == 'bank_transfer']),
-                "cash": len([p for p in carbon_payments if p.get('payment_method') == 'cash'])
-            }
-        }
+        "production": _build_production_section(farmers, cooperatives, data["coop_members"], data["parcels"], data["harvests"]),
+        "sustainability": _build_sustainability_section(data["parcels"], data["carbon_credits"], data["carbon_purchases"]),
+        "eudr_compliance": _build_eudr_section(data["parcels"], data["coop_members"], cooperatives, data["ssrte_visits"], data["ici_profiles"]),
+        "social_impact": _build_social_section(farmers, data["coop_members"], data["parcels"]),
+        "market": _build_market_section(data["orders"]),
+        "macroeconomic": _build_macroeconomic_section(farmers, data["harvests"], data["orders"]),
+        "cooperatives": _build_cooperatives_section(cooperatives, data["coop_members"], data["carbon_payments"]),
+        "carbon_auditors": _build_audit_section(carbon_auditors, dual_role_agents, data["carbon_audits"], data["audit_missions"]),
+        "ssrte_monitoring": _build_ssrte_section(field_agents, farmers, data["ssrte_visits"], start_date),
+        "ici_alerts": _build_ici_alerts_section(data["ici_alerts"]),
+        "carbon_premiums": _build_carbon_premiums_section(data["carbon_payments"]),
     }
 
 # ============= DETAILED REPORTS =============

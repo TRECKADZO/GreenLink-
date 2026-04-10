@@ -82,10 +82,12 @@ const CarbonAuditorsPage = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchAuditors();
     fetchStats();
     fetchCooperatives();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAddAuditor = async (e) => {
@@ -354,7 +356,7 @@ const CarbonAuditorsPage = () => {
                         <div className="flex gap-1 mt-1 flex-wrap">
                           {auditor.roles?.map((role, i) => (
                             <Badge 
-                              key={i} 
+                              key={`el-${i}`} 
                               variant="outline" 
                               className={`text-xs ${
                                 role === 'carbon_auditor' 
@@ -613,7 +615,7 @@ const CarbonAuditorsPage = () => {
                 <div className="flex flex-wrap gap-2">
                   {selectedAuditor.roles?.map((role, i) => (
                     <Badge 
-                      key={i} 
+                      key={`el-${i}`} 
                       className={`${
                         role === 'carbon_auditor' 
                           ? 'bg-emerald-500/20 text-emerald-400' 
@@ -719,7 +721,7 @@ const CarbonAuditorsPage = () => {
                 <div className="flex flex-wrap gap-1">
                   {selectedAuditor.zone_coverage?.length > 0 ? (
                     selectedAuditor.zone_coverage.map((zone, i) => (
-                      <Badge key={i} variant="secondary" className="bg-gray-600 text-gray-200">{zone}</Badge>
+                      <Badge key={`el-${i}`} variant="secondary" className="bg-gray-600 text-gray-200">{zone}</Badge>
                     ))
                   ) : (
                     <span className="text-gray-500">Aucune zone spécifiée</span>
@@ -732,7 +734,7 @@ const CarbonAuditorsPage = () => {
                 <div className="flex flex-wrap gap-1">
                   {selectedAuditor.certifications?.length > 0 ? (
                     selectedAuditor.certifications.map((cert, i) => (
-                      <Badge key={i} className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      <Badge key={`el-${i}`} className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                         <Award className="h-3 w-3 mr-1" />
                         {cert}
                       </Badge>

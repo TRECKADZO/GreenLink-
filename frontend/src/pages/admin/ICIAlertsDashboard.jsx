@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -19,19 +20,19 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const apiClient = {
   get: async (url) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.get(`${API_URL}${url}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
   },
   put: async (url, data) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.put(`${API_URL}${url}`, data, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
   },
   post: async (url, data) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.post(`${API_URL}${url}`, data, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
@@ -51,6 +52,7 @@ const ICIAlertsDashboard = () => {
   const [filterSeverity, setFilterSeverity] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'admin') {
@@ -59,6 +61,7 @@ const ICIAlertsDashboard = () => {
       return;
     }
     fetchAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchAllData = async () => {
@@ -112,7 +115,7 @@ const ICIAlertsDashboard = () => {
 
   const exportCSV = async (type) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const response = await axios.get(`${API_URL}/api/ici-export/${type}/csv`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'

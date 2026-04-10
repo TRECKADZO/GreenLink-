@@ -1,12 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Parcel Verification Feature - Iteration 51
+Test Parcel Verification Feature - Iteration 51
+Tests for field agent parcel verification endpoints:
 Tests for field agent parcel verification endpoints:
 - GET /api/field-agent/parcels-to-verify (with filters)
+- GET /api/field-agent/parcels-to-verify (with filters)
+- PUT /api/field-agent/parcels/{parcel_id}/verify
 - PUT /api/field-agent/parcels/{parcel_id}/verify
 Also verifies existing dashboard endpoints still work.
+Also verifies existing dashboard endpoints still work.
+"""
 """
 
-import pytest
 import requests
 import os
 
@@ -14,8 +22,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 FIELD_AGENT_CREDS = {"identifier": "+2250709005301", "password": "greenlink2024"}
-COOPERATIVE_CREDS = {"identifier": "bielaghana@gmail.com", "password": "greenlink2024"}
-ADMIN_CREDS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+COOPERATIVE_CREDS = {"identifier": COOP_EMAIL, "password": "greenlink2024"}
+ADMIN_CREDS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 
 
 class TestAuthentication:

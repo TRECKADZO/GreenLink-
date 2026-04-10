@@ -22,6 +22,7 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -29,8 +30,10 @@ const Messages = () => {
       return;
     }
     fetchConversations();
-  }, [user, authLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, navigate]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.conversation_id);
@@ -40,6 +43,7 @@ const Messages = () => {
       }, 5000);
       return () => clearInterval(interval);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation]);
 
   const fetchConversations = async () => {

@@ -26,6 +26,7 @@ const SSRTERealTimeDashboard = () => {
   useEffect(() => {
     audioRef.current = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU' + 
       'FvT18AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const playAlertSound = useCallback(() => {
@@ -33,6 +34,7 @@ const SSRTERealTimeDashboard = () => {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [soundEnabled]);
 
   const connectWebSocket = useCallback(() => {
@@ -47,7 +49,7 @@ const SSRTERealTimeDashboard = () => {
       wsRef.current.onopen = () => {
         setConnected(true);
         toast.success('Connecté au flux temps réel');
-        console.log('[WS] Connected to real-time dashboard');
+        // [WS] Connected to real-time dashboard');
       };
 
       wsRef.current.onmessage = (event) => {
@@ -61,12 +63,12 @@ const SSRTERealTimeDashboard = () => {
 
       wsRef.current.onclose = (event) => {
         setConnected(false);
-        console.log('[WS] Disconnected:', event.code, event.reason);
+        // [WS] Disconnected:', event.code, event.reason);
         
         // Reconnexion automatique après 5 secondes
         if (event.code !== 1000) {
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('[WS] Attempting reconnection...');
+            // [WS] Attempting reconnection...');
             connectWebSocket();
           }, 5000);
         }
@@ -79,6 +81,7 @@ const SSRTERealTimeDashboard = () => {
     } catch (error) {
       console.error('[WS] Connection error:', error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const handleWebSocketMessage = useCallback((message) => {
@@ -86,7 +89,7 @@ const SSRTERealTimeDashboard = () => {
 
     switch (type) {
       case 'connection_established':
-        console.log('[WS] Connection confirmed');
+        // [WS] Connection confirmed');
         break;
 
       case 'ssrte_case_critical':
@@ -167,8 +170,9 @@ const SSRTERealTimeDashboard = () => {
         break;
 
       default:
-        console.log('[WS] Unknown message type:', type);
+        // [WS] Unknown message type:', type);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playAlertSound]);
 
   useEffect(() => {
@@ -182,6 +186,7 @@ const SSRTERealTimeDashboard = () => {
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectWebSocket]);
 
   const markAsRead = (alertId) => {

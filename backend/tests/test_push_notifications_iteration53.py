@@ -1,14 +1,24 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Push Notifications Feature - Iteration 53
+Test Push Notifications Feature - Iteration 53
+Tests for:
 Tests for:
 1. POST /api/cooperative/members/{member_id}/parcels - creates parcel AND stores notification
+1. POST /api/cooperative/members/{member_id}/parcels - creates parcel AND stores notification
+2. GET /api/notifications/unread-count - returns correct non_lues count
 2. GET /api/notifications/unread-count - returns correct non_lues count
 3. GET /api/notifications/history - returns notifications with title, body, type, read status
+3. GET /api/notifications/history - returns notifications with title, body, type, read status
+4. PUT /api/notifications/history/{id}/read - marks notification as read
 4. PUT /api/notifications/history/{id}/read - marks notification as read
 5. PUT /api/notifications/history/read-all - marks all notifications as read
+5. PUT /api/notifications/history/read-all - marks all notifications as read
+"""
 """
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -17,7 +27,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 COOP_CREDENTIALS = {
-    "identifier": "bielaghana@gmail.com",
+    "identifier": COOP_EMAIL,
     "password": "greenlink2024"
 }
 

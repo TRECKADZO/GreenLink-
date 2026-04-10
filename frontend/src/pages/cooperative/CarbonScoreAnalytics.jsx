@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,7 +17,7 @@ import {
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -56,6 +57,7 @@ const CarbonScoreAnalytics = () => {
   const [expandedParcel, setExpandedParcel] = useState(null);
   const [sortBy, setSortBy] = useState('rang');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -72,6 +74,7 @@ const CarbonScoreAnalytics = () => {
       }
     };
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -158,7 +161,7 @@ const CarbonScoreAnalytics = () => {
             { label: 'Prime Agriculteurs', value: `${resume.total_prime_farmer_xof.toLocaleString('fr-FR')} F`, icon: Banknote, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Commission Coop', value: `${resume.total_prime_coop_xof.toLocaleString('fr-FR')} F`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
           ].map((kpi, i) => (
-            <Card key={i} data-testid={`kpi-${i}`}>
+            <Card key={`el-${i}`} data-testid={`kpi-${i}`}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <div className={`w-8 h-8 rounded-lg ${kpi.bg} flex items-center justify-center`}>
@@ -194,7 +197,7 @@ const CarbonScoreAnalytics = () => {
                   />
                   <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={36}>
                     {barData.map((entry, idx) => (
-                      <Cell key={idx} fill={entry.fill} />
+                      <Cell key={`el-${idx}`} fill={entry.fill} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -223,7 +226,7 @@ const CarbonScoreAnalytics = () => {
                   >
                     {pieData.map((entry, idx) => {
                       const colorIdx = ['Excellent', 'Tres Bon', 'Bon', 'En Progression', 'Insuffisant'].indexOf(entry.name);
-                      return <Cell key={idx} fill={PIE_COLORS[colorIdx >= 0 ? colorIdx : 4]} />;
+                      return <Cell key={`el-${idx}`} fill={PIE_COLORS[colorIdx >= 0 ? colorIdx : 4]} />;
                     })}
                   </Pie>
                   <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -356,7 +359,7 @@ const CarbonScoreAnalytics = () => {
                                   {p.recommandations?.length > 0 ? (
                                     <div className="space-y-1">
                                       {p.recommandations.map((r, i) => (
-                                        <div key={i} className="flex items-start gap-2 text-[11px] text-gray-600">
+                                        <div key={`el-${i}`} className="flex items-start gap-2 text-[11px] text-gray-600">
                                           <AlertTriangle className="h-3 w-3 text-amber-500 mt-0.5 flex-shrink-0" />
                                           <span>{r}</span>
                                         </div>

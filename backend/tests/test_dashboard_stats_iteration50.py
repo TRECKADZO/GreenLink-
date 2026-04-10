@@ -1,18 +1,24 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 50 - Dashboard Statistics Audit
+Iteration 50 - Dashboard Statistics Audit
+Tests all dashboard endpoints for Cooperative, Admin, Field Agent, Farmer, and SSRTE dashboards
 Tests all dashboard endpoints for Cooperative, Admin, Field Agent, Farmer, and SSRTE dashboards
 Verifies no 500 errors, KeyErrors, or TypeErrors (round(None), trees_count, total_producteurs)
+Verifies no 500 errors, KeyErrors, or TypeErrors (round(None), trees_count, total_producteurs)
+"""
 """
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_CREDS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
-COOP_CREDS = {"identifier": "bielaghana@gmail.com", "password": "greenlink2024"}
+ADMIN_CREDS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
+COOP_CREDS = {"identifier": COOP_EMAIL, "password": "greenlink2024"}
 AGENT_CREDS = {"identifier": "+2250709005301", "password": "greenlink2024"}
 FARMER_CREDS = {"identifier": "+2250701234567", "password": "greenlink2024"}
 

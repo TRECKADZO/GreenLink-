@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -60,13 +61,15 @@ const BuyerDashboard = () => {
   });
 
   const getAuthHeaders = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    headers: { Authorization: `Bearer ${tokenService.getToken()}` }
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchDashboard();
     fetchTrialStatus();
     fetchSubscription();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchSubscription = async () => {
@@ -104,6 +107,7 @@ const BuyerDashboard = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (activeTab === 'quotes') fetchQuotes();
     if (activeTab === 'favorites') fetchFavorites();
@@ -112,6 +116,7 @@ const BuyerDashboard = () => {
       fetchMatchingListings();
     }
     if (activeTab === 'insights') fetchMarketInsights();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const fetchDashboard = async () => {

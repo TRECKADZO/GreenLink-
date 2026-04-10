@@ -1,16 +1,28 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Carbon Price Management, Premium Distribution, and Member/Agent Activation Flows
+Test Carbon Price Management, Premium Distribution, and Member/Agent Activation Flows
+Tests for iteration 23 - Verify:
 Tests for iteration 23 - Verify:
 1. Carbon listing submission WITHOUT price (cooperative sets quantity only)
+1. Carbon listing submission WITHOUT price (cooperative sets quantity only)
+2. Admin approval WITH price (admin sets price_per_tonne)
 2. Admin approval WITH price (admin sets price_per_tonne)
 3. Admin approval FAILS without price
+3. Admin approval FAILS without price
+4. Premium distribution calculation (30% fees, 70/25/5 split)
 4. Premium distribution calculation (30% fees, 70/25/5 split)
 5. Simulate premium endpoint
+5. Simulate premium endpoint
+6. Carbon price management (GET/PUT)
 6. Carbon price management (GET/PUT)
 7. Member activation flow (check phone -> activate)
+7. Member activation flow (check phone -> activate)
+8. Agent activation flow (check phone -> activate)
 8. Agent activation flow (check phone -> activate)
 """
-import pytest
 import requests
 import os
 import uuid
@@ -19,8 +31,8 @@ from datetime import datetime
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_IDENTIFIER = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+ADMIN_IDENTIFIER = ADMIN_EMAIL
+# ADMIN_PASSWORD imported from test_config
 COOP_IDENTIFIER = "coop-gagnoa@greenlink.ci"
 COOP_PASSWORD = "password"
 

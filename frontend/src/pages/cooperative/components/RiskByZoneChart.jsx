@@ -49,7 +49,7 @@ export const RiskByZoneChart = ({ data }) => {
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="total" name="Visites" radius={[0, 4, 4, 0]} barSize={18}>
               {data.map((entry, i) => (
-                <Cell key={i} fill={getBarColor(entry)} fillOpacity={0.85} />
+                <Cell key={`el-${i}`} fill={getBarColor(entry)} fillOpacity={0.85} />
               ))}
             </Bar>
           </BarChart>

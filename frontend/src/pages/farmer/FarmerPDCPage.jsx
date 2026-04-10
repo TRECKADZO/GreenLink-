@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -12,7 +13,7 @@ import {
 import { GeoSelectCI } from '../../components/GeoSelectCI';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
-const getToken = () => localStorage.getItem('token');
+const getToken = () => tokenService.getToken();
 const authHeaders = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
 const STEPS = [
@@ -196,7 +197,7 @@ const Fiche2 = ({ data, onChange }) => {
           </thead>
           <tbody>
             {data.map((row, i) => (
-              <tr key={i}>
+              <tr key={`el-${i}`}>
                 <td className="border p-1.5 font-medium">{row.type}</td>
                 {['nombre', 'a_ecole', 'aucun', 'primaire', 'secondaire', 'universitaire', 'plein_temps', 'occasionnel'].map(f => (
                   <td key={f} className="border p-0.5"><Input type="number" min={0} value={row[f] || ''} onChange={(e) => updateRow(i, f, e.target.value)} className="h-6 text-[10px] text-center w-full border-0" /></td>
@@ -267,7 +268,7 @@ const Fiche3 = ({ exploitation, cultures, onExploitationChange, onCulturesChange
             </thead>
             <tbody>
               {cultures.map((c, i) => (
-                <tr key={i}>
+                <tr key={`el-${i}`}>
                   <td className="border p-0.5"><Input value={c.nom || ''} onChange={(e) => updateCulture(i, 'nom', e.target.value)} className="h-6 text-[10px] border-0" placeholder="Cacao P1" /></td>
                   <td className="border p-0.5"><Input type="number" step="0.01" value={c.superficie || ''} onChange={(e) => updateCulture(i, 'superficie', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
                   <td className="border p-0.5"><Input type="number" value={c.annee_creation || ''} onChange={(e) => updateCulture(i, 'annee_creation', e.target.value)} className="h-6 text-[10px] border-0 text-center" placeholder="2010" /></td>
@@ -321,7 +322,7 @@ const Fiche4 = ({ data, onChange }) => {
             {data.length === 0 ? (
               <tr><td colSpan={9} className="border p-3 text-center text-gray-400">Cliquez "Ajouter arbre" pour commencer l'inventaire</td></tr>
             ) : data.map((a, i) => (
-              <tr key={i}>
+              <tr key={`el-${i}`}>
                 <td className="border p-1 text-center font-medium">{i + 1}</td>
                 <td className="border p-0.5"><Input value={a.nom_botanique || ''} onChange={(e) => updateArbre(i, 'nom_botanique', e.target.value)} className="h-6 text-[10px] border-0" placeholder="Terminalia..." /></td>
                 <td className="border p-0.5"><Input value={a.nom_local || ''} onChange={(e) => updateArbre(i, 'nom_local', e.target.value)} className="h-6 text-[10px] border-0" placeholder="Fraké" /></td>
@@ -397,7 +398,7 @@ const Fiche6 = ({ data, onChange }) => {
               const showType = row.type !== lastType;
               lastType = row.type;
               return (
-                <tr key={i}>
+                <tr key={`el-${i}`}>
                   <td className="border p-1.5 font-medium">{showType ? row.type : ''}</td>
                   <td className="border p-1.5">{row.designation}</td>
                   <td className="border p-0.5"><Input type="number" min={0} value={row.quantite || ''} onChange={(e) => updateRow(i, 'quantite', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
@@ -443,7 +444,7 @@ const Fiche7 = ({ matrice, programme, onMatriceChange, onProgrammeChange }) => {
             </thead>
             <tbody>
               {matrice.map((row, i) => (
-                <tr key={i}>
+                <tr key={`el-${i}`}>
                   <td className="border p-1.5 font-medium text-[9px]">{row.axe}</td>
                   <td className="border p-0.5"><Input value={row.objectifs || ''} onChange={(e) => updateM(i, 'objectifs', e.target.value)} className="h-6 text-[10px] border-0" /></td>
                   <td className="border p-0.5"><Input value={row.activites || ''} onChange={(e) => updateM(i, 'activites', e.target.value)} className="h-6 text-[10px] border-0" /></td>
@@ -483,7 +484,7 @@ const Fiche7 = ({ matrice, programme, onMatriceChange, onProgrammeChange }) => {
             </thead>
             <tbody>
               {programme.map((row, i) => (
-                <tr key={i}>
+                <tr key={`el-${i}`}>
                   <td className="border p-0.5">
                     <select className="text-[10px] w-full h-6 border-0" value={row.axe || ''} onChange={(e) => updateP(i, 'axe', e.target.value)}>
                       <option value="">--</option>
@@ -566,6 +567,7 @@ export default function FarmerPDCPage() {
       }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { loadPDC(); }, [loadPDC]);

@@ -11,6 +11,7 @@ const TestimonialsSection = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
@@ -19,12 +20,13 @@ const TestimonialsSection = () => {
           setTestimonials(response.data);
         }
       } catch (error) {
-        console.log('No testimonials found');
+        // no testimonials found;
       } finally {
         setLoading(false);
       }
     };
     fetchTestimonials();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Ne pas afficher la section s'il n'y a pas de témoignages

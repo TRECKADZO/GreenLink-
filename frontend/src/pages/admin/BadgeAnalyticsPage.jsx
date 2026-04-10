@@ -17,6 +17,7 @@ const BadgeAnalyticsPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
@@ -32,6 +33,7 @@ const BadgeAnalyticsPage = () => {
     };
 
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const downloadCertificate = async (auditorId, auditorName) => {

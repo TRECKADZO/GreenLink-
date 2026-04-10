@@ -220,7 +220,7 @@ Tra Bi Emmanuel,+2250707778888,Issia,CI-2021-456789`;
                   <p className="font-medium text-amber-800">Attention</p>
                   <ul className="text-sm text-amber-700 mt-1 list-disc list-inside">
                     {parseErrors.map((err, i) => (
-                      <li key={i}>{err}</li>
+                      <li key={`el-${i}`}>{err}</li>
                     ))}
                   </ul>
                 </div>
@@ -251,7 +251,7 @@ Tra Bi Emmanuel,+2250707778888,Issia,CI-2021-456789`;
                   </thead>
                   <tbody>
                     {parsedMembers.slice(0, 10).map((member, i) => (
-                      <tr key={i} className="border-t">
+                      <tr key={`el-${i}`} className="border-t">
                         <td className="p-2">{member.full_name}</td>
                         <td className="p-2">{member.phone_number}</td>
                         <td className="p-2">{member.village}</td>
@@ -306,7 +306,7 @@ Tra Bi Emmanuel,+2250707778888,Issia,CI-2021-456789`;
                   </p>
                   <ul className="text-sm text-amber-700 list-disc list-inside">
                     {result.errors.map((err, i) => (
-                      <li key={i}>{err}</li>
+                      <li key={`el-${i}`}>{err}</li>
                     ))}
                   </ul>
                 </div>

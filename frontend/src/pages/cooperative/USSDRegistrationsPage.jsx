@@ -43,6 +43,7 @@ const USSDRegistrationsPage = () => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => { fetchRegistrations(); }, [fetchRegistrations]);

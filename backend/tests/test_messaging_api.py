@@ -1,16 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Messaging API Tests - Secure messaging system between buyers and sellers
+Messaging API Tests - Secure messaging system between buyers and sellers
+Tests cover: authentication, conversations, stats, blocked users, and error handling
 Tests cover: authentication, conversations, stats, blocked users, and error handling
 """
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 COOP_EMAIL = "coop-gagnoa@greenlink.ci"
 COOP_PASSWORD = "password"
 

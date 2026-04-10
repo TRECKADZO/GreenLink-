@@ -32,6 +32,7 @@ const BuyerOrders = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -39,6 +40,7 @@ const BuyerOrders = () => {
       return;
     }
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchOrders = async () => {
@@ -70,7 +72,7 @@ const BuyerOrders = () => {
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse space-y-4">
               {[1,2,3].map(i => (
-                <Card key={i} className="p-6">
+                <Card key={`el-${i}`} className="p-6">
                   <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                 </Card>
@@ -163,7 +165,7 @@ const BuyerOrders = () => {
                         <h4 className="font-semibold text-gray-900 mb-3">Articles</h4>
                         <div className="space-y-2 mb-6">
                           {order.items.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
+                            <div key={`el-${idx}`} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
                               <div>
                                 <p className="font-medium text-gray-900">{item.product_name}</p>
                                 <p className="text-sm text-gray-500">

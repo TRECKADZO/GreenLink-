@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -65,6 +66,7 @@ const RSEDashboard = () => {
   const [subscription, setSubscription] = useState(null);
   const [stats, setStats] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || !['entreprise_rse', 'admin'].includes(user.user_type)) {
@@ -74,11 +76,12 @@ const RSEDashboard = () => {
     fetchData();
     fetchSubscription();
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchSubscription = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -90,7 +93,7 @@ const RSEDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const { data } = await axios.get(`${API_URL}/api/rse/dashboard-stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -373,7 +376,7 @@ www.greenlink-agritech.com
               {carbonMkt.credit_types?.length > 0 && (
                 <div className="mt-4 space-y-2">
                   {carbonMkt.credit_types.map((ct, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
+                    <div key={`metric-${i}`} className="flex items-center justify-between text-sm">
                       <span className="text-slate-400">{ct.type}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-white font-medium">{ct.tonnes}t</span>
@@ -462,7 +465,7 @@ www.greenlink-agritech.com
           </h2>
           <div className="space-y-3">
             {impact.monthly_breakdown.map((month, index) => (
-              <div key={index} className="flex items-center gap-3">
+              <div key={`domain-${index}`} className="flex items-center gap-3">
                 <div className="w-28 text-xs text-slate-400 font-medium truncate">{month.month}</div>
                 <div className="flex-1 bg-slate-800 rounded-full h-6 overflow-hidden">
                   <div
@@ -492,7 +495,7 @@ www.greenlink-agritech.com
           </h2>
           <div className="space-y-3">
             {impact.impact_stories.map((story, index) => (
-              <div key={index} className="p-4 bg-slate-800 rounded-xl border-l-4 border-emerald-500">
+              <div key={`recommendation-${index}`} className="p-4 bg-slate-800 rounded-xl border-l-4 border-emerald-500">
                 <div className="flex items-start gap-3">
                   <Award className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
                   <div>

@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MessageSquare, Loader2, Plus, Send, Clock, CheckCircle2, XCircle } from 'lucide-react';
@@ -7,7 +8,7 @@ import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
-const getToken = () => localStorage.getItem('token');
+const getToken = () => tokenService.getToken();
 const authHeaders = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
 const STATUT_MAP = {
@@ -121,7 +122,7 @@ export default function FarmerReclamationsPage() {
               const st = STATUT_MAP[r.statut || 'ouverte'];
               const StIcon = st.icon;
               return (
-                <div key={i} className="bg-white rounded-xl border shadow-sm p-4" data-testid={`farmer-rec-${r.id}`}>
+                <div key={`el-${i}`} className="bg-white rounded-xl border shadow-sm p-4" data-testid={`farmer-rec-${r.id}`}>
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="font-semibold text-sm">{r.objet}</p>

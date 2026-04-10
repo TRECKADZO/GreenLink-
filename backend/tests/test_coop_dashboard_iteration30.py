@@ -1,15 +1,19 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test file for Cooperative Dashboard Iteration 30
+Test file for Cooperative Dashboard Iteration 30
+Tests: Cooperative login, dashboard API, Agents Terrain stat, Naturalisation menu, Home/Profile buttons
 Tests: Cooperative login, dashboard API, Agents Terrain stat, Naturalisation menu, Home/Profile buttons
 """
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-COOP_BIELAGHANA = {"identifier": "bielaghana@gmail.com", "password": "greenlink2024"}
+COOP_BIELAGHANA = {"identifier": COOP_EMAIL, "password": "greenlink2024"}
 COOP_GAGNOA = {"identifier": "coop-gagnoa@greenlink.ci", "password": "password"}
 AGENT_TERRAIN = {"identifier": "+2250709005301", "password": "greenlink2024"}
 
@@ -27,7 +31,7 @@ class TestCooperativeLogin:
         data = response.json()
         assert "access_token" in data, "No access_token in response"
         assert data["user"]["user_type"] == "cooperative"
-        assert data["user"]["email"] == "bielaghana@gmail.com"
+        assert data["user"]["email"] == COOP_EMAIL
         
     def test_gagnoa_login_success(self):
         """Test login with coop-gagnoa@greenlink.ci / password"""

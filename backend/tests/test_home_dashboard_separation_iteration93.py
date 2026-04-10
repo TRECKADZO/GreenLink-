@@ -1,8 +1,12 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 93 - Home vs Dashboard Tab Separation Tests
+Iteration 93 - Home vs Dashboard Tab Separation Tests
+Tests the separation of Accueil (Home) and Tableau (Dashboard) tabs for Agent Terrain and Farmer.
 Tests the separation of Accueil (Home) and Tableau (Dashboard) tabs for Agent Terrain and Farmer.
 """
-import pytest
 import requests
 import os
 
@@ -19,8 +23,8 @@ class TestFieldAgentAPIs:
         
         # Login to get token
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         if login_response.status_code == 200:
             token = login_response.json().get("access_token")
@@ -107,8 +111,8 @@ class TestFarmerDashboardAPIs:
         
         # Login to get token
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         if login_response.status_code == 200:
             token = login_response.json().get("access_token")
@@ -142,8 +146,8 @@ class TestREDDEndpoints:
         
         # Login to get token
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         if login_response.status_code == 200:
             token = login_response.json().get("access_token")
@@ -181,8 +185,8 @@ class TestUSSDRegistration:
         
         # Login to get token
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         if login_response.status_code == 200:
             token = login_response.json().get("access_token")

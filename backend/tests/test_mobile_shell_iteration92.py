@@ -1,18 +1,24 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 92 - Mobile App Shell Testing
+Iteration 92 - Mobile App Shell Testing
+Tests for Agent Terrain Dashboard and Farmer Dashboard mobile-first rewrite
 Tests for Agent Terrain Dashboard and Farmer Dashboard mobile-first rewrite
 Backend API tests for /api/field-agent/dashboard, /api/field-agent/my-farmers, /api/agent/search
+Backend API tests for /api/field-agent/dashboard, /api/field-agent/my-farmers, /api/agent/search
+"""
 """
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 
 class TestHealthAndBasics:

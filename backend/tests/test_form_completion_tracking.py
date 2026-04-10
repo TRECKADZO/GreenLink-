@@ -1,8 +1,12 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+# Test suite for Form Completion Tracking feature
 # Test suite for Form Completion Tracking feature
 # Tests the forms_status and completion data in /api/field-agent/my-farmers endpoint
+# Tests the forms_status and completion data in /api/field-agent/my-farmers endpoint
+# Tests: ICI, SSRTE, Parcels, Photos, Register completion statuses
 # Tests: ICI, SSRTE, Parcels, Photos, Register completion statuses
 
-import pytest
 import requests
 import os
 
@@ -25,7 +29,7 @@ class TestFormCompletionTracking:
     def cooperative_token(self):
         """Get cooperative authentication token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "bielaghana@gmail.com",
+            "identifier": COOP_EMAIL,
             "password": "greenlink2024"
         })
         assert response.status_code == 200, f"Cooperative login failed: {response.text}"

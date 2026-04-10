@@ -2,6 +2,7 @@
  * MarketplaceAnalyticsTab - Métriques Avancées Bourse des Récoltes
  * Analytics de classe mondiale pour matières premières agricoles
  */
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -25,11 +26,13 @@ const MarketplaceAnalyticsTab = () => {
   const [selectedCrop, setSelectedCrop] = useState('cacao');
 
   const getAuthHeaders = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    headers: { Authorization: `Bearer ${tokenService.getToken()}` }
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAnalytics = async () => {
@@ -169,7 +172,7 @@ const MarketplaceAnalyticsTab = () => {
             <div className="flex items-center gap-4 flex-wrap">
               <Zap className="h-5 w-5 text-amber-400" />
               {executive_summary.key_insights.map((insight, idx) => (
-                <Badge key={idx} className="bg-amber-500/20 text-amber-300 border-amber-500/30">
+                <Badge key={`el-${idx}`} className="bg-amber-500/20 text-amber-300 border-amber-500/30">
                   {insight}
                 </Badge>
               ))}

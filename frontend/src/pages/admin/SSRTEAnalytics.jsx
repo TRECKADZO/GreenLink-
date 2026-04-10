@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -25,6 +26,7 @@ const SSRTEAnalytics = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [leaderboard, setLeaderboard] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || !['admin', 'super_admin'].includes(user.user_type)) {
@@ -33,12 +35,13 @@ const SSRTEAnalytics = () => {
       return;
     }
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, period, navigate]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       
       // Charger le dashboard
       const dashboardRes = await fetch(`${API_URL}/api/ssrte/dashboard?period=${period}`, {
@@ -389,7 +392,7 @@ const SSRTEAnalytics = () => {
                       const percent = (t.visits / maxVisits) * 100;
                       
                       return (
-                        <div key={i} className="flex items-center gap-3">
+                        <div key={`el-${i}`} className="flex items-center gap-3">
                           <span className="text-slate-500 text-xs w-20 truncate">{t.date}</span>
                           <div className="flex-1 h-6 bg-slate-800 rounded overflow-hidden">
                             <div 
@@ -427,7 +430,7 @@ const SSRTEAnalytics = () => {
                 {dangerousTasks.length > 0 ? (
                   <div className="space-y-2">
                     {dangerousTasks.map((task, i) => (
-                      <div key={i} className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
+                      <div key={`el-${i}`} className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
                         <span className="text-slate-300 text-sm">{task.code}</span>
                         <Badge variant="outline" className="border-red-500/50 text-red-400">
                           {task.count} fois
@@ -453,7 +456,7 @@ const SSRTEAnalytics = () => {
                 {supportProvided.length > 0 ? (
                   <div className="space-y-2">
                     {supportProvided.map((support, i) => (
-                      <div key={i} className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
+                      <div key={`el-${i}`} className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
                         <span className="text-slate-300 text-sm">{support.type}</span>
                         <Badge variant="outline" className="border-emerald-500/50 text-emerald-400">
                           {support.count} fois
@@ -483,7 +486,7 @@ const SSRTEAnalytics = () => {
                   {leaderboard.top_agents?.length > 0 ? (
                     <div className="space-y-2">
                       {leaderboard.top_agents.slice(0, 5).map((agent, i) => (
-                        <div key={i} className="flex items-center gap-3 p-2 bg-slate-800/50 rounded">
+                        <div key={`el-${i}`} className="flex items-center gap-3 p-2 bg-slate-800/50 rounded">
                           <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
                             i === 0 ? 'bg-yellow-500 text-black' :
                             i === 1 ? 'bg-slate-400 text-black' :
@@ -518,7 +521,7 @@ const SSRTEAnalytics = () => {
                   {leaderboard.top_cooperatives?.length > 0 ? (
                     <div className="space-y-2">
                       {leaderboard.top_cooperatives.slice(0, 5).map((coop, i) => (
-                        <div key={i} className="flex items-center gap-3 p-2 bg-slate-800/50 rounded">
+                        <div key={`el-${i}`} className="flex items-center gap-3 p-2 bg-slate-800/50 rounded">
                           <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
                             i === 0 ? 'bg-yellow-500 text-black' :
                             i === 1 ? 'bg-slate-400 text-black' :
@@ -555,7 +558,7 @@ const SSRTEAnalytics = () => {
               <CardContent>
                 <div className="space-y-2">
                   {dashboardData.recent_critical_visits.map((visit, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
+                    <div key={`el-${i}`} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
                       <div>
                         <p className="text-white font-medium">{visit.farmer_name || 'Producteur'}</p>
                         <p className="text-slate-400 text-sm">

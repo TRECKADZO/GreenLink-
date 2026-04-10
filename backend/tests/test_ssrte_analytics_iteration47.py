@@ -1,24 +1,37 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test SSRTE Analytics Dashboard & Leaderboard - Iteration 47
+Test SSRTE Analytics Dashboard & Leaderboard - Iteration 47
+Tests:
 Tests:
 1. GET /api/ssrte/dashboard?period=all - enriched analytics data (admin only)
+1. GET /api/ssrte/dashboard?period=all - enriched analytics data (admin only)
+2. GET /api/ssrte/leaderboard?period=all - agent/cooperative rankings (admin only)
 2. GET /api/ssrte/leaderboard?period=all - agent/cooperative rankings (admin only)
 3. Access restrictions - cooperative should NOT have access to analytics endpoints
+3. Access restrictions - cooperative should NOT have access to analytics endpoints
+4. Cooperative dashboard route /cooperative/ssrte should NOT exist
 4. Cooperative dashboard route /cooperative/ssrte should NOT exist
 
+
+KNOWN ISSUES:
 KNOWN ISSUES:
 - BUG: ssrte_analytics.py (loaded first) defines /api/ssrte/dashboard allowing cooperative access
+- BUG: ssrte_analytics.py (loaded first) defines /api/ssrte/dashboard allowing cooperative access
+- BUG: ssrte.py (loaded second) has the admin-only endpoint that is NEVER reached due to route conflict
 - BUG: ssrte.py (loaded second) has the admin-only endpoint that is NEVER reached due to route conflict
 - BUG: living_conditions data is NOT returned because ssrte_analytics.py route takes precedence
+- BUG: living_conditions data is NOT returned because ssrte_analytics.py route takes precedence
 """
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_CREDS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 COOP_CREDS = {"identifier": "traore_eric@yahoo.fr", "password": "greenlink2024"}
 
 

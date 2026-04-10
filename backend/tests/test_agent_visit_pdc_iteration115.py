@@ -1,15 +1,26 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Suite for Agent Terrain PDC Visit Workflow - Iteration 115
+Test Suite for Agent Terrain PDC Visit Workflow - Iteration 115
+Tests the NEW agent-visit and complete-visit endpoints for ARS 1000 PDC
 Tests the NEW agent-visit and complete-visit endpoints for ARS 1000 PDC
 
+
+Features tested:
 Features tested:
 - POST /api/ars1000/pdc/agent-visit - Create/update PDC during field visit
+- POST /api/ars1000/pdc/agent-visit - Create/update PDC during field visit
+- POST /api/ars1000/pdc/{id}/complete-visit - Complete visit, change status, send notification
 - POST /api/ars1000/pdc/{id}/complete-visit - Complete visit, change status, send notification
 - Notification creation for cooperative
+- Notification creation for cooperative
+- Update existing PDC if one exists for farmer
 - Update existing PDC if one exists for farmer
 """
+"""
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -18,7 +29,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
 AGENT_CREDENTIALS = {"identifier": "testagent@test.ci", "password": "test123456"}
-COOP_CREDENTIALS = {"identifier": "bielaghana@gmail.com", "password": "test123456"}
+COOP_CREDENTIALS = {"identifier": COOP_EMAIL, "password": "test123456"}
 
 
 class TestAgentVisitPDCWorkflow:

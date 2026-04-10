@@ -1,11 +1,18 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test suite for Iteration 79 - REDD+ Tracking and USSD Carbon Calculator Updates
+Test suite for Iteration 79 - REDD+ Tracking and USSD Carbon Calculator Updates
+Tests:
 Tests:
 1. USSD Carbon Calculator - no formulas/percentages in results, concept explanations in questions
+1. USSD Carbon Calculator - no formulas/percentages in results, concept explanations in questions
+2. REDD+ Tracking API - practices list, visit creation, visits listing, stats
 2. REDD+ Tracking API - practices list, visit creation, visits listing, stats
 3. Web Carbon Calculator page - Notions importantes card
+3. Web Carbon Calculator page - Notions importantes card
 """
-import pytest
 import requests
 import os
 
@@ -117,8 +124,8 @@ class TestREDDTrackingAPI:
     def auth_token(self):
         """Get authentication token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
             return response.json().get("access_token")
@@ -253,8 +260,8 @@ class TestREDDTrackingWebPage:
     def auth_token(self):
         """Get authentication token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
             return response.json().get("access_token")

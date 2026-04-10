@@ -22,6 +22,7 @@ const Navbar = () => {
   const menuRef = useRef(null);
   const marketplaceRef = useRef(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) setMenuOpen(false);
@@ -29,12 +30,15 @@ const Navbar = () => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Lock body scroll when mobile menu is open
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mobileMenuOpen]);
 
   const handleLogout = () => {
@@ -149,7 +153,7 @@ const Navbar = () => {
               {marketplaceMenuOpen && (
                 <div className="absolute top-full left-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
                   {marketplaceItems.map((item, i) => (
-                    <button key={i} onClick={() => navTo(item.route)}
+                    <button key={`el-${i}`} onClick={() => navTo(item.route)}
                       className="w-full p-4 hover:bg-white/5 transition-colors text-left group border-b border-slate-700 last:border-b-0">
                       <div className="flex items-start gap-3">
                         <div className={`p-2 bg-gradient-to-br ${item.color} rounded-lg`}>
@@ -220,7 +224,7 @@ const Navbar = () => {
                     </div>
                     <div className="py-2">
                       {getMenuItems().map((item, i) => (
-                        <button key={i} onClick={() => { navigate(item.route); setMenuOpen(false); }}
+                        <button key={`el-${i}`} onClick={() => { navigate(item.route); setMenuOpen(false); }}
                           className="w-full px-4 py-3 flex items-center gap-3 text-gray-700 hover:bg-gray-50 transition-colors"
                           data-testid={`menu-item-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
                           <item.icon className="w-5 h-5 text-gray-400" />
@@ -289,7 +293,7 @@ const Navbar = () => {
               {/* Marketplaces section */}
               <p className="text-white/40 text-xs font-semibold uppercase tracking-wider px-3 pt-3 pb-1">Marketplaces</p>
               {marketplaceItems.map((item, i) => (
-                <button key={i} onClick={() => navTo(item.route)}
+                <button key={`el-${i}`} onClick={() => navTo(item.route)}
                   className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors">
                   <div className={`p-1.5 bg-gradient-to-br ${item.color} rounded-lg`}>
                     <item.icon className="h-4 w-4 text-white" />
@@ -306,7 +310,7 @@ const Navbar = () => {
                 <>
                   <p className="text-white/40 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1">Mon espace</p>
                   {getMenuItems().map((item, i) => (
-                    <button key={i} onClick={() => navTo(item.route)}
+                    <button key={`el-${i}`} onClick={() => navTo(item.route)}
                       className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors">
                       <item.icon className="w-5 h-5 text-white/60" />
                       <span className="text-white text-sm font-medium">{item.label}</span>

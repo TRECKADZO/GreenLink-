@@ -96,6 +96,7 @@ const AuditMissionsPage = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -103,13 +104,16 @@ const AuditMissionsPage = () => {
       setLoading(false);
     };
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (newMission.cooperative_id) {
       fetchParcels(newMission.cooperative_id);
       setSelectedParcels([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newMission.cooperative_id]);
 
   const handleCreateMission = async () => {

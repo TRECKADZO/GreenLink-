@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -25,7 +26,7 @@ const MRVDashboard = () => {
 
   const downloadPDF = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await axios.get(`${API}/api/redd/pdf/mrv-report`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob',
@@ -47,7 +48,7 @@ const MRVDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const headers = { Authorization: `Bearer ${token}` };
 
       // All cooperatives have free access - no subscription check needed
@@ -64,8 +65,10 @@ const MRVDashboard = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (user) fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   if (authLoading) {
@@ -309,7 +312,7 @@ const MRVDashboard = () => {
                               <td className="py-2 px-2">
                                 <div className="flex flex-wrap gap-1">
                                   {f.practices?.slice(0, 3).map((p, i) => (
-                                    <Badge key={i} variant="outline" className="text-[9px] border-slate-600 text-slate-400 px-1 py-0">{p}</Badge>
+                                    <Badge key={`el-${i}`} variant="outline" className="text-[9px] border-slate-600 text-slate-400 px-1 py-0">{p}</Badge>
                                   ))}
                                   {f.practices?.length > 3 && <span className="text-[10px] text-slate-500">+{f.practices.length - 3}</span>}
                                 </div>

@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -18,7 +19,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const apiClient = {
   get: async (url) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.get(`${API_URL}${url}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
@@ -46,6 +47,7 @@ const PremiumAnalyticsDashboard = () => {
     { id: 10, name: 'Prévisions 2030', icon: Calendar, color: 'indigo', endpoint: '10-macro-forecasts' },
   ];
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'admin') {
@@ -54,6 +56,7 @@ const PremiumAnalyticsDashboard = () => {
       return;
     }
     fetchTopPriority();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchTopPriority = async () => {

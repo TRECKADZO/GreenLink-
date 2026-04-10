@@ -1,7 +1,10 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+# Cooperative Subscription System Tests - Iteration 80
 # Cooperative Subscription System Tests - Iteration 80
 # Tests for: GET /api/coop-subscriptions/plans, /my-subscription, POST /choose-plan
+# Tests for: GET /api/coop-subscriptions/plans, /my-subscription, POST /choose-plan
 
-import pytest
 import requests
 import os
 
@@ -108,8 +111,8 @@ class TestMySubscription:
         """Should return 403 for non-cooperative users"""
         # Login as admin (not a cooperative)
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         if login_response.status_code != 200:
             pytest.skip("Could not login as admin")
@@ -138,8 +141,8 @@ class TestChoosePlan:
         """Should validate plan parameter"""
         # Login as admin
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         if login_response.status_code != 200:
             pytest.skip("Could not login as admin")
@@ -160,8 +163,8 @@ class TestChoosePlan:
         """Should reject choosing trial plan"""
         # Login as admin
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         if login_response.status_code != 200:
             pytest.skip("Could not login as admin")

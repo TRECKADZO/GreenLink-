@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -32,7 +33,7 @@ const RealTimeDashboard = () => {
   const connectWebSocket = useCallback(() => {
     if (!user) return;
 
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     if (!token) return;
 
     // Try WebSocket first
@@ -73,6 +74,7 @@ const RealTimeDashboard = () => {
       console.error('WebSocket connection failed, using polling:', error);
       startPolling();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Fallback polling
@@ -81,7 +83,7 @@ const RealTimeDashboard = () => {
     
     const pollData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = tokenService.getToken();
         const response = await fetch(`${API_URL}/api/ws/broadcast-stats`, {
           method: 'POST',
           headers: { 
@@ -153,7 +155,7 @@ const RealTimeDashboard = () => {
         break;
 
       default:
-        console.log('Unknown WS message type:', type);
+        // silenced in production;
     }
   };
 
@@ -172,7 +174,7 @@ const RealTimeDashboard = () => {
   // Télécharger rapport PDF
   const downloadPDF = async (type) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const response = await fetch(`${API_URL}/api/pdf-reports/${type}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -209,6 +211,7 @@ const RealTimeDashboard = () => {
       }
       stopPolling();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, connectWebSocket, navigate]);
 
   const formatTime = (date) => {

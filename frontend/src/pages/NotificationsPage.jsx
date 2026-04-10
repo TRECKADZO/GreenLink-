@@ -40,6 +40,7 @@ const NotificationsPage = () => {
       setLoading(false);
       setRefreshing(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => {
@@ -48,6 +49,7 @@ const NotificationsPage = () => {
     // Auto-refresh toutes les 30 secondes
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchNotifications]);
 
   const handleMarkRead = async (notificationId) => {

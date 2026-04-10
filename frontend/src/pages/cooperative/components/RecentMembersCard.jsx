@@ -24,7 +24,7 @@ export const RecentMembersCard = ({ recentMembers, pendingValidation, navigate }
           <div className="space-y-2">
             {recentMembers.map((member, index) => (
               <div
-                key={index}
+                key={`el-${index}`}
                 className="flex items-center justify-between p-3 rounded-md hover:bg-[#F3F4F6] transition-colors group"
                 data-testid={`recent-member-${index}`}
               >

@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -49,7 +50,7 @@ const CarbonPremiumsManagement = () => {
   const [newRate, setNewRate] = useState('');
   const [savingRate, setSavingRate] = useState(false);
 
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   const fetchStats = useCallback(async () => {
@@ -57,6 +58,7 @@ const CarbonPremiumsManagement = () => {
       const res = await fetch(`${API}/api/admin/carbon-premiums/stats`, { headers });
       if (res.ok) setStats(await res.json());
     } catch (e) { console.error('Stats error', e); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchConfig = useCallback(async () => {
@@ -68,6 +70,7 @@ const CarbonPremiumsManagement = () => {
         setNewRate(String(data.taux_par_hectare || 5000));
       }
     } catch (e) { console.error('Config error', e); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRequests = useCallback(async () => {
@@ -80,12 +83,14 @@ const CarbonPremiumsManagement = () => {
         setTotal(data.total || 0);
       }
     } catch (e) { console.error('Requests error', e); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
     await Promise.all([fetchStats(), fetchConfig(), fetchRequests()]);
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchStats, fetchConfig, fetchRequests]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
@@ -396,7 +401,7 @@ const CarbonPremiumsManagement = () => {
                                 </tr></thead>
                                 <tbody>
                                   {req.parcels.map((p, i) => (
-                                    <tr key={i} className="border-b border-slate-800/50">
+                                    <tr key={`el-${i}`} className="border-b border-slate-800/50">
                                       <td className="py-1 pr-4 text-white">{p.village || '-'}</td>
                                       <td className="py-1 pr-4 text-right text-slate-300">{p.area_hectares}</td>
                                       <td className="py-1 pr-4 text-right text-slate-300">{p.carbon_score}/10</td>

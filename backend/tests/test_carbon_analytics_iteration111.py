@@ -1,18 +1,25 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Carbon Analytics Dashboard - Iteration 111
+Test Carbon Analytics Dashboard - Iteration 111
+Tests for:
 Tests for:
 1. GET /api/cooperative/carbon-analytics - Cooperative carbon analytics endpoint
+1. GET /api/cooperative/carbon-analytics - Cooperative carbon analytics endpoint
+2. GET /api/greenlink/carbon/my-score - Farmer carbon score endpoint
 2. GET /api/greenlink/carbon/my-score - Farmer carbon score endpoint
 """
+"""
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
-COOPERATIVE_EMAIL = "bielaghana@gmail.com"
+COOPERATIVE_EMAIL = COOP_EMAIL
 COOPERATIVE_PASSWORD = "test123456"
 FARMER_EMAIL = "testplanteur@test.ci"
 FARMER_PASSWORD = "test123456"

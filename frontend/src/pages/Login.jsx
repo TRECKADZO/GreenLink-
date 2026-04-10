@@ -1,3 +1,4 @@
+import { tokenService } from "../services/tokenService";
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -60,7 +61,7 @@ const Login = () => {
         navigate(redirectPath);
       } else {
         // Fallback: try to decode JWT
-        const token = localStorage.getItem('token');
+        const token = tokenService.getToken();
         if (token) {
           try {
             const payload = JSON.parse(atob(token.split('.')[1]));

@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
@@ -93,14 +94,16 @@ const REDDTrackingPage = () => {
   const [visits, setVisits] = useState([]);
   const [stats, setStats] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (tab === 'historique') loadVisits();
     if (tab === 'stats') loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   const loadVisits = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await fetch(`${API_URL}/api/redd/tracking/visits`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -113,7 +116,7 @@ const REDDTrackingPage = () => {
 
   const loadStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await fetch(`${API_URL}/api/redd/tracking/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -168,7 +171,7 @@ const REDDTrackingPage = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const visitPayload = {
         farmer_id: farmerId || `web_${Date.now()}`,
         farmer_name: farmerName,
@@ -510,7 +513,7 @@ const REDDTrackingPage = () => {
               </Card>
             ) : (
               visits.map((v, i) => (
-                <Card key={i} className="p-4">
+                <Card key={`el-${i}`} className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-gray-800 text-sm">{v.farmer_name}</h4>
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${

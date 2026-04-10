@@ -1,3 +1,4 @@
+import { tokenService } from "../services/tokenService";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell, Check, CheckCheck, MapPin, Leaf, AlertTriangle, X, ShoppingCart, Wheat } from 'lucide-react';
 import { Button } from './ui/button';
@@ -48,7 +49,7 @@ export const NotificationCenter = () => {
   const ref = useRef(null);
   const sseRef = useRef(null);
 
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   const headers = { Authorization: `Bearer ${token}` };
 
   const fetchUnreadCount = useCallback(async () => {
@@ -59,6 +60,7 @@ export const NotificationCenter = () => {
         setUnreadCount(data.non_lues || 0);
       }
     } catch (e) { /* silent */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchNotifications = useCallback(async () => {
@@ -72,6 +74,7 @@ export const NotificationCenter = () => {
       }
     } catch (e) { /* silent */ }
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const markAsRead = async (id) => {
@@ -159,6 +162,7 @@ export const NotificationCenter = () => {
     return () => {
       if (sseRef.current) sseRef.current.abort();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   // Fallback polling for unread count
@@ -166,10 +170,12 @@ export const NotificationCenter = () => {
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchUnreadCount]);
 
   useEffect(() => {
     if (open) fetchNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, fetchNotifications]);
 
   useEffect(() => {
@@ -178,6 +184,7 @@ export const NotificationCenter = () => {
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

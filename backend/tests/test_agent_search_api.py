@@ -1,17 +1,30 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Suite for Agent Terrain Search API
+Test Suite for Agent Terrain Search API
+GreenLink - Agent Terrain Secure Search System
 GreenLink - Agent Terrain Secure Search System
 
+
+Tests cover:
 Tests cover:
 - Agent Search API: GET /api/agent/search?phone=X
+- Agent Search API: GET /api/agent/search?phone=X
+- Agent Full Details: GET /api/agent/farmer/{farmer_id}/details
 - Agent Full Details: GET /api/agent/farmer/{farmer_id}/details
 - Agent Dashboard Stats: GET /api/agent/dashboard/stats  
+- Agent Dashboard Stats: GET /api/agent/dashboard/stats  
+- Agent Audit Logs: GET /api/agent/audit-logs
 - Agent Audit Logs: GET /api/agent/audit-logs
 - Cooperative Members fix: GET /api/cooperative/members
+- Cooperative Members fix: GET /api/cooperative/members
+- Cooperative Member Details fix: GET /api/cooperative/members/{member_id}
 - Cooperative Member Details fix: GET /api/cooperative/members/{member_id}
 """
+"""
 
-import pytest
 import requests
 import os
 
@@ -24,8 +37,8 @@ COOP_USER = {
 }
 
 ADMIN_USER = {
-    "identifier": "klenakan.eric@gmail.com", 
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL, 
+    "password": ADMIN_PASSWORD
 }
 
 # Known farmer phone for testing

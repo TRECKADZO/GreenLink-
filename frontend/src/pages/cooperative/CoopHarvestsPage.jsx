@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, Clock, CheckCircle2, XCircle, Loader2, User, Calendar, Scale, AlertTriangle, Check, X, ShoppingCart } from 'lucide-react';
@@ -9,7 +10,7 @@ import Navbar from '../../components/Navbar';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : {};
 };
 

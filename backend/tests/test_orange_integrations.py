@@ -1,20 +1,36 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Suite for Orange Money, Orange SMS, and USSD Gateway Integrations
+Test Suite for Orange Money, Orange SMS, and USSD Gateway Integrations
+Tests the mock mode functionality when credentials are absent in .env
 Tests the mock mode functionality when credentials are absent in .env
 
+
+Tested Endpoints:
 Tested Endpoints:
 - GET /api/payments/simulation-status - public, returns simulation_mode=true
+- GET /api/payments/simulation-status - public, returns simulation_mode=true
+- GET /api/payments/integrations-status - admin-only, returns status of all 3 services
 - GET /api/payments/integrations-status - admin-only, returns status of all 3 services
 - POST /api/ussd/calculate-premium - public carbon calculator
+- POST /api/ussd/calculate-premium - public carbon calculator
+- POST /api/ussd/callback - USSD callback endpoint
 - POST /api/ussd/callback - USSD callback endpoint
 
+
+Service Mock Mode Tests:
 Service Mock Mode Tests:
 - OrangeMoneyService: mock mode when credentials absent
+- OrangeMoneyService: mock mode when credentials absent
+- OrangeSMSService: mock mode when credentials absent  
 - OrangeSMSService: mock mode when credentials absent  
 - USSDGatewayService: mock mode when credentials absent
+- USSDGatewayService: mock mode when credentials absent
+"""
 """
 
-import pytest
 import requests
 import os
 
@@ -22,8 +38,8 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
 # Test credentials
 ADMIN_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 COOP_CREDENTIALS = {

@@ -52,6 +52,7 @@ const AuditFormPage = () => {
     rejection_reason: ''
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchParcelDetails = async () => {
       try {
@@ -80,6 +81,7 @@ const AuditFormPage = () => {
     if (missionId && parcelId) {
       fetchParcelDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missionId, parcelId]);
 
   const getCurrentLocation = () => {
@@ -441,7 +443,7 @@ const AuditFormPage = () => {
             <CardContent>
               <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-4">
                 {photos.map((photo, index) => (
-                  <div key={index} className="relative group">
+                  <div key={`el-${index}`} className="relative group">
                     <img
                       src={photo.uri}
                       alt={`Photo ${index + 1}`}

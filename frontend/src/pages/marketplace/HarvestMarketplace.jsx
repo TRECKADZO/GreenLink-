@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -211,15 +212,17 @@ const HarvestMarketplace = () => {
   const isSeller = user && ['producteur', 'cooperative', 'farmer'].includes(user.user_type);
   const isBuyer = user && ['acheteur', 'buyer'].includes(user.user_type);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchListings();
     fetchStats();
     fetchFavorites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cropFilter, certFilter, sortBy]);
 
   const fetchFavorites = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       if (!token) return;
       const response = await axios.get(`${API_URL}/api/buyer/favorites`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -233,7 +236,7 @@ const HarvestMarketplace = () => {
 
   const handleToggleFavorite = async (e, listingId) => {
     e.stopPropagation();
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     if (!token) {
       toast.error('Connectez-vous pour ajouter aux favoris');
       return;
@@ -299,7 +302,7 @@ const HarvestMarketplace = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.post(`${API_URL}/api/harvest-marketplace/quote-requests`, {
         listing_id: selectedListing.listing_id,
         ...quoteForm,

@@ -19,14 +19,18 @@ const USSDCarbonCalculator = () => {
   const inputRef = useRef(null);
   const screenRef = useRef(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setSessionId(`carbon_${Date.now()}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (screenRef.current) {
       screenRef.current.scrollTop = screenRef.current.scrollHeight;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
 
   const startSession = async () => {

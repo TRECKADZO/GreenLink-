@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -90,6 +91,7 @@ const UsersManagement = () => {
     return badges[status] || badges.active;
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'admin') {
@@ -97,12 +99,13 @@ const UsersManagement = () => {
       return;
     }
     fetchUsers();
-  }, [user, authLoading, page, userTypeFilter, sortBy, sortOrder]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, page, userTypeFilter, sortBy, sortOrder, navigate]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const params = new URLSearchParams({
         skip: page * limit,
         limit: limit,
@@ -177,7 +180,7 @@ const UsersManagement = () => {
 
   const handleDelete = async (userId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.delete(`${API_URL}/api/admin/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -200,7 +203,7 @@ const UsersManagement = () => {
 
   const handleBulkDelete = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const response = await axios.delete(`${API_URL}/api/admin/users/bulk/delete`, {
         headers: { Authorization: `Bearer ${token}` },
         data: selectedUsers
@@ -224,7 +227,7 @@ const UsersManagement = () => {
 
   const exportToCSV = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const params = userTypeFilter !== 'all' ? `?user_type=${userTypeFilter}` : '';
       
       const response = await axios.get(`${API_URL}/api/admin/users/export/data${params}`, {
@@ -261,7 +264,7 @@ const UsersManagement = () => {
 
   const exportToPDF = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const params = userTypeFilter !== 'all' ? `?user_type=${userTypeFilter}` : '';
       
       const response = await axios.get(`${API_URL}/api/admin/users/export/data${params}`, {

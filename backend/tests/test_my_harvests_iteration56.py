@@ -1,18 +1,32 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test suite for GET /api/greenlink/harvests/my-harvests endpoint
+Test suite for GET /api/greenlink/harvests/my-harvests endpoint
+and POST /api/greenlink/harvests unit conversion features.
 and POST /api/greenlink/harvests unit conversion features.
 
+
+Features tested:
 Features tested:
 1. GET /api/greenlink/harvests/my-harvests - returns farmer's harvests with stats
+1. GET /api/greenlink/harvests/my-harvests - returns farmer's harvests with stats
+2. Filtering by statut (en_attente, validee, rejetee)
 2. Filtering by statut (en_attente, validee, rejetee)
 3. Unit conversion: tonnes→kg (x1000), sacs→kg (x65)
+3. Unit conversion: tonnes→kg (x1000), sacs→kg (x65)
+4. quantity_display format with original unit
 4. quantity_display format with original unit
 5. original_quantity field in response
+5. original_quantity field in response
+6. Stats calculation (total, en_attente, validees, rejetees, total_kg)
 6. Stats calculation (total, en_attente, validees, rejetees, total_kg)
 7. Authentication requirement (401 without token)
+7. Authentication requirement (401 without token)
+"""
 """
 
-import pytest
 import requests
 import os
 import time
@@ -22,7 +36,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 # Test credentials
 FARMER_IDENTIFIER = "+2250709090909"
 FARMER_PASSWORD = "koffi2024"
-COOP_IDENTIFIER = "bielaghana@gmail.com"
+COOP_IDENTIFIER = COOP_EMAIL
 COOP_PASSWORD = "greenlink2024"
 
 # Existing parcel IDs for farmer

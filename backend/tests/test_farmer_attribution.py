@@ -1,21 +1,31 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Tests for Farmer Attribution Feature (Iteration 32)
+Tests for Farmer Attribution Feature (Iteration 32)
+- GET /api/cooperative/agents returns agents with assigned_farmers_count
 - GET /api/cooperative/agents returns agents with assigned_farmers_count
 - POST /api/cooperative/agents/{agent_id}/assign-farmers assigns farmers
+- POST /api/cooperative/agents/{agent_id}/assign-farmers assigns farmers
+- POST /api/cooperative/agents/{agent_id}/unassign-farmers removes assignments
 - POST /api/cooperative/agents/{agent_id}/unassign-farmers removes assignments
 - GET /api/cooperative/agents/{agent_id}/assigned-farmers lists farmers for agent
+- GET /api/cooperative/agents/{agent_id}/assigned-farmers lists farmers for agent
+- GET /api/field-agent/my-farmers returns assigned farmers for logged-in agent
 - GET /api/field-agent/my-farmers returns assigned farmers for logged-in agent
 - Reassignment logic: assigning a farmer already assigned to another agent should reassign
+- Reassignment logic: assigning a farmer already assigned to another agent should reassign
+"""
 """
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-COOP_IDENTIFIER = "bielaghana@gmail.com"
+COOP_IDENTIFIER = COOP_EMAIL
 COOP_PASSWORD = "greenlink2024"
 AGENT_IDENTIFIER = "+2250709005301"
 AGENT_PASSWORD = "greenlink2024"

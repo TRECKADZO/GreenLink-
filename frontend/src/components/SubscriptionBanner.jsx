@@ -1,3 +1,4 @@
+import { tokenService } from "../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -19,7 +20,7 @@ const REGIONS_CI = [
 
 const SubscriptionBanner = ({ subscription }) => {
   const { toast } = useToast();
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   const headers = { Authorization: `Bearer ${token}` };
 
   const [showQuoteForm, setShowQuoteForm] = useState(false);
@@ -39,8 +40,10 @@ const SubscriptionBanner = ({ subscription }) => {
     billing_preference: 'monthly',
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchMyQuotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMyQuotes = async () => {

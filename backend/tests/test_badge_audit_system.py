@@ -1,12 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Badge System and Audit Flow Tests
+Badge System and Audit Flow Tests
+Tests for:
 Tests for:
 - Badge calculation (starter -> bronze -> silver -> gold)
+- Badge calculation (starter -> bronze -> silver -> gold)
+- Audit submission API
 - Audit submission API
 - Dashboard API with badge_progress
+- Dashboard API with badge_progress
+- Push notification trigger (mocked)
 - Push notification trigger (mocked)
 """
-import pytest
 import requests
 import os
 
@@ -19,8 +27,8 @@ AUDITOR_CREDENTIALS = {
 }
 
 ADMIN_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 

@@ -56,10 +56,12 @@ const SSRTEAgentDashboard = () => {
     observations: ''
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (token) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const loadData = async () => {
@@ -654,7 +656,7 @@ const SSRTEAgentDashboard = () => {
                     </Button>
                   </div>
                   {visitForm.children_details.map((child, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-slate-700/50 space-y-2">
+                    <div key={`el-${index}`} className="p-3 rounded-lg bg-slate-700/50 space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-white text-sm">Enfant {index + 1}</span>
                         <Button 

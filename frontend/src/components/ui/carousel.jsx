@@ -43,14 +43,17 @@ const Carousel = React.forwardRef((
 
     setCanScrollPrev(api.canScrollPrev())
     setCanScrollNext(api.canScrollNext())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const scrollPrev = React.useCallback(() => {
     api?.scrollPrev()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api])
 
   const scrollNext = React.useCallback(() => {
     api?.scrollNext()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api])
 
   const handleKeyDown = React.useCallback((event) => {
@@ -61,6 +64,7 @@ const Carousel = React.forwardRef((
       event.preventDefault()
       scrollNext()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollPrev, scrollNext])
 
   React.useEffect(() => {
@@ -69,6 +73,7 @@ const Carousel = React.forwardRef((
     }
 
     setApi(api)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api, setApi])
 
   React.useEffect(() => {
@@ -83,6 +88,7 @@ const Carousel = React.forwardRef((
     return () => {
       api?.off("select", onSelect)
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api, onSelect])
 
   return (

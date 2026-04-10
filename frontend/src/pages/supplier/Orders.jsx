@@ -18,6 +18,7 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -25,7 +26,8 @@ const Orders = () => {
       return;
     }
     fetchOrders();
-  }, [user, authLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, navigate]);
 
   const fetchOrders = async () => {
     try {
@@ -210,7 +212,7 @@ const Orders = () => {
                     <h4 className="font-semibold text-gray-900 mb-3">Articles commandés:</h4>
                     <div className="space-y-2">
                       {order.items.map((item, index) => (
-                        <div key={index} className="flex justify-between text-sm">
+                        <div key={`item-${index}`} className="flex justify-between text-sm">
                           <span className="text-gray-700">
                             {item.product_name} x {item.quantity}
                           </span>

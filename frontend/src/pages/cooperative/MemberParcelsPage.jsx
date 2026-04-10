@@ -62,8 +62,10 @@ const MemberParcelsPage = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchParcels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId]);
 
   const handleAddParcel = async (e) => {

@@ -1,20 +1,36 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 PDF and CSV Export Tests - Iteration 45
+PDF and CSV Export Tests - Iteration 45
+Testing all PDF/CSV export endpoints for GreenLink cooperative dashboard
 Testing all PDF/CSV export endpoints for GreenLink cooperative dashboard
 
+
+Credentials used:
 Credentials used:
 - Cooperative 1 (Alain yao / no members): traore_eric@yahoo.fr / greenlink2024
+- Cooperative 1 (Alain yao / no members): traore_eric@yahoo.fr / greenlink2024
+- Cooperative 2 (COOP-GAGNOA / has members): +2250505000001 / greenlink2024
 - Cooperative 2 (COOP-GAGNOA / has members): +2250505000001 / greenlink2024
 - Admin: klenakan.eric@gmail.com / 474Treckadzo
+- Admin: klenakan.eric@gmail.com / 474Treckadzo
+
 
 Key bugs fixed in this iteration:
+Key bugs fixed in this iteration:
+1. certifications=None causing join error in EUDR PDF (cooperative.py line 1524)
 1. certifications=None causing join error in EUDR PDF (cooperative.py line 1524)
 2. Unicode chars (accents, bullets) in fpdf causing crashes in ICI PDF (ici_pdf_reports.py)
+2. Unicode chars (accents, bullets) in fpdf causing crashes in ICI PDF (ici_pdf_reports.py)
+3. Missing generate_ssrte_report method in pdf_service.py
 3. Missing generate_ssrte_report method in pdf_service.py
 4. Missing ici_pdf_reports router in server.py
+4. Missing ici_pdf_reports router in server.py
+"""
 """
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -29,8 +45,8 @@ COOP_GAGNOA_PHONE = "+2250505000001"
 COOP_GAGNOA_PASSWORD = "greenlink2024"
 COOP_GAGNOA_ID = "69a22d7bf64360df4cbb7acc"
 
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 
 @pytest.fixture(scope="module")

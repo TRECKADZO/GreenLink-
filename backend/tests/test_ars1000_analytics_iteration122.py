@@ -1,20 +1,26 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test ARS 1000 Analytics & Excel Export - Iteration 122
+Test ARS 1000 Analytics & Excel Export - Iteration 122
+Tests:
 Tests:
 1. GET /api/admin/analytics/ars1000/stats - Comprehensive ARS 1000 metrics
+1. GET /api/admin/analytics/ars1000/stats - Comprehensive ARS 1000 metrics
+2. GET /api/admin/analytics/ars1000/export/excel/{pdc_id} - Excel export with 7 sheets
 2. GET /api/admin/analytics/ars1000/export/excel/{pdc_id} - Excel export with 7 sheets
 """
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
-COOPERATIVE_EMAIL = "bielaghana@gmail.com"
+COOPERATIVE_EMAIL = COOP_EMAIL
 COOPERATIVE_PASSWORD = "test123456"
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 
 class TestARS1000Analytics:

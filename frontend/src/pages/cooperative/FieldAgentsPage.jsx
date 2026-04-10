@@ -52,6 +52,7 @@ const FieldAgentsPage = () => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { fetchAgents(); }, [fetchAgents]);
@@ -317,7 +318,7 @@ const FieldAgentsPage = () => {
                 <div className="p-3 bg-gray-50 rounded-lg col-span-2">
                   <p className="text-sm text-gray-500">Villages couverts</p>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {selectedAgent.village_coverage?.length > 0 ? selectedAgent.village_coverage.map((village, i) => <Badge key={i} variant="secondary">{village}</Badge>) : <span className="text-gray-400">Aucun village spécifié</span>}
+                    {selectedAgent.village_coverage?.length > 0 ? selectedAgent.village_coverage.map((village, i) => <Badge key={`el-${i}`} variant="secondary">{village}</Badge>) : <span className="text-gray-400">Aucun village spécifié</span>}
                   </div>
                 </div>
               </div>

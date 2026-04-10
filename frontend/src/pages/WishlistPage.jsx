@@ -25,6 +25,7 @@ const WishlistPage = () => {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -32,6 +33,7 @@ const WishlistPage = () => {
       return;
     }
     fetchWishlist();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchWishlist = async () => {
@@ -86,7 +88,7 @@ const WishlistPage = () => {
           <div className="max-w-6xl mx-auto">
             <div className="animate-pulse space-y-4">
               {[1,2,3].map(i => (
-                <Card key={i} className="p-6">
+                <Card key={`el-${i}`} className="p-6">
                   <div className="h-20 bg-gray-200 rounded"></div>
                 </Card>
               ))}

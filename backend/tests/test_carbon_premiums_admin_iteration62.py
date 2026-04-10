@@ -1,24 +1,36 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Carbon Premiums Admin Workflow - Iteration 62
+Test Carbon Premiums Admin Workflow - Iteration 62
+Tests the Super Admin carbon premium management flow:
 Tests the Super Admin carbon premium management flow:
 - GET /api/admin/carbon-premiums/stats
+- GET /api/admin/carbon-premiums/stats
+- GET /api/admin/carbon-premiums/config
 - GET /api/admin/carbon-premiums/config
 - GET /api/admin/carbon-premiums/requests
+- GET /api/admin/carbon-premiums/requests
+- GET /api/admin/carbon-premiums/requests/{id}
 - GET /api/admin/carbon-premiums/requests/{id}
 - PUT /api/admin/carbon-premiums/requests/{id}/validate
+- PUT /api/admin/carbon-premiums/requests/{id}/validate
+- PUT /api/admin/carbon-premiums/requests/{id}/pay
 - PUT /api/admin/carbon-premiums/requests/{id}/pay
 - POST /api/ussd/callback with text=2*1 (USSD payment request)
+- POST /api/ussd/callback with text=2*1 (USSD payment request)
+"""
 """
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Admin credentials from review request
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 # Test farmer phone for USSD
 TEST_FARMER_PHONE = "+2250799999999"

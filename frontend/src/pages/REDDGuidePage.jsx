@@ -209,7 +209,7 @@ const REDDGuidePage = () => {
                   {isExpanded && (
                     <div className="border-t border-slate-800 p-4 sm:p-5 space-y-3">
                       {cat.practices.map((practice, idx) => (
-                        <div key={idx} className={`p-3 rounded-lg ${colors.bg} border ${colors.border}`} data-testid={`redd-practice-${cat.id}-${idx}`}>
+                        <div key={`el-${idx}`} className={`p-3 rounded-lg ${colors.bg} border ${colors.border}`} data-testid={`redd-practice-${cat.id}-${idx}`}>
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
                               <p className="text-sm font-medium text-white">{practice.name}</p>

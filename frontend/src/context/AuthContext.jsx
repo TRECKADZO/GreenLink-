@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { tokenService } from '../services/tokenService';
+import logger from '../services/logger';
 
 const AuthContext = createContext();
 
@@ -8,12 +10,13 @@ const API = `${BACKEND_URL}/api`;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(tokenService.getToken());
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const initAuth = async () => {
-      const savedToken = localStorage.getItem('token');
+      const savedToken = tokenService.getToken();
       if (savedToken) {
         try {
           const response = await axios.get(`${API}/auth/me`, {
@@ -22,20 +25,20 @@ export const AuthProvider = ({ children }) => {
           setUser(response.data);
           setToken(savedToken);
         } catch (error) {
-          console.error('Token invalid:', error);
-          localStorage.removeItem('token');
+          logger.error('Token invalid:', error);
+          tokenService.removeToken();
           setToken(null);
         }
       }
       setLoading(false);
     };
     initAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const register = async (identifier, password, fullName, userType, isEmail = false, additionalData = null) => {
     try {
-      console.log('[Auth] Attempting registration:', { identifier, fullName, userType, isEmail });
-      console.log('[Auth] API URL:', API);
+      logger.log('[Auth] Attempting registration:', { identifier, fullName, userType, isEmail });
       
       const payload = {
         password,
@@ -43,16 +46,13 @@ export const AuthProvider = ({ children }) => {
         user_type: userType
       };
       
-      // Add either phone_number or email
       if (isEmail) {
         payload.email = identifier;
       } else {
         payload.phone_number = identifier;
       }
 
-      // Add additional data (legal acceptance + ICI data) if provided
       if (additionalData) {
-        // Legal acceptance fields
         if (additionalData.acceptedConditions !== undefined) {
           payload.legal_acceptance = {
             acceptedConditions: additionalData.acceptedConditions,
@@ -60,64 +60,29 @@ export const AuthProvider = ({ children }) => {
             acceptedAt: additionalData.acceptedAt
           };
         }
-        
-        // Location fields
-        if (additionalData.departement) {
-          payload.department = additionalData.departement;
-        }
-        if (additionalData.zone) {
-          payload.zone = additionalData.zone;
-        }
-        if (additionalData.village) {
-          payload.village = additionalData.village;
-        }
-        
-        // Cooperative fields
-        if (additionalData.coop_name) {
-          payload.coop_name = additionalData.coop_name;
-        }
-        if (additionalData.sponsor_referral_code) {
-          payload.sponsor_referral_code = additionalData.sponsor_referral_code;
-        }
-        
-        // ICI demographic fields for producers
-        if (additionalData.genre) {
-          payload.genre = additionalData.genre;
-        }
-        if (additionalData.date_naissance) {
-          payload.date_naissance = additionalData.date_naissance;
-        }
-        if (additionalData.niveau_education) {
-          payload.niveau_education = additionalData.niveau_education;
-        }
-        if (additionalData.taille_menage) {
-          payload.taille_menage = additionalData.taille_menage;
-        }
-        if (additionalData.nombre_enfants) {
-          payload.nombre_enfants = additionalData.nombre_enfants;
-        }
+        if (additionalData.departement) payload.department = additionalData.departement;
+        if (additionalData.zone) payload.zone = additionalData.zone;
+        if (additionalData.village) payload.village = additionalData.village;
+        if (additionalData.coop_name) payload.coop_name = additionalData.coop_name;
+        if (additionalData.sponsor_referral_code) payload.sponsor_referral_code = additionalData.sponsor_referral_code;
+        if (additionalData.genre) payload.genre = additionalData.genre;
+        if (additionalData.date_naissance) payload.date_naissance = additionalData.date_naissance;
+        if (additionalData.niveau_education) payload.niveau_education = additionalData.niveau_education;
+        if (additionalData.taille_menage) payload.taille_menage = additionalData.taille_menage;
+        if (additionalData.nombre_enfants) payload.nombre_enfants = additionalData.nombre_enfants;
       }
       
-      console.log('[Auth] Registration payload:', payload);
-      
       const response = await axios.post(`${API}/auth/register`, payload);
-      
-      console.log('[Auth] Registration response:', response.data);
       
       const { access_token, user: userData } = response.data;
       setToken(access_token);
       setUser(userData);
-      localStorage.setItem('token', access_token);
+      tokenService.setToken(access_token);
       
-      console.log('[Auth] Registration successful, token saved');
       return { success: true, user: userData };
     } catch (error) {
-      console.error('[Auth] Registration error:', error);
-      console.error('[Auth] Error response:', error.response?.data);
-      console.error('[Auth] Error status:', error.response?.status);
-      console.error('[Auth] Error message:', error.message);
+      logger.error('[Auth] Registration error:', error.response?.data || error.message);
       
-      // More detailed error message
       let errorMessage = 'Erreur lors de l\'inscription';
       if (error.response?.data?.detail) {
         errorMessage = error.response.data.detail;
@@ -129,30 +94,24 @@ export const AuthProvider = ({ children }) => {
         errorMessage = `Erreur: ${error.message}`;
       }
       
-      return {
-        success: false,
-        error: errorMessage
-      };
+      return { success: false, error: errorMessage };
     }
   };
 
   const login = async (identifier, password) => {
     try {
-      console.log('[Auth] Attempting login with:', identifier);
-      console.log('[Auth] API URL:', API);
+      logger.log('[Auth] Attempting login with:', identifier);
       
       const response = await axios.post(`${API}/auth/login`, {
         identifier,
         password
       });
       
-      console.log('[Auth] Login response:', response.data);
-      
       const { access_token, user: userData } = response.data;
       setToken(access_token);
       setUser(userData);
-      localStorage.setItem('token', access_token);
-      localStorage.setItem('user', JSON.stringify(userData));
+      tokenService.setToken(access_token);
+      tokenService.setUser(userData);
       
       // Trigger offline sync for field_agent and cooperative users
       if (userData.user_type === 'field_agent' || userData.user_type === 'cooperative') {
@@ -163,18 +122,13 @@ export const AuthProvider = ({ children }) => {
           } else {
             performFullSync(BACKEND_URL, access_token).catch(() => {});
           }
-        } catch { /* offline DB not ready */ }
+        } catch (e) { logger.warn('[Auth] Offline DB not ready:', e.message); }
       }
       
-      console.log('[Auth] Login successful, token saved');
       return { success: true, user: userData };
     } catch (error) {
-      console.error('[Auth] Login error:', error);
-      console.error('[Auth] Error response:', error.response?.data);
-      console.error('[Auth] Error status:', error.response?.status);
-      console.error('[Auth] Error message:', error.message);
+      logger.error('[Auth] Login error:', error.response?.data || error.message);
       
-      // More detailed error message
       let errorMessage = 'Erreur lors de la connexion';
       if (error.response?.data?.detail) {
         errorMessage = error.response.data.detail;
@@ -188,17 +142,14 @@ export const AuthProvider = ({ children }) => {
         errorMessage = `Erreur: ${error.message}`;
       }
       
-      return {
-        success: false,
-        error: errorMessage
-      };
+      return { success: false, error: errorMessage };
     }
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('token');
+    tokenService.clearAll();
   };
 
   const updateProfile = async (profileData) => {

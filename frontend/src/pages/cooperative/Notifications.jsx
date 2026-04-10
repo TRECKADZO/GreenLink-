@@ -47,12 +47,14 @@ const CooperativeNotifications = () => {
       setLoading(false);
       setRefreshing(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchNotifications]);
 
   const handleMarkRead = async (notificationId) => {

@@ -1,9 +1,14 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Dashboard Charts API - Iteration 84
+Test Dashboard Charts API - Iteration 84
+Tests for the 4 interactive charts: REDD Evolution, SSRTE Trends, Risk by Zone, Practices Donut
 Tests for the 4 interactive charts: REDD Evolution, SSRTE Trends, Risk by Zone, Practices Donut
 """
+"""
 
-import pytest
 import requests
 import os
 
@@ -11,8 +16,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 TEST_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 

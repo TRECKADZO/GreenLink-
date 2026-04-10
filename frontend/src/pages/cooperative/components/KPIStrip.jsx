@@ -76,7 +76,7 @@ export const KPIStrip = ({ members, parcelles, financial, navigate }) => {
     <div className="max-w-[1400px] mx-auto px-6 md:px-8 -mt-6 relative z-10">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi, i) => (
-          <KPICard key={i} {...kpi} />
+          <KPICard key={`el-${i}`} {...kpi} />
         ))}
       </div>
     </div>

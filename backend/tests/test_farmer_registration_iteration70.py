@@ -1,16 +1,28 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 70 - Farmer Registration Flow Tests
+Iteration 70 - Farmer Registration Flow Tests
+Tests for:
 Tests for:
 1. POST /api/cooperative/members - PIN code is MANDATORY (returns error without it)
+1. POST /api/cooperative/members - PIN code is MANDATORY (returns error without it)
+2. POST /api/cooperative/members - creates member with auto-generated code_planteur, hashed PIN, hectares
 2. POST /api/cooperative/members - creates member with auto-generated code_planteur, hashed PIN, hectares
 3. POST /api/cooperative/members - creates ussd_registrations entry
+3. POST /api/cooperative/members - creates ussd_registrations entry
+4. GET /api/cooperative/members/activation-stats - returns stats (total, activated, pending, rate, pin count, code count)
 4. GET /api/cooperative/members/activation-stats - returns stats (total, activated, pending, rate, pin count, code count)
 5. POST /api/cooperative/members/{id}/send-reminder - sends MOCKED SMS reminder
+5. POST /api/cooperative/members/{id}/send-reminder - sends MOCKED SMS reminder
+6. USSD recognition - farmer created by coop is recognized when dialing *144*99# and choosing option 1
 6. USSD recognition - farmer created by coop is recognized when dialing *144*99# and choosing option 1
 7. POST /api/auth/activate-member-account - member can activate and gets code_planteur
+7. POST /api/auth/activate-member-account - member can activate and gets code_planteur
+"""
 """
 
-import pytest
 import requests
 import os
 import time
@@ -19,8 +31,8 @@ import random
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.preview.emergentagent.com')
 
 # Test credentials
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "474Treckadzo"
+# COOP_EMAIL imported from test_config
+COOP_PASSWORD = COOP_PASSWORD  # from test_config
 
 
 class TestFarmerRegistrationIteration70:

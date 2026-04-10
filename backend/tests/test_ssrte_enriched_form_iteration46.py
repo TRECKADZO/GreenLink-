@@ -1,10 +1,16 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test SSRTE Enriched Form Fields - Iteration 46
+Test SSRTE Enriched Form Fields - Iteration 46
+Tests for enriched SSRTE fields: taille_menage, nombre_enfants, liste_enfants, 
 Tests for enriched SSRTE fields: taille_menage, nombre_enfants, liste_enfants, 
 conditions_vie, eau_courante, electricite, distance_ecole_km, observations
+conditions_vie, eau_courante, electricite, distance_ecole_km, observations
+"""
 """
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -17,8 +23,8 @@ COOP_CREDENTIALS = {
     "password": "greenlink2024"
 }
 ADMIN_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 

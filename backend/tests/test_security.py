@@ -1,21 +1,38 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Security Testing for GreenLink Agritech Platform
+Security Testing for GreenLink Agritech Platform
+OWASP Top 10 Vulnerability Testing
 OWASP Top 10 Vulnerability Testing
 
+
+Tests:
 Tests:
 1. Authentication Security - JWT validation, expiration, tampering
+1. Authentication Security - JWT validation, expiration, tampering
+2. Authorization - RBAC verification (role-based access control)
 2. Authorization - RBAC verification (role-based access control)
 3. Input Validation - NoSQL/SQL injection attempts
+3. Input Validation - NoSQL/SQL injection attempts
+4. XSS Prevention - Script injection in form fields
 4. XSS Prevention - Script injection in form fields
 5. CORS Configuration - Verify proper CORS headers
+5. CORS Configuration - Verify proper CORS headers
+6. Sensitive Data Exposure - Check for password/token/PII leaks
 6. Sensitive Data Exposure - Check for password/token/PII leaks
 7. Rate Limiting - Brute force protection (if present)
+7. Rate Limiting - Brute force protection (if present)
+8. API Security - Verify endpoints require proper authentication
 8. API Security - Verify endpoints require proper authentication
 9. Password Security - Check password hashing
+9. Password Security - Check password hashing
+10. Session Management - Token refresh, logout
 10. Session Management - Token refresh, logout
 """
+"""
 
-import pytest
 import requests
 import json
 import os
@@ -28,7 +45,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.pr
 
 # Test credentials
 CREDENTIALS = {
-    "admin": {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"},
+    "admin": {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
     "cooperative": {"identifier": "coop-test@greenlink.ci", "password": "coop123"},
     "farmer": {"identifier": "konan@test.com", "password": "password"},
     "buyer": {"identifier": "nestle@test.com", "password": "password"},
@@ -132,8 +149,8 @@ class TestAuthenticationSecurity:
     def test_wrong_credentials_rejected(self):
         """Test that wrong credentials are rejected"""
         wrong_creds = [
-            {"identifier": "klenakan.eric@gmail.com", "password": "wrong_password"},
-            {"identifier": "wrong_email@test.com", "password": "474Treckadzo"},
+            {"identifier": ADMIN_EMAIL, "password": "wrong_password"},
+            {"identifier": "wrong_email@test.com", "password": ADMIN_PASSWORD},
             {"identifier": "", "password": ""},
             {"identifier": "admin", "password": "admin"},
         ]
@@ -608,7 +625,7 @@ class TestBruteForceProtection:
     
     def test_rapid_login_attempts(self):
         """Test if rapid login attempts are rate limited"""
-        wrong_creds = {"identifier": "klenakan.eric@gmail.com", "password": "wrong_password"}
+        wrong_creds = {"identifier": ADMIN_EMAIL, "password": "wrong_password"}
         
         responses = []
         for i in range(10):

@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -46,7 +47,7 @@ const QuotesManagement = () => {
   const [actionReason, setActionReason] = useState('');
   const [processing, setProcessing] = useState(false);
 
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   const headers = { Authorization: `Bearer ${token}` };
 
   const fetchQuotes = useCallback(async () => {
@@ -59,6 +60,7 @@ const QuotesManagement = () => {
     } catch (err) {
       console.error('Error fetching quotes:', err);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const fetchAccounts = useCallback(async () => {
@@ -69,6 +71,7 @@ const QuotesManagement = () => {
     } catch (err) {
       console.error('Error fetching accounts:', err);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -78,6 +81,7 @@ const QuotesManagement = () => {
       setLoading(false);
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchQuotes, fetchAccounts]);
 
   const handleQuoteAction = async (quoteId, action) => {
@@ -192,7 +196,7 @@ const QuotesManagement = () => {
             { label: 'Comptes actifs', value: accountStats.active || 0, color: 'text-blue-600', bg: 'bg-blue-50', icon: Users },
             { label: 'Comptes suspendus', value: accountStats.suspended || 0, color: 'text-gray-600', bg: 'bg-gray-100', icon: Ban },
           ].map((kpi, i) => (
-            <Card key={i} className={`border-0 shadow-sm ${kpi.bg}`}>
+            <Card key={`el-${i}`} className={`border-0 shadow-sm ${kpi.bg}`}>
               <CardContent className="p-4 flex items-center gap-3">
                 <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
                 <div>
@@ -352,7 +356,7 @@ const QuotesManagement = () => {
                   <div className="text-sm">
                     <span className="text-gray-500">Regions ciblees:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {q.target_regions.map((r, i) => <Badge key={i} variant="outline" className="text-xs">{r}</Badge>)}
+                      {q.target_regions.map((r, i) => <Badge key={`el-${i}`} variant="outline" className="text-xs">{r}</Badge>)}
                     </div>
                   </div>
                 )}

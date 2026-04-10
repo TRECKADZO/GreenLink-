@@ -1,14 +1,24 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 ARS 1000 Module Tests - Iteration 114
+ARS 1000 Module Tests - Iteration 114
+Testing PDC, Lots/Traceability, Certification, and Agroforestry endpoints
 Testing PDC, Lots/Traceability, Certification, and Agroforestry endpoints
 
+
+Test credentials:
 Test credentials:
 - Cooperative: bielaghana@gmail.com / test123456
+- Cooperative: bielaghana@gmail.com / test123456
+- Farmer: testplanteur@test.ci / test123456
 - Farmer: testplanteur@test.ci / test123456
 - Agent: testagent@test.ci / test123456
+- Agent: testagent@test.ci / test123456
+"""
 """
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -29,7 +39,7 @@ def api_client():
 def cooperative_token(api_client):
     """Get cooperative authentication token"""
     response = api_client.post(f"{BASE_URL}/api/auth/login", json={
-        "identifier": "bielaghana@gmail.com",
+        "identifier": COOP_EMAIL,
         "password": "test123456"
     })
     if response.status_code == 200:
@@ -99,7 +109,7 @@ class TestAuthentication:
     def test_cooperative_login(self, api_client):
         """Test cooperative login"""
         response = api_client.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "bielaghana@gmail.com",
+            "identifier": COOP_EMAIL,
             "password": "test123456"
         })
         assert response.status_code == 200, f"Login failed: {response.text}"

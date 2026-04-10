@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -23,13 +24,13 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const apiClient = {
   get: async (url) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.get(`${API_URL}${url}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
   },
   post: async (url, data) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.post(`${API_URL}${url}`, data, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
@@ -120,6 +121,7 @@ const CooperativeSSRTEDashboard = () => {
   };
 
   // Monitor online status
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -137,9 +139,11 @@ const CooperativeSSRTEDashboard = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-sync when coming back online
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isOnline && offlineVisits.length > 0) {
       toast.info('Connexion rétablie', { 
@@ -150,8 +154,10 @@ const CooperativeSSRTEDashboard = () => {
         }
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || (user.user_type !== 'cooperative' && user.user_type !== 'admin')) {
@@ -160,6 +166,7 @@ const CooperativeSSRTEDashboard = () => {
       return;
     }
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchData = async () => {
@@ -812,7 +819,7 @@ const CooperativeSSRTEDashboard = () => {
                         <p className="text-xs text-slate-500 text-center py-2">Cliquez "Ajouter" pour enregistrer les enfants</p>
                       )}
                       {visitForm.liste_enfants.map((child, i) => (
-                        <div key={i} className="p-2 bg-slate-900 rounded-lg space-y-2">
+                        <div key={`el-${i}`} className="p-2 bg-slate-900 rounded-lg space-y-2">
                           <div className="flex justify-between items-center">
                             <span className="text-xs text-slate-400 font-medium">Enfant {i + 1}</span>
                             <button onClick={() => removeChildFromForm(i)} className="text-red-400 hover:text-red-300">

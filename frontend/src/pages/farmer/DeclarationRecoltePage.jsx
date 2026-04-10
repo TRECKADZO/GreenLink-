@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -10,7 +11,7 @@ import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
-const getToken = () => localStorage.getItem('token');
+const getToken = () => tokenService.getToken();
 const authHeaders = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
 const GRADE_COLORS = { A: 'bg-green-100 text-green-700 border-green-300', B: 'bg-blue-100 text-blue-700 border-blue-300', C: 'bg-amber-100 text-amber-700 border-amber-300', D: 'bg-red-100 text-red-700 border-red-300' };

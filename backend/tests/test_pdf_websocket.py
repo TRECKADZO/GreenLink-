@@ -1,7 +1,10 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+# Tests for PDF Reports and WebSocket endpoints
 # Tests for PDF Reports and WebSocket endpoints
 # Features: PDF report generation (reportlab), WebSocket connections, stats broadcast
+# Features: PDF report generation (reportlab), WebSocket connections, stats broadcast
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -16,8 +19,8 @@ class TestPDFReports:
         """Login as admin before each test"""
         self.session = requests.Session()
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
         token = login_response.json().get('access_token')
@@ -89,8 +92,8 @@ class TestWebSocketEndpoints:
         """Login as admin before each test"""
         self.session = requests.Session()
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
         token = login_response.json().get('access_token')
@@ -207,8 +210,8 @@ class TestRealTimeDashboardData:
         """Login as admin before each test"""
         self.session = requests.Session()
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
         token = login_response.json().get('access_token')

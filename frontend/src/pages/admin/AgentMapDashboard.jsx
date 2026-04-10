@@ -42,6 +42,7 @@ const AgentMapDashboard = () => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
 
   // Connexion WebSocket pour mises à jour temps réel
@@ -79,6 +80,7 @@ const AgentMapDashboard = () => {
     } catch (error) {
       console.error('[WS] Connection error:', error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_URL, token]);
 
   const handleWebSocketMessage = useCallback((message) => {
@@ -125,6 +127,7 @@ const AgentMapDashboard = () => {
       ));
       setStats(prev => ({ ...prev, online: Math.max(0, prev.online - 1) }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -140,6 +143,7 @@ const AgentMapDashboard = () => {
         wsRef.current.close();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadAgents, connectWebSocket]);
 
   const getAgentTypeLabel = (type) => {

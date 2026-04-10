@@ -1,8 +1,12 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 112 - Farmer Parcel Declaration Form Tests
+Iteration 112 - Farmer Parcel Declaration Form Tests
+Tests the updated farmer parcel form with strata fields matching agent terrain form.
 Tests the updated farmer parcel form with strata fields matching agent terrain form.
 """
-import pytest
 import requests
 import time
 
@@ -14,8 +18,8 @@ FARMER_EMAIL = "testplanteur@test.ci"
 FARMER_PASSWORD = "test123456"
 AGENT_EMAIL = "testagent@test.ci"
 AGENT_PASSWORD = "test123456"
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "test123456"
+# COOP_EMAIL imported from test_config
+# COOP_PASSWORD imported from test_config
 
 # Global token cache
 _token_cache = {}

@@ -32,7 +32,7 @@ export const USSDPanel = ({ show, simulatorMembers, onClose }) => {
             </p>
             <div className="space-y-2 mt-3">
               {steps.map((text, i) => (
-                <div key={i} className="flex items-start gap-3">
+                <div key={`el-${i}`} className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#10B981]/20 text-[#10B981] gl-mono text-[10px] flex items-center justify-center font-bold">
                     {i + 1}
                   </span>

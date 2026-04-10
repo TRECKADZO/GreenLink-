@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { offlineCooperativeApi as cooperativeApi } from '../../services/offlineCooperativeApi';
@@ -133,9 +134,11 @@ const MembersPage = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchMembers();
     loadActivationStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const loadActivationStats = async () => {
@@ -165,7 +168,7 @@ const MembersPage = () => {
     setShowExportMenu(false);
     try {
       const API = process.env.REACT_APP_BACKEND_URL;
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const params = new URLSearchParams({ format });
       if (statusFilter) params.append('status', statusFilter);
       if (search) params.append('search', search);
@@ -800,7 +803,7 @@ const MembersPage = () => {
                   <h4 className="font-medium mb-2">Parcelles</h4>
                   <div className="space-y-2">
                     {selectedMember.parcels.map((parcel, i) => (
-                      <div key={i} className="p-2 bg-green-50 rounded flex justify-between">
+                      <div key={`el-${i}`} className="p-2 bg-green-50 rounded flex justify-between">
                         <span>{parcel.localisation || parcel.location}</span>
                         <span className="text-sm text-gray-600">
                           {parcel.superficie || parcel.area_hectares} ha | Score: {parcel.score_carbone || parcel.carbon_score}/10

@@ -6,6 +6,7 @@ const PWAInstallPrompt = () => {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
@@ -23,6 +24,7 @@ const PWAInstallPrompt = () => {
     }
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInstall = async () => {

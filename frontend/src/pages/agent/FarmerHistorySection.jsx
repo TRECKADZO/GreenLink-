@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import {
   History, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Minus,
@@ -89,7 +90,7 @@ const SSRTEVisitCard = ({ visit }) => {
               <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Enfants enregistres</p>
               <div className="space-y-1">
                 {visit.liste_enfants.map((e, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs bg-white rounded p-1.5 border">
+                  <div key={`el-${i}`} className="flex items-center gap-2 text-xs bg-white rounded p-1.5 border">
                     <span className="font-medium">{e.prenom}</span>
                     <span className="text-gray-400">{e.age} ans</span>
                     {e.scolarise && <Badge className="bg-green-50 text-green-600 text-[8px] px-1">Scolarise</Badge>}
@@ -123,7 +124,7 @@ const SSRTEVisitCard = ({ visit }) => {
             <div>
               <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Recommandations</p>
               <ul className="text-xs text-gray-600 list-disc pl-4 space-y-0.5">
-                {visit.recommandations.map((r, i) => <li key={i}>{r}</li>)}
+                {visit.recommandations.map((r, i) => <li key={`el-${i}`}>{r}</li>)}
               </ul>
             </div>
           )}
@@ -176,7 +177,7 @@ const ICISummaryCard = ({ profile }) => {
           <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Enfants enregistres</p>
           <div className="space-y-1">
             {children.liste_enfants.map((e, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs bg-white rounded p-2 border">
+              <div key={`el-${i}`} className="flex items-center gap-2 text-xs bg-white rounded p-2 border">
                 <span className="font-medium">{e.prenom}</span>
                 <Badge variant="outline" className="text-[9px]">{e.sexe}</Badge>
                 <span className="text-gray-500">{e.age} ans</span>
@@ -209,14 +210,16 @@ const FarmerHistorySection = ({ farmer }) => {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (farmer?.id) loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmer?.id]);
 
   const loadHistory = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await fetch(`${API_URL}/api/ici-data/farmers/${farmer.id}/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });

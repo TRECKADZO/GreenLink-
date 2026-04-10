@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
@@ -58,7 +59,7 @@ export default function DiscrepancyDashboard() {
   const fetchEcarts = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       let url = `${API_URL}/api/ecarts/cooperative?limit=50`;
       if (filter) url += `&classification=${filter}`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -70,6 +71,7 @@ export default function DiscrepancyDashboard() {
       toast.error('Erreur de chargement');
     }
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   useEffect(() => { fetchEcarts(); }, [fetchEcarts]);
@@ -77,7 +79,7 @@ export default function DiscrepancyDashboard() {
   const handleExportPDF = async () => {
     setExporting(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       let url = `${API_URL}/api/ecarts/export/pdf`;
       if (filter) url += `?classification=${filter}`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -104,7 +106,7 @@ export default function DiscrepancyDashboard() {
     if (!selectedEcart) return;
     setValidating(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const r = await fetch(`${API_URL}/api/ecarts/${selectedEcart.id}/validate`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -210,7 +212,7 @@ export default function DiscrepancyDashboard() {
                       <p className="text-xs text-gray-500 mt-0.5">{ecart.parcelle_location} — {formatDate(ecart.created_at)}</p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {ecart.ecarts?.slice(0, 3).map((e, i) => (
-                          <span key={i} className="inline-flex items-center gap-1 text-[10px] bg-white/70 px-2 py-0.5 rounded border">
+                          <span key={`el-${i}`} className="inline-flex items-center gap-1 text-[10px] bg-white/70 px-2 py-0.5 rounded border">
                             {e.ecart_pct > 30 ? <ArrowUpRight className="h-3 w-3 text-red-500" /> :
                              e.ecart_pct > 15 ? <ArrowUpRight className="h-3 w-3 text-amber-500" /> :
                              <Minus className="h-3 w-3 text-green-500" />}
@@ -273,7 +275,7 @@ export default function DiscrepancyDashboard() {
                       {selectedEcart.ecarts?.map((e, i) => {
                         const cls = CLASSIFICATION_COLORS[e.classification] || CLASSIFICATION_COLORS.faible;
                         return (
-                          <tr key={i} className={cls.bg}>
+                          <tr key={`el-${i}`} className={cls.bg}>
                             <td className="p-2 font-medium">{e.label}</td>
                             <td className="p-2 text-right">{typeof e.declare === 'number' ? e.declare.toLocaleString() : e.declare}</td>
                             <td className="p-2 text-right font-semibold">{typeof e.mesure === 'number' ? e.mesure.toLocaleString() : e.mesure}</td>

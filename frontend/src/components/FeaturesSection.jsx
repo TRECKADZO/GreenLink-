@@ -96,6 +96,7 @@ const FeaturesSection = () => {
   const [features, setFeatures] = useState(mockFeatures);
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchFeatures = async () => {
       const data = await api.getFeatures();
@@ -105,6 +106,7 @@ const FeaturesSection = () => {
       setLoading(false);
     };
     fetchFeatures();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
     <section className="py-16 sm:py-24 bg-gradient-to-b from-gray-50 to-white">
@@ -126,7 +128,7 @@ const FeaturesSection = () => {
             const IconComponent = getIconComponent(feature.icon);
             return (
               <Card 
-                key={index} 
+                key={`el-${index}`} 
                 className="p-4 sm:p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-gray-200 group"
               >
                 <div className="flex items-start justify-between mb-3 sm:mb-4">

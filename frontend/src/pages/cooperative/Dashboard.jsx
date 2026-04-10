@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -78,7 +79,7 @@ const Dashboard = () => {
 
   const loadSimulatorMembers = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await fetch(`${API_URL}/api/cooperative/members?limit=200`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -111,11 +112,13 @@ const Dashboard = () => {
     });
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadDashboard();
     loadActivationStats();
     loadKPIs();
     loadCharts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

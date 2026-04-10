@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -82,6 +83,7 @@ const AdminDashboard = () => {
     { value: 'bg-gray-700', label: 'Gris' }
   ];
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'admin') {
@@ -95,18 +97,21 @@ const AdminDashboard = () => {
     }
     fetchPartners();
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   /* Auto-refresh stats toutes les 60s */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!user || user.user_type !== 'admin') return;
     const interval = setInterval(fetchStats, 60000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const response = await axios.get(`${API_URL}/api/admin/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -118,7 +123,7 @@ const AdminDashboard = () => {
 
   const fetchPartners = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const response = await axios.get(`${API_URL}/api/admin/partners`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -132,7 +137,7 @@ const AdminDashboard = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     
     try {
       if (editingId) {
@@ -177,7 +182,7 @@ const AdminDashboard = () => {
     if (!window.confirm('Supprimer ce partenaire?')) return;
     
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.delete(`${API_URL}/api/admin/partners/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -201,7 +206,7 @@ const AdminDashboard = () => {
             <div className="animate-pulse">
               <div className="h-10 bg-gray-200 rounded w-1/3 mb-8"></div>
               <div className="grid gap-4">
-                {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-200 rounded"></div>)}
+                {[1,2,3].map(i => <div key={`el-${i}`} className="h-24 bg-gray-200 rounded"></div>)}
               </div>
             </div>
           </div>

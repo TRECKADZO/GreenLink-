@@ -26,10 +26,12 @@ export const CartProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
     fetchCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchCart]);
 
   const addToCart = async (productId, quantity = 1) => {

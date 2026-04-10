@@ -1,8 +1,12 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Delivery Fee System - Iteration 55
+Test Delivery Fee System - Iteration 55
+Tests for supplier delivery settings and fee calculation endpoints
 Tests for supplier delivery settings and fee calculation endpoints
 """
-import pytest
 import requests
 import os
 
@@ -11,7 +15,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.pr
 # Test credentials
 SUPPLIER_EMAIL = "testfournisseur@test.com"
 SUPPLIER_PASSWORD = "supplier2024"
-COOPERATIVE_EMAIL = "bielaghana@gmail.com"
+COOPERATIVE_EMAIL = COOP_EMAIL
 COOPERATIVE_PASSWORD = "greenlink2024"
 
 

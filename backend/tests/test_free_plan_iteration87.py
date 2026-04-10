@@ -1,17 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 87 - Free Plan for Cooperatives Tests
+Iteration 87 - Free Plan for Cooperatives Tests
+Tests that all subscription plans have been replaced with a single 'Gratuit' free plan.
 Tests that all subscription plans have been replaced with a single 'Gratuit' free plan.
 All features should be enabled for all cooperatives.
+All features should be enabled for all cooperatives.
 """
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
-TEST_IDENTIFIER = "klenakan.eric@gmail.com"
-TEST_PASSWORD = "474Treckadzo"
+TEST_IDENTIFIER = ADMIN_EMAIL
+TEST_PASSWORD = ADMIN_PASSWORD
 
 
 @pytest.fixture(scope="module")

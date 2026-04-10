@@ -1,12 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 ICI Profile Backend API Tests
+ICI Profile Backend API Tests
+Tests for ICI (Indice Composite de l'Enfant) profile functionality:
 Tests for ICI (Indice Composite de l'Enfant) profile functionality:
 - POST /api/ici-data/farmers/{farmer_id}/ici-profile (create/update profile with children data)
+- POST /api/ici-data/farmers/{farmer_id}/ici-profile (create/update profile with children data)
+- GET /api/ici-data/farmers/{farmer_id}/ici-profile (retrieve profile)
 - GET /api/ici-data/farmers/{farmer_id}/ici-profile (retrieve profile)
 - Field agent and cooperative access permissions
+- Field agent and cooperative access permissions
+- Risk score calculation based on children data
 - Risk score calculation based on children data
 """
-import pytest
 import requests
 import os
 
@@ -14,7 +22,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 COOPERATIVE_CREDENTIALS = {
-    "identifier": "bielaghana@gmail.com",
+    "identifier": COOP_EMAIL,
     "password": "greenlink2024"
 }
 

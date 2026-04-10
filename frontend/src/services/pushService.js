@@ -3,12 +3,14 @@
  * Gère l'abonnement aux notifications push navigateur
  */
 import axios from 'axios';
+import logger from './logger';
+import { tokenService } from './tokenService';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api/push`;
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -58,7 +60,7 @@ export const pushService = {
 
       return false;
     } catch (err) {
-      console.error('[Push] Init error:', err);
+      logger.error('[Push] Init error:', err);
       return false;
     }
   },
@@ -77,7 +79,7 @@ export const pushService = {
       await this.subscribe(registration);
       return true;
     } catch (err) {
-      console.error('[Push] Permission error:', err);
+      logger.error('[Push] Permission error:', err);
       return false;
     }
   },
@@ -107,7 +109,7 @@ export const pushService = {
 
       return true;
     } catch (err) {
-      console.error('[Push] Subscribe error:', err);
+      logger.error('[Push] Subscribe error:', err);
       return false;
     }
   },
@@ -125,7 +127,7 @@ export const pushService = {
       await axios.delete(`${API}/unsubscribe`, { headers: getAuthHeaders() });
       return true;
     } catch (err) {
-      console.error('[Push] Unsubscribe error:', err);
+      logger.error('[Push] Unsubscribe error:', err);
       return false;
     }
   }

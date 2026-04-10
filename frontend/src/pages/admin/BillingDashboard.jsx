@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -21,19 +22,19 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const apiClient = {
   get: async (url) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.get(`${API_URL}${url}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
   },
   post: async (url, data) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.post(`${API_URL}${url}`, data, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
   },
   put: async (url, data) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.put(`${API_URL}${url}`, data, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
@@ -73,6 +74,7 @@ const BillingDashboard = () => {
     notes: ''
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'admin') {
@@ -81,6 +83,7 @@ const BillingDashboard = () => {
       return;
     }
     fetchAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchAllData = async () => {
@@ -498,7 +501,7 @@ const BillingDashboard = () => {
                   ) : (
                     <div className="space-y-3">
                       {paymentHistory.map((payment, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div key={`el-${idx}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                           <div className="flex items-center gap-4">
                             <div className="p-2 bg-green-100 rounded-lg">
                               <ArrowDownRight className="w-5 h-5 text-green-600" />

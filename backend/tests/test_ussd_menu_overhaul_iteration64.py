@@ -1,20 +1,36 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test USSD Menu Overhaul - Iteration 64
+Test USSD Menu Overhaul - Iteration 64
+Tests for:
 Tests for:
 - USSD Welcome menu (3 options: Deja inscrit, Nouvelle inscription, Aide)
+- USSD Welcome menu (3 options: Deja inscrit, Nouvelle inscription, Aide)
+- USSD Recognition for existing farmer (phone +2250799999999) -> main menu with 6 options
 - USSD Recognition for existing farmer (phone +2250799999999) -> main menu with 6 options
 - USSD Registration flow (4 steps: name, coop code, village, PIN + confirmation)
+- USSD Registration flow (4 steps: name, coop code, village, PIN + confirmation)
+- USSD Simple estimation (5 questions then result with prime annuelle)
 - USSD Simple estimation (5 questions then result with prime annuelle)
 - USSD Detailed estimation (9 questions then result with detailed tree breakdown)
+- USSD Detailed estimation (9 questions then result with detailed tree breakdown)
+- USSD Estimation result options (Demander versement, Refaire, Retour, Quitter)
 - USSD Estimation result options (Demander versement, Refaire, Retour, Quitter)
 - Web registration endpoint POST /api/ussd/register-web
+- Web registration endpoint POST /api/ussd/register-web
+- Web registration rejects duplicate phone numbers
 - Web registration rejects duplicate phone numbers
 - Web registration rejects invalid PIN (not 4 digits)
+- Web registration rejects invalid PIN (not 4 digits)
+- GET /api/ussd/registrations returns list of registrations
 - GET /api/ussd/registrations returns list of registrations
 - Homepage calculator POST /api/ussd/calculate-premium
+- Homepage calculator POST /api/ussd/calculate-premium
+"""
 """
 
-import pytest
 import requests
 import os
 import uuid
@@ -24,8 +40,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 TEST_FARMER_PHONE = "+2250799999999"
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 
 class TestUSSDWelcomeMenu:

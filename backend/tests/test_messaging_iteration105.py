@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Messaging System Tests - Iteration 105
+Messaging System Tests - Iteration 105
+Tests for:
 Tests for:
 - GET /api/messaging/contacts - Get contacts with user_type_label
+- GET /api/messaging/contacts - Get contacts with user_type_label
+- POST /api/messaging/conversations/direct - Create direct conversation
 - POST /api/messaging/conversations/direct - Create direct conversation
 - GET /api/messaging/conversations - Get conversations with conversation_type field
+- GET /api/messaging/conversations - Get conversations with conversation_type field
+- GET /api/messaging/conversations/{id} - Get single conversation
 - GET /api/messaging/conversations/{id} - Get single conversation
 - GET /api/messaging/conversations/{id}/messages - Get messages
+- GET /api/messaging/conversations/{id}/messages - Get messages
 """
-import pytest
 import requests
 import os
 import time
@@ -15,7 +24,7 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
-ADMIN_CREDENTIALS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDENTIALS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 AGENT_CREDENTIALS = {"identifier": "testagent@test.ci", "password": "test123456"}
 FARMER_CREDENTIALS = {"identifier": "testplanteur@test.ci", "password": "test123456"}
 

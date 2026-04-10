@@ -1,16 +1,28 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Extended Notifications System Tests - Iteration 54
+Extended Notifications System Tests - Iteration 54
+Tests for:
 Tests for:
 1. POST /api/cooperative/members/{member_id}/parcels triggers new_parcel_to_verify notification
+1. POST /api/cooperative/members/{member_id}/parcels triggers new_parcel_to_verify notification
+2. PUT /api/cooperative/parcels/{parcel_id}/verify triggers parcel_verified notification
 2. PUT /api/cooperative/parcels/{parcel_id}/verify triggers parcel_verified notification
 3. GET /api/notifications/history returns notifications with types
+3. GET /api/notifications/history returns notifications with types
+4. GET /api/notifications/unread-count returns correct count
 4. GET /api/notifications/unread-count returns correct count
 5. PUT /api/notifications/history/read-all resets unread count
+5. PUT /api/notifications/history/read-all resets unread count
+6. SSRTE critical alert notification (when children_at_risk > 0)
 6. SSRTE critical alert notification (when children_at_risk > 0)
 7. Payment received notification (when carbon premium paid)
+7. Payment received notification (when carbon premium paid)
+"""
 """
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -19,7 +31,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 COOP_CREDENTIALS = {
-    "identifier": "bielaghana@gmail.com",
+    "identifier": COOP_EMAIL,
     "password": "greenlink2024"
 }
 TEST_MEMBER_ID = "69bdef2c13defac7fb3a12d9"

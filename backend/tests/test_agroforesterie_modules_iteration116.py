@@ -1,14 +1,24 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test ARS 1000 Agroforesterie Modules - Iteration 116
+Test ARS 1000 Agroforesterie Modules - Iteration 116
+Tests for:
 Tests for:
 - Species database (44 compatible + 10 banned)
+- Species database (44 compatible + 10 banned)
+- Species filters (strate, usage, search)
 - Species filters (strate, usage, search)
 - Nursery calendar
+- Nursery calendar
+- Advanced diagnostic
 - Advanced diagnostic
 - Environmental protection CRUD
+- Environmental protection CRUD
+"""
 """
 
-import pytest
 import requests
 import os
 
@@ -217,7 +227,7 @@ class TestProtectedDiagnosticEndpoints:
     def coop_token(self):
         """Get cooperative auth token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "bielaghana@gmail.com",
+            "identifier": COOP_EMAIL,
             "password": "test123456"
         })
         if response.status_code == 200:
@@ -323,7 +333,7 @@ class TestProtectionEnvironnementale:
     def coop_token(self):
         """Get cooperative auth token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "bielaghana@gmail.com",
+            "identifier": COOP_EMAIL,
             "password": "test123456"
         })
         if response.status_code == 200:
@@ -417,7 +427,7 @@ class TestDiagnosticWithBannedSpecies:
     def coop_token(self):
         """Get cooperative auth token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "bielaghana@gmail.com",
+            "identifier": COOP_EMAIL,
             "password": "test123456"
         })
         if response.status_code == 200:

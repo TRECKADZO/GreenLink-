@@ -1,14 +1,24 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 42 - Testing Auth Login and Activation Flow Bug Fixes
+Iteration 42 - Testing Auth Login and Activation Flow Bug Fixes
+=================================================================
 =================================================================
 Focus areas:
+Focus areas:
+1. Login with phone-based account (bug fix: empty email string -> None)
 1. Login with phone-based account (bug fix: empty email string -> None)
 2. Login with email-based account (regression test)
+2. Login with email-based account (regression test)
+3. Check member phone endpoint
 3. Check member phone endpoint
 4. Check agent phone endpoint
+4. Check agent phone endpoint
+5. Member activation flow
 5. Member activation flow
 """
-import pytest
 import requests
 import os
 import urllib.parse
@@ -19,8 +29,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 # Test credentials from review request
 AGENT_PHONE = "+2250709005301"
 AGENT_PASSWORD = "greenlink2024"
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 # Member phone for activation test (un-activated)
 MEMBER_PHONE_UNACTIVATED = "+2250707001001"

@@ -3,13 +3,15 @@
  * Gestion des conversations et messages temps réel
  */
 import axios from 'axios';
+import logger from './logger';
+import { tokenService } from './tokenService';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api/messaging`;
 
 // Récupérer le token d'authentification
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -28,7 +30,7 @@ export const messagingApi = {
       }, { headers: getAuthHeaders() });
       return response.data;
     } catch (error) {
-      console.error('Error creating conversation:', error);
+      logger.error('Error creating conversation:', error);
       throw error;
     }
   },
@@ -45,7 +47,7 @@ export const messagingApi = {
       }, { headers: getAuthHeaders() });
       return response.data;
     } catch (error) {
-      console.error('Error creating direct conversation:', error);
+      logger.error('Error creating direct conversation:', error);
       throw error;
     }
   },
@@ -63,7 +65,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching contacts:', error);
+      logger.error('Error fetching contacts:', error);
       throw error;
     }
   },
@@ -79,7 +81,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      logger.error('Error fetching conversations:', error);
       throw error;
     }
   },
@@ -94,7 +96,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching conversation:', error);
+      logger.error('Error fetching conversation:', error);
       throw error;
     }
   },
@@ -113,7 +115,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      logger.error('Error fetching messages:', error);
       throw error;
     }
   },
@@ -128,7 +130,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching pinned messages:', error);
+      logger.error('Error fetching pinned messages:', error);
       throw error;
     }
   },
@@ -143,7 +145,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error archiving conversation:', error);
+      logger.error('Error archiving conversation:', error);
       throw error;
     }
   },
@@ -160,7 +162,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error deleting message:', error);
+      logger.error('Error deleting message:', error);
       throw error;
     }
   },
@@ -179,7 +181,7 @@ export const messagingApi = {
       }, { headers: getAuthHeaders() });
       return response.data;
     } catch (error) {
-      console.error('Error reporting message:', error);
+      logger.error('Error reporting message:', error);
       throw error;
     }
   },
@@ -195,7 +197,7 @@ export const messagingApi = {
       }, { headers: getAuthHeaders() });
       return response.data;
     } catch (error) {
-      console.error('Error blocking user:', error);
+      logger.error('Error blocking user:', error);
       throw error;
     }
   },
@@ -210,7 +212,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error unblocking user:', error);
+      logger.error('Error unblocking user:', error);
       throw error;
     }
   },
@@ -225,7 +227,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching blocked users:', error);
+      logger.error('Error fetching blocked users:', error);
       throw error;
     }
   },
@@ -248,7 +250,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error uploading attachment:', error);
+      logger.error('Error uploading attachment:', error);
       throw error;
     }
   },
@@ -265,7 +267,7 @@ export const messagingApi = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching messaging stats:', error);
+      logger.error('Error fetching messaging stats:', error);
       throw error;
     }
   }
@@ -286,9 +288,9 @@ export class MessagingWebSocket {
   }
 
   connect() {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     if (!token) {
-      console.error('No token for WebSocket connection');
+      logger.error('No token for WebSocket connection');
       return;
     }
 
@@ -296,7 +298,7 @@ export class MessagingWebSocket {
     this.ws = new WebSocket(`${wsUrl}/api/messaging/ws?token=${token}`);
 
     this.ws.onopen = () => {
-      console.log('[Messaging WS] Connected');
+      logger.log('[Messaging WS] Connected');
       this.reconnectAttempts = 0;
     };
 
@@ -305,17 +307,17 @@ export class MessagingWebSocket {
         const data = JSON.parse(event.data);
         this.handleMessage(data);
       } catch (e) {
-        console.error('[Messaging WS] Parse error:', e);
+        logger.error('[Messaging WS] Parse error:', e);
       }
     };
 
     this.ws.onclose = (event) => {
-      console.log('[Messaging WS] Disconnected:', event.code);
+      logger.log('[Messaging WS] Disconnected:', event.code);
       this.attemptReconnect();
     };
 
     this.ws.onerror = (error) => {
-      console.error('[Messaging WS] Error:', error);
+      logger.error('[Messaging WS] Error:', error);
       if (this.onError) this.onError(error);
     };
   }
@@ -335,20 +337,20 @@ export class MessagingWebSocket {
         if (this.onMessage) this.onMessage({ type: 'new_conversation', ...data.conversation });
         break;
       case 'connected':
-        console.log('[Messaging WS] Session established, unread:', data.unread_count);
+        logger.log('[Messaging WS] Session established, unread:', data.unread_count);
         break;
       case 'pong':
         // Heartbeat response
         break;
       default:
-        console.log('[Messaging WS] Unknown message type:', data.type);
+        logger.log('[Messaging WS] Unknown message type:', data.type);
     }
   }
 
   attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`[Messaging WS] Reconnecting attempt ${this.reconnectAttempts}...`);
+      logger.log(`[Messaging WS] Reconnecting attempt ${this.reconnectAttempts}...`);
       setTimeout(() => this.connect(), this.reconnectDelay * this.reconnectAttempts);
     }
   }

@@ -1,13 +1,17 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Security Tests: Privilege Escalation & Session Invalidation
+Security Tests: Privilege Escalation & Session Invalidation
+GreenLink Agritech — Tests de securite P1
 GreenLink Agritech — Tests de securite P1
 """
-import httpx
 
 API_URL = "https://pdc-cocoa-preview.preview.emergentagent.com"
 
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 AGENT_EMAIL = "testagent@test.ci"
 AGENT_PASSWORD = "test123456"
 FARMER_EMAIL = "testplanteur@test.ci"

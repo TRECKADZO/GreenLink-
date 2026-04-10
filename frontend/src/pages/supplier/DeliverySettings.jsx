@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +17,7 @@ import { Truck, Package, MapPin, Scale, Gift, Save, Loader2, Info } from 'lucide
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -39,6 +40,7 @@ const DeliverySettings = () => {
     seuil_gratuit: { actif: false, montant_minimum: 0 }
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -46,7 +48,8 @@ const DeliverySettings = () => {
       return;
     }
     fetchSettings();
-  }, [user, authLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, navigate]);
 
   const fetchSettings = async () => {
     try {

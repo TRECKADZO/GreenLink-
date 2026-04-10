@@ -1,24 +1,34 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 71 - Export Members (XLSX/PDF) and Navbar coop_name Display Tests
+Iteration 71 - Export Members (XLSX/PDF) and Navbar coop_name Display Tests
+Tests:
 Tests:
 1. GET /api/cooperative/members/export?format=xlsx - returns valid Excel file
+1. GET /api/cooperative/members/export?format=xlsx - returns valid Excel file
+2. GET /api/cooperative/members/export?format=pdf - returns valid PDF file
 2. GET /api/cooperative/members/export?format=pdf - returns valid PDF file
 3. Export with status filter
+3. Export with status filter
+4. Export with search filter
 4. Export with search filter
 5. Navbar shows coop_name for cooperative users
+5. Navbar shows coop_name for cooperative users
+"""
 """
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "474Treckadzo"
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# COOP_EMAIL imported from test_config
+COOP_PASSWORD = COOP_PASSWORD  # from test_config
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 
 @pytest.fixture(scope="module")

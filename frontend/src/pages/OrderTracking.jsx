@@ -1,3 +1,4 @@
+import { tokenService } from "../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card } from '../components/ui/card';
@@ -18,7 +19,7 @@ const OrderTracking = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return { Authorization: `Bearer ${token}` };
   };
 
@@ -39,10 +40,12 @@ const OrderTracking = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (orderId) {
       fetchTracking();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   const getStatusColor = (status) => {
@@ -265,7 +268,7 @@ const OrderTracking = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Historique des mises à jour</h2>
             <div className="space-y-4">
               {tracking.events.slice(0, 10).map((event, index) => (
-                <div key={index} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
+                <div key={`el-${index}`} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
                   <div className={`w-2 h-2 rounded-full mt-2 ${getStatusColor(event.status)}`} />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">

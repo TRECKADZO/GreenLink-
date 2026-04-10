@@ -38,7 +38,7 @@ export const ParcelsSection = ({ parcelles, navigate }) => {
       <div className="p-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
           {stats.map((s, i) => (
-            <div key={i} className="p-3 bg-[#FAF9F6] rounded-md border border-[#E5E5E0] text-center">
+            <div key={`el-${i}`} className="p-3 bg-[#FAF9F6] rounded-md border border-[#E5E5E0] text-center">
               <s.icon className={`h-5 w-5 mx-auto mb-1.5 ${s.color}`} strokeWidth={1.5} />
               <p className="gl-heading text-xl font-bold text-[#111827]">{s.value}</p>
               <p className="text-[10px] tracking-[0.05em] uppercase font-bold text-[#9CA3AF] mt-0.5">{s.label}</p>

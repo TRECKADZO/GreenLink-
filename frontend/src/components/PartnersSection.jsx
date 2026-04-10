@@ -11,6 +11,7 @@ const PartnersSection = () => {
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchPartners = async () => {
       try {
@@ -19,12 +20,13 @@ const PartnersSection = () => {
           setPartners(response.data);
         }
       } catch (error) {
-        console.log('No partners found');
+        // no partners found;
       } finally {
         setLoading(false);
       }
     };
     fetchPartners();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Ne pas afficher la section s'il n'y a pas de partenaires

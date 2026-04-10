@@ -50,7 +50,7 @@ const REDDSection = () => {
             const Icon = item.icon;
             return (
               <Card
-                key={idx}
+                key={`el-${idx}`}
                 className={`p-5 bg-gradient-to-br ${colorMap[item.color]} border hover:shadow-lg transition-all hover:-translate-y-1`}
                 data-testid={`redd-highlight-${idx}`}
               >

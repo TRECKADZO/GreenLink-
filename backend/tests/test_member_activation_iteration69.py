@@ -1,15 +1,26 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Member Activation Flow - Iteration 69
+Test Member Activation Flow - Iteration 69
+Tests for:
 Tests for:
 1. POST /api/cooperative/members - creates member with auto-generated code_planteur and hashed PIN
+1. POST /api/cooperative/members - creates member with auto-generated code_planteur and hashed PIN
+2. POST /api/cooperative/members - ussd_registrations entry is also created
 2. POST /api/cooperative/members - ussd_registrations entry is also created
 3. POST /api/auth/activate-member-account - member can activate using phone and password
+3. POST /api/auth/activate-member-account - member can activate using phone and password
+4. POST /api/auth/activate-member-account - activated user receives code_planteur from coop_members
 4. POST /api/auth/activate-member-account - activated user receives code_planteur from coop_members
 5. GET /api/auth/check-member-phone/{phone} - returns found=true, can_activate=true for new coop member
+5. GET /api/auth/check-member-phone/{phone} - returns found=true, can_activate=true for new coop member
+6. USSD recognition - farmer created by coop is recognized by USSD callback
 6. USSD recognition - farmer created by coop is recognized by USSD callback
 """
+"""
 
-import pytest
 import requests
 import os
 import time
@@ -18,8 +29,8 @@ import random
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "474Treckadzo"
+# COOP_EMAIL imported from test_config
+COOP_PASSWORD = COOP_PASSWORD  # from test_config
 
 # Generate unique test phone number
 TEST_PHONE = f"+2250599{random.randint(100000, 999999)}"

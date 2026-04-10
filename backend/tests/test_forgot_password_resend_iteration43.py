@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 43 - Test forgot-password with Resend email integration
+Iteration 43 - Test forgot-password with Resend email integration
+Tests:
 Tests:
 1. POST /api/auth/forgot-password with email (traore_eric@yahoo.fr) -> email_sent:true, NO simulation_code
+1. POST /api/auth/forgot-password with email (traore_eric@yahoo.fr) -> email_sent:true, NO simulation_code
+2. POST /api/auth/forgot-password with phone (+2250709005301) -> email_sent:false, simulation_code present
 2. POST /api/auth/forgot-password with phone (+2250709005301) -> email_sent:false, simulation_code present
 3. POST /api/auth/forgot-password with non-existent user -> sent:true (security - no reveal)
+3. POST /api/auth/forgot-password with non-existent user -> sent:true (security - no reveal)
+4. POST /api/auth/login regression for phone +2250709005301 / greenlink2024
 4. POST /api/auth/login regression for phone +2250709005301 / greenlink2024
 5. POST /api/auth/login regression for email klenakan.eric@gmail.com / 474Treckadzo
+5. POST /api/auth/login regression for email klenakan.eric@gmail.com / 474Treckadzo
 """
-import pytest
 import requests
 import os
 import time
@@ -106,8 +115,8 @@ class TestLoginRegression:
     def test_login_email_account_admin(self, api_client):
         """Regression: Login with email klenakan.eric@gmail.com / 474Treckadzo"""
         response = api_client.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         
         assert response.status_code == 200, f"Expected 200 but got {response.status_code}: {response.text}"
@@ -126,7 +135,7 @@ class TestForgotPasswordWithExistingEmailUser:
         time.sleep(1)  # Rate limit protection
         
         response = api_client.post(f"{BASE_URL}/api/auth/forgot-password", json={
-            "identifier": "klenakan.eric@gmail.com"
+            "identifier": ADMIN_EMAIL
         })
         
         # Status code assertion

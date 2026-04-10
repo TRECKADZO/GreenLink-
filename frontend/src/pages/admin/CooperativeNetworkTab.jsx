@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -26,7 +27,7 @@ const CooperativeNetworkTab = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await axios.get(`${API_URL}/api/cooperative-referral/admin/network-full`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -39,6 +40,7 @@ const CooperativeNetworkTab = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchData(); }, []);
 
   const filteredNodes = useMemo(() => {
@@ -60,6 +62,7 @@ const CooperativeNetworkTab = () => {
     else if (filter === 'orphan') nodes = nodes.filter(n => !n.is_affiliated && !n.is_sponsor);
 
     return nodes;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, search, filter]);
 
   const copyCode = async (code) => {
@@ -71,7 +74,7 @@ const CooperativeNetworkTab = () => {
   const generateCode = async (coopId) => {
     setGeneratingCode(coopId);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await axios.post(`${API_URL}/api/cooperative-referral/admin/generate-code/${coopId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -87,7 +90,7 @@ const CooperativeNetworkTab = () => {
   const removeAffiliation = async (coopId, coopName) => {
     if (!window.confirm(`Retirer l'affiliation de ${coopName} ?`)) return;
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.delete(`${API_URL}/api/cooperative-referral/admin/remove-affiliation/${coopId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });

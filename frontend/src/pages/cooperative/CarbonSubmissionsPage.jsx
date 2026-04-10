@@ -24,11 +24,13 @@ const CarbonSubmissionsPage = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchMyListings();
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchMyListings, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMyListings = async () => {

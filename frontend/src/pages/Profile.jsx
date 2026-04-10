@@ -1,3 +1,4 @@
+import { tokenService } from "../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -72,6 +73,7 @@ const Profile = () => {
   });
 
   // Update form data when user is loaded
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (user) {
       setFormData({
@@ -95,32 +97,37 @@ const Profile = () => {
         nombre_enfants: user.nombre_enfants || ''
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Redirect if not authenticated
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/login');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, navigate]);
 
   // Fetch ICI profile for producers
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (user?.user_type === 'producteur' && user?._id) {
       fetchIciProfile();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchIciProfile = async () => {
     setLoadingIci(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const response = await axios.get(`${API_URL}/api/ici-data/farmers/${user._id}/ici-profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setIciProfile(response.data);
     } catch (error) {
-      console.log('No ICI profile found or error:', error);
+      // ICI profile not found
     } finally {
       setLoadingIci(false);
     }
@@ -184,7 +191,7 @@ const Profile = () => {
     // Update ICI profile if producer
     if (user.user_type === 'producteur' && result.success) {
       try {
-        const token = localStorage.getItem('token');
+        const token = tokenService.getToken();
         await axios.post(`${API_URL}/api/ici-data/farmers/${user._id}/ici-profile`, {
           genre: formData.genre || null,
           date_naissance: formData.date_naissance || null,
@@ -199,7 +206,7 @@ const Profile = () => {
         });
         fetchIciProfile(); // Refresh ICI profile
       } catch (error) {
-        console.log('ICI profile update error:', error);
+        // ICI profile update error
       }
     }
 
@@ -232,7 +239,7 @@ const Profile = () => {
 
     setDeleting(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.delete(`${API_URL}/api/auth/account`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -267,7 +274,7 @@ const Profile = () => {
     }
     setChangingPwd(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const r = await fetch(`${API_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -276,7 +283,7 @@ const Profile = () => {
       const data = await r.json();
       if (!r.ok) throw new Error(data.detail || 'Erreur');
       // Update token
-      if (data.access_token) localStorage.setItem('token', data.access_token);
+      if (data.access_token) tokenService.setToken(data.access_token);
       toast({ title: 'Succes', description: 'Mot de passe modifie avec succes' });
       setShowChangePassword(false);
       setChangePwdData({ current: '', newPwd: '', confirm: '' });

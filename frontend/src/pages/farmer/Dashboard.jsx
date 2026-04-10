@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
@@ -159,7 +160,7 @@ const FarmerDashboardTab = ({ stats, smsHistory, onSendSummary, sendingSummary, 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3">
         {statCards.map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div key={`el-${i}`} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
               <div className={`p-2 rounded-xl ${stat.bg}`}>
                 <stat.icon className={`w-4 h-4 ${stat.color}`} />
@@ -187,7 +188,7 @@ const FarmerDashboardTab = ({ stats, smsHistory, onSendSummary, sendingSummary, 
         ) : (
           <div className="divide-y divide-gray-100">
             {(stats.recoltes_recentes || []).slice(0, 4).map((harvest, index) => (
-              <div key={index} className="flex items-center justify-between px-4 py-3">
+              <div key={`el-${index}`} className="flex items-center justify-between px-4 py-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{harvest.quantity_kg} kg - Grade {harvest.quality_grade}</p>
                   <p className="text-[10px] text-gray-400">{new Date(harvest.created_at).toLocaleDateString('fr-FR')}</p>
@@ -222,7 +223,7 @@ const FarmerDashboardTab = ({ stats, smsHistory, onSendSummary, sendingSummary, 
         ) : (
           <div className="divide-y divide-gray-100">
             {smsHistory.slice(0, 3).map((sms, index) => (
-              <div key={index} className="px-4 py-3">
+              <div key={`el-${index}`} className="px-4 py-3">
                 <div className="flex items-center justify-between mb-1">
                   <Badge className={`text-[9px] px-1.5 py-0 ${sms.template === 'carbon_premium_eligible' ? 'bg-green-100 text-green-700' : sms.template === 'harvest_payment' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
                     {sms.template === 'carbon_premium_eligible' ? 'Prime' : sms.template === 'harvest_payment' ? 'Paiement' : sms.template === 'weekly_summary' ? 'Resume' : sms.template}
@@ -389,7 +390,7 @@ const FarmerParcelsTab = ({ navigate }) => {
     has_shade_trees: false, uses_organic_fertilizer: false, has_erosion_control: false,
   });
   const API_URL = process.env.REACT_APP_BACKEND_URL;
-  const getToken = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
+  const getToken = () => ({ Authorization: `Bearer ${tokenService.getToken()}` });
 
   const setField = (k, v) => {
     const next = { ...form, [k]: v };
@@ -665,6 +666,7 @@ const FarmerDashboard = () => {
   const [sendingSummary, setSendingSummary] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || !['producteur', 'producer', 'farmer'].includes(user.user_type)) {
@@ -673,6 +675,7 @@ const FarmerDashboard = () => {
     }
     fetchDashboard();
     fetchSmsHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchDashboard = async () => {

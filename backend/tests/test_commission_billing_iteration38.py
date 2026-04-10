@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test suite for Commission Rate and Billing Cycle features - Iteration 38
+Test suite for Commission Rate and Billing Cycle features - Iteration 38
+Tests:
 Tests:
 - PUT /api/admin/quotes/{id} accepts commission_rate and billing_cycle fields when approving
+- PUT /api/admin/quotes/{id} accepts commission_rate and billing_cycle fields when approving
+- Subscription stores price_xof, commission_rate, and billing_cycle after approval
 - Subscription stores price_xof, commission_rate, and billing_cycle after approval
 - GET /api/subscriptions/my-subscription returns price_xof, commission_rate, billing_cycle
+- GET /api/subscriptions/my-subscription returns price_xof, commission_rate, billing_cycle
+- GET /api/subscriptions/quote/my-quote returns commission_rate, billing_cycle, subscription_duration_days
 - GET /api/subscriptions/quote/my-quote returns commission_rate, billing_cycle, subscription_duration_days
 """
+"""
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -15,7 +24,7 @@ from datetime import datetime
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_CREDS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 FOURNISSEUR_CREDS = {"identifier": "intrants-ci@test.com", "password": "test1234"}
 
 

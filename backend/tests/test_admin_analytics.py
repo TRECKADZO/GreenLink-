@@ -1,16 +1,28 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Super Admin Analytics API Tests
+Super Admin Analytics API Tests
+Testing endpoints for:
 Testing endpoints for:
 - Strategic Dashboard
+- Strategic Dashboard
+- Production Report
 - Production Report
 - Carbon Report  
+- Carbon Report  
+- Social Impact Report
 - Social Impact Report
 - Trade Report
+- Trade Report
+- EUDR Compliance Report
 - EUDR Compliance Report
 - Regional Analytics
+- Regional Analytics
+"""
 """
 
-import pytest
 import requests
 import os
 
@@ -19,8 +31,8 @@ API_URL = f"{BASE_URL}/api/admin/analytics"
 
 # Test credentials for admin user
 ADMIN_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 # Non-admin test credentials

@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -78,6 +79,7 @@ const ContentManagement = () => {
     { value: 'bg-pink-500', label: 'Rose' }
   ];
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'admin') {
@@ -86,12 +88,13 @@ const ContentManagement = () => {
     }
     fetchPartners();
     fetchTestimonials();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchPartners = async () => {
     setLoadingPartners(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const response = await axios.get(`${API_URL}/api/partners`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -106,7 +109,7 @@ const ContentManagement = () => {
   const fetchTestimonials = async () => {
     setLoadingTestimonials(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const response = await axios.get(`${API_URL}/api/admin/testimonials`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -139,7 +142,7 @@ const ContentManagement = () => {
 
   const savePartner = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       
       if (partnerDialog.partner) {
         await axios.put(
@@ -168,7 +171,7 @@ const ContentManagement = () => {
     if (!window.confirm('Supprimer ce partenaire ?')) return;
     
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.delete(`${API_URL}/api/partners/${partnerId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -201,7 +204,7 @@ const ContentManagement = () => {
 
   const saveTestimonial = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const data = {
         ...testimonialForm,
         initial: testimonialForm.initial || testimonialForm.author.charAt(0).toUpperCase()
@@ -234,7 +237,7 @@ const ContentManagement = () => {
     if (!window.confirm('Supprimer ce témoignage ?')) return;
     
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.delete(`${API_URL}/api/admin/testimonials/${testimonialId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -247,7 +250,7 @@ const ContentManagement = () => {
 
   const toggleTestimonialActive = async (testimonial) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.put(
         `${API_URL}/api/admin/testimonials/${testimonial._id}`,
         { is_active: !testimonial.is_active },

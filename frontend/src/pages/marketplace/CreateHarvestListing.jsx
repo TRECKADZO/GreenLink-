@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -187,7 +188,7 @@ const CreateHarvestListing = () => {
         origin_country: 'CI'
       };
 
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.post(`${API_URL}/api/harvest-marketplace/listings`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });

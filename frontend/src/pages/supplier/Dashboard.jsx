@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +31,7 @@ const SupplierDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -44,11 +46,12 @@ const SupplierDashboard = () => {
 
     fetchDashboardStats();
     fetchSubscription();
-  }, [user, authLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, navigate, toast]);
 
   const fetchSubscription = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -172,7 +175,7 @@ const SupplierDashboard = () => {
         {/* Stats Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {statCards.map((stat, index) => (
-            <Card key={index} className="p-6 hover:shadow-lg transition-shadow duration-200">
+            <Card key={`stat-${index}`} className="p-6 hover:shadow-lg transition-shadow duration-200">
               <div className="flex items-start justify-between mb-4">
                 <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                   <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -220,7 +223,7 @@ const SupplierDashboard = () => {
               <div className="space-y-4">
                 {stats.recent_orders.map((order, index) => (
                   <div 
-                    key={index} 
+                    key={`chart-${index}`} 
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                     onClick={() => navigate(`/supplier/orders/${order.order_number}`)}
                   >
@@ -260,7 +263,7 @@ const SupplierDashboard = () => {
             ) : (
               <div className="space-y-4">
                 {stats.top_products.map((product, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div key={`order-${index}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 bg-[#2d5a4d] rounded-full flex items-center justify-center text-white font-bold">
                         {index + 1}
@@ -289,7 +292,7 @@ const SupplierDashboard = () => {
               const height = maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0;
               
               return (
-                <div key={index} className="flex-1 flex flex-col items-center">
+                <div key={`step-${index}`} className="flex-1 flex flex-col items-center">
                   <div className="w-full bg-gray-200 rounded-t-lg relative group">
                     <div 
                       className="w-full bg-gradient-to-t from-[#2d5a4d] to-[#4a8a7a] rounded-t-lg transition-all duration-300 hover:opacity-80"

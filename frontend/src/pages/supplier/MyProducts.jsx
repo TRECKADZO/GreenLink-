@@ -51,6 +51,7 @@ const MyProducts = () => {
     specifications: {}
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -58,7 +59,8 @@ const MyProducts = () => {
       return;
     }
     fetchProducts();
-  }, [user, authLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, navigate]);
 
   const fetchProducts = async () => {
     try {
@@ -349,7 +351,7 @@ const MyProducts = () => {
                     {formData.images.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-3">
                         {formData.images.map((url, index) => (
-                          <div key={index} className="relative group">
+                          <div key={`el-${index}`} className="relative group">
                             <img 
                               src={`${process.env.REACT_APP_BACKEND_URL}${url}`}
                               alt={`Produit ${index + 1}`}

@@ -1,8 +1,12 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Dashboard PDF Export - Iteration 85
+Test Dashboard PDF Export - Iteration 85
+Tests the PDF export endpoint for cooperative dashboard reports
 Tests the PDF export endpoint for cooperative dashboard reports
 """
-import pytest
 import requests
 import os
 import io
@@ -16,8 +20,8 @@ class TestDashboardPDFExport:
     def auth_token(self):
         """Get authentication token for cooperative/admin user"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()

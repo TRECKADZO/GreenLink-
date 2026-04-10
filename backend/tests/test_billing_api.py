@@ -1,7 +1,10 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+# Billing API Tests for GreenLink Agritech Platform
 # Billing API Tests for GreenLink Agritech Platform
 # Tests for: invoices, payments, distributions, and billing dashboard endpoints
+# Tests for: invoices, payments, distributions, and billing dashboard endpoints
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -10,8 +13,8 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Admin credentials for testing
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 
 class TestBillingAuth:

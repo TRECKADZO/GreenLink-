@@ -25,7 +25,7 @@ const wrapWithCache = (apiFn, cacheSaveFn, cacheGetFn) => {
       const result = await apiFn(...args);
       // Save to cache on success
       if (cacheSaveFn && result) {
-        try { await cacheSaveFn(result); } catch { /* silent */ }
+        try { await cacheSaveFn(result); } catch (e) { console.warn('[OfflineAPI] Cache save failed:', e.message); }
       }
       return result;
     } catch (err) {
@@ -70,7 +70,7 @@ export const offlineCooperativeApi = {
       const result = await cooperativeApi.getMembers(params);
       // Cache members for offline
       const members = result.members || result || [];
-      try { await saveCoopMembers(members); } catch { /* silent */ }
+      try { await saveCoopMembers(members); } catch (e) { console.warn('[OfflineAPI] Members cache failed:', e.message); }
       return result;
     } catch (err) {
       if (!navigator.onLine || err?.code === 'ERR_NETWORK') {
@@ -115,7 +115,7 @@ export const offlineCooperativeApi = {
   getLots: async (status = null) => {
     try {
       const result = await cooperativeApi.getLots(status);
-      try { await saveCoopLots(result.lots || result || []); } catch { /* silent */ }
+      try { await saveCoopLots(result.lots || result || []); } catch (e) { console.warn('[OfflineAPI] Lots cache failed:', e.message); }
       return result;
     } catch (err) {
       if (!navigator.onLine || err?.code === 'ERR_NETWORK') {

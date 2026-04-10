@@ -1,16 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 REDD+ Impact National Metrics API Tests - Iteration 88
+REDD+ Impact National Metrics API Tests - Iteration 88
+Tests for GET /api/redd-impact/national-metrics endpoint
 Tests for GET /api/redd-impact/national-metrics endpoint
 """
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
-ADMIN_IDENTIFIER = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+ADMIN_IDENTIFIER = ADMIN_EMAIL
+# ADMIN_PASSWORD imported from test_config
 
 
 @pytest.fixture(scope="module")

@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Email Notifications for Quote and Account Actions - Iteration 37
+Test Email Notifications for Quote and Account Actions - Iteration 37
+Tests that email notifications are triggered (in MOCK mode) when:
 Tests that email notifications are triggered (in MOCK mode) when:
 1. Admin approves a quote
+1. Admin approves a quote
+2. Admin rejects a quote  
 2. Admin rejects a quote  
 3. Admin suspends an account
+3. Admin suspends an account
+4. Admin activates an account
 4. Admin activates an account
 """
+"""
 
-import pytest
 import requests
 import os
 import time
@@ -17,8 +26,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 ADMIN_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 SUPPLIER_CREDENTIALS = {

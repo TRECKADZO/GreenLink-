@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test ICI/SSRTE Form Bug Fixes - Iteration 48
+Test ICI/SSRTE Form Bug Fixes - Iteration 48
+Tests for 5 bugs in ICI/SSRTE forms for GreenLink platform:
 Tests for 5 bugs in ICI/SSRTE forms for GreenLink platform:
 - Bug 2: Household size (taille_menage) stuck at 1
+- Bug 2: Household size (taille_menage) stuck at 1
+- Bug 3: Cross-form auto-fill between ICI and SSRTE
 - Bug 3: Cross-form auto-fill between ICI and SSRTE
 - Bug 4: Completion counter showing 1/5 instead of 5/5
+- Bug 4: Completion counter showing 1/5 instead of 5/5
+- Bug 5: Agent visit auto-update when 5/5 forms complete
 - Bug 5: Agent visit auto-update when 5/5 forms complete
 """
+"""
 
-import pytest
 import requests
 import os
 import time
@@ -17,7 +26,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 # Test credentials
 FIELD_AGENT_CREDS = {"identifier": "+2250709005301", "password": "greenlink2024"}
 COOPERATIVE_CREDS = {"identifier": "traore_eric@yahoo.fr", "password": "greenlink2024"}
-ADMIN_CREDS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 
 # Known farmers from agent's assigned list
 FARMER_KOFFI_ID = "69b9fac98b05ef67133cfbe5"  # 5/5 completion

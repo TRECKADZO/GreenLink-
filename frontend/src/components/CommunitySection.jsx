@@ -17,6 +17,7 @@ const mockProducers = [
 const CommunitySection = () => {
   const [producers, setProducers] = useState(mockProducers);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchProducers = async () => {
       const data = await api.getProducers(4);
@@ -25,6 +26,7 @@ const CommunitySection = () => {
       }
     };
     fetchProducers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   return (
@@ -45,7 +47,7 @@ const CommunitySection = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {producers.map((producer, index) => (
             <Card 
-              key={index} 
+              key={`el-${index}`} 
               className="p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2 border-gray-100 group"
             >
               <Avatar className="w-16 h-16 mb-4 group-hover:scale-110 transition-transform duration-300">

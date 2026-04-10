@@ -1,15 +1,26 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 120 - ARS 1000 Analytics, Widget, Farmer Features Testing
+Iteration 120 - ARS 1000 Analytics, Widget, Farmer Features Testing
+Tests for:
 Tests for:
 1. GET /api/ars1000/recoltes/analytics - Analytics dashboard for harvests
+1. GET /api/ars1000/recoltes/analytics - Analytics dashboard for harvests
+2. GET /api/ars1000/certification/dashboard - Widget data (total_pdc, pdc_valides, total_kg_recoltes)
 2. GET /api/ars1000/certification/dashboard - Widget data (total_pdc, pdc_valides, total_kg_recoltes)
 3. POST /api/ars1000/certification/reclamation - Farmer can submit reclamations
+3. POST /api/ars1000/certification/reclamation - Farmer can submit reclamations
+4. GET /api/ars1000/certification/reclamations/farmer - Farmer-specific reclamations
 4. GET /api/ars1000/certification/reclamations/farmer - Farmer-specific reclamations
 5. POST /api/ars1000/agroforesterie/protection-env - Farmer can add protection measures
+5. POST /api/ars1000/agroforesterie/protection-env - Farmer can add protection measures
+6. GET /api/ars1000/agroforesterie/protection-env - Filters by farmer_id for farmer users
 6. GET /api/ars1000/agroforesterie/protection-env - Filters by farmer_id for farmer users
 """
+"""
 
-import pytest
 import requests
 import os
 import time
@@ -17,7 +28,7 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.preview.emergentagent.com')
 
 # Test credentials
-COOPERATIVE_EMAIL = "bielaghana@gmail.com"
+COOPERATIVE_EMAIL = COOP_EMAIL
 COOPERATIVE_PASSWORD = "test123456"
 FARMER_EMAIL = "testplanteur@test.ci"
 FARMER_PASSWORD = "test123456"

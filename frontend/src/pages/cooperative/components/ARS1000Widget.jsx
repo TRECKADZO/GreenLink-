@@ -1,3 +1,4 @@
+import { tokenService } from "../../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Award, FileText, ChevronRight, Loader2, CheckCircle2, Wheat } from 'lucide-react';
@@ -8,8 +9,9 @@ export const ARS1000Widget = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const load = async () => {
       try {
@@ -21,6 +23,7 @@ export const ARS1000Widget = () => {
       finally { setLoading(false); }
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   if (loading) return (

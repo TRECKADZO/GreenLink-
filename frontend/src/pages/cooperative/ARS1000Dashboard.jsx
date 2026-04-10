@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -17,7 +18,7 @@ import { GuideEspeces, CalendrierPepiniere, DiagnosticParcelle, ProtectionEnviro
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const getToken = () => localStorage.getItem('token');
+const getToken = () => tokenService.getToken();
 const authHeaders = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
 // ============= TABS =============
@@ -108,7 +109,7 @@ const CertificationTab = ({ dashboard, onRefresh }) => {
           { label: 'Arbres Ombrage', value: stats.total_arbres_ombrage, icon: TreePine, color: 'emerald' },
           { label: 'NC ouvertes', value: stats.nc_ouvertes, icon: AlertTriangle, color: stats.nc_ouvertes > 0 ? 'red' : 'gray' },
         ].map((kpi, i) => (
-          <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+          <div key={`el-${i}`} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
               <kpi.icon className={`w-4 h-4 text-${kpi.color}-500`} />
               <span className="text-xs text-gray-500">{kpi.label}</span>
@@ -124,7 +125,7 @@ const CertificationTab = ({ dashboard, onRefresh }) => {
         {certification.cycle_audit && certification.cycle_audit.length > 0 ? (
           <div className="space-y-3">
             {certification.cycle_audit.map((a, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div key={`el-${i}`} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <ClipboardCheck className="w-5 h-5 text-blue-500" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{a.type_audit}</p>
@@ -165,6 +166,7 @@ const PDCTab = ({ onRefresh }) => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, statusFilter]);
 
   const loadStats = useCallback(async () => {
@@ -172,6 +174,7 @@ const PDCTab = ({ onRefresh }) => {
       const res = await fetch(`${API_URL}/api/ars1000/pdc/cooperative/stats`, { headers: authHeaders() });
       setStats(await res.json());
     } catch (e) { console.error(e); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { loadPDCs(); loadStats(); }, [loadPDCs, loadStats]);
@@ -245,7 +248,7 @@ const PDCTab = ({ onRefresh }) => {
             { label: 'Validés', value: stats.valides, color: 'green' },
             { label: 'Conformité moy.', value: `${stats.pourcentage_conformite_moyen}%`, color: 'purple' },
           ].map((s, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm text-center">
+            <div key={`el-${i}`} className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm text-center">
               <p className="text-xl font-bold text-gray-900">{s.value}</p>
               <p className="text-xs text-gray-500">{s.label}</p>
             </div>
@@ -347,6 +350,7 @@ const LotsTab = () => {
       setLots(data.lots || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadStats = useCallback(async () => {
@@ -354,6 +358,7 @@ const LotsTab = () => {
       const res = await fetch(`${API_URL}/api/ars1000/lots/stats/overview`, { headers: authHeaders() });
       setStats(await res.json());
     } catch (e) { console.error(e); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { loadLots(); loadStats(); }, [loadLots, loadStats]);
@@ -418,7 +423,7 @@ const LotsTab = () => {
             { label: 'Poids Total (kg)', value: stats.poids_total_kg?.toLocaleString() },
             { label: 'Score Qualité Moy.', value: `${stats.score_qualite_moyen}%` },
           ].map((s, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm text-center">
+            <div key={`el-${i}`} className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm text-center">
               <p className="text-xl font-bold text-gray-900">{s.value}</p>
               <p className="text-xs text-gray-500">{s.label}</p>
             </div>
@@ -610,6 +615,7 @@ const AgroforesterieTab = () => {
       if (diagRes.ok) setDiagnostic(await diagRes.json());
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -752,7 +758,7 @@ const AgroforesterieTab = () => {
                   </h4>
                   <div className="space-y-2">
                     {diagnostic.problemes_frequents.map((p, i) => (
-                      <div key={i} className="flex items-center justify-between bg-amber-50 rounded-lg px-3 py-2">
+                      <div key={`el-${i}`} className="flex items-center justify-between bg-amber-50 rounded-lg px-3 py-2">
                         <p className="text-xs text-amber-800 flex-1">{p.probleme}...</p>
                         <Badge className="bg-amber-200 text-amber-800 text-[10px] ml-2">{p.count} planteur(s)</Badge>
                       </div>
@@ -772,7 +778,7 @@ const AgroforesterieTab = () => {
               {stats?.especes && stats.especes.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {stats.especes.map((esp, i) => (
-                    <Badge key={i} className="bg-green-100 text-green-700">{esp}</Badge>
+                    <Badge key={`el-${i}`} className="bg-green-100 text-green-700">{esp}</Badge>
                   ))}
                 </div>
               )}
@@ -883,7 +889,7 @@ const DiagnosticFarmerCard = ({ diag, alert }) => {
               <p className="text-[10px] text-gray-400 font-medium mb-1.5">RECOMMANDATIONS</p>
               <div className="space-y-1">
                 {recs.map((rec, i) => (
-                  <div key={i} className="flex items-start gap-2 bg-amber-50 rounded-lg px-2.5 py-1.5">
+                  <div key={`el-${i}`} className="flex items-start gap-2 bg-amber-50 rounded-lg px-2.5 py-1.5">
                     <Lightbulb className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-amber-800">{rec}</p>
                   </div>
@@ -981,6 +987,7 @@ const RecoltesAnalytics = () => {
       finally { setLoading(false); }
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="animate-spin w-6 h-6 text-green-600" /></div>;
@@ -1022,7 +1029,7 @@ const RecoltesAnalytics = () => {
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={gradeData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                  {gradeData.map((_, i) => <Cell key={i} fill={GRADE_COLORS_CHART[i % GRADE_COLORS_CHART.length]} />)}
+                  {gradeData.map((_, i) => <Cell key={`el-${i}`} fill={GRADE_COLORS_CHART[i % GRADE_COLORS_CHART.length]} />)}
                 </Pie>
                 <Tooltip formatter={(v, name, props) => [`${v} décl. (${props.payload.kg} kg)`, props.payload.label]} />
               </PieChart>
@@ -1072,7 +1079,7 @@ const RecoltesAnalytics = () => {
           <p className="text-xs font-bold text-gray-600 mb-3">Top 10 Planteurs (par volume validé)</p>
           <div className="space-y-2">
             {analytics.top_planteurs.map((p, i) => (
-              <div key={i} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+              <div key={`el-${i}`} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
                 <span className="text-xs font-bold text-gray-400 w-5">#{i + 1}</span>
                 <div className="flex-1">
                   <p className="text-sm font-medium">{p.nom}</p>
@@ -1107,6 +1114,7 @@ const RecoltesTab = () => {
       }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   useEffect(() => { loadDeclarations(); }, [loadDeclarations]);
@@ -1495,7 +1503,7 @@ const RegistresTab = ({ dashboard, onRefresh }) => {
           </form>
         )}
         {cert?.non_conformites?.length > 0 ? cert.non_conformites.map((nc, i) => (
-          <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
+          <div key={`el-${i}`} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
             <XCircle className={`w-5 h-5 flex-shrink-0 ${nc.type === 'majeure' ? 'text-red-500' : 'text-amber-500'}`} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">{nc.description}</p>
@@ -1530,7 +1538,7 @@ const RegistresTab = ({ dashboard, onRefresh }) => {
           </form>
         )}
         {cert?.reclamations?.length > 0 ? cert.reclamations.map((rec, i) => (
-          <div key={i} className="p-3 bg-gray-50 rounded-lg mb-2" data-testid={`rec-item-${rec.id}`}>
+          <div key={`el-${i}`} className="p-3 bg-gray-50 rounded-lg mb-2" data-testid={`rec-item-${rec.id}`}>
             <div className="flex items-start gap-3">
               <MessageSquareWarning className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
@@ -1583,7 +1591,7 @@ const RegistresTab = ({ dashboard, onRefresh }) => {
           </form>
         )}
         {cert?.risques?.length > 0 ? cert.risques.map((r, i) => (
-          <div key={i} className="p-3 bg-gray-50 rounded-lg mb-2" data-testid={`risque-item-${r.id}`}>
+          <div key={`el-${i}`} className="p-3 bg-gray-50 rounded-lg mb-2" data-testid={`risque-item-${r.id}`}>
             <div className="flex items-start gap-3">
               <Scale className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
@@ -1629,7 +1637,7 @@ const RegistresTab = ({ dashboard, onRefresh }) => {
           </form>
         )}
         {declarations.length > 0 ? declarations.map((d, i) => (
-          <div key={i} className="flex items-center gap-3 p-3 bg-green-50/50 rounded-lg mb-2 border border-green-100" data-testid={`imp-item-${d.id}`}>
+          <div key={`el-${i}`} className="flex items-center gap-3 p-3 bg-green-50/50 rounded-lg mb-2 border border-green-100" data-testid={`imp-item-${d.id}`}>
             <ShieldCheck className="w-5 h-5 text-green-500 flex-shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-medium">{d.signataire_nom} - {d.signataire_fonction}</p>
@@ -1661,6 +1669,7 @@ const DiagnosticConformitePDC = () => {
       finally { setLoading(false); }
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const ficheChecks = [
@@ -1797,6 +1806,7 @@ export default function ARS1000Dashboard() {
       if (res.ok) setCertDashboard(await res.json());
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { loadCertification(); }, [loadCertification]);

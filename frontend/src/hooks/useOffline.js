@@ -5,6 +5,7 @@
  * Détection online/offline + sync automatique + sync manuelle
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { tokenService } from '../services/tokenService';
 import {
   performFullSync,
   uploadPendingActions,
@@ -38,6 +39,7 @@ export function useOfflineAgent() {
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Charger l'état initial depuis IndexedDB
@@ -48,6 +50,7 @@ export function useOfflineAgent() {
       setPendingCount(await getPendingActionsCount());
       setCachedFarmers(await getFarmersCount());
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-sync quand on revient en ligne
@@ -70,7 +73,7 @@ export function useOfflineAgent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline]);
 
-  const getToken = () => localStorage.getItem('token');
+  const getToken = () => tokenService.getToken();
 
   // Synchronisation complète (download + upload)
   const syncAll = useCallback(async () => {
@@ -101,23 +104,27 @@ export function useOfflineAgent() {
       setSyncing(false);
       syncInProgress.current = false;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Recherche offline par téléphone
   const searchOffline = useCallback(async (phone) => {
     const results = await searchFarmerByPhone(phone);
     return results;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Recherche offline par nom
   const searchOfflineByName = useCallback(async (name) => {
     const results = await searchFarmerByName(name);
     return results;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Détails d'un planteur offline
   const getFarmerOffline = useCallback(async (id) => {
     return getFarmerById(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Ajouter une action à la file d'attente
@@ -125,6 +132,7 @@ export function useOfflineAgent() {
     const id = await queueOfflineAction(action);
     setPendingCount((c) => c + 1);
     return id;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

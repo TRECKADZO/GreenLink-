@@ -22,6 +22,7 @@ const AuditorMissionPage = () => {
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchMissionParcels = async () => {
       try {
@@ -40,6 +41,7 @@ const AuditorMissionPage = () => {
     if (missionId) {
       fetchMissionParcels();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missionId]);
 
   const getStatusBadge = (parcel) => {

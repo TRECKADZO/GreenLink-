@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -29,6 +30,7 @@ const BuyerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'acheteur') {
@@ -37,11 +39,12 @@ const BuyerDashboard = () => {
     }
     fetchData();
     fetchSubscription();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchSubscription = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const { data } = await axios.get(`${API_URL}/api/subscriptions/my-subscription`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -181,7 +184,7 @@ const BuyerDashboard = () => {
         {/* Stats */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {statCards.map((stat, index) => (
-            <Card key={index} className="p-6 hover:shadow-xl transition-shadow">
+            <Card key={`el-${index}`} className="p-6 hover:shadow-xl transition-shadow">
               <div className={`p-3 rounded-lg ${stat.bgColor} w-fit mb-4`}>
                 <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>

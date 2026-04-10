@@ -1,16 +1,28 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test PDC 7 Fiches - Iteration 121
+Test PDC 7 Fiches - Iteration 121
+Tests for the new 7-fiche ARS 1000 PDC schema implementation
 Tests for the new 7-fiche ARS 1000 PDC schema implementation
 
+
+Features tested:
 Features tested:
 - POST /api/ars1000/pdc - Create PDC with new 7-fiche schema
+- POST /api/ars1000/pdc - Create PDC with new 7-fiche schema
+- PUT /api/ars1000/pdc/{id} - Update PDC with new schema
 - PUT /api/ars1000/pdc/{id} - Update PDC with new schema
 - GET /api/ars1000/pdc/my-pdc - Returns all new fields
+- GET /api/ars1000/pdc/my-pdc - Returns all new fields
+- POST /api/ars1000/pdc/agent-visit - Agent visit with new schema
 - POST /api/ars1000/pdc/agent-visit - Agent visit with new schema
 - calculate_pdc_conformite - Works with both old and new field names
+- calculate_pdc_conformite - Works with both old and new field names
+"""
 """
 
-import pytest
 import requests
 import os
 import time
@@ -20,7 +32,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 # Test credentials
 PLANTEUR_CREDS = {"identifier": "testplanteur@test.ci", "password": "test123456"}
 AGENT_CREDS = {"identifier": "testagent@test.ci", "password": "test123456"}
-COOP_CREDS = {"identifier": "bielaghana@gmail.com", "password": "test123456"}
+COOP_CREDS = {"identifier": COOP_EMAIL, "password": "test123456"}
 
 # Module-level token cache to avoid rate limiting
 _TOKEN_CACHE = {}

@@ -1,16 +1,28 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 ARS 1000 - PDF Generation & Smart Recommendations Testing
+ARS 1000 - PDF Generation & Smart Recommendations Testing
+Iteration 117 - GreenLink Agritech
 Iteration 117 - GreenLink Agritech
 
+
+Tests:
 Tests:
 1. POST /api/ars1000/agroforesterie/recommandations - Smart tree recommendation from raw data
+1. POST /api/ars1000/agroforesterie/recommandations - Smart tree recommendation from raw data
+2. GET /api/ars1000/agroforesterie/recommandations/farmer/{farmer_id} - Smart tree recommendation for a specific farmer
 2. GET /api/ars1000/agroforesterie/recommandations/farmer/{farmer_id} - Smart tree recommendation for a specific farmer
 3. GET /api/ars1000/pdf/pdc/{pdc_id} - Generate PDC PDF (10 pages ARS 1000 format)
+3. GET /api/ars1000/pdf/pdc/{pdc_id} - Generate PDC PDF (10 pages ARS 1000 format)
+4. GET /api/ars1000/pdf/rapport-essai/{lot_id} - Generate rapport d'essai PDF (ARS 1000-2)
 4. GET /api/ars1000/pdf/rapport-essai/{lot_id} - Generate rapport d'essai PDF (ARS 1000-2)
 5. GET /api/ars1000/pdf/tracabilite/{lot_id} - Generate traceability sheet PDF
+5. GET /api/ars1000/pdf/tracabilite/{lot_id} - Generate traceability sheet PDF
+"""
 """
 
-import pytest
 import requests
 import os
 import time
@@ -18,7 +30,7 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.preview.emergentagent.com')
 
 # Test credentials
-COOPERATIVE_CREDS = {"identifier": "bielaghana@gmail.com", "password": "test123456"}
+COOPERATIVE_CREDS = {"identifier": COOP_EMAIL, "password": "test123456"}
 AGENT_CREDS = {"identifier": "testagent@test.ci", "password": "test123456"}
 FARMER_CREDS = {"identifier": "testplanteur@test.ci", "password": "test123456"}
 

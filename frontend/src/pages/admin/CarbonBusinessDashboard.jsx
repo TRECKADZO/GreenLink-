@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -15,7 +16,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 // Simple API helper with auth
 const apiClient = {
   get: async (url) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.get(`${API_URL}${url}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
@@ -36,8 +37,10 @@ const CarbonBusinessDashboard = () => {
     priceUsd: 30
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
@@ -333,7 +336,7 @@ const CarbonBusinessDashboard = () => {
               <CardContent>
                 <div className="space-y-4">
                   {marketPrices?.quality_tiers?.map((tier, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={`el-${idx}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">{tier.quality_name}</p>
                         <p className="text-sm text-gray-500">{tier.price_range_usd?.replace(/(\d+)/g, (m) => formatNumber(parseInt(m) * USD_TO_XOF))?.replace('USD', 'XOF')}</p>
@@ -363,7 +366,7 @@ const CarbonBusinessDashboard = () => {
               <CardContent>
                 <div className="space-y-4">
                   {marketPrices?.buyer_types?.map((buyer, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={`el-${idx}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">{buyer.type_name}</p>
                         <p className="text-sm text-gray-500">

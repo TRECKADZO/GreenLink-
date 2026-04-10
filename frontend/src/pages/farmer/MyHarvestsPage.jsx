@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, Filter, Clock, CheckCircle2, XCircle, Loader2, Plus } from 'lucide-react';
@@ -9,7 +10,7 @@ import Navbar from '../../components/Navbar';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -26,8 +27,10 @@ const MyHarvestsPage = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchHarvests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const fetchHarvests = async () => {

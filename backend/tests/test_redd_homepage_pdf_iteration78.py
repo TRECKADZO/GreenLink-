@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 78 - REDD+ Homepage Updates and PDF Export Tests
+Iteration 78 - REDD+ Homepage Updates and PDF Export Tests
+Tests for:
 Tests for:
 - Homepage REDD+ section with 4 highlight cards
+- Homepage REDD+ section with 4 highlight cards
+- Features section with 9 cards including REDD+ and MRV
 - Features section with 9 cards including REDD+ and MRV
 - /guide-redd page accessibility
+- /guide-redd page accessibility
+- MRV PDF export endpoint authentication and response
 - MRV PDF export endpoint authentication and response
 - Cooperative dashboard MRV quick action
+- Cooperative dashboard MRV quick action
 """
-import pytest
 import requests
 import os
 
@@ -15,8 +24,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 ADMIN_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 

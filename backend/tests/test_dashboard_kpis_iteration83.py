@@ -1,9 +1,14 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Dashboard KPIs with REAL Seed Data - Iteration 83
+Test Dashboard KPIs with REAL Seed Data - Iteration 83
+Tests REDD+, SSRTE, ICI KPIs with actual seed data and sync tests
 Tests REDD+, SSRTE, ICI KPIs with actual seed data and sync tests
 """
+"""
 
-import pytest
 import requests
 import os
 import time
@@ -11,8 +16,8 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.preview.emergentagent.com').rstrip('/')
 
 # Test credentials from test_credentials.md
-TEST_EMAIL = "klenakan.eric@gmail.com"
-TEST_PASSWORD = "474Treckadzo"
+TEST_EMAIL = ADMIN_EMAIL
+TEST_PASSWORD = ADMIN_PASSWORD
 
 
 @pytest.fixture(scope="module")

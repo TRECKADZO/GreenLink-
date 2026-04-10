@@ -1,20 +1,36 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Messaging Contacts Fix Tests - Iteration 113
+Messaging Contacts Fix Tests - Iteration 113
+Tests for the fix: Changed 'member_id' to 'user_id' in coop_members queries
 Tests for the fix: Changed 'member_id' to 'user_id' in coop_members queries
 
+
+Key fix: In messaging.py contacts endpoint, changed 'member_id' to 'user_id' 
 Key fix: In messaging.py contacts endpoint, changed 'member_id' to 'user_id' 
 for coop_members queries across cooperative, field_agent, and producteur roles.
+for coop_members queries across cooperative, field_agent, and producteur roles.
+
 
 Tests:
+Tests:
+- GET /api/messaging/contacts for cooperative role (should see agents + farmers + buyers)
 - GET /api/messaging/contacts for cooperative role (should see agents + farmers + buyers)
 - GET /api/messaging/contacts for field_agent role (should see cooperative + farmers from same coop)
+- GET /api/messaging/contacts for field_agent role (should see cooperative + farmers from same coop)
+- GET /api/messaging/contacts for producteur/farmer role (should see cooperatives + agents + buyers)
 - GET /api/messaging/contacts for producteur/farmer role (should see cooperatives + agents + buyers)
 - POST /api/messaging/conversations/direct creates a direct conversation
+- POST /api/messaging/conversations/direct creates a direct conversation
+- GET /api/messaging/conversations returns conversations for a user
 - GET /api/messaging/conversations returns conversations for a user
 - GET /api/messaging/conversations/{id} returns conversation details
+- GET /api/messaging/conversations/{id} returns conversation details
+- GET /api/messaging/conversations/{id}/messages returns paginated messages
 - GET /api/messaging/conversations/{id}/messages returns paginated messages
 """
-import pytest
 import requests
 import os
 import time
@@ -22,10 +38,10 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
-COOPERATIVE_CREDENTIALS = {"identifier": "bielaghana@gmail.com", "password": "test123456"}
+COOPERATIVE_CREDENTIALS = {"identifier": COOP_EMAIL, "password": "test123456"}
 AGENT_CREDENTIALS = {"identifier": "testagent@test.ci", "password": "test123456"}
 FARMER_CREDENTIALS = {"identifier": "testplanteur@test.ci", "password": "test123456"}
-ADMIN_CREDENTIALS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDENTIALS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 
 # Global token cache
 _token_cache = {}

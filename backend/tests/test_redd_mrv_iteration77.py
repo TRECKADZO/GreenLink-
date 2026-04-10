@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 REDD+ MRV Features Testing - Iteration 77
+REDD+ MRV Features Testing - Iteration 77
+Tests for:
 Tests for:
 1. GET /api/redd/practices - REDD+ practices categories (total_practices=21)
+1. GET /api/redd/practices - REDD+ practices categories (total_practices=21)
+2. GET /api/redd/mrv/summary - MRV aggregated data
 2. GET /api/redd/mrv/summary - MRV aggregated data
 3. GET /api/redd/mrv/farmers - Farmer list with redd_score and redd_level
+3. GET /api/redd/mrv/farmers - Farmer list with redd_score and redd_level
+4. POST /api/ussd/callback - Detailed estimation flow with 12 questions (9 original + 3 REDD+)
 4. POST /api/ussd/callback - Detailed estimation flow with 12 questions (9 original + 3 REDD+)
 5. USSD result includes 'Niveau REDD+' line
+5. USSD result includes 'Niveau REDD+' line
 """
-import pytest
 import requests
 import os
 
@@ -308,8 +317,8 @@ class TestAuthLogin:
     def test_admin_login_returns_token(self):
         """Admin login with identifier returns access_token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         assert response.status_code == 200, f"Login failed: {response.status_code} - {response.text}"
         

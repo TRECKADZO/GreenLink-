@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -135,7 +136,7 @@ const CreateCarbonListing = () => {
         farmers_involved: form.farmers_involved ? parseInt(form.farmers_involved) : null,
         documentation_urls: [],
       };
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       await axios.post(`${API_URL}/api/carbon-listings/submit`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });

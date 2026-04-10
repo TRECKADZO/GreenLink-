@@ -1,10 +1,16 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 72 - Member Creation with PIN and Hectares Testing
+Iteration 72 - Member Creation with PIN and Hectares Testing
+Tests the complete flow: login cooperative, create member with PIN + hectares,
 Tests the complete flow: login cooperative, create member with PIN + hectares,
 verify code_planteur generation, and activation stats.
+verify code_planteur generation, and activation stats.
+"""
 """
 
-import pytest
 import requests
 import os
 import time
@@ -12,8 +18,8 @@ import time
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-COOP_IDENTIFIER = "bielaghana@gmail.com"
-COOP_PASSWORD = "474Treckadzo"
+COOP_IDENTIFIER = COOP_EMAIL
+COOP_PASSWORD = COOP_PASSWORD  # from test_config
 
 class TestCooperativeLogin:
     """Test cooperative authentication"""

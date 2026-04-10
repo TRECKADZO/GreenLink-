@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -18,7 +19,7 @@ const AdminFarmerAssignment = () => {
   const [farmerSearch, setFarmerSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => { fetchData(); }, []);

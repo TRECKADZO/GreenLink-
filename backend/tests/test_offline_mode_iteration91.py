@@ -1,16 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Offline Mode Implementation - Iteration 91
+Test Offline Mode Implementation - Iteration 91
+Tests for cooperative dashboard, members, lots endpoints that support offline-first mode
 Tests for cooperative dashboard, members, lots endpoints that support offline-first mode
 """
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 
 @pytest.fixture(scope="module")

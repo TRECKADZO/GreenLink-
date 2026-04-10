@@ -69,6 +69,7 @@ function NewConversationDialog({ open, onClose, onCreated }) {
       const data = await messagingApi.getContacts(q || null);
       setContacts(data);
     } catch { /* ignore */ } finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { if (open) { loadContacts(); setSelected(null); setMessage(''); setSearch(''); } }, [open, loadContacts]);
@@ -122,7 +123,7 @@ function NewConversationDialog({ open, onClose, onCreated }) {
             </div>
             <ScrollArea className="flex-1 max-h-[45vh] -mx-1">
               {loading ? (
-                <div className="space-y-3 p-2">{[1,2,3].map(i => <Skeleton key={i} className="h-14 bg-[#2d5a4d]/40 rounded-lg" />)}</div>
+                <div className="space-y-3 p-2">{[1,2,3].map(i => <Skeleton key={`el-${i}`} className="h-14 bg-[#2d5a4d]/40 rounded-lg" />)}</div>
               ) : contacts.length === 0 ? (
                 <p className="text-white/50 text-center py-8 text-sm">Aucun contact trouvé</p>
               ) : (
@@ -244,6 +245,7 @@ export default function MessagingPage() {
     } else {
       setPushState('prompt');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const handleEnablePush = async () => {
@@ -273,6 +275,7 @@ export default function MessagingPage() {
     );
     wsRef.current.connect();
     return () => { if (wsRef.current) wsRef.current.disconnect(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   /* ── Load conversations ── */
@@ -281,6 +284,7 @@ export default function MessagingPage() {
       const data = await messagingApi.getConversations(showArchived);
       setConversations(data);
     } catch { /* ignore */ } finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showArchived]);
 
   useEffect(() => { if (token) loadConversations(); }, [token, loadConversations]);
@@ -290,6 +294,7 @@ export default function MessagingPage() {
     if (!token) return;
     const interval = setInterval(loadConversations, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, loadConversations]);
 
   /* ── Load single conversation ── */
@@ -307,6 +312,7 @@ export default function MessagingPage() {
     } catch {
       toast.error('Erreur lors du chargement');
     } finally { setLoadingMessages(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { if (token && conversationId) { loadConversation(conversationId); setMobileShowChat(true); } }, [token, conversationId, loadConversation]);
@@ -324,6 +330,7 @@ export default function MessagingPage() {
         } catch { toast.error("Erreur lors de la creation"); }
       })();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, conversationId, navigate]);
 
   /* ── Scroll to bottom ── */
@@ -486,7 +493,7 @@ export default function MessagingPage() {
             {/* Conversation list */}
             <ScrollArea className="flex-1">
               {loading ? (
-                <div className="p-3 space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-lg bg-[#2d5a4d]/30" />)}</div>
+                <div className="p-3 space-y-2">{[1,2,3,4].map(i => <Skeleton key={`el-${i}`} className="h-16 rounded-lg bg-[#2d5a4d]/30" />)}</div>
               ) : filteredConversations.length === 0 ? (
                 <div className="p-8 text-center">
                   <MessageSquare className="w-10 h-10 mx-auto mb-3 text-white/20" />
@@ -612,7 +619,7 @@ export default function MessagingPage() {
                 {/* ── Messages ── */}
                 <ScrollArea className="flex-1 px-4 py-4">
                   {loadingMessages ? (
-                    <div className="space-y-4">{[1,2,3].map(i => <div key={i} className={`flex ${i%2?'':'justify-end'}`}><Skeleton className="h-14 w-56 rounded-2xl bg-[#2d5a4d]/30" /></div>)}</div>
+                    <div className="space-y-4">{[1,2,3].map(i => <div key={`el-${i}`} className={`flex ${i%2?'':'justify-end'}`}><Skeleton className="h-14 w-56 rounded-2xl bg-[#2d5a4d]/30" /></div>)}</div>
                   ) : (
                     <div className="space-y-3">
                       {/* E2E notice */}

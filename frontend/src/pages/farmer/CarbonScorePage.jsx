@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,7 +18,7 @@ import {
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -57,6 +58,7 @@ const CarbonScorePage = () => {
   const [expandedParcel, setExpandedParcel] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchAll = async () => {
       try {
@@ -76,6 +78,7 @@ const CarbonScorePage = () => {
       }
     };
     fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -203,7 +206,7 @@ const CarbonScorePage = () => {
                     { label: 'Pratiques', value: breakdown.pratiques || 0, max: 2.5, color: 'bg-indigo-500', detail: `${data?.practices_count || 0}/5` },
                     { label: 'Surface', value: breakdown.surface || 0, max: 0.5, color: 'bg-amber-500', detail: `${data?.total_area || 0} ha` },
                   ].map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
+                    <div key={`el-${idx}`} className="flex items-center gap-3">
                       <div className="w-20 text-xs">
                         <p className="font-medium text-gray-700">{item.label}</p>
                         {item.detail && <p className="text-[10px] text-gray-400">{item.detail}</p>}
@@ -234,7 +237,7 @@ const CarbonScorePage = () => {
                           { label: 'S2 (5-30m)', value: data.arbre_categories.moyens_8_12m, color: 'green' },
                           { label: 'S3 (>30m)', value: data.arbre_categories.grands_gt_12m, color: 'emerald' },
                         ].map((s, i) => (
-                          <div key={i} className={`text-center p-2 rounded-lg bg-${s.color}-50 border border-${s.color}-200`}>
+                          <div key={`el-${i}`} className={`text-center p-2 rounded-lg bg-${s.color}-50 border border-${s.color}-200`}>
                             <p className={`text-lg font-bold text-${s.color}-600`}>{s.value}</p>
                             <p className="text-[10px] text-gray-500">{s.label}</p>
                           </div>
@@ -270,7 +273,7 @@ const CarbonScorePage = () => {
                 <h2 className="text-sm font-bold text-gray-900 mb-2">Recommandations</h2>
                 <div className="space-y-2">
                   {recommendations.map((rec, idx) => (
-                    <Card key={idx}>
+                    <Card key={`el-${idx}`}>
                       <CardContent className="p-3 flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                           rec.priority === 'haute' ? 'bg-amber-100' : rec.priority === 'moyenne' ? 'bg-indigo-100' : 'bg-gray-100'
@@ -385,7 +388,7 @@ const CarbonScorePage = () => {
                         <Tooltip formatter={(v) => [`${v}/10`, 'Score']} contentStyle={{ borderRadius: 8, fontSize: 12 }} />
                         <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={40}>
                           {barData.map((entry, idx) => (
-                            <Cell key={idx} fill={entry.fill} />
+                            <Cell key={`el-${idx}`} fill={entry.fill} />
                           ))}
                         </Bar>
                       </BarChart>

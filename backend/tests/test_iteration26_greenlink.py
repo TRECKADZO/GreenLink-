@@ -1,12 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 26 - GreenLink Backend API Tests
+Iteration 26 - GreenLink Backend API Tests
+Testing:
 Testing:
 - Marketplace Intrants API (/api/marketplace/products)
+- Marketplace Intrants API (/api/marketplace/products)
+- User Registration/Login (/api/auth/register, /api/auth/login)
 - User Registration/Login (/api/auth/register, /api/auth/login)
 - Carbon Premium Calculator (/api/carbon-payments/ma-prime)
+- Carbon Premium Calculator (/api/carbon-payments/ma-prime)
+- Carbon Credits Submission/Pending (/api/carbon-listings/submit, /api/carbon-listings/pending)
 - Carbon Credits Submission/Pending (/api/carbon-listings/submit, /api/carbon-listings/pending)
 """
-import pytest
 import requests
 import os
 import uuid
@@ -15,8 +23,8 @@ from datetime import datetime
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 COOP_EMAIL = "coop-gagnoa@greenlink.ci"
 COOP_PASSWORD = "password"
 

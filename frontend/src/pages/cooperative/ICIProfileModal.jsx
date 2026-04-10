@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { offlineCooperativeApi as cooperativeApi } from '../../services/offlineCooperativeApi';
 import {
@@ -53,8 +54,10 @@ const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
     },
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (open && farmer) fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, farmer]);
 
   const fetchProfile = async () => {
@@ -85,7 +88,7 @@ const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
       } else {
         // No ICI profile yet — try to load family data from SSRTE
         try {
-          const token = localStorage.getItem('token');
+          const token = tokenService.getToken();
           const familyRes = await fetch(`${API_URL}/api/ici-data/farmers/${farmer.id}/family-data`, {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -255,7 +258,7 @@ const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
                 ) : (
                   <div className="space-y-3" data-testid="children-list">
                     {form.household_children.liste_enfants.map((child, idx) => (
-                      <div key={idx} className="border rounded-lg p-3 bg-gray-50 relative">
+                      <div key={`el-${idx}`} className="border rounded-lg p-3 bg-gray-50 relative">
                         <Button size="sm" variant="ghost" className="absolute top-1 right-1 h-6 w-6 p-0 text-red-400 hover:text-red-600" onClick={() => removeChild(idx)}>
                           <X className="h-3 w-3" />
                         </Button>

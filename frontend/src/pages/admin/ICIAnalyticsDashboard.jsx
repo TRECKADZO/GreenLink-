@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -20,7 +21,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const apiClient = {
   get: async (url) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return axios.get(`${API_URL}${url}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
@@ -37,6 +38,7 @@ const ICIAnalyticsDashboard = () => {
   const [socialImpactData, setSocialImpactData] = useState(null);
   const [dueDiligenceData, setDueDiligenceData] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'admin') {
@@ -45,6 +47,7 @@ const ICIAnalyticsDashboard = () => {
       return;
     }
     fetchAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const fetchAllData = async () => {
@@ -223,7 +226,7 @@ const ICIAnalyticsDashboard = () => {
                           <h4 className="text-sm font-medium text-slate-400 mb-3">Composantes du système</h4>
                           <div className="space-y-2">
                             {childLaborData.ssrte_implementation?.composantes?.map((comp, i) => (
-                              <div key={i} className="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg">
+                              <div key={`el-${i}`} className="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg">
                                 <ChevronRight className="w-4 h-4 text-amber-400" />
                                 <span className="text-sm text-slate-300">{comp}</span>
                               </div>
@@ -253,7 +256,7 @@ const ICIAnalyticsDashboard = () => {
                     <CardContent>
                       <div className="grid md:grid-cols-3 gap-4">
                         {childLaborData.taches_dangereuses?.taches?.map((tache, i) => (
-                          <div key={i} className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                          <div key={`el-${i}`} className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-slate-300">{tache.nom}</span>
                               <Badge className="bg-red-500/20 text-red-400">{tache.pourcentage}%</Badge>
@@ -308,7 +311,7 @@ const ICIAnalyticsDashboard = () => {
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {childLaborData.recommandations?.map((rec, i) => (
-                          <div key={i} className="p-3 bg-slate-800/50 rounded-lg">
+                          <div key={`el-${i}`} className="p-3 bg-slate-800/50 rounded-lg">
                             <div className="flex items-center gap-2 mb-1">
                               <Badge 
                                 className={`text-xs ${
@@ -444,7 +447,7 @@ const ICIAnalyticsDashboard = () => {
                           <h4 className="text-amber-400 font-medium mb-2">Déterminants Sociaux</h4>
                           <ul className="text-sm text-slate-400 space-y-1">
                             {zoneData.methodologie?.variables_determinants_sociaux?.slice(0, 4).map((v, i) => (
-                              <li key={i}>• {v}</li>
+                              <li key={`el-${i}`}>• {v}</li>
                             ))}
                           </ul>
                         </div>
@@ -452,7 +455,7 @@ const ICIAnalyticsDashboard = () => {
                           <h4 className="text-blue-400 font-medium mb-2">Capital Humain</h4>
                           <ul className="text-sm text-slate-400 space-y-1">
                             {zoneData.methodologie?.variables_capital_humain?.slice(0, 4).map((v, i) => (
-                              <li key={i}>• {v}</li>
+                              <li key={`el-${i}`}>• {v}</li>
                             ))}
                           </ul>
                         </div>
@@ -460,7 +463,7 @@ const ICIAnalyticsDashboard = () => {
                           <h4 className="text-green-400 font-medium mb-2">Capital Économique</h4>
                           <ul className="text-sm text-slate-400 space-y-1">
                             {zoneData.methodologie?.variables_capital_economique?.slice(0, 4).map((v, i) => (
-                              <li key={i}>• {v}</li>
+                              <li key={`el-${i}`}>• {v}</li>
                             ))}
                           </ul>
                         </div>
@@ -772,7 +775,7 @@ const ICIAnalyticsDashboard = () => {
                             </p>
                             <ul className="space-y-2">
                               {pkg.inclus?.map((item, i) => (
-                                <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
+                                <li key={`el-${i}`} className="flex items-center gap-2 text-sm text-slate-300">
                                   <ChevronRight className="w-3 h-3 text-green-400" />
                                   {item}
                                 </li>
@@ -795,7 +798,7 @@ const ICIAnalyticsDashboard = () => {
                     <CardContent>
                       <div className="grid md:grid-cols-5 gap-3">
                         {dueDiligenceData.documents_disponibles?.map((doc, i) => (
-                          <div key={i} className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-700/50 cursor-pointer transition-colors">
+                          <div key={`el-${i}`} className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-700/50 cursor-pointer transition-colors">
                             <FileText className="w-8 h-8 text-purple-400 mx-auto mb-2" />
                             <p className="text-xs text-slate-300">{doc}</p>
                           </div>

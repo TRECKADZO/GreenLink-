@@ -1,35 +1,56 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test RSE Formula Implementation - Iteration 63
+Test RSE Formula Implementation - Iteration 63
+Tests the NEW RSE formula (30% frais, 70% distribue: 25% GreenLink, 5% Coop, 70% Paysan)
 Tests the NEW RSE formula (30% frais, 70% distribue: 25% GreenLink, 5% Coop, 70% Paysan)
 and formula confidentiality (Admin sees all, Coop/Farmer see only their amounts).
+and formula confidentiality (Admin sees all, Coop/Farmer see only their amounts).
+
 
 RSE = score x taux_XOF x hectares
+RSE = score x taux_XOF x hectares
+- 30% -> Frais
 - 30% -> Frais
 - 70% distribue:
+- 70% distribue:
+  - 25% -> GreenLink
   - 25% -> GreenLink
   - 5%  -> Cooperative
+  - 5%  -> Cooperative
+  - 70% -> Paysan
   - 70% -> Paysan
 
+
+Math verification: For score=7.5, area=3ha, taux=5000:
 Math verification: For score=7.5, area=3ha, taux=5000:
 RSE = 7.5 * 5000 * 3 = 112,500 XOF
+RSE = 7.5 * 5000 * 3 = 112,500 XOF
+frais = 112,500 * 0.30 = 33,750 XOF
 frais = 112,500 * 0.30 = 33,750 XOF
 distributable = 112,500 * 0.70 = 78,750 XOF
+distributable = 112,500 * 0.70 = 78,750 XOF
+greenlink = 78,750 * 0.25 = 19,687.5 ~ 19,688 XOF
 greenlink = 78,750 * 0.25 = 19,687.5 ~ 19,688 XOF
 coop = 78,750 * 0.05 = 3,937.5 ~ 3,938 XOF
+coop = 78,750 * 0.05 = 3,937.5 ~ 3,938 XOF
+farmer = 78,750 - 19,688 - 3,938 = 55,124 XOF
 farmer = 78,750 - 19,688 - 3,938 = 55,124 XOF
 """
+"""
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Credentials from review request
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
+# COOP_EMAIL imported from test_config
+COOP_PASSWORD = COOP_PASSWORD  # from test_config
 FARMER_PHONE = "+2250705551234"
 FARMER_PASSWORD = "koffi2024"
 USSD_TEST_PHONE = "+2250799999999"

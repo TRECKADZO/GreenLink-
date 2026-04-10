@@ -1,15 +1,26 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 89 - Cooperative Referral System Bug Fixes Testing
+Iteration 89 - Cooperative Referral System Bug Fixes Testing
+
 
 Tests for:
+Tests for:
+1. POST /api/auth/register with user_type=cooperative - creates user with coop_name, referral_code, user_type
 1. POST /api/auth/register with user_type=cooperative - creates user with coop_name, referral_code, user_type
 2. POST /api/auth/register with sponsor_referral_code - links new coop to sponsor
+2. POST /api/auth/register with sponsor_referral_code - links new coop to sponsor
+3. GET /api/cooperative-referral/my-code - returns 200 with referral_code and coop_name (NOT 403)
 3. GET /api/cooperative-referral/my-code - returns 200 with referral_code and coop_name (NOT 403)
 4. GET /api/cooperative-referral/my-affiliates - lists affiliated cooperatives
+4. GET /api/cooperative-referral/my-affiliates - lists affiliated cooperatives
+5. POST /api/cooperative-referral/validate - validates a referral code
 5. POST /api/cooperative-referral/validate - validates a referral code
 """
+"""
 
-import pytest
 import requests
 import os
 import random
@@ -19,8 +30,8 @@ from datetime import datetime
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 
 def generate_unique_id():

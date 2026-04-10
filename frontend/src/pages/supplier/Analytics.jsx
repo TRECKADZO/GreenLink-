@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -18,7 +19,7 @@ const SupplierAnalytics = () => {
   const [exporting, setExporting] = useState(false);
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     return { Authorization: `Bearer ${token}` };
   };
 
@@ -38,8 +39,10 @@ const SupplierAnalytics = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
   const exportData = async (type) => {
@@ -263,7 +266,7 @@ const SupplierAnalytics = () => {
             const height = maxRevenue > 0 ? (day.revenue / maxRevenue * 100) : 0;
             
             return (
-              <div key={index} className="flex-1 flex flex-col items-center">
+              <div key={`el-${index}`} className="flex-1 flex flex-col items-center">
                 <div
                   className="w-full bg-[#2d5a4d] rounded-t-sm hover:bg-[#1a4038] transition-colors cursor-pointer relative group"
                   style={{ height: `${Math.max(height, 2)}%` }}

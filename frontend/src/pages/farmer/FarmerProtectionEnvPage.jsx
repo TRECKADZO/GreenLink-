@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Leaf, Loader2, Plus, Send, Droplets, Mountain, TreePine, AlertTriangle, CheckCircle2 } from 'lucide-react';
@@ -7,7 +8,7 @@ import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
-const getToken = () => localStorage.getItem('token');
+const getToken = () => tokenService.getToken();
 const authHeaders = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
 const TYPE_MAP = {
@@ -179,7 +180,7 @@ export default function FarmerProtectionEnvPage() {
               const t = TYPE_MAP[m.type_protection] || TYPE_MAP.cours_eau;
               const TIcon = t.icon;
               return (
-                <div key={i} className="bg-white rounded-xl border shadow-sm p-4" data-testid={`farmer-prot-${i}`}>
+                <div key={`el-${i}`} className="bg-white rounded-xl border shadow-sm p-4" data-testid={`farmer-prot-${i}`}>
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <TIcon className="w-4 h-4 text-gray-600" />

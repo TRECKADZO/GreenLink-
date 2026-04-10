@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -26,7 +27,7 @@ import { useOffline } from '../../context/OfflineContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -157,7 +158,7 @@ const DashboardTab = ({ dashboard, myFarmers, onTabChange }) => {
       <h2 className="text-base font-bold text-gray-800">Tableau de Bord</h2>
       <div className="grid grid-cols-2 gap-3" data-testid="dashboard-kpi-cards">
         {kpis.map((kpi, i) => (
-          <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div key={`el-${i}`} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-2">
               <div className={`p-2 rounded-xl ${kpi.bg}`}><kpi.icon className={`w-4 h-4 ${kpi.color}`} /></div>
               <span className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</span>
@@ -212,6 +213,7 @@ const StorageIndicator = () => {
 
   useEffect(() => {
     estimateStorage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const estimateStorage = async () => {
@@ -480,6 +482,7 @@ const DeclarationFormModal = ({ farmer, open, onClose, onDeclared }) => {
 
   useEffect(() => {
     if (open && farmer) setForm(f => ({ ...f, village: farmer.village || '' }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, farmer]);
 
   const setField = (k, v) => {
@@ -758,6 +761,7 @@ const VerificationTab = () => {
       if (r.ok) { const d = await r.json(); setParcels(d.parcels || []); setStats(d.stats || {}); }
     } catch { toast.error('Erreur de chargement'); }
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const loadFarmers = useCallback(async () => {
@@ -767,6 +771,7 @@ const VerificationTab = () => {
       if (r.ok) { const d = await r.json(); setFarmers(d.farmers || []); }
     } catch { toast.error('Erreur chargement agriculteurs'); }
     setLoadingFarmers(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { if (mode === 'verify') loadParcels(); else loadFarmers(); }, [mode, loadParcels, loadFarmers]);
@@ -977,8 +982,8 @@ const AgentRegistrationForm = () => {
 
   const loadRecent = async () => {
     try {
-      const storedUser = localStorage.getItem('user');
-      const userId = storedUser ? JSON.parse(storedUser)._id : '';
+      const userData = tokenService.getUser();
+      const userId = userData ? userData._id : '';
       const r = await fetch(`${API_URL}/api/ussd/registrations?limit=10${userId ? `&agent_id=${userId}` : ''}`, { headers: getAuthHeader() });
       if (r.ok) { const d = await r.json(); setRecentRegs(d.registrations || []); }
     } catch {}
@@ -1073,7 +1078,7 @@ const AgentRegistrationForm = () => {
       {allRegs.length > 0 && (
         <div><h3 className="text-sm font-semibold text-gray-500 mb-2">Recentes</h3>
           <div className="space-y-2">{allRegs.slice(0, 5).map((r, i) => (
-            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+            <div key={`el-${i}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
               <div>
                 <p className="text-sm font-medium text-gray-800">{r.full_name || r.nom_complet}</p>
                 <p className="text-xs text-gray-400">{r.phone_number}</p>
@@ -1107,6 +1112,7 @@ const PhotosPanel = ({ farmer, onClose }) => {
         { enableHighAccuracy: true, timeout: 15000 }
       );
     } else { setGpsStatus('error'); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCapture = async (e) => {
@@ -1130,7 +1136,7 @@ const PhotosPanel = ({ farmer, onClose }) => {
   const handleSave = async () => {
     if (photos.length === 0) { toast.error('Aucune photo'); return; }
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await fetch(`${API_URL}/api/agent/photos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -1175,7 +1181,7 @@ const PhotosPanel = ({ farmer, onClose }) => {
           <p className="text-xs font-semibold text-gray-500">{photos.length} photo(s) capturee(s)</p>
           <div className="grid grid-cols-3 gap-2">
             {photos.map((p, i) => (
-              <div key={i} className="relative rounded-xl overflow-hidden border border-gray-200 aspect-square">
+              <div key={`el-${i}`} className="relative rounded-xl overflow-hidden border border-gray-200 aspect-square">
                 <img src={p.data} alt="" className="w-full h-full object-cover" />
                 {p.gps && <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-[8px] text-white px-1.5 py-0.5"><MapPin className="w-2.5 h-2.5 inline mr-0.5" />{p.gps.lat.toFixed(4)}, {p.gps.lng.toFixed(4)}</div>}
               </div>
@@ -1222,14 +1228,17 @@ const AgentTerrainDashboard = () => {
       // Clear the state to avoid re-triggering
       window.history.replaceState({}, document.title);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   const loadDashboard = useCallback(async () => {
     try { const r = await fetch(`${API_URL}/api/field-agent/dashboard`, { headers: getAuthHeader() }); if (r.ok) setDashboard(await r.json()); } catch {} finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const loadMyFarmers = useCallback(async () => {
     setFarmersLoading(true);
     try { const r = await fetch(`${API_URL}/api/field-agent/my-farmers`, { headers: getAuthHeader() }); if (r.ok) { const d = await r.json(); setMyFarmers(d.farmers || []); } } catch {} finally { setFarmersLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => { loadDashboard(); loadMyFarmers(); }, [loadDashboard, loadMyFarmers]);
 

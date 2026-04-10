@@ -1,12 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 GreenLink Security & Functional Audit - Iteration 73
+GreenLink Security & Functional Audit - Iteration 73
+Tests for:
 Tests for:
 1. Security: Protected endpoints, no hardcoded passwords, CORS, rate limiting
+1. Security: Protected endpoints, no hardcoded passwords, CORS, rate limiting
+2. Functional: All cooperative endpoints work correctly
 2. Functional: All cooperative endpoints work correctly
 3. Data integrity: Sensitive fields (pin_hash, hashed_password) never returned
+3. Data integrity: Sensitive fields (pin_hash, hashed_password) never returned
+"""
 """
 
-import pytest
 import requests
 import os
 import time
@@ -15,13 +23,13 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
 ADMIN_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 COOP_CREDENTIALS = {
-    "identifier": "bielaghana@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": COOP_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 

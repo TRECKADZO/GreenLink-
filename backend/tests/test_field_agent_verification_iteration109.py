@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 109 - Field Agent Verification & Declaration Tests
+Iteration 109 - Field Agent Verification & Declaration Tests
+Tests for:
 Tests for:
 1. GET /api/field-agent/assigned-farmers - List assigned farmers with parcel counts
+1. GET /api/field-agent/assigned-farmers - List assigned farmers with parcel counts
+2. POST /api/field-agent/farmer-parcels/{farmer_id} - Create new parcel with carbon score
 2. POST /api/field-agent/farmer-parcels/{farmer_id} - Create new parcel with carbon score
 3. GET /api/field-agent/parcels-to-verify - Get parcels to verify with stats
+3. GET /api/field-agent/parcels-to-verify - Get parcels to verify with stats
+4. PUT /api/field-agent/parcels/{parcel_id}/verify - Verify parcel with measured values
 4. PUT /api/field-agent/parcels/{parcel_id}/verify - Verify parcel with measured values
 """
+"""
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -17,8 +26,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 # Test credentials from test_credentials.md
 AGENT_EMAIL = "testagent@test.ci"
 AGENT_PASSWORD = "test123456"
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "test123456"
+# COOP_EMAIL imported from test_config
+# COOP_PASSWORD imported from test_config
 
 
 class TestFieldAgentAuth:

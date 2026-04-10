@@ -1,17 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Dashboard KPIs Endpoint - Iteration 82
+Test Dashboard KPIs Endpoint - Iteration 82
+Tests REDD+, SSRTE, ICI KPIs gated by cooperative subscription plan
 Tests REDD+, SSRTE, ICI KPIs gated by cooperative subscription plan
 """
+"""
 
-import pytest
 import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
-TEST_EMAIL = "klenakan.eric@gmail.com"
-TEST_PASSWORD = "474Treckadzo"
+TEST_EMAIL = ADMIN_EMAIL
+TEST_PASSWORD = ADMIN_PASSWORD
 
 
 class TestDashboardKPIs:

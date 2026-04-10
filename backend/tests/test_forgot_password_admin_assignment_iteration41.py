@@ -1,11 +1,18 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 41 - Testing New Features:
+Iteration 41 - Testing New Features:
+1. Forgot Password with simulation_code display (SMS mocked)
 1. Forgot Password with simulation_code display (SMS mocked)
 2. Admin farmer-agent assignment (super admin can assign any farmer to any agent)
+2. Admin farmer-agent assignment (super admin can assign any farmer to any agent)
+3. Registration page - field_agent user type removed from options
 3. Registration page - field_agent user type removed from options
 """
+"""
 
-import pytest
 import requests
 import os
 import random
@@ -15,8 +22,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test Credentials
 SUPER_ADMIN_CREDS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 FIELD_AGENT_CREDS = {

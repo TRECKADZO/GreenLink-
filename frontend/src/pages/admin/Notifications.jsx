@@ -58,6 +58,7 @@ const AdminNotifications = () => {
       setLoading(false);
       setRefreshing(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const fetchStats = useCallback(async () => {
@@ -74,11 +75,13 @@ const AdminNotifications = () => {
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => {
     fetchNotifications();
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchNotifications, fetchStats]);
 
   const handleMarkAllRead = async () => {

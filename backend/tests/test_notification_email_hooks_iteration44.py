@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 44 - Backend tests for notification email hooks
+Iteration 44 - Backend tests for notification email hooks
+Tests added by testing agent for:
 Tests added by testing agent for:
 1. Login regression tests (email & phone)
+1. Login regression tests (email & phone)
+2. Forgot-password with Resend email integration  
 2. Forgot-password with Resend email integration  
 3. Activate-member-account triggers notification hooks
+3. Activate-member-account triggers notification hooks
+4. Backend server health check (no crashes from notification imports)
 4. Backend server health check (no crashes from notification imports)
 """
+"""
 
-import pytest
 import requests
 import os
 import time
@@ -22,13 +31,13 @@ class TestLoginRegression:
         """Test login with admin email klenakan.eric@gmail.com"""
         response = requests.post(
             f"{BASE_URL}/api/auth/login",
-            json={"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"},
+            json={"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
             timeout=30
         )
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
         assert "access_token" in data, "Missing access_token in response"
-        assert data.get("user", {}).get("email") == "klenakan.eric@gmail.com"
+        assert data.get("user", {}).get("email") == ADMIN_EMAIL
         print(f"PASS: Admin email login returns 200, user_type={data.get('user', {}).get('user_type')}")
 
     def test_login_agent_phone(self):
@@ -118,7 +127,7 @@ class TestNotificationHooksImport:
         # Just verifying login works proves auth.py loaded correctly
         response = requests.post(
             f"{BASE_URL}/api/auth/login",
-            json={"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"},
+            json={"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
             timeout=30
         )
         assert response.status_code == 200, "Auth module failed to load"
@@ -129,7 +138,7 @@ class TestNotificationHooksImport:
         # Get token first
         login_resp = requests.post(
             f"{BASE_URL}/api/auth/login",
-            json={"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"},
+            json={"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
             timeout=30
         )
         token = login_resp.json().get("access_token")
@@ -148,7 +157,7 @@ class TestNotificationHooksImport:
         """Test that ici_data_collection.py loads correctly (has ssrte_visit hook)"""
         login_resp = requests.post(
             f"{BASE_URL}/api/auth/login",
-            json={"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"},
+            json={"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
             timeout=30
         )
         token = login_resp.json().get("access_token")
@@ -167,7 +176,7 @@ class TestNotificationHooksImport:
         """Test that admin.py loads correctly (has farmer_assigned hook)"""
         login_resp = requests.post(
             f"{BASE_URL}/api/auth/login",
-            json={"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"},
+            json={"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
             timeout=30
         )
         token = login_resp.json().get("access_token")
@@ -185,7 +194,7 @@ class TestNotificationHooksImport:
         """Test that cooperative.py loads correctly (has verify_parcel hook)"""
         login_resp = requests.post(
             f"{BASE_URL}/api/auth/login",
-            json={"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"},
+            json={"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
             timeout=30
         )
         token = login_resp.json().get("access_token")

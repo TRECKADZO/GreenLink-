@@ -47,7 +47,7 @@ const CropsSection = () => {
         <div className="grid md:grid-cols-3 gap-8">
           {CROPS_DATA.map((crop, index) => (
             <Card 
-              key={index} 
+              key={`el-${index}`} 
               className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-0 group"
             >
               {/* Image de la culture */}

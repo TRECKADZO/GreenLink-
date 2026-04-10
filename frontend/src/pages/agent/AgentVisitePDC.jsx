@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -15,7 +16,7 @@ import {
 import { GeoSelectCI } from '../../components/GeoSelectCI';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
-const getToken = () => localStorage.getItem('token');
+const getToken = () => tokenService.getToken();
 const authHeaders = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
 
 const STEPS = [
@@ -103,6 +104,7 @@ const SignatureCanvas = ({ onSave, label, savedData }) => {
   const [drawing, setDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(!!savedData);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -119,6 +121,7 @@ const SignatureCanvas = ({ onSave, label, savedData }) => {
       img.onload = () => ctx.drawImage(img, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
       img.src = savedData;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedData]);
 
   const getPos = (e) => {
@@ -153,12 +156,13 @@ const Fiche1Agent = ({ data, epargne, onChange, onEpargneChange, farmer }) => {
   const update = (f, v) => onChange({ ...data, [f]: v });
   const updateEp = (cat, f, v) => onEpargneChange({ ...epargne, [cat]: { ...epargne[cat], [f]: v } });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (farmer && !data.nom) {
       const parts = (farmer.full_name || '').split(' ');
       onChange({ ...data, nom: parts[0] || '', prenoms: parts.slice(1).join(' ') || '', contact_tel: farmer.phone_number || '', village: farmer.village || '' });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmer]);
 
   return (
@@ -248,7 +252,7 @@ const Fiche2Agent = ({ data, onChange }) => {
           </thead>
           <tbody>
             {data.map((row, i) => (
-              <tr key={i}>
+              <tr key={`el-${i}`}>
                 <td className="border p-1.5 font-medium text-[9px]">{row.type}</td>
                 {['nombre', 'a_ecole', 'aucun', 'primaire', 'secondaire', 'universitaire', 'plein_temps', 'occasionnel'].map(f => (
                   <td key={f} className="border p-0.5"><Input type="number" min={0} value={row[f] || ''} onChange={(e) => updateRow(i, f, e.target.value)} className="h-6 text-[10px] text-center w-full border-0" /></td>
@@ -325,7 +329,7 @@ const Fiche3Agent = ({ exploitation, cultures, onExploitationChange, onCulturesC
             </tr></thead>
             <tbody>
               {cultures.map((c, i) => (
-                <tr key={i}>
+                <tr key={`el-${i}`}>
                   <td className="border p-0.5"><Input value={c.nom || ''} onChange={(e) => updateCulture(i, 'nom', e.target.value)} className="h-6 text-[10px] border-0" placeholder="Cacao P1" /></td>
                   <td className="border p-0.5"><Input type="number" step="0.01" value={c.superficie || ''} onChange={(e) => updateCulture(i, 'superficie', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
                   <td className="border p-0.5"><Input type="number" value={c.annee_creation || ''} onChange={(e) => updateCulture(i, 'annee_creation', e.target.value)} className="h-6 text-[10px] border-0 text-center" placeholder="2010" /></td>
@@ -388,7 +392,7 @@ const Fiche4Agent = ({ data, onChange, farmerId }) => {
             {data.length === 0 ? (
               <tr><td colSpan={8} className="border p-3 text-center text-gray-400">Cliquez "Ajouter arbre"</td></tr>
             ) : data.map((a, i) => (
-              <tr key={i}>
+              <tr key={`el-${i}`}>
                 <td className="border p-1 text-center font-medium">{i + 1}</td>
                 <td className="border p-0.5"><Input value={a.nom_botanique || ''} onChange={(e) => updateArbre(i, 'nom_botanique', e.target.value)} className="h-6 text-[10px] border-0" placeholder="Terminalia..." /></td>
                 <td className="border p-0.5"><Input value={a.nom_local || ''} onChange={(e) => updateArbre(i, 'nom_local', e.target.value)} className="h-6 text-[10px] border-0" placeholder="Frake" /></td>
@@ -457,7 +461,7 @@ const RecommandationsPanel = ({ farmerId }) => {
             </div>
           </div>
           {recs.recommendations?.map((rec, i) => (
-            <div key={i} className={`rounded-xl p-3 border ${pColors[rec.priorite] || pColors.basse}`}>
+            <div key={`el-${i}`} className={`rounded-xl p-3 border ${pColors[rec.priorite] || pColors.basse}`}>
               <div className="flex items-center gap-2 mb-1"><AlertTriangle className="w-3.5 h-3.5" /><Badge className={pColors[rec.priorite]}>{rec.priorite}</Badge></div>
               <p className="text-xs font-medium">{rec.message}</p>
               {rec.especes_suggerees?.map((sp, j) => (
@@ -469,7 +473,7 @@ const RecommandationsPanel = ({ farmerId }) => {
             <div className="bg-white rounded-xl border border-green-100 p-3">
               <p className="text-xs font-bold text-green-800 mb-2">Plan de plantation</p>
               {recs.plan_plantation.map((p, i) => (
-                <div key={i} className="flex items-center justify-between text-[10px] bg-green-50 rounded-lg px-2 py-1 mb-1">
+                <div key={`el-${i}`} className="flex items-center justify-between text-[10px] bg-green-50 rounded-lg px-2 py-1 mb-1">
                   <span><b>{p.espece}</b> ({p.strate})</span><b className="text-green-700">{p.quantite} arbres</b>
                 </div>
               ))}
@@ -527,7 +531,7 @@ const Fiche6Agent = ({ data, onChange }) => {
               const showType = row.type !== lastType;
               lastType = row.type;
               return (
-                <tr key={i}>
+                <tr key={`el-${i}`}>
                   <td className="border p-1.5 font-medium">{showType ? row.type : ''}</td>
                   <td className="border p-1.5">{row.designation}</td>
                   <td className="border p-0.5"><Input type="number" min={0} value={row.quantite || ''} onChange={(e) => updateRow(i, 'quantite', e.target.value)} className="h-6 text-[10px] border-0 text-center" /></td>
@@ -570,7 +574,7 @@ const Fiche7Agent = ({ matrice, programme, onMatriceChange, onProgrammeChange })
             </tr></thead>
             <tbody>
               {matrice.map((row, i) => (
-                <tr key={i}>
+                <tr key={`el-${i}`}>
                   <td className="border p-1.5 font-medium text-[9px]">{row.axe}</td>
                   <td className="border p-0.5"><Input value={row.objectifs || ''} onChange={(e) => updateM(i, 'objectifs', e.target.value)} className="h-6 text-[10px] border-0" /></td>
                   <td className="border p-0.5"><Input value={row.activites || ''} onChange={(e) => updateM(i, 'activites', e.target.value)} className="h-6 text-[10px] border-0" /></td>
@@ -606,7 +610,7 @@ const Fiche7Agent = ({ matrice, programme, onMatriceChange, onProgrammeChange })
             </tr></thead>
             <tbody>
               {programme.map((row, i) => (
-                <tr key={i}>
+                <tr key={`el-${i}`}>
                   <td className="border p-0.5">
                     <select className="text-[10px] w-full h-6 border-0" value={row.axe || ''} onChange={(e) => updateP(i, 'axe', e.target.value)}>
                       <option value="">--</option>{matrice.map((m, j) => <option key={j} value={`Axe ${j+1}`}>{`Axe ${j+1}`}</option>)}
@@ -636,10 +640,12 @@ const PhotosStep = ({ photos, onPhotosChange }) => {
   const fileRef = useRef(null);
   const [gps, setGps] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude }), () => {}, { enableHighAccuracy: true, timeout: 15000 });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCapture = (e) => {
@@ -665,7 +671,7 @@ const PhotosStep = ({ photos, onPhotosChange }) => {
       {photos.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {photos.map((p, i) => (
-            <div key={i} className="relative rounded-xl overflow-hidden border border-gray-200 aspect-square">
+            <div key={`el-${i}`} className="relative rounded-xl overflow-hidden border border-gray-200 aspect-square">
               <img src={p.data} alt="" className="w-full h-full object-cover" />
               <button onClick={() => onPhotosChange(photos.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
                 <X className="w-3 h-3 text-white" />
@@ -780,6 +786,7 @@ export default function AgentVisitePDC() {
   const [conformite, setConformite] = useState(0);
 
   // Load farmer and existing PDC
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -815,7 +822,7 @@ export default function AgentVisitePDC() {
       finally { setLoading(false); }
     };
     loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmerId]);
 
   const handleSave = async () => {

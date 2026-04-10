@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -21,14 +22,16 @@ const CooperativeReferralPage = () => {
 
   const MESSAGE = "Le service est entièrement gratuit pour votre coopérative. Vous pouvez parrainer d'autres coopératives en leur partageant votre code. Cela nous aide à faire grandir ensemble le réseau des coopératives engagées dans les pratiques durables.";
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchReferralData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchReferralData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const headers = { Authorization: `Bearer ${token}` };
 
       // Get referral code
@@ -79,7 +82,7 @@ const CooperativeReferralPage = () => {
           url: `${appUrl}/register`,
         });
       } catch (err) {
-        console.log('Share cancelled');
+        // share cancelled;
       }
     } else {
       // Fallback - copy to clipboard

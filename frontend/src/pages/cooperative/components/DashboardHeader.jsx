@@ -1,3 +1,4 @@
+import { tokenService } from "../../../services/tokenService";
 import React, { useState } from 'react';
 import { Building2, Home, UserCircle, Plus, FileDown, Loader2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
@@ -26,7 +27,7 @@ export const DashboardHeader = ({ coopInfo, user, navigate }) => {
   const handleExportPDF = async () => {
     setExporting(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const res = await fetch(`${API_URL}/api/cooperative/pdf/dashboard-report`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -68,7 +69,7 @@ export const DashboardHeader = ({ coopInfo, user, navigate }) => {
             {certs.length > 0 && (
               <div className="flex gap-2 mt-3 ml-[52px]">
                 {certs.map((cert, i) => (
-                  <span key={i} className="text-[10px] tracking-[0.08em] uppercase font-bold text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-2.5 py-1 rounded-sm">
+                  <span key={`el-${i}`} className="text-[10px] tracking-[0.08em] uppercase font-bold text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-2.5 py-1 rounded-sm">
                     {cert}
                   </span>
                 ))}

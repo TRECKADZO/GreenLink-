@@ -1,7 +1,10 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+# Test Devis (Quotes) Subscription System for GreenLink
 # Test Devis (Quotes) Subscription System for GreenLink
 # Workflow: Fournisseur registration -> 15 days free trial -> Quote form submission -> Admin approval/rejection -> Account management
+# Workflow: Fournisseur registration -> 15 days free trial -> Quote form submission -> Admin approval/rejection -> Account management
 
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -10,7 +13,7 @@ from datetime import datetime
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.preview.emergentagent.com')
 
 # Test credentials
-ADMIN_CREDENTIALS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDENTIALS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 SUPPLIER_CREDENTIALS = {"identifier": "testfournisseur@test.com", "password": "test1234"}
 
 

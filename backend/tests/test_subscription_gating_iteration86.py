@@ -1,9 +1,14 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Subscription Feature Gating Tests - Iteration 86
+Subscription Feature Gating Tests - Iteration 86
+Tests cooperative subscription tiers (Trial, Starter, Pro, Enterprise) feature gating
 Tests cooperative subscription tiers (Trial, Starter, Pro, Enterprise) feature gating
 for dashboard-kpis, dashboard-charts, PDF export, and my-subscription endpoints.
+for dashboard-kpis, dashboard-charts, PDF export, and my-subscription endpoints.
 """
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -12,8 +17,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.pr
 
 # Test credentials
 TEST_ADMIN = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 # User ID for subscription manipulation

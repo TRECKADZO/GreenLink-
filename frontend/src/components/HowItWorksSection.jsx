@@ -29,6 +29,7 @@ const mockSteps = [
 const HowItWorksSection = () => {
   const [steps, setSteps] = useState(mockSteps);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const fetchSteps = async () => {
       const data = await api.getSteps();
@@ -37,6 +38,7 @@ const HowItWorksSection = () => {
       }
     };
     fetchSteps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   return (
@@ -56,7 +58,7 @@ const HowItWorksSection = () => {
             const IconComponent = getIconComponent(step.icon);
             return (
               <Card 
-                key={index} 
+                key={`el-${index}`} 
                 className="relative p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-2 border-gray-100 group overflow-hidden"
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2d5a4d] to-[#d4a574] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>

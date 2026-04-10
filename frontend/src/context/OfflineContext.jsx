@@ -1,16 +1,9 @@
 /**
  * OfflineContext — Contexte global pour le mode offline-first
  * GreenLink Agritech — Web PWA
- *
- * Fournit à toute l'app :
- *  - isOnline (boolean)
- *  - syncing (boolean)
- *  - pendingCount (int) — actions en attente
- *  - lastSync (ISO string)
- *  - syncAll() — sync manuelle
- *  - queueAction(action) — ajouter une action à la file
  */
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { tokenService } from '../services/tokenService';
 import {
   performFullSync,
   uploadPendingActions,
@@ -61,7 +54,7 @@ export const OfflineProvider = ({ children }) => {
 
   // Core sync function — uses refs to avoid stale closures
   const doSync = useCallback(async () => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     if (!token || syncInProgress.current || !isOnlineRef.current) return;
 
     syncInProgress.current = true;
@@ -73,8 +66,8 @@ export const OfflineProvider = ({ children }) => {
       await uploadPendingActions(API_URL, token);
 
       // 2. Download fresh data based on user type
-      const storedUser = localStorage.getItem('user');
-      const ut = storedUser ? JSON.parse(storedUser).user_type : null;
+      const userData = tokenService.getUser();
+      const ut = userData ? userData.user_type : null;
 
       if (ut === 'field_agent') {
         const result = await performFullSync(API_URL, token);
@@ -101,6 +94,7 @@ export const OfflineProvider = ({ children }) => {
       setSyncing(false);
       syncInProgress.current = false;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const scheduleRetry = useCallback(() => {
@@ -112,12 +106,14 @@ export const OfflineProvider = ({ children }) => {
         doSync();
       }
     }, delay);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doSync]);
 
   // Public syncAll — wraps doSync
   const syncAll = useCallback(async () => {
     retryCount.current = 0;
     await doSync();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doSync]);
 
   // Detect online/offline + real ping
@@ -147,6 +143,7 @@ export const OfflineProvider = ({ children }) => {
       window.removeEventListener('offline', goOffline);
       clearInterval(pingInterval.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load initial state from IndexedDB
@@ -162,12 +159,12 @@ export const OfflineProvider = ({ children }) => {
     })();
     // Read user type from localStorage
     try {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        const u = JSON.parse(stored);
-        setUserType(u.user_type);
+      const userData = tokenService.getUser();
+      if (userData) {
+        setUserType(userData.user_type);
       }
     } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-sync: triggers when isOnline changes OR pendingCount increases
@@ -175,6 +172,7 @@ export const OfflineProvider = ({ children }) => {
     if (isOnline && pendingCount > 0 && !syncInProgress.current) {
       doSync();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline, pendingCount, doSync]);
 
   // Also sync when user returns to the tab (handles background/foreground transitions)
@@ -186,6 +184,7 @@ export const OfflineProvider = ({ children }) => {
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doSync]);
 
   const queueAction = useCallback(async (action) => {
@@ -197,6 +196,7 @@ export const OfflineProvider = ({ children }) => {
       setTimeout(() => doSync(), 500);
     }
     return id;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doSync]);
 
   // Cleanup retry timer on unmount
@@ -204,6 +204,7 @@ export const OfflineProvider = ({ children }) => {
     return () => {
       if (retryTimer.current) clearTimeout(retryTimer.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

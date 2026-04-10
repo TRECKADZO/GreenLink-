@@ -1,13 +1,22 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Carbon Pricing Model Tests - Iteration 24
+Carbon Pricing Model Tests - Iteration 24
+Tests the updated pricing model where:
 Tests the updated pricing model where:
 1) Cooperative submits quantity ONLY (no price field)
+1) Cooperative submits quantity ONLY (no price field)
+2) Admin MUST set price_per_tonne when approving
 2) Admin MUST set price_per_tonne when approving
 3) Premium distribution: 30% fees, then 70% farmer / 25% GreenLink / 5% cooperative
+3) Premium distribution: 30% fees, then 70% farmer / 25% GreenLink / 5% cooperative
+4) Farmer dashboard shows full distribution breakdown with real admin-set price
 4) Farmer dashboard shows full distribution breakdown with real admin-set price
 """
+"""
 
-import pytest
 import requests
 import os
 import uuid
@@ -15,7 +24,7 @@ import uuid
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.preview.emergentagent.com')
 
 # Test credentials
-ADMIN_CREDS = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+ADMIN_CREDS = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 COOP_CREDS = {"identifier": "coop-gagnoa@greenlink.ci", "password": "password"}
 
 

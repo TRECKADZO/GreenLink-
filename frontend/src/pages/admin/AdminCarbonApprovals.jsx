@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -38,15 +39,17 @@ const AdminCarbonApprovals = () => {
   const [pricePerTonne, setPricePerTonne] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchListings();
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const fetchListings = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const endpoint = filter === 'pending_approval'
         ? `${API_URL}/api/carbon-listings/pending`
         : `${API_URL}/api/carbon-listings/all?status=${filter}`;
@@ -64,7 +67,7 @@ const AdminCarbonApprovals = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const response = await axios.get(`${API_URL}/api/carbon-listings/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -82,7 +85,7 @@ const AdminCarbonApprovals = () => {
     }
     setProcessing(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
       const body = { action: reviewAction, admin_note: adminNote };
       if (reviewAction === 'approve') {
         body.price_per_tonne = parseFloat(pricePerTonne);

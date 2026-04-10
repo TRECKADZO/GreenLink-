@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect } from 'react';
 import {
   ClipboardCheck, Save, Loader2, AlertTriangle, ShieldCheck, Heart,
@@ -81,11 +82,12 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
   const [observations, setObservations] = useState('');
 
   // Auto-load family data from ICI/SSRTE when modal opens
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (open && farmer?.id) {
       const loadFamilyData = async () => {
         try {
-          const token = localStorage.getItem('token');
+          const token = tokenService.getToken();
           const res = await fetch(`${API_URL}/api/ici-data/farmers/${farmer.id}/family-data`, {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -108,6 +110,7 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
       };
       loadFamilyData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, farmer]);
 
   const addChild = () => {
@@ -125,14 +128,17 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
   };
 
   // Auto-sync enfantsObserves from liste_enfants children marked as working
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const workingFromList = listeEnfants.filter(e => e.travaille_exploitation).length;
     if (workingFromList > enfantsObserves) {
       setEnfantsObserves(workingFromList);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listeEnfants]);
 
   // Auto-calculate risk level based on collected data (works offline)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const critiqueTasks = selectedTasks.filter(code => {
       const task = DANGEROUS_TASKS.find(t => t.code === code);
@@ -155,6 +161,7 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
     }
 
     setRiskLevel(computed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTasks, enfantsObserves, conditionsVie, listeEnfants]);
 
   const toggleTask = (code) => {
@@ -196,7 +203,7 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
     };
 
     try {
-      const token = localStorage.getItem('token');
+      const token = tokenService.getToken();
 
       if (isOnline) {
         const res = await fetch(`${API_URL}/api/ici-data/ssrte/visit`, {
@@ -308,7 +315,7 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
                 <p className="text-xs text-gray-400 text-center py-2">Cliquez "Ajouter" pour enregistrer les enfants du menage</p>
               )}
               {listeEnfants.map((child, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 items-end p-2 bg-gray-50 rounded-lg">
+                <div key={`el-${i}`} className="grid grid-cols-12 gap-2 items-end p-2 bg-gray-50 rounded-lg">
                   <div className="col-span-3">
                     <Label className="text-[10px]">Prenom</Label>
                     <Input value={child.prenom} placeholder="Prenom"

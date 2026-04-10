@@ -1,12 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test SSRTE Dashboard APIs - Iteration 76
+Test SSRTE Dashboard APIs - Iteration 76
+Tests for:
 Tests for:
 - GET /api/ussd/ssrte/responses - returns stats and responses list
+- GET /api/ussd/ssrte/responses - returns stats and responses list
+- GET /api/ussd/ssrte/alerts - returns only alerte_ici responses
 - GET /api/ussd/ssrte/alerts - returns only alerte_ici responses
 - POST /api/auth/login - admin login with identifier field
+- POST /api/auth/login - admin login with identifier field
+"""
 """
 
-import pytest
 import requests
 import os
 
@@ -82,8 +90,8 @@ class TestAdminLogin:
     def test_admin_login_with_identifier(self):
         """Test POST /api/auth/login with identifier field (not email)"""
         login_data = {
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         }
         
         response = requests.post(f"{BASE_URL}/api/auth/login", json=login_data)
@@ -103,8 +111,8 @@ class TestAdminLogin:
         """Test SSRTE responses with authentication"""
         # First login
         login_data = {
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         }
         login_response = requests.post(f"{BASE_URL}/api/auth/login", json=login_data)
         assert login_response.status_code == 200

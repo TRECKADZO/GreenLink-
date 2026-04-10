@@ -1,8 +1,12 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Suite: Gestion des Ecarts (Discrepancy Management)
+Test Suite: Gestion des Ecarts (Discrepancy Management)
+Tests for discrepancy classification, premium impact, and cooperative dashboard.
 Tests for discrepancy classification, premium impact, and cooperative dashboard.
 """
-import pytest
 import requests
 import os
 from datetime import datetime
@@ -10,12 +14,12 @@ from datetime import datetime
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "test123456"
+# COOP_EMAIL imported from test_config
+# COOP_PASSWORD imported from test_config
 AGENT_EMAIL = "testagent@test.ci"
 AGENT_PASSWORD = "test123456"
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 
 # Known discrepancy IDs from context
 KNOWN_IMPORTANT_ECART_ID = "69d3e0b2241a91003b526aa3"

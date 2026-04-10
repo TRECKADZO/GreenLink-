@@ -1,14 +1,24 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 68 - Global Analysis and Fixes Testing
+Iteration 68 - Global Analysis and Fixes Testing
+Tests for:
 Tests for:
 1. Login functionality for multiple accounts (bielaghana@gmail.com, klenakan.eric@gmail.com, coop-test@greenlink.ci)
+1. Login functionality for multiple accounts (bielaghana@gmail.com, klenakan.eric@gmail.com, coop-test@greenlink.ci)
+2. Cooperative registration with auto-generated coop_code
 2. Cooperative registration with auto-generated coop_code
 3. Acheteur registration (phone only) without errors
+3. Acheteur registration (phone only) without errors
+4. GET /api/admin/analytics/onboarding endpoint (summary, funnel, cooperatives)
 4. GET /api/admin/analytics/onboarding endpoint (summary, funnel, cooperatives)
 5. GET /api/auth/cooperatives public endpoint
+5. GET /api/auth/cooperatives public endpoint
+"""
 """
 
-import pytest
 import requests
 import os
 import time
@@ -18,11 +28,11 @@ import string
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from review request
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
-COOP_EMAIL_1 = "bielaghana@gmail.com"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
+COOP_EMAIL_1 = COOP_EMAIL
 COOP_EMAIL_2 = "coop-test@greenlink.ci"
-COOP_PASSWORD = "474Treckadzo"
+COOP_PASSWORD = COOP_PASSWORD  # from test_config
 
 
 def generate_unique_phone():

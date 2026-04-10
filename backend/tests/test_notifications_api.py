@@ -1,14 +1,24 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Test Notification API Endpoints for GreenLink Agritech
+Test Notification API Endpoints for GreenLink Agritech
+- Device registration and unregistration
 - Device registration and unregistration
 - Notification preferences (get/update)
+- Notification preferences (get/update)
+- Notification history
 - Notification history
 - Test notification sending
+- Test notification sending
+
 
 Note: Actual push notifications require physical device with Expo token.
+Note: Actual push notifications require physical device with Expo token.
+Backend endpoints are tested for correctness.
 Backend endpoints are tested for correctness.
 """
-import pytest
 import requests
 import os
 import uuid
@@ -23,8 +33,8 @@ COOP_CREDENTIALS = {
 
 # Admin test credentials
 ADMIN_CREDENTIALS = {
-    "identifier": "klenakan.eric@gmail.com",
-    "password": "474Treckadzo"
+    "identifier": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
 }
 
 

@@ -1,8 +1,12 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 SSRTE (Système de Suivi et Remédiation du Travail des Enfants) API Tests
+SSRTE (Système de Suivi et Remédiation du Travail des Enfants) API Tests
+Tests for: /api/ssrte/stats/overview, /api/ssrte/visits, /api/ssrte/cases, /api/ssrte/visits/create, /api/ssrte/cases/create
 Tests for: /api/ssrte/stats/overview, /api/ssrte/visits, /api/ssrte/cases, /api/ssrte/visits/create, /api/ssrte/cases/create
 """
-import pytest
 import requests
 import os
 import uuid
@@ -17,8 +21,8 @@ class TestSSRTEAuth:
     def admin_token(self):
         """Get admin authentication token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
@@ -56,8 +60,8 @@ class TestSSRTEStatsAPI:
     @pytest.fixture(scope="class")
     def admin_token(self):
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         return response.json()["access_token"]
     
@@ -127,8 +131,8 @@ class TestSSRTEVisitsAPI:
     @pytest.fixture(scope="class")
     def admin_token(self):
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         return response.json()["access_token"]
     
@@ -295,8 +299,8 @@ class TestSSRTECasesAPI:
     @pytest.fixture(scope="class")
     def admin_token(self):
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         return response.json()["access_token"]
     
@@ -492,8 +496,8 @@ class TestSSRTEAgentsAPI:
     @pytest.fixture(scope="class")
     def admin_token(self):
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         return response.json()["access_token"]
     
@@ -518,8 +522,8 @@ class TestSSRTERemediationsAPI:
     @pytest.fixture(scope="class")
     def admin_token(self):
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "klenakan.eric@gmail.com",
-            "password": "474Treckadzo"
+            "identifier": ADMIN_EMAIL,
+            "password": ADMIN_PASSWORD
         })
         return response.json()["access_token"]
     

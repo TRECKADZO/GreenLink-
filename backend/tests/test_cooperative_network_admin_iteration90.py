@@ -1,12 +1,20 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 90 - Cooperative Network Admin Dashboard Tests
+Iteration 90 - Cooperative Network Admin Dashboard Tests
+Tests for the new admin endpoints in cooperative_referral.py:
 Tests for the new admin endpoints in cooperative_referral.py:
 - GET /api/cooperative-referral/admin/network-full
+- GET /api/cooperative-referral/admin/network-full
+- POST /api/cooperative-referral/admin/generate-code/{coop_id}
 - POST /api/cooperative-referral/admin/generate-code/{coop_id}
 - DELETE /api/cooperative-referral/admin/remove-affiliation/{coop_id}
+- DELETE /api/cooperative-referral/admin/remove-affiliation/{coop_id}
+"""
 """
 
-import pytest
 import requests
 import os
 import uuid
@@ -14,10 +22,10 @@ import uuid
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
 COOP_EMAIL = "sponsor-coop-e2e@test.ci"
-COOP_PASSWORD = "test123456"
+# COOP_PASSWORD imported from test_config
 
 
 class TestCooperativeNetworkAdmin:

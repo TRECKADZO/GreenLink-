@@ -150,7 +150,7 @@ const MarketplaceHub = () => {
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
                   {mp.stats.map((stat, idx) => (
-                    <div key={idx} className="p-3 rounded-lg bg-slate-700/50">
+                    <div key={`el-${idx}`} className="p-3 rounded-lg bg-slate-700/50">
                       <p className="text-xs text-slate-400">{stat.label}</p>
                       <p className="text-sm text-white font-medium">{stat.value}</p>
                     </div>
@@ -160,7 +160,7 @@ const MarketplaceHub = () => {
                 {/* Features */}
                 <div className="flex flex-wrap gap-2 mb-6">
                   {mp.features.map((feature, idx) => (
-                    <Badge key={idx} variant="outline" className="text-xs border-slate-600 text-slate-300">
+                    <Badge key={`el-${idx}`} variant="outline" className="text-xs border-slate-600 text-slate-300">
                       {feature}
                     </Badge>
                   ))}

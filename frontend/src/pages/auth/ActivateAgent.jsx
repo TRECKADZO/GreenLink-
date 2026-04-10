@@ -246,7 +246,7 @@ const ActivateAgent = () => {
                 <p className="text-xs font-semibold text-gray-600 mb-2">Vos permissions:</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {permissions.map((perm, i) => (
-                    <div key={i} className="flex items-center gap-1 text-xs text-gray-600">
+                    <div key={`el-${i}`} className="flex items-center gap-1 text-xs text-gray-600">
                       <perm.icon className="w-3 h-3 text-cyan-500" />
                       <span>{perm.label}</span>
                     </div>

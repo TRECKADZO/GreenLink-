@@ -40,8 +40,10 @@ const MarketplaceSection = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showAll, setShowAll] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
   const fetchProducts = async () => {
@@ -152,7 +154,7 @@ const MarketplaceSection = () => {
         {loading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1,2,3,4,5,6].map(i => (
-              <Card key={i} className="p-6 animate-pulse">
+              <Card key={`el-${i}`} className="p-6 animate-pulse">
                 <div className="h-40 bg-gray-200 rounded-lg mb-4"></div>
                 <div className="h-6 bg-gray-200 rounded mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-2/3"></div>

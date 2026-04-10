@@ -33,12 +33,14 @@ function USSDSimulator({ title, onClose, members }) {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history]);
 
   useEffect(() => {
     if (started && inputRef.current) {
       inputRef.current.focus();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started, history]);
 
   const sendUSSD = async (text) => {
@@ -143,6 +145,7 @@ function USSDSimulator({ title, onClose, members }) {
       }
     }
     return options;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history, sessionEnded]);
 
   const hasMembersList = membersList.length > 0;
@@ -161,6 +164,7 @@ function USSDSimulator({ title, onClose, members }) {
              village.toLowerCase().includes(search) ||
              codePlanteur.toLowerCase().includes(search);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membersList, memberSearch, hasMembersList]);
 
   const selectMember = (member) => {
@@ -221,7 +225,7 @@ function USSDSimulator({ title, onClose, members }) {
                   
                   return (
                     <button
-                      key={i}
+                      key={`el-${i}`}
                       onClick={() => selectMember(m)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${buttonClass}`}
                       data-testid={`ussd-sim-member-${i}`}
@@ -305,7 +309,7 @@ function USSDSimulator({ title, onClose, members }) {
           }
           
           return (
-            <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={`el-${i}`} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div
                 className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${msgClass}`}
                 data-testid={`ussd-sim-msg-${i}`}

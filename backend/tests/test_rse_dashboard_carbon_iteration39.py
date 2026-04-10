@@ -1,10 +1,16 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 39 - RSE Dashboard Stats & Carbon Credit Form Testing
+Iteration 39 - RSE Dashboard Stats & Carbon Credit Form Testing
+Tests:
 Tests:
 - GET /api/rse/dashboard-stats with enriched metrics (EUDR, ESG, child labor, traceability, carbon market)
+- GET /api/rse/dashboard-stats with enriched metrics (EUDR, ESG, child labor, traceability, carbon market)
+- POST /api/carbon-listings/submit with new ESG fields (additionality, permanence, co-benefits, SDGs, community consent)
 - POST /api/carbon-listings/submit with new ESG fields (additionality, permanence, co-benefits, SDGs, community consent)
 """
-import pytest
 import requests
 import os
 import random
@@ -14,8 +20,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from problem statement
 RSE_USER = {"identifier": "rse-devis@test.com", "password": "test1234"}
-COOP_USER = {"identifier": "bielaghana@gmail.com", "password": "greenlink2024"}
-ADMIN_USER = {"identifier": "klenakan.eric@gmail.com", "password": "474Treckadzo"}
+COOP_USER = {"identifier": COOP_EMAIL, "password": "greenlink2024"}
+ADMIN_USER = {"identifier": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
 
 
 def get_auth_token(credentials: dict) -> str:

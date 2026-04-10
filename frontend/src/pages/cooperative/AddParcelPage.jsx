@@ -84,6 +84,7 @@ const AddParcelPage = () => {
     setFormData(next);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isFromAgent) {
       const fetchMembers = async () => {
@@ -99,6 +100,7 @@ const AddParcelPage = () => {
       };
       fetchMembers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFromAgent]);
 
   const handleSubmit = async (e) => {

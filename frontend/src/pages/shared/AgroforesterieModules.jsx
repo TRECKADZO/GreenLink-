@@ -1,3 +1,4 @@
+import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -38,6 +39,7 @@ export const GuideEspeces = () => {
       setStrates(data.strates || {});
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, strateFilter, usageFilter]);
 
   useEffect(() => { loadEspeces(); }, [loadEspeces]);
@@ -130,7 +132,7 @@ export const GuideEspeces = () => {
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {(esp.usages || []).map((u, i) => (
-                        <Badge key={i} className="bg-green-100 text-green-700 text-[9px]">{u}</Badge>
+                        <Badge key={`usage-${u}-${i}`} className="bg-green-100 text-green-700 text-[9px]">{u}</Badge>
                       ))}
                     </div>
                   </div>
@@ -184,6 +186,7 @@ export const CalendrierPepiniere = () => {
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="animate-spin w-6 h-6 text-green-600" /></div>;
@@ -257,7 +260,7 @@ export const DiagnosticParcelle = ({ farmerId, isCooperative = false }) => {
   const [coopDiag, setCoopDiag] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   useEffect(() => {
@@ -273,7 +276,7 @@ export const DiagnosticParcelle = ({ farmerId, isCooperative = false }) => {
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmerId, isCooperative]);
 
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="animate-spin w-6 h-6 text-green-600" /></div>;
@@ -297,7 +300,7 @@ export const DiagnosticParcelle = ({ farmerId, isCooperative = false }) => {
           <div className="bg-white rounded-xl border border-gray-100 p-4">
             <p className="text-sm font-bold text-gray-900 mb-3">Problèmes les plus fréquents</p>
             {coopDiag.problemes_frequents.map((p, i) => (
-              <div key={i} className="flex items-center gap-2 mb-2">
+              <div key={`item-${i}`} className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
                 <p className="text-xs text-gray-700 flex-1">{p.probleme}...</p>
                 <Badge className="bg-amber-100 text-amber-700 text-[9px]">{p.count}x</Badge>
@@ -311,7 +314,7 @@ export const DiagnosticParcelle = ({ farmerId, isCooperative = false }) => {
           <div className="space-y-2">
             <p className="text-sm font-bold text-gray-900">Détail par planteur</p>
             {coopDiag.diagnostics.map((d, i) => (
-              <div key={i} className="bg-white rounded-lg border border-gray-100 p-3 flex items-center gap-3">
+              <div key={`tree-${i}`} className="bg-white rounded-lg border border-gray-100 p-3 flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white ${d.score >= 80 ? 'bg-green-500' : d.score >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}>
                   {Math.round(d.score)}
                 </div>
@@ -355,7 +358,7 @@ export const DiagnosticParcelle = ({ farmerId, isCooperative = false }) => {
       <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-2">
         <p className="text-sm font-bold text-gray-900">Critères de conformité</p>
         {Object.values(diagnostic.criteres || {}).map((c, i) => (
-          <div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
+          <div key={`rec-${i}`} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
             {c.conforme ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" /> : <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />}
             <div className="flex-1">
               <p className="text-xs font-medium text-gray-800">{c.label}</p>
@@ -373,7 +376,7 @@ export const DiagnosticParcelle = ({ farmerId, isCooperative = false }) => {
             <Info className="w-4 h-4" /> Plan d'action recommandé
           </p>
           {diagnostic.recommandations.map((rec, i) => (
-            <div key={i} className="flex items-start gap-2">
+            <div key={`alert-${i}`} className="flex items-start gap-2">
               <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
               <p className="text-xs text-amber-900">{rec}</p>
             </div>
@@ -394,7 +397,7 @@ export const ProtectionEnvironnementale = () => {
   const [form, setForm] = useState({ type_protection: 'cours_eau', description: '', distance_cours_eau_m: '', mesures_prises: '', especes_plantees: '', superficie_reboisee_ha: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const token = localStorage.getItem('token');
+  const token = tokenService.getToken();
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   const load = useCallback(async () => {
@@ -403,7 +406,7 @@ export const ProtectionEnvironnementale = () => {
       if (res.ok) { const d = await res.json(); setMesures(d.mesures || []); setStats(d.par_type || null); }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -465,7 +468,7 @@ export const ProtectionEnvironnementale = () => {
                 </div>
                 <div className="space-y-1.5">
                   {checks.map((c, i) => (
-                    <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${c.ok ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                    <div key={`check-${i}`} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${c.ok ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
                       {c.ok ? <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" /> : <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />}
                       <span className="text-xs flex-1">{c.label}</span>
                       <span className="text-[9px] text-gray-400">{c.requis}</span>
@@ -558,7 +561,7 @@ export const ProtectionEnvironnementale = () => {
           {mesures.map((m, i) => {
             const Icon = typeIcons[m.type_protection] || Shield;
             return (
-              <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 flex items-center gap-3">
+              <div key={`espece-${i}`} className="bg-white rounded-xl border border-gray-100 p-3 flex items-center gap-3">
                 <Icon className={`w-5 h-5 ${typeColors[m.type_protection] || 'text-gray-400'} flex-shrink-0`} />
                 <div className="flex-1">
                   <p className="text-xs font-medium">{m.description || typeLabels[m.type_protection]}</p>

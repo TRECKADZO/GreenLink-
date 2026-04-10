@@ -60,7 +60,7 @@ const PricingSection = () => {
             <div className="p-6 sm:p-8">
               <div className="grid sm:grid-cols-2 gap-3 mb-8">
                 {allFeatures.map((f, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
+                  <div key={`el-${i}`} className="flex items-start gap-2.5">
                     <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                     <span className="text-sm text-gray-700 leading-snug">{f}</span>
                   </div>
@@ -123,7 +123,7 @@ const PricingSection = () => {
             ].map((item, idx) => {
               const Icon = item.icon;
               return (
-                <Card key={idx} className="bg-white/80 p-4 border-gray-100 hover:shadow-md transition-shadow">
+                <Card key={`el-${idx}`} className="bg-white/80 p-4 border-gray-100 hover:shadow-md transition-shadow">
                   <div className={`w-9 h-9 rounded-lg bg-${item.color}-100 flex items-center justify-center mb-3`}>
                     <Icon className={`w-5 h-5 text-${item.color}-600`} />
                   </div>

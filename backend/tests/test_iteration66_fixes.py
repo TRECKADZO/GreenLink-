@@ -1,15 +1,26 @@
+from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, BASE_URL
+
+"""
 """
 Iteration 66 - Testing 3 Bug Fixes:
+Iteration 66 - Testing 3 Bug Fixes:
+1. Homepage hero button says 'S'inscrire gratuitement' and links to /register (NOT /farmer/inscription)
 1. Homepage hero button says 'S'inscrire gratuitement' and links to /register (NOT /farmer/inscription)
 2. POST /api/auth/register works for phone-only users without Pydantic validation error
+2. POST /api/auth/register works for phone-only users without Pydantic validation error
+3. POST /api/ussd/register-web auto-generates code_planteur in format GL-XXX-NNNNN
 3. POST /api/ussd/register-web auto-generates code_planteur in format GL-XXX-NNNNN
 
+
+Also tests:
 Also tests:
 - USSD registration (option 2) shows auto-generated code_planteur after confirmation
+- USSD registration (option 2) shows auto-generated code_planteur after confirmation
+- Web registration response includes code_planteur field
 - Web registration response includes code_planteur field
 """
+"""
 
-import pytest
 import requests
 import os
 import time
@@ -19,10 +30,10 @@ import uuid
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_EMAIL = "klenakan.eric@gmail.com"
-ADMIN_PASSWORD = "474Treckadzo"
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "474Treckadzo"
+# ADMIN_EMAIL imported from test_config
+# ADMIN_PASSWORD imported from test_config
+# COOP_EMAIL imported from test_config
+COOP_PASSWORD = COOP_PASSWORD  # from test_config
 
 
 class TestAuthRegisterPhoneOnly:
