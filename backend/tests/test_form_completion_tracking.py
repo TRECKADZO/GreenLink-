@@ -10,7 +10,7 @@ from test_config import ADMIN_EMAIL, ADMIN_PASSWORD, COOP_EMAIL, COOP_PASSWORD, 
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://agritech-pdc.preview.emergentagent.com').rstrip('/')
 
 class TestFormCompletionTracking:
     """Form completion tracking feature tests"""

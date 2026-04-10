@@ -3,7 +3,7 @@
 
 export const CONFIG = {
   // URL unique vers le backend — pas de fallback CDN
-  DIRECT_API_URL: 'https://pdc-cocoa-preview.preview.emergentagent.com',
+  DIRECT_API_URL: 'https://agritech-pdc.preview.emergentagent.com',
   
   // Timeouts geres directement par le client API (20s/40s/60s)
   REQUEST_TIMEOUT: 20000,

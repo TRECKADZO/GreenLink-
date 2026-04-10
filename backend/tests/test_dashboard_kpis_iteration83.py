@@ -13,7 +13,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdc-cocoa-preview.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://agritech-pdc.preview.emergentagent.com').rstrip('/')
 
 # Test credentials from test_credentials.md
 TEST_EMAIL = ADMIN_EMAIL

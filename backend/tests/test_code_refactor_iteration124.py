@@ -22,7 +22,7 @@ from pathlib import Path
 load_dotenv(Path(__file__).parent.parent / '.env', override=False)
 
 # Configuration
-BASE_URL = os.getenv("REACT_APP_BACKEND_URL", "https://pdc-cocoa-preview.preview.emergentagent.com")
+BASE_URL = os.getenv("REACT_APP_BACKEND_URL", "https://agritech-pdc.preview.emergentagent.com")
 API_URL = f"{BASE_URL}/api"
 
 # Test credentials from test_credentials.md

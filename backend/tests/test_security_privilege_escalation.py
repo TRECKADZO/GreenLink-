@@ -8,7 +8,7 @@ GreenLink Agritech — Tests de securite P1
 GreenLink Agritech — Tests de securite P1
 """
 
-API_URL = "https://pdc-cocoa-preview.preview.emergentagent.com"
+API_URL = "https://agritech-pdc.preview.emergentagent.com"
 
 # ADMIN_EMAIL imported from test_config
 # ADMIN_PASSWORD imported from test_config
