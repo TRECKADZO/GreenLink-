@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { tokenService } from '../../../services/tokenService';
 import { useAuth } from '../../../context/AuthContext';
 import { Button } from '../../../components/ui/button';
@@ -28,6 +28,7 @@ const STATUS_MAP = {
 const PDCListPage = ({ onBack }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [pdcs, setPdcs] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +40,9 @@ const PDCListPage = ({ onBack }) => {
 
   const userType = user?.user_type || '';
   const isReadOnly = ['farmer', 'planteur', 'producteur'].includes(userType);
+
+  // Support farmer_id from URL (agent terrain flow)
+  const urlFarmerId = searchParams.get('farmer_id');
 
   const loadPdcs = useCallback(async () => {
     setLoading(true);
@@ -71,6 +75,16 @@ const PDCListPage = ({ onBack }) => {
   }, []);
 
   useEffect(() => { loadPdcs(); loadStats(); }, [loadPdcs, loadStats]);
+
+  // Auto-open create panel and pre-select farmer when farmer_id is in URL
+  useEffect(() => {
+    if (urlFarmerId && !isReadOnly) {
+      loadMembers().then(() => {
+        setSelectedMember(urlFarmerId);
+        setShowCreate(true);
+      });
+    }
+  }, [urlFarmerId, isReadOnly, loadMembers]);
 
   const handleCreate = async () => {
     if (!selectedMember) { toast.error('Selectionnez un planteur'); return; }

@@ -1257,7 +1257,7 @@ const AgentTerrainDashboard = () => {
     if (!selectedFarmer) return;
     const fId = selectedFarmer.id || '', fName = encodeURIComponent(selectedFarmer.full_name || ''), fPhone = encodeURIComponent(selectedFarmer.phone_number || '');
     switch (formId) {
-      case 'pdc': navigate(`/agent/visite-pdc?farmer_id=${fId}&farmer_name=${fName}`); break;
+      case 'pdc': navigate(`/cooperative/pdc-v2?farmer_id=${fId}&farmer_name=${fName}`); break;
       case 'ici': setShowICIModal(true); break;
       case 'ssrte': setShowSSRTEModal(true); break;
       case 'redd': navigate(`/redd/tracking?farmer=${fName}&phone=${fPhone}&id=${fId}`); break;
@@ -1408,3 +1408,4 @@ const AgentTerrainDashboard = () => {
 };
 
 export default AgentTerrainDashboard;
+

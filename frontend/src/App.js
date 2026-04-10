@@ -37,7 +37,7 @@ import CarbonPaymentsDashboard from "./pages/farmer/CarbonPaymentsDashboard";
 import MyHarvestsPage from "./pages/farmer/MyHarvestsPage";
 import CarbonScorePage from "./pages/farmer/CarbonScorePage";
 import RegisterFarmerPage from "./pages/farmer/RegisterFarmerPage";
-import FarmerPDCPage from "./pages/farmer/FarmerPDCPage";
+// FarmerPDCPage supprime - remplace par PDC v2
 import DeclarationRecoltePage from "./pages/farmer/DeclarationRecoltePage";
 import FarmerReclamationsPage from "./pages/farmer/FarmerReclamationsPage";
 import FarmerProtectionEnvPage from "./pages/farmer/FarmerProtectionEnvPage";
@@ -131,7 +131,7 @@ import { OfflineBanner } from "./components/OfflineBanner";
 
 // Agent Terrain
 import AgentTerrainDashboard from "./pages/agent/AgentTerrainDashboard";
-import AgentVisitePDC from "./pages/agent/AgentVisitePDC";
+// AgentVisitePDC supprime - remplace par PDC v2
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 // Notifications (shared)
@@ -182,7 +182,7 @@ function App() {
               <Route path="/farmer/my-harvests" element={<MyHarvestsPage />} />
               <Route path="/farmer/carbon-score" element={<CarbonScorePage />} />
               <Route path="/farmer/inscription" element={<RegisterFarmerPage />} />
-              <Route path="/farmer/pdc" element={<FarmerPDCPage />} />
+              <Route path="/farmer/pdc" element={<PDCListPage />} />
               <Route path="/farmer/declaration-recolte" element={<DeclarationRecoltePage />} />
               <Route path="/farmer/reclamations" element={<FarmerReclamationsPage />} />
               <Route path="/farmer/protection-env" element={<FarmerProtectionEnvPage />} />
@@ -275,7 +275,7 @@ function App() {
               <Route path="/agent/ssrte" element={<SSRTEAgentDashboard />} />
               <Route path="/agent/terrain" element={<AgentTerrainDashboard />} />
               <Route path="/agent/search" element={<AgentTerrainDashboard />} />
-              <Route path="/agent/visite-pdc" element={<AgentVisitePDC />} />
+              <Route path="/agent/visite-pdc" element={<PDCListPage />} />
               <Route path="/ssrte/realtime" element={<SSRTERealTimeDashboard />} />
               <Route path="/ssrte/alerts" element={<SSRTERealTimeDashboard />} />
 
