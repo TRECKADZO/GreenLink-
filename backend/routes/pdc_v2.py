@@ -182,7 +182,7 @@ async def create_pdc(data: PDCCreateRequest, current_user: dict = Depends(get_cu
         "statut": "brouillon",
         "step1": {
             "fiche1": {"enqueteur": {}, "producteur": {}, "membres_menage": []},
-            "fiche2": {"coordonnees_gps": {}, "cultures": [], "materiels": [], "arbres": []},
+            "fiche2": {"coordonnees_gps": {}, "carte_parcelle": {"polygon": [], "arbres_ombrage": [], "map_snapshot": None}, "cultures": [], "materiels": [], "arbres": []},
             "fiche3": {"etat_cacaoyere": {}, "maladies": [], "etat_sol": {}, "recolte_post_recolte": {}, "engrais": [], "phytosanitaires": [], "gestion_emballages": ""},
             "fiche4": {"epargne": [], "production_cacao": [], "autres_revenus": [], "depenses": [], "main_oeuvre": []},
         },

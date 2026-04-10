@@ -20,9 +20,10 @@ from reportlab.lib.colors import HexColor, black, white
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, KeepTogether
+    PageBreak, KeepTogether, Image
 )
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+import base64
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/pdc-v2/pdf", tags=["PDC v2 - PDF"])
@@ -149,9 +150,30 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
 
     styles = _styles()
     buffer = io.BytesIO()
+
+    def _page_template(canvas, doc):
+        """Header + footer on every page"""
+        canvas.saveState()
+        # Header line
+        canvas.setStrokeColor(PRIMARY)
+        canvas.setLineWidth(0.5)
+        canvas.line(12 * mm, A4[1] - 10 * mm, A4[0] - 12 * mm, A4[1] - 10 * mm)
+        canvas.setFont('Helvetica-Bold', 7)
+        canvas.setFillColor(PRIMARY)
+        canvas.drawString(12 * mm, A4[1] - 9 * mm, 'GreenLink Agritech')
+        canvas.setFont('Helvetica', 7)
+        canvas.setFillColor(MUTED)
+        canvas.drawRightString(A4[0] - 12 * mm, A4[1] - 9 * mm, 'Plan de Developpement de la Cacaoyere')
+        # Footer
+        canvas.setFont('Helvetica', 7)
+        canvas.setFillColor(MUTED)
+        canvas.drawString(12 * mm, 8 * mm, f'GreenLink Agritech - PDC v2 - {datetime.now(timezone.utc).strftime("%d/%m/%Y")}')
+        canvas.drawRightString(A4[0] - 12 * mm, 8 * mm, f'Page {doc.page}')
+        canvas.restoreState()
+
     doc = SimpleDocTemplate(
         buffer, pagesize=A4,
-        topMargin=12 * mm, bottomMargin=12 * mm,
+        topMargin=14 * mm, bottomMargin=14 * mm,
         leftMargin=12 * mm, rightMargin=12 * mm,
     )
     story = []
@@ -262,6 +284,52 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
         ('Village', _val(gps, 'village')),
         ('Campement', _val(gps, 'campement')),
     ], styles))
+    story.append(Spacer(1, 3 * mm))
+
+    # Carte de la parcelle (snapshot)
+    carte = f2.get("carte_parcelle", {})
+    map_snapshot = carte.get("map_snapshot")
+    polygon_pts = carte.get("polygon", [])
+    arbres_carte = carte.get("arbres_ombrage", [])
+
+    story.append(Paragraph('<b>Croquis / Polygone de la parcelle avec arbres d\'ombrage</b>', styles['SubTitle']))
+    if map_snapshot and isinstance(map_snapshot, str) and map_snapshot.startswith('data:image'):
+        try:
+            b64_data = map_snapshot.split(',', 1)[1]
+            img_bytes = base64.b64decode(b64_data)
+            img_buffer = io.BytesIO(img_bytes)
+            img = Image(img_buffer, width=170 * mm, height=100 * mm)
+            img.hAlign = 'CENTER'
+            story.append(img)
+            story.append(Spacer(1, 2 * mm))
+            # Legend
+            legend_items = []
+            if len(polygon_pts) > 0:
+                legend_items.append(f"Polygone parcelle: {len(polygon_pts)} sommets")
+            if len(arbres_carte) > 0:
+                legend_items.append(f"Arbres d'ombrage: {len(arbres_carte)}")
+            if legend_items:
+                legend_text = ' | '.join(legend_items)
+                story.append(Paragraph(
+                    f'<font color="#6B7280"><i>Legende: polygone bleu = limites parcelle, pins jaunes = arbres d\'ombrage | {legend_text}</i></font>',
+                    styles['Small']
+                ))
+        except Exception as e:
+            logger.warning(f"Erreur insertion carte PDF: {e}")
+            story.append(Paragraph('<i>Carte non disponible (erreur de traitement de l\'image)</i>', styles['Body']))
+    else:
+        story.append(Paragraph('<i>Carte non disponible - Utilisez l\'interface web pour capturer la carte</i>', styles['Body']))
+
+    # Tree waypoints table in PDF
+    if len(arbres_carte) > 0:
+        story.append(Spacer(1, 2 * mm))
+        story.append(Paragraph('<b>Liste des arbres d\'ombrage</b>', styles['SubTitle']))
+        tree_rows = [[str(a.get('numero', i+1)), f"{a.get('lat', 0):.5f}", f"{a.get('lng', 0):.5f}", a.get('nom', '-')] for i, a in enumerate(arbres_carte)]
+        story.append(_data_table(
+            ['N', 'Latitude', 'Longitude', 'Nom/Espece'],
+            tree_rows, col_widths=[15*mm, 40*mm, 40*mm, 50*mm],
+        ))
+
     story.append(Spacer(1, 3 * mm))
 
     # Cultures
@@ -534,7 +602,7 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
     story.append(Paragraph('Document genere par GreenLink Agritech | Plateforme de certification cacao durable', styles['Footer']))
 
     # Build
-    doc.build(story)
+    doc.build(story, onFirstPage=_page_template, onLaterPages=_page_template)
     buffer.seek(0)
     filename = f"PDC_{farmer_name.replace(' ', '_')}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.pdf"
 

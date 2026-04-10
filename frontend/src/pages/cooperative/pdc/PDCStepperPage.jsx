@@ -7,6 +7,7 @@ import { Badge } from '../../../components/ui/badge';
 import { Input } from '../../../components/ui/input';
 import { toast } from 'sonner';
 import DynamicTable from './DynamicTable';
+import ParcelMapGarmin from './ParcelMapGarmin';
 import {
   ArrowLeft, ArrowRight, Save, CheckCircle2, Loader2,
   ClipboardList, Search as SearchIcon, Calendar, Lock,
@@ -361,6 +362,18 @@ const PDCStepperPage = () => {
             <FormField label="Village" value={gps.village} onChange={v => updateField('step1', 'fiche2', 'coordonnees_gps.village', v)} disabled={disabled} />
             <FormField label="Campement" value={gps.campement} onChange={v => updateField('step1', 'fiche2', 'coordonnees_gps.campement', v)} disabled={disabled} />
           </div>
+        </SectionCard>
+
+        <SectionCard title="Croquis / Polygone de la parcelle + Arbres d'ombrage" sectionKey="f2-carte">
+          <ParcelMapGarmin
+            data={f.carte_parcelle || {}}
+            onChange={v => updateField('step1', 'fiche2', 'carte_parcelle', v)}
+            readOnly={disabled || readOnly}
+            producerInfo={{
+              nom: pdc.step1?.fiche1?.producteur?.nom || pdc.farmer_name || '',
+              village: gps.village || pdc.step1?.fiche1?.producteur?.village || '',
+            }}
+          />
         </SectionCard>
 
         <SectionCard title="Donnees sur les cultures" sectionKey="f2-cultures">
