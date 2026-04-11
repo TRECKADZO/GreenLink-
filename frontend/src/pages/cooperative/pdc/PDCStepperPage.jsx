@@ -8,6 +8,7 @@ import { Input } from '../../../components/ui/input';
 import { toast } from 'sonner';
 import DynamicTable from './DynamicTable';
 import ParcelMapGarmin from './ParcelMapGarmin';
+import { getRegions, getDepartements, getSousPrefectures, findRegionByDepartement } from '../../../data/coteIvoireGeo';
 import {
   ArrowLeft, ArrowRight, Save, CheckCircle2, Loader2,
   ClipboardList, Search as SearchIcon, Calendar, Lock,
@@ -173,6 +174,13 @@ const PDCStepperPage = () => {
     }
   };
 
+  // Champs auto-propages de Fiche 1 producteur -> Fiche 2 coordonnees_gps
+  const PROPAGATION_MAP = {
+    'producteur.sous_prefecture': 'coordonnees_gps.sous_prefecture',
+    'producteur.village': 'coordonnees_gps.village',
+    'producteur.campement': 'coordonnees_gps.campement',
+  };
+
   const updateField = (stepKey, ficheKey, path, value) => {
     setPdc(prev => {
       const step = { ...prev[stepKey] };
@@ -185,6 +193,46 @@ const PDCStepperPage = () => {
       }
       obj[keys[keys.length - 1]] = value;
       step[ficheKey] = fiche;
+
+      // Auto-propagation: Fiche 1 -> Fiche 2
+      if (ficheKey === 'fiche1' && PROPAGATION_MAP[path]) {
+        const targetPath = PROPAGATION_MAP[path];
+        const fiche2 = { ...step.fiche2 };
+        const targetKeys = targetPath.split('.');
+        let tObj = fiche2;
+        for (let i = 0; i < targetKeys.length - 1; i++) {
+          tObj[targetKeys[i]] = { ...tObj[targetKeys[i]] };
+          tObj = tObj[targetKeys[i]];
+        }
+        tObj[targetKeys[targetKeys.length - 1]] = value;
+        step.fiche2 = fiche2;
+      }
+
+      // Cascade geo: si region change -> reset departement + sous-prefecture
+      if (ficheKey === 'fiche1' && path === 'producteur.delegation_regionale') {
+        const prod = { ...step.fiche1.producteur };
+        prod.departement = '';
+        prod.sous_prefecture = '';
+        step.fiche1 = { ...step.fiche1, producteur: prod };
+        // Reset aussi Fiche 2
+        const f2 = { ...step.fiche2 };
+        const gps = { ...f2.coordonnees_gps };
+        gps.sous_prefecture = '';
+        f2.coordonnees_gps = gps;
+        step.fiche2 = f2;
+      }
+      if (ficheKey === 'fiche1' && path === 'producteur.departement') {
+        const prod = { ...step.fiche1.producteur };
+        prod.sous_prefecture = '';
+        step.fiche1 = { ...step.fiche1, producteur: prod };
+        // Reset aussi Fiche 2
+        const f2 = { ...step.fiche2 };
+        const gps = { ...f2.coordonnees_gps };
+        gps.sous_prefecture = '';
+        f2.coordonnees_gps = gps;
+        step.fiche2 = f2;
+      }
+
       return { ...prev, [stepKey]: step };
     });
   };
@@ -251,7 +299,7 @@ const PDCStepperPage = () => {
     </div>
   );
 
-  const SelectField = ({ label, value, onChange, options, disabled = false }) => (
+  const SelectField = ({ label, value, onChange, options, disabled = false, placeholder = '--' }) => (
     <div>
       <label className="text-xs font-medium text-[#6B7280] mb-1 block">{label}</label>
       <select
@@ -260,7 +308,7 @@ const PDCStepperPage = () => {
         disabled={disabled || readOnly}
         className="w-full border border-[#E5E5E0] rounded-md px-3 py-1.5 text-sm bg-white focus:ring-1 focus:ring-[#1A3622] outline-none disabled:bg-gray-50"
       >
-        <option value="">--</option>
+        <option value="">{placeholder}</option>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
@@ -291,13 +339,22 @@ const PDCStepperPage = () => {
             <FormField label="Code National (Conseil Cafe-Cacao)" value={prod.code_national} onChange={v => updateField('step1', 'fiche1', 'producteur.code_national', v)} disabled={disabled} />
             <FormField label="Nom Entite Reconnue" value={prod.entite_reconnue} onChange={v => updateField('step1', 'fiche1', 'producteur.entite_reconnue', v)} disabled={disabled} />
             <FormField label="Code groupe" value={prod.code_groupe} onChange={v => updateField('step1', 'fiche1', 'producteur.code_groupe', v)} disabled={disabled} />
-            <FormField label="Delegation Regionale" value={prod.delegation_regionale} onChange={v => updateField('step1', 'fiche1', 'producteur.delegation_regionale', v)} disabled={disabled} />
+            <SelectField label="Region / Delegation Regionale" value={prod.delegation_regionale} onChange={v => updateField('step1', 'fiche1', 'producteur.delegation_regionale', v)} disabled={disabled}
+              options={getRegions().map(r => ({ value: r, label: r }))} placeholder="-- Selectionnez la region --" />
             <FormField label="Code cooperative" value={prod.code_cooperative} onChange={v => updateField('step1', 'fiche1', 'producteur.code_cooperative', v)} disabled={disabled} />
-            <FormField label="Departement" value={prod.departement} onChange={v => updateField('step1', 'fiche1', 'producteur.departement', v)} disabled={disabled} />
-            <FormField label="Sous-Prefecture" value={prod.sous_prefecture} onChange={v => updateField('step1', 'fiche1', 'producteur.sous_prefecture', v)} disabled={disabled} />
+            <SelectField label="Departement" value={prod.departement} onChange={v => updateField('step1', 'fiche1', 'producteur.departement', v)} disabled={disabled || !prod.delegation_regionale}
+              options={getDepartements(prod.delegation_regionale).map(d => ({ value: d, label: d }))} placeholder={prod.delegation_regionale ? '-- Selectionnez --' : '-- Region d\'abord --'} />
+            <SelectField label="Sous-Prefecture" value={prod.sous_prefecture} onChange={v => updateField('step1', 'fiche1', 'producteur.sous_prefecture', v)} disabled={disabled || !prod.departement}
+              options={getSousPrefectures(prod.delegation_regionale, prod.departement).map(s => ({ value: s, label: s }))} placeholder={prod.departement ? '-- Selectionnez --' : '-- Departement d\'abord --'} />
             <FormField label="Village" value={prod.village} onChange={v => updateField('step1', 'fiche1', 'producteur.village', v)} disabled={disabled} />
             <FormField label="Campement" value={prod.campement} onChange={v => updateField('step1', 'fiche1', 'producteur.campement', v)} disabled={disabled} />
           </div>
+          {prod.delegation_regionale && prod.departement && prod.sous_prefecture && (
+            <div className="mt-2 bg-[#E8F0EA] border border-[#1A3622]/20 rounded-md px-3 py-2 text-xs text-[#1A3622]" data-testid="geo-auto-propagate-info">
+              <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" />
+              Sous-prefecture, village et campement seront auto-remplis dans la Fiche 2
+            </div>
+          )}
         </SectionCard>
 
         <SectionCard title="Membres du menage" sectionKey="f1-menage">
@@ -360,10 +417,20 @@ const PDCStepperPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <FormField label="Waypoint O" value={gps.waypoint_o} onChange={v => updateField('step1', 'fiche2', 'coordonnees_gps.waypoint_o', v)} disabled={disabled} />
             <FormField label="N" value={gps.n} onChange={v => updateField('step1', 'fiche2', 'coordonnees_gps.n', v)} disabled={disabled} />
-            <FormField label="Sous-prefecture" value={gps.sous_prefecture} onChange={v => updateField('step1', 'fiche2', 'coordonnees_gps.sous_prefecture', v)} disabled={disabled} />
+            <SelectField label="Sous-prefecture" value={gps.sous_prefecture} onChange={v => updateField('step1', 'fiche2', 'coordonnees_gps.sous_prefecture', v)} disabled={disabled}
+              options={getSousPrefectures(
+                pdc.step1?.fiche1?.producteur?.delegation_regionale,
+                pdc.step1?.fiche1?.producteur?.departement
+              ).map(s => ({ value: s, label: s }))}
+              placeholder={gps.sous_prefecture || '-- Selectionnez --'} />
             <FormField label="Village" value={gps.village} onChange={v => updateField('step1', 'fiche2', 'coordonnees_gps.village', v)} disabled={disabled} />
             <FormField label="Campement" value={gps.campement} onChange={v => updateField('step1', 'fiche2', 'coordonnees_gps.campement', v)} disabled={disabled} />
           </div>
+          {(gps.sous_prefecture || gps.village) && (
+            <div className="mt-2 text-[10px] text-[#6B7280]" data-testid="fiche2-geo-info">
+              Auto-rempli depuis Fiche 1 — modifiable si necessaire
+            </div>
+          )}
         </SectionCard>
 
         <SectionCard title="Croquis / Polygone de la parcelle + Arbres d'ombrage" sectionKey="f2-carte">
