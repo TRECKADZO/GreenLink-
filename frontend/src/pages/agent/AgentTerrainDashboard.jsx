@@ -25,6 +25,8 @@ import { Textarea } from '../../components/ui/textarea';
 import { useAuth } from '../../context/AuthContext';
 import { useOffline } from '../../context/OfflineContext';
 
+import TilesDownloader from '../../components/TilesDownloader';
+
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const getAuthHeader = () => {
   const token = tokenService.getToken();
@@ -114,6 +116,9 @@ const HomeTab = ({ info, myFarmers, onTabChange, navigate, onShowUSSD }) => {
           <p className="text-[9px] text-amber-500">Parcelles</p>
         </div>
       </div>
+
+      {/* Cartes hors-ligne */}
+      <TilesDownloader />
 
       <div>
         <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Choisissez une option</p>

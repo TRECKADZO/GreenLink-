@@ -6,7 +6,8 @@ import html2canvas from 'html2canvas';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { toast } from 'sonner';
-import { TreePine, Route, Camera, Trash2, RotateCcw, Navigation, ZoomIn, ZoomOut, Radio, Square, MapPin } from 'lucide-react';
+import { TreePine, Route, Camera, Trash2, RotateCcw, Navigation, ZoomIn, ZoomOut, Radio, Square, MapPin, Wifi, WifiOff } from 'lucide-react';
+import TilesDownloader from '../../../components/TilesDownloader';
 
 // Minimum distance (meters) between tracked points to filter GPS noise
 const MIN_TRACK_DISTANCE_M = 3;
@@ -339,7 +340,31 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
             </Badge>
           </div>
         )}
+
+        {/* Offline cache indicator */}
+        <div className="absolute top-3 right-3 z-[1000]" data-testid="map-cache-indicator">
+          {navigator.onLine ? (
+            <Badge className="bg-emerald-600/90 text-white text-[10px] px-2 py-1 flex items-center gap-1">
+              <Wifi className="w-3 h-3" /> En ligne
+            </Badge>
+          ) : (
+            <Badge className="bg-amber-600/90 text-white text-[10px] px-2 py-1 flex items-center gap-1">
+              <WifiOff className="w-3 h-3" /> Cache hors-ligne
+            </Badge>
+          )}
+        </div>
       </div>
+
+      {/* Tiles download for this parcel zone */}
+      {!readOnly && (
+        <TilesDownloader
+          polygon={polygon}
+          centerLat={defaultCenter[0]}
+          centerLng={defaultCenter[1]}
+          radiusKm={1}
+          compact
+        />
+      )}
 
       {/* Action buttons */}
       {!readOnly && (
