@@ -16,8 +16,9 @@ Decomposition:
   Age des cacaoyers                       : 0 - 0.5
   Surface (>5ha)                          : 0 - 0.3
   Certification                           : 0 - 0.2
+  Bonus Ombrage ARS 1000 (coeff 0.30)    : 0 - 1.0
   -------------------------------------------
-  MAX THEORIQUE (sans penalites)          : 10.0
+  MAX THEORIQUE (sans penalites)          : 11.0 (cap 10.0)
   Avec brulage + engrais chimiques        : max ~8.0
 """
 
@@ -62,6 +63,150 @@ CROWN_AREA_STRATE2 = 30   # 5-30m trees - medium canopy
 CROWN_AREA_STRATE1 = 10   # 3-5m trees - small canopy
 
 
+# ============= ARS 1000 SHADE SCORE (0-100) =============
+
+def calculate_shade_score_ars1000(
+    nombre_arbres_ombrage: int = 0,
+    superficie_ha: float = 0,
+    nombre_especes: int = 0,
+    has_strate3: bool = False,
+    evaluation_agent: str = None,   # "inexistant" | "moyen" | "dense"
+    arbres_par_strate: dict = None, # {"strate1": X, "strate2": Y, "strate3": Z}
+) -> dict:
+    """
+    Calcule le score ombrage ARS 1000 (0-100 pts).
+    
+    Decomposition:
+      - Densite (40 pts): 25-40 arbres/ha = optimal
+      - Diversite (30 pts): min 3 especes differentes
+      - Strates (30 pts): presence strate 3 + evaluation agent
+    
+    Retourne: score, conformite, details, recommandations
+    """
+    area = max(float(superficie_ha or 0), 0.01)
+    nb_arbres = int(nombre_arbres_ombrage or 0)
+    nb_especes = int(nombre_especes or 0)
+    strates = arbres_par_strate or {}
+    s1 = int(strates.get("strate1", 0))
+    s2 = int(strates.get("strate2", 0))
+    s3 = int(strates.get("strate3", 0))
+    eval_agent = (evaluation_agent or "").lower().strip()
+
+    details = {}
+    recommandations = []
+
+    # === 1. DENSITE (40 pts) — optimal 25-40 arbres/ha ===
+    densite = nb_arbres / area if nb_arbres > 0 else 0
+    densite_score = 0
+    if 25 <= densite <= 40:
+        densite_score = 40  # zone optimale
+    elif densite > 40:
+        # Sur-densite legere penalite
+        densite_score = max(25, 40 - (densite - 40) * 0.5)
+    elif densite >= 18:
+        densite_score = 30
+    elif densite >= 12:
+        densite_score = 20
+    elif densite >= 5:
+        densite_score = 10
+        recommandations.append(f"Densité insuffisante ({densite:.0f} arbres/ha). Objectif ARS 1000 : 25-40 arbres/ha")
+    elif densite > 0:
+        densite_score = 5
+        recommandations.append(f"Densité très faible ({densite:.0f} arbres/ha). Plantez plus d'arbres d'ombrage")
+    else:
+        recommandations.append("Aucun arbre d'ombrage détecté. Plantez 25-40 arbres/ha")
+
+    details["densite_arbres_ha"] = round(densite, 1)
+    details["densite_score"] = round(densite_score, 1)
+    details["densite_optimal"] = 25 <= densite <= 40
+
+    # === 2. DIVERSITE (30 pts) — min 3 especes ===
+    diversite_score = 0
+    if nb_especes >= 5:
+        diversite_score = 30
+    elif nb_especes >= 3:
+        diversite_score = 25  # conforme ARS 1000
+    elif nb_especes == 2:
+        diversite_score = 15
+        recommandations.append(f"Seulement {nb_especes} espèces. ARS 1000 exige minimum 3 espèces")
+    elif nb_especes == 1:
+        diversite_score = 5
+        recommandations.append("Monoculture d'ombrage détectée. Diversifiez avec min 3 espèces")
+    else:
+        recommandations.append("Aucune espèce d'ombrage identifiée")
+
+    details["nombre_especes"] = nb_especes
+    details["diversite_score"] = round(diversite_score, 1)
+    details["diversite_conforme"] = nb_especes >= 3
+
+    # === 3. STRATES (30 pts) — strate 3 obligatoire + evaluation agent ===
+    strate_score = 0
+    has_s3 = has_strate3 or s3 > 0
+
+    # Strate 3 presence (15 pts)
+    if has_s3:
+        strate_score += 15
+    else:
+        recommandations.append("Aucun arbre de strate 3 (>30m). ARS 1000 exige minimum 1 arbre de strate haute")
+
+    # Evaluation agent (15 pts)
+    if eval_agent == "dense":
+        strate_score += 15
+    elif eval_agent == "moyen":
+        strate_score += 10
+    elif eval_agent == "inexistant":
+        strate_score += 0
+        if not recommandations or "ombrage" not in recommandations[-1].lower():
+            recommandations.append("L'agent a évalué l'ombrage comme inexistant")
+    else:
+        strate_score += 5  # evaluation non fournie - score neutre
+
+    details["has_strate3"] = has_s3
+    details["strate_score"] = round(strate_score, 1)
+    details["evaluation_agent"] = eval_agent or "non_fournie"
+    details["arbres_strate1"] = s1
+    details["arbres_strate2"] = s2
+    details["arbres_strate3"] = s3
+
+    # === SCORE TOTAL ===
+    total = round(densite_score + diversite_score + strate_score, 1)
+    total = max(0, min(100, total))
+
+    # Conformite ARS 1000
+    conforme = (
+        25 <= densite <= 40 and
+        nb_especes >= 3 and
+        has_s3
+    )
+
+    details["score_total"] = total
+    details["conforme_ars1000"] = conforme
+
+    # Niveau
+    if total >= 80:
+        niveau = "Excellent"
+    elif total >= 60:
+        niveau = "Bon"
+    elif total >= 40:
+        niveau = "Moyen"
+    elif total >= 20:
+        niveau = "Insuffisant"
+    else:
+        niveau = "Critique"
+
+    return {
+        "score": total,
+        "score_max": 100,
+        "niveau": niveau,
+        "conforme_ars1000": conforme,
+        "densite_arbres_ha": round(densite, 1),
+        "nombre_especes": nb_especes,
+        "has_strate3": has_s3,
+        "details": details,
+        "recommandations": recommandations[:5],
+    }
+
+
 def estimate_couverture_ombragee(
     arbres_petits: int = 0,
     arbres_moyens: int = 0,
@@ -96,6 +241,9 @@ def calculate_carbon_score(
     age_cacaoyers: str = None,            # "jeune" | "mature" | "vieux"
     certification: str = None,            # Any certification name or None
     existing_practices: list = None,      # From parcel doc (backward compat)
+    shade_score_ars1000: float = None,    # Score ombrage ARS 1000 (0-100) from PDC
+    nombre_especes_ombrage: int = 0,      # Nombre d'especes d'ombrage from PDC
+    evaluation_agent_ombrage: str = None, # Evaluation agent: inexistant/moyen/dense
 ) -> dict:
     """
     Calcule le score carbone unifie (0-10) avec decomposition detaillee.
@@ -251,6 +399,37 @@ def calculate_carbon_score(
     score += cert_pts
     details["certification"] = round(cert_pts, 2)
 
+    # === 10. BONUS OMBRAGE ARS 1000 (max 1.0) — coefficient 0.30 ===
+    SHADE_COEFF = 0.30
+    shade_bonus = 0
+    shade_detail = {}
+    if shade_score_ars1000 is not None and shade_score_ars1000 > 0:
+        # Shade score 0-100 -> bonus 0-1.0 via coefficient
+        shade_bonus = round(min((shade_score_ars1000 / 100) * (1.0 / SHADE_COEFF) * SHADE_COEFF, 1.0), 2)
+        shade_detail["score_ombrage_ars1000"] = shade_score_ars1000
+        shade_detail["coefficient"] = SHADE_COEFF
+        shade_detail["bonus_points"] = shade_bonus
+    elif nombre_especes_ombrage > 0 or evaluation_agent_ombrage:
+        # Auto-calculate shade score from available data
+        auto_shade = calculate_shade_score_ars1000(
+            nombre_arbres_ombrage=total_cat or int(nombre_arbres or 0),
+            superficie_ha=area,
+            nombre_especes=nombre_especes_ombrage,
+            has_strate3=n_g > 0,
+            evaluation_agent=evaluation_agent_ombrage,
+            arbres_par_strate={"strate1": n_p, "strate2": n_m, "strate3": n_g},
+        )
+        shade_score_ars1000 = auto_shade["score"]
+        shade_bonus = round(min((shade_score_ars1000 / 100) * (1.0 / SHADE_COEFF) * SHADE_COEFF, 1.0), 2)
+        shade_detail["score_ombrage_ars1000"] = shade_score_ars1000
+        shade_detail["auto_calculated"] = True
+        shade_detail["coefficient"] = SHADE_COEFF
+        shade_detail["bonus_points"] = shade_bonus
+        shade_detail["conforme_ars1000"] = auto_shade.get("conforme_ars1000", False)
+
+    score += shade_bonus
+    details["bonus_ombrage_ars1000"] = shade_detail if shade_detail else {"score_ombrage_ars1000": 0, "bonus_points": 0}
+
     # === FINAL ===
     final_score = round(max(0, min(10, score)), 1)
 
@@ -324,6 +503,9 @@ async def simulate_carbon_score(data: dict):
         redd_practices=data.get("redd_practices", []),
         age_cacaoyers=data.get("age_cacaoyers"),
         certification=data.get("certification"),
+        shade_score_ars1000=data.get("shade_score_ars1000"),
+        nombre_especes_ombrage=data.get("nombre_especes_ombrage", 0),
+        evaluation_agent_ombrage=data.get("evaluation_agent_ombrage"),
     )
     return result
 
@@ -348,6 +530,7 @@ async def get_score_decomposition():
             {"nom": "Age des cacaoyers", "max": 0.5, "description": "Mature=0.5, Vieux=0.3, Jeune=0.1"},
             {"nom": "Surface", "max": 0.3, "description": "Bonus pour les grandes parcelles (>5ha=0.3, >3ha=0.2, >1ha=0.1)"},
             {"nom": "Certification", "max": 0.2, "description": "Bonus si la parcelle est certifiee (Bio, Fairtrade, ARS, etc.)"},
+            {"nom": "Bonus Ombrage ARS 1000", "max": 1.0, "description": "Score ombrage ARS 1000 (0-100) x coefficient 0.30. Criteres: densite 25-40 arbres/ha, min 3 especes, strate 3 presente"},
         ],
         "niveaux": [
             {"nom": "Excellent", "seuil": "8-10", "description": "Pratiques durables exemplaires"},

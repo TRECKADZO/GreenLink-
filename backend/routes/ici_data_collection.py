@@ -161,30 +161,32 @@ def get_zone_risk_category(department: str) -> dict:
         "part_production": 0
     }
 
-# ============= HELPER: CHECK 5/5 COMPLETION (Bug 5) =============
+# ============= HELPER: CHECK 7/7 COMPLETION =============
 
 async def check_and_update_farmer_completion(farmer_id: str):
-    """Check if a farmer has completed all 5 forms and auto-update agent visit log"""
+    """Check if a farmer has completed all 7 forms and auto-update agent visit log"""
     try:
         # Check each form type
         ici_done = await db.ici_profiles.find_one({"farmer_id": farmer_id, "taille_menage": {"$exists": True, "$gt": 0}}) is not None
         ssrte_done = await db.ssrte_visits.count_documents({"farmer_id": farmer_id}) > 0
         parcels_done = await db.parcels.count_documents({"$or": [{"farmer_id": farmer_id}, {"member_id": farmer_id}]}) > 0
         photos_done = await db.geotagged_photos.count_documents({"farmer_id": farmer_id}) > 0
+        pdc_done = await db.pdc_v2.find_one({"farmer_id": farmer_id, "statut": {"$nin": ["archive", "brouillon"]}}) is not None
+        redd_done = await db.redd_assessments.count_documents({"farmer_id": farmer_id}) > 0
         
         # Check registration status
         member = await db.coop_members.find_one({"_id": ObjectId(farmer_id)}) if ObjectId.is_valid(farmer_id) else None
         registered = (member.get("status") == "active" or member.get("is_active", False)) if member else False
         
-        completed = sum([ici_done, ssrte_done, parcels_done, photos_done, registered])
+        completed = sum([ici_done, ssrte_done, parcels_done, photos_done, pdc_done, redd_done, registered])
         
-        if completed == 5:
+        if completed == 7:
             # Auto-update: mark farmer as fully completed in agent activities
             await db.agent_activities.insert_one({
-                "activity_type": "farmer_5_5_complete",
+                "activity_type": "farmer_7_7_complete",
                 "farmer_id": farmer_id,
                 "farmer_name": member.get("full_name", "") if member else "",
-                "details": {"ici": ici_done, "ssrte": ssrte_done, "parcels": parcels_done, "photos": photos_done, "registered": registered},
+                "details": {"ici": ici_done, "ssrte": ssrte_done, "parcels": parcels_done, "photos": photos_done, "pdc": pdc_done, "redd": redd_done, "registered": registered},
                 "timestamp": datetime.utcnow(),
                 "auto_generated": True
             })
@@ -194,7 +196,7 @@ async def check_and_update_farmer_completion(farmer_id: str):
                     {"_id": member["_id"]},
                     {"$set": {"all_forms_complete": True, "forms_completed_at": datetime.utcnow()}}
                 )
-            logger.info(f"Farmer {farmer_id} reached 5/5 completion - auto-updated")
+            logger.info(f"Farmer {farmer_id} reached 7/7 completion - auto-updated")
     except Exception as e:
         logger.error(f"Error checking farmer completion: {e}")
 

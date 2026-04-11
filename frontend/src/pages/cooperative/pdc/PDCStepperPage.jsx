@@ -12,7 +12,7 @@ import { getRegions, getDepartements, getSousPrefectures, findRegionByDepartemen
 import {
   ArrowLeft, ArrowRight, Save, CheckCircle2, Loader2,
   ClipboardList, Search as SearchIcon, Calendar, Lock,
-  FileText, ChevronDown, ChevronUp, Download, Eye, Info
+  FileText, ChevronDown, ChevronUp, Download, Eye, Info, Leaf
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -520,6 +520,82 @@ const PDCStepperPage = () => {
     );
   };
 
+  // Compute shade score client-side (for offline + real-time)
+  const computeShadeScore = () => {
+    if (!pdc) return null;
+    const f2 = pdc.step1?.fiche2 || {};
+    const f3 = pdc.step1?.fiche3 || {};
+    const arbres = f2.arbres || [];
+    const arbresCarte = (f2.carte_parcelle || {}).arbres_ombrage || [];
+    const cultures = f2.cultures || [];
+    const etatCac = f3.etat_cacaoyere || {};
+
+    const totalArbres = arbres.length + arbresCarte.length;
+    let superficie = 0;
+    cultures.forEach(c => { superficie += parseFloat(c.superficie_ha || 0) || 0; });
+    if (superficie <= 0) superficie = 1;
+
+    // Count species
+    const especes = new Set();
+    arbres.forEach(a => {
+      const nom = (a.nom_botanique || a.nom_local || '').trim().toLowerCase();
+      if (nom && nom !== '-') especes.add(nom);
+    });
+    arbresCarte.forEach(a => {
+      const nom = (a.nom || a.espece || '').trim().toLowerCase();
+      if (nom && nom !== '-' && nom !== 'arbre') especes.add(nom);
+    });
+
+    // Strate breakdown
+    let s1 = 0, s2 = 0, s3 = 0;
+    arbres.forEach(a => {
+      const circ = parseFloat(a.circonference || 0) || 0;
+      if (circ >= 200) s3++;
+      else if (circ >= 50) s2++;
+      else s1++;
+    });
+    arbresCarte.forEach(() => s1++); // GPS trees default strate 1
+
+    const densite = totalArbres / superficie;
+    const nbEspeces = especes.size;
+    const hasS3 = s3 > 0;
+    const evalAgent = (etatCac.ombrage || '').toLowerCase();
+
+    // Score density (40 pts)
+    let densScore = 0;
+    if (densite >= 25 && densite <= 40) densScore = 40;
+    else if (densite > 40) densScore = Math.max(25, 40 - (densite - 40) * 0.5);
+    else if (densite >= 18) densScore = 30;
+    else if (densite >= 12) densScore = 20;
+    else if (densite >= 5) densScore = 10;
+    else if (densite > 0) densScore = 5;
+
+    // Score diversity (30 pts)
+    let divScore = 0;
+    if (nbEspeces >= 5) divScore = 30;
+    else if (nbEspeces >= 3) divScore = 25;
+    else if (nbEspeces === 2) divScore = 15;
+    else if (nbEspeces === 1) divScore = 5;
+
+    // Score strates (30 pts)
+    let strScore = 0;
+    if (hasS3) strScore += 15;
+    if (evalAgent === 'dense') strScore += 15;
+    else if (evalAgent === 'moyen') strScore += 10;
+    else if (!evalAgent) strScore += 5;
+
+    const total = Math.min(100, Math.max(0, Math.round(densScore + divScore + strScore)));
+    const conforme = densite >= 25 && densite <= 40 && nbEspeces >= 3 && hasS3;
+
+    return {
+      score: total, conforme, densite: Math.round(densite * 10) / 10,
+      nbEspeces, hasS3, evalAgent,
+      densScore: Math.round(densScore), divScore: Math.round(divScore), strScore: Math.round(strScore),
+      totalArbres, superficie,
+      bonusPrime: Math.round(Math.min(total / 100, 1) * 5000 * superficie),
+    };
+  };
+
   const renderFiche3 = () => {
     const f = pdc.step1?.fiche3 || {};
     const etat = f.etat_cacaoyere || {};
@@ -544,6 +620,82 @@ const PDCStepperPage = () => {
               options={[{ value: 'normal', label: 'Normal' }, { value: 'peu_degrade', label: 'Peu degrade' }, { value: 'degrade', label: 'Degrade' }]} />
           </div>
         </SectionCard>
+
+        {/* Score Ombrage ARS 1000 — temps reel */}
+        {(() => {
+          const shade = computeShadeScore();
+          if (!shade || shade.totalArbres === 0) return null;
+          const scoreColor = shade.score >= 70 ? 'text-emerald-700' : shade.score >= 40 ? 'text-amber-700' : 'text-red-700';
+          const scoreBg = shade.score >= 70 ? 'bg-emerald-50 border-emerald-200' : shade.score >= 40 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
+          return (
+            <div className={`border rounded-lg p-4 space-y-3 ${scoreBg}`} data-testid="shade-score-panel">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm text-gray-800 flex items-center gap-2">
+                  <Leaf className="h-4 w-4 text-emerald-600" />
+                  Score Ombrage ARS 1000
+                </h4>
+                <span className={`text-2xl font-bold ${scoreColor}`}>{shade.score}/100</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {shade.conforme ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium" data-testid="shade-conforme-badge">
+                    <CheckCircle2 className="w-3 h-3" /> Conforme ARS 1000
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-medium" data-testid="shade-non-conforme-badge">
+                    <Info className="w-3 h-3" /> Non conforme ARS 1000
+                  </span>
+                )}
+              </div>
+
+              {/* Progress bars for each criterion */}
+              <div className="space-y-2">
+                <div>
+                  <div className="flex justify-between text-xs text-gray-600 mb-0.5">
+                    <span>Densite ({shade.densite} arbres/ha)</span>
+                    <span className="font-medium">{shade.densScore}/40</span>
+                  </div>
+                  <div className="h-2 bg-white/60 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${shade.densScore >= 30 ? 'bg-emerald-500' : shade.densScore >= 15 ? 'bg-amber-500' : 'bg-red-400'}`} style={{ width: `${(shade.densScore / 40) * 100}%` }} />
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Optimal : 25-40 arbres/ha</p>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs text-gray-600 mb-0.5">
+                    <span>Diversite ({shade.nbEspeces} espece{shade.nbEspeces > 1 ? 's' : ''})</span>
+                    <span className="font-medium">{shade.divScore}/30</span>
+                  </div>
+                  <div className="h-2 bg-white/60 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${shade.divScore >= 20 ? 'bg-emerald-500' : shade.divScore >= 10 ? 'bg-amber-500' : 'bg-red-400'}`} style={{ width: `${(shade.divScore / 30) * 100}%` }} />
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Minimum 3 especes differentes</p>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs text-gray-600 mb-0.5">
+                    <span>Strates {shade.hasS3 ? '(Strate 3 presente)' : '(Pas de strate 3)'}</span>
+                    <span className="font-medium">{shade.strScore}/30</span>
+                  </div>
+                  <div className="h-2 bg-white/60 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${shade.strScore >= 20 ? 'bg-emerald-500' : shade.strScore >= 10 ? 'bg-amber-500' : 'bg-red-400'}`} style={{ width: `${(shade.strScore / 30) * 100}%` }} />
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Min 1 arbre strate 3 (&gt;30m) + evaluation agent</p>
+                </div>
+              </div>
+
+              {shade.bonusPrime > 0 && (
+                <div className="bg-white/70 rounded-md p-2 border border-emerald-200 mt-2" data-testid="shade-prime-impact">
+                  <p className="text-xs font-medium text-emerald-800">
+                    + {shade.bonusPrime.toLocaleString('fr-FR')} FCFA de prime carbone estimee grace a l'ombrage
+                  </p>
+                  <p className="text-[10px] text-emerald-600 mt-0.5">
+                    Densite {shade.densite} arbres/ha, {shade.nbEspeces} espece{shade.nbEspeces > 1 ? 's' : ''}{shade.hasS3 ? ', strate 3 presente' : ''}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         <SectionCard title="Maladies et ravageurs" sectionKey="f3-maladies">
           <DynamicTable

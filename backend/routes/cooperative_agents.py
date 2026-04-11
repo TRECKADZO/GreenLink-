@@ -311,6 +311,20 @@ async def get_agents_progress(current_user: dict = Depends(get_current_user)):
     ]).to_list(500)
     photo_set = {p["_id"] for p in photo_agg if p["count"] > 0}
 
+    # PDC v2 check
+    pdc_docs = await db.pdc_v2.find(
+        {"farmer_id": {"$in": all_farmer_ids}, "statut": {"$nin": ["archive", "brouillon"]}},
+        {"farmer_id": 1}
+    ).to_list(1000)
+    pdc_set = {d["farmer_id"] for d in pdc_docs}
+
+    # REDD check
+    redd_agg = await db.redd_assessments.aggregate([
+        {"$match": {"farmer_id": {"$in": all_farmer_ids}}},
+        {"$group": {"_id": "$farmer_id", "count": {"$sum": 1}}}
+    ]).to_list(500)
+    redd_set = {r["_id"] for r in redd_agg if r["count"] > 0}
+
     total_5_5 = 0
     total_completed_forms = 0
     total_farmers_count = 0
@@ -330,9 +344,11 @@ async def get_agents_progress(current_user: dict = Depends(get_current_user)):
             ssrte_done = fid in ssrte_set
             parcels_done = fid in parcel_set
             photos_done = fid in photo_set
+            pdc_done = fid in pdc_set
+            redd_done = fid in redd_set
 
-            completed = sum([registered, ici_done, ssrte_done, parcels_done, photos_done])
-            if completed == 5:
+            completed = sum([registered, ici_done, ssrte_done, parcels_done, photos_done, pdc_done, redd_done])
+            if completed == 7:
                 agent_5_5 += 1
             total_completed_forms += completed
 
@@ -341,12 +357,14 @@ async def get_agents_progress(current_user: dict = Depends(get_current_user)):
                 "full_name": member.get("full_name", "Inconnu"),
                 "village": member.get("village", ""),
                 "completed": completed,
-                "total": 5,
-                "percentage": round(completed / 5 * 100),
+                "total": 7,
+                "percentage": round(completed / 7 * 100),
                 "forms": {
                     "register": registered,
+                    "pdc": pdc_done,
                     "ici": ici_done,
                     "ssrte": ssrte_done,
+                    "redd": redd_done,
                     "parcels": parcels_done,
                     "photos": photos_done
                 }
@@ -364,13 +382,13 @@ async def get_agents_progress(current_user: dict = Depends(get_current_user)):
             "zone": a.get("zone", ""),
             "assigned_count": len(assigned),
             "farmers_5_5": agent_5_5,
-            "progress_percent": round(total_completed_forms / (len(assigned) * 5) * 100) if assigned else 0,
+            "progress_percent": round(total_completed_forms / (len(assigned) * 7) * 100) if assigned else 0,
             "farmers": farmers_detail
         })
 
     agent_results.sort(key=lambda a: a["progress_percent"])
 
-    avg_progress = round(total_completed_forms / (total_farmers_count * 5) * 100) if total_farmers_count > 0 else 0
+    avg_progress = round(total_completed_forms / (total_farmers_count * 7) * 100) if total_farmers_count > 0 else 0
 
     return {
         "agents": agent_results,

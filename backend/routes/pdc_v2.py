@@ -544,3 +544,104 @@ async def get_available_members(current_user: dict = Depends(get_current_user)):
             })
 
     return available
+
+
+@router.get("/{pdc_id}/shade-score")
+async def get_pdc_shade_score(pdc_id: str, current_user: dict = Depends(get_current_user)):
+    """Calcule le score ombrage ARS 1000 en temps reel a partir des donnees du PDC"""
+    pdc = await get_pdc_or_404(pdc_id)
+    await check_pdc_access(pdc, current_user)
+
+    from routes.carbon_score_engine import calculate_shade_score_ars1000
+
+    step1 = pdc.get("step1", {})
+    f2 = step1.get("fiche2", {})
+    f3 = step1.get("fiche3", {})
+
+    # Count trees from fiche2 arbres list + carte arbres_ombrage
+    arbres_list = f2.get("arbres", [])
+    carte = f2.get("carte_parcelle", {})
+    arbres_carte = carte.get("arbres_ombrage", [])
+
+    # Total shade trees: unique trees from both sources
+    total_arbres = len(arbres_list) + len(arbres_carte)
+
+    # Count unique species from arbres list (nom_botanique or nom_local)
+    especes = set()
+    for a in arbres_list:
+        nom = (a.get("nom_botanique") or a.get("nom_local") or "").strip().lower()
+        if nom and nom != "-":
+            especes.add(nom)
+    for a in arbres_carte:
+        nom = (a.get("nom") or a.get("espece") or "").strip().lower()
+        if nom and nom != "-" and nom != "arbre":
+            especes.add(nom)
+
+    # Get superficie from cultures
+    cultures = f2.get("cultures", [])
+    superficie = 0
+    for c in cultures:
+        try:
+            sup = float(c.get("superficie_ha", 0) or 0)
+            superficie += sup
+        except (ValueError, TypeError):
+            pass
+    if superficie <= 0:
+        superficie = 1.0  # default 1 ha
+
+    # Strate breakdown from arbres list (using decision field or circumference)
+    s1 = s2 = s3 = 0
+    for a in arbres_list:
+        circ = 0
+        try:
+            circ = float(a.get("circonference", 0) or 0)
+        except (ValueError, TypeError):
+            pass
+        if circ >= 200:  # >200cm circ ~ >30m height
+            s3 += 1
+        elif circ >= 50:
+            s2 += 1
+        else:
+            s1 += 1
+
+    # Add carte trees (strate info from GPS trees if available)
+    for a in arbres_carte:
+        strate = a.get("strate", "")
+        if strate == "3" or a.get("hauteur", 0) and float(a.get("hauteur", 0)) > 30:
+            s3 += 1
+        elif strate == "2":
+            s2 += 1
+        else:
+            s1 += 1
+
+    # Agent evaluation from fiche3
+    etat = f3.get("etat_cacaoyere", {})
+    evaluation = etat.get("ombrage", "")
+
+    result = calculate_shade_score_ars1000(
+        nombre_arbres_ombrage=total_arbres,
+        superficie_ha=superficie,
+        nombre_especes=len(especes),
+        has_strate3=s3 > 0,
+        evaluation_agent=evaluation,
+        arbres_par_strate={"strate1": s1, "strate2": s2, "strate3": s3},
+    )
+
+    # Add context
+    result["pdc_id"] = pdc_id
+    result["superficie_ha"] = superficie
+    result["total_arbres_detectes"] = total_arbres
+    result["especes_detectees"] = list(especes)
+
+    # Calculate premium impact
+    from routes.carbon_premiums import DEFAULT_RATE_PER_HA
+    shade_bonus_pts = round(min((result["score"] / 100) * 1.0, 1.0), 2)
+    prime_impact_fcfa = round(shade_bonus_pts * DEFAULT_RATE_PER_HA * superficie)
+    result["impact_prime"] = {
+        "bonus_score_carbone": shade_bonus_pts,
+        "prime_supplementaire_fcfa": prime_impact_fcfa,
+        "message": f"+ {prime_impact_fcfa:,} FCFA grâce à la couverture ombragée (densité {result['densite_arbres_ha']} arbres/ha, {len(especes)} espèces)" if prime_impact_fcfa > 0 else "Aucun bonus ombrage"
+    }
+
+    return result
+

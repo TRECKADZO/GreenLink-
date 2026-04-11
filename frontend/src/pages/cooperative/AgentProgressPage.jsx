@@ -14,8 +14,10 @@ import { toast } from 'sonner';
 
 const FORM_LABELS = {
   register: 'Inscription',
+  pdc: 'PDC',
   ici: 'Fiche ICI',
   ssrte: 'Visite SSRTE',
+  redd: 'REDD+',
   parcels: 'Parcelles',
   photos: 'Photos'
 };
@@ -113,7 +115,7 @@ const AgentProgressPage = () => {
             <CardContent className="p-4 text-center">
               <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-600" />
               <p className="text-2xl font-bold text-emerald-600">{summary.farmers_5_5}</p>
-              <p className="text-xs text-gray-500">Fermiers a 5/5</p>
+              <p className="text-xs text-gray-500">Fermiers a 7/7</p>
             </CardContent>
           </Card>
           <Card data-testid="summary-avg-progress">
@@ -203,8 +205,8 @@ const AgentProgressPage = () => {
                               ))}
                             </div>
                             <div className="col-span-2 text-right">
-                              <Badge className={f.completed === 5 ? 'bg-emerald-600 text-white' : f.completed >= 3 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}>
-                                {f.completed}/5
+                              <Badge className={f.completed === 7 ? 'bg-emerald-600 text-white' : f.completed >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}>
+                                {f.completed}/{f.total || 7}
                               </Badge>
                             </div>
                           </div>

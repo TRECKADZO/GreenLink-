@@ -9,7 +9,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
 from bson import ObjectId
-import io, logging
+import io
+import logging
 
 from database import db
 from routes.auth import get_current_user
@@ -388,6 +389,93 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
         ('Canopee', _select_label(etat.get('canopee'), canopee_map)),
     ], styles))
     story.append(Spacer(1, 3 * mm))
+
+    # === SCORE OMBRAGE ARS 1000 ===
+    try:
+        from routes.carbon_score_engine import calculate_shade_score_ars1000
+        arbres_list = f2.get("arbres", [])
+        carte_pdc = f2.get("carte_parcelle", {})
+        arbres_carte_list = carte_pdc.get("arbres_ombrage", [])
+        total_arbres_pdf = len(arbres_list) + len(arbres_carte_list)
+        
+        especes_set = set()
+        for arb in arbres_list:
+            n = (arb.get("nom_botanique") or arb.get("nom_local") or "").strip().lower()
+            if n and n != "-":
+                especes_set.add(n)
+        for arb in arbres_carte_list:
+            n = (arb.get("nom") or arb.get("espece") or "").strip().lower()
+            if n and n != "-" and n != "arbre":
+                especes_set.add(n)
+        
+        sup_pdf = sum(float(c.get("superficie_ha", 0) or 0) for c in f2.get("cultures", [])) or 1.0
+        
+        s1_pdf = s2_pdf = s3_pdf = 0
+        for arb in arbres_list:
+            circ = float(arb.get("circonference", 0) or 0)
+            if circ >= 200:
+                s3_pdf += 1
+            elif circ >= 50:
+                s2_pdf += 1
+            else:
+                s1_pdf += 1
+        
+        if total_arbres_pdf > 0:
+            shade_result = calculate_shade_score_ars1000(
+                nombre_arbres_ombrage=total_arbres_pdf,
+                superficie_ha=sup_pdf,
+                nombre_especes=len(especes_set),
+                has_strate3=s3_pdf > 0,
+                evaluation_agent=etat.get("ombrage", ""),
+                arbres_par_strate={"strate1": s1_pdf, "strate2": s2_pdf, "strate3": s3_pdf},
+            )
+            
+            conf_text = "CONFORME" if shade_result["conforme_ars1000"] else "NON CONFORME"
+            conf_color = HexColor('#059669') if shade_result["conforme_ars1000"] else HexColor('#D97706')
+            
+            story.append(Paragraph('<b>Score Ombrage ARS 1000</b>', styles['SubTitle']))
+            
+            # Score summary
+            score_data = [
+                [Paragraph('<b>Score global</b>', styles['Body']),
+                 Paragraph(f'<b><font color="{conf_color}">{shade_result["score"]}/100 ({shade_result["niveau"]})</font></b>', styles['Body'])],
+                [Paragraph('Conformite ARS 1000', styles['Body']),
+                 Paragraph(f'<font color="{conf_color}"><b>{conf_text}</b></font>', styles['Body'])],
+            ]
+            score_table = Table(score_data, colWidths=[80*mm, 75*mm])
+            score_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), PRIMARY_LIGHT),
+                ('GRID', (0, 0), (-1, -1), 0.5, GRAY_BORDER),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, -1), 3),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            story.append(score_table)
+            story.append(Spacer(1, 2 * mm))
+            
+            # Criteria breakdown
+            story.append(_kv_table([
+                ('Densite', f'{shade_result["densite_arbres_ha"]} arbres/ha (optimal: 25-40)'),
+                ('Diversite', f'{len(especes_set)} especes (min requis: 3)'),
+                ('Strate 3 (>30m)', 'Presente' if shade_result["has_strate3"] else 'Absente'),
+                ('Evaluation agent', (etat.get("ombrage") or "Non fournie").capitalize()),
+                ('Details score', f'Densite: {shade_result["details"]["densite_score"]}/40 | Diversite: {shade_result["details"]["diversite_score"]}/30 | Strates: {shade_result["details"]["strate_score"]}/30'),
+            ], styles))
+            
+            # Prime impact
+            bonus_pts = round(min(shade_result["score"] / 100, 1.0), 2)
+            prime_fcfa = round(bonus_pts * 5000 * sup_pdf)
+            if prime_fcfa > 0:
+                story.append(Spacer(1, 2 * mm))
+                story.append(Paragraph(
+                    f'<font color="#059669"><b>Impact prime carbone : + {prime_fcfa:,} FCFA</b> (bonus {bonus_pts} pts sur score carbone)</font>',
+                    styles['Body']
+                ))
+            
+            story.append(Spacer(1, 3 * mm))
+    except Exception as e:
+        logger.warning(f"Shade score PDF generation error: {e}")
 
     # Maladies
     maladies = f3.get("maladies", [])
