@@ -9,9 +9,15 @@ Plateforme agritech Cote d'Ivoire - modules ARS 1000 pour certification cacao du
 - **Carte interactive Garmin eTrex 20** dans Fiche 2:
   - Polygone bleu limites parcelle + pins jaunes arbres ombrage
   - **GPS Tracking continu** : watchPosition, filtre 3m, Haversine, bandeau rouge temps reel
-  - **Bouton permanent "Ajouter arbre ici"** (11 avril): Capture GPS instantanee, disponible PENDANT et APRES le trace du polygone. Formulaire rapide: Nom botanique, Nom local, Circonference, Origine, Decision. Coexiste avec placement manuel.
+  - **Bouton permanent "Ajouter arbre ici"** (11 avril): Capture GPS instantanee, disponible PENDANT et APRES le trace du polygone. Formulaire rapide: Nom botanique, Nom local, Circonference, Origine, Decision.
+  - **Trace manuel ameliore** (11 avril):
+    - Drag & drop des vertices apres trace (DraggableVertex component)
+    - Detection intelligente rectangle au 4e point (snap 30m) + alignement automatique
+    - Bouton "Terminer le trace" pendant le tracage
+    - Banniere "Polygone ferme" avec superficie/perimetre/points
+    - Calcul geodesique precis (Shoelace + Haversine)
   - Boutons: Enregistrer GPS, Trace manuel, Marquer arbre (manuel), Capturer PDF
-  - Info box Garmin + liste waypoints enrichie (nom, circ., decision) + snapshot html2canvas
+  - Info box enrichie: Producteur, Village, Superficie, Perimetre, Points, Arbres
 - PDF officiel: carte statique + liste arbres + numerotation pages + header GreenLink
 - 8 fiches dynamiques, RBAC strict, validation cooperative
 
@@ -25,14 +31,12 @@ Plateforme agritech Cote d'Ivoire - modules ARS 1000 pour certification cacao du
 - Service Worker TILES_CACHE: Cache-First, 200Mo max, nettoyage LRU
 - Pre-telechargement par zone (zoom 10-17), progression temps reel
 - TilesDownloader dans dashboard agent + carte Garmin (compact)
-- Badge "En ligne"/"Cache hors-ligne" sur la carte
 
 ### Core Platform
 - Auth JWT, Dashboard multi-roles, Notifications, USSD, Score carbone, Marketplace
 
 ### ARS 1000
 - PDC v2 (seul actif), Lots Traceabilite, Certification, Agroforesterie, Visite Terrain
-- Declarations Recolte, Diagnostic Conformite, Protection Environnementale
 
 ## Architecture
 - Backend: FastAPI + MongoDB | Frontend: React + Tailwind + Shadcn + Leaflet + html2canvas
