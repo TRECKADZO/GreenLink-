@@ -324,7 +324,7 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
 
   // ---- GPS TRACKING ----
   const startTracking = useCallback(() => {
-    if (!navigator.geolocation) { toast.error('Geolocalisation non disponible sur cet appareil'); return; }
+    if (!navigator.geolocation) { toast.error('Autorisez la localisation pour enregistrer le parcours'); return; }
 
     // Clear existing polygon
     updateData({ polygon: [] });
@@ -353,7 +353,12 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
         }
       },
       (err) => {
-        toast.error(`Erreur GPS: ${err.message}`);
+        setTracking(false);
+        if (err.code === 1) {
+          toast.error('Autorisez la localisation pour enregistrer le parcours');
+        } else {
+          toast.error(`Erreur GPS: ${err.message}`);
+        }
       },
       { enableHighAccuracy: true, maximumAge: 1000, timeout: 30000 }
     );
@@ -438,18 +443,18 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
 
       {/* Tracking banner */}
       {tracking && (
-        <div className="bg-red-900/90 border border-red-500 rounded-md p-3 flex items-center justify-between animate-pulse" data-testid="tracking-banner">
+        <div className="bg-orange-600/95 border border-orange-400 rounded-md p-3 flex items-center justify-between" data-testid="tracking-banner">
           <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-ping" />
+            <div className="w-3 h-3 bg-white rounded-full animate-ping" />
             <div>
               <p className="text-sm font-bold text-white font-mono">GPS TRACKING EN COURS</p>
-              <p className="text-xs text-red-200 font-mono">
+              <p className="text-xs text-orange-100 font-mono">
                 Temps: {formatDuration(trackElapsed)} | Points: {polygon.length} | Dist: {perimeter}m
                 {trackAccuracy !== null && ` | Precision: ±${trackAccuracy}m`}
               </p>
             </div>
           </div>
-          <Button size="sm" onClick={stopTracking} className="bg-red-600 hover:bg-red-700 text-white h-10" data-testid="tracking-stop-btn">
+          <Button size="sm" onClick={stopTracking} className="bg-white hover:bg-orange-50 text-orange-700 font-bold h-10" data-testid="tracking-stop-btn">
             <Square className="w-4 h-4 mr-1 fill-current" /> Arreter
           </Button>
         </div>
@@ -688,27 +693,24 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
             </div>
           )}
 
-          {/* GPS Tracking row */}
+          {/* GPS Tracking toggle button */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {!tracking ? (
-              <Button
-                size="sm"
-                onClick={startTracking}
-                className="h-14 text-sm font-bold bg-[#2D3B2D] hover:bg-[#3E4F3E] text-[#4ADE80] border-2 border-[#4ADE80]"
-                data-testid="map-btn-start-tracking"
-              >
-                <Radio className="w-6 h-6 mr-2" /> Enregistrer le parcours GPS
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                onClick={stopTracking}
-                className="h-14 text-sm font-bold bg-red-700 hover:bg-red-800 text-white border-2 border-red-500"
-                data-testid="map-btn-stop-tracking"
-              >
-                <Square className="w-5 h-5 mr-2 fill-current" /> Arreter le parcours
-              </Button>
-            )}
+            <Button
+              size="sm"
+              onClick={tracking ? stopTracking : startTracking}
+              className={`h-14 text-sm font-bold border-2 transition-colors duration-150 ${
+                tracking
+                  ? 'bg-orange-600 hover:bg-orange-700 text-white border-orange-400 animate-pulse'
+                  : 'bg-[#2D3B2D] hover:bg-[#3E4F3E] text-[#4ADE80] border-[#4ADE80]'
+              }`}
+              data-testid="map-btn-toggle-tracking"
+            >
+              {tracking ? (
+                <><Radio className="w-6 h-6 mr-2 animate-spin" /> Enregistrement en cours...</>
+              ) : (
+                <><Radio className="w-6 h-6 mr-2" /> Enregistrer le parcours GPS</>
+              )}
+            </Button>
             <Button
               variant="outline"
               size="sm"
