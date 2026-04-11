@@ -86,7 +86,7 @@ const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
           },
         }));
       } else {
-        // No ICI profile yet — try to load family data from SSRTE
+        // No ICI profile yet — try to load family data from PDC/SSRTE
         try {
           const token = tokenService.getToken();
           const familyRes = await fetch(`${API_URL}/api/ici-data/farmers/${farmer.id}/family-data`, {
@@ -95,17 +95,31 @@ const ICIProfileModal = ({ open, onOpenChange, farmer, onSaved }) => {
           if (familyRes.ok) {
             const familyData = await familyRes.json();
             if (familyData.source) {
+              const enfants = familyData.liste_enfants || [];
+              const scolarises = enfants.filter(c => c.scolarise).length;
+              const travaillant = enfants.filter(c => c.travaille_exploitation).length;
+              const e5_11 = enfants.filter(c => c.age >= 5 && c.age <= 11).length;
+              const e12_14 = enfants.filter(c => c.age >= 12 && c.age <= 14).length;
+              const e15_17 = enfants.filter(c => c.age >= 15 && c.age <= 17).length;
               setForm(prev => ({
                 ...prev,
                 taille_menage: familyData.taille_menage || prev.taille_menage,
+                genre: familyData.genre || prev.genre,
+                niveau_education: familyData.niveau_education || prev.niveau_education,
+                date_naissance: familyData.date_naissance || prev.date_naissance,
                 household_children: {
                   ...prev.household_children,
-                  nombre_enfants: familyData.nombre_enfants || 0,
-                  liste_enfants: familyData.liste_enfants || [],
-                  total_enfants: familyData.nombre_enfants || 0,
+                  liste_enfants: enfants,
+                  total_enfants: enfants.length,
+                  enfants_scolarises: scolarises,
+                  enfants_travaillant_exploitation: travaillant,
+                  enfants_5_11_ans: e5_11,
+                  enfants_12_14_ans: e12_14,
+                  enfants_15_17_ans: e15_17,
                 },
               }));
-              toast.info('Donnees familiales pre-remplies depuis les fiches precedentes');
+              const sourceLabel = familyData.source.includes('pdc') ? 'PDC' : 'fiches precedentes';
+              toast.info(`Donnees pre-remplies depuis le ${sourceLabel}`);
             }
           }
         } catch {

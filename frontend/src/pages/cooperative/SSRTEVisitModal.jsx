@@ -81,7 +81,7 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
   const [followUpRequired, setFollowUpRequired] = useState(false);
   const [observations, setObservations] = useState('');
 
-  // Auto-load family data from ICI/SSRTE when modal opens
+  // Auto-load family data from PDC/ICI/SSRTE when modal opens
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (open && farmer?.id) {
@@ -98,8 +98,8 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
               if (data.nombre_enfants) setNombreEnfants(data.nombre_enfants);
               if (data.liste_enfants?.length) setListeEnfants(data.liste_enfants);
               if (data.conditions_vie) setConditionsVie(data.conditions_vie);
-              if (data.eau_courante !== null) setEauCourante(data.eau_courante);
-              if (data.electricite !== null) setElectricite(data.electricite);
+              if (data.eau_courante !== undefined && data.eau_courante !== null) setEauCourante(data.eau_courante);
+              if (data.electricite !== undefined && data.electricite !== null) setElectricite(data.electricite);
               if (data.distance_ecole_km) setDistanceEcole(String(data.distance_ecole_km));
               setPrefilled(true);
             }
@@ -273,7 +273,7 @@ const SSRTEVisitModal = ({ open, onOpenChange, farmer, onSaved }) => {
           {prefilled && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2 text-xs text-emerald-700" data-testid="prefilled-banner">
               <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-              <span>Informations familiales pre-remplies depuis les fiches precedentes. Vous pouvez les modifier si necessaire.</span>
+              <span>Informations familiales pre-remplies depuis les donnees existantes (PDC / ICI). Vous pouvez les modifier si necessaire.</span>
             </div>
           )}
 

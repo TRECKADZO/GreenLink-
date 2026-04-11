@@ -519,7 +519,7 @@ async def get_farmer_history(
 
 @router.get("/farmers/{farmer_id}/family-data")
 async def get_farmer_family_data(farmer_id: str, request: Request, current_user: dict = Depends(get_admin_or_coop_user)):
-    """Retourne les donnees familiales connues d'un planteur (ICI + SSRTE) pour pre-remplissage."""
+    """Retourne les donnees familiales connues d'un planteur (PDC v2 + ICI + SSRTE) pour pre-remplissage."""
     
     # Verify agent can access this farmer
     user_type = current_user.get('user_type')
@@ -535,6 +535,9 @@ async def get_farmer_family_data(farmer_id: str, request: Request, current_user:
         "taille_menage": 0,
         "nombre_enfants": 0,
         "liste_enfants": [],
+        "genre": "",
+        "niveau_education": "",
+        "date_naissance": "",
         "conditions_vie": "",
         "eau_courante": None,
         "electricite": None,
@@ -542,14 +545,89 @@ async def get_farmer_family_data(farmer_id: str, request: Request, current_user:
         "source": None,
     }
 
-    # 1. Check ICI profile
+    # 0. Check PDC v2 data (highest priority for demographic info)
+    pdc = await db.pdc_v2.find_one(
+        {"farmer_id": farmer_id, "statut": {"$nin": ["archive"]}},
+        sort=[("updated_at", -1)]
+    )
+    if pdc:
+        fiche1 = (pdc.get("step1") or {}).get("fiche1") or {}
+        membres = fiche1.get("membres_menage") or []
+        producteur = fiche1.get("producteur") or {}
+
+        if membres:
+            result["taille_menage"] = len(membres)
+            result["source"] = "pdc"
+
+            # Extract chef de menage info
+            chef = next((m for m in membres if m.get("statut_famille") == "chef_menage"), None)
+            if chef:
+                sexe_raw = (chef.get("sexe") or "").upper()
+                result["genre"] = "homme" if sexe_raw == "M" else "femme" if sexe_raw == "F" else ""
+                niv = (chef.get("niveau_instruction") or "").lower()
+                if niv in ("aucun", "primaire", "secondaire", "superieur", "prescolaire"):
+                    result["niveau_education"] = "aucun" if niv == "prescolaire" else niv
+                annee = chef.get("annee_naissance")
+                if annee:
+                    try:
+                        result["date_naissance"] = f"{int(annee)}-01-01"
+                    except (ValueError, TypeError):
+                        pass
+
+            # Extract children from membres_menage
+            current_year = datetime.utcnow().year
+            enfants_pdc = []
+            for m in membres:
+                if m.get("statut_famille") == "enfant":
+                    annee_n = m.get("annee_naissance")
+                    age = 0
+                    if annee_n:
+                        try:
+                            age = current_year - int(annee_n)
+                        except (ValueError, TypeError):
+                            pass
+                    sexe_m = (m.get("sexe") or "").upper()
+                    enfants_pdc.append({
+                        "prenom": m.get("nom_prenoms", ""),
+                        "sexe": "Fille" if sexe_m == "F" else "Garcon",
+                        "age": max(0, min(age, 17)),
+                        "scolarise": m.get("statut_scolaire") == "scolarise",
+                        "travaille_exploitation": m.get("statut_plantation") not in (None, "", "aucun"),
+                    })
+            if enfants_pdc:
+                result["liste_enfants"] = enfants_pdc
+                result["nombre_enfants"] = len(enfants_pdc)
+
+        # Geographic info from producteur
+        if producteur:
+            result["region"] = producteur.get("delegation_regionale", "")
+            result["departement"] = producteur.get("departement", "")
+            result["sous_prefecture"] = producteur.get("sous_prefecture", "")
+            result["village"] = producteur.get("village", "")
+            result["campement"] = producteur.get("campement", "")
+
+    # 1. Check ICI profile (may override if more detailed)
     ici = await db.ici_profiles.find_one({"farmer_id": farmer_id}, {"_id": 0})
     if ici:
         hc = ici.get("household_children", {})
-        result["taille_menage"] = ici.get("taille_menage", 0)
-        result["nombre_enfants"] = hc.get("nombre_enfants", len(hc.get("liste_enfants", [])))
-        result["liste_enfants"] = hc.get("liste_enfants", [])
-        result["source"] = "ici"
+        ici_taille = ici.get("taille_menage", 0)
+        ici_enfants = hc.get("liste_enfants", [])
+        if ici_taille > result["taille_menage"]:
+            result["taille_menage"] = ici_taille
+        if len(ici_enfants) > len(result["liste_enfants"]):
+            result["liste_enfants"] = ici_enfants
+            result["nombre_enfants"] = len(ici_enfants)
+        # ICI has explicit genre/education — use if PDC didn't provide
+        if not result["genre"] and ici.get("genre"):
+            result["genre"] = ici["genre"]
+        if not result["niveau_education"] and ici.get("niveau_education"):
+            result["niveau_education"] = ici["niveau_education"]
+        if not result["date_naissance"] and ici.get("date_naissance"):
+            result["date_naissance"] = ici["date_naissance"]
+        if result["source"]:
+            result["source"] = result["source"] + "+ici"
+        else:
+            result["source"] = "ici"
 
     # 2. Check latest SSRTE visit (may have more recent or additional data)
     ssrte = await db.ssrte_visits.find_one(
@@ -557,20 +635,24 @@ async def get_farmer_family_data(farmer_id: str, request: Request, current_user:
         sort=[("date_visite", -1)]
     )
     if ssrte:
-        if not result["source"] or ssrte.get("taille_menage", 0) > result["taille_menage"]:
-            result["taille_menage"] = ssrte.get("taille_menage", result["taille_menage"])
+        if ssrte.get("taille_menage", 0) > result["taille_menage"]:
+            result["taille_menage"] = ssrte["taille_menage"]
         ssrte_enfants = ssrte.get("liste_enfants", [])
         if len(ssrte_enfants) > len(result["liste_enfants"]):
             result["liste_enfants"] = ssrte_enfants
             result["nombre_enfants"] = ssrte.get("nombre_enfants", len(ssrte_enfants))
-        result["conditions_vie"] = ssrte.get("conditions_vie", result["conditions_vie"])
-        result["eau_courante"] = ssrte.get("eau_courante", result["eau_courante"])
-        result["electricite"] = ssrte.get("electricite", result["electricite"])
-        result["distance_ecole_km"] = ssrte.get("distance_ecole_km", result["distance_ecole_km"])
+        if not result["conditions_vie"]:
+            result["conditions_vie"] = ssrte.get("conditions_vie", "")
+        if result["eau_courante"] is None:
+            result["eau_courante"] = ssrte.get("eau_courante")
+        if result["electricite"] is None:
+            result["electricite"] = ssrte.get("electricite")
+        if result["distance_ecole_km"] is None:
+            result["distance_ecole_km"] = ssrte.get("distance_ecole_km")
         if not result["source"]:
             result["source"] = "ssrte"
-        elif result["source"] == "ici":
-            result["source"] = "ici+ssrte"
+        elif "ssrte" not in result["source"]:
+            result["source"] = result["source"] + "+ssrte"
 
     return result
 
