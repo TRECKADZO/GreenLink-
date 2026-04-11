@@ -6,8 +6,9 @@ import html2canvas from 'html2canvas';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { toast } from 'sonner';
-import { TreePine, Route, Camera, Trash2, RotateCcw, Navigation, ZoomIn, ZoomOut, Radio, Square, MapPin, Wifi, WifiOff } from 'lucide-react';
+import { TreePine, Route, Camera, Trash2, RotateCcw, Navigation, ZoomIn, ZoomOut, Radio, Square, MapPin, Wifi, WifiOff, Crosshair, X, Check, Loader2 } from 'lucide-react';
 import TilesDownloader from '../../../components/TilesDownloader';
+import { Input } from '../../../components/ui/input';
 
 // Minimum distance (meters) between tracked points to filter GPS noise
 const MIN_TRACK_DISTANCE_M = 3;
@@ -98,6 +99,10 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
   const [trackElapsed, setTrackElapsed] = useState(0);
   const [trackAccuracy, setTrackAccuracy] = useState(null);
 
+  // GPS tree: permanent button state
+  const [gpsTreeLoading, setGpsTreeLoading] = useState(false);
+  const [treeForm, setTreeForm] = useState(null); // { lat, lng, numero, nom_botanique, nom_local, circonference, origine, decision }
+
   const polygon = data?.polygon || [];
   const trees = data?.arbres_ombrage || [];
 
@@ -113,8 +118,53 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
 
   const handleAddTree = useCallback((tree) => {
     const num = trees.length + 1;
-    updateData({ arbres_ombrage: [...trees, { ...tree, numero: num }] });
-  }, [trees, updateData]);
+    // Open form for manual trees placed on map
+    setTreeForm({ lat: tree.lat, lng: tree.lng, numero: num, nom_botanique: '', nom_local: '', circonference: '', origine: '', decision: '' });
+  }, [trees.length]);
+
+  // GPS tree: capture current position and open form
+  const handleAddTreeGPS = useCallback(() => {
+    if (!navigator.geolocation) { toast.error('Geolocalisation non disponible'); return; }
+    setGpsTreeLoading(true);
+
+    // If tracking, use currentPos for instant response
+    if (tracking && currentPos) {
+      const num = trees.length + 1;
+      setTreeForm({ lat: currentPos[0], lng: currentPos[1], numero: num, nom_botanique: '', nom_local: '', circonference: '', origine: '', decision: '' });
+      setGpsTreeLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const num = trees.length + 1;
+        setTreeForm({
+          lat: pos.coords.latitude, lng: pos.coords.longitude, numero: num,
+          nom_botanique: '', nom_local: '', circonference: '', origine: '', decision: '',
+        });
+        setGpsTreeLoading(false);
+      },
+      (err) => {
+        toast.error(`Erreur GPS: ${err.message}`);
+        setGpsTreeLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }, [tracking, currentPos, trees.length]);
+
+  // Save tree from form
+  const saveTreeForm = useCallback(() => {
+    if (!treeForm) return;
+    const tree = {
+      lat: treeForm.lat, lng: treeForm.lng, numero: treeForm.numero,
+      nom: treeForm.nom_botanique || treeForm.nom_local || '',
+      nom_botanique: treeForm.nom_botanique, nom_local: treeForm.nom_local,
+      circonference: treeForm.circonference, origine: treeForm.origine, decision: treeForm.decision,
+    };
+    updateData({ arbres_ombrage: [...trees, tree] });
+    toast.success(`Arbre #${tree.numero} ajoute`);
+    setTreeForm(null);
+  }, [treeForm, trees, updateData]);
 
   const removeLastVertex = () => { if (polygon.length > 0) updateData({ polygon: polygon.slice(0, -1) }); };
   const removeTree = (idx) => {
@@ -316,7 +366,16 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
           {/* Tree markers */}
           {trees.map((t, i) => (
             <Marker key={`t-${i}-${t.lat}`} position={[t.lat, t.lng]} icon={treeIcon}>
-              <Popup><div className="text-xs"><b>Arbre #{t.numero}</b><br />{t.lat.toFixed(5)}, {t.lng.toFixed(5)}{t.nom && <><br />{t.nom}</>}</div></Popup>
+              <Popup>
+                <div className="text-xs">
+                  <b>Arbre #{t.numero}</b><br />
+                  {t.lat.toFixed(5)}, {t.lng.toFixed(5)}
+                  {t.nom_botanique && <><br /><b>Bot:</b> {t.nom_botanique}</>}
+                  {t.nom_local && <><br /><b>Local:</b> {t.nom_local}</>}
+                  {t.circonference && <><br /><b>Circ:</b> {t.circonference} cm</>}
+                  {t.decision && <><br /><b>Dec:</b> {t.decision}</>}
+                </div>
+              </Popup>
             </Marker>
           ))}
 
@@ -369,6 +428,105 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
       {/* Action buttons */}
       {!readOnly && (
         <div className="space-y-2">
+          {/* PERMANENT GPS TREE BUTTON — always visible */}
+          <Button
+            size="lg"
+            onClick={handleAddTreeGPS}
+            disabled={gpsTreeLoading || !!treeForm}
+            className="w-full h-16 text-base font-bold bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black border-2 border-amber-600 shadow-lg active:scale-[0.98] transition-transform"
+            data-testid="map-btn-add-tree-gps"
+          >
+            {gpsTreeLoading ? (
+              <><Loader2 className="w-6 h-6 mr-2 animate-spin" /> Localisation GPS...</>
+            ) : (
+              <><Crosshair className="w-6 h-6 mr-2" /> Ajouter arbre ici</>
+            )}
+          </Button>
+
+          {/* Tree quick form */}
+          {treeForm && (
+            <div className="bg-[#FFFDE7] border-2 border-amber-400 rounded-lg p-4 space-y-3 shadow-md" data-testid="tree-quick-form">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TreePine className="w-5 h-5 text-amber-700" />
+                  <span className="text-sm font-bold text-amber-900">Arbre #{treeForm.numero}</span>
+                  <span className="text-[10px] font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{treeForm.lat.toFixed(5)}, {treeForm.lng.toFixed(5)}</span>
+                </div>
+                <button onClick={() => setTreeForm(null)} className="text-amber-600 hover:text-amber-900" data-testid="tree-form-cancel">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-semibold text-amber-800 uppercase">Nom botanique</label>
+                  <Input
+                    value={treeForm.nom_botanique}
+                    onChange={(e) => setTreeForm(f => ({ ...f, nom_botanique: e.target.value }))}
+                    placeholder="Ex: Terminalia superba"
+                    className="h-9 text-sm bg-white border-amber-300 focus:border-amber-500"
+                    data-testid="tree-form-nom-botanique"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-amber-800 uppercase">Nom local</label>
+                  <Input
+                    value={treeForm.nom_local}
+                    onChange={(e) => setTreeForm(f => ({ ...f, nom_local: e.target.value }))}
+                    placeholder="Ex: Fraké"
+                    className="h-9 text-sm bg-white border-amber-300 focus:border-amber-500"
+                    data-testid="tree-form-nom-local"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-amber-800 uppercase">Circonference (cm)</label>
+                  <Input
+                    value={treeForm.circonference}
+                    onChange={(e) => setTreeForm(f => ({ ...f, circonference: e.target.value }))}
+                    placeholder="Ex: 120"
+                    className="h-9 text-sm bg-white border-amber-300 focus:border-amber-500"
+                    data-testid="tree-form-circonference"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-amber-800 uppercase">Origine</label>
+                  <select
+                    value={treeForm.origine}
+                    onChange={(e) => setTreeForm(f => ({ ...f, origine: e.target.value }))}
+                    className="w-full h-9 text-sm bg-white border border-amber-300 rounded-md px-2 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    data-testid="tree-form-origine"
+                  >
+                    <option value="">Choisir...</option>
+                    <option value="naturelle">Naturelle</option>
+                    <option value="plantee">Plantee</option>
+                    <option value="spontanee">Spontanee</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-amber-800 uppercase">Decision</label>
+                <select
+                  value={treeForm.decision}
+                  onChange={(e) => setTreeForm(f => ({ ...f, decision: e.target.value }))}
+                  className="w-full h-9 text-sm bg-white border border-amber-300 rounded-md px-2 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                  data-testid="tree-form-decision"
+                >
+                  <option value="">Choisir...</option>
+                  <option value="conserver">Conserver</option>
+                  <option value="abattre">Abattre</option>
+                  <option value="elaguer">Elaguer</option>
+                  <option value="remplacer">Remplacer</option>
+                </select>
+              </div>
+              <Button
+                onClick={saveTreeForm}
+                className="w-full h-11 bg-amber-600 hover:bg-amber-700 text-white font-bold"
+                data-testid="tree-form-save"
+              >
+                <Check className="w-5 h-5 mr-2" /> Enregistrer arbre #{treeForm.numero}
+              </Button>
+            </div>
+          )}
+
           {/* GPS Tracking row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {!tracking ? (
@@ -482,7 +640,13 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
               <div className="space-y-0.5 max-h-32 overflow-y-auto">
                 {trees.map((t, i) => (
                   <div key={`tree-${i}-${t.lat}`} className="flex items-center justify-between text-[10px] font-mono text-[#FFF9C4]">
-                    <span>#{t.numero} {t.lat.toFixed(5)}N {t.lng.toFixed(5)}W {t.nom && `(${t.nom})`}</span>
+                    <span>
+                      #{t.numero} {t.lat.toFixed(5)}N {t.lng.toFixed(5)}W
+                      {t.nom_botanique && ` ${t.nom_botanique}`}
+                      {t.nom_local && ` (${t.nom_local})`}
+                      {t.circonference && ` ${t.circonference}cm`}
+                      {t.decision && <span className={`ml-1 px-1 rounded ${t.decision === 'conserver' ? 'bg-green-800' : t.decision === 'abattre' ? 'bg-red-800' : 'bg-yellow-800'}`}>{t.decision}</span>}
+                    </span>
                     {!readOnly && (
                       <button onClick={() => removeTree(i)} className="text-red-400 hover:text-red-300 ml-2">x</button>
                     )}
