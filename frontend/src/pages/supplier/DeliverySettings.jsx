@@ -64,7 +64,7 @@ const DeliverySettings = () => {
         });
       }
     } catch (error) {
-      /* error logged */
+      console.error('[DeliverySettings] Fetch failed:', error.message);
     } finally {
       setLoading(false);
     }

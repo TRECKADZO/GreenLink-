@@ -482,7 +482,10 @@ const SSRTEAgentDashboard = () => {
                         </td>
                         <td className="p-3">
                           <Badge variant={visit.niveau_risque === 'critique' || visit.niveau_risque === 'eleve' ? 'destructive' : 'secondary'}>
-                            {visit.niveau_risque === 'critique' ? 'Critique' : visit.niveau_risque === 'eleve' ? 'Élevé' : 'Faible'}
+                            {(() => {
+                              const labels = { critique: 'Critique', eleve: 'Élevé' };
+                              return labels[visit.niveau_risque] || 'Faible';
+                            })()}
                           </Badge>
                         </td>
                         <td className="p-3 text-slate-300">
@@ -543,9 +546,10 @@ const SSRTEAgentDashboard = () => {
                             ${caseItem.labor_type === 'hazardous' ? 'bg-orange-600' : ''}
                             ${caseItem.labor_type === 'light_work' ? 'bg-amber-600' : ''}
                           `}>
-                            {caseItem.labor_type === 'worst_forms' ? 'Pire forme' : 
-                             caseItem.labor_type === 'hazardous' ? 'Dangereux' : 
-                             caseItem.labor_type === 'light_work' ? 'Léger' : caseItem.labor_type}
+                            {(() => {
+                              const labels = { worst_forms: 'Pire forme', hazardous: 'Dangereux', light_work: 'Léger' };
+                              return labels[caseItem.labor_type] || caseItem.labor_type;
+                            })()}
                           </Badge>
                         </td>
                         <td className="p-3">
@@ -565,9 +569,10 @@ const SSRTEAgentDashboard = () => {
                             ${caseItem.status === 'resolved' ? 'bg-emerald-600' : ''}
                             ${caseItem.status === 'closed' ? 'bg-slate-600' : ''}
                           `}>
-                            {caseItem.status === 'identified' ? 'Identifié' :
-                             caseItem.status === 'in_progress' ? 'En cours' :
-                             caseItem.status === 'resolved' ? 'Résolu' : 'Fermé'}
+                            {(() => {
+                              const labels = { identified: 'Identifié', in_progress: 'En cours', resolved: 'Résolu' };
+                              return labels[caseItem.status] || 'Fermé';
+                            })()}
                           </Badge>
                         </td>
                         <td className="p-3">

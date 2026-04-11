@@ -38,7 +38,7 @@ const Marketplace = () => {
       const data = await marketplaceApi.getProducts(filters);
       setProducts(data);
     } catch (error) {
-      /* error logged */
+      console.error('[Marketplace] Products fetch failed:', error.message);
     } finally {
       setLoading(false);
     }

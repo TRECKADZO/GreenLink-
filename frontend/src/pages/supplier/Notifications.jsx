@@ -45,7 +45,7 @@ const Notifications = () => {
       await marketplaceApi.markNotificationRead(notificationId);
       fetchNotifications();
     } catch (error) {
-      /* error logged */
+      console.error('[Notifications] Mark read failed:', error.message);
     }
   };
 
