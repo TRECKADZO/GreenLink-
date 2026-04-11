@@ -183,6 +183,11 @@ function perimeterM(polygon) {
   return Math.round(total);
 }
 
+// Memoized path options to avoid re-renders
+const POLYGON_PATH = { color: '#3B82F6', weight: 3, fillColor: '#3B82F6', fillOpacity: 0.15 };
+const POLYLINE_PATH = { color: '#3B82F6', weight: 3, dashArray: '8 4' };
+const CURRENT_POS_PATH = { color: '#EF4444', fillColor: '#EF4444', fillOpacity: 0.6, weight: 3 };
+
 const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }) => {
   const mapRef = useRef(null);
   const containerRef = useRef(null);
@@ -493,12 +498,12 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
 
           {/* Closed polygon (3+ points, not tracking) */}
           {polygon.length >= 3 && !tracking && (
-            <Polygon positions={polygon} pathOptions={{ color: '#3B82F6', weight: 3, fillColor: '#3B82F6', fillOpacity: 0.15 }} />
+            <Polygon positions={polygon} pathOptions={POLYGON_PATH} />
           )}
 
           {/* Open polyline during tracking */}
           {polygon.length >= 2 && tracking && (
-            <Polyline positions={polygon} pathOptions={{ color: '#3B82F6', weight: 3, dashArray: '8 4' }} />
+            <Polyline positions={polygon} pathOptions={POLYLINE_PATH} />
           )}
 
           {/* Polygon vertices (draggable when not tracking/drawing) */}
@@ -514,7 +519,7 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
 
           {/* Current position (blue pulsing dot) */}
           {currentPos && tracking && (
-            <CircleMarker center={currentPos} radius={10} pathOptions={{ color: '#EF4444', fillColor: '#EF4444', fillOpacity: 0.6, weight: 3 }}>
+            <CircleMarker center={currentPos} radius={10} pathOptions={CURRENT_POS_PATH}>
               <Popup className="text-xs">Position actuelle<br />{currentPos[0].toFixed(5)}, {currentPos[1].toFixed(5)}</Popup>
             </CircleMarker>
           )}

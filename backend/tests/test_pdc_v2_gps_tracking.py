@@ -16,8 +16,8 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 TEST_PDC_ID = "69d96ef8a99d36666f85edb2"
 
 # Cooperative credentials
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "test123456"
+COOP_EMAIL = os.environ.get("TEST_COOP_EMAIL", "bielaghana@gmail.com")
+COOP_PASSWORD = os.environ.get("TEST_COOP_PASSWORD", "test123456")
 
 
 @pytest.fixture(scope="module")

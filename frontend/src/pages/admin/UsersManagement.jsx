@@ -272,6 +272,9 @@ const UsersManagement = () => {
       const data = response.data.data;
       
       // Create printable HTML
+      // Sanitize to prevent XSS in print window
+      const esc = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
       const printContent = `
         <!DOCTYPE html>
         <html>
@@ -290,22 +293,22 @@ const UsersManagement = () => {
         </head>
         <body>
           <h1>Liste des Utilisateurs GreenLink</h1>
-          <p class="meta">Exporté le ${new Date().toLocaleDateString('fr-FR')} • ${data.length} utilisateurs</p>
+          <p class="meta">Exporte le ${new Date().toLocaleDateString('fr-FR')} • ${data.length} utilisateurs</p>
           <table>
             <thead>
               <tr>
-                ${Object.keys(data[0] || {}).map(h => `<th>${h}</th>`).join('')}
+                ${Object.keys(data[0] || {}).map(h => `<th>${esc(h)}</th>`).join('')}
               </tr>
             </thead>
             <tbody>
               ${data.map(row => `
                 <tr>
-                  ${Object.values(row).map(v => `<td>${v}</td>`).join('')}
+                  ${Object.values(row).map(v => `<td>${esc(v)}</td>`).join('')}
                 </tr>
               `).join('')}
             </tbody>
           </table>
-          <p class="footer">GreenLink - Plateforme Agritech Côte d'Ivoire</p>
+          <p class="footer">GreenLink - Plateforme Agritech Cote d'Ivoire</p>
         </body>
         </html>
       `;

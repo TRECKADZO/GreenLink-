@@ -302,9 +302,9 @@ async def get_ssrte_visits(
         else:
             query["date_visite"] = {"$lte": datetime.fromisoformat(end_date)}
     
-    if has_children is True:
+    if has_children is True:  # noqa: E712 - tri-state filter
         query["enfants_observes_travaillant"] = {"$gt": 0}
-    elif has_children is False:
+    elif has_children is False:  # noqa: E712
         query["enfants_observes_travaillant"] = 0
     
     # Exécuter la requête

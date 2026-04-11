@@ -15,12 +15,12 @@ import os
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials from test_credentials.md
-COOPERATIVE_EMAIL = "bielaghana@gmail.com"
-COOPERATIVE_PASSWORD = "test123456"
-AGENT_EMAIL = "testagent@test.ci"
-AGENT_PASSWORD = "test123456"
-PLANTEUR_EMAIL = "testplanteur@test.ci"
-PLANTEUR_PASSWORD = "test123456"
+COOPERATIVE_EMAIL = os.environ.get("TEST_COOP_EMAIL", "bielaghana@gmail.com")
+COOPERATIVE_PASSWORD = os.environ.get("TEST_COOP_PASSWORD", "test123456")
+AGENT_EMAIL = os.environ.get("TEST_AGENT_EMAIL", "testagent@test.ci")
+AGENT_PASSWORD = os.environ.get("TEST_AGENT_PASSWORD", "test123456")
+PLANTEUR_EMAIL = os.environ.get("TEST_PLANTEUR_EMAIL", "testplanteur@test.ci")
+PLANTEUR_PASSWORD = os.environ.get("TEST_PLANTEUR_PASSWORD", "test123456")
 
 # PDC ID with etape1_complete (current_step >= 2)
 PDC_ID_STEP2 = "69d97a7ff2a45f9a4e690268"

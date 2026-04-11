@@ -338,7 +338,7 @@ export async function clearAllOfflineData() {
       const tx = db.transaction(store, 'readwrite');
       await tx.store.clear();
       await tx.done;
-    } catch (e) { /* warning */ }
+    } catch (e) { console.warn('[OfflineDB] Warning:', e.message); }
   }
 }
 
@@ -370,7 +370,7 @@ export async function getCoopMembersCount() {
   try {
     const db = await getDB();
     return db.count(STORES.COOP_MEMBERS);
-  } catch (e) { /* warning */ return 0; }
+  } catch (e) { console.warn('[OfflineDB] Warning:', e.message); return 0; }
 }
 
 export async function searchCoopMemberByName(name) {

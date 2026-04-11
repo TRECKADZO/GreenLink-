@@ -167,6 +167,7 @@ def calculate_carbon_score(
 
     # === 3. BRULAGE (penalite -1.5 / bonus +0.5) ===
     brulage_pts = 0
+    # Tri-state: True/False/None — use `is` for identity check on singletons
     if pratique_brulage is True:
         brulage_pts = -1.5
         recommandations.append("URGENT: Arretez la pratique du brulage (-1.5 points)")
@@ -178,10 +179,10 @@ def calculate_carbon_score(
 
     # === 4. ENGRAIS CHIMIQUES (penalite -0.5 / bonus +0.3) ===
     engrais_pts = 0
-    if engrais_chimique is True:
+    if engrais_chimique is True:  # noqa: E712 - tri-state (None/True/False)
         engrais_pts = -0.5
         recommandations.append("Remplacez les engrais chimiques par du compost (-0.5 points)")
-    elif engrais_chimique is False:
+    elif engrais_chimique is False:  # noqa: E712
         engrais_pts = 0.3
     score += engrais_pts
     details["engrais_chimique"] = round(engrais_pts, 2)
