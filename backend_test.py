@@ -14,7 +14,7 @@ import sys
 from datetime import datetime, timedelta
 
 # Get backend URL from environment
-BACKEND_URL = "https://pdc-modernization.preview.emergentagent.com"
+BACKEND_URL = "https://pdc-autofill.preview.emergentagent.com"
 BASE_URL = f"{BACKEND_URL}/api"
 
 class Colors:
