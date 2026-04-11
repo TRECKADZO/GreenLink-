@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
 from typing import Optional
+from bson import ObjectId
 import io
 import logging
 
@@ -30,62 +31,85 @@ async def get_ars1000_stats(current_user=Depends(get_current_user())):
 
     db = get_db()
 
-    # PDC Stats
-    total_pdc = await db.pdc.count_documents({})
+    # PDC v2 Stats
+    total_pdc = await db.pdc_v2.count_documents({"statut": {"$nin": ["archive"]}})
     pdc_by_status = {}
-    for status in ["brouillon", "en_cours", "visite_terrain", "complete_agent", "valide"]:
-        pdc_by_status[status] = await db.pdc.count_documents({"statut": status})
+    for status in ["brouillon", "etape1_en_cours", "etape1_complete", "etape2_en_cours", "etape2_complete", "etape3_en_cours", "valide"]:
+        pdc_by_status[status] = await db.pdc_v2.count_documents({"statut": status})
 
-    # Average conformity
-    pipeline_conf = [
-        {"$match": {"pourcentage_conformite": {"$exists": True, "$gt": 0}}},
-        {"$group": {"_id": None, "avg": {"$avg": "$pourcentage_conformite"}, "min": {"$min": "$pourcentage_conformite"}, "max": {"$max": "$pourcentage_conformite"}}}
-    ]
-    conf_result = await db.pdc.aggregate(pipeline_conf).to_list(1)
-    avg_conformite = round(conf_result[0]["avg"], 1) if conf_result else 0
-    min_conformite = round(conf_result[0]["min"], 1) if conf_result else 0
-    max_conformite = round(conf_result[0]["max"], 1) if conf_result else 0
+    # PDC v2 conformity: based on fiche completion (8 fiches)
+    pdc_v2_list = await db.pdc_v2.find({"statut": {"$nin": ["archive"]}}).to_list(1000)
+    scores = []
+    for p in pdc_v2_list:
+        s1 = p.get("step1", {})
+        s2 = p.get("step2", {})
+        s3 = p.get("step3", {})
+        filled = 0
+        f1 = s1.get("fiche1", {})
+        if f1.get("producteur", {}).get("nom") or (f1.get("membres_menage") and len(f1["membres_menage"]) > 0):
+            filled += 1
+        f2 = s1.get("fiche2", {})
+        if f2.get("cultures") or f2.get("arbres") or (f2.get("carte_parcelle", {}).get("polygon") and len(f2["carte_parcelle"]["polygon"]) > 0):
+            filled += 1
+        f3 = s1.get("fiche3", {})
+        if f3.get("etat_cacaoyere", {}).get("dispositif_plantation") or f3.get("maladies"):
+            filled += 1
+        f4 = s1.get("fiche4", {})
+        if f4.get("epargne") or f4.get("production_cacao") or f4.get("main_oeuvre"):
+            filled += 1
+        f5 = s2.get("fiche5", {})
+        if f5.get("analyses") and len(f5["analyses"]) > 0:
+            filled += 1
+        f6 = s3.get("fiche6", {})
+        if f6.get("axes") and len(f6["axes"]) > 0:
+            filled += 1
+        f7 = s3.get("fiche7", {})
+        if f7.get("actions") and len(f7["actions"]) > 0:
+            filled += 1
+        f8 = s3.get("fiche8", {})
+        if f8.get("moyens") and len(f8["moyens"]) > 0:
+            filled += 1
+        scores.append(round(filled / 8 * 100))
 
-    # Conformity distribution
+    avg_conformite = round(sum(scores) / len(scores), 1) if scores else 0
+    min_conformite = min(scores) if scores else 0
+    max_conformite = max(scores) if scores else 0
+
     conf_distribution = {"excellent": 0, "bon": 0, "moyen": 0, "faible": 0}
-    async for pdc in db.pdc.find({"pourcentage_conformite": {"$exists": True}}, {"pourcentage_conformite": 1}):
-        score = pdc.get("pourcentage_conformite", 0)
-        if score >= 80:
+    for s in scores:
+        if s >= 80:
             conf_distribution["excellent"] += 1
-        elif score >= 60:
+        elif s >= 60:
             conf_distribution["bon"] += 1
-        elif score >= 40:
+        elif s >= 40:
             conf_distribution["moyen"] += 1
         else:
             conf_distribution["faible"] += 1
 
-    # PDC completion rate (fiches filled)
-    fiches_completion = {"identification": 0, "epargne": 0, "menage_detail": 0, "exploitation": 0, "cultures": 0, "inventaire_arbres": 0, "arbres_ombrage_resume": 0, "materiel_detail": 0, "matrice_strategique_detail": 0, "programme_annuel": 0}
-    total_pdcs_checked = 0
-    async for pdc in db.pdc.find({}, {"identification": 1, "epargne": 1, "menage_detail": 1, "exploitation": 1, "cultures": 1, "inventaire_arbres": 1, "arbres_ombrage_resume": 1, "materiel_detail": 1, "matrice_strategique_detail": 1, "programme_annuel": 1}):
-        total_pdcs_checked += 1
-        ident = pdc.get("identification", {})
-        if ident and (ident.get("nom") or ident.get("prenoms")):
-            fiches_completion["identification"] += 1
-        if pdc.get("epargne"):
-            fiches_completion["epargne"] += 1
-        if isinstance(pdc.get("menage_detail"), list) and len(pdc.get("menage_detail", [])) > 0:
-            fiches_completion["menage_detail"] += 1
-        if pdc.get("exploitation") and pdc["exploitation"].get("superficie_totale_ha"):
-            fiches_completion["exploitation"] += 1
-        if isinstance(pdc.get("cultures"), list) and len(pdc.get("cultures", [])) > 0:
-            fiches_completion["cultures"] += 1
-        if isinstance(pdc.get("inventaire_arbres"), list) and len(pdc.get("inventaire_arbres", [])) > 0:
-            fiches_completion["inventaire_arbres"] += 1
-        if pdc.get("arbres_ombrage_resume"):
-            fiches_completion["arbres_ombrage_resume"] += 1
-        if isinstance(pdc.get("materiel_detail"), list) and len(pdc.get("materiel_detail", [])) > 0:
-            fiches_completion["materiel_detail"] += 1
-        if isinstance(pdc.get("matrice_strategique_detail"), list) and len(pdc.get("matrice_strategique_detail", [])) > 0:
-            fiches_completion["matrice_strategique_detail"] += 1
-        if isinstance(pdc.get("programme_annuel"), list) and len(pdc.get("programme_annuel", [])) > 0:
-            fiches_completion["programme_annuel"] += 1
+    # PDC v2 fiche completion rates
+    fiches_completion = {"fiche1_producteur": 0, "fiche1_menage": 0, "fiche2_exploitation": 0, "fiche2_arbres": 0, "fiche3_cacaoyere": 0, "fiche4_socioeco": 0, "fiche5_analyse": 0, "fiche6_planification": 0}
+    for p in pdc_v2_list:
+        s1 = p.get("step1", {})
+        s2 = p.get("step2", {})
+        s3 = p.get("step3", {})
+        if s1.get("fiche1", {}).get("producteur", {}).get("nom"):
+            fiches_completion["fiche1_producteur"] += 1
+        if s1.get("fiche1", {}).get("membres_menage") and len(s1["fiche1"]["membres_menage"]) > 0:
+            fiches_completion["fiche1_menage"] += 1
+        if s1.get("fiche2", {}).get("cultures") or s1.get("fiche2", {}).get("arbres"):
+            fiches_completion["fiche2_exploitation"] += 1
+        if s1.get("fiche2", {}).get("arbres") and len(s1["fiche2"]["arbres"]) > 0:
+            fiches_completion["fiche2_arbres"] += 1
+        if s1.get("fiche3", {}).get("etat_cacaoyere"):
+            fiches_completion["fiche3_cacaoyere"] += 1
+        if s1.get("fiche4", {}).get("epargne") or s1.get("fiche4", {}).get("production_cacao"):
+            fiches_completion["fiche4_socioeco"] += 1
+        if s2.get("fiche5", {}).get("analyses") and len(s2["fiche5"]["analyses"]) > 0:
+            fiches_completion["fiche5_analyse"] += 1
+        if s3.get("fiche6", {}).get("axes") and len(s3["fiche6"]["axes"]) > 0:
+            fiches_completion["fiche6_planification"] += 1
 
+    total_pdcs_checked = len(pdc_v2_list)
     fiches_pct = {}
     for k, v in fiches_completion.items():
         fiches_pct[k] = round((v / total_pdcs_checked) * 100, 1) if total_pdcs_checked > 0 else 0
@@ -123,37 +147,32 @@ async def get_ars1000_stats(current_user=Depends(get_current_user())):
     for s in ["ouverte", "en_cours", "resolue", "fermee"]:
         recl_by_status[s] = await db.reclamations.count_documents({"statut": s})
 
-    # Agroforesterie summary
+    # Agroforesterie summary from PDC v2
     total_arbres_inventories = 0
     total_ombrage = 0
-    async for pdc in db.pdc.find({}, {"inventaire_arbres": 1, "arbres_ombrage": 1, "arbres_ombrage_resume": 1}):
-        inv = pdc.get("inventaire_arbres", [])
-        if isinstance(inv, list):
-            total_arbres_inventories += len(inv)
-        ao = pdc.get("arbres_ombrage", {})
-        aor = pdc.get("arbres_ombrage_resume", {})
-        total_ombrage += int(ao.get("nombre_total", 0) or 0) + int(aor.get("total", 0) or 0)
+    for p in pdc_v2_list:
+        f2 = p.get("step1", {}).get("fiche2", {})
+        arbres = f2.get("arbres", [])
+        carte_a = (f2.get("carte_parcelle") or {}).get("arbres_ombrage", [])
+        total_arbres_inventories += len(arbres)
+        total_ombrage += len(arbres) + len(carte_a)
 
-    # Agent visits
-    pipeline_visits = [
-        {"$match": {"last_visit_at": {"$exists": True}}},
-        {"$count": "total"}
-    ]
-    visit_result = await db.pdc.aggregate(pipeline_visits).to_list(1)
-    total_visites_terrain = visit_result[0]["total"] if visit_result else 0
+    # PDC v2 validated count as "visites terrain"
+    total_visites_terrain = len([p for p in pdc_v2_list if p.get("current_step", 1) >= 2])
 
-    # Top cooperatives by PDC count
+    # Top cooperatives by PDC v2 count
     pipeline_top_coop = [
-        {"$group": {"_id": "$coop_id", "count": {"$sum": 1}, "avg_conf": {"$avg": "$pourcentage_conformite"}}},
+        {"$match": {"statut": {"$nin": ["archive"]}}},
+        {"$group": {"_id": "$coop_id", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
         {"$limit": 10}
     ]
     top_coops = []
-    async for c in db.pdc.aggregate(pipeline_top_coop):
+    async for c in db.pdc_v2.aggregate(pipeline_top_coop):
         if c["_id"]:
-            coop = await db.users.find_one({"_id": c["_id"]}, {"_id": 0, "cooperative_name": 1, "full_name": 1})
+            coop = await db.users.find_one({"_id": ObjectId(c["_id"]) if ObjectId.is_valid(str(c["_id"])) else c["_id"]}, {"_id": 0, "cooperative_name": 1, "full_name": 1})
             name = (coop or {}).get("cooperative_name") or (coop or {}).get("full_name") or str(c["_id"])
-            top_coops.append({"name": name, "pdc_count": c["count"], "avg_conformite": round(c.get("avg_conf", 0) or 0, 1)})
+            top_coops.append({"name": name, "pdc_count": c["count"]})
 
     return {
         "pdc": {

@@ -172,14 +172,56 @@ async def get_certification_dashboard(current_user: dict = Depends(get_current_u
         result = await db.certification.insert_one(cert)
         cert["_id"] = result.inserted_id
 
-    # Calculate real-time conformity from PDCs and Lots
-    pdc_pipeline = [
-        {"$match": {"coop_id": coop_id}},
-        {"$group": {"_id": None, "avg": {"$avg": "$pourcentage_conformite"}, "total": {"$sum": 1}}}
-    ]
-    pdc_agg = await db.pdc.aggregate(pdc_pipeline).to_list(1)
-    pdc_pct = round(pdc_agg[0]["avg"], 1) if pdc_agg and pdc_agg[0].get("avg") else 0
-    total_pdcs = pdc_agg[0]["total"] if pdc_agg else 0
+    # Calculate real-time conformity from PDC v2 and Lots
+    # PDC v2: count fiches filled per step
+    pdc_v2_cursor = db.pdc_v2.find({"coop_id": coop_id, "statut": {"$nin": ["archive"]}})
+    pdc_v2_list = await pdc_v2_cursor.to_list(500)
+    total_pdcs = len(pdc_v2_list)
+
+    # Calculate PDC conformity based on fiche completion
+    if total_pdcs > 0:
+        total_score = 0
+        for p in pdc_v2_list:
+            s1 = p.get("step1", {})
+            s2 = p.get("step2", {})
+            s3 = p.get("step3", {})
+            fiches_filled = 0
+            # Fiche 1: producteur info
+            f1 = s1.get("fiche1", {})
+            if f1.get("producteur", {}).get("nom") or (f1.get("membres_menage") and len(f1["membres_menage"]) > 0):
+                fiches_filled += 1
+            # Fiche 2: exploitation (cultures or arbres or carte)
+            f2 = s1.get("fiche2", {})
+            if f2.get("cultures") or f2.get("arbres") or (f2.get("carte_parcelle", {}).get("polygon") and len(f2["carte_parcelle"]["polygon"]) > 0):
+                fiches_filled += 1
+            # Fiche 3: cacaoyere
+            f3 = s1.get("fiche3", {})
+            if f3.get("etat_cacaoyere", {}).get("dispositif_plantation") or f3.get("maladies"):
+                fiches_filled += 1
+            # Fiche 4: socio-economique
+            f4 = s1.get("fiche4", {})
+            if f4.get("epargne") or f4.get("production_cacao") or f4.get("main_oeuvre"):
+                fiches_filled += 1
+            # Fiche 5: analyse
+            f5 = s2.get("fiche5", {})
+            if f5.get("analyses") and len(f5["analyses"]) > 0:
+                fiches_filled += 1
+            # Fiche 6: planification
+            f6 = s3.get("fiche6", {})
+            if f6.get("axes") and len(f6["axes"]) > 0:
+                fiches_filled += 1
+            # Fiche 7: programme annuel
+            f7 = s3.get("fiche7", {})
+            if f7.get("actions") and len(f7["actions"]) > 0:
+                fiches_filled += 1
+            # Fiche 8: moyens et couts
+            f8 = s3.get("fiche8", {})
+            if f8.get("moyens") and len(f8["moyens"]) > 0:
+                fiches_filled += 1
+            total_score += round(fiches_filled / 8 * 100)
+        pdc_pct = round(total_score / total_pdcs, 1)
+    else:
+        pdc_pct = 0
 
     lots_pipeline = [
         {"$match": {"coop_id": coop_id}},
@@ -208,25 +250,74 @@ async def get_certification_dashboard(current_user: dict = Depends(get_current_u
     cert["pourcentage_conformite_ars2"] = qualite_pct
     cert["pourcentage_conformite_global"] = global_pct
 
-    # Arbres ombrage stats
-    arbres_count = await db.arbres_ombrage.count_documents({"coop_id": coop_id})
-    arbres_pipeline = [
+    # Arbres ombrage stats — from PDC v2 fiche2 arbres + carte_parcelle
+    total_arbres = 0
+    especes_set = set()
+    for p in pdc_v2_list:
+        f2 = p.get("step1", {}).get("fiche2", {})
+        arbres = f2.get("arbres", [])
+        carte_arbres = (f2.get("carte_parcelle") or {}).get("arbres_ombrage", [])
+        total_arbres += len(arbres) + len(carte_arbres)
+        for a in arbres:
+            nom = (a.get("nom_botanique") or a.get("nom_local") or "").strip().lower()
+            if nom and nom != "-":
+                especes_set.add(nom)
+        for a in carte_arbres:
+            nom = (a.get("nom") or a.get("espece") or "").strip().lower()
+            if nom and nom != "-" and nom != "arbre":
+                especes_set.add(nom)
+    nb_especes = len(especes_set)
+
+    # Also check legacy arbres_ombrage collection
+    legacy_arbres_agg = await db.arbres_ombrage.aggregate([
         {"$match": {"coop_id": coop_id}},
-        {"$group": {
-            "_id": None,
-            "total_arbres": {"$sum": "$nombre"},
-            "especes": {"$addToSet": "$espece"}
-        }}
-    ]
-    arbres_agg = await db.arbres_ombrage.aggregate(arbres_pipeline).to_list(1)
-    total_arbres = arbres_agg[0]["total_arbres"] if arbres_agg else 0
-    nb_especes = len(arbres_agg[0]["especes"]) if arbres_agg else 0
+        {"$group": {"_id": None, "total": {"$sum": "$nombre"}, "especes": {"$addToSet": "$espece"}}}
+    ]).to_list(1)
+    if legacy_arbres_agg:
+        total_arbres += legacy_arbres_agg[0].get("total", 0)
+        for e in legacy_arbres_agg[0].get("especes", []):
+            if e:
+                especes_set.add(e.lower())
+        nb_especes = len(especes_set)
 
     # NC counts
     nc_ouvertes = len([nc for nc in cert.get("non_conformites", []) if nc.get("statut") == "ouverte"])
 
     # PDC validés
-    pdc_valides = await db.pdc.count_documents({"coop_id": coop_id, "statut": "valide"})
+    pdc_valides = len([p for p in pdc_v2_list if p.get("statut") == "valide"])
+
+    # Score ombrage moyen (from PDC v2)
+    shade_scores = []
+    try:
+        from routes.carbon_score_engine import calculate_shade_score_ars1000
+        for p in pdc_v2_list:
+            f2 = p.get("step1", {}).get("fiche2", {})
+            f3 = p.get("step1", {}).get("fiche3", {})
+            arbres = f2.get("arbres", [])
+            carte_a = (f2.get("carte_parcelle") or {}).get("arbres_ombrage", [])
+            n_arbres = len(arbres) + len(carte_a)
+            if n_arbres > 0:
+                esp = set()
+                for a in arbres:
+                    nm = (a.get("nom_botanique") or a.get("nom_local") or "").strip().lower()
+                    if nm and nm != "-":
+                        esp.add(nm)
+                for a in carte_a:
+                    nm = (a.get("nom") or a.get("espece") or "").strip().lower()
+                    if nm and nm != "-" and nm != "arbre":
+                        esp.add(nm)
+                sup = sum(float(c.get("superficie_ha", 0) or 0) for c in f2.get("cultures", [])) or 1.0
+                s3_count = sum(1 for a in arbres if float(a.get("circonference", 0) or 0) >= 200)
+                shade_r = calculate_shade_score_ars1000(
+                    nombre_arbres_ombrage=n_arbres, superficie_ha=sup,
+                    nombre_especes=len(esp), has_strate3=s3_count > 0,
+                    evaluation_agent=(f3.get("etat_cacaoyere") or {}).get("ombrage", ""),
+                )
+                shade_scores.append(shade_r["score"])
+    except Exception:
+        pass
+    score_ombrage_moyen = round(sum(shade_scores) / len(shade_scores), 1) if shade_scores else 0
+    pdc_conformes_ombrage = len([s for s in shade_scores if s >= 60])
 
     # Total récoltes kg
     recolte_agg = await db.ars1000_declarations_recoltes.aggregate([
@@ -253,6 +344,8 @@ async def get_certification_dashboard(current_user: dict = Depends(get_current_u
             "nombre_especes": nb_especes,
             "nc_ouvertes": nc_ouvertes,
             "total_kg_recoltes": total_kg_recoltes,
+            "score_ombrage_moyen": score_ombrage_moyen,
+            "pdc_conformes_ombrage": pdc_conformes_ombrage,
         }
     }
 

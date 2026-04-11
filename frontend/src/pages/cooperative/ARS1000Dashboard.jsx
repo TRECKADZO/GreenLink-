@@ -120,6 +120,34 @@ const CertificationTab = ({ dashboard, onRefresh }) => {
         ))}
       </div>
 
+      {/* Score Ombrage ARS 1000 */}
+      {(stats.score_ombrage_moyen > 0 || stats.nombre_especes > 0) && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm" data-testid="cert-shade-score">
+          <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Leaf className="w-5 h-5 text-emerald-500" /> Score Ombrage ARS 1000
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`rounded-xl p-4 border ${stats.score_ombrage_moyen >= 60 ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+              <p className="text-xs font-medium mb-1 text-gray-600">Score Moyen</p>
+              <p className={`text-3xl font-bold ${stats.score_ombrage_moyen >= 60 ? 'text-emerald-700' : 'text-amber-700'}`}>{stats.score_ombrage_moyen}/100</p>
+              <div className="h-2 bg-white/60 rounded-full mt-2 overflow-hidden">
+                <div className={`h-full rounded-full ${stats.score_ombrage_moyen >= 60 ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{ width: `${stats.score_ombrage_moyen}%` }} />
+              </div>
+            </div>
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+              <p className="text-xs text-blue-600 font-medium mb-1">Especes Identifiees</p>
+              <p className="text-3xl font-bold text-blue-800">{stats.nombre_especes}</p>
+              <p className="text-xs text-blue-500 mt-1">{stats.nombre_especes >= 3 ? 'Min 3 requis (conforme)' : 'Min 3 requis'}</p>
+            </div>
+            <div className="bg-teal-50 rounded-xl p-4 border border-teal-100">
+              <p className="text-xs text-teal-600 font-medium mb-1">PDC Conformes Ombrage</p>
+              <p className="text-3xl font-bold text-teal-800">{stats.pdc_conformes_ombrage || 0}</p>
+              <p className="text-xs text-teal-500 mt-1">sur {stats.total_pdcs} PDC</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Audits */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <h3 className="text-base font-bold text-gray-900 mb-4">Cycle d'Audit</h3>
@@ -146,23 +174,105 @@ const CertificationTab = ({ dashboard, onRefresh }) => {
   );
 };
 
-// ============= PDC TAB (v2 - Stepper) =============
+// ============= PDC TAB (v2 - Enriched Dashboard) =============
 const PDCTab = () => {
   const navigate = useNavigate();
+  const [pdcStats, setPdcStats] = useState(null);
+  const [pdcs, setPdcs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [statsRes, listRes] = await Promise.all([
+          fetch(`${API_URL}/api/pdc-v2/stats/overview`, { headers: authHeaders() }),
+          fetch(`${API_URL}/api/pdc-v2/list?limit=10`, { headers: authHeaders() }),
+        ]);
+        if (statsRes.ok) setPdcStats(await statsRes.json());
+        if (listRes.ok) {
+          const data = await listRes.json();
+          setPdcs(data.pdcs || []);
+        }
+      } catch { /* ignore */ }
+      finally { setLoading(false); }
+    };
+    load();
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="animate-spin w-8 h-8 text-green-600" /></div>;
+
+  const statusColors = {
+    brouillon: 'bg-gray-100 text-gray-600',
+    etape1_en_cours: 'bg-blue-100 text-blue-700',
+    etape1_complete: 'bg-cyan-100 text-cyan-700',
+    etape2_en_cours: 'bg-purple-100 text-purple-700',
+    etape2_complete: 'bg-indigo-100 text-indigo-700',
+    etape3_en_cours: 'bg-amber-100 text-amber-700',
+    valide: 'bg-emerald-100 text-emerald-700',
+  };
+
   return (
     <div className="space-y-4" data-testid="pdc-tab">
-      <div className="bg-white border border-[#E5E5E0] rounded-md p-6 text-center">
-        <FileText className="w-10 h-10 text-[#1A3622] mx-auto mb-3" />
-        <h3 className="text-lg font-semibold text-[#1A3622] mb-1">Module PDC v2 - Stepper 3 Etapes</h3>
-        <p className="text-sm text-[#6B7280] mb-4">Gerez les Plans de Developpement de la Cacaoyere avec le nouveau workflow en 3 etapes (Collecte, Analyse, Planification).</p>
-        <Button
-          onClick={() => navigate('/cooperative/pdc-v2')}
-          className="bg-[#1A3622] hover:bg-[#112417] text-white"
-          data-testid="pdc-v2-open-btn"
-        >
-          <FileText className="w-4 h-4 mr-2" /> Ouvrir le module PDC v2
+      {/* Stats overview */}
+      {pdcStats && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {[
+            { label: 'Total PDC', value: pdcStats.total, color: 'green' },
+            { label: 'Brouillons', value: pdcStats.brouillons, color: 'gray' },
+            { label: 'Etape 1', value: pdcStats.etape1_complete, color: 'blue' },
+            { label: 'Etape 2-3', value: (pdcStats.etape2_en_cours || 0) + (pdcStats.etape3_en_cours || 0), color: 'purple' },
+            { label: 'Valides', value: pdcStats.valides, color: 'emerald' },
+          ].map((s, i) => (
+            <div key={`el-${i}`} className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm text-center">
+              <p className={`text-2xl font-bold text-${s.color}-700`}>{s.value}</p>
+              <p className="text-xs text-gray-500">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Quick access */}
+      <div className="flex justify-between items-center">
+        <h3 className="font-semibold text-gray-900">Derniers PDC</h3>
+        <Button size="sm" onClick={() => navigate('/cooperative/pdc-v2')} className="bg-[#1A3622] hover:bg-[#112417] text-white" data-testid="pdc-v2-open-btn">
+          <FileText className="w-4 h-4 mr-1" /> Voir tous les PDC
         </Button>
       </div>
+
+      {/* PDC list */}
+      {pdcs.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">Aucun PDC. Commencez par creer un PDC pour vos planteurs.</p>
+          <Button size="sm" onClick={() => navigate('/cooperative/pdc-v2')} className="mt-3 bg-[#1A3622] hover:bg-[#112417] text-white">
+            <Plus className="w-4 h-4 mr-1" /> Nouveau PDC
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {pdcs.map(p => (
+            <div
+              key={p.id}
+              className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:bg-gray-50 cursor-pointer transition-colors"
+              onClick={() => navigate(`/cooperative/pdc-v2/${p.id}`)}
+              data-testid={`pdc-item-${p.id}`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-sm text-gray-900">{p.farmer_name || 'Planteur'}</p>
+                  <p className="text-xs text-gray-400">Etape {p.current_step}/3 - Mis a jour {p.updated_at ? new Date(p.updated_at).toLocaleDateString('fr-FR') : '-'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={statusColors[p.statut] || 'bg-gray-100 text-gray-600'}>
+                    {p.statut?.replace(/_/g, ' ')}
+                  </Badge>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -1485,35 +1595,58 @@ const RegistresTab = ({ dashboard, onRefresh }) => {
 
 // ======== DIAGNOSTIC CONFORMITE PDC ========
 const DiagnosticConformitePDC = () => {
+  const navigate = useNavigate();
   const [pdcs, setPdcs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/ars1000/pdc/cooperative/all?limit=100`, { headers: authHeaders() });
+        const res = await fetch(`${API_URL}/api/pdc-v2/list?limit=100`, { headers: authHeaders() });
         if (res.ok) {
           const data = await res.json();
-          setPdcs(data.pdcs || data || []);
+          setPdcs(data.pdcs || []);
         }
-      } catch (e) { /* error */ }
+      } catch { /* error */ }
       finally { setLoading(false); }
     };
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // PDC v2 fiche checks (8 fiches across 3 steps)
   const ficheChecks = [
-    { key: 'identification', label: 'F1: Identification', check: (p) => p.identification?.nom && p.identification?.prenoms },
-    { key: 'epargne', label: 'F1: Epargne', check: (p) => !!p.epargne },
-    { key: 'menage', label: 'F2: Menage', check: (p) => Array.isArray(p.menage_detail) && p.menage_detail.length > 0 },
-    { key: 'exploitation', label: 'F3: Exploitation', check: (p) => p.exploitation?.superficie_totale_ha },
-    { key: 'cultures', label: 'F3: Cultures', check: (p) => Array.isArray(p.cultures) && p.cultures.length > 0 },
-    { key: 'inventaire', label: 'F4: Inventaire arbres', check: (p) => Array.isArray(p.inventaire_arbres) && p.inventaire_arbres.length > 0 },
-    { key: 'ombrage', label: 'F5: Ombrage', check: (p) => !!p.arbres_ombrage_resume || (p.arbres_ombrage?.nombre_total > 0) },
-    { key: 'materiel', label: 'F6: Materiel', check: (p) => Array.isArray(p.materiel_detail) && p.materiel_detail.length > 0 },
-    { key: 'strategie', label: 'F7: Strategie', check: (p) => Array.isArray(p.matrice_strategique_detail) && p.matrice_strategique_detail.length > 0 },
-    { key: 'programme', label: 'F7: Programme', check: (p) => Array.isArray(p.programme_annuel) && p.programme_annuel.length > 0 },
+    { key: 'f1_producteur', label: 'F1: Producteur', check: (p) => {
+      const f1 = p.step1?.fiche1 || {};
+      return !!(f1.producteur?.nom || (f1.membres_menage && f1.membres_menage.length > 0));
+    }},
+    { key: 'f2_exploitation', label: 'F2: Exploitation', check: (p) => {
+      const f2 = p.step1?.fiche2 || {};
+      return !!(f2.cultures?.length > 0 || f2.arbres?.length > 0 || (f2.carte_parcelle?.polygon?.length > 0));
+    }},
+    { key: 'f2_arbres', label: 'F2: Arbres ombrage', check: (p) => {
+      const f2 = p.step1?.fiche2 || {};
+      return !!(f2.arbres?.length > 0 || f2.carte_parcelle?.arbres_ombrage?.length > 0);
+    }},
+    { key: 'f3_cacaoyere', label: 'F3: Cacaoyere', check: (p) => {
+      const f3 = p.step1?.fiche3 || {};
+      return !!(f3.etat_cacaoyere?.dispositif_plantation || f3.maladies?.length > 0 || f3.etat_sol?.position);
+    }},
+    { key: 'f4_socioeco', label: 'F4: Socio-economique', check: (p) => {
+      const f4 = p.step1?.fiche4 || {};
+      return !!(f4.epargne?.length > 0 || f4.production_cacao?.length > 0 || f4.main_oeuvre?.length > 0);
+    }},
+    { key: 'f5_analyse', label: 'F5: Analyse', check: (p) => {
+      const f5 = p.step2?.fiche5 || {};
+      return !!(f5.analyses?.length > 0);
+    }},
+    { key: 'f6_planification', label: 'F6: Planification', check: (p) => {
+      const f6 = p.step3?.fiche6 || {};
+      return !!(f6.axes?.length > 0);
+    }},
+    { key: 'f7_programme', label: 'F7: Programme', check: (p) => {
+      const f7 = p.step3?.fiche7 || {};
+      return !!(f7.actions?.length > 0);
+    }},
   ];
 
   const pdcsWithScore = pdcs.map(p => {
@@ -1542,7 +1675,7 @@ const DiagnosticConformitePDC = () => {
           </div>
           <div>
             <p className="font-bold text-lg text-gray-900">Diagnostic Conformite PDC</p>
-            <p className="text-sm text-gray-600">Taux de remplissage moyen des 7 fiches ARS 1000</p>
+            <p className="text-sm text-gray-600">Taux de remplissage moyen des 8 fiches PDC v2</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3">
@@ -1588,8 +1721,8 @@ const DiagnosticConformitePDC = () => {
             const scoreColor = p.ficheScore >= 80 ? 'text-green-600' : p.ficheScore >= 50 ? 'text-amber-600' : 'text-red-600';
             const scoreBg = p.ficheScore >= 80 ? 'bg-green-100' : p.ficheScore >= 50 ? 'bg-amber-100' : 'bg-red-100';
             const filled = p.ficheChecks.filter(c => c.ok).length;
-            const nom = p.identification?.nom || 'Planteur';
-            const prenoms = p.identification?.prenoms || '';
+            const nom = p.farmer_name || 'Planteur';
+            const prenoms = '';
             return (
               <details key={p.id} className={`rounded-xl border overflow-hidden ${p.ficheScore < 50 ? 'border-red-200' : 'border-gray-100'}`} data-testid={`pdc-diag-${p.id}`}>
                 <summary className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors">
@@ -1597,13 +1730,13 @@ const DiagnosticConformitePDC = () => {
                     <span className={`text-xs font-bold ${scoreColor}`}>{p.ficheScore}%</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-gray-900 truncate">{nom} {prenoms}</p>
-                    <p className="text-[10px] text-gray-400">{filled}/{ficheChecks.length} fiches | {p.statut}</p>
+                    <p className="font-semibold text-sm text-gray-900 truncate">{nom}</p>
+                    <p className="text-[10px] text-gray-400">{filled}/{ficheChecks.length} fiches | Etape {p.current_step || 1}/3 | {p.statut}</p>
                   </div>
-                  <Badge className={p.statut === 'valide' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}>{p.statut}</Badge>
+                  <Badge className={p.statut === 'valide' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}>{p.statut?.replace(/_/g, ' ')}</Badge>
                 </summary>
                 <div className="px-3 pb-3 border-t pt-2">
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-2 gap-1 mb-2">
                     {p.ficheChecks.map(c => (
                       <div key={c.key} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] ${c.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                         {c.ok ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
@@ -1611,6 +1744,9 @@ const DiagnosticConformitePDC = () => {
                       </div>
                     ))}
                   </div>
+                  <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => navigate(`/cooperative/pdc-v2/${p.id}`)} data-testid={`pdc-goto-${p.id}`}>
+                    <Eye className="w-3 h-3 mr-1" /> Voir le PDC
+                  </Button>
                 </div>
               </details>
             );
