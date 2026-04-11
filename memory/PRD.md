@@ -9,29 +9,23 @@ Plateforme agritech Cote d'Ivoire - modules ARS 1000 pour certification cacao du
 - **Carte interactive Garmin eTrex 20** dans Fiche 2:
   - Polygone bleu limites parcelle + pins jaunes arbres ombrage
   - **GPS Tracking continu** : watchPosition, filtre 3m, Haversine, bandeau rouge temps reel
-  - Boutons: Enregistrer GPS, Trace manuel, Marquer arbre, Capturer PDF
-  - Info box Garmin + liste waypoints + snapshot html2canvas
+  - **Bouton permanent "Ajouter arbre ici"** (11 avril): Capture GPS instantanee, disponible PENDANT et APRES le trace du polygone. Formulaire rapide: Nom botanique, Nom local, Circonference, Origine, Decision. Coexiste avec placement manuel.
+  - Boutons: Enregistrer GPS, Trace manuel, Marquer arbre (manuel), Capturer PDF
+  - Info box Garmin + liste waypoints enrichie (nom, circ., decision) + snapshot html2canvas
 - PDF officiel: carte statique + liste arbres + numerotation pages + header GreenLink
 - 8 fiches dynamiques, RBAC strict, validation cooperative
 
 ### Migration PDC v1 -> v2 (11 avril 2026)
-- **Ancien systeme PDC supprime**: `ars1000_pdc.py`, `AgentVisitePDC.jsx`, `FarmerPDCPage.jsx`
-- **Routes redirigees**: `/farmer/pdc` et `/agent/visite-pdc` pointent vers `PDCListPage` (PDC v2)
-- **Navigation mise a jour**: Agent Terrain dashboard et Farmer dashboard redirigent vers PDC v2
+- Ancien systeme PDC supprime. Routes redirigees vers PDC v2. Navigation mise a jour.
 
 ### Workflow RBAC PDC v2 (11 avril 2026)
-- **Etape 1 lecture seule pour cooperative**: Apres soumission agent, la cooperative consulte en mode lecture. Backend bloque PUT step1 (403).
-- **Bannieres de workflow contextuelles**: Bleue (lecture step1), Ambre (analyse step2), Violette (planification step3), Verte (planteur valide)
-- **Planteur voit PDC uniquement apres validation** par l'agronome
+- Etape 1 lecture seule pour cooperative apres soumission agent. Bannieres contextuelles. Planteur voit PDC apres validation.
 
-### Offline-First Complet avec Cache Tuiles (11 avril 2026)
-- **Service Worker TILES_CACHE**: Cache dedie pour tuiles OpenStreetMap, strategie Cache-First, limite 200Mo, nettoyage LRU automatique
-- **Pre-telechargement par zone**: Calcul des tuiles necessaires (zoom 10-17) a partir du centre GPS ou polygone parcelle, telechargement par lots de 6 avec progression
-- **TilesDownloader (dashboard agent)**: Composant complet avec stats cache (tuiles/Mo), barre de progression, bouton telechargement, bouton vider cache
-- **TilesDownloader compact (carte Garmin)**: Bouton inline pour telecharger les tuiles de la parcelle en cours
-- **Indicateur cache sur carte**: Badge "En ligne" (vert) ou "Cache hors-ligne" (ambre) sur la carte Garmin
-- **Communication SW <-> page**: Messages postMessage (PRECACHE_TILES, TILES_PRECACHE_PROGRESS, GET_TILES_CACHE_STATS, CLEAR_TILES_CACHE)
-- **Fallback offline**: Tuile transparente 1px si tuile non disponible en cache
+### Offline-First avec Cache Tuiles (11 avril 2026)
+- Service Worker TILES_CACHE: Cache-First, 200Mo max, nettoyage LRU
+- Pre-telechargement par zone (zoom 10-17), progression temps reel
+- TilesDownloader dans dashboard agent + carte Garmin (compact)
+- Badge "En ligne"/"Cache hors-ligne" sur la carte
 
 ### Core Platform
 - Auth JWT, Dashboard multi-roles, Notifications, USSD, Score carbone, Marketplace
