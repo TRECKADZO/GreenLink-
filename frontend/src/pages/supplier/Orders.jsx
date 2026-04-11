@@ -22,8 +22,8 @@ const Orders = () => {
     try {
       const data = await marketplaceApi.getMyOrders();
       setOrders(data);
-    } catch (_err) {
-      /* fetch error */
+    } catch (err) {
+      console.error('[Orders] Fetch failed:', err.message);
     } finally {
       setLoading(false);
     }

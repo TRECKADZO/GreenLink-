@@ -21,8 +21,8 @@ const Notifications = () => {
     try {
       const data = await marketplaceApi.getNotifications();
       setNotifications(data);
-    } catch (_err) {
-      /* fetch error */
+    } catch (err) {
+      console.error('[Notifications] Fetch failed:', err.message);
     } finally {
       setLoading(false);
     }

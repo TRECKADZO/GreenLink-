@@ -39,7 +39,7 @@ const SupplierDashboard = () => {
       });
       setSubscription(data.subscription);
     } catch (_err) {
-      /* subscription fetch error */
+      console.warn('[Dashboard] Subscription fetch failed');
     }
   }, []);
 

@@ -36,63 +36,15 @@ const SSRTERealTimeDashboard = () => {
     }
   }, [soundEnabled]);
 
-  const connectWebSocket = useCallback(() => {
-    if (!token) return;
-
-    const API_URL = process.env.REACT_APP_BACKEND_URL;
-    const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
-    
-    try {
-      wsRef.current = new WebSocket(`${wsUrl}/ws/dashboard?token=${token}&channels=ssrte,alerts,stats`);
-
-      wsRef.current.onopen = () => {
-        setConnected(true);
-        toast.success('Connecté au flux temps réel');
-        // [WS] Connected to real-time dashboard');
-      };
-
-      wsRef.current.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          handleWebSocketMessage(message);
-        } catch (e) {
-          /* error logged */
-        }
-      };
-
-      wsRef.current.onclose = (event) => {
-        setConnected(false);
-        // [WS] Disconnected:', event.code, event.reason);
-        
-        // Reconnexion automatique après 5 secondes
-        if (event.code !== 1000) {
-          reconnectTimeoutRef.current = setTimeout(() => {
-            // [WS] Attempting reconnection...');
-            connectWebSocket();
-          }, 5000);
-        }
-      };
-
-      wsRef.current.onerror = (error) => {
-        /* error logged */
-        setConnected(false);
-      };
-    } catch (error) {
-      /* error logged */
-    }
-  }, [token, handleWebSocketMessage]);
-
   const handleWebSocketMessage = useCallback((message) => {
     const { type, priority, data, timestamp } = message;
 
     switch (type) {
       case 'connection_established':
-        // [WS] Connection confirmed');
         break;
 
       case 'ssrte_case_critical':
-      case 'new_ssrte_case':
-        // Nouvelle alerte cas SSRTE
+      case 'new_ssrte_case': {
         const caseAlert = {
           id: `case-${Date.now()}`,
           type: 'case',
@@ -114,7 +66,6 @@ const SSRTERealTimeDashboard = () => {
           critical: data.severity_score >= 8 ? prev.critical + 1 : prev.critical
         }));
         
-        // Notification toast et son
         if (data.severity_score >= 8) {
           playAlertSound();
           toast.error(`🚨 CAS CRITIQUE: ${data.child_name} (${data.child_age} ans)`, {
@@ -127,9 +78,9 @@ const SSRTERealTimeDashboard = () => {
           });
         }
         break;
+      }
 
       case 'new_ssrte_visit':
-        // Nouvelle visite à risque
         if (priority === 'high' || data.children_at_risk > 0) {
           const visitAlert = {
             id: `visit-${Date.now()}`,
@@ -154,7 +105,6 @@ const SSRTERealTimeDashboard = () => {
         break;
 
       case 'stats_update':
-        // Mise à jour des statistiques
         if (data) {
           setStats(prev => ({
             ...prev,
@@ -164,13 +114,54 @@ const SSRTERealTimeDashboard = () => {
         break;
 
       case 'heartbeat':
-        // Heartbeat - confirme que la connexion est active
         break;
 
       default:
-        // [WS] Unknown message type:', type);
+        console.warn('[WS] Unknown message type:', type);
     }
   }, [playAlertSound]);
+
+  const connectWebSocket = useCallback(() => {
+    if (!token) return;
+
+    const API_URL = process.env.REACT_APP_BACKEND_URL;
+    const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+    
+    try {
+      wsRef.current = new WebSocket(`${wsUrl}/ws/dashboard?token=${token}&channels=ssrte,alerts,stats`);
+
+      wsRef.current.onopen = () => {
+        setConnected(true);
+        toast.success('Connecté au flux temps réel');
+      };
+
+      wsRef.current.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          handleWebSocketMessage(message);
+        } catch (e) {
+          console.error('[WS] Parse error:', e.message);
+        }
+      };
+
+      wsRef.current.onclose = (event) => {
+        setConnected(false);
+        
+        if (event.code !== 1000) {
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connectWebSocket();
+          }, 5000);
+        }
+      };
+
+      wsRef.current.onerror = (error) => {
+        console.error('[WS] Connection error:', error);
+        setConnected(false);
+      };
+    } catch (error) {
+      console.error('[WS] Setup error:', error.message);
+    }
+  }, [token, handleWebSocketMessage]);
 
   useEffect(() => {
     connectWebSocket();

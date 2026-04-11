@@ -22,6 +22,29 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
+  const fetchConversations = useCallback(async () => {
+    try {
+      const data = await marketplaceApi.getConversations();
+      setConversations(data);
+      if (data.length > 0) {
+        setSelectedConversation(prev => prev || data[0]);
+      }
+    } catch (err) {
+      console.error('[Messages] Conversations fetch failed:', err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchMessages = useCallback(async (conversationId) => {
+    try {
+      const data = await marketplaceApi.getMessages(conversationId);
+      setMessages(data);
+    } catch (err) {
+      console.error('[Messages] Messages fetch failed:', err.message);
+    }
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.user_type !== 'fournisseur') {
@@ -40,29 +63,6 @@ const Messages = () => {
       return () => clearInterval(interval);
     }
   }, [selectedConversation, fetchMessages]);
-
-  const fetchConversations = useCallback(async () => {
-    try {
-      const data = await marketplaceApi.getConversations();
-      setConversations(data);
-      if (data.length > 0) {
-        setSelectedConversation(prev => prev || data[0]);
-      }
-    } catch (_err) {
-      /* error */
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchMessages = useCallback(async (conversationId) => {
-    try {
-      const data = await marketplaceApi.getMessages(conversationId);
-      setMessages(data);
-    } catch (_err) {
-      /* error */
-    }
-  }, []);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
