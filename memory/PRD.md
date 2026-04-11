@@ -18,16 +18,20 @@ Plateforme agritech Cote d'Ivoire - modules ARS 1000 pour certification cacao du
 - **Ancien systeme PDC supprime**: `ars1000_pdc.py`, `AgentVisitePDC.jsx`, `FarmerPDCPage.jsx`
 - **Routes redirigees**: `/farmer/pdc` et `/agent/visite-pdc` pointent vers `PDCListPage` (PDC v2)
 - **Navigation mise a jour**: Agent Terrain dashboard et Farmer dashboard redirigent vers PDC v2
-- **Backend nettoye**: routeur `ars1000_pdc` retire de `server.py`
 
 ### Workflow RBAC PDC v2 (11 avril 2026)
-- **Etape 1 lecture seule pour cooperative**: Apres soumission par l'agent terrain, la cooperative voit les donnees collectees en mode lecture. Backend bloque PUT step1 (403).
-- **Bannieres de workflow contextuelles**:
-  - Bleue (Step 1 cooperative): "Mode lecture — Donnees collectees par l'agent terrain"
-  - Ambre (Step 2 cooperative): "Analyse des problemes — Annexe 2"
-  - Violette (Step 3 cooperative): "Planification — Annexe 3"
-  - Verte (Planteur PDC valide): "Votre Plan de Developpement Cacaoyer"
+- **Etape 1 lecture seule pour cooperative**: Apres soumission agent, la cooperative consulte en mode lecture. Backend bloque PUT step1 (403).
+- **Bannieres de workflow contextuelles**: Bleue (lecture step1), Ambre (analyse step2), Violette (planification step3), Verte (planteur valide)
 - **Planteur voit PDC uniquement apres validation** par l'agronome
+
+### Offline-First Complet avec Cache Tuiles (11 avril 2026)
+- **Service Worker TILES_CACHE**: Cache dedie pour tuiles OpenStreetMap, strategie Cache-First, limite 200Mo, nettoyage LRU automatique
+- **Pre-telechargement par zone**: Calcul des tuiles necessaires (zoom 10-17) a partir du centre GPS ou polygone parcelle, telechargement par lots de 6 avec progression
+- **TilesDownloader (dashboard agent)**: Composant complet avec stats cache (tuiles/Mo), barre de progression, bouton telechargement, bouton vider cache
+- **TilesDownloader compact (carte Garmin)**: Bouton inline pour telecharger les tuiles de la parcelle en cours
+- **Indicateur cache sur carte**: Badge "En ligne" (vert) ou "Cache hors-ligne" (ambre) sur la carte Garmin
+- **Communication SW <-> page**: Messages postMessage (PRECACHE_TILES, TILES_PRECACHE_PROGRESS, GET_TILES_CACHE_STATS, CLEAR_TILES_CACHE)
+- **Fallback offline**: Tuile transparente 1px si tuile non disponible en cache
 
 ### Core Platform
 - Auth JWT, Dashboard multi-roles, Notifications, USSD, Score carbone, Marketplace
@@ -39,10 +43,10 @@ Plateforme agritech Cote d'Ivoire - modules ARS 1000 pour certification cacao du
 ## Architecture
 - Backend: FastAPI + MongoDB | Frontend: React + Tailwind + Shadcn + Leaflet + html2canvas
 - PDF: ReportLab | SMS: Orange CI (MOCKE) | Paiement: Orange Money (MOCKE)
+- Offline: Service Worker + IndexedDB (idb) + TILES_CACHE
 
 ## Backlog
 - P1: Integration SMS reel (Orange CI / MTN)
 - P1: Support langues locales (Baoule/Dioula)
-- P2: Offline-first complet (Service Worker tiles cache)
 - P2: Nettoyage donnees test/demo
 - P3: Refactoring ussd.py, composants > 300 lignes
