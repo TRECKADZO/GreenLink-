@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Polygon, Polyline, Marker, Popup, CircleMarker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -6,7 +6,7 @@ import html2canvas from 'html2canvas';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { toast } from 'sonner';
-import { TreePine, Route, Camera, Trash2, RotateCcw, Navigation, ZoomIn, ZoomOut, Radio, Square, MapPin, Wifi, WifiOff, Crosshair, X, Check, Loader2 } from 'lucide-react';
+import { TreePine, Route, Camera, Trash2, RotateCcw, Navigation, ZoomIn, ZoomOut, Radio, Square, MapPin, Wifi, WifiOff, Crosshair, X, Check, Loader2, CheckCircle2, Move } from 'lucide-react';
 import TilesDownloader from '../../../components/TilesDownloader';
 import { Input } from '../../../components/ui/input';
 
@@ -86,6 +86,103 @@ const FitBounds = ({ polygon, trees }) => {
   return null;
 };
 
+// Draggable polygon vertex for drag & drop
+const DraggableVertex = ({ position, index, onDragEnd, isDraggable }) => {
+  const markerRef = useRef(null);
+  const eventHandlers = useMemo(() => ({
+    dragend() {
+      const marker = markerRef.current;
+      if (marker) {
+        const { lat, lng } = marker.getLatLng();
+        onDragEnd(index, [lat, lng]);
+      }
+    },
+  }), [index, onDragEnd]);
+
+  return (
+    <Marker
+      position={position}
+      icon={vertexIcon}
+      draggable={isDraggable}
+      ref={markerRef}
+      eventHandlers={isDraggable ? eventHandlers : undefined}
+    >
+      <Popup className="text-xs">
+        WPT {index + 1}: {position[0].toFixed(5)}, {position[1].toFixed(5)}
+        {isDraggable && <><br /><i>Glissez pour deplacer</i></>}
+      </Popup>
+    </Marker>
+  );
+};
+
+// Snap 4 points to a perfect rectangle
+function snapToRectangle(pts) {
+  if (pts.length !== 4) return pts;
+  // Centroid
+  const cx = pts.reduce((s, p) => s + p[0], 0) / 4;
+  const cy = pts.reduce((s, p) => s + p[1], 0) / 4;
+  // Principal axis: direction from pt0 to pt1
+  const dx = pts[1][0] - pts[0][0];
+  const dy = pts[1][1] - pts[0][1];
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 1e-10) return pts;
+  const ux = dx / len, uy = dy / len; // unit along side 0->1
+  const vx = -uy, vy = ux; // perpendicular
+
+  // Project all points onto (u, v) axes relative to centroid
+  const projs = pts.map(p => ({
+    u: (p[0] - cx) * ux + (p[1] - cy) * uy,
+    v: (p[0] - cx) * vx + (p[1] - cy) * vy,
+  }));
+  const uMin = Math.min(...projs.map(p => p.u));
+  const uMax = Math.max(...projs.map(p => p.u));
+  const vMin = Math.min(...projs.map(p => p.v));
+  const vMax = Math.max(...projs.map(p => p.v));
+
+  // Rectangle corners in (u,v) space -> back to lat/lng
+  const corners = [
+    [uMin, vMin], [uMax, vMin], [uMax, vMax], [uMin, vMax],
+  ];
+  return corners.map(([u, v]) => [
+    cx + u * ux + v * vx,
+    cy + u * uy + v * vy,
+  ]);
+}
+
+// Precise geodesic area (Shoelace + local metric conversion)
+function geodesicAreaHa(polygon) {
+  if (polygon.length < 3) return 0;
+  const toRad = Math.PI / 180;
+  const centerLat = polygon.reduce((s, p) => s + p[0], 0) / polygon.length;
+  const mPerDegLat = 111320;
+  const mPerDegLng = 111320 * Math.cos(centerLat * toRad);
+
+  // Convert to meters relative to first point
+  const pts = polygon.map(p => [
+    (p[0] - polygon[0][0]) * mPerDegLat,
+    (p[1] - polygon[0][1]) * mPerDegLng,
+  ]);
+
+  let area = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const j = (i + 1) % pts.length;
+    area += pts[i][0] * pts[j][1];
+    area -= pts[j][0] * pts[i][1];
+  }
+  return Math.abs(area) / 2 / 10000; // m2 -> ha
+}
+
+// Perimeter using Haversine
+function perimeterM(polygon) {
+  if (polygon.length < 2) return 0;
+  let total = 0;
+  for (let i = 0; i < polygon.length; i++) {
+    const j = (i + 1) % polygon.length;
+    total += distanceM(polygon[i], polygon[j]);
+  }
+  return Math.round(total);
+}
+
 const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }) => {
   const mapRef = useRef(null);
   const containerRef = useRef(null);
@@ -101,7 +198,10 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
 
   // GPS tree: permanent button state
   const [gpsTreeLoading, setGpsTreeLoading] = useState(false);
-  const [treeForm, setTreeForm] = useState(null); // { lat, lng, numero, nom_botanique, nom_local, circonference, origine, decision }
+  const [treeForm, setTreeForm] = useState(null);
+
+  // Rectangle detection prompt
+  const [rectPrompt, setRectPrompt] = useState(false); // { lat, lng, numero, nom_botanique, nom_local, circonference, origine, decision }
 
   const polygon = data?.polygon || [];
   const trees = data?.arbres_ombrage || [];
@@ -112,9 +212,43 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
 
   // ---- Manual vertex / tree ----
   const handleAddVertex = useCallback((pt) => {
-    if (tracking) return; // block manual add during tracking
-    updateData({ polygon: [...polygon, pt] });
+    if (tracking) return;
+    const next = [...polygon, pt];
+    updateData({ polygon: next });
+
+    // Rectangle detection: 4th point close to 1st → propose snap
+    if (next.length === 4) {
+      const d = distanceM(next[3], next[0]);
+      if (d < 30) { // within 30 meters
+        setRectPrompt(true);
+      }
+    }
   }, [polygon, updateData, tracking]);
+
+  // Drag & drop: move a vertex
+  const handleVertexDrag = useCallback((index, newPos) => {
+    const updated = polygon.map((p, i) => i === index ? newPos : p);
+    updateData({ polygon: updated });
+  }, [polygon, updateData]);
+
+  // Accept rectangle snap
+  const acceptRectangle = useCallback(() => {
+    if (polygon.length === 4) {
+      const snapped = snapToRectangle(polygon);
+      updateData({ polygon: snapped });
+      toast.success('Rectangle parfait applique');
+    }
+    setRectPrompt(false);
+    setMode(null);
+  }, [polygon, updateData]);
+
+  // Finish manual trace
+  const finishTrace = useCallback(() => {
+    setMode(null);
+    if (polygon.length >= 3) {
+      toast.success(`Polygone ferme — ${polygon.length} points, ${geodesicAreaHa(polygon).toFixed(2)} ha`);
+    }
+  }, [polygon]);
 
   const handleAddTree = useCallback((tree) => {
     const num = trees.length + 1;
@@ -275,32 +409,13 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
     }
   };
 
-  // ---- Area ----
-  const computeArea = () => {
-    if (polygon.length < 3) return 0;
-    const latlngs = polygon.map(p => L.latLng(p[0], p[1]));
-    let area = 0;
-    for (let i = 0; i < latlngs.length; i++) {
-      const j = (i + 1) % latlngs.length;
-      area += latlngs[i].lng * latlngs[j].lat;
-      area -= latlngs[j].lng * latlngs[i].lat;
-    }
-    area = Math.abs(area) / 2;
-    const mPerDegLat = 111320;
-    const mPerDegLng = 111320 * Math.cos(7 * Math.PI / 180);
-    return ((area * mPerDegLat * mPerDegLng) / 10000).toFixed(2);
-  };
-
-  // ---- Track distance ----
-  const trackDistance = () => {
-    if (polygon.length < 2) return 0;
-    let total = 0;
-    for (let i = 1; i < polygon.length; i++) total += distanceM(polygon[i - 1], polygon[i]);
-    return Math.round(total);
-  };
-
-  const surfaceHa = computeArea();
+  // ---- Area & perimeter (real-time) ----
+  const surfaceHa = geodesicAreaHa(polygon).toFixed(2);
+  const perimeter = perimeterM(polygon);
   const defaultCenter = polygon.length > 0 ? polygon[0] : [6.8, -5.3];
+
+  // Whether vertices should be draggable (not tracking, not drawing polygon, not readOnly)
+  const verticesDraggable = !readOnly && !tracking && mode !== 'polygon';
 
   return (
     <div className="space-y-3" data-testid="parcel-map-garmin">
@@ -310,6 +425,7 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
           <span className="text-[#C8E6C9] font-mono"><span className="text-[#81C784]">Prod: </span>{producerInfo.nom || '-'}</span>
           <span className="text-[#C8E6C9] font-mono"><span className="text-[#81C784]">Vill: </span>{producerInfo.village || '-'}</span>
           <span className="text-[#C8E6C9] font-mono"><span className="text-[#81C784]">Sup: </span>{surfaceHa} ha</span>
+          <span className="text-[#C8E6C9] font-mono"><span className="text-[#81C784]">Per: </span>{perimeter}m</span>
           <span className="text-[#C8E6C9] font-mono"><span className="text-[#81C784]">Pts: </span>{polygon.length}</span>
           <span className="text-[#C8E6C9] font-mono"><span className="text-[#81C784]">Arbres: </span>{trees.length}</span>
         </div>
@@ -323,7 +439,7 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
             <div>
               <p className="text-sm font-bold text-white font-mono">GPS TRACKING EN COURS</p>
               <p className="text-xs text-red-200 font-mono">
-                Temps: {formatDuration(trackElapsed)} | Points: {polygon.length} | Dist: {trackDistance()}m
+                Temps: {formatDuration(trackElapsed)} | Points: {polygon.length} | Dist: {perimeter}m
                 {trackAccuracy !== null && ` | Precision: ±${trackAccuracy}m`}
               </p>
             </div>
@@ -331,6 +447,42 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
           <Button size="sm" onClick={stopTracking} className="bg-red-600 hover:bg-red-700 text-white h-10" data-testid="tracking-stop-btn">
             <Square className="w-4 h-4 mr-1 fill-current" /> Arreter
           </Button>
+        </div>
+      )}
+
+      {/* Rectangle snap prompt */}
+      {rectPrompt && (
+        <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-3 flex items-center justify-between shadow-md" data-testid="rect-prompt">
+          <div className="flex items-center gap-2">
+            <Move className="w-5 h-5 text-blue-600" />
+            <div>
+              <p className="text-sm font-bold text-blue-900">Fermer en rectangle ?</p>
+              <p className="text-xs text-blue-600">Le 4e point est proche du 1er. Ajuster en rectangle parfait ?</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={acceptRectangle} className="bg-blue-600 hover:bg-blue-700 text-white h-9" data-testid="rect-accept">
+              <Check className="w-4 h-4 mr-1" /> Oui
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => { setRectPrompt(false); setMode(null); }} className="h-9 border-blue-300" data-testid="rect-decline">
+              Non
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Polygon closed banner */}
+      {polygon.length >= 3 && !tracking && mode !== 'polygon' && !rectPrompt && (
+        <div className="bg-[#E8F0EA] border border-[#1A3622]/20 rounded-md p-2.5 flex items-center gap-2" data-testid="polygon-closed-banner">
+          <CheckCircle2 className="w-4 h-4 text-[#1A3622] flex-shrink-0" />
+          <p className="text-xs text-[#1A3622] font-semibold">
+            Polygone ferme — {polygon.length} points, {surfaceHa} ha, perimetre {perimeter}m
+          </p>
+          {verticesDraggable && (
+            <span className="text-[10px] text-[#6B7280] ml-auto flex items-center gap-1">
+              <Move className="w-3 h-3" /> Glissez les points pour ajuster
+            </span>
+          )}
         </div>
       )}
 
@@ -349,11 +501,15 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
             <Polyline positions={polygon} pathOptions={{ color: '#3B82F6', weight: 3, dashArray: '8 4' }} />
           )}
 
-          {/* Polygon vertices */}
+          {/* Polygon vertices (draggable when not tracking/drawing) */}
           {polygon.map((pt, i) => (
-            <Marker key={`v-${i}-${pt[0]}-${pt[1]}`} position={pt} icon={vertexIcon}>
-              <Popup className="text-xs">WPT {i + 1}: {pt[0].toFixed(5)}, {pt[1].toFixed(5)}</Popup>
-            </Marker>
+            <DraggableVertex
+              key={`v-${i}-${pt[0]}-${pt[1]}`}
+              position={pt}
+              index={i}
+              onDragEnd={handleVertexDrag}
+              isDraggable={verticesDraggable}
+            />
           ))}
 
           {/* Current position (blue pulsing dot) */}
@@ -572,6 +728,16 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
             >
               <Route className="w-4 h-4 mr-1" /> Trace manuel
             </Button>
+            {mode === 'polygon' && polygon.length >= 3 && (
+              <Button
+                size="sm"
+                onClick={finishTrace}
+                className="h-11 text-xs font-bold bg-[#1A3622] hover:bg-[#112417] text-white"
+                data-testid="map-btn-finish-trace"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-1" /> Terminer le trace
+              </Button>
+            )}
             <Button
               variant={mode === 'tree' ? 'default' : 'outline'}
               size="sm"
@@ -613,7 +779,7 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
             <div className="bg-[#2D3B2D] rounded-md p-3 border border-[#4A5C4A]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-[#81C784] font-mono flex items-center gap-1">
-                  <Route className="w-3.5 h-3.5" /> Parcelle ({polygon.length} pts, {surfaceHa} ha, {trackDistance()}m)
+                  <Route className="w-3.5 h-3.5" /> Parcelle ({polygon.length} pts, {surfaceHa} ha, {perimeter}m)
                 </span>
               </div>
               <div className="space-y-0.5 max-h-32 overflow-y-auto">
