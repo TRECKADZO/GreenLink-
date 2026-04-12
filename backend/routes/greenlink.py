@@ -899,13 +899,12 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
             "total_credits": 0,
             "total_premium": 0,
             "parcels_count": 0,
-            "breakdown": {"base": 3.0, "arbres": 0, "ombrage": 0, "pratiques": 0, "surface": 0, "max_possible": 10.0},
+            "breakdown": {"base": 0, "densite_arbres": 0, "couverture_ombragee": 0, "brulage": 0, "engrais_chimique": 0, "pratiques_ecologiques": 0, "redd_practices": 0, "age_cacaoyers": 0, "surface": 0, "certification": 0, "bonus_ombrage_ars1000": 0},
             "recommendations": [],
             "parcels": []
         }
 
-    scores = [p.get("carbon_score", 0) for p in parcels]
-    total_credits = sum([p.get("carbon_credits_earned", 0) for p in parcels])
+    total_credits = sum(p.get("carbon_credits_earned", 0) for p in parcels)
     total_area = sum([p.get("area_hectares", 0) for p in parcels])
     total_trees = sum([p.get("nombre_arbres", 0) or 0 for p in parcels])
     total_petits = sum([p.get("arbres_petits", 0) or 0 for p in parcels])

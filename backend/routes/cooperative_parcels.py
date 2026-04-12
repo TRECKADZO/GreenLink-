@@ -437,19 +437,22 @@ async def verify_parcel(
                     seen_codes.add(code)
                     redd_practices_adopted.append(practice)
 
-    new_carbon_score = _calculate_verified_carbon_score(
-        nombre_arbres=update_data.get("nombre_arbres", parcel.get("nombre_arbres")),
-        couverture_ombragee=update_data.get("couverture_ombragee", parcel.get("couverture_ombragee")),
-        pratiques=update_data.get("pratiques_ecologiques", []),
-        area=area,
-        existing_practices=parcel.get("farming_practices", []),
+    from routes.carbon_score_engine import calculate_carbon_score
+    full_score_result = calculate_carbon_score(
+        area_hectares=area,
         arbres_petits=update_data.get("arbres_petits", parcel.get("arbres_petits")),
         arbres_moyens=update_data.get("arbres_moyens", parcel.get("arbres_moyens")),
         arbres_grands=update_data.get("arbres_grands", parcel.get("arbres_grands")),
+        nombre_arbres=update_data.get("nombre_arbres", parcel.get("nombre_arbres")),
+        couverture_ombragee=update_data.get("couverture_ombragee", parcel.get("couverture_ombragee")),
+        pratiques_ecologiques=update_data.get("pratiques_ecologiques", []),
         redd_practices=redd_practices_adopted,
+        existing_practices=parcel.get("farming_practices", []),
     )
-    update_data["carbon_score"] = new_carbon_score
-    update_data["co2_captured_tonnes"] = round(area * new_carbon_score * 2.5, 2)
+    update_data["carbon_score"] = full_score_result["score"]
+    update_data["co2_captured_tonnes"] = full_score_result["co2_tonnes"]
+    update_data["carbon_score_details"] = full_score_result["details"]
+    update_data["carbon_credits_earned"] = round(full_score_result["co2_tonnes"] * 0.5, 2)
     
     await db.parcels.update_one(
         {"_id": ObjectId(parcel_id)},

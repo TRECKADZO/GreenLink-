@@ -906,24 +906,7 @@ async def verify_parcel_by_agent(
                     seen_codes.add(code)
                     redd_practices_adopted.append(practice)
 
-    carbon_score = _calculate_verified_carbon_score(
-        nombre_arbres=nombre_arbres,
-        couverture_ombragee=couverture_ombragee,
-        pratiques=pratiques,
-        area=area,
-        existing_practices=parcel.get("farming_practices", []),
-        arbres_petits=arbres_petits,
-        arbres_moyens=arbres_moyens,
-        arbres_grands=arbres_grands,
-        redd_practices=redd_practices_adopted,
-        pratique_brulage=data.get("pratique_brulage"),
-        engrais_chimique=data.get("engrais_chimique"),
-        age_cacaoyers=data.get("age_cacaoyers"),
-        certification=parcel.get("certification"),
-    )
-    update_data["carbon_score"] = carbon_score
-
-    # Use unified CO2 calculation
+    # Use unified carbon score engine for ALL calculations
     from routes.carbon_score_engine import calculate_carbon_score
     full_result = calculate_carbon_score(
         area_hectares=area,
@@ -934,10 +917,11 @@ async def verify_parcel_by_agent(
         age_cacaoyers=data.get("age_cacaoyers"), certification=parcel.get("certification"),
         existing_practices=parcel.get("farming_practices", []),
     )
+    update_data["carbon_score"] = full_result["score"]
     update_data["co2_captured_tonnes"] = full_result["co2_tonnes"]
     update_data["carbon_score_details"] = full_result["details"]
     update_data["carbon_score_recommandations"] = full_result["recommandations"]
-    update_data["carbon_credits_earned"] = round(carbon_score * area * 0.5, 2)
+    update_data["carbon_credits_earned"] = round(full_result["co2_tonnes"] * 0.5, 2)
 
     await db.parcels.update_one(
         {"_id": ObjectId(parcel_id)},
@@ -948,7 +932,7 @@ async def verify_parcel_by_agent(
     if v_status == "verified":
         from routes.carbon_premiums import check_and_set_admissibility
         farmer_id = str(parcel.get("farmer_id", ""))
-        await check_and_set_admissibility(parcel_id, carbon_score, farmer_id, area)
+        await check_and_set_admissibility(parcel_id, full_result["score"], farmer_id, area)
 
         # === GESTION DES ECARTS ===
         from routes.discrepancy import create_discrepancy_record
@@ -967,7 +951,7 @@ async def verify_parcel_by_agent(
         "message": f"Parcelle {status_labels.get(v_status, v_status)}",
         "parcel_id": parcel_id,
         "verification_status": v_status,
-        "carbon_score": carbon_score,
+        "carbon_score": full_result["score"],
         "verified_at": update_data["verified_at"].isoformat(),
         "ecart": disc_result if v_status == "verified" and disc_result else None
     }
