@@ -446,22 +446,38 @@ const PDCStepperPage = () => {
         </SectionCard>
 
         <SectionCard title="Donnees sur les cultures" sectionKey="f2-cultures">
-          <DynamicTable
-            readOnly={disabled || readOnly}
-            columns={[
-              { key: 'libelle', label: 'Libelle', width: '120px' },
-              { key: 'annee_creation', label: 'Annee creation', type: 'number', width: '110px' },
-              { key: 'precedent_cultural', label: 'Precedent cultural', width: '130px' },
-              { key: 'superficie_ha', label: 'Sup. (ha)', type: 'number', width: '90px' },
-              { key: 'origine_materiel', label: 'Origine materiel vegetal', width: '150px' },
-              { key: 'en_production', label: 'En production', type: 'select', width: '100px', options: [
-                { value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' },
-              ]},
-            ]}
-            rows={f.cultures || []}
-            onChange={v => updateArray('step1', 'fiche2', 'cultures', v)}
-            addLabel="Ajouter une culture"
-          />
+          <p className="text-xs text-[#6B7280] mb-2">Les libelles en gras sont pre-remplis selon le document officiel.</p>
+          {(() => {
+            const defaultCultures = [
+              { libelle: '** CACAO **', annee_creation: '', precedent_cultural: '', superficie_ha: '', origine_materiel: '', en_production: '' },
+              { libelle: 'Champs 1', annee_creation: '', precedent_cultural: '', superficie_ha: '', origine_materiel: '', en_production: '' },
+              { libelle: 'Champs 2', annee_creation: '', precedent_cultural: '', superficie_ha: '', origine_materiel: '', en_production: '' },
+              { libelle: '** AUTRES CULTURES **', annee_creation: '', precedent_cultural: '', superficie_ha: '', origine_materiel: '', en_production: '' },
+              { libelle: '', annee_creation: '', precedent_cultural: '', superficie_ha: '', origine_materiel: '', en_production: '' },
+              { libelle: '** TERRES NON EXPLOITEES **', annee_creation: '', precedent_cultural: '', superficie_ha: '', origine_materiel: '', en_production: '' },
+              { libelle: 'Jacheres', annee_creation: '', precedent_cultural: '', superficie_ha: '', origine_materiel: '', en_production: '' },
+              { libelle: 'Forets', annee_creation: '', precedent_cultural: '', superficie_ha: '', origine_materiel: '', en_production: '' },
+            ];
+            const cultures = f.cultures && f.cultures.length > 0 ? f.cultures : defaultCultures;
+            return (
+              <DynamicTable
+                readOnly={disabled || readOnly}
+                columns={[
+                  { key: 'libelle', label: 'Libelle', width: '170px' },
+                  { key: 'annee_creation', label: 'Annee de creation', type: 'number', width: '110px' },
+                  { key: 'precedent_cultural', label: 'Precedent cultural', width: '130px' },
+                  { key: 'superficie_ha', label: 'Sup. (ha)', type: 'number', width: '85px' },
+                  { key: 'origine_materiel', label: 'Origine materiel vegetal', width: '150px' },
+                  { key: 'en_production', label: 'En production (Oui/Non)', type: 'select', width: '120px', options: [
+                    { value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' },
+                  ]},
+                ]}
+                rows={cultures}
+                onChange={v => updateArray('step1', 'fiche2', 'cultures', v)}
+                addLabel="Ajouter une ligne"
+              />
+            );
+          })()}
         </SectionCard>
 
         <SectionCard title="Materiels agricoles / Equipements de travail" sectionKey="f2-materiels">
@@ -515,25 +531,25 @@ const PDCStepperPage = () => {
           })()}
         </SectionCard>
 
-        <SectionCard title="Diagnostic des arbres (autres que cacaoyer)" sectionKey="f2-arbres">
+        <SectionCard title="Diagnostic des arbres forestiers et fruitiers autres que le cacaoyer sur l'exploitation" sectionKey="f2-arbres">
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'numero', label: 'N', type: 'number', width: '50px' },
+              { key: 'numero', label: 'N° arbre', type: 'number', width: '60px' },
               { key: 'nom_botanique', label: 'Nom botanique', width: '130px' },
-              { key: 'nom_local', label: 'Nom local', width: '120px' },
-              { key: 'circonference', label: 'Circonf. (cm)', type: 'number', width: '90px' },
-              { key: 'longitude', label: 'Longitude', width: '100px' },
-              { key: 'latitude', label: 'Latitude', width: '100px' },
-              { key: 'origine', label: 'Origine', type: 'select', width: '100px', options: [
+              { key: 'nom_local', label: 'Nom local', width: '110px' },
+              { key: 'circonference', label: 'Circonference (a hauteur de poitrine)', type: 'number', width: '120px' },
+              { key: 'latitude', label: 'GPS Latitude', width: '95px' },
+              { key: 'longitude', label: 'GPS Longitude', width: '95px' },
+              { key: 'origine', label: 'Origine', type: 'select', width: '90px', options: [
                 { value: 'preserve', label: 'Preserve' }, { value: 'plante', label: 'Plante' },
               ]},
-              { key: 'organe_utilise', label: 'Organe utilise', width: '110px' },
-              { key: 'utilite', label: 'Utilite', width: '110px' },
+              { key: 'organe_utilise', label: 'Organe utilise', width: '100px' },
+              { key: 'utilite', label: 'Utilite', width: '90px' },
               { key: 'decision', label: 'Decision', type: 'select', width: '100px', options: [
                 { value: 'eliminer', label: 'A eliminer' }, { value: 'maintenir', label: 'A maintenir' },
               ]},
-              { key: 'raisons', label: 'Raisons', width: '120px' },
+              { key: 'raisons', label: 'Raisons / Observations', width: '130px' },
             ]}
             rows={f.arbres || []}
             onChange={v => updateArray('step1', 'fiche2', 'arbres', v)}
@@ -644,20 +660,20 @@ const PDCStepperPage = () => {
           </div>
         </SectionCard>
 
-        {/* Grille de comptage - Carres 10m x 10m */}
-        <SectionCard title="Comptage cacaoyers - Carres 10m x 10m" sectionKey="f3-carres">
-          <p className="text-xs text-[#6B7280] mb-2">Comptez les tiges dans 4 carres de 10m x 10m. 16 cacaoyers par carre.</p>
+        {/* Grille de comptage - Carres 10m x 10m - CONFORME DOCUMENT OFFICIEL */}
+        <SectionCard title="Comptage des cacaoyers - Densite" sectionKey="f3-carres">
+          <p className="text-xs text-[#6B7280] mb-2">Comptez le nombre de tiges pour chaque cacaoyer dans 4 carres de 10m x 10m.</p>
           {(() => {
             const carres = f.carres_comptage || Array.from({ length: 16 }, (_, i) => ({ numero: i + 1, carre1: '', carre2: '', carre3: '', carre4: '' }));
             return (
               <DynamicTable
                 readOnly={disabled || readOnly}
                 columns={[
-                  { key: 'numero', label: 'N cacaoyer', type: 'number', width: '80px' },
-                  { key: 'carre1', label: 'Carre 1 (tiges)', type: 'number', width: '110px' },
-                  { key: 'carre2', label: 'Carre 2 (tiges)', type: 'number', width: '110px' },
-                  { key: 'carre3', label: 'Carre 3 (tiges)', type: 'number', width: '110px' },
-                  { key: 'carre4', label: 'Carre 4 (tiges)', type: 'number', width: '110px' },
+                  { key: 'numero', label: 'N° cacaoyer', type: 'number', width: '90px' },
+                  { key: 'carre1', label: 'Carre 1 (10m x 10m) - Nombre de tiges', type: 'number', width: '150px' },
+                  { key: 'carre2', label: 'Carre 2 (10m x 10m) - Nombre de tiges', type: 'number', width: '150px' },
+                  { key: 'carre3', label: 'Carre 3 (10m x 10m) - Nombre de tiges', type: 'number', width: '150px' },
+                  { key: 'carre4', label: 'Carre 4 (10m x 10m) - Nombre de tiges', type: 'number', width: '150px' },
                 ]}
                 rows={carres}
                 onChange={v => updateArray('step1', 'fiche3', 'carres_comptage', v)}
@@ -813,26 +829,79 @@ const PDCStepperPage = () => {
         </SectionCard>
 
         <SectionCard title="Pratiques de recolte et post-recolte" sectionKey="f3-recolte">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <FormField label="Frequence recoltes (jours)" value={rpr.frequence_recolte_jours} onChange={v => updateField('step1', 'fiche3', 'recolte_post_recolte.frequence_recolte_jours', v)} type="number" disabled={disabled} />
-            <FormField label="Temps recolte-ecabossage (jours)" value={rpr.temps_ecabossage_jours} onChange={v => updateField('step1', 'fiche3', 'recolte_post_recolte.temps_ecabossage_jours', v)} type="number" disabled={disabled} />
-            <FormField label="Duree fermentation (jours)" value={rpr.duree_fermentation_jours} onChange={v => updateField('step1', 'fiche3', 'recolte_post_recolte.duree_fermentation_jours', v)} type="number" disabled={disabled} />
-            <SelectField label="Mode fermentation" value={rpr.mode_fermentation} onChange={v => updateField('step1', 'fiche3', 'recolte_post_recolte.mode_fermentation', v)} disabled={disabled}
-              options={[
-                { value: 'bache_plastique', label: 'Bache en plastique' },
-                { value: 'feuilles_bananier', label: 'Feuilles de bananier' },
-                { value: 'bac_fermentation', label: 'Bac de fermentation' },
-                { value: 'autre', label: 'Autre' },
-              ]} />
-            <SelectField label="Methode de sechage" value={rpr.methode_sechage} onChange={v => updateField('step1', 'fiche3', 'recolte_post_recolte.methode_sechage', v)} disabled={disabled}
-              options={[
-                { value: 'goudron', label: 'Sur goudron' },
-                { value: 'aire_cimentee', label: 'Sur aire cimentee' },
-                { value: 'bache_plastique', label: 'Sur bache a terre' },
-                { value: 'claie', label: 'Sur claie' },
-                { value: 'autre', label: 'Autre' },
-              ]} />
-          </div>
+          <p className="text-xs text-[#6B7280] mb-2">Conforme au document officiel : Elements d'observation et Reponses.</p>
+          {(() => {
+            const modesFermentation = [
+              { value: 'bache_plastique', label: '1. Bache en plastique' },
+              { value: 'feuilles_bananier', label: '2. Feuilles de bananier' },
+              { value: 'bac_fermentation', label: '3. Bac de fermentation' },
+              { value: 'autre', label: '4. Autre (a preciser)' },
+            ];
+            const methodesSechage = [
+              { value: 'goudron', label: '1. Sur goudron' },
+              { value: 'aire_cimentee', label: '2. Sur aire cimentee' },
+              { value: 'bache_plastique', label: '3. Sur bache en plastique a terre' },
+              { value: 'claie', label: '4. Sur claie' },
+              { value: 'autre', label: '5. Autre (a preciser)' },
+            ];
+            return (
+              <div className="space-y-3">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse border border-[#E5E5E0]">
+                    <thead>
+                      <tr className="bg-[#1A3622] text-white">
+                        <th className="p-2 text-left border border-[#E5E5E0] font-medium w-1/2">Elements d'observation</th>
+                        <th className="p-2 text-left border border-[#E5E5E0] font-medium w-1/2">Reponses</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-[#E5E5E0]">
+                        <td className="p-2 border border-[#E5E5E0] text-[#374151]">Frequence des recoltes (Espacement entre 2 recoltes en nbre de jours)</td>
+                        <td className="p-2 border border-[#E5E5E0]">
+                          <input type="number" className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-[#1A3622] outline-none disabled:bg-gray-50" disabled={disabled || readOnly}
+                            value={rpr.frequence_recolte_jours || ''} onChange={e => updateField('step1', 'fiche3', 'recolte_post_recolte.frequence_recolte_jours', e.target.value)} placeholder="Nombre de jours" />
+                        </td>
+                      </tr>
+                      <tr className="border-b border-[#E5E5E0]">
+                        <td className="p-2 border border-[#E5E5E0] text-[#374151]">Temps entre la recolte et l'ecabossage (nombre de jours)</td>
+                        <td className="p-2 border border-[#E5E5E0]">
+                          <input type="number" className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-[#1A3622] outline-none disabled:bg-gray-50" disabled={disabled || readOnly}
+                            value={rpr.temps_ecabossage_jours || ''} onChange={e => updateField('step1', 'fiche3', 'recolte_post_recolte.temps_ecabossage_jours', e.target.value)} placeholder="Nombre de jours" />
+                        </td>
+                      </tr>
+                      <tr className="border-b border-[#E5E5E0]">
+                        <td className="p-2 border border-[#E5E5E0] text-[#374151]">Duree de la fermentation (nombre de jours)</td>
+                        <td className="p-2 border border-[#E5E5E0]">
+                          <input type="number" className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-[#1A3622] outline-none disabled:bg-gray-50" disabled={disabled || readOnly}
+                            value={rpr.duree_fermentation_jours || ''} onChange={e => updateField('step1', 'fiche3', 'recolte_post_recolte.duree_fermentation_jours', e.target.value)} placeholder="Nombre de jours" />
+                        </td>
+                      </tr>
+                      <tr className="border-b border-[#E5E5E0]">
+                        <td className="p-2 border border-[#E5E5E0] text-[#374151]">Mode de fermentation</td>
+                        <td className="p-2 border border-[#E5E5E0]">
+                          <select className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-[#1A3622] outline-none disabled:bg-gray-50" disabled={disabled || readOnly}
+                            value={rpr.mode_fermentation || ''} onChange={e => updateField('step1', 'fiche3', 'recolte_post_recolte.mode_fermentation', e.target.value)}>
+                            <option value="">-- Selectionnez --</option>
+                            {modesFermentation.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-[#E5E5E0]">
+                        <td className="p-2 border border-[#E5E5E0] text-[#374151]">Methodes de sechage</td>
+                        <td className="p-2 border border-[#E5E5E0]">
+                          <select className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-[#1A3622] outline-none disabled:bg-gray-50" disabled={disabled || readOnly}
+                            value={rpr.methode_sechage || ''} onChange={e => updateField('step1', 'fiche3', 'recolte_post_recolte.methode_sechage', e.target.value)}>
+                            <option value="">-- Selectionnez --</option>
+                            {methodesSechage.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
         </SectionCard>
 
         <SectionCard title="Application des engrais" sectionKey="f3-engrais">
