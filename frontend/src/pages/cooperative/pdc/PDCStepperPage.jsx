@@ -465,30 +465,54 @@ const PDCStepperPage = () => {
         </SectionCard>
 
         <SectionCard title="Materiels agricoles / Equipements de travail" sectionKey="f2-materiels">
-          <DynamicTable
-            readOnly={disabled || readOnly}
-            columns={[
-              { key: 'type', label: 'Type', type: 'select', width: '140px', options: [
-                { value: 'traitement', label: 'Materiel de traitement' },
-                { value: 'transport', label: 'Materiel de transport' },
-                { value: 'deplacement', label: 'Moyen de deplacement' },
-                { value: 'sechage', label: 'Materiel de sechage' },
-                { value: 'fermentation', label: 'Materiel de fermentation' },
-                { value: 'outillage', label: 'Petit outillage' },
-                { value: 'autre', label: 'Autres' },
-              ]},
-              { key: 'designation', label: 'Designation', width: '140px' },
-              { key: 'quantite', label: 'Quantite', type: 'number', width: '80px' },
-              { key: 'annee_acquisition', label: 'Annee acq.', type: 'number', width: '90px' },
-              { key: 'cout', label: 'Cout (FCFA)', type: 'number', width: '100px' },
-              { key: 'etat_bon', label: 'Bon', type: 'number', width: '60px' },
-              { key: 'etat_acceptable', label: 'Accept.', type: 'number', width: '60px' },
-              { key: 'etat_mauvais', label: 'Mauvais', type: 'number', width: '70px' },
-            ]}
-            rows={f.materiels || []}
-            onChange={v => updateArray('step1', 'fiche2', 'materiels', v)}
-            addLabel="Ajouter un materiel"
-          />
+          <p className="text-xs text-[#6B7280] mb-2">Inventaire conforme au document officiel. Ajoutez des lignes si necessaire.</p>
+          {(() => {
+            const defaultMateriels = [
+              { type: 'traitement', designation: 'Pulverisateur', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'traitement', designation: 'Atomiseur', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'traitement', designation: 'EPI', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'transport', designation: 'Tricycle', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'transport', designation: 'Brouette', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'transport', designation: 'Camion/camionnette', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'deplacement', designation: 'Velo', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'deplacement', designation: 'Moto', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'deplacement', designation: 'Voiture', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'sechage', designation: 'Claie/seco', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'sechage', designation: 'Aire cimentee', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'sechage', designation: 'Sechoir solaire', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'fermentation', designation: 'Bac de fermentation', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'outillage', designation: 'Machette, emondoir', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'outillage', designation: 'Materiel de recolte', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+              { type: 'outillage', designation: 'Tronconneuse', quantite: '', annee_acquisition: '', cout: '', etat_bon: '', etat_acceptable: '', etat_mauvais: '' },
+            ];
+            const materiels = f.materiels && f.materiels.length > 0 ? f.materiels : defaultMateriels;
+            return (
+              <DynamicTable
+                readOnly={disabled || readOnly}
+                columns={[
+                  { key: 'type', label: 'Type', type: 'select', width: '140px', options: [
+                    { value: 'traitement', label: 'Mat. traitement' },
+                    { value: 'transport', label: 'Mat. transport' },
+                    { value: 'deplacement', label: 'Moy. deplacement' },
+                    { value: 'sechage', label: 'Mat. sechage' },
+                    { value: 'fermentation', label: 'Mat. fermentation' },
+                    { value: 'outillage', label: 'Petit outillage' },
+                    { value: 'autre', label: 'Autres' },
+                  ]},
+                  { key: 'designation', label: 'Designation', width: '150px' },
+                  { key: 'quantite', label: 'Qte', type: 'number', width: '60px' },
+                  { key: 'annee_acquisition', label: 'Annee acq.', type: 'number', width: '85px' },
+                  { key: 'cout', label: 'Cout (FCFA)', type: 'number', width: '100px' },
+                  { key: 'etat_bon', label: 'Bon', type: 'number', width: '55px' },
+                  { key: 'etat_acceptable', label: 'Accept.', type: 'number', width: '60px' },
+                  { key: 'etat_mauvais', label: 'Mauvais', type: 'number', width: '65px' },
+                ]}
+                rows={materiels}
+                onChange={v => updateArray('step1', 'fiche2', 'materiels', v)}
+                addLabel="Ajouter un materiel"
+              />
+            );
+          })()}
         </SectionCard>
 
         <SectionCard title="Diagnostic des arbres (autres que cacaoyer)" sectionKey="f2-arbres">
@@ -608,17 +632,39 @@ const PDCStepperPage = () => {
         <SectionCard title="Etat de la cacaoyere" sectionKey="f3-etat">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <SelectField label="Dispositif de plantation" value={etat.dispositif_plantation} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.dispositif_plantation', v)} disabled={disabled}
-              options={[{ value: 'en_lignes', label: 'En lignes' }, { value: 'en_desordre', label: 'En desordre' }]} />
-            <FormField label="Densite des arbres" value={etat.densite_arbres} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.densite_arbres', v)} type="number" disabled={disabled} />
-            <FormField label="Nombre moyen de tiges/cacaoyer" value={etat.nb_tiges} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.nb_tiges', v)} type="number" disabled={disabled} />
-            <SelectField label="Plages vides" value={etat.plages_vides} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.plages_vides', v)} disabled={disabled}
-              options={[{ value: 'peu', label: 'Peu (<=5)' }, { value: 'beaucoup', label: 'Beaucoup (>5)' }]} />
-            <FormField label="Etendue plages vides (GPS)" value={etat.etendue_plages_vides} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.etendue_plages_vides', v)} disabled={disabled} />
-            <SelectField label="Ombrage arbres" value={etat.ombrage} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.ombrage', v)} disabled={disabled}
-              options={[{ value: 'inexistant', label: 'Inexistant' }, { value: 'moyen', label: 'Moyen' }, { value: 'dense', label: 'Dense' }]} />
-            <SelectField label="Canopee/couronne" value={etat.canopee} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.canopee', v)} disabled={disabled}
-              options={[{ value: 'normal', label: 'Normal' }, { value: 'peu_degrade', label: 'Peu degrade' }, { value: 'degrade', label: 'Degrade' }]} />
+              options={[{ value: 'en_lignes', label: '1. En lignes' }, { value: 'en_desordre', label: '2. En desordre' }]} />
+            <SelectField label="Plages vides dans le champ" value={etat.plages_vides} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.plages_vides', v)} disabled={disabled}
+              options={[{ value: 'peu', label: '1. Peu (<=5)' }, { value: 'beaucoup', label: '2. Beaucoup (>5)' }]} />
+            <SelectField label="Etendue plages vides (GPS)" value={etat.etendue_plages_vides} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.etendue_plages_vides', v)} disabled={disabled}
+              options={[{ value: 'grande', label: '1. Grande' }, { value: 'petite', label: '2. Petite' }]} />
+            <SelectField label="Ombrage des arbres (autre que cacaoyer)" value={etat.ombrage} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.ombrage', v)} disabled={disabled}
+              options={[{ value: 'faible', label: '1. Faible' }, { value: 'moyen', label: '2. Moyen' }, { value: 'dense', label: '3. Dense' }]} />
+            <SelectField label="Presentation canopee/couronne" value={etat.canopee} onChange={v => updateField('step1', 'fiche3', 'etat_cacaoyere.canopee', v)} disabled={disabled}
+              options={[{ value: 'normal', label: '1. Normal' }, { value: 'dense', label: '2. Dense' }, { value: 'peu_degrade', label: '3. Peu degrade' }, { value: 'degrade', label: '4. Degrade' }]} />
           </div>
+        </SectionCard>
+
+        {/* Grille de comptage - Carres 10m x 10m */}
+        <SectionCard title="Comptage cacaoyers - Carres 10m x 10m" sectionKey="f3-carres">
+          <p className="text-xs text-[#6B7280] mb-2">Comptez les tiges dans 4 carres de 10m x 10m. 16 cacaoyers par carre.</p>
+          {(() => {
+            const carres = f.carres_comptage || Array.from({ length: 16 }, (_, i) => ({ numero: i + 1, carre1: '', carre2: '', carre3: '', carre4: '' }));
+            return (
+              <DynamicTable
+                readOnly={disabled || readOnly}
+                columns={[
+                  { key: 'numero', label: 'N cacaoyer', type: 'number', width: '80px' },
+                  { key: 'carre1', label: 'Carre 1 (tiges)', type: 'number', width: '110px' },
+                  { key: 'carre2', label: 'Carre 2 (tiges)', type: 'number', width: '110px' },
+                  { key: 'carre3', label: 'Carre 3 (tiges)', type: 'number', width: '110px' },
+                  { key: 'carre4', label: 'Carre 4 (tiges)', type: 'number', width: '110px' },
+                ]}
+                rows={carres}
+                onChange={v => updateArray('step1', 'fiche3', 'carres_comptage', v)}
+                addLabel="Ajouter une ligne"
+              />
+            );
+          })()}
         </SectionCard>
 
         {/* Score Ombrage ARS 1000 — temps reel */}
@@ -697,36 +743,73 @@ const PDCStepperPage = () => {
           );
         })()}
 
-        <SectionCard title="Maladies et ravageurs" sectionKey="f3-maladies">
-          <DynamicTable
-            readOnly={disabled || readOnly}
-            columns={[
-              { key: 'type', label: 'Maladie/Ravageur', width: '180px' },
-              { key: 'severite', label: 'Severite', type: 'select', width: '100px', options: [
-                { value: '1', label: 'Aucun' }, { value: '2', label: 'Faible' }, { value: '3', label: 'Moyen' }, { value: '4', label: 'Fort' },
-              ]},
-              { key: 'observations', label: 'Observations', width: '200px' },
-            ]}
-            rows={f.maladies || []}
-            onChange={v => updateArray('step1', 'fiche3', 'maladies', v)}
-            addLabel="Ajouter maladie/ravageur"
-          />
+        <SectionCard title="Maladies / Ravageurs et Parametres phytosanitaires" sectionKey="f3-maladies">
+          <p className="text-xs text-[#6B7280] mb-2">Tableau conforme au document officiel. Evaluez la severite de chaque maladie et parametre.</p>
+          {(() => {
+            const severiteOpts = [
+              { value: '1', label: '1. Aucun' }, { value: '2', label: '2. Faible' },
+              { value: '3', label: '3. Moyen' }, { value: '4', label: '4. Fort' },
+            ];
+            const defaultMaladies = [
+              { maladie: 'Attaques de mirides', severite: '', obs_maladie: '', parametre: 'Presence de gourmands', valeur: '', obs_parametre: '' },
+              { maladie: 'Attaques de Pourriture Brune', severite: '', obs_maladie: '', parametre: 'Presence de cabosses momifiees', valeur: '', obs_parametre: '' },
+              { maladie: 'Attaques de punaises', severite: '', obs_maladie: '', parametre: 'Presence de plantes epiphytes', valeur: '', obs_parametre: '' },
+              { maladie: 'Attaque CSSVD', severite: '', obs_maladie: '', parametre: 'Enherbement', valeur: '', obs_parametre: '' },
+              { maladie: 'Attaque Foreurs', severite: '', obs_maladie: '', parametre: 'Presence de loranthus', valeur: '', obs_parametre: '' },
+              { maladie: 'Autres (precisez)', severite: '', obs_maladie: '', parametre: 'Autres (precisez)', valeur: '', obs_parametre: '' },
+            ];
+            const maladies = f.maladies && f.maladies.length > 0 && f.maladies[0]?.maladie ? f.maladies : defaultMaladies;
+            return (
+              <DynamicTable
+                readOnly={disabled || readOnly}
+                columns={[
+                  { key: 'maladie', label: 'Maladies/Ravageurs', width: '170px' },
+                  { key: 'severite', label: 'Severite', type: 'select', width: '95px', options: severiteOpts },
+                  { key: 'obs_maladie', label: 'Observations', width: '140px' },
+                  { key: 'parametre', label: 'Parametres', width: '170px' },
+                  { key: 'valeur', label: 'Valeur', type: 'select', width: '95px', options: severiteOpts },
+                  { key: 'obs_parametre', label: 'Observations', width: '140px' },
+                ]}
+                rows={maladies}
+                onChange={v => updateArray('step1', 'fiche3', 'maladies', v)}
+                addLabel="Ajouter une ligne"
+              />
+            );
+          })()}
         </SectionCard>
 
         <SectionCard title="Etat du sol" sectionKey="f3-sol">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <SelectField label="Position parcelle" value={sol.position} onChange={v => updateField('step1', 'fiche3', 'etat_sol.position', v)} disabled={disabled}
-              options={[{ value: 'haut_pente', label: 'Haut de pente' }, { value: 'mi_versant', label: 'Mi versant' }, { value: 'bas_pente', label: 'Bas de pente' }]} />
-            <SelectField label="Couvert vegetal" value={sol.couvert_vegetal} onChange={v => updateField('step1', 'fiche3', 'etat_sol.couvert_vegetal', v)} disabled={disabled}
-              options={[{ value: 'faible', label: 'Faible' }, { value: 'moyen', label: 'Moyen' }, { value: 'beaucoup', label: 'Beaucoup' }]} />
-            <SelectField label="Matiere organique" value={sol.matiere_organique} onChange={v => updateField('step1', 'fiche3', 'etat_sol.matiere_organique', v)} disabled={disabled}
-              options={[{ value: 'faible', label: 'Faible' }, { value: 'moyen', label: 'Moyen' }, { value: 'beaucoup', label: 'Beaucoup' }]} />
-            <SelectField label="Zones erodees" value={sol.zones_erodees} onChange={v => updateField('step1', 'fiche3', 'etat_sol.zones_erodees', v)} disabled={disabled}
-              options={[{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }]} />
-            <SelectField label="Zones a risque d'erosion" value={sol.zones_risque_erosion} onChange={v => updateField('step1', 'fiche3', 'etat_sol.zones_risque_erosion', v)} disabled={disabled}
-              options={[{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }]} />
-            <FormField label="Observations sol" value={sol.observations} onChange={v => updateField('step1', 'fiche3', 'etat_sol.observations', v)} disabled={disabled} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+            <SelectField label="Positionnement de la parcelle" value={sol.position} onChange={v => updateField('step1', 'fiche3', 'etat_sol.position', v)} disabled={disabled}
+              options={[
+                { value: 'plateau', label: '1. Plateau' },
+                { value: 'haut_pente', label: '2. Haut de pente' },
+                { value: 'mi_versant', label: '3. Mi versant' },
+                { value: 'bas_pente', label: '4. Bas de pente' },
+              ]} />
           </div>
+          {(() => {
+            const ouiNonOpts = [{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }];
+            const defaultSolElements = [
+              { element: 'Existence de zones erodees', valeur: '', observations: '' },
+              { element: 'Existence de zones a risque d\'erosion', valeur: '', observations: '' },
+              { element: 'Hydromorphie', valeur: '', observations: '' },
+            ];
+            const solElements = f.sol_elements && f.sol_elements.length > 0 ? f.sol_elements : defaultSolElements;
+            return (
+              <DynamicTable
+                readOnly={disabled || readOnly}
+                columns={[
+                  { key: 'element', label: 'Elements d\'observation', width: '220px' },
+                  { key: 'valeur', label: 'Valeur', type: 'select', width: '90px', options: ouiNonOpts },
+                  { key: 'observations', label: 'Observations', width: '250px' },
+                ]}
+                rows={solElements}
+                onChange={v => updateArray('step1', 'fiche3', 'sol_elements', v)}
+                addLabel="Ajouter un element"
+              />
+            );
+          })()}
         </SectionCard>
 
         <SectionCard title="Pratiques de recolte et post-recolte" sectionKey="f3-recolte">
@@ -816,53 +899,75 @@ const PDCStepperPage = () => {
     return (
       <div className="space-y-4" data-testid="fiche-4">
         <SectionCard title="Compte d'epargne et Financement" sectionKey="f4-epargne">
-          <DynamicTable
-            readOnly={disabled || readOnly}
-            columns={[
-              { key: 'type', label: 'Type', type: 'select', width: '120px', options: [
-                { value: 'mobile_money', label: 'Mobile Money' },
-                { value: 'microfinance', label: 'Microfinance' },
-                { value: 'banque', label: 'Banque' },
-                { value: 'autre', label: 'Autre' },
-              ]},
-              { key: 'a_compte', label: 'Compte ?', type: 'select', width: '80px', options: [
-                { value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' },
-              ]},
-              { key: 'argent_compte', label: 'Argent ?', type: 'select', width: '80px', options: [
-                { value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' },
-              ]},
-              { key: 'financement', label: 'Financement ?', type: 'select', width: '100px', options: [
-                { value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' },
-              ]},
-              { key: 'montant_financement', label: 'Montant (FCFA)', type: 'number', width: '110px' },
-            ]}
-            rows={f.epargne || []}
-            onChange={v => updateArray('step1', 'fiche4', 'epargne', v)}
-            addLabel="Ajouter une ligne"
-          />
+          {(() => {
+            const defaultEpargne = [
+              { type: 'mobile_money', a_compte: '', argent_compte: '', financement: '', montant_financement: '' },
+              { type: 'microfinance', a_compte: '', argent_compte: '', financement: '', montant_financement: '' },
+              { type: 'banque', a_compte: '', argent_compte: '', financement: '', montant_financement: '' },
+              { type: 'autre', a_compte: '', argent_compte: '', financement: '', montant_financement: '' },
+            ];
+            const epargne = f.epargne && f.epargne.length > 0 ? f.epargne : defaultEpargne;
+            return (
+              <DynamicTable
+                readOnly={disabled || readOnly}
+                columns={[
+                  { key: 'type', label: 'Epargne', type: 'select', width: '130px', options: [
+                    { value: 'mobile_money', label: 'Mobile Money' },
+                    { value: 'microfinance', label: 'Microfinance' },
+                    { value: 'banque', label: 'Banque' },
+                    { value: 'autre', label: 'Autres (precisez)' },
+                  ]},
+                  { key: 'a_compte', label: 'Compte ?', type: 'select', width: '80px', options: [
+                    { value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' },
+                  ]},
+                  { key: 'argent_compte', label: 'Argent ?', type: 'select', width: '80px', options: [
+                    { value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' },
+                  ]},
+                  { key: 'financement', label: 'Financement ?', type: 'select', width: '100px', options: [
+                    { value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' },
+                  ]},
+                  { key: 'montant_financement', label: 'Montant (FCFA)', type: 'number', width: '120px' },
+                ]}
+                rows={epargne}
+                onChange={v => updateArray('step1', 'fiche4', 'epargne', v)}
+                addLabel="Ajouter une ligne"
+              />
+            );
+          })()}
         </SectionCard>
 
         <SectionCard title="Production de cacao des 3 dernieres annees" sectionKey="f4-production">
-          <DynamicTable
-            readOnly={disabled || readOnly}
-            columns={[
-              { key: 'annee', label: 'Annee', width: '100px' },
-              { key: 'production_kg', label: 'Production (kg)', type: 'number', width: '120px' },
-              { key: 'revenu_brut', label: 'Revenu brut (FCFA)', type: 'number', width: '130px' },
-            ]}
-            rows={f.production_cacao || []}
-            onChange={v => updateArray('step1', 'fiche4', 'production_cacao', v)}
-            addLabel="Ajouter une annee"
-          />
+          {(() => {
+            const yr = new Date().getFullYear();
+            const defaultProd = [
+              { annee: `${yr - 1}`, production_kg: '', revenu_brut: '' },
+              { annee: `${yr - 2}`, production_kg: '', revenu_brut: '' },
+              { annee: `${yr - 3}`, production_kg: '', revenu_brut: '' },
+            ];
+            const prod = f.production_cacao && f.production_cacao.length > 0 ? f.production_cacao : defaultProd;
+            return (
+              <DynamicTable
+                readOnly={disabled || readOnly}
+                columns={[
+                  { key: 'annee', label: 'Annee', width: '100px' },
+                  { key: 'production_kg', label: 'Production (kg)', type: 'number', width: '130px' },
+                  { key: 'revenu_brut', label: 'Revenu brut (FCFA)', type: 'number', width: '140px' },
+                ]}
+                rows={prod}
+                onChange={v => updateArray('step1', 'fiche4', 'production_cacao', v)}
+                addLabel="Ajouter une annee"
+              />
+            );
+          })()}
         </SectionCard>
 
         <SectionCard title="Sources de revenus autres que le cacao" sectionKey="f4-revenus">
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'activite', label: 'Activite', width: '150px' },
-              { key: 'production_moyenne', label: 'Production moyenne/an', width: '140px' },
-              { key: 'revenu_brut_moyen', label: 'Revenu brut moyen/an (FCFA)', type: 'number', width: '160px' },
+              { key: 'activite', label: 'Activite', width: '160px' },
+              { key: 'production_moyenne', label: 'Production moyenne/an', width: '150px' },
+              { key: 'revenu_brut_moyen', label: 'Revenu brut moyen/an (FCFA)', type: 'number', width: '170px' },
             ]}
             rows={f.autres_revenus || []}
             onChange={v => updateArray('step1', 'fiche4', 'autres_revenus', v)}
@@ -871,27 +976,42 @@ const PDCStepperPage = () => {
         </SectionCard>
 
         <SectionCard title="Depenses courantes du foyer" sectionKey="f4-depenses">
-          <DynamicTable
-            readOnly={disabled || readOnly}
-            columns={[
-              { key: 'depense', label: 'Depense', width: '150px' },
-              { key: 'periodicite', label: 'Periodicite', type: 'select', width: '100px', options: [
-                { value: 'mois', label: 'Mois' }, { value: 'annee', label: 'Annee' }, { value: 'trimestre', label: 'Trimestre' },
-              ]},
-              { key: 'montant_moyen_an', label: 'Montant moyen/an (FCFA)', type: 'number', width: '160px' },
-            ]}
-            rows={f.depenses || []}
-            onChange={v => updateArray('step1', 'fiche4', 'depenses', v)}
-            addLabel="Ajouter une depense"
-          />
+          {(() => {
+            const defaultDepenses = [
+              { depense: 'Scolarite', periodicite: 'annee', montant_moyen_an: '' },
+              { depense: 'Nourriture', periodicite: 'mois', montant_moyen_an: '' },
+              { depense: 'Sante', periodicite: 'annee', montant_moyen_an: '' },
+              { depense: 'Electricite', periodicite: 'trimestre', montant_moyen_an: '' },
+              { depense: 'Eau courante', periodicite: 'mois', montant_moyen_an: '' },
+              { depense: 'Funerailles', periodicite: 'annee', montant_moyen_an: '' },
+              { depense: 'Mariage, bapteme', periodicite: 'annee', montant_moyen_an: '' },
+            ];
+            const depenses = f.depenses && f.depenses.length > 0 ? f.depenses : defaultDepenses;
+            return (
+              <DynamicTable
+                readOnly={disabled || readOnly}
+                columns={[
+                  { key: 'depense', label: 'Depenses', width: '160px' },
+                  { key: 'periodicite', label: 'Periodicite', type: 'select', width: '110px', options: [
+                    { value: 'mois', label: 'Mois' }, { value: 'trimestre', label: 'Trimestre' },
+                    { value: 'annee', label: 'Annee' },
+                  ]},
+                  { key: 'montant_moyen_an', label: 'Montant moyen (FCFA)', type: 'number', width: '160px' },
+                ]}
+                rows={depenses}
+                onChange={v => updateArray('step1', 'fiche4', 'depenses', v)}
+                addLabel="Ajouter une depense"
+              />
+            );
+          })()}
         </SectionCard>
 
         <SectionCard title="Cout de la main d'oeuvre" sectionKey="f4-mo">
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'travailleur', label: 'Travailleur', width: '130px' },
-              { key: 'statut_mo', label: 'Statut MO', type: 'select', width: '130px', options: [
+              { key: 'travailleur', label: 'Travailleur', width: '140px' },
+              { key: 'statut_mo', label: 'Statut MO', type: 'select', width: '140px', options: [
                 { value: 'permanente', label: 'MO permanente' },
                 { value: 'occasionnelle', label: 'MO occasionnelle' },
                 { value: 'familiale', label: 'Non remuneree (familiale)' },

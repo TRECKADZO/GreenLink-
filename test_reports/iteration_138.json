@@ -1,0 +1,113 @@
+{
+  "summary": "PDC v2 Step 1 Predefined Fields Testing - Backend: 9/9 tests PASSED. Frontend: Verified Fiche 3 carres comptage (16 rows x 4 columns), Fiche 4 epargne (4 types), Fiche 4 production (3 years). Backend accepts all new fields: carres_comptage, sol_elements, new maladies structure with maladie/severite/obs_maladie/parametre/valeur/obs_parametre.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_pdc_v2_step1_predefined_fields.py",
+    "/app/test_reports/pytest/pytest_pdc_v2_step1_predefined_iteration138.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Frontend PDCStepperPage.jsx: defaultMateriels (lines 470-487) correctly defines 16 predefined equipment types",
+    "Frontend PDCStepperPage.jsx: carres_comptage (line 651) generates 16 rows with 4 columns when array is empty",
+    "Frontend PDCStepperPage.jsx: defaultMaladies (lines 753-760) defines 6 predefined maladies with new structure (maladie/severite/obs_maladie/parametre/valeur/obs_parametre)",
+    "Frontend PDCStepperPage.jsx: defaultSolElements (lines 793-797) defines 3 predefined sol elements",
+    "Frontend PDCStepperPage.jsx: defaultEpargne (lines 903-908) defines 4 predefined epargne types",
+    "Frontend PDCStepperPage.jsx: defaultProd (lines 942-946) defines 3 predefined production years (N-1, N-2, N-3)",
+    "Frontend PDCStepperPage.jsx: defaultDepenses (lines 980-988) defines 7 predefined depenses types",
+    "Frontend PDCStepperPage.jsx: Ombrage options (line 641) are Faible/Moyen/Dense (NOT Inexistant)",
+    "Frontend PDCStepperPage.jsx: Canopee options (line 643) are Normal/Dense/Peu degrade/Degrade",
+    "Frontend PDCStepperPage.jsx: Position options (lines 784-788) include Plateau",
+    "Backend pdc_v2.py: Step1Data model accepts any dict for fiche1-4, allowing new fields"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pdc_v2_step1_predefined_fields.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 pytest tests passed)",
+    "frontend": "100% (All predefined fields verified via Playwright)"
+  },
+  "test_credentials": {
+    "cooperative": "bielaghana@gmail.com / test123456"
+  },
+  "seed_data_creation": "Used existing PDC 'Test Planteur Activation' (69dbcbaa40f8055c60a8ee5a) in brouillon state",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PDC v2 Step 1 predefined fields fully tested. Backend accepts all new fields (carres_comptage, sol_elements, new maladies structure). Frontend shows predefined rows when arrays are EMPTY. Use PDC in brouillon state to see defaults. PDC 'Test Planteur Activation' (69dbcbaa40f8055c60a8ee5a) was used for testing.",
+  "features_tested": {
+    "fiche2_materiels_16_types": {
+      "status": "PASSED",
+      "description": "16 predefined equipment types appear when materiels array is empty",
+      "types": ["Pulverisateur", "Atomiseur", "EPI", "Tricycle", "Brouette", "Camion/camionnette", "Velo", "Moto", "Voiture", "Claie/seco", "Aire cimentee", "Sechoir solaire", "Bac de fermentation", "Machette, emondoir", "Materiel de recolte", "Tronconneuse"],
+      "backend_test": "test_05_fiche2_materiels_16_types PASSED"
+    },
+    "fiche3_carres_comptage_16x4": {
+      "status": "PASSED",
+      "description": "16 pre-filled rows with 4 columns (Carre 1-4 tiges) appear",
+      "columns": ["N cacaoyer", "Carre 1 (tiges)", "Carre 2 (tiges)", "Carre 3 (tiges)", "Carre 4 (tiges)"],
+      "backend_test": "test_02_backend_accepts_carres_comptage PASSED",
+      "screenshot": ".screenshots/brouillon_carres.png"
+    },
+    "fiche3_maladies_6_predefined": {
+      "status": "PASSED",
+      "description": "6 predefined maladies with new structure (maladie/severite/obs_maladie/parametre/valeur/obs_parametre)",
+      "maladies": ["Attaques de mirides", "Attaques de Pourriture Brune", "Attaques de punaises", "Attaque CSSVD", "Attaque Foreurs", "Autres (precisez)"],
+      "backend_test": "test_04_backend_accepts_new_maladies_structure PASSED"
+    },
+    "fiche3_ombrage_options": {
+      "status": "PASSED",
+      "description": "Ombrage options are Faible/Moyen/Dense (NOT Inexistant)",
+      "options": ["faible", "moyen", "dense"],
+      "backend_test": "test_09_fiche3_ombrage_canopee_position_options PASSED"
+    },
+    "fiche3_canopee_4_options": {
+      "status": "PASSED",
+      "description": "Canopee has 4 options: Normal/Dense/Peu degrade/Degrade",
+      "options": ["normal", "dense", "peu_degrade", "degrade"],
+      "backend_test": "test_09_fiche3_ombrage_canopee_position_options PASSED"
+    },
+    "fiche3_position_plateau": {
+      "status": "PASSED",
+      "description": "Position parcelle includes Plateau option",
+      "options": ["plateau", "haut_pente", "mi_versant", "bas_pente"],
+      "backend_test": "test_09_fiche3_ombrage_canopee_position_options PASSED"
+    },
+    "fiche3_sol_elements_table": {
+      "status": "PASSED",
+      "description": "Etat du sol is now a DynamicTable with 3 predefined rows",
+      "elements": ["Existence de zones erodees", "Existence de zones a risque d'erosion", "Hydromorphie"],
+      "backend_test": "test_03_backend_accepts_sol_elements PASSED"
+    },
+    "fiche4_epargne_4_types": {
+      "status": "PASSED",
+      "description": "4 predefined epargne types appear",
+      "types": ["Mobile Money", "Microfinance", "Banque", "Autres (precisez)"],
+      "backend_test": "test_06_fiche4_epargne_4_types PASSED",
+      "screenshot": ".screenshots/brouillon_epargne.png"
+    },
+    "fiche4_production_3_years": {
+      "status": "PASSED",
+      "description": "3 predefined production years (N-1, N-2, N-3 with current year)",
+      "years": ["2025", "2024", "2023"],
+      "backend_test": "test_07_fiche4_production_cacao_3_years PASSED",
+      "screenshot": ".screenshots/brouillon_production.png"
+    },
+    "fiche4_depenses_7_types": {
+      "status": "PASSED",
+      "description": "7 predefined depenses types appear",
+      "types": ["Scolarite", "Nourriture", "Sante", "Electricite", "Eau courante", "Funerailles", "Mariage, bapteme"],
+      "backend_test": "test_08_fiche4_depenses_7_types PASSED"
+    }
+  },
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["Orange CI SMS", "Orange Money"]
+  }
+}
