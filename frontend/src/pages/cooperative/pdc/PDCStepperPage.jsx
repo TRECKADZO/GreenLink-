@@ -1381,19 +1381,21 @@ const PDCStepperPage = () => {
     return (
       <div className="space-y-4" data-testid="fiche-7">
         <SectionCard title="FICHE 7 : MATRICE DU PROGRAMME ANNUEL D'ACTION" sectionKey="f7-programme">
-          <p className="text-xs text-[#6B7280] mb-3">Annexe 3 : Outils de planification. Programme annuel detaille avec activites, sous-activites, indicateurs et chronogramme trimestriel (T1 a T4).</p>
+          <p className="text-xs text-[#6B7280] mb-3">Annexe 3 : Outils de planification. Programme annuel avec activites, sous-activites, indicateurs, chronogramme (T1-T4), execution, appui et cout.</p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'axe', label: 'Axes strategiques', width: '180px' },
-              { key: 'activites', label: 'ACTIVITES / SOUS-ACTIVITES', width: '180px' },
-              { key: 'indicateurs', label: 'INDICATEURS', width: '130px' },
-              { key: 't1', label: 'T1', type: 'select', width: '48px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't2', label: 'T2', type: 'select', width: '48px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't3', label: 'T3', type: 'select', width: '48px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't4', label: 'T4', type: 'select', width: '48px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'responsable', label: 'Responsable', width: '110px' },
-              { key: 'cout', label: 'COUT', type: 'number', width: '100px' },
+              { key: 'axe', label: 'Axes strategiques', width: '160px' },
+              { key: 'activites', label: 'ACTIVITES', width: '140px' },
+              { key: 'sous_activites', label: 'SOUS-ACTIVITES', width: '140px' },
+              { key: 'indicateurs', label: 'INDICATEURS', width: '120px' },
+              { key: 't1', label: 'T1', type: 'select', width: '45px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't2', label: 'T2', type: 'select', width: '45px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't3', label: 'T3', type: 'select', width: '45px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't4', label: 'T4', type: 'select', width: '45px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'execution', label: 'Execution', width: '95px' },
+              { key: 'appui', label: 'Appui', width: '95px' },
+              { key: 'cout', label: 'COUT', type: 'number', width: '90px' },
             ]}
             rows={actions}
             onChange={v => updateArray('step3', 'fiche7', 'actions', v)}

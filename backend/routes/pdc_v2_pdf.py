@@ -197,22 +197,22 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
     statut = pdc.get("statut", "brouillon")
     is_valid = statut == "valide"
 
-    # === PAGE COUVERTURE ===
-    story.append(Spacer(1, 25 * mm))
+    # === PAGE DE COUVERTURE — PDC DU PLANTEUR ===
+    story.append(Spacer(1, 30 * mm))
     story.append(_header_banner(
         'PLAN DE DEVELOPPEMENT<br/>DE LA CACAOYERE (PDC)',
-        'Diagnostic et Planification | Cacao Durable Cote d\'Ivoire',
+        'CERTIFICATION DU CACAO IVOIRIEN SELON LA NORME AFRICAINE<br/>ARS 1000 POUR LE CACAO DURABLE',
         styles,
     ))
-    story.append(Spacer(1, 12 * mm))
+    story.append(Spacer(1, 15 * mm))
     story.append(Paragraph(f'<b>Producteur :</b> {farmer_name}', styles['SectionTitle']))
     story.append(Paragraph(f"Village : {_val(prod, 'village')} | Departement : {_val(prod, 'departement')}", styles['Body']))
-    story.append(Paragraph(f"Cooperative : {_val(prod, 'code_cooperative')} | Code national : {_val(prod, 'code_national')}", styles['Body']))
+    story.append(Paragraph(f"Code national : {_val(prod, 'code_national')}", styles['Body']))
     story.append(Spacer(1, 10 * mm))
 
-    status_label = 'VALIDE PAR L\'AGRONOME' if is_valid else statut.upper().replace('_', ' ')
+    status_label = 'VALIDE' if is_valid else statut.upper().replace('_', ' ')
     status_color = '#1A3622' if is_valid else '#92400E'
-    story.append(Paragraph(f'<font color="{status_color}" size="16"><b>Statut : {status_label}</b></font>', styles['CenterText']))
+    story.append(Paragraph(f'<font color="{status_color}" size="16"><b>{status_label}</b></font>', styles['CenterText']))
 
     if is_valid and pdc.get("validated_at"):
         story.append(Spacer(1, 4 * mm))
@@ -220,396 +220,206 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
 
     story.append(Spacer(1, 10 * mm))
     story.append(Paragraph(f'Date de creation : {pdc.get("created_at", "-")[:10]}', styles['RightText']))
-    story.append(Paragraph(f'Derniere mise a jour : {pdc.get("updated_at", "-")[:10]}', styles['RightText']))
     story.append(PageBreak())
 
-    # === ANNEXE 1 - COLLECTE DE DONNEES ===
-    story.append(Paragraph('<font color="#1A3622" size="14"><b>ANNEXE 1 : OUTILS DE COLLECTE DES DONNEES</b></font>', styles['CenterText']))
-    story.append(Spacer(1, 5 * mm))
-
-    # --- FICHE 1 ---
-    story.append(_section('FICHE 1 : Profil du producteur et du menage', styles))
-    story.append(Paragraph('<b>Enqueteur</b>', styles['SubTitle']))
-    story.append(_kv_table([
-        ('Date', _val(enq, 'date')),
-        ('Nom', _val(enq, 'nom')),
-        ('Qualification', _val(enq, 'qualification')),
-        ('Contact', _val(enq, 'contact_tel')),
-    ], styles))
-    story.append(Spacer(1, 3 * mm))
-
-    story.append(Paragraph('<b>Identification du producteur</b>', styles['SubTitle']))
+    # ============================================
+    # SECTION 1 : IDENTIFICATION DU PRODUCTEUR
+    # ============================================
+    story.append(_section('IDENTIFICATION DU PRODUCTEUR', styles))
     story.append(_kv_table([
         ('Nom et prenoms', _val(prod, 'nom')),
-        ('Code National', _val(prod, 'code_national')),
-        ('Entite Reconnue', _val(prod, 'entite_reconnue')),
+        ('Contact (Tel)', _val(prod, 'contact_tel', default=_val(enq, 'contact_tel'))),
+        ('Code National du producteur (CCC)', _val(prod, 'code_national')),
         ('Code groupe', _val(prod, 'code_groupe')),
-        ('Delegation Regionale', _val(prod, 'delegation_regionale')),
-        ('Code cooperative', _val(prod, 'code_cooperative')),
+        ('Nom Entite reconnue', _val(prod, 'nom_entite')),
+        ('Code Entite reconnue', _val(prod, 'code_entite')),
+        ('Delegation Regionale du CCC', _val(prod, 'delegation_regionale')),
         ('Departement', _val(prod, 'departement')),
         ('Sous-Prefecture', _val(prod, 'sous_prefecture')),
         ('Village', _val(prod, 'village')),
         ('Campement', _val(prod, 'campement')),
     ], styles))
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 5 * mm))
 
-    # Membres du menage
-    membres = f1.get("membres_menage", [])
-    story.append(Paragraph('<b>Membres du menage</b>', styles['SubTitle']))
-    famille_map = {'chef_menage': 'Chef menage', 'conjoint': 'Conjoint', 'enfant': 'Enfant', 'autre': 'Autre'}
-    plantation_map = {'aucun': 'Aucun', 'proprietaire': 'Proprietaire', 'gerant': 'Gerant', 'mo_permanent': 'MO perm.', 'mo_temporaire': 'MO temp.'}
-    m_headers = ['Nom', 'Famille', 'Plantation', 'Scolaire', 'Contact', 'Naissance', 'Sexe', 'Instruction']
-    m_rows = []
-    for m in membres:
-        m_rows.append([
-            m.get('nom_prenoms', '-'),
-            _select_label(m.get('statut_famille'), famille_map),
-            _select_label(m.get('statut_plantation'), plantation_map),
-            m.get('statut_scolaire', '-'),
-            m.get('contact', '-'),
-            m.get('annee_naissance', '-'),
-            m.get('sexe', '-'),
-            m.get('niveau_instruction', '-'),
-        ])
-    story.append(_data_table(m_headers, m_rows, col_widths=[30*mm, 20*mm, 20*mm, 16*mm, 22*mm, 16*mm, 10*mm, 20*mm]))
-    story.append(PageBreak())
+    # ============================================
+    # SECTION 2 : INFORMATION SUR LE MENAGE
+    # ============================================
+    story.append(_section('INFORMATION SUR LE MENAGE', styles))
 
-    # --- FICHE 2 ---
-    story.append(_section('FICHE 2 : Profil de l\'exploitation', styles))
-    gps = f2.get("coordonnees_gps", {})
-    story.append(Paragraph('<b>Coordonnees geographiques</b>', styles['SubTitle']))
-    story.append(_kv_table([
-        ('Waypoint O', _val(gps, 'waypoint_o')),
-        ('N', _val(gps, 'n')),
-        ('Sous-prefecture', _val(gps, 'sous_prefecture')),
-        ('Village', _val(gps, 'village')),
-        ('Campement', _val(gps, 'campement')),
-    ], styles))
-    story.append(Spacer(1, 3 * mm))
-
-    # Carte de la parcelle (snapshot)
-    carte = f2.get("carte_parcelle", {})
-    map_snapshot = carte.get("map_snapshot")
-    polygon_pts = carte.get("polygon", [])
-    arbres_carte = carte.get("arbres_ombrage", [])
-
-    story.append(Paragraph('<b>Croquis / Polygone de la parcelle avec arbres d\'ombrage</b>', styles['SubTitle']))
-    if map_snapshot and isinstance(map_snapshot, str) and map_snapshot.startswith('data:image'):
-        try:
-            b64_data = map_snapshot.split(',', 1)[1]
-            img_bytes = base64.b64decode(b64_data)
-            img_buffer = io.BytesIO(img_bytes)
-            img = Image(img_buffer, width=170 * mm, height=100 * mm)
-            img.hAlign = 'CENTER'
-            story.append(img)
-            story.append(Spacer(1, 2 * mm))
-            # Legend
-            legend_items = []
-            if len(polygon_pts) > 0:
-                legend_items.append(f"Polygone parcelle: {len(polygon_pts)} sommets")
-            if len(arbres_carte) > 0:
-                legend_items.append(f"Arbres d'ombrage: {len(arbres_carte)}")
-            if legend_items:
-                legend_text = ' | '.join(legend_items)
-                story.append(Paragraph(
-                    f'<font color="#6B7280"><i>Legende: polygone bleu = limites parcelle, pins jaunes = arbres d\'ombrage | {legend_text}</i></font>',
-                    styles['Small']
-                ))
-        except Exception as e:
-            logger.warning(f"Erreur insertion carte PDF: {e}")
-            story.append(Paragraph('<i>Carte non disponible (erreur de traitement de l\'image)</i>', styles['Body']))
-    else:
-        story.append(Paragraph('<i>Carte non disponible - Utilisez l\'interface web pour capturer la carte</i>', styles['Body']))
-
-    # Tree waypoints table in PDF
-    if len(arbres_carte) > 0:
-        story.append(Spacer(1, 2 * mm))
-        story.append(Paragraph('<b>Liste des arbres d\'ombrage</b>', styles['SubTitle']))
-        tree_rows = [[str(a.get('numero', i+1)), f"{a.get('lat', 0):.5f}", f"{a.get('lng', 0):.5f}", a.get('nom', '-')] for i, a in enumerate(arbres_carte)]
-        story.append(_data_table(
-            ['N', 'Latitude', 'Longitude', 'Nom/Espece'],
-            tree_rows, col_widths=[15*mm, 40*mm, 40*mm, 50*mm],
-        ))
-
-    story.append(Spacer(1, 3 * mm))
-
-    # Cultures
-    cultures = f2.get("cultures", [])
-    story.append(Paragraph('<b>Donnees sur les cultures</b>', styles['SubTitle']))
-    c_rows = [[c.get('libelle', '-'), c.get('annee_creation', '-'), c.get('precedent_cultural', '-'),
-                c.get('superficie_ha', '-'), c.get('origine_materiel', '-'), c.get('en_production', '-')]
-               for c in cultures]
-    story.append(_data_table(
-        ['Libelle', 'Annee creation', 'Precedent cultural', 'Sup. (ha)', 'Origine materiel', 'Production'],
-        c_rows, col_widths=[28*mm, 22*mm, 28*mm, 18*mm, 32*mm, 18*mm],
-    ))
-    story.append(Spacer(1, 3 * mm))
-
-    # Materiels
-    materiels = f2.get("materiels", [])
-    story.append(Paragraph('<b>Materiels agricoles</b>', styles['SubTitle']))
-    mat_rows = [[m.get('type', '-'), m.get('designation', '-'), m.get('quantite', '-'),
-                  m.get('annee_acquisition', '-'), m.get('cout', '-'),
-                  m.get('etat_bon', '-'), m.get('etat_acceptable', '-'), m.get('etat_mauvais', '-')]
-                 for m in materiels]
-    story.append(_data_table(
-        ['Type', 'Designation', 'Qte', 'Annee', 'Cout', 'Bon', 'Accept.', 'Mauvais'],
-        mat_rows, col_widths=[25*mm, 28*mm, 13*mm, 15*mm, 20*mm, 13*mm, 16*mm, 16*mm],
-    ))
-    story.append(Spacer(1, 3 * mm))
-
-    # Arbres
-    arbres = f2.get("arbres", [])
-    story.append(Paragraph('<b>Arbres forestiers et fruitiers</b>', styles['SubTitle']))
-    a_rows = [[a.get('numero', '-'), a.get('nom_botanique', '-'), a.get('nom_local', '-'),
-                a.get('circonference', '-'), a.get('longitude', '-'), a.get('latitude', '-'),
-                a.get('origine', '-'), a.get('decision', '-')]
-               for a in arbres]
-    story.append(_data_table(
-        ['N', 'Nom botanique', 'Nom local', 'Circonf.', 'Long.', 'Lat.', 'Origine', 'Decision'],
-        a_rows, col_widths=[10*mm, 28*mm, 24*mm, 16*mm, 20*mm, 20*mm, 16*mm, 18*mm],
-    ))
-    story.append(PageBreak())
-
-    # --- FICHE 3 ---
-    story.append(_section('FICHE 3 : Informations sur la cacaoyere', styles))
-    etat = f3.get("etat_cacaoyere", {})
-    disp_map = {'en_lignes': 'En lignes', 'en_desordre': 'En desordre'}
-    ombrage_map = {'inexistant': 'Inexistant', 'moyen': 'Moyen', 'dense': 'Dense'}
-    canopee_map = {'normal': 'Normal', 'peu_degrade': 'Peu degrade', 'degrade': 'Degrade'}
-
-    story.append(Paragraph('<b>Etat de la cacaoyere</b>', styles['SubTitle']))
-    story.append(_kv_table([
-        ('Dispositif de plantation', _select_label(etat.get('dispositif_plantation'), disp_map)),
-        ('Densite des arbres', _val(etat, 'densite_arbres')),
-        ('Nb moyen tiges/cacaoyer', _val(etat, 'nb_tiges')),
-        ('Plages vides', _val(etat, 'plages_vides')),
-        ('Etendue plages vides', _val(etat, 'etendue_plages_vides')),
-        ('Ombrage', _select_label(etat.get('ombrage'), ombrage_map)),
-        ('Canopee', _select_label(etat.get('canopee'), canopee_map)),
-    ], styles))
-    story.append(Spacer(1, 3 * mm))
-
-    # === SCORE OMBRAGE ARS 1000 ===
-    try:
-        from routes.carbon_score_engine import calculate_shade_score_ars1000
-        arbres_list = f2.get("arbres", [])
-        carte_pdc = f2.get("carte_parcelle", {})
-        arbres_carte_list = carte_pdc.get("arbres_ombrage", [])
-        total_arbres_pdf = len(arbres_list) + len(arbres_carte_list)
-        
-        especes_set = set()
-        for arb in arbres_list:
-            n = (arb.get("nom_botanique") or arb.get("nom_local") or "").strip().lower()
-            if n and n != "-":
-                especes_set.add(n)
-        for arb in arbres_carte_list:
-            n = (arb.get("nom") or arb.get("espece") or "").strip().lower()
-            if n and n != "-" and n != "arbre":
-                especes_set.add(n)
-        
-        sup_pdf = sum(float(c.get("superficie_ha", 0) or 0) for c in f2.get("cultures", [])) or 1.0
-        
-        s1_pdf = s2_pdf = s3_pdf = 0
-        for arb in arbres_list:
-            circ = float(arb.get("circonference", 0) or 0)
-            if circ >= 200:
-                s3_pdf += 1
-            elif circ >= 50:
-                s2_pdf += 1
-            else:
-                s1_pdf += 1
-        
-        if total_arbres_pdf > 0:
-            shade_result = calculate_shade_score_ars1000(
-                nombre_arbres_ombrage=total_arbres_pdf,
-                superficie_ha=sup_pdf,
-                nombre_especes=len(especes_set),
-                has_strate3=s3_pdf > 0,
-                evaluation_agent=etat.get("ombrage", ""),
-                arbres_par_strate={"strate1": s1_pdf, "strate2": s2_pdf, "strate3": s3_pdf},
-            )
-            
-            conf_text = "CONFORME" if shade_result["conforme_ars1000"] else "NON CONFORME"
-            conf_color = HexColor('#059669') if shade_result["conforme_ars1000"] else HexColor('#D97706')
-            
-            story.append(Paragraph('<b>Score Ombrage ARS 1000</b>', styles['SubTitle']))
-            
-            # Score summary
-            score_data = [
-                [Paragraph('<b>Score global</b>', styles['Body']),
-                 Paragraph(f'<b><font color="{conf_color}">{shade_result["score"]}/100 ({shade_result["niveau"]})</font></b>', styles['Body'])],
-                [Paragraph('Conformite ARS 1000', styles['Body']),
-                 Paragraph(f'<font color="{conf_color}"><b>{conf_text}</b></font>', styles['Body'])],
-            ]
-            score_table = Table(score_data, colWidths=[80*mm, 75*mm])
-            score_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), PRIMARY_LIGHT),
-                ('GRID', (0, 0), (-1, -1), 0.5, GRAY_BORDER),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('TOPPADDING', (0, 0), (-1, -1), 3),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-                ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ]))
-            story.append(score_table)
-            story.append(Spacer(1, 2 * mm))
-            
-            # Criteria breakdown
-            story.append(_kv_table([
-                ('Densite', f'{shade_result["densite_arbres_ha"]} arbres/ha (optimal: 25-40)'),
-                ('Diversite', f'{len(especes_set)} especes (min requis: 3)'),
-                ('Strate 3 (>30m)', 'Presente' if shade_result["has_strate3"] else 'Absente'),
-                ('Evaluation agent', (etat.get("ombrage") or "Non fournie").capitalize()),
-                ('Details score', f'Densite: {shade_result["details"]["densite_score"]}/40 | Diversite: {shade_result["details"]["diversite_score"]}/30 | Strates: {shade_result["details"]["strate_score"]}/30'),
-            ], styles))
-            
-            # Prime impact
-            bonus_pts = round(min(shade_result["score"] / 100, 1.0), 2)
-            prime_fcfa = round(bonus_pts * 5000 * sup_pdf)
-            if prime_fcfa > 0:
-                story.append(Spacer(1, 2 * mm))
-                story.append(Paragraph(
-                    f'<font color="#059669"><b>Impact prime carbone : + {prime_fcfa:,} FCFA</b> (bonus {bonus_pts} pts sur score carbone)</font>',
-                    styles['Body']
-                ))
-            
-            story.append(Spacer(1, 3 * mm))
-    except Exception as e:
-        logger.warning(f"Shade score PDF generation error: {e}")
-
-    # Maladies
-    maladies = f3.get("maladies", [])
-    sev_map = {'1': 'Aucun', '2': 'Faible', '3': 'Moyen', '4': 'Fort'}
-    story.append(Paragraph('<b>Maladies et ravageurs</b>', styles['SubTitle']))
-    mal_rows = [[m.get('type', '-'), _select_label(m.get('severite'), sev_map), m.get('observations', '-')] for m in maladies]
-    story.append(_data_table(['Maladie/Ravageur', 'Severite', 'Observations'], mal_rows, col_widths=[55*mm, 25*mm, 75*mm]))
-    story.append(Spacer(1, 3 * mm))
-
-    # Etat du sol
-    sol = f3.get("etat_sol", {})
-    pos_map = {'haut_pente': 'Haut de pente', 'mi_versant': 'Mi versant', 'bas_pente': 'Bas de pente'}
-    couvert_map = {'faible': 'Faible', 'moyen': 'Moyen', 'beaucoup': 'Beaucoup'}
-    story.append(Paragraph('<b>Etat du sol</b>', styles['SubTitle']))
-    story.append(_kv_table([
-        ('Position parcelle', _select_label(sol.get('position'), pos_map)),
-        ('Couvert vegetal', _select_label(sol.get('couvert_vegetal'), couvert_map)),
-        ('Matiere organique', _select_label(sol.get('matiere_organique'), couvert_map)),
-        ('Zones erodees', _val(sol, 'zones_erodees')),
-        ('Zones a risque erosion', _val(sol, 'zones_risque_erosion')),
-        ('Observations', _val(sol, 'observations')),
-    ], styles))
-    story.append(Spacer(1, 3 * mm))
-
-    # Recolte et post-recolte
-    rpr = f3.get("recolte_post_recolte", {})
-    ferm_map = {'bache_plastique': 'Bache plastique', 'feuilles_bananier': 'Feuilles bananier', 'bac_fermentation': 'Bac fermentation', 'autre': 'Autre'}
-    sech_map = {'goudron': 'Sur goudron', 'aire_cimentee': 'Aire cimentee', 'bache_plastique': 'Bache a terre', 'claie': 'Sur claie', 'autre': 'Autre'}
-    story.append(Paragraph('<b>Pratiques de recolte et post-recolte</b>', styles['SubTitle']))
-    story.append(_kv_table([
-        ('Frequence recoltes (jours)', _val(rpr, 'frequence_recolte_jours')),
-        ('Temps recolte-ecabossage (jours)', _val(rpr, 'temps_ecabossage_jours')),
-        ('Duree fermentation (jours)', _val(rpr, 'duree_fermentation_jours')),
-        ('Mode fermentation', _select_label(rpr.get('mode_fermentation'), ferm_map)),
-        ('Methode sechage', _select_label(rpr.get('methode_sechage'), sech_map)),
-    ], styles))
-    story.append(Spacer(1, 3 * mm))
-
-    # Engrais
-    engrais = f3.get("engrais", [])
-    story.append(Paragraph('<b>Application des engrais</b>', styles['SubTitle']))
-    eng_rows = [[e.get('type_engrais', '-'), e.get('nom_commercial', '-'), e.get('quantite_an', '-'),
-                  e.get('periode_apport', '-'), e.get('mode_apport', '-'), e.get('applicateur', '-')]
-                 for e in engrais]
-    story.append(_data_table(['Type', 'Nom commercial', 'Qte/an', 'Periode', 'Mode', 'Applicateur'],
-                             eng_rows, col_widths=[25*mm, 30*mm, 18*mm, 25*mm, 22*mm, 22*mm]))
-    story.append(Spacer(1, 3 * mm))
-
-    # Phytosanitaires
-    phyto = f3.get("phytosanitaires", [])
-    story.append(Paragraph('<b>Produits phytosanitaires</b>', styles['SubTitle']))
-    ph_rows = [[p.get('type_produit', '-'), p.get('nom_commercial', '-'), p.get('quantite_traitement', '-'),
-                 p.get('periode_traitement', '-'), p.get('mode_apport', '-'), p.get('applicateur', '-')]
-                for p in phyto]
-    story.append(_data_table(['Type', 'Nom commercial', 'Qte/trait.', 'Periode', 'Mode', 'Applicateur'],
-                             ph_rows, col_widths=[25*mm, 30*mm, 18*mm, 25*mm, 22*mm, 22*mm]))
-    story.append(Spacer(1, 2 * mm))
-
-    # Gestion emballages
-    emb = f3.get("gestion_emballages", "")
-    if emb:
-        story.append(Paragraph(f'<b>Gestion des emballages :</b> {emb}', styles['Body']))
-    story.append(PageBreak())
-
-    # --- FICHE 4 ---
-    story.append(_section('FICHE 4 : Profil socio-economique du producteur', styles))
-
-    # Epargne
+    # --- Situation de l'epargne ---
+    story.append(Paragraph('<b>Situation de l\'epargne</b>', styles['SubTitle']))
     epargne = f4.get("epargne", [])
-    story.append(Paragraph('<b>Compte d\'epargne et financement</b>', styles['SubTitle']))
-    ep_rows = [[e.get('type', '-'), e.get('a_compte', '-'), e.get('argent_compte', '-'),
-                 e.get('financement', '-'), e.get('montant_financement', '-')]
-                for e in epargne]
-    story.append(_data_table(['Type', 'Compte?', 'Argent?', 'Financement?', 'Montant (FCFA)'],
-                             ep_rows, col_widths=[30*mm, 25*mm, 25*mm, 28*mm, 30*mm]))
+    ep_rows = []
+    for e in epargne:
+        type_label = {'mobile_money': 'Mobile Money', 'microfinance': 'Microfinance', 'banque': 'Banque', 'autre': 'Autres'}.get(e.get('type', ''), e.get('type', '-'))
+        ep_rows.append([
+            type_label,
+            'X' if e.get('a_compte') == 'oui' else '', 'X' if e.get('a_compte') == 'non' else '',
+            'X' if e.get('argent_compte') == 'oui' else '', 'X' if e.get('argent_compte') == 'non' else '',
+            'X' if e.get('financement') == 'oui' else '', 'X' if e.get('financement') == 'non' else '',
+            e.get('montant_financement', '-'),
+        ])
+    if not ep_rows:
+        ep_rows = [['Mobile Money', '', '', '', '', '', '', '-'], ['Microfinance', '', '', '', '', '', '', '-'], ['Banque', '', '', '', '', '', '', '-'], ['Autres', '', '', '', '', '', '', '-']]
+    story.append(_data_table(
+        ['Epargne', 'Compte Oui', 'Compte Non', 'Argent Oui', 'Argent Non', 'Financ. Oui', 'Financ. Non', 'Montant'],
+        ep_rows, col_widths=[24*mm, 16*mm, 16*mm, 16*mm, 16*mm, 16*mm, 16*mm, 22*mm],
+    ))
     story.append(Spacer(1, 3 * mm))
 
-    # Production cacao
-    prod_cacao = f4.get("production_cacao", [])
-    story.append(Paragraph('<b>Production de cacao (3 dernieres annees)</b>', styles['SubTitle']))
-    pc_rows = [[p.get('annee', '-'), p.get('production_kg', '-'), p.get('revenu_brut', '-')] for p in prod_cacao]
-    story.append(_data_table(['Annee', 'Production (kg)', 'Revenu brut (FCFA)'],
-                             pc_rows, col_widths=[40*mm, 50*mm, 55*mm]))
-    story.append(Spacer(1, 3 * mm))
+    # --- Situation du menage (categories du PDC du planteur) ---
+    story.append(Paragraph('<b>Situation du menage</b>', styles['SubTitle']))
+    membres = f1.get("membres_menage", [])
+    from datetime import datetime as dt
+    current_year = dt.utcnow().year
 
-    # Autres revenus
-    autres_rev = f4.get("autres_revenus", [])
-    story.append(Paragraph('<b>Sources de revenus autres que le cacao</b>', styles['SubTitle']))
-    ar_rows = [[a.get('activite', '-'), a.get('production_moyenne', '-'), a.get('revenu_brut_moyen', '-')]
-               for a in autres_rev]
-    story.append(_data_table(['Activite', 'Production moyenne/an', 'Revenu brut moyen/an (FCFA)'],
-                             ar_rows, col_widths=[50*mm, 50*mm, 50*mm]))
-    story.append(Spacer(1, 3 * mm))
+    def _count_menage_cat(cat_filter):
+        """Count members and stats for a category"""
+        matched = [m for m in membres if cat_filter(m)]
+        total = len(matched)
+        a_ecole = sum(1 for m in matched if m.get('statut_scolaire') == 'scolarise')
+        niv = {'aucun': 0, 'primaire': 0, 'secondaire': 0, 'superieur': 0}
+        for m in matched:
+            n = (m.get('niveau_instruction') or '').lower()
+            if n in niv:
+                niv[n] += 1
+        plein = sum(1 for m in matched if m.get('statut_plantation') in ('proprietaire', 'mo_permanente'))
+        occas = sum(1 for m in matched if m.get('statut_plantation') in ('mo_temporaire', 'occasionnel'))
+        return [str(total), str(a_ecole), str(niv['aucun']), str(niv['primaire']), str(niv['secondaire']), str(niv['superieur']), str(plein), str(occas)]
 
-    # Depenses
-    depenses = f4.get("depenses", [])
-    story.append(Paragraph('<b>Depenses courantes du foyer</b>', styles['SubTitle']))
-    dep_rows = [[d.get('depense', '-'), d.get('periodicite', '-'), d.get('montant_moyen_an', '-')]
-                for d in depenses]
-    story.append(_data_table(['Depense', 'Periodicite', 'Montant moyen/an (FCFA)'],
-                             dep_rows, col_widths=[55*mm, 40*mm, 50*mm]))
-    story.append(Spacer(1, 3 * mm))
+    def _age(m):
+        try:
+            return current_year - int(m.get('annee_naissance', 0))
+        except (ValueError, TypeError):
+            return 0
 
-    # Main d'oeuvre
-    mo = f4.get("main_oeuvre", [])
-    story.append(Paragraph('<b>Cout de la main d\'oeuvre</b>', styles['SubTitle']))
-    mo_rows = [[m.get('travailleur', '-'), m.get('statut_mo', '-'), m.get('sexe', '-'),
-                 m.get('cout_annuel', '-'), m.get('temps_travail_jours', '-')]
-                for m in mo]
-    story.append(_data_table(['Travailleur', 'Statut MO', 'Sexe', 'Cout annuel (FCFA)', 'Jours travail'],
-                             mo_rows, col_widths=[32*mm, 32*mm, 15*mm, 35*mm, 30*mm]))
-    story.append(PageBreak())
-
-    # === ANNEXE 2 - ANALYSE DES DONNEES ===
-    story.append(Paragraph('<font color="#1A3622" size="14"><b>ANNEXE 2 : OUTIL D\'ANALYSE DES DONNEES</b></font>', styles['CenterText']))
+    menage_rows = [
+        ['Proprietaire de l\'exploitation'] + _count_menage_cat(lambda m: m.get('statut_famille') == 'chef_menage'),
+        ['Gerant ou representant'] + _count_menage_cat(lambda m: m.get('statut_famille') == 'gerant'),
+        ['Conjoints'] + _count_menage_cat(lambda m: m.get('statut_famille') == 'conjoint'),
+        ['Enfants 0-6 ans'] + _count_menage_cat(lambda m: m.get('statut_famille') == 'enfant' and _age(m) <= 6),
+        ['Enfants 6-18 ans'] + _count_menage_cat(lambda m: m.get('statut_famille') == 'enfant' and 6 < _age(m) <= 18),
+        ['Enfants +18 ans'] + _count_menage_cat(lambda m: m.get('statut_famille') == 'enfant' and _age(m) > 18),
+        ['Manoeuvres'] + _count_menage_cat(lambda m: m.get('statut_famille') in ('manoeuvre', 'autre')),
+    ]
+    story.append(_data_table(
+        ['Membre du menage', 'Nombre', 'A l\'ecole', 'Aucun', 'Primaire', 'Second.', 'Univers.', 'Plein tps', 'Occasion.'],
+        menage_rows, col_widths=[35*mm, 14*mm, 14*mm, 14*mm, 14*mm, 14*mm, 14*mm, 16*mm, 16*mm],
+    ))
     story.append(Spacer(1, 5 * mm))
 
-    # --- FICHE 5 ---
-    story.append(_section('FICHE 5 : ANALYSE DES PROBLEMES', styles))
-    analyses = f5.get("analyses", [])
-    an_rows = [[a.get('theme', '-'), a.get('problemes', '-'), a.get('causes', '-'),
-                 a.get('consequences', '-'), a.get('solutions', '-')]
-                for a in analyses]
+    # ============================================
+    # SECTION 3 : DESCRIPTION DE L'EXPLOITATION
+    # ============================================
+    story.append(_section('DESCRIPTION DE L\'EXPLOITATION', styles))
+
+    cultures = f2.get("cultures", [])
+    sup_total = sum(float(c.get('superficie_ha', 0) or 0) for c in cultures)
+    sup_cacao = sum(float(c.get('superficie_ha', 0) or 0) for c in cultures if 'cacao' in (c.get('libelle', '') or '').lower())
+    sup_jachere = sum(float(c.get('superficie_ha', 0) or 0) for c in cultures if 'jach' in (c.get('libelle', '') or '').lower())
+    sup_foret = sum(float(c.get('superficie_ha', 0) or 0) for c in cultures if 'foret' in (c.get('libelle', '') or '').lower() or 'forêt' in (c.get('libelle', '') or '').lower())
+
+    story.append(_kv_table([
+        ('Superficie totale de l\'exploitation (ha)', f'{sup_total:.2f}'),
+        ('Superficie cultivee (ha)', f'{sup_total - sup_jachere - sup_foret:.2f}'),
+        ('Superficie de foret (ha)', f'{sup_foret:.2f}'),
+        ('Superficie jachere (ha)', f'{sup_jachere:.2f}'),
+    ], styles))
+    story.append(Spacer(1, 3 * mm))
+
+    # --- Cultures (format PDC du planteur) ---
+    story.append(Paragraph('<b>Cultures</b>', styles['SubTitle']))
+    cult_rows = []
+    production_data = f4.get("production_cacao", [])
+    for c in cultures:
+        lib = c.get('libelle', '-')
+        prod_kg = '-'
+        revenu = '-'
+        # Match production for cacao
+        if 'cacao' in lib.lower() or 'champs' in lib.lower():
+            for p in production_data:
+                if p.get('production_kg'):
+                    prod_kg = p.get('production_kg', '-')
+                    revenu = p.get('revenu_brut', '-')
+                    break
+        cult_rows.append([
+            lib, c.get('superficie_ha', '-'), c.get('annee_creation', '-'),
+            c.get('origine_materiel', '-'), prod_kg, revenu,
+        ])
+    if not cult_rows:
+        cult_rows = [['Cacao Parcelle 1', '-', '-', '-', '-', '-']]
     story.append(_data_table(
-        ['THEMES D\'ANALYSE', 'PROBLEMES OU CONTRAINTES', 'CAUSES', 'CONSEQUENCES', 'SOLUTIONS'],
-        an_rows, col_widths=[35*mm, 35*mm, 30*mm, 30*mm, 30*mm],
+        ['Cultures', 'Superficie (ha)', 'Annee de creation', 'Source materiel vegetal (*)', 'Production (kg)', 'Revenu (FCFA)'],
+        cult_rows, col_widths=[30*mm, 22*mm, 22*mm, 30*mm, 25*mm, 25*mm],
+    ))
+    story.append(Paragraph('(*) 1. SATMACI/ANADER/CNRA  2. Tout venant  3. Pepinieriste prive', styles['Small']))
+    story.append(Spacer(1, 3 * mm))
+
+    # --- Situation des arbres ---
+    story.append(Paragraph('<b>Situation des arbres forestiers et fruitiers</b>', styles['SubTitle']))
+    arbres = f2.get("arbres", [])
+    arb_rows = []
+    s1_count = s2_count = s3_count = 0
+    for a in arbres:
+        circ = float(a.get('circonference', 0) or 0)
+        if circ >= 200:
+            s3_count += 1
+        elif circ >= 50:
+            s2_count += 1
+        else:
+            s1_count += 1
+        arb_rows.append([
+            a.get('numero', '-'), a.get('nom_botanique', '-'), a.get('nom_local', '-'),
+            a.get('circonference', '-'), a.get('longitude', '-'), a.get('latitude', '-'),
+            'X' if a.get('origine') == 'preserve' else '', 'X' if a.get('origine') == 'plante' else '',
+            'X' if a.get('decision') == 'eliminer' else '', 'X' if a.get('decision') == 'maintenir' else '',
+        ])
+    # Add GPS-tracked trees from carte
+    carte_arbres = (f2.get("carte_parcelle") or {}).get("arbres_ombrage", [])
+    for i, a in enumerate(carte_arbres):
+        arb_rows.append([
+            str(len(arbres) + i + 1), a.get('nom', a.get('espece', '-')), '-',
+            '-', str(a.get('lng', '-')), str(a.get('lat', '-')),
+            '', 'X', '', 'X',
+        ])
+
+    story.append(_data_table(
+        ['N°', 'Nom botanique', 'Nom local', 'Circonf.', 'Longitude', 'Latitude', 'Preserve', 'Plante', 'A elim.', 'A maint.'],
+        arb_rows, col_widths=[10*mm, 22*mm, 18*mm, 14*mm, 18*mm, 18*mm, 14*mm, 14*mm, 14*mm, 14*mm],
+    ))
+    total_ombrage = len(arbres) + len(carte_arbres)
+    story.append(Spacer(1, 2 * mm))
+    story.append(_kv_table([
+        ('Nombre d\'arbres strate 1', str(s1_count)),
+        ('Nombre d\'arbres strate 2', str(s2_count)),
+        ('Nombre d\'arbres strate 3', str(s3_count)),
+        ('Total arbres d\'ombrage', str(total_ombrage)),
+    ], styles, col_widths=[50*mm, 30*mm]))
+    story.append(Spacer(1, 2 * mm))
+    story.append(Paragraph(
+        '<i>NOTE : Tirer les conclusions sur la conformite ou non de la parcelle vis-a-vis des recommandations sur l\'agroforesterie.</i>',
+        styles['Small']
+    ))
+    story.append(Spacer(1, 3 * mm))
+
+    # --- Materiel agricole ---
+    story.append(Paragraph('<b>Materiel agricole et equipements de travail</b>', styles['SubTitle']))
+    materiels = f2.get("materiels", [])
+    mat_rows = []
+    for m in materiels:
+        type_label = {'traitement': 'Mat. traitement', 'transport': 'Mat. transport', 'deplacement': 'Moy. deplacement', 'sechage': 'Mat. sechage', 'fermentation': 'Mat. fermentation', 'outillage': 'Petit outillage', 'autre': 'Autres'}.get(m.get('type', ''), m.get('type', '-'))
+        mat_rows.append([
+            type_label, m.get('designation', '-'), m.get('quantite', '-'),
+            m.get('annee_acquisition', '-'), m.get('cout', '-'),
+            m.get('etat_bon', '-'), m.get('etat_acceptable', '-'), m.get('etat_mauvais', '-'),
+        ])
+    story.append(_data_table(
+        ['Type', 'Designation', 'Qte', 'Annee acq.', 'Cout', 'Bon', 'Accept.', 'Mauvais'],
+        mat_rows, col_widths=[22*mm, 28*mm, 12*mm, 18*mm, 18*mm, 12*mm, 14*mm, 14*mm],
     ))
     story.append(PageBreak())
 
-    # === ANNEXE 3 - PLANIFICATION ===
-    story.append(Paragraph('<font color="#1A3622" size="14"><b>ANNEXE 3 : OUTILS DE PLANIFICATION DU PDC</b></font>', styles['CenterText']))
-    story.append(Spacer(1, 5 * mm))
-
-    # --- FICHE 6 ---
+    # === FICHE 6 : MATRICE DE PLANIFICATION STRATEGIQUE ===
     story.append(_section('FICHE 6 : MATRICE DE PLANIFICATION STRATEGIQUE', styles))
     axes = f6.get("axes", [])
     ax_rows = []
@@ -625,24 +435,24 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
     ))
     story.append(Spacer(1, 5 * mm))
 
-    # --- FICHE 7 ---
+    # === FICHE 7 : MATRICE DU PROGRAMME ANNUEL D'ACTION ===
     story.append(_section('FICHE 7 : MATRICE DU PROGRAMME ANNUEL D\'ACTION', styles))
     actions = f7.get("actions", [])
     act_rows = []
     for a in actions:
         chrono = ' '.join([f'T{i}' for i in range(1, 5) if a.get(f't{i}') == 'x'])
         act_rows.append([
-            a.get('axe', '-'), a.get('activites', '-'),
+            a.get('axe', '-'), a.get('activites', '-'), a.get('sous_activites', '-'),
             a.get('indicateurs', '-'), chrono or '-',
-            a.get('responsable', '-'), a.get('cout', '-'),
+            a.get('execution', '-'), a.get('appui', '-'), a.get('cout', '-'),
         ])
     story.append(_data_table(
-        ['Axes strategiques', 'ACTIVITES / SOUS-ACTIVITES', 'INDICATEURS', 'CHRONOGRAMME', 'Responsable', 'COUT'],
-        act_rows, col_widths=[28*mm, 35*mm, 28*mm, 20*mm, 22*mm, 22*mm],
+        ['Axes strategiques', 'ACTIVITES', 'SOUS-ACTIVITES', 'INDICATEURS', 'CHRONOGRAMME', 'Execution', 'Appui', 'COUT'],
+        act_rows, col_widths=[22*mm, 22*mm, 22*mm, 20*mm, 18*mm, 18*mm, 18*mm, 18*mm],
     ))
     story.append(Spacer(1, 5 * mm))
 
-    # --- FICHE 8 ---
+    # === FICHE 8 ===
     story.append(_section('FICHE 8 : TABLEAU DE DETERMINATION DES MOYENS ET DES COUTS', styles))
     moyens = f8.get("moyens", [])
     my_rows = []
@@ -661,17 +471,16 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
     ))
     story.append(PageBreak())
 
-    # === PAGE SIGNATURES ===
+    # === PAGE SIGNATURES — PRODUCTEUR / COOPERATIVE / CABINET ===
     story.append(_section('VALIDATION ET SIGNATURES', styles))
-    story.append(Spacer(1, 8 * mm))
-
+    story.append(Spacer(1, 10 * mm))
     sig_data = [
-        ['', 'Agent Terrain', 'Agronome (Cooperative)', 'Planteur'],
-        ['Nom', _val(enq, 'nom'), pdc.get('validated_by_name', '-'), farmer_name],
-        ['Date', _val(enq, 'date'), pdc.get('validated_at', '-')[:10] if pdc.get('validated_at') else '-', '-'],
-        ['Signature', '', '', ''],
+        ['', 'SIGNATURE DU\nPRODUCTEUR', 'SIGNATURE ET CACHET\nDE LA COOPERATIVE', 'SIGNATURE ET CACHET\nDU CABINET DE FORMATION'],
+        ['Nom', farmer_name, pdc.get('validated_by_name', ''), ''],
+        ['Date', '', pdc.get('validated_at', '')[:10] if pdc.get('validated_at') else '', ''],
+        ['Signature\n\n\n\n', '', '', ''],
     ]
-    sig_t = Table(sig_data, colWidths=[30*mm, 45*mm, 50*mm, 40*mm])
+    sig_t = Table(sig_data, colWidths=[22*mm, 45*mm, 48*mm, 48*mm])
     sig_t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), PRIMARY),
         ('TEXTCOLOR', (0, 0), (-1, 0), white),
@@ -680,15 +489,15 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
         ('TOPPADDING', (0, 0), (-1, -1), 8),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
-        ('ROWHEIGHT', (0, 3), (-1, 3), 30 * mm),
+        ('ROWHEIGHT', (0, 3), (-1, 3), 35 * mm),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     story.append(sig_t)
     story.append(Spacer(1, 15 * mm))
-    story.append(Paragraph('Document genere par GreenLink Agritech | Plateforme de certification cacao durable', styles['Footer']))
+    story.append(Paragraph('Document genere par GreenLink Agritech | Certification ARS 1000 - Cacao Durable Cote d\'Ivoire', styles['Footer']))
 
     # Build
     doc.build(story, onFirstPage=_page_template, onLaterPages=_page_template)
@@ -700,3 +509,4 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+

@@ -1,37 +1,26 @@
 # GreenLink Agritech - PRD
 
-## Probleme original
-Plateforme agritech Cote d'Ivoire - modules ARS 1000 pour certification cacao durable.
+## PDC v2 — Document final conforme "PDC du Planteur" (12 avril 2026)
 
-## PDC v2 - Conformite totale aux documents officiels (12 avril 2026)
+### PDF du PDC = Document final remis au planteur
+- Page couverture: "PLAN DE DEVELOPPEMENT DE LA CACAOYERE - ARS 1000"
+- IDENTIFICATION DU PRODUCTEUR (11 champs depuis Fiche 1)
+- INFORMATION SUR LE MENAGE: Situation epargne + Situation menage (categories: Proprietaire, Gerant, Conjoints, Enfants 0-6/6-18/+18, Manoeuvres)
+- DESCRIPTION DE L'EXPLOITATION: Superficies + Cultures (format PDC planteur) + Arbres (strates 1/2/3 + total ombrage + NOTE agroforesterie) + Materiel
+- FICHE 6: Matrice planification strategique (6 axes predefinis)
+- FICHE 7: Programme annuel (ACTIVITES + SOUS-ACTIVITES + Execution + Appui + COUT)
+- FICHE 8: Moyens et couts (Annee 1-5)
+- Signatures: PRODUCTEUR / COOPERATIVE (cachet) / CABINET DE FORMATION (cachet)
 
-### Etape 1 : Fiche de collecte Agent Terrain (Fiches 1-4)
-- Fiche 1: Membres menage (9 colonnes avec selects conformes)
-- Fiche 2: Cultures (8 lignes predefinies CACAO/AUTRES/TERRES), Materiels (16 equipements), Arbres (titre et colonnes exacts)
-- Fiche 3: Grille carres 16x4 (10m x 10m - Nombre de tiges), Maladies 6+6 predefinies, Sol tableau 3 elements, Recolte tableau Elements/Reponses
-- Fiche 4: Epargne 4 types, Production 3 annees, Depenses 7 types, Main d'oeuvre
+### Frontend Fiche 7 corrige
+- Colonnes separees: ACTIVITES, SOUS-ACTIVITES, Execution, Appui (conforme au PDC du planteur)
 
-### Etape 2 : Donc Agronome (Fiche 5)
-- FICHE 5 : ANALYSE DES PROBLEMES - Colonnes: THEMES D'ANALYSE, PROBLEMES OU CONTRAINTES, CAUSES, CONSEQUENCES, SOLUTIONS
-- 10 themes predefinis avec textes exacts du document (parentheses incluses)
-- Sous-titre "Annexe 2 : Outils d'analyse des donnees"
-
-### Etape 3 : Planification (Fiches 6-8) + Auto-remplissage
-- FICHE 6 : MATRICE DE PLANIFICATION STRATEGIQUE (6 axes, Periode A1-A5, legende)
-- FICHE 7 : MATRICE DU PROGRAMME ANNUEL D'ACTION (ACTIVITES/SOUS-ACTIVITES, INDICATEURS, CHRONOGRAMME T1-T4, legende)
-- FICHE 8 : TABLEAU DE DETERMINATION DES MOYENS ET DES COUTS (Annee 1-5 Qte/Cout, categories predefinies)
-- Auto-remplissage Etape 1 -> Etape 3 (Identification, Menage, Exploitation, Production)
-- PDF conforme avec tous les titres et entetes exacts
-
-### Autres modules
-- Score Ombrage ARS 1000 (densite + diversite + strates = 0-100)
-- Integration score carbone (bonus x coeff 0.30)
-- ARS 1000 Dashboard migre vers pdc_v2
-- Auto-remplissage PDC -> ICI/SSRTE
-- Compteur 7/7 fiches
+### Etape 1-4 conformes aux documents officiels
+### Score Ombrage ARS 1000 integre
+### Auto-remplissage PDC -> ICI/SSRTE + Etape 1 -> Etape 3
 
 ## Backlog
-- P1: Integration SMS reel (Orange CI / MTN) - MOCKE
+- P1: Integration SMS reel (Orange CI / MTN)
 - P1: Support langues locales (Baoule/Dioula)
 - P2: Nettoyage donnees test/demo
 - P3: Refactoring composants volumineux
