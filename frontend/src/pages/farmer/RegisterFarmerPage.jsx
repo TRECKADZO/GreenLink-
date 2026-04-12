@@ -52,7 +52,7 @@ const RegisterFarmerPage = () => {
           const data = await res.json();
           setCooperatives(data.cooperatives || []);
         }
-      } catch { /* silent */ }
+      } catch (e) { console.warn('[Register] Coop check:', e?.message); }
     };
     loadCoops();
     // eslint-disable-next-line react-hooks/exhaustive-deps

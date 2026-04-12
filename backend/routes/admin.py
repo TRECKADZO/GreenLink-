@@ -5,10 +5,12 @@ Super Admin management for partners, users, and platform settings
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
 import os
+import logging
 from database import db
 from routes.auth import get_current_user
 from datetime import datetime
 from bson import ObjectId
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api", tags=["admin"])
@@ -763,23 +765,8 @@ async def admin_list_all_farmers(admin: dict = Depends(get_admin_user), search: 
     return {"farmers": result, "total": len(result)}
 
 @router.post("/admin/assign-farmers-to-agent")
-async def admin_assign_farmers_to_agent(body: AdminAssignFarmersRequest, admin: dict = Depends(get_admin_user)):
-    """Super Admin: assigner n'importe quel agriculteur a n'importe quel agent (sans restriction cooperative)"""
-    if not ObjectId.is_valid(body.agent_id):
-        raise HTTPException(status_code=400, detail="ID agent invalide")
-    
-    agent = await db.coop_agents.find_one({"_id": ObjectId(body.agent_id)})
-    if not agent:
-        raise HTTPException(status_code=404, detail="Agent non trouve")
-    
-    if not body.farmer_ids:
-        raise HTTPException(status_code=400, detail="Liste de fermiers vide")
-    
-    valid_ids = [fid for fid in body.farmer_ids if ObjectId.is_valid(fid)]
-    if not valid_ids:
-        raise HTTPException(status_code=400, detail="Aucun ID fermier valide")
-    
-    # Verify farmers exist (in coop_members OR users)
+async def _verify_farmer_ids(valid_ids):
+    """Verify farmer IDs exist in coop_members or users"""
     verified = []
     for fid in valid_ids:
         member = await db.coop_members.find_one({"_id": ObjectId(fid)})
@@ -787,36 +774,51 @@ async def admin_assign_farmers_to_agent(body: AdminAssignFarmersRequest, admin: 
             member = await db.users.find_one({"_id": ObjectId(fid), "user_type": "producteur"})
         if member:
             verified.append(fid)
-    
+    return verified
+
+
+async def _get_farmer_names(farmer_ids):
+    """Get display names for a list of farmer IDs"""
+    names = []
+    for fid in farmer_ids:
+        m = await db.coop_members.find_one({"_id": ObjectId(fid)})
+        if not m:
+            m = await db.users.find_one({"_id": ObjectId(fid)})
+        if m:
+            names.append(m.get("full_name") or m.get("name") or "Agriculteur")
+    return names
+
+
+async def admin_assign_farmers_to_agent(body: AdminAssignFarmersRequest, admin: dict = Depends(get_admin_user)):
+    """Super Admin: assigner des agriculteurs a un agent"""
+    if not ObjectId.is_valid(body.agent_id):
+        raise HTTPException(status_code=400, detail="ID agent invalide")
+
+    agent = await db.coop_agents.find_one({"_id": ObjectId(body.agent_id)})
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouve")
+
+    if not body.farmer_ids:
+        raise HTTPException(status_code=400, detail="Liste de fermiers vide")
+
+    valid_ids = [fid for fid in body.farmer_ids if ObjectId.is_valid(fid)]
+    if not valid_ids:
+        raise HTTPException(status_code=400, detail="Aucun ID fermier valide")
+
+    verified = await _verify_farmer_ids(valid_ids)
     if not verified:
         raise HTTPException(status_code=400, detail="Aucun agriculteur valide trouve")
-    
-    # Unassign from any other agent first
-    await db.coop_agents.update_many(
-        {},
-        {"$pull": {"assigned_farmers": {"$in": verified}}}
-    )
-    
-    # Assign to this agent
-    await db.coop_agents.update_one(
-        {"_id": ObjectId(body.agent_id)},
-        {"$addToSet": {"assigned_farmers": {"$each": verified}}}
-    )
-    
+
+    # Unassign from other agents, then assign
+    await db.coop_agents.update_many({}, {"$pull": {"assigned_farmers": {"$in": verified}}})
+    await db.coop_agents.update_one({"_id": ObjectId(body.agent_id)}, {"$addToSet": {"assigned_farmers": {"$each": verified}}})
     updated = await db.coop_agents.find_one({"_id": ObjectId(body.agent_id)})
-    
-    # Envoyer email notification a l'agent
+
+    # Notification email (fire-and-forget)
     try:
         import asyncio as _asyncio
         from services.notification_email_helper import send_notification_email_async
-        # Recuperer les noms des agriculteurs assignes
-        farmer_names = []
-        for fid in verified:
-            m = await db.coop_members.find_one({"_id": ObjectId(fid)})
-            if not m:
-                m = await db.users.find_one({"_id": ObjectId(fid)})
-            if m:
-                farmer_names.append(m.get("full_name") or m.get("name") or "Agriculteur")
+        farmer_names = await _get_farmer_names(verified)
         agent_user_id = updated.get("user_id")
         _asyncio.create_task(send_notification_email_async(db, "farmer_assigned",
             agent_id=agent_user_id or str(updated.get("_id")),
@@ -824,9 +826,8 @@ async def admin_assign_farmers_to_agent(body: AdminAssignFarmersRequest, admin: 
             assigned_by=admin.get("full_name", "Administrateur")
         ))
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).error(f"Assignment email notification failed: {e}")
-    
+        logger.error(f"Assignment email notification failed: {e}")
+
     return {
         "message": f"{len(verified)} agriculteur(s) assigne(s) a {agent.get('full_name', 'agent')}",
         "assigned_count": len(updated.get("assigned_farmers", [])),

@@ -230,7 +230,7 @@ const HarvestMarketplace = () => {
       const favIds = new Set(response.data.map(f => f.listing_id));
       setFavorites(favIds);
     } catch (error) {
-      // User might not be logged in
+      console.warn('[Marketplace] Auth check:', error?.message);
     }
   };
 
@@ -277,7 +277,7 @@ const HarvestMarketplace = () => {
       const data = response.data || [];
       setListings(data);
     } catch (error) {
-      /* error logged */
+      console.warn('[Marketplace] Error:', error?.message);
       setListings([]);
     } finally {
       setLoading(false);
@@ -290,7 +290,7 @@ const HarvestMarketplace = () => {
       const data = response.data;
       setStats(data || { total_listings: 0, total_quantity_tons: 0, avg_price_per_kg: 0, active_sellers: 0 });
     } catch (error) {
-      /* error logged */
+      console.warn('[Marketplace] Error:', error?.message);
       setStats({ total_listings: 0, total_quantity_tons: 0, avg_price_per_kg: 0, active_sellers: 0 });
     }
   };

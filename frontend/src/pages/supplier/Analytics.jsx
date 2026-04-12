@@ -124,7 +124,7 @@ const SupplierAnalytics = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {p === '7d' ? '7 jours' : p === '30d' ? '30 jours' : p === '90d' ? '90 jours' : '1 an'}
+                {{'7d': '7 jours', '30d': '30 jours', '90d': '90 jours', '1y': '1 an'}[p] || p}
               </button>
             ))}
           </div>
@@ -223,7 +223,7 @@ const SupplierAnalytics = () => {
             {(products?.top_performers || []).map((product, index) => (
               <div key={product.id} className="flex items-center gap-4">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                  index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-gray-300'
+                  ['bg-yellow-500', 'bg-gray-400', 'bg-amber-600'][index] || 'bg-gray-300'
                 }`}>
                   {index + 1}
                 </div>

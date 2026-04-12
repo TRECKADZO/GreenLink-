@@ -30,6 +30,16 @@ const PRACTICE_LABELS = {
   agroforesterie: { label: 'Agroforesterie', icon: Sprout },
 };
 
+// Chart constants (extracted to avoid inline object re-renders)
+const CHART_MARGIN = { top: 5, right: 10, left: -10, bottom: 5 };
+const CHART_MARGIN_PRIME = { top: 5, right: 10, left: 10, bottom: 5 };
+const TICK_SM = { fontSize: 11 };
+const TICK_XS = { fontSize: 10 };
+const TICK_RADAR = { fontSize: 12, fill: '#374151' };
+const TICK_RADAR_RADIUS = { fontSize: 9 };
+const TOOLTIP_STYLE = { borderRadius: 8, fontSize: 12 };
+const LEGEND_STYLE = { fontSize: 12 };
+
 const getScoreThreshold = (score) => {
   if (score >= 8) return { label: 'Excellent', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', fill: '#059669' };
   if (score >= 6) return { label: 'Tres Bon', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', fill: '#16a34a' };
@@ -381,11 +391,11 @@ const CarbonScorePage = () => {
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={280}>
-                      <BarChart data={barData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                      <BarChart data={barData} margin={CHART_MARGIN}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-25} textAnchor="end" height={55} />
-                        <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
-                        <Tooltip formatter={(v) => [`${v}/10`, 'Score']} contentStyle={{ borderRadius: 8, fontSize: 12 }} />
+                        <XAxis dataKey="name" tick={TICK_SM} angle={-25} textAnchor="end" height={55} />
+                        <YAxis domain={[0, 10]} tick={TICK_SM} />
+                        <Tooltip formatter={(v) => [`${v}/10`, 'Score']} contentStyle={TOOLTIP_STYLE} />
                         <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={40}>
                           {barData.map((entry, idx) => (
                             <Cell key={`el-${idx}`} fill={entry.fill} />
@@ -408,11 +418,11 @@ const CarbonScorePage = () => {
                     <ResponsiveContainer width="100%" height={300}>
                       <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
                         <PolarGrid stroke="#d1d5db" />
-                        <PolarAngleAxis dataKey="critere" tick={{ fontSize: 12, fill: '#374151' }} />
-                        <PolarRadiusAxis angle={90} domain={[0, 'auto']} tick={{ fontSize: 9 }} />
+                        <PolarAngleAxis dataKey="critere" tick={TICK_RADAR} />
+                        <PolarRadiusAxis angle={90} domain={[0, 'auto']} tick={TICK_RADAR_RADIUS} />
                         <Radar name="Mon score" dataKey="valeur" stroke="#059669" fill="#059669" fillOpacity={0.3} strokeWidth={2} />
                         <Radar name="Maximum" dataKey="max" stroke="#d1d5db" fill="none" strokeDasharray="4 4" />
-                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        <Legend wrapperStyle={LEGEND_STYLE} />
                         <Tooltip formatter={(v) => [typeof v === 'number' ? v.toFixed(2) : v, '']} />
                       </RadarChart>
                     </ResponsiveContainer>
@@ -434,12 +444,12 @@ const CarbonScorePage = () => {
                           name: (p.village || `Parcelle ${p.rank}`).substring(0, 14),
                           prime: p.prime_xof,
                         }))}
-                        margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                        margin={CHART_MARGIN_PRIME}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-25} textAnchor="end" height={55} />
-                        <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
-                        <Tooltip formatter={(v) => [`${v.toLocaleString('fr-FR')} XOF`, 'Prime']} contentStyle={{ borderRadius: 8, fontSize: 12 }} />
+                        <XAxis dataKey="name" tick={TICK_SM} angle={-25} textAnchor="end" height={55} />
+                        <YAxis tick={TICK_XS} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
+                        <Tooltip formatter={(v) => [`${v.toLocaleString('fr-FR')} XOF`, 'Prime']} contentStyle={TOOLTIP_STYLE} />
                         <Bar dataKey="prime" fill="#d97706" radius={[4, 4, 0, 0]} maxBarSize={40} />
                       </BarChart>
                     </ResponsiveContainer>

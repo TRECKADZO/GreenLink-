@@ -68,8 +68,7 @@ function NewConversationDialog({ open, onClose, onCreated }) {
     try {
       const data = await messagingApi.getContacts(q || null);
       setContacts(data);
-    } catch { /* ignore */ } finally { setLoading(false); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch (e) { console.warn('[Messaging] Load error:', e?.message); } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { if (open) { loadContacts(); setSelected(null); setMessage(''); setSearch(''); } }, [open, loadContacts]);
@@ -283,8 +282,7 @@ export default function MessagingPage() {
     try {
       const data = await messagingApi.getConversations(showArchived);
       setConversations(data);
-    } catch { /* ignore */ } finally { setLoading(false); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch (e) { console.warn('[Messaging] Load error:', e?.message); } finally { setLoading(false); }
   }, [showArchived]);
 
   useEffect(() => { if (token) loadConversations(); }, [token, loadConversations]);

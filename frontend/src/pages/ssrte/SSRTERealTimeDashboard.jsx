@@ -362,11 +362,9 @@ const SSRTERealTimeDashboard = () => {
                     key={alert.id}
                     onClick={() => markAsRead(alert.id)}
                     className={`p-4 rounded-lg border transition-all cursor-pointer ${
-                      alert.priority === 'critical' 
-                        ? 'bg-rose-900/30 border-rose-700/50 hover:bg-rose-900/50' 
-                        : alert.priority === 'high'
-                        ? 'bg-orange-900/20 border-orange-700/30 hover:bg-orange-900/40'
-                        : 'bg-slate-700/30 border-slate-600/30 hover:bg-slate-700/50'
+                      {'critical': 'bg-rose-900/30 border-rose-700/50 hover:bg-rose-900/50',
+                       'high': 'bg-orange-900/20 border-orange-700/30 hover:bg-orange-900/40'
+                      }[alert.priority] || 'bg-slate-700/30 border-slate-600/30 hover:bg-slate-700/50'
                     } ${!alert.read ? 'ring-2 ring-cyan-500/50' : ''}`}
                   >
                     <div className="flex items-start justify-between">
@@ -401,14 +399,12 @@ const SSRTERealTimeDashboard = () => {
                               </p>
                               <div className="flex items-center gap-3 mt-2">
                                 <Badge className={`${
-                                  alert.laborType === 'worst_forms' ? 'bg-rose-600' :
-                                  alert.laborType === 'hazardous' ? 'bg-orange-600' : 'bg-amber-600'
+                                  {'worst_forms': 'bg-rose-600', 'hazardous': 'bg-orange-600'}[alert.laborType] || 'bg-amber-600'
                                 }`}>
                                   {getLaborTypeLabel(alert.laborType)}
                                 </Badge>
                                 <span className={`font-bold ${
-                                  alert.severityScore >= 8 ? 'text-rose-400' : 
-                                  alert.severityScore >= 5 ? 'text-orange-400' : 'text-amber-400'
+                                  alert.severityScore >= 8 ? 'text-rose-400' : alert.severityScore >= 5 ? 'text-orange-400' : 'text-amber-400'
                                 }`}>
                                   Sévérité: {alert.severityScore}/10
                                 </span>
