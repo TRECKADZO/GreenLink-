@@ -594,13 +594,13 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
     story.append(Spacer(1, 5 * mm))
 
     # --- FICHE 5 ---
-    story.append(_section('FICHE 5 : Analyse des problemes', styles))
+    story.append(_section('FICHE 5 : ANALYSE DES PROBLEMES', styles))
     analyses = f5.get("analyses", [])
     an_rows = [[a.get('theme', '-'), a.get('problemes', '-'), a.get('causes', '-'),
                  a.get('consequences', '-'), a.get('solutions', '-')]
                 for a in analyses]
     story.append(_data_table(
-        ['Theme d\'analyse', 'Problemes/Contraintes', 'Causes', 'Consequences', 'Solutions'],
+        ['THEMES D\'ANALYSE', 'PROBLEMES OU CONTRAINTES', 'CAUSES', 'CONSEQUENCES', 'SOLUTIONS'],
         an_rows, col_widths=[35*mm, 35*mm, 30*mm, 30*mm, 30*mm],
     ))
     story.append(PageBreak())
@@ -610,7 +610,7 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
     story.append(Spacer(1, 5 * mm))
 
     # --- FICHE 6 ---
-    story.append(_section('FICHE 6 : Matrice de planification strategique', styles))
+    story.append(_section('FICHE 6 : MATRICE DE PLANIFICATION STRATEGIQUE', styles))
     axes = f6.get("axes", [])
     ax_rows = []
     for a in axes:
@@ -620,30 +620,30 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
             a.get('cout', '-'), period or '-', a.get('responsable', '-'), a.get('partenaires', '-'),
         ])
     story.append(_data_table(
-        ['Axe strategique', 'Objectifs', 'Activites', 'Cout (FCFA)', 'Periode', 'Responsable', 'Partenaires'],
+        ['Axes strategiques', 'Objectifs', 'Activites', 'Cout', 'Periode', 'Responsable', 'Partenaires'],
         ax_rows, col_widths=[25*mm, 25*mm, 25*mm, 20*mm, 18*mm, 22*mm, 22*mm],
     ))
     story.append(Spacer(1, 5 * mm))
 
     # --- FICHE 7 ---
-    story.append(_section('FICHE 7 : Programme annuel d\'action', styles))
+    story.append(_section('FICHE 7 : MATRICE DU PROGRAMME ANNUEL D\'ACTION', styles))
     actions = f7.get("actions", [])
     act_rows = []
     for a in actions:
         chrono = ' '.join([f'T{i}' for i in range(1, 5) if a.get(f't{i}') == 'x'])
         act_rows.append([
-            a.get('axe', '-'), a.get('activites', '-'), a.get('sous_activites', '-'),
+            a.get('axe', '-'), a.get('activites', '-'),
             a.get('indicateurs', '-'), chrono or '-',
-            a.get('execution', '-'), a.get('appui', '-'), a.get('cout', '-'),
+            a.get('responsable', '-'), a.get('cout', '-'),
         ])
     story.append(_data_table(
-        ['Axe', 'Activites', 'Sous-activites', 'Indicateurs', 'Chrono.', 'Execution', 'Appui', 'Cout'],
-        act_rows, col_widths=[22*mm, 25*mm, 25*mm, 22*mm, 15*mm, 18*mm, 18*mm, 18*mm],
+        ['Axes strategiques', 'ACTIVITES / SOUS-ACTIVITES', 'INDICATEURS', 'CHRONOGRAMME', 'Responsable', 'COUT'],
+        act_rows, col_widths=[28*mm, 35*mm, 28*mm, 20*mm, 22*mm, 22*mm],
     ))
     story.append(Spacer(1, 5 * mm))
 
     # --- FICHE 8 ---
-    story.append(_section('FICHE 8 : Moyens et couts sur 5 ans', styles))
+    story.append(_section('FICHE 8 : TABLEAU DE DETERMINATION DES MOYENS ET DES COUTS', styles))
     moyens = f8.get("moyens", [])
     my_rows = []
     for m in moyens:
@@ -656,7 +656,7 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
             m.get('a5_qte', '-'), m.get('a5_cout', '-'),
         ])
     story.append(_data_table(
-        ['Moyen', 'Unite', 'A1 Qte', 'A1 Cout', 'A2 Qte', 'A2 Cout', 'A3 Qte', 'A3 Cout', 'A4 Qte', 'A4 Cout', 'A5 Qte', 'A5 Cout'],
+        ['Moyens specifiques', 'Unites', 'An.1 Qte', 'An.1 Cout', 'An.2 Qte', 'An.2 Cout', 'An.3 Qte', 'An.3 Cout', 'An.4 Qte', 'An.4 Cout', 'An.5 Qte', 'An.5 Cout'],
         my_rows, col_widths=[22*mm, 14*mm, 12*mm, 14*mm, 12*mm, 14*mm, 12*mm, 14*mm, 12*mm, 14*mm, 12*mm, 14*mm],
     ))
     story.append(PageBreak())

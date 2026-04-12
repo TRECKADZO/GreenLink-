@@ -1105,15 +1105,15 @@ const PDCStepperPage = () => {
     const disabled = !canEditStep2;
 
     const defaultThemes = [
-      'Peuplement du verger (densite, materiel vegetal, tiges/pieds, plages vides)',
-      'Entretien du verger (gourmands, cabosses momifiees, enherbement)',
-      'Etat sanitaire (pourriture brune, mirides, foreurs, loranthus, canopee)',
+      'Peuplement du verger (densite, materiel vegetal, nombre de tiges/pieds, plages vides ...)',
+      'Entretien du verger (presence de gourmands, cabosses momifiees, enherbement...)',
+      'Etat sanitaire du verger (attaques de pourriture brune, mirides, foreurs, loranthus, etat de la canopee...)',
       'Arbres d\'ombrage (nombre, especes, strates)',
-      'Etat du sol (erosion, matiere organique)',
-      'Cours/sources d\'eau (presence, distance, etat)',
+      'Etat du sol (Zones erodees ou a risque d\'erosion, presence de matieres organiques...)',
+      'Cours/sources d\'eau (Presence de cours d\'eau ou de foret, distance avec les cultures, leur etat)',
       'Terre/Jacheres disponibles',
       'Materiel et equipement (disponibilite, qualite)',
-      'Gestion de l\'exploitation (technicite, comptabilite)',
+      'Gestion de l\'exploitation (Technicite du producteur, de la main d\'oeuvre, existence de comptabilite...)',
       'Autres cultures/activites',
     ];
 
@@ -1121,20 +1121,20 @@ const PDCStepperPage = () => {
 
     return (
       <div className="space-y-4" data-testid="fiche-5">
-        <SectionCard title="Analyse des problemes" sectionKey="f5-analyse">
-          <p className="text-xs text-[#6B7280] mb-3">Pour chaque theme, identifiez les problemes, causes, consequences et solutions proposees.</p>
+        <SectionCard title="FICHE 5 : ANALYSE DES PROBLEMES" sectionKey="f5-analyse">
+          <p className="text-xs text-[#6B7280] mb-3">Annexe 2 : Outils d'analyse des donnees. Pour chaque theme, identifiez les problemes ou contraintes, leurs causes, consequences et solutions proposees.</p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'theme', label: 'Theme d\'analyse', width: '220px' },
-              { key: 'problemes', label: 'Problemes/Contraintes', width: '180px' },
-              { key: 'causes', label: 'Causes', width: '180px' },
-              { key: 'consequences', label: 'Consequences', width: '180px' },
-              { key: 'solutions', label: 'Solutions', width: '180px' },
+              { key: 'theme', label: 'THEMES D\'ANALYSE', width: '250px' },
+              { key: 'problemes', label: 'PROBLEMES OU CONTRAINTES', width: '170px' },
+              { key: 'causes', label: 'CAUSES', width: '150px' },
+              { key: 'consequences', label: 'CONSEQUENCES', width: '150px' },
+              { key: 'solutions', label: 'SOLUTIONS', width: '150px' },
             ]}
             rows={analyses}
             onChange={v => updateArray('step2', 'fiche5', 'analyses', v)}
-            addLabel="Ajouter un theme"
+            addLabel="Ajouter un theme d'analyse"
           />
         </SectionCard>
       </div>
@@ -1342,27 +1342,28 @@ const PDCStepperPage = () => {
     return (
       <div className="space-y-4" data-testid="fiche-6">
         {activeStep === 3 && activeFiche === 0 && renderStep3Summary()}
-        <SectionCard title="Fiche 6 : Matrice de planification strategique" sectionKey="f6-matrice">
-          <p className="text-xs text-[#6B7280] mb-3">Definissez les axes strategiques, objectifs et activites du PDC sur 5 ans (A1-A5). Les 6 axes ARS 1000 sont pre-remplis.</p>
+        <SectionCard title="FICHE 6 : MATRICE DE PLANIFICATION STRATEGIQUE" sectionKey="f6-matrice">
+          <p className="text-xs text-[#6B7280] mb-3">Annexe 3 : Outils de planification. Definissez les axes strategiques, objectifs et activites du PDC. Periode sur 5 ans (A1 a A5).</p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
               { key: 'axe', label: 'Axes strategiques', width: '200px' },
-              { key: 'objectifs', label: 'Objectifs', width: '160px' },
-              { key: 'activites', label: 'Activites', width: '160px' },
-              { key: 'cout', label: 'Cout (FCFA)', type: 'number', width: '100px' },
-              { key: 'a1', label: 'A1', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a2', label: 'A2', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a3', label: 'A3', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a4', label: 'A4', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a5', label: 'A5', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'responsable', label: 'Responsable', width: '120px' },
-              { key: 'partenaires', label: 'Partenaires', width: '120px' },
+              { key: 'objectifs', label: 'Objectifs', width: '150px' },
+              { key: 'activites', label: 'Activites', width: '150px' },
+              { key: 'cout', label: 'Cout', type: 'number', width: '90px' },
+              { key: 'a1', label: 'A1', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'a2', label: 'A2', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'a3', label: 'A3', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'a4', label: 'A4', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'a5', label: 'A5', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'responsable', label: 'Responsable', width: '110px' },
+              { key: 'partenaires', label: 'Partenaires', width: '110px' },
             ]}
             rows={axes}
             onChange={v => updateArray('step3', 'fiche6', 'axes', v)}
             addLabel="Ajouter un axe/activite"
           />
+          <p className="text-[10px] text-[#6B7280] mt-2 italic">Periode : A1 = Annee 1, A2 = Annee 2, ..., A5 = Annee 5</p>
         </SectionCard>
       </div>
     );
@@ -1379,27 +1380,26 @@ const PDCStepperPage = () => {
 
     return (
       <div className="space-y-4" data-testid="fiche-7">
-        <SectionCard title="Fiche 7 : Matrice du programme annuel d'action" sectionKey="f7-programme">
-          <p className="text-xs text-[#6B7280] mb-3">Programme annuel detaille avec activites, sous-activites, indicateurs et chronogramme trimestriel (T1-T4).</p>
+        <SectionCard title="FICHE 7 : MATRICE DU PROGRAMME ANNUEL D'ACTION" sectionKey="f7-programme">
+          <p className="text-xs text-[#6B7280] mb-3">Annexe 3 : Outils de planification. Programme annuel detaille avec activites, sous-activites, indicateurs et chronogramme trimestriel (T1 a T4).</p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
               { key: 'axe', label: 'Axes strategiques', width: '180px' },
-              { key: 'activites', label: 'Activites', width: '150px' },
-              { key: 'sous_activites', label: 'Sous-activites', width: '150px' },
-              { key: 'indicateurs', label: 'Indicateurs', width: '130px' },
-              { key: 't1', label: 'T1', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't2', label: 'T2', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't3', label: 'T3', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't4', label: 'T4', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'execution', label: 'Execution', width: '100px' },
-              { key: 'appui', label: 'Appui', width: '100px' },
-              { key: 'cout', label: 'Cout (FCFA)', type: 'number', width: '100px' },
+              { key: 'activites', label: 'ACTIVITES / SOUS-ACTIVITES', width: '180px' },
+              { key: 'indicateurs', label: 'INDICATEURS', width: '130px' },
+              { key: 't1', label: 'T1', type: 'select', width: '48px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't2', label: 'T2', type: 'select', width: '48px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't3', label: 'T3', type: 'select', width: '48px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't4', label: 'T4', type: 'select', width: '48px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'responsable', label: 'Responsable', width: '110px' },
+              { key: 'cout', label: 'COUT', type: 'number', width: '100px' },
             ]}
             rows={actions}
             onChange={v => updateArray('step3', 'fiche7', 'actions', v)}
             addLabel="Ajouter une action"
           />
+          <p className="text-[10px] text-[#6B7280] mt-2 italic">CHRONOGRAMME : T1 = Trimestre 1, T2 = Trimestre 2, T3 = Trimestre 3, T4 = Trimestre 4</p>
         </SectionCard>
       </div>
     );
@@ -1427,23 +1427,23 @@ const PDCStepperPage = () => {
 
     return (
       <div className="space-y-4" data-testid="fiche-8">
-        <SectionCard title="Fiche 8 : Tableau de determination des moyens et des couts" sectionKey="f8-moyens">
-          <p className="text-xs text-[#6B7280] mb-3">Estimez les moyens (investissement, intrants, main d'oeuvre) et couts sur 5 ans. Les categories sont pre-remplies.</p>
+        <SectionCard title="FICHE 8 : TABLEAU DE DETERMINATION DES MOYENS ET DES COUTS" sectionKey="f8-moyens">
+          <p className="text-xs text-[#6B7280] mb-3">Annexe 3 : Outils de planification. Estimez les moyens specifiques (investissement, intrants, main d'oeuvre) et couts sur 5 ans.</p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'moyen', label: 'Moyens specifiques', width: '150px' },
+              { key: 'moyen', label: 'Moyens specifiques', width: '160px' },
               { key: 'unite', label: 'Unites', width: '70px' },
-              { key: 'a1_qte', label: 'An1 Qte', type: 'number', width: '65px' },
-              { key: 'a1_cout', label: 'An1 Cout', type: 'number', width: '80px' },
-              { key: 'a2_qte', label: 'An2 Qte', type: 'number', width: '65px' },
-              { key: 'a2_cout', label: 'An2 Cout', type: 'number', width: '80px' },
-              { key: 'a3_qte', label: 'An3 Qte', type: 'number', width: '65px' },
-              { key: 'a3_cout', label: 'An3 Cout', type: 'number', width: '80px' },
-              { key: 'a4_qte', label: 'An4 Qte', type: 'number', width: '65px' },
-              { key: 'a4_cout', label: 'An4 Cout', type: 'number', width: '80px' },
-              { key: 'a5_qte', label: 'An5 Qte', type: 'number', width: '65px' },
-              { key: 'a5_cout', label: 'An5 Cout', type: 'number', width: '80px' },
+              { key: 'a1_qte', label: 'Annee 1 Qte', type: 'number', width: '70px' },
+              { key: 'a1_cout', label: 'Annee 1 Cout', type: 'number', width: '80px' },
+              { key: 'a2_qte', label: 'Annee 2 Qte', type: 'number', width: '70px' },
+              { key: 'a2_cout', label: 'Annee 2 Cout', type: 'number', width: '80px' },
+              { key: 'a3_qte', label: 'Annee 3 Qte', type: 'number', width: '70px' },
+              { key: 'a3_cout', label: 'Annee 3 Cout', type: 'number', width: '80px' },
+              { key: 'a4_qte', label: 'Annee 4 Qte', type: 'number', width: '70px' },
+              { key: 'a4_cout', label: 'Annee 4 Cout', type: 'number', width: '80px' },
+              { key: 'a5_qte', label: 'Annee 5 Qte', type: 'number', width: '70px' },
+              { key: 'a5_cout', label: 'Annee 5 Cout', type: 'number', width: '80px' },
             ]}
             rows={moyens}
             onChange={v => updateArray('step3', 'fiche8', 'moyens', v)}
