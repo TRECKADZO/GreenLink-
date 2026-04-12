@@ -95,13 +95,12 @@ const PDCListPage = ({ onBack }) => {
         headers: authHeaders(),
         body: JSON.stringify({ farmer_id: selectedMember }),
       });
+      const data = await res.json();
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Erreur');
+        throw new Error(data.detail || 'Erreur lors de la creation');
       }
-      const pdc = await res.json();
       toast.success('PDC cree avec succes');
-      navigate(`/cooperative/pdc-v2/${pdc.id}`);
+      navigate(`/cooperative/pdc-v2/${data.id}`);
     } catch (e) {
       toast.error(e.message || 'Erreur lors de la creation');
     } finally {
@@ -113,7 +112,10 @@ const PDCListPage = ({ onBack }) => {
     if (!window.confirm('Supprimer ce PDC ?')) return;
     try {
       const res = await fetch(`${API_URL}/api/pdc-v2/${pdcId}`, { method: 'DELETE', headers: authHeaders() });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.detail); }
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.detail || 'Erreur');
+      }
       toast.success('PDC supprime');
       loadPdcs();
       loadStats();
