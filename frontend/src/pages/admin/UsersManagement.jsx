@@ -313,13 +313,15 @@ const UsersManagement = () => {
         </html>
       `;
       
-      // Open print dialog with safe DOM manipulation
-      const printWindow = window.open('', '_blank');
+      // Open print dialog with safe Blob approach (avoids document.write XSS)
+      const blob = new Blob([printContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const printWindow = window.open(url, '_blank');
       if (printWindow) {
-        printWindow.document.open();
-        printWindow.document.write(printContent);
-        printWindow.document.close();
-        printWindow.print();
+        printWindow.onload = () => {
+          printWindow.print();
+          URL.revokeObjectURL(url);
+        };
       }
       
       toast({

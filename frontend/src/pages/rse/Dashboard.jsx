@@ -87,7 +87,7 @@ const RSEDashboard = () => {
       });
       setSubscription(data.subscription);
     } catch (err) {
-      /* error logged */
+      console.warn('[RSE] Subscription fetch failed:', err.message);
     }
   };
 
@@ -99,7 +99,7 @@ const RSEDashboard = () => {
       });
       setStats(data);
     } catch (err) {
-      /* error logged */
+      console.warn('[RSE] Stats fetch failed:', err.message);
     }
   };
 
@@ -114,7 +114,7 @@ const RSEDashboard = () => {
       setCredits(creditsData);
       setDistrib(distribData);
     } catch (error) {
-      /* error logged */
+      console.warn('[RSE] Data fetch failed:', error.message);
     } finally {
       setLoading(false);
     }

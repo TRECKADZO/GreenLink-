@@ -450,7 +450,7 @@ export async function syncCooperativeData(apiUrl, token) {
       await saveCoopMembers(members);
       membersCount = members.length;
     }
-  } catch (e) { /* warning */ }
+  } catch (e) { console.warn('[OfflineDB] Members sync failed:', e.message); }
 
   // 2. Lots
   try {
@@ -459,7 +459,7 @@ export async function syncCooperativeData(apiUrl, token) {
       const data = await res.json();
       await saveCoopLots(data.lots || data || []);
     }
-  } catch (e) { /* warning */ }
+  } catch (e) { console.warn('[OfflineDB] Lots sync failed:', e.message); }
 
   // 3. Dashboard
   try {
@@ -468,7 +468,7 @@ export async function syncCooperativeData(apiUrl, token) {
       const data = await res.json();
       await saveCoopDashboard(data);
     }
-  } catch (e) { /* warning */ }
+  } catch (e) { console.warn('[OfflineDB] Dashboard sync failed:', e.message); }
 
   // 4. KPIs
   try {
@@ -477,7 +477,7 @@ export async function syncCooperativeData(apiUrl, token) {
       const data = await res.json();
       await saveCoopDashboardKPIs(data);
     }
-  } catch (e) { /* warning */ }
+  } catch (e) { console.warn('[OfflineDB] KPIs sync failed:', e.message); }
 
   // 5. Update meta
   const syncTimestamp = new Date().toISOString();

@@ -14,11 +14,11 @@ import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
-# Test credentials
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "test123456"
-AGENT_EMAIL = "testagent@test.ci"
-AGENT_PASSWORD = "test123456"
+# Test credentials from environment
+COOP_EMAIL = os.environ.get("TEST_COOP_EMAIL", "bielaghana@gmail.com")
+COOP_PASSWORD = os.environ.get("TEST_COOP_PASSWORD", "test123456")
+AGENT_EMAIL = os.environ.get("TEST_AGENT_EMAIL", "testagent@test.ci")
+AGENT_PASSWORD = os.environ.get("TEST_AGENT_PASSWORD", "test123456")
 
 # Test PDC ID with full tree data
 TEST_PDC_ID = "69da80390d8a87a393fd1ede"

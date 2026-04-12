@@ -15,9 +15,9 @@ from datetime import datetime
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
-# Test credentials
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "test123456"
+# Test credentials from environment or test_credentials.md
+COOP_EMAIL = os.environ.get("TEST_COOP_EMAIL", "bielaghana@gmail.com")
+COOP_PASSWORD = os.environ.get("TEST_COOP_PASSWORD", "test123456")
 
 # Module-level session to avoid rate limiting
 _session = None
