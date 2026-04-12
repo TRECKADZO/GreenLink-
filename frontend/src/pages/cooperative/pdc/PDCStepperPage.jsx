@@ -1469,7 +1469,7 @@ const PDCStepperPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/cooperative/pdc-v2')} className="text-[#6B7280] hover:text-[#1A3622]" data-testid="pdc-stepper-back">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-[#6B7280] hover:text-[#1A3622]" data-testid="pdc-stepper-back">
             <ArrowLeft className="w-4 h-4 mr-1" /> Retour
           </Button>
           <div>
@@ -1599,51 +1599,70 @@ const PDCStepperPage = () => {
         {currentFicheRenderer ? currentFicheRenderer() : <p className="text-[#6B7280] text-sm">Fiche non disponible</p>}
       </div>
 
-      {/* Actions */}
-      {!readOnly && (
-        <div className="flex items-center justify-between bg-white border border-[#E5E5E0] rounded-md px-4 py-3" data-testid="pdc-actions">
-          <div className="flex gap-2">
-            {currentCanEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => saveStep(activeStep)}
-                disabled={saving}
-                className="border-[#1A3622] text-[#1A3622] hover:bg-[#E8F0EA]"
-                data-testid="pdc-save-btn"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
-                Sauvegarder
-              </Button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {activeStep < 3 && currentCanEdit && (
-              <Button
-                size="sm"
-                onClick={() => submitStep(activeStep)}
-                disabled={saving}
-                className="bg-[#1A3622] hover:bg-[#112417] text-white"
-                data-testid="pdc-submit-step-btn"
-              >
-                Soumettre Etape {activeStep} <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            )}
-            {activeStep === 3 && canValidate && (
-              <Button
-                size="sm"
-                onClick={validatePdc}
-                disabled={saving}
-                className="bg-[#1A3622] hover:bg-[#112417] text-white"
-                data-testid="pdc-validate-btn"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
-                Valider le PDC
-              </Button>
-            )}
-          </div>
+      {/* Navigation entre fiches + Actions */}
+      <div className="flex items-center justify-between bg-white border border-[#E5E5E0] rounded-md px-4 py-3" data-testid="pdc-actions">
+        <div className="flex gap-2">
+          {/* Bouton fiche precedente */}
+          {activeFiche > 0 ? (
+            <Button variant="outline" size="sm" onClick={() => setActiveFiche(activeFiche - 1)} className="text-[#6B7280] hover:text-[#1A3622]" data-testid="pdc-prev-fiche">
+              <ArrowLeft className="w-4 h-4 mr-1" /> {ficheNames[activeFiche - 1]}
+            </Button>
+          ) : activeStep > 1 ? (
+            <Button variant="outline" size="sm" onClick={() => { setActiveStep(activeStep - 1); setActiveFiche(STEPS[activeStep - 2].fiches.length - 1); }} className="text-[#6B7280] hover:text-[#1A3622]" data-testid="pdc-prev-step">
+              <ArrowLeft className="w-4 h-4 mr-1" /> Etape {activeStep - 1}
+            </Button>
+          ) : null}
+
+          {currentCanEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => saveStep(activeStep)}
+              disabled={saving}
+              className="border-[#1A3622] text-[#1A3622] hover:bg-[#E8F0EA]"
+              data-testid="pdc-save-btn"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+              Sauvegarder
+            </Button>
+          )}
         </div>
-      )}
+        <div className="flex gap-2">
+          {/* Bouton fiche suivante */}
+          {activeFiche < ficheNames.length - 1 ? (
+            <Button variant="outline" size="sm" onClick={() => setActiveFiche(activeFiche + 1)} className="text-[#374151] hover:text-[#1A3622]" data-testid="pdc-next-fiche">
+              {ficheNames[activeFiche + 1]} <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          ) : activeStep < 3 && currentCanEdit ? (
+            <Button
+              size="sm"
+              onClick={() => submitStep(activeStep)}
+              disabled={saving}
+              className="bg-[#1A3622] hover:bg-[#112417] text-white"
+              data-testid="pdc-submit-step-btn"
+            >
+              Soumettre Etape {activeStep} <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          ) : activeStep < 3 && pdc.current_step > activeStep ? (
+            <Button variant="outline" size="sm" onClick={() => { setActiveStep(activeStep + 1); setActiveFiche(0); }} className="text-[#374151] hover:text-[#1A3622]" data-testid="pdc-next-step">
+              Etape {activeStep + 1} <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          ) : null}
+
+          {activeStep === 3 && activeFiche === ficheNames.length - 1 && canValidate && (
+            <Button
+              size="sm"
+              onClick={validatePdc}
+              disabled={saving}
+              className="bg-[#1A3622] hover:bg-[#112417] text-white"
+              data-testid="pdc-validate-btn"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
+              Valider le PDC
+            </Button>
+          )}
+        </div>
+      </div>
 
       {/* Validation banner */}
       {pdc.statut === 'valide' && (
