@@ -1,23 +1,24 @@
-# Test Credentials
-
-## Admin
-- Email: klenakan.eric@gmail.com
-- Password: 474Treckadzo
+# Test Credentials - GreenLink Agritech
 
 ## Cooperative
 - Email: bielaghana@gmail.com
 - Password: test123456
+- User Type: cooperative
+- Dashboard: /cooperative/dashboard
 
 ## Agent Terrain
 - Email: testagent@test.ci
 - Password: test123456
+- User Type: field_agent
+- Dashboard: /agent/terrain
 
-## Planteur
-- Email: testplanteur@test.ci
+## Producteur (Koffi)
+- Phone: +2250709090909
 - Password: test123456
+- User Type: producteur
+- Dashboard: /farmer/dashboard
+- Has PDC: Yes (validated)
 
-## Login
-- Endpoint: POST /api/auth/login
-- Body: {"identifier": "<email>", "password": "<password>"}
-- Response key: access_token
-- Note: Rate limiter blocks after 30 attempts/minute. Restart backend to clear.
+## Notes
+- Rate limiter blocks after 30 attempts/minute. Restart backend to clear.
+- Login endpoint: POST /api/auth/login with {"identifier": "<email_or_phone>", "password": "<password>"}

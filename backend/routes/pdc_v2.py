@@ -101,9 +101,14 @@ async def check_pdc_access(pdc: dict, user: dict):
         return True
 
     if user_type in ("farmer", "planteur", "producteur"):
-        if pdc.get("farmer_id") != user_id:
-            raise HTTPException(status_code=403, detail="Acces refuse")
-        return True
+        # farmer_id in PDC = coop_member._id, not users._id
+        if pdc.get("farmer_id") == user_id:
+            return True
+        # Check via coop_members link
+        member = await db.coop_members.find_one({"user_id": user_id}, {"_id": 1})
+        if member and pdc.get("farmer_id") == str(member["_id"]):
+            return True
+        raise HTTPException(status_code=403, detail="Acces refuse")
 
     if user_type == "cooperative":
         if pdc.get("coop_id") != user_id:
@@ -222,7 +227,12 @@ async def list_pdcs(
     query = {}
 
     if user_type in ("farmer", "planteur", "producteur"):
-        query["farmer_id"] = user_id
+        # Farmer's user_id != member_id — find the linked coop_member first
+        member = await db.coop_members.find_one({"user_id": user_id}, {"_id": 1})
+        if member:
+            query["farmer_id"] = str(member["_id"])
+        else:
+            query["farmer_id"] = user_id  # fallback
     elif user_type == "cooperative":
         query["coop_id"] = user_id
     elif user_type in ("field_agent", "agent_terrain"):
