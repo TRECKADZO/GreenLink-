@@ -473,63 +473,40 @@ async def delete_testimonial(testimonial_id: str, admin: dict = Depends(get_admi
 
 # ============= REAL-TIME DASHBOARD =============
 
-@router.get("/admin/realtime-dashboard")
-async def get_realtime_dashboard(current_user: dict = Depends(get_admin_user)):
-    """
-    Tableau de bord temps réel pour les administrateurs
-    - Activité USSD
-    - Paiements en cours
-    - Métriques par région
-    """
-    from datetime import timedelta
-    
-    now = datetime.utcnow()
-    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    week_ago = today - timedelta(days=7)
-    month_ago = today - timedelta(days=30)
-    
-    # ===== USSD ACTIVITY =====
+async def _get_ussd_metrics(today, week_ago):
+    """USSD activity metrics"""
     ussd_today = await db.sms_logs.count_documents({"created_at": {"$gte": today}})
     ussd_week = await db.sms_logs.count_documents({"created_at": {"$gte": week_ago}})
-    
-    # USSD by command type
     ussd_by_type = await db.sms_logs.aggregate([
         {"$match": {"created_at": {"$gte": week_ago}, "direction": "incoming"}},
-        {"$addFields": {
-            "command": {"$toUpper": {"$arrayElemAt": [{"$split": ["$message", " "]}, 0]}}
-        }},
+        {"$addFields": {"command": {"$toUpper": {"$arrayElemAt": [{"$split": ["$message", " "]}, 0]}}}},
         {"$group": {"_id": "$command", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 5}
+        {"$sort": {"count": -1}}, {"$limit": 5}
     ]).to_list(5)
-    
-    # Pending SMS requests
     pending_parcels = await db.sms_parcel_requests.count_documents({"status": "pending"})
     pending_harvests = await db.sms_harvest_requests.count_documents({"status": "pending"})
-    
-    # ===== PAYMENTS ACTIVITY =====
+    return {
+        "requests_today": ussd_today, "requests_week": ussd_week,
+        "by_command": {item["_id"]: item["count"] for item in ussd_by_type if item["_id"]},
+        "pending_requests": {"parcels": pending_parcels, "harvests": pending_harvests}
+    }
+
+
+async def _get_payment_metrics(today, week_ago, month_ago):
+    """Payment activity metrics"""
     payments_today = await db.carbon_payments.count_documents({"created_at": {"$gte": today}})
     payments_week = await db.carbon_payments.count_documents({"created_at": {"$gte": week_ago}})
-    
-    # Total amounts
     payment_stats = await db.carbon_payments.aggregate([
         {"$match": {"created_at": {"$gte": month_ago}}},
-        {"$group": {
-            "_id": None,
-            "total_amount": {"$sum": "$amount_xof"},
-            "count": {"$sum": 1},
-            "avg_amount": {"$avg": "$amount_xof"}
-        }}
+        {"$group": {"_id": None, "total_amount": {"$sum": "$amount_xof"}, "count": {"$sum": 1}, "avg_amount": {"$avg": "$amount_xof"}}}
     ]).to_list(1)
-    
     payment_totals = payment_stats[0] if payment_stats else {"total_amount": 0, "count": 0, "avg_amount": 0}
-    
-    # Recent payments
+
     recent_payments = await db.carbon_payments.find().sort("created_at", -1).limit(10).to_list(10)
-    recent_payments_list = []
+    recent_list = []
     for p in recent_payments:
         member = await db.coop_members.find_one({"_id": ObjectId(p.get("member_id"))}) if p.get("member_id") else None
-        recent_payments_list.append({
+        recent_list.append({
             "id": str(p["_id"]),
             "member_name": member.get("full_name") if member else "N/A",
             "amount": p.get("amount_xof", 0),
@@ -537,91 +514,69 @@ async def get_realtime_dashboard(current_user: dict = Depends(get_admin_user)):
             "payment_ref": p.get("payment_ref", ""),
             "created_at": p.get("created_at").isoformat() if p.get("created_at") else None
         })
-    
-    # ===== REGIONAL METRICS =====
-    # Parcels by region
+    return {
+        "today": payments_today, "week": payments_week,
+        "month_total": round(payment_totals.get("total_amount", 0) or 0),
+        "month_count": payment_totals.get("count", 0) or 0,
+        "avg_amount": round(payment_totals.get("avg_amount", 0) or 0),
+        "recent": recent_list
+    }
+
+
+async def _get_regional_metrics():
+    """Regional parcels and cooperatives"""
     parcels_by_region = await db.parcels.aggregate([
-        {"$group": {
-            "_id": "$region",
-            "count": {"$sum": 1},
-            "total_area": {"$sum": "$area_hectares"},
-            "avg_score": {"$avg": "$carbon_score"}
-        }},
-        {"$sort": {"count": -1}},
-        {"$limit": 10}
+        {"$group": {"_id": "$region", "count": {"$sum": 1}, "total_area": {"$sum": "$area_hectares"}, "avg_score": {"$avg": "$carbon_score"}}},
+        {"$sort": {"count": -1}}, {"$limit": 10}
     ]).to_list(10)
-    
-    # Cooperatives by region
     coops_by_region = await db.users.aggregate([
         {"$match": {"user_type": "cooperative"}},
         {"$group": {"_id": "$headquarters_region", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}}
     ]).to_list(10)
-    
-    # ===== AUDIT ACTIVITY =====
+    return {
+        "parcels": [{"region": r["_id"] or "Non defini", "parcels": r["count"], "area_ha": round(r.get("total_area", 0) or 0, 1), "avg_score": round(r.get("avg_score", 0) or 0, 1)} for r in parcels_by_region],
+        "cooperatives": {r["_id"] or "Non defini": r["count"] for r in coops_by_region}
+    }
+
+
+@router.get("/admin/realtime-dashboard")
+async def get_realtime_dashboard(current_user: dict = Depends(get_admin_user)):
+    """Tableau de bord temps reel administrateurs"""
+    from datetime import timedelta
+    now = datetime.utcnow()
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+
+    ussd = await _get_ussd_metrics(today, week_ago)
+    payments = await _get_payment_metrics(today, week_ago, month_ago)
+    regions = await _get_regional_metrics()
+
     audits_today = await db.carbon_audits.count_documents({"created_at": {"$gte": today}})
     audits_week = await db.carbon_audits.count_documents({"created_at": {"$gte": week_ago}})
-    
-    # Audits by recommendation
     audits_by_status = await db.carbon_audits.aggregate([
         {"$match": {"created_at": {"$gte": month_ago}}},
         {"$group": {"_id": "$recommendation", "count": {"$sum": 1}}}
     ]).to_list(10)
-    
-    # ===== ACTIVE USERS =====
-    # Users who logged in today (simplified - would need login tracking)
-    active_coops = await db.users.count_documents({
-        "user_type": "cooperative",
-        "last_login": {"$gte": today}
-    }) if await db.users.find_one({"last_login": {"$exists": True}}) else 0
-    
-    # Total active entities
-    total_coops = await db.users.count_documents({"user_type": "cooperative"})
-    total_farmers = await db.coop_members.count_documents({})
-    total_auditors = await db.users.count_documents({"user_type": "carbon_auditor"})
-    total_parcels = await db.parcels.count_documents({})
-    
+
     return {
         "timestamp": now.isoformat(),
-        "ussd": {
-            "requests_today": ussd_today,
-            "requests_week": ussd_week,
-            "by_command": {item["_id"]: item["count"] for item in ussd_by_type if item["_id"]},
-            "pending_requests": {
-                "parcels": pending_parcels,
-                "harvests": pending_harvests
-            }
-        },
-        "payments": {
-            "today": payments_today,
-            "week": payments_week,
-            "month_total": round(payment_totals.get("total_amount", 0) or 0),
-            "month_count": payment_totals.get("count", 0) or 0,
-            "avg_amount": round(payment_totals.get("avg_amount", 0) or 0),
-            "recent": recent_payments_list
-        },
-        "regions": {
-            "parcels": [
-                {
-                    "region": r["_id"] or "Non défini",
-                    "parcels": r["count"],
-                    "area_ha": round(r.get("total_area", 0) or 0, 1),
-                    "avg_score": round(r.get("avg_score", 0) or 0, 1)
-                }
-                for r in parcels_by_region
-            ],
-            "cooperatives": {r["_id"] or "Non défini": r["count"] for r in coops_by_region}
-        },
+        "ussd": ussd,
+        "payments": payments,
+        "regions": regions,
         "audits": {
-            "today": audits_today,
-            "week": audits_week,
+            "today": audits_today, "week": audits_week,
             "by_status": {item["_id"]: item["count"] for item in audits_by_status if item["_id"]}
         },
+        "active_cooperatives": await db.users.count_documents({
+            "user_type": "cooperative", "last_login": {"$gte": today}
+        }) if await db.users.find_one({"last_login": {"$exists": True}}) else 0,
         "totals": {
-            "cooperatives": total_coops,
-            "farmers": total_farmers,
-            "auditors": total_auditors,
-            "parcels": total_parcels
+            "cooperatives": await db.users.count_documents({"user_type": "cooperative"}),
+            "farmers": await db.coop_members.count_documents({}),
+            "auditors": await db.users.count_documents({"user_type": "carbon_auditor"}),
+            "parcels": await db.parcels.count_documents({})
         }
     }
 

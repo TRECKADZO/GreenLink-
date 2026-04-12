@@ -52,7 +52,7 @@ const SubscriptionBanner = ({ subscription }) => {
       const { data } = await axios.get(`${API_URL}/api/subscriptions/quote/my-quote`, { headers });
       setMyQuotes(data.quotes || []);
     } catch (err) {
-      // Ignore
+      console.warn('[Subscription] Quotes fetch failed:', err.message);
     } finally {
       setLoadingQuotes(false);
     }

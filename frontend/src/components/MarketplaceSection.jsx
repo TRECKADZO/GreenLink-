@@ -53,7 +53,7 @@ const MarketplaceSection = () => {
       const data = await marketplaceApi.getProducts(filters);
       setProducts(data);
     } catch (error) {
-      /* error logged */
+      console.warn('[Marketplace] Load error:', error.message);
     } finally {
       setLoading(false);
     }

@@ -59,7 +59,7 @@ export const NotificationCenter = () => {
         const data = await res.json();
         setUnreadCount(data.non_lues || 0);
       }
-    } catch (e) { /* silent */ }
+    } catch (e) { console.warn('[Notifications] Error:', e.message); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -72,7 +72,7 @@ export const NotificationCenter = () => {
         setNotifications(data.notifications || []);
         setUnreadCount(data.non_lues || 0);
       }
-    } catch (e) { /* silent */ }
+    } catch (e) { console.warn('[Notifications] Error:', e.message); }
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -84,7 +84,7 @@ export const NotificationCenter = () => {
       });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (e) { /* silent */ }
+    } catch (e) { console.warn('[Notifications] Error:', e.message); }
   };
 
   const markAllRead = async () => {
@@ -94,7 +94,7 @@ export const NotificationCenter = () => {
       });
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
-    } catch (e) { /* silent */ }
+    } catch (e) { console.warn('[Notifications] Error:', e.message); }
   };
 
   // SSE real-time connection
@@ -143,16 +143,16 @@ export const NotificationCenter = () => {
                   } else if (eventType === 'unread_count') {
                     setUnreadCount(parsed.non_lues || 0);
                   }
-                } catch (e) { /* ignore parse errors */ }
+                } catch (e) { console.warn('[Notifications] Parse error:', e.message); }
                 eventType = '';
                 eventData = '';
               }
             }
             readStream();
-          }).catch(() => { /* stream closed */ });
+          }).catch((e) => { console.debug('[Notifications] Stream closed:', e?.message); });
         };
         readStream();
-      }).catch(() => { /* connection failed, fallback to polling */ });
+      }).catch((e) => { console.warn('[Notifications] SSE fallback to polling:', e?.message); });
 
       sseRef.current = controller;
     };

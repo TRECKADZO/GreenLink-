@@ -70,7 +70,7 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
       setResult(data);
       setStep(3);
     } catch (error) {
-      /* error logged */
+      console.error('[CarbonCalculator] Load error:', error.message);
     } finally {
       setCalculating(false);
     }
