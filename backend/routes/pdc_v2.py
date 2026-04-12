@@ -211,6 +211,7 @@ async def list_pdcs(
     current_user: dict = Depends(get_current_user),
     statut: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    farmer_id: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
 ):
@@ -229,6 +230,10 @@ async def list_pdcs(
         query["coop_id"] = coop_id
     elif user_type not in ("admin", "super_admin"):
         raise HTTPException(status_code=403, detail="Role non autorise")
+
+    # Filter by specific farmer
+    if farmer_id:
+        query["farmer_id"] = farmer_id
 
     if statut:
         query["statut"] = statut

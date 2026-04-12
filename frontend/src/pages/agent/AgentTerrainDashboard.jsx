@@ -1258,11 +1258,43 @@ const AgentTerrainDashboard = () => {
       setTab('farmer-profile');
     }
   };
-  const handleFormAction = (formId) => {
+  const handleFormAction = async (formId) => {
     if (!selectedFarmer) return;
     const fId = selectedFarmer.id || '', fName = encodeURIComponent(selectedFarmer.full_name || ''), fPhone = encodeURIComponent(selectedFarmer.phone_number || '');
     switch (formId) {
-      case 'pdc': navigate(`/cooperative/pdc-v2?farmer_id=${fId}&farmer_name=${fName}`); break;
+      case 'pdc': {
+        // Navigate directly to the farmer's PDC (find or create)
+        try {
+          const token = tokenService.getToken();
+          const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+          // Check if PDC exists for this farmer
+          const listRes = await fetch(`${API_URL}/api/pdc-v2/list?farmer_id=${fId}`, { headers });
+          if (listRes.ok) {
+            const data = await listRes.json();
+            const pdcs = data.pdcs || [];
+            const activePdc = pdcs.find(p => p.farmer_id === fId && p.statut !== 'archive');
+            if (activePdc) {
+              navigate(`/cooperative/pdc-v2/${activePdc.id}`);
+              return;
+            }
+          }
+          // No PDC exists — create one
+          const createRes = await fetch(`${API_URL}/api/pdc-v2`, {
+            method: 'POST', headers,
+            body: JSON.stringify({ farmer_id: fId }),
+          });
+          const newPdc = await createRes.json();
+          if (createRes.ok && newPdc.id) {
+            toast.success('PDC cree pour ' + (selectedFarmer.full_name || 'ce planteur'));
+            navigate(`/cooperative/pdc-v2/${newPdc.id}`);
+          } else {
+            toast.error(newPdc.detail || 'Erreur creation PDC');
+          }
+        } catch {
+          toast.error('Erreur reseau — verifiez votre connexion');
+        }
+        break;
+      }
       case 'ici': setShowICIModal(true); break;
       case 'ssrte': setShowSSRTEModal(true); break;
       case 'redd': navigate(`/redd/tracking?farmer=${fName}&phone=${fPhone}&id=${fId}`); break;
