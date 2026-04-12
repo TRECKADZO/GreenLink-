@@ -126,11 +126,12 @@ const CarbonScorePage = () => {
 
   // Radar chart data from breakdown
   const radarData = [
-    { critere: 'Base', valeur: breakdown.base || 0, max: 3.0, fullMark: 3.0 },
-    { critere: 'Arbres', valeur: breakdown.arbres || 0, max: 2.0, fullMark: 2.0 },
-    { critere: 'Ombrage', valeur: breakdown.ombrage || 0, max: 2.0, fullMark: 2.0 },
-    { critere: 'Pratiques', valeur: breakdown.pratiques || 0, max: 2.5, fullMark: 2.5 },
-    { critere: 'Surface', valeur: breakdown.surface || 0, max: 0.5, fullMark: 0.5 },
+    { critere: 'Base', valeur: breakdown.base || 0, max: 1.0, fullMark: 1.0 },
+    { critere: 'Arbres', valeur: breakdown.densite_arbres || 0, max: 2.0, fullMark: 2.0 },
+    { critere: 'Ombrage', valeur: breakdown.couverture_ombragee || 0, max: 1.5, fullMark: 1.5 },
+    { critere: 'Pratiques', valeur: breakdown.pratiques_ecologiques || 0, max: 1.2, fullMark: 1.2 },
+    { critere: 'REDD+', valeur: breakdown.redd_practices || 0, max: 2.5, fullMark: 2.5 },
+    { critere: 'Surface', valeur: breakdown.surface || 0, max: 0.3, fullMark: 0.3 },
   ];
 
   const totalPrime = parcelsWithPrime.reduce((s, p) => s + p.prime_xof, 0);
@@ -208,28 +209,29 @@ const CarbonScorePage = () => {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Decomposition du score</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    { label: 'Base', value: breakdown.base || 3, max: 3, color: 'bg-gray-400' },
-                    { label: 'Arbres', value: breakdown.arbres || 0, max: 2, color: 'bg-emerald-500', detail: `${data?.total_trees || 0} arbres` },
-                    { label: 'Ombrage', value: breakdown.ombrage || 0, max: 2, color: 'bg-green-500', detail: `${data?.avg_shade_cover || 0}%` },
-                    { label: 'Pratiques', value: breakdown.pratiques || 0, max: 2.5, color: 'bg-indigo-500', detail: `${data?.practices_count || 0}/5` },
-                    { label: 'Surface', value: breakdown.surface || 0, max: 0.5, color: 'bg-amber-500', detail: `${data?.total_area || 0} ha` },
-                  ].map((item, idx) => (
-                    <div key={`el-${idx}`} className="flex items-center gap-3">
-                      <div className="w-20 text-xs">
-                        <p className="font-medium text-gray-700">{item.label}</p>
-                        {item.detail && <p className="text-[10px] text-gray-400">{item.detail}</p>}
-                      </div>
-                      <div className="flex-1">
-                        <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${item.color} transition-all duration-700`}
-                            style={{ width: `${item.max > 0 ? (item.value / item.max) * 100 : 0}%` }} />
+                <CardContent className="space-y-2">
+                  {Object.entries(DECOMPO_LABELS).map(([key, label]) => {
+                    const val = typeof breakdown[key] === 'object' ? (breakdown[key]?.bonus_points || 0) : (breakdown[key] || 0);
+                    const max = DECOMPO_MAX[key] || 1;
+                    const colors = ['bg-slate-400', 'bg-emerald-500', 'bg-green-500', 'bg-orange-500', 'bg-teal-500', 'bg-lime-600', 'bg-cyan-600', 'bg-amber-600', 'bg-blue-500', 'bg-purple-500'];
+                    const idx = Object.keys(DECOMPO_LABELS).indexOf(key);
+                    const color = colors[idx] || 'bg-gray-400';
+                    if (val === 0 && key !== 'base') return null;
+                    return (
+                      <div key={key} className="flex items-center gap-3">
+                        <div className="w-24 text-xs">
+                          <p className="font-medium text-gray-700">{label}</p>
                         </div>
+                        <div className="flex-1">
+                          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${color} transition-all duration-700`}
+                              style={{ width: `${max > 0 ? Math.min((Math.abs(val) / max) * 100, 100) : 0}%` }} />
+                          </div>
+                        </div>
+                        <span className={`text-xs font-bold w-14 text-right ${val < 0 ? 'text-red-600' : 'text-gray-700'}`}>{typeof val === 'number' ? val.toFixed(1) : val}/{max}</span>
                       </div>
-                      <span className="text-xs font-bold text-gray-700 w-12 text-right">{item.value}/{item.max}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div className="flex justify-between pt-2 border-t">
                     <span className="font-bold text-gray-700 text-sm">Total</span>
                     <span className={`text-lg font-extrabold ${threshold.color}`}>{score.toFixed(1)} / 10</span>

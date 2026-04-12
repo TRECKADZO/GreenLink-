@@ -905,7 +905,6 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
         }
 
     scores = [p.get("carbon_score", 0) for p in parcels]
-    avg_score = sum(scores) / len(scores) if scores else 0
     total_credits = sum([p.get("carbon_credits_earned", 0) for p in parcels])
     total_area = sum([p.get("area_hectares", 0) for p in parcels])
     total_trees = sum([p.get("nombre_arbres", 0) or 0 for p in parcels])
@@ -931,84 +930,72 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
         for pr in (p.get("pratiques_ecologiques") or p.get("farming_practices") or []):
             all_practices.add(pr)
 
-    # Calculate breakdown components using weighted biomass
-    COEFF_PETIT = 0.3
-    COEFF_MOYEN = 0.7
-    COEFF_GRAND = 1.0
-    weighted_trees = (total_petits * COEFF_PETIT) + (total_moyens * COEFF_MOYEN) + (total_grands * COEFF_GRAND)
-    weighted_density = weighted_trees / total_area if total_area > 0 else 0
-    tree_pts = 2.0 if weighted_density >= 80 else 1.5 if weighted_density >= 50 else 1.0 if weighted_density >= 20 else 0.5 if weighted_density >= 5 else 0
-    
-    # Shade with maturity bonus
-    total_categorized = total_petits + total_moyens + total_grands
-    mature_ratio = total_grands / total_categorized if total_categorized > 0 else 0
-    maturity_bonus = 0.3 * mature_ratio
-    shade_pts = 0
-    if avg_shade >= 60:
-        shade_pts = min(2.0 + maturity_bonus, 2.0)
-    elif avg_shade >= 40:
-        shade_pts = min(1.5 + maturity_bonus, 2.0)
-    elif avg_shade >= 20:
-        shade_pts = min(1.0 + maturity_bonus, 2.0)
-    elif avg_shade >= 10:
-        shade_pts = min(0.5 + maturity_bonus, 2.0)
-    
-    practice_map = {"compostage": 0.5, "absence_pesticides": 0.5, "gestion_dechets": 0.5, "protection_cours_eau": 0.5, "agroforesterie": 0.5}
-    practice_pts = sum(practice_map.get(p, 0) for p in all_practices)
-    area_pts = 0.5 if total_area >= 5 else 0
+    # Recalculate using the unified carbon score engine for accurate breakdown
+    from routes.carbon_score_engine import calculate_carbon_score
+    unified_result = calculate_carbon_score(
+        area_hectares=total_area,
+        arbres_petits=total_petits,
+        arbres_moyens=total_moyens,
+        arbres_grands=total_grands,
+        nombre_arbres=total_trees,
+        couverture_ombragee=avg_shade,
+        pratiques_ecologiques=list(all_practices),
+    )
+    unified_score = unified_result["score"]
+    unified_details = unified_result["details"]
 
     harvests = await db.harvests.find({"farmer_id": {"$in": possible_ids}}).to_list(100)
     total_premium = sum([h.get("carbon_premium", 0) for h in harvests])
 
-    # Build personalized recommendations
-    recommendations = []
-    if tree_pts < 2.0:
-        if total_grands < total_categorized * 0.3 and total_categorized > 0:
-            recommendations.append({
-                "type": "arbres_grands",
-                "title": "Favorisez les grands arbres (> 12m)",
-                "description": f"Seulement {total_grands} grands arbres sur {total_categorized} total. Les arbres matures stockent 3x plus de carbone.",
-                "potential_gain": round(min(2.0 - tree_pts, 1.0), 1),
-                "priority": "haute"
-            })
-        target = 80 if weighted_density < 20 else 50
-        recommendations.append({
-            "type": "arbres",
-            "title": "Augmentez la densite d'arbres ombragés",
-            "description": f"Densite ponderee: {int(weighted_density)}/ha (petits:{total_petits}, moyens:{total_moyens}, grands:{total_grands}). Visez {target}+ arbres ponderes/ha",
-            "potential_gain": round(2.0 - tree_pts, 1),
-            "priority": "haute" if tree_pts == 0 else "moyenne"
+    # Build personalized recommendations from engine
+    recommendations = unified_result.get("recommandations", [])
+    formatted_recs = []
+    for r in recommendations:
+        formatted_recs.append({
+            "type": "info",
+            "title": r,
+            "description": r,
+            "potential_gain": 0.5,
+            "priority": "moyenne"
         })
-    if shade_pts < 2.0:
-        recommendations.append({
+
+    # Additional targeted recommendations
+    tree_pts = unified_details.get("densite_arbres", 0)
+    shade_pts = unified_details.get("couverture_ombragee", 0)
+    practice_pts = unified_details.get("pratiques_ecologiques", 0)
+    if tree_pts < 2.0:
+        formatted_recs.append({
+            "type": "arbres",
+            "title": "Augmentez la densite d'arbres d'ombrage",
+            "description": f"Score actuel arbres: {tree_pts}/2.0. Plantez plus d'arbres varies (petits, moyens, grands).",
+            "potential_gain": round(2.0 - tree_pts, 1),
+            "priority": "haute"
+        })
+    if shade_pts < 1.5:
+        formatted_recs.append({
             "type": "ombrage",
             "title": "Augmentez la couverture ombragee",
-            "description": f"Couverture actuelle: {int(avg_shade)}%. Visez 60%+ pour gagner +{2.0 - shade_pts:.1f} pts",
-            "potential_gain": round(2.0 - shade_pts, 1),
+            "description": f"Couverture actuelle: {int(avg_shade)}%. Visez 60%+ pour maximiser votre score.",
+            "potential_gain": round(1.5 - shade_pts, 1),
             "priority": "haute" if shade_pts == 0 else "moyenne"
         })
-    missing_practices = [k for k in practice_map if k not in all_practices]
-    practice_labels = {
-        "compostage": "Compostage",
-        "absence_pesticides": "Elimination des pesticides chimiques",
-        "gestion_dechets": "Gestion des dechets",
-        "protection_cours_eau": "Protection des cours d'eau",
-        "agroforesterie": "Agroforesterie"
-    }
-    for mp in missing_practices[:3]:
-        recommendations.append({
-            "type": "pratique",
-            "title": f"Adoptez: {practice_labels.get(mp, mp)}",
-            "description": "Cette pratique ecologique vous rapportera +0.5 pt sur votre score carbone",
-            "potential_gain": 0.5,
-            "priority": "faible"
-        })
+    if practice_pts < 1.2:
+        practice_labels = {"compostage": "Compostage", "absence_pesticides": "Elimination des pesticides", "gestion_dechets": "Gestion des dechets", "protection_cours_eau": "Protection des cours d'eau", "agroforesterie": "Agroforesterie"}
+        practice_map = {"compostage": 0.3, "absence_pesticides": 0.3, "gestion_dechets": 0.2, "protection_cours_eau": 0.2, "agroforesterie": 0.2}
+        missing_practices = [k for k in practice_map if k not in all_practices]
+        for mp in missing_practices[:2]:
+            formatted_recs.append({
+                "type": "pratique",
+                "title": f"Adoptez: {practice_labels.get(mp, mp)}",
+                "description": f"Cette pratique vous rapportera +{practice_map[mp]} pt sur votre score.",
+                "potential_gain": practice_map[mp],
+                "priority": "faible"
+            })
 
-    # Sort by potential gain
-    recommendations.sort(key=lambda r: r["potential_gain"], reverse=True)
+    formatted_recs.sort(key=lambda r: r["potential_gain"], reverse=True)
 
     return {
-        "average_score": round(avg_score, 1),
+        "average_score": round(unified_score, 1),
         "total_credits": round(total_credits, 2),
         "total_premium": total_premium,
         "parcels_count": len(parcels),
@@ -1017,27 +1004,25 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
         "arbres_petits": total_petits,
         "arbres_moyens": total_moyens,
         "arbres_grands": total_grands,
-        "weighted_density": round(weighted_density, 1),
         "avg_shade_cover": round(avg_shade, 1),
         "practices_count": len(all_practices),
         "practices_list": list(all_practices),
         "breakdown": {
-            "base": 3.0,
-            "arbres": round(tree_pts, 1),
-            "ombrage": round(shade_pts, 1),
-            "pratiques": round(practice_pts, 1),
-            "surface": round(area_pts, 1),
-            "max_possible": 10.0
+            "base": unified_details.get("base", 1.0),
+            "densite_arbres": unified_details.get("densite_arbres", 0),
+            "couverture_ombragee": unified_details.get("couverture_ombragee", 0),
+            "brulage": unified_details.get("brulage", 0),
+            "engrais_chimique": unified_details.get("engrais_chimique", 0),
+            "pratiques_ecologiques": unified_details.get("pratiques_ecologiques", 0),
+            "redd_practices": unified_details.get("redd_practices", 0),
+            "age_cacaoyers": unified_details.get("age_cacaoyers", 0),
+            "surface": unified_details.get("surface", 0),
+            "certification": unified_details.get("certification", 0),
+            "bonus_ombrage_ars1000": unified_details.get("bonus_ombrage_ars1000", {}),
         },
-        "arbre_categories": {
-            "petits_lt_8m": total_petits,
-            "moyens_8_12m": total_moyens,
-            "grands_gt_12m": total_grands,
-            "total": total_categorized,
-            "biomasse_ponderee": round(weighted_trees, 1),
-            "coefficients": {"petit": COEFF_PETIT, "moyen": COEFF_MOYEN, "grand": COEFF_GRAND}
-        },
-        "recommendations": recommendations[:5],
+        "niveau": unified_result.get("niveau", ""),
+        "co2_tonnes": unified_result.get("co2_tonnes", 0),
+        "recommendations": formatted_recs[:5],
         "parcels": [{
             "id": str(p["_id"]),
             "village": p.get("village", p.get("location", "")),
@@ -1045,9 +1030,6 @@ async def get_my_carbon_score(current_user: dict = Depends(get_current_user)):
             "carbon_score": p.get("carbon_score", 0),
             "carbon_credits_earned": p.get("carbon_credits_earned", 0),
             "nombre_arbres": p.get("nombre_arbres", 0) or 0,
-            "arbres_petits": p.get("arbres_petits", 0) or 0,
-            "arbres_moyens": p.get("arbres_moyens", 0) or 0,
-            "arbres_grands": p.get("arbres_grands", 0) or 0,
             "couverture_ombragee": p.get("couverture_ombragee", 0) or 0,
             "pratiques_ecologiques": p.get("pratiques_ecologiques", []),
             "verification_status": p.get("verification_status", "pending"),
