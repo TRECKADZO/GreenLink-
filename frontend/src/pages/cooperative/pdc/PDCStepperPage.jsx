@@ -952,30 +952,225 @@ const PDCStepperPage = () => {
     );
   };
 
+  // Predefined axes for Fiche 6 & 7 (from official document)
+  const AXES_STRATEGIQUES = [
+    'Axe 1 : Rehabilitation du verger',
+    'Axe 2 : Gestion du swollen shoot sur la parcelle',
+    'Axe 3 : Diversification par valorisation des espaces vides',
+    'Axe 4 : Gestion des arbres compagnons du cacaoyer',
+    'Axe 5 : Gestion technique de l\'exploitation',
+    'Axe 6 : Gestion financiere de l\'exploitation',
+  ];
+
+  // Auto-fill Step 3 summary from Step 1 data
+  const getStep3Summary = () => {
+    const s1 = pdc.step1 || {};
+    const f1 = s1.fiche1 || {};
+    const f2 = s1.fiche2 || {};
+    const f4 = s1.fiche4 || {};
+    const prod = f1.producteur || {};
+    const membres = f1.membres_menage || [];
+    const cultures = f2.cultures || [];
+    const arbres = f2.arbres || [];
+    const epargne = f4.epargne || [];
+    const prodCacao = f4.production_cacao || [];
+
+    // Menage summary by category
+    const chef = membres.filter(m => m.statut_famille === 'chef_menage');
+    const conjoints = membres.filter(m => m.statut_famille === 'conjoint');
+    const enfants = membres.filter(m => m.statut_famille === 'enfant');
+    const autres = membres.filter(m => !['chef_menage', 'conjoint', 'enfant'].includes(m.statut_famille));
+
+    // Superficies from cultures
+    let supCacao = 0, supAutres = 0;
+    cultures.forEach(c => {
+      const s = parseFloat(c.superficie_ha || 0) || 0;
+      if ((c.libelle || '').toLowerCase().includes('cacao')) supCacao += s;
+      else supAutres += s;
+    });
+
+    return {
+      producteur: prod,
+      menage: { chef, conjoints, enfants, autres, total: membres.length },
+      cultures,
+      arbres,
+      epargne,
+      prodCacao,
+      supCacao: Math.round(supCacao * 100) / 100,
+      supAutres: Math.round(supAutres * 100) / 100,
+      supTotale: Math.round((supCacao + supAutres) * 100) / 100,
+    };
+  };
+
+  const renderStep3Summary = () => {
+    const s = getStep3Summary();
+    if (!s.producteur.nom && s.menage.total === 0) return null;
+
+    return (
+      <div className="space-y-4 mb-4" data-testid="step3-summary">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2 text-xs text-emerald-700">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          <span>Donnees auto-remplies depuis l'Etape 1 (Fiche de collecte agent terrain). Ces informations sont en lecture seule.</span>
+        </div>
+
+        {/* Identification */}
+        <SectionCard title="Identification du Producteur" sectionKey="s3-identification" defaultOpen={false}>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            {[
+              ['Nom et prenoms', s.producteur.nom],
+              ['Code National (CCC)', s.producteur.code_national],
+              ['Delegation Regionale', s.producteur.delegation_regionale],
+              ['Departement', s.producteur.departement],
+              ['Sous-Prefecture', s.producteur.sous_prefecture],
+              ['Village', s.producteur.village],
+              ['Campement', s.producteur.campement],
+            ].map(([label, val]) => (
+              <div key={label} className="bg-gray-50 rounded-lg p-2">
+                <p className="text-[10px] text-gray-500">{label}</p>
+                <p className="font-medium text-gray-800">{val || '-'}</p>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+
+        {/* Situation du menage */}
+        <SectionCard title={`Situation du menage (${s.menage.total} membres)`} sectionKey="s3-menage" defaultOpen={false}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#1A3622] text-white">
+                  <th className="p-2 text-left">Membre du menage</th>
+                  <th className="p-2 text-center">Nombre</th>
+                  <th className="p-2 text-center">Scolarises</th>
+                  <th className="p-2 text-center">Travail plantation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Proprietaire/Chef de menage', s.menage.chef],
+                  ['Conjoints', s.menage.conjoints],
+                  ['Enfants', s.menage.enfants],
+                  ['Autres', s.menage.autres],
+                ].map(([label, arr]) => (
+                  <tr key={label} className="border-b border-gray-100">
+                    <td className="p-2 font-medium">{label}</td>
+                    <td className="p-2 text-center">{arr.length}</td>
+                    <td className="p-2 text-center">{arr.filter(m => m.statut_scolaire === 'scolarise').length}</td>
+                    <td className="p-2 text-center">{arr.filter(m => m.statut_plantation && m.statut_plantation !== 'aucun').length}</td>
+                  </tr>
+                ))}
+                <tr className="bg-gray-50 font-bold border-t-2 border-gray-300">
+                  <td className="p-2">TOTAL</td>
+                  <td className="p-2 text-center">{s.menage.total}</td>
+                  <td className="p-2 text-center">{s.menage.chef.concat(s.menage.conjoints, s.menage.enfants, s.menage.autres).filter(m => m.statut_scolaire === 'scolarise').length}</td>
+                  <td className="p-2 text-center">{s.menage.chef.concat(s.menage.conjoints, s.menage.enfants, s.menage.autres).filter(m => m.statut_plantation && m.statut_plantation !== 'aucun').length}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+
+        {/* Description exploitation + Cultures */}
+        <SectionCard title={`Description de l'exploitation (${s.supTotale} ha)`} sectionKey="s3-exploitation" defaultOpen={false}>
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 text-center">
+              <p className="text-lg font-bold text-amber-800">{s.supCacao} ha</p>
+              <p className="text-[10px] text-amber-600">Cacao</p>
+            </div>
+            <div className="bg-green-50 border border-green-100 rounded-lg p-3 text-center">
+              <p className="text-lg font-bold text-green-800">{s.supAutres} ha</p>
+              <p className="text-[10px] text-green-600">Autres cultures</p>
+            </div>
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-center">
+              <p className="text-lg font-bold text-blue-800">{s.arbres.length}</p>
+              <p className="text-[10px] text-blue-600">Arbres inventories</p>
+            </div>
+          </div>
+          {s.cultures.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-[#1A3622] text-white">
+                    <th className="p-2 text-left">Culture</th>
+                    <th className="p-2 text-center">Superficie (ha)</th>
+                    <th className="p-2 text-center">Annee creation</th>
+                    <th className="p-2 text-center">En production</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.cultures.map((c, i) => (
+                    <tr key={`c-${i}`} className="border-b border-gray-100">
+                      <td className="p-2 font-medium">{c.libelle || '-'}</td>
+                      <td className="p-2 text-center">{c.superficie_ha || '-'}</td>
+                      <td className="p-2 text-center">{c.annee_creation || '-'}</td>
+                      <td className="p-2 text-center">{c.en_production || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </SectionCard>
+
+        {/* Production cacao (from Fiche 4) */}
+        {s.prodCacao.length > 0 && (
+          <SectionCard title="Production cacao (3 dernieres annees)" sectionKey="s3-production" defaultOpen={false}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-[#1A3622] text-white">
+                    <th className="p-2 text-left">Annee</th>
+                    <th className="p-2 text-center">Production (kg)</th>
+                    <th className="p-2 text-center">Revenu brut (FCFA)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.prodCacao.map((p, i) => (
+                    <tr key={`pr-${i}`} className="border-b border-gray-100">
+                      <td className="p-2">{p.annee || `N-${i + 1}`}</td>
+                      <td className="p-2 text-center">{p.production_kg ? Number(p.production_kg).toLocaleString('fr-FR') : '-'}</td>
+                      <td className="p-2 text-center">{p.revenu_brut ? Number(p.revenu_brut).toLocaleString('fr-FR') : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </SectionCard>
+        )}
+      </div>
+    );
+  };
+
   const renderFiche6 = () => {
     const f = pdc.step3?.fiche6 || {};
     const disabled = !canEditStep3;
 
+    const defaultAxes = AXES_STRATEGIQUES.map(a => ({
+      axe: a, objectifs: '', activites: '', cout: '', a1: '', a2: '', a3: '', a4: '', a5: '', responsable: '', partenaires: ''
+    }));
+    const axes = f.axes && f.axes.length > 0 ? f.axes : defaultAxes;
+
     return (
       <div className="space-y-4" data-testid="fiche-6">
-        <SectionCard title="Matrice de planification strategique" sectionKey="f6-matrice">
-          <p className="text-xs text-[#6B7280] mb-3">Definissez les axes strategiques, objectifs et activites du PDC sur 5 ans.</p>
+        {activeStep === 3 && activeFiche === 0 && renderStep3Summary()}
+        <SectionCard title="Fiche 6 : Matrice de planification strategique" sectionKey="f6-matrice">
+          <p className="text-xs text-[#6B7280] mb-3">Definissez les axes strategiques, objectifs et activites du PDC sur 5 ans (A1-A5). Les 6 axes ARS 1000 sont pre-remplis.</p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'axe', label: 'Axe strategique', width: '160px' },
+              { key: 'axe', label: 'Axes strategiques', width: '200px' },
               { key: 'objectifs', label: 'Objectifs', width: '160px' },
               { key: 'activites', label: 'Activites', width: '160px' },
               { key: 'cout', label: 'Cout (FCFA)', type: 'number', width: '100px' },
-              { key: 'a1', label: 'A1', type: 'select', width: '60px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a2', label: 'A2', type: 'select', width: '60px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a3', label: 'A3', type: 'select', width: '60px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a4', label: 'A4', type: 'select', width: '60px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a5', label: 'A5', type: 'select', width: '60px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'a1', label: 'A1', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'a2', label: 'A2', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'a3', label: 'A3', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'a4', label: 'A4', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'a5', label: 'A5', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
               { key: 'responsable', label: 'Responsable', width: '120px' },
               { key: 'partenaires', label: 'Partenaires', width: '120px' },
             ]}
-            rows={f.axes || []}
+            rows={axes}
             onChange={v => updateArray('step3', 'fiche6', 'axes', v)}
             addLabel="Ajouter un axe/activite"
           />
@@ -988,24 +1183,31 @@ const PDCStepperPage = () => {
     const f = pdc.step3?.fiche7 || {};
     const disabled = !canEditStep3;
 
+    const defaultActions = AXES_STRATEGIQUES.map(a => ({
+      axe: a, activites: '', sous_activites: '', indicateurs: '', t1: '', t2: '', t3: '', t4: '', execution: '', appui: '', cout: ''
+    }));
+    const actions = f.actions && f.actions.length > 0 ? f.actions : defaultActions;
+
     return (
       <div className="space-y-4" data-testid="fiche-7">
-        <SectionCard title="Matrice du programme annuel d'action" sectionKey="f7-programme">
-          <p className="text-xs text-[#6B7280] mb-3">Programme annuel detaille avec activites, indicateurs et chronogramme trimestriel.</p>
+        <SectionCard title="Fiche 7 : Matrice du programme annuel d'action" sectionKey="f7-programme">
+          <p className="text-xs text-[#6B7280] mb-3">Programme annuel detaille avec activites, sous-activites, indicateurs et chronogramme trimestriel (T1-T4).</p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'axe', label: 'Axe strategique', width: '150px' },
-              { key: 'activites', label: 'Activites/Sous-activites', width: '180px' },
-              { key: 'indicateurs', label: 'Indicateurs', width: '150px' },
-              { key: 't1', label: 'T1', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't2', label: 'T2', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't3', label: 'T3', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't4', label: 'T4', type: 'select', width: '55px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'responsable', label: 'Responsable', width: '120px' },
+              { key: 'axe', label: 'Axes strategiques', width: '180px' },
+              { key: 'activites', label: 'Activites', width: '150px' },
+              { key: 'sous_activites', label: 'Sous-activites', width: '150px' },
+              { key: 'indicateurs', label: 'Indicateurs', width: '130px' },
+              { key: 't1', label: 'T1', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't2', label: 'T2', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't3', label: 'T3', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't4', label: 'T4', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'execution', label: 'Execution', width: '100px' },
+              { key: 'appui', label: 'Appui', width: '100px' },
               { key: 'cout', label: 'Cout (FCFA)', type: 'number', width: '100px' },
             ]}
-            rows={f.actions || []}
+            rows={actions}
             onChange={v => updateArray('step3', 'fiche7', 'actions', v)}
             addLabel="Ajouter une action"
           />
@@ -1018,27 +1220,43 @@ const PDCStepperPage = () => {
     const f = pdc.step3?.fiche8 || {};
     const disabled = !canEditStep3;
 
+    const defaultMoyens = [
+      { moyen: '--- INVESTISSEMENT ---', unite: '', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: 'Atomiseur', unite: 'unite', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: 'Pulverisateur', unite: 'unite', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: 'EPI', unite: 'kit', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: '--- INTRANTS ---', unite: '', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: 'Engrais', unite: 'kg', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: 'Insecticide', unite: 'litre', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: 'Fongicide', unite: 'litre', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: 'Plants de cacao', unite: 'plants', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: '--- MAIN D\'OEUVRE ---', unite: '', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: 'M.O. permanente', unite: 'pers', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: 'M.O. occasionnelle', unite: 'pers', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+    ];
+    const moyens = f.moyens && f.moyens.length > 0 ? f.moyens : defaultMoyens;
+
     return (
       <div className="space-y-4" data-testid="fiche-8">
-        <SectionCard title="Tableau de determination des moyens et des couts" sectionKey="f8-moyens">
-          <p className="text-xs text-[#6B7280] mb-3">Estimez les moyens (investissement, intrants, main d'oeuvre) et couts sur 5 ans.</p>
+        <SectionCard title="Fiche 8 : Tableau de determination des moyens et des couts" sectionKey="f8-moyens">
+          <p className="text-xs text-[#6B7280] mb-3">Estimez les moyens (investissement, intrants, main d'oeuvre) et couts sur 5 ans. Les categories sont pre-remplies.</p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
               { key: 'moyen', label: 'Moyens specifiques', width: '150px' },
-              { key: 'unite', label: 'Unites', width: '80px' },
-              { key: 'a1_qte', label: 'An1 Qte', type: 'number', width: '70px' },
+              { key: 'unite', label: 'Unites', width: '70px' },
+              { key: 'a1_qte', label: 'An1 Qte', type: 'number', width: '65px' },
               { key: 'a1_cout', label: 'An1 Cout', type: 'number', width: '80px' },
-              { key: 'a2_qte', label: 'An2 Qte', type: 'number', width: '70px' },
+              { key: 'a2_qte', label: 'An2 Qte', type: 'number', width: '65px' },
               { key: 'a2_cout', label: 'An2 Cout', type: 'number', width: '80px' },
-              { key: 'a3_qte', label: 'An3 Qte', type: 'number', width: '70px' },
+              { key: 'a3_qte', label: 'An3 Qte', type: 'number', width: '65px' },
               { key: 'a3_cout', label: 'An3 Cout', type: 'number', width: '80px' },
-              { key: 'a4_qte', label: 'An4 Qte', type: 'number', width: '70px' },
+              { key: 'a4_qte', label: 'An4 Qte', type: 'number', width: '65px' },
               { key: 'a4_cout', label: 'An4 Cout', type: 'number', width: '80px' },
-              { key: 'a5_qte', label: 'An5 Qte', type: 'number', width: '70px' },
+              { key: 'a5_qte', label: 'An5 Qte', type: 'number', width: '65px' },
               { key: 'a5_cout', label: 'An5 Cout', type: 'number', width: '80px' },
             ]}
-            rows={f.moyens || []}
+            rows={moyens}
             onChange={v => updateArray('step3', 'fiche8', 'moyens', v)}
             addLabel="Ajouter un moyen"
           />

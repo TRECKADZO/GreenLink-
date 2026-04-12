@@ -632,12 +632,13 @@ async def generate_pdc_v2_pdf(pdc_id: str, current_user: dict = Depends(get_curr
     for a in actions:
         chrono = ' '.join([f'T{i}' for i in range(1, 5) if a.get(f't{i}') == 'x'])
         act_rows.append([
-            a.get('axe', '-'), a.get('activites', '-'), a.get('indicateurs', '-'),
-            chrono or '-', a.get('responsable', '-'), a.get('cout', '-'),
+            a.get('axe', '-'), a.get('activites', '-'), a.get('sous_activites', '-'),
+            a.get('indicateurs', '-'), chrono or '-',
+            a.get('execution', '-'), a.get('appui', '-'), a.get('cout', '-'),
         ])
     story.append(_data_table(
-        ['Axe', 'Activites', 'Indicateurs', 'Chrono.', 'Responsable', 'Cout (FCFA)'],
-        act_rows, col_widths=[25*mm, 35*mm, 30*mm, 18*mm, 25*mm, 22*mm],
+        ['Axe', 'Activites', 'Sous-activites', 'Indicateurs', 'Chrono.', 'Execution', 'Appui', 'Cout'],
+        act_rows, col_widths=[22*mm, 25*mm, 25*mm, 22*mm, 15*mm, 18*mm, 18*mm, 18*mm],
     ))
     story.append(Spacer(1, 5 * mm))
 
