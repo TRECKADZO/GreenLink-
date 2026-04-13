@@ -273,11 +273,13 @@ async def get_pdc(pdc_id: str, current_user: dict = Depends(get_current_user)):
     await check_pdc_access(pdc, current_user)
 
     user_type = get_user_type(current_user)
-    # Planteur ne voit le PDC complet qu'apres validation
+    result = serialize_pdc_v2(pdc)
+    # Planteur voit son PDC en lecture seule avec indicateur de statut
     if user_type in READONLY_ROLES and pdc.get("statut") != "valide":
-        raise HTTPException(status_code=403, detail="Le PDC n'est pas encore valide. Vous pourrez le consulter apres validation par l'agronome.")
+        result["en_cours"] = True
+        result["message_statut"] = "Votre PDC est en cours de traitement. Il sera complet apres validation par la cooperative."
 
-    return serialize_pdc_v2(pdc)
+    return result
 
 
 @router.put("/{pdc_id}/step1")
