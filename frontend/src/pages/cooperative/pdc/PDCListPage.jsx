@@ -76,16 +76,6 @@ const PDCListPage = ({ onBack }) => {
 
   useEffect(() => { loadPdcs(); loadStats(); }, [loadPdcs, loadStats]);
 
-  // Auto-redirect farmer to their PDC (not the list)
-  useEffect(() => {
-    if (isReadOnly && pdcs.length > 0 && !loading) {
-      const activePdc = pdcs.find(p => p.statut !== 'archive') || pdcs[0];
-      if (activePdc) {
-        navigate(`/cooperative/pdc-v2/${activePdc.id}`, { replace: true });
-      }
-    }
-  }, [isReadOnly, pdcs, loading, navigate]);
-
   // Auto-open create panel and pre-select farmer when farmer_id is in URL
   useEffect(() => {
     if (urlFarmerId && !isReadOnly) {
@@ -136,14 +126,24 @@ const PDCListPage = ({ onBack }) => {
 
   const getStatusInfo = (statut) => STATUS_MAP[statut] || { label: statut, color: 'bg-gray-100 text-gray-700' };
 
-  // Farmer with no PDC — show friendly message
-  if (isReadOnly && !loading && pdcs.length === 0) {
+  // Planteur: PDC disponible seulement quand etape 3 atteinte
+  if (isReadOnly && !loading) {
+    const readyPdc = pdcs.find(p => p.current_step >= 3 || p.statut === 'valide');
+    if (readyPdc) {
+      navigate(`/cooperative/pdc-v2/${readyPdc.id}`, { replace: true });
+      return null;
+    }
+    const hasPdc = pdcs.length > 0;
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4" data-testid="farmer-no-pdc">
         <FileText className="w-16 h-16 text-gray-300" />
-        <h2 className="text-lg font-semibold text-gray-700">Votre PDC n'est pas encore disponible</h2>
+        <h2 className="text-lg font-semibold text-gray-700">
+          {hasPdc ? 'Votre PDC est en cours de preparation' : 'Votre PDC n\'est pas encore disponible'}
+        </h2>
         <p className="text-sm text-gray-500 text-center max-w-md">
-          Votre Plan de Developpement de la Cacaoyere sera visible ici une fois que l'agent terrain et la cooperative auront complete le processus.
+          {hasPdc
+            ? 'La cooperative doit completer les etapes 2 (Analyse) et 3 (Planification). Votre PDC sera consultable une fois l\'etape 3 terminee.'
+            : 'L\'agent terrain doit d\'abord collecter vos donnees pour creer votre PDC.'}
         </p>
         <Button variant="outline" size="sm" onClick={() => navigate(-1)} data-testid="farmer-no-pdc-back">
           <ArrowLeft className="w-4 h-4 mr-1" /> Retour

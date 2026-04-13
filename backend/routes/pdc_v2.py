@@ -274,10 +274,10 @@ async def get_pdc(pdc_id: str, current_user: dict = Depends(get_current_user)):
 
     user_type = get_user_type(current_user)
     result = serialize_pdc_v2(pdc)
-    # Planteur voit son PDC en lecture seule avec indicateur de statut
-    if user_type in READONLY_ROLES and pdc.get("statut") != "valide":
-        result["en_cours"] = True
-        result["message_statut"] = "Votre PDC est en cours de traitement. Il sera complet apres validation par la cooperative."
+    # Planteur ne voit son PDC QUE quand l'etape 3 est terminee (etape3_en_cours, valide)
+    if user_type in READONLY_ROLES:
+        if pdc.get("current_step", 1) < 3 and pdc.get("statut") != "valide":
+            raise HTTPException(status_code=403, detail="Votre PDC n'est pas encore disponible. La cooperative doit completer les etapes 2 et 3.")
 
     return result
 

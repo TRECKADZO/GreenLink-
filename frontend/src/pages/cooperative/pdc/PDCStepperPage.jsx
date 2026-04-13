@@ -270,9 +270,6 @@ const PDCStepperPage = () => {
     );
   }
 
-  const enCours = pdc.en_cours;
-  const messageStatut = pdc.message_statut;
-
   const currentCanEdit = activeStep === 1 ? canEditStep1 : activeStep === 2 ? canEditStep2 : canEditStep3;
   const ficheNames = STEPS[activeStep - 1].fiches;
 
@@ -1502,15 +1499,6 @@ const PDCStepperPage = () => {
       </div>
 
       {/* Workflow status banners */}
-      {enCours && (
-        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start gap-3" data-testid="pdc-en-cours-banner">
-          <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-amber-800">PDC en cours de traitement</p>
-            <p className="text-xs text-amber-600 mt-0.5">{messageStatut || 'Votre PDC sera complet apres validation par la cooperative et l\'agronome.'}</p>
-          </div>
-        </div>
-      )}
       {isCoopOrAdmin && step1SubmittedByAgent && activeStep === 1 && pdc.statut !== 'valide' && (
         <div className="bg-blue-50 border border-blue-200 rounded-md p-3 flex items-start gap-3" data-testid="step1-readonly-banner">
           <Eye className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
