@@ -1,26 +1,45 @@
 # GreenLink Agritech - PRD
 
-## PDC v2 — Document final conforme "PDC du Planteur" (12 avril 2026)
+## Architecture
+- Backend: FastAPI (Python) sur port 8001
+- Frontend: React (CRA) sur port 3000
+- Database: MongoDB
+- Langues: Francais
 
-### PDF du PDC = Document final remis au planteur
-- Page couverture: "PLAN DE DEVELOPPEMENT DE LA CACAOYERE - ARS 1000"
-- IDENTIFICATION DU PRODUCTEUR (11 champs depuis Fiche 1)
-- INFORMATION SUR LE MENAGE: Situation epargne + Situation menage (categories: Proprietaire, Gerant, Conjoints, Enfants 0-6/6-18/+18, Manoeuvres)
-- DESCRIPTION DE L'EXPLOITATION: Superficies + Cultures (format PDC planteur) + Arbres (strates 1/2/3 + total ombrage + NOTE agroforesterie) + Materiel
-- FICHE 6: Matrice planification strategique (6 axes predefinis)
-- FICHE 7: Programme annuel (ACTIVITES + SOUS-ACTIVITES + Execution + Appui + COUT)
-- FICHE 8: Moyens et couts (Annee 1-5)
-- Signatures: PRODUCTEUR / COOPERATIVE (cachet) / CABINET DE FORMATION (cachet)
+## Modules Implementes
 
-### Frontend Fiche 7 corrige
-- Colonnes separees: ACTIVITES, SOUS-ACTIVITES, Execution, Appui (conforme au PDC du planteur)
+### PDC v2 (Plan de Developpement de la Cacaoyere)
+- 4 etapes conformes aux documents officiels ARS 1000
+- PDF genere conforme au "PDC du Planteur"
+- Pre-remplissage ICI/SSRTE avec donnees du PDC
+- Score Ombrage ARS 1000 integre au Score Carbone
+- Acces producteur en lecture seule
 
-### Etape 1-4 conformes aux documents officiels
-### Score Ombrage ARS 1000 integre
-### Auto-remplissage PDC -> ICI/SSRTE + Etape 1 -> Etape 3
+### Module Tracabilite ARS 1000-2 (Clauses 11-16) - NOUVEAU
+- **Dashboard** (/cooperative/traceability): KPIs, repartition par etape, evenements recents, alertes
+- **Flux du Cacao** (/cooperative/traceability/flow): CRUD lots, ajout evenements, timeline visuelle
+  - 7 etapes: Recolte > Fermentation > Sechage > Stockage Coop > Conditionnement > Transport > Export
+- **Segregation physique** (/cooperative/traceability/segregation): Magasins virtuels certifie/non-certifie, blocage automatique des melanges
+- **Rapports & Audits** (/cooperative/traceability/reports): Export PDF et Excel pour auditeurs ARS 1000
+- **Objectifs ARS** (/cooperative/traceability/objectives): 6 clauses avec indicateurs de progression
+- **QR Codes**: Generation pour chaque lot (tracabilite sur sacs)
+- **USSD**: Endpoint simule pour tracer un lot par code
+- Backend: /api/traceability/* (14 endpoints)
+- Collections MongoDB: traceability_lots
+
+### Autres modules
+- Score Carbone (moteur unifie)
+- SSRTE/ICI (fiches de visite)
+- ARS 1000 (certification, lots, agroforesterie)
+- Marketplace & Harvest Marketplace
+- REDD+ MRV
+- Messaging, Notifications
+- Facturation & Abonnements
 
 ## Backlog
-- P1: Integration SMS reel (Orange CI / MTN)
+- P1: Integration Gateway SMS reel (Orange CI / MTN) - actuellement mocke
 - P1: Support langues locales (Baoule/Dioula)
 - P2: Nettoyage donnees test/demo
-- P3: Refactoring composants volumineux
+- P2: Emails Resend (bloque sur config DNS SPF/DKIM/DMARC)
+- P3: Refactoring composants React volumineux (AgentMapLeaflet, Profile, BillingDashboard > 700 lignes)
+- P3: Refactoring fonctions backend complexes (admin_analytics, carbon_business_model)
