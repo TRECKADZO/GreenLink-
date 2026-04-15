@@ -219,7 +219,7 @@ async def get_listing_detail(listing_id: str):
         # Try by ObjectId
         try:
             listing = await db.harvest_listings.find_one({"_id": ObjectId(listing_id)})
-        except:
+        except Exception:
             pass
     
     if not listing:

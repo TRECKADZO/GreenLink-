@@ -684,7 +684,7 @@ async def checkout_cart(
             "title": "Nouvelle commande reçue",
             "message": f"Commande #{order['order_number']} de {current_user['full_name']} - {order['total_amount']:,.0f} XOF",
             "type": "order",
-            "action_url": f"/supplier/orders",
+            "action_url": "/supplier/orders",
             "created_at": datetime.utcnow(),
             "is_read": False
         }

@@ -16,9 +16,9 @@ import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
-# Test credentials for cooperative
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "test123456"
+# Test credentials from environment
+COOP_EMAIL = os.environ.get("TEST_COOP_EMAIL", "bielaghana@gmail.com")
+COOP_PASSWORD = os.environ.get("TEST_COOP_PASSWORD", "test123456")
 
 
 @pytest.fixture(scope="module")

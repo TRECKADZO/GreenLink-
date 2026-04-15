@@ -361,7 +361,7 @@ async def get_farmer_full_details(
         "ssrte_visits_count": len(visits_data)
     }
 
-    await _log_audit(agent_id, "VIEW_DETAILS", source.get("phone_number", ""), f"Fiche complète consultée", client_ip, source_id)
+    await _log_audit(agent_id, "VIEW_DETAILS", source.get("phone_number", ""), "Fiche complète consultée", client_ip, source_id)
 
     return result
 

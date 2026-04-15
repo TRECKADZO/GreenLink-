@@ -216,7 +216,7 @@ async def get_available_credits(
             data["potential_revenue_usd"] = round(data["total_tonnes"] * price_info["price_per_tonne_usd"], 2)
             data["potential_revenue_xof"] = round(data["potential_revenue_usd"] * USD_TO_XOF, 0)
             data["price_per_tonne_usd"] = price_info["price_per_tonne_usd"]
-        except:
+        except Exception:
             pass
     
     total_tonnes = sum(d["total_tonnes"] for d in aggregated.values())
@@ -298,7 +298,7 @@ async def create_carbon_sale(
     # Validate buyer type
     try:
         buyer_type = BuyerType(sale_request.buyer_type)
-    except:
+    except (ValueError, KeyError):
         raise HTTPException(status_code=400, detail="Type d'acheteur invalide")
     
     # Get credits

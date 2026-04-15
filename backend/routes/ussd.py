@@ -62,6 +62,10 @@ def hash_pin(pin: str) -> str:
     return hashlib.sha256(pin.encode()).hexdigest()
 
 
+def verify_pin(pin: str, stored_hash: str) -> bool:
+    return hash_pin(pin) == stored_hash
+
+
 async def generate_farmer_code(coop_code: str = "", village: str = "") -> str:
     """
     Auto-generate a unique farmer code.
@@ -412,7 +416,7 @@ def calculate_ars_level(answers: dict) -> dict:
         if arbres_manquants > 0:
             conseil = f"Plantez {arbres_manquants} arbres supplementaires pour atteindre le niveau Excellent."
         else:
-            conseil = f"Arretez le brulage et utilisez le compost pour atteindre le niveau Excellent."
+            conseil = "Arretez le brulage et utilisez le compost pour atteindre le niveau Excellent."
     elif pct >= 30:
         level = "Bronze"
         conseil = "Plantez plus d'arbres ombres et arretez le brulage pour ameliorer votre prime."
@@ -892,12 +896,12 @@ async def ussd_callback(request: USSDRequest):
                 # SSRTE - Travail des enfants (ICI)
                 session["state"] = "ssrte_q1"
                 response_text = (
-                    f"SSRTE - Lutte contre le travail des enfants (ICI)\n\n"
-                    f"Question 1/2\n"
-                    f"Avez-vous des enfants en age scolaire sur votre parcelle ?\n\n"
-                    f"1. Oui\n"
-                    f"2. Non\n\n"
-                    f"0. Retour"
+                    "SSRTE - Lutte contre le travail des enfants (ICI)\n\n"
+                    "Question 1/2\n"
+                    "Avez-vous des enfants en age scolaire sur votre parcelle ?\n\n"
+                    "1. Oui\n"
+                    "2. Non\n\n"
+                    "0. Retour"
                 )
                 
             elif choice == "7":
@@ -950,13 +954,13 @@ async def ussd_callback(request: USSDRequest):
                     )
                 else:
                     response_text = (
-                        f"PRATIQUES DURABLES\n\n"
-                        f"Aucune evaluation disponible.\n"
-                        f"Faites une estimation (choix 1)\n"
-                        f"pour obtenir votre score.\n\n"
-                        f"1. Guide des pratiques\n"
-                        f"2. Faire une estimation\n"
-                        f"0. Retour menu principal"
+                        "PRATIQUES DURABLES\n\n"
+                        "Aucune evaluation disponible.\n"
+                        "Faites une estimation (choix 1)\n"
+                        "pour obtenir votre score.\n\n"
+                        "1. Guide des pratiques\n"
+                        "2. Faire une estimation\n"
+                        "0. Retour menu principal"
                     )
                 
             elif choice == "9":
@@ -976,17 +980,17 @@ async def ussd_callback(request: USSDRequest):
                 coop = data.get("coop_name", "")
                 coop_label = f" ({coop})" if coop else ""
                 response_text = (
-                    f"Option invalide.\n\n"
-                    f"1. Estimation de ma prime\n"
-                    f"2. Mes pratiques durables\n"
-                    f"3. Conseils prime\n"
-                    f"4. Demander paiement\n"
-                    f"5. Mes parcelles\n"
-                    f"6. SSRTE - Travail des enfants\n"
-                    f"7. Mon profil\n"
-                    f"8. Pratiques durables\n"
-                    f"9. Changer mon PIN\n"
-                    f"0. Quitter"
+                    "Option invalide.\n\n"
+                    "1. Estimation de ma prime\n"
+                    "2. Mes pratiques durables\n"
+                    "3. Conseils prime\n"
+                    "4. Demander paiement\n"
+                    "5. Mes parcelles\n"
+                    "6. SSRTE - Travail des enfants\n"
+                    "7. Mon profil\n"
+                    "8. Pratiques durables\n"
+                    "9. Changer mon PIN\n"
+                    "0. Quitter"
                 )
 
 
@@ -1110,10 +1114,10 @@ async def ussd_callback(request: USSDRequest):
                     )
                 else:
                     response_text = (
-                        f"PRATIQUES DURABLES\n\n"
-                        f"1. Guide des pratiques\n"
-                        f"2. Faire une estimation\n"
-                        f"0. Retour menu principal"
+                        "PRATIQUES DURABLES\n\n"
+                        "1. Guide des pratiques\n"
+                        "2. Faire une estimation\n"
+                        "0. Retour menu principal"
                     )
             elif state == "redd_guide" and choice in ("1", "2", "3", "4", "5"):
                 guides = {
@@ -1178,11 +1182,11 @@ async def ussd_callback(request: USSDRequest):
                 session["state"] = "ssrte_q2"
                 session["data"]["ssrte_enfants_scolaires"] = True
                 response_text = (
-                    f"SSRTE - Question 2/2\n\n"
-                    f"Sont-ils scolarises ?\n\n"
-                    f"1. Oui\n"
-                    f"2. Non\n\n"
-                    f"0. Retour"
+                    "SSRTE - Question 2/2\n\n"
+                    "Sont-ils scolarises ?\n\n"
+                    "1. Oui\n"
+                    "2. Non\n\n"
+                    "0. Retour"
                 )
             elif choice == "2":
                 # Non, pas d'enfants en age scolaire
@@ -1208,9 +1212,9 @@ async def ussd_callback(request: USSDRequest):
                         upsert=True,
                     )
                 response_text = (
-                    f"Merci pour votre reponse.\n\n"
-                    f"Aucune action SSRTE requise.\n\n"
-                    f"0. Retour au menu"
+                    "Merci pour votre reponse.\n\n"
+                    "Aucune action SSRTE requise.\n\n"
+                    "0. Retour au menu"
                 )
                 session["state"] = "ssrte_done"
             elif choice == "0":
@@ -1234,11 +1238,11 @@ async def ussd_callback(request: USSDRequest):
                 )
             else:
                 response_text = (
-                    f"Option invalide.\n\n"
-                    f"Avez-vous des enfants en age scolaire ?\n"
-                    f"1. Oui\n"
-                    f"2. Non\n\n"
-                    f"0. Retour"
+                    "Option invalide.\n\n"
+                    "Avez-vous des enfants en age scolaire ?\n"
+                    "1. Oui\n"
+                    "2. Non\n\n"
+                    "0. Retour"
                 )
 
         elif state == "ssrte_q2":
@@ -1265,11 +1269,11 @@ async def ussd_callback(request: USSDRequest):
                         upsert=True,
                     )
                 response_text = (
-                    f"Merci pour votre reponse.\n\n"
-                    f"Situation conforme.\n"
-                    f"Continuez a soutenir la scolarite\n"
-                    f"de vos enfants.\n\n"
-                    f"0. Retour au menu"
+                    "Merci pour votre reponse.\n\n"
+                    "Situation conforme.\n"
+                    "Continuez a soutenir la scolarite\n"
+                    "de vos enfants.\n\n"
+                    "0. Retour au menu"
                 )
                 session["state"] = "ssrte_done"
             elif choice == "2":
@@ -1293,31 +1297,31 @@ async def ussd_callback(request: USSDRequest):
                         upsert=True,
                     )
                 response_text = (
-                    f"Merci pour votre reponse.\n\n"
-                    f"Nous vous mettons en relation\n"
-                    f"avec votre cooperative pour un\n"
-                    f"accompagnement SSRTE de l'ICI.\n\n"
-                    f"Votre cooperative sera informee.\n\n"
-                    f"0. Retour au menu"
+                    "Merci pour votre reponse.\n\n"
+                    "Nous vous mettons en relation\n"
+                    "avec votre cooperative pour un\n"
+                    "accompagnement SSRTE de l'ICI.\n\n"
+                    "Votre cooperative sera informee.\n\n"
+                    "0. Retour au menu"
                 )
                 session["state"] = "ssrte_done"
             elif choice == "0":
                 session["state"] = "ssrte_q1"
                 response_text = (
-                    f"SSRTE - Lutte contre le travail des enfants (ICI)\n\n"
-                    f"Question 1/2\n"
-                    f"Avez-vous des enfants en age scolaire sur votre parcelle ?\n\n"
-                    f"1. Oui\n"
-                    f"2. Non\n\n"
-                    f"0. Retour"
+                    "SSRTE - Lutte contre le travail des enfants (ICI)\n\n"
+                    "Question 1/2\n"
+                    "Avez-vous des enfants en age scolaire sur votre parcelle ?\n\n"
+                    "1. Oui\n"
+                    "2. Non\n\n"
+                    "0. Retour"
                 )
             else:
                 response_text = (
-                    f"Option invalide.\n\n"
-                    f"Sont-ils scolarises ?\n"
-                    f"1. Oui\n"
-                    f"2. Non\n\n"
-                    f"0. Retour"
+                    "Option invalide.\n\n"
+                    "Sont-ils scolarises ?\n"
+                    "1. Oui\n"
+                    "2. Non\n\n"
+                    "0. Retour"
                 )
 
         elif state == "ssrte_done":
@@ -1419,8 +1423,8 @@ async def ussd_callback(request: USSDRequest):
                 session["data"]["new_pin"] = new_pin
                 session["state"] = "change_pin_confirm"
                 response_text = (
-                    f"Confirmez votre nouveau PIN:\n"
-                    f"Entrez a nouveau les 4 chiffres"
+                    "Confirmez votre nouveau PIN:\n"
+                    "Entrez a nouveau les 4 chiffres"
                 )
 
         # ==============================

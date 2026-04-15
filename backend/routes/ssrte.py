@@ -336,7 +336,7 @@ async def create_household_visit(
                 "risk_level": "high",
                 "agent_name": current_user.get("full_name")
             })
-            logger.info(f"[SSRTE] WebSocket alert sent for high-risk visit")
+            logger.info("[SSRTE] WebSocket alert sent for high-risk visit")
         except Exception as e:
             logger.error(f"[SSRTE] Failed to send WebSocket alert: {e}")
     

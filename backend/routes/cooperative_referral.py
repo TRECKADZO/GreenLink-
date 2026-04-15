@@ -143,7 +143,7 @@ async def ensure_referral_code(user_id: str) -> str:
         try:
             from bson import ObjectId
             user = await db.users.find_one({"_id": ObjectId(user_id)})
-        except:
+        except Exception:
             pass
     
     if not user:
@@ -305,7 +305,7 @@ async def get_my_sponsor(current_user: dict = Depends(get_current_user)):
             from bson import ObjectId
             if ObjectId.is_valid(sponsor_id):
                 sponsor = await db.users.find_one({"_id": ObjectId(sponsor_id), "is_active": True})
-        except:
+        except Exception:
             pass
     if not sponsor:
         return {
@@ -365,7 +365,7 @@ async def get_network_stats(current_user: dict = Depends(get_current_user)):
                 from bson import ObjectId
                 if ObjectId.is_valid(str(ts["_id"])):
                     sponsor = await db.users.find_one({"_id": ObjectId(str(ts["_id"]))})
-            except:
+            except Exception:
                 pass
         if sponsor:
             top_sponsors.append({

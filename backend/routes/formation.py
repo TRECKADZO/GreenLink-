@@ -438,7 +438,7 @@ async def generate_attestation_pdf(session_id: str, participant_id: str, current
     el.append(Paragraph(f"<b>{nom_complet}</b>", big_s))
     el.append(Spacer(1, 0.5*cm))
 
-    el.append(Paragraph(f"a participe a la session de formation/sensibilisation portant sur :", center_s))
+    el.append(Paragraph("a participe a la session de formation/sensibilisation portant sur :", center_s))
     el.append(Spacer(1, 0.3*cm))
     el.append(Paragraph(f"<b>{s.get('theme_titre', '')}</b>", big_s))
     el.append(Spacer(1, 0.3*cm))
@@ -637,7 +637,7 @@ async def export_excel(current_user: dict = Depends(get_current_user)):
     wb.save(buf)
     buf.seek(0)
     return StreamingResponse(buf, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={
-        "Content-Disposition": f"attachment; filename=formations_ars1000.xlsx"
+        "Content-Disposition": "attachment; filename=formations_ars1000.xlsx"
     })
 
 

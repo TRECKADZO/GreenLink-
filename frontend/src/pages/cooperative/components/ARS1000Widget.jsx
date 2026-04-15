@@ -19,7 +19,7 @@ export const ARS1000Widget = () => {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) setData(await res.json());
-      } catch (e) { /* silent */ }
+      } catch (e) { console.error('ARS1000 widget load error:', e); }
       finally { setLoading(false); }
     };
     load();

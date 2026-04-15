@@ -64,14 +64,14 @@ const PDCListPage = ({ onBack }) => {
     try {
       const res = await fetch(`${API_URL}/api/pdc-v2/stats/overview`, { headers: authHeaders() });
       if (res.ok) setStats(await res.json());
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Stats load error:', e); }
   }, []);
 
   const loadMembers = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/api/pdc-v2/members/available`, { headers: authHeaders() });
       if (res.ok) setMembers(await res.json());
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Members load error:', e); }
   }, []);
 
   useEffect(() => { loadPdcs(); loadStats(); }, [loadPdcs, loadStats]);

@@ -322,7 +322,7 @@ async def login(request: Request, credentials: UserLogin):
     logger.info(f"Login attempt for: {credentials.identifier}")
     
     # Find user by phone number or email
-    phone_variants = normalize_phone(credentials.identifier) if not "@" in credentials.identifier else []
+    phone_variants = normalize_phone(credentials.identifier) if "@" not in credentials.identifier else []
     
     search_conditions = [{"email": credentials.identifier}]
     if phone_variants:
@@ -1331,7 +1331,7 @@ async def activate_agent_account(request: AgentActivationRequest):
         await db.notifications.insert_one({
             "user_id": user_id,
             "title": f"Bienvenue Agent {user_dict.get('full_name')}!",
-            "body": f"Votre compte agent terrain est activé. Vous pouvez maintenant effectuer des visites SSRTE, rechercher des producteurs par téléphone et enregistrer des photos géolocalisées.",
+            "body": "Votre compte agent terrain est activé. Vous pouvez maintenant effectuer des visites SSRTE, rechercher des producteurs par téléphone et enregistrer des photos géolocalisées.",
             "type": "welcome",
             "data": {"role": "field_agent"},
             "created_at": datetime.utcnow(),

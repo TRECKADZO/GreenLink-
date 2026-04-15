@@ -510,7 +510,7 @@ async def generate_ssrte_report(
     story = []
     styles = get_styles()
     
-    create_header(story, styles, "RAPPORT VISITES SSRTE", f"Système de Suivi et Remédiation du Travail des Enfants")
+    create_header(story, styles, "RAPPORT VISITES SSRTE", "Système de Suivi et Remédiation du Travail des Enfants")
     
     # Stats
     total = len(visits)

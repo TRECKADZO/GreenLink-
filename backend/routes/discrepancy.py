@@ -649,9 +649,9 @@ async def export_discrepancies_pdf(
     elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#1a5c2e')))
     elements.append(Spacer(1, 6))
     elements.append(Paragraph(
-        f"Ce rapport est genere automatiquement par GreenLink Agritech. "
-        f"Les ecarts sont calcules en comparant les declarations des planteurs avec les mesures des agents terrain. "
-        f"L'objectif est d'encourager l'exactitude des declarations tout en maintenant la confiance.",
+        "Ce rapport est genere automatiquement par GreenLink Agritech. "
+        "Les ecarts sont calcules en comparant les declarations des planteurs avec les mesures des agents terrain. "
+        "L'objectif est d'encourager l'exactitude des declarations tout en maintenant la confiance.",
         ParagraphStyle('Footer', parent=small_style, fontSize=7, textColor=colors.HexColor('#999999'))
     ))
 

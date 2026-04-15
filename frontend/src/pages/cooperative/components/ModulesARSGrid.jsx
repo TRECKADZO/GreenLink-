@@ -40,7 +40,7 @@ export const ModulesARSGrid = () => {
         const d = await res.json();
         results.readiness = { score: d.score_global, label: d.readiness };
       }
-    } catch { /* silent */ }
+    } catch (e) { console.error('Readiness fetch error:', e); }
 
     // Load individual modules in parallel
     const fetches = MODULE_CONFIG.filter(m => m.apiPath).map(async (mod) => {
@@ -50,7 +50,7 @@ export const ModulesARSGrid = () => {
           const d = await res.json();
           results[mod.key] = extractKPI(mod.key, d);
         }
-      } catch { /* silent */ }
+      } catch (e) { console.error(`Module ${mod.key} fetch error:`, e); }
     });
 
     await Promise.all(fetches);

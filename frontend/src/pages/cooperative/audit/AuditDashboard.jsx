@@ -113,7 +113,7 @@ const AuditDashboard = () => {
                 {sections.length === 0 ? (
                   <div className="px-5 py-8 text-center text-sm text-[#6B7280]">Aucune donnee. Commencez l'audit.</div>
                 ) : sections.map((s, i) => (
-                  <div key={i} className="px-5 py-3 flex items-center gap-4">
+                  <div key={s.section || `section-${i}`} className="px-5 py-3 flex items-center gap-4">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-[#111827] truncate">{s.section}</p>
                       <p className="text-[10px] text-[#6B7280]">{s.norme} | {s.conformes}C / {s.non_conformes}NC sur {s.total}</p>

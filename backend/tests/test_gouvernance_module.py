@@ -26,9 +26,9 @@ import uuid
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
-# Test credentials
-TEST_EMAIL = "bielaghana@gmail.com"
-TEST_PASSWORD = "test123456"
+# Test credentials from environment
+TEST_EMAIL = os.environ.get("TEST_COOP_EMAIL", "bielaghana@gmail.com")
+TEST_PASSWORD = os.environ.get("TEST_COOP_PASSWORD", "test123456")
 
 # 7 ARS 1000 required positions
 ARS1000_POSITIONS = [

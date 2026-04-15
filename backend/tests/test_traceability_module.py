@@ -10,9 +10,9 @@ import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
-# Test credentials from test_credentials.md
-COOP_EMAIL = "bielaghana@gmail.com"
-COOP_PASSWORD = "test123456"
+# Test credentials from environment
+COOP_EMAIL = os.environ.get("TEST_COOP_EMAIL", "bielaghana@gmail.com")
+COOP_PASSWORD = os.environ.get("TEST_COOP_PASSWORD", "test123456")
 
 # Existing test lots from context
 EXISTING_LOT_CERTIFIE = "LOT-D29F82F8"

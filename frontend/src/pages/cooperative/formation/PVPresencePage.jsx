@@ -42,7 +42,7 @@ const PVPresencePage = () => {
       const res = await fetch(`${API}/api/formation/sessions/${sessionId}/participants`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       setParticipants(data.participants || []);
-    } catch { /* handled */ }
+    } catch (e) { console.error('Participants load error:', e); }
   };
 
   const handleSelectSession = (s) => {

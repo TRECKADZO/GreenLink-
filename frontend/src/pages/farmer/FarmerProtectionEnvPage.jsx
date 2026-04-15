@@ -45,7 +45,7 @@ export default function FarmerProtectionEnvPage() {
         setMesures(data.mesures || []);
         setStats(data.par_type || {});
       }
-    } catch (e) { /* error */ }
+    } catch (e) { console.error('Erreur chargement mesures:', e); }
     finally { setLoading(false); }
   };
 

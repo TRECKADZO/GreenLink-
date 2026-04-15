@@ -9,7 +9,8 @@ from fastapi import APIRouter, HTTPException, Depends, Response
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
 from bson import ObjectId
-import io, logging
+import io
+import logging
 
 from database import db
 from routes.auth import get_current_user
@@ -155,7 +156,7 @@ async def generate_pdc_pdf(pdc_id: str, current_user: dict = Depends(get_current
     story.append(Spacer(1, 30 * mm))
     story.append(make_header_table(
         'PLAN DE DEVELOPPEMENT<br/>DE LA CACAOYERE (PDC)',
-        f'Norme ARS 1000-1 | Cacao Durable Cote d\'Ivoire',
+        'Norme ARS 1000-1 | Cacao Durable Cote d\'Ivoire',
         styles
     ))
     story.append(Spacer(1, 15 * mm))
@@ -317,7 +318,7 @@ async def generate_pdc_pdf(pdc_id: str, current_user: dict = Depends(get_current
         story.append(Paragraph('Aucune signature', styles['Body']))
 
     story.append(Spacer(1, 15 * mm))
-    story.append(Paragraph(f'<b>Cachet de la cooperative :</b>', styles['Bold']))
+    story.append(Paragraph('<b>Cachet de la cooperative :</b>', styles['Bold']))
     story.append(Spacer(1, 20 * mm))
     story.append(HRFlowable(width="40%", thickness=0.5, color=GRAY_BORDER))
     story.append(Spacer(1, 10 * mm))
@@ -358,7 +359,7 @@ async def generate_rapport_essai_pdf(lot_id: str, current_user: dict = Depends(g
     # HEADER
     story.append(make_header_table(
         'RAPPORT D\'ESSAI',
-        f'Norme ARS 1000-2 | Controle Qualite Cacao',
+        'Norme ARS 1000-2 | Controle Qualite Cacao',
         styles
     ))
     story.append(Spacer(1, 10 * mm))

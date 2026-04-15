@@ -106,7 +106,7 @@ const TraceabilityDashboard = () => {
         {alertes.length > 0 && (
           <div className="mb-6 space-y-2" data-testid="alertes-section">
             {alertes.slice(0, 5).map((a, i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-md">
+              <div key={a.message || `alerte-${i}`} className="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-md">
                 <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0" />
                 <span className="text-sm text-red-800">{a.message}</span>
               </div>
@@ -156,7 +156,7 @@ const TraceabilityDashboard = () => {
                   </div>
                 ) : (
                   recentEvents.map((evt, i) => (
-                    <div key={i} className="px-5 py-3 flex items-center justify-between hover:bg-[#F9FAFB] transition-colors">
+                    <div key={evt.lot_code ? `${evt.lot_code}-${i}` : `evt-${i}`} className="px-5 py-3 flex items-center justify-between hover:bg-[#F9FAFB] transition-colors">
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${evt.event?.conforme ? 'bg-emerald-500' : 'bg-red-500'}`} />
                         <div>

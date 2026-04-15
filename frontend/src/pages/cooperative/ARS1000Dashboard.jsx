@@ -193,7 +193,7 @@ const PDCTab = () => {
           const data = await listRes.json();
           setPdcs(data.pdcs || []);
         }
-      } catch { /* ignore */ }
+      } catch (e) { console.error('PDC load error:', e); }
       finally { setLoading(false); }
     };
     load();
@@ -924,7 +924,7 @@ const RecoltesAnalytics = () => {
       try {
         const res = await fetch(`${API_URL}/api/ars1000/recoltes/analytics`, { headers: authHeaders() });
         if (res.ok) setAnalytics(await res.json());
-      } catch (e) { /* */ }
+      } catch (e) { console.error('Analytics load error:', e); }
       finally { setLoading(false); }
     };
     load();
@@ -1267,7 +1267,7 @@ const RegistresTab = ({ dashboard, onRefresh }) => {
     try {
       const res = await fetch(`${API_URL}/api/ars1000/certification/impartialite`, { headers: authHeaders() });
       if (res.ok) { const d = await res.json(); setDeclarations(d.declarations || []); }
-    } catch (e) { /* */ }
+    } catch (e) { console.error('Impartialite load error:', e); }
   };
 
   const handleAddNC = async (e) => {

@@ -33,6 +33,14 @@
 - Pattern: ChevronRight rotate-180 dans un bouton w-8 h-8 bg-white/10
 - Modules couverts: Tracabilite (5), Audit (5), Formation (5), Gouvernance (4), Membres (4), Risques (1), Consolide (1), Simulation (1)
 
+### Code Quality Fixes (DONE - 2026-04-15)
+- Secrets tests: 6 fichiers migres vers os.environ.get() avec fallback
+- Catch vides: 12+ handlers remplaces par console.error() (farmer, ARS1000, PDC, formation)
+- Array index as key: 4 instances corrigees avec identifiants stables (traceability, formation, audit)
+- Python undefined: `timedelta` import ajoute (cooperative_harvests), `verify_pin` defini (ussd)
+- Bare except: 6 instances remplacees par Exception/ValueError (carbon_sales, cooperative_referral, harvest_marketplace)
+- Auto-fix ruff: 82 corrections automatiques (f-strings vides, imports)
+
 ## Backlog
 - P1: Integration Gateway SMS reel (Orange CI / MTN)
 - P1: Support langues locales (Baoule/Dioula)
