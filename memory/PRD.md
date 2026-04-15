@@ -27,6 +27,12 @@
 - ModulesARSGrid integre: Barre readiness ARS 1000 + 7 cartes modules cliquables avec KPIs temps reel
 - Toutes les sections dans les Actions Rapides sidebar
 
+### Navigation - Boutons Retour (DONE - 2026-04-15)
+- 26 pages avec bouton retour (data-testid="btn-retour")
+- Navigation coherente: dashboards -> /cooperative/dashboard, sous-pages -> dashboard module parent
+- Pattern: ChevronRight rotate-180 dans un bouton w-8 h-8 bg-white/10
+- Modules couverts: Tracabilite (5), Audit (5), Formation (5), Gouvernance (4), Membres (4), Risques (1), Consolide (1), Simulation (1)
+
 ## Backlog
 - P1: Integration Gateway SMS reel (Orange CI / MTN)
 - P1: Support langues locales (Baoule/Dioula)
