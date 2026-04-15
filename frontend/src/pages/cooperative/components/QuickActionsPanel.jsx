@@ -45,6 +45,16 @@ const categories = [
     ],
   },
   {
+    title: 'Audit & Conformite',
+    items: [
+      { icon: Shield, label: 'Dashboard', path: '/cooperative/audit', color: 'text-[#7C3AED]' },
+      { icon: FileText, label: 'Checklist', path: '/cooperative/audit/checklist', color: 'text-[#7C3AED]' },
+      { icon: AlertTriangle, label: 'Non-conformites', path: '/cooperative/audit/non-conformites', color: 'text-[#7C3AED]' },
+      { icon: FileText, label: 'Rapports', path: '/cooperative/audit/reports', color: 'text-[#7C3AED]' },
+      { icon: Target, label: 'Revue direction', path: '/cooperative/audit/revue', color: 'text-[#7C3AED]' },
+    ],
+  },
+  {
     title: 'Tracabilite',
     items: [
       { icon: Package, label: 'Dashboard', path: '/cooperative/traceability', color: 'text-[#065F46]' },

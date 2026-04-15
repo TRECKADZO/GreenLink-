@@ -113,6 +113,13 @@ import SegregationPage from "./pages/cooperative/traceability/SegregationPage";
 import TraceabilityReportsPage from "./pages/cooperative/traceability/ReportsPage";
 import TraceabilityObjectivesPage from "./pages/cooperative/traceability/ObjectivesPage";
 
+// Audit Module
+import AuditDashboard from "./pages/cooperative/audit/AuditDashboard";
+import AuditChecklistPage from "./pages/cooperative/audit/ChecklistPage";
+import AuditNonConformitesPage from "./pages/cooperative/audit/NonConformitesPage";
+import AuditReportsPage from "./pages/cooperative/audit/AuditReportsPage";
+import RevueDirectionPage from "./pages/cooperative/audit/RevueDirectionPage";
+
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
 import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
@@ -279,6 +286,11 @@ function App() {
               <Route path="/cooperative/traceability/segregation" element={<SegregationPage />} />
               <Route path="/cooperative/traceability/reports" element={<TraceabilityReportsPage />} />
               <Route path="/cooperative/traceability/objectives" element={<TraceabilityObjectivesPage />} />
+              <Route path="/cooperative/audit" element={<AuditDashboard />} />
+              <Route path="/cooperative/audit/checklist" element={<AuditChecklistPage />} />
+              <Route path="/cooperative/audit/non-conformites" element={<AuditNonConformitesPage />} />
+              <Route path="/cooperative/audit/reports" element={<AuditReportsPage />} />
+              <Route path="/cooperative/audit/revue" element={<RevueDirectionPage />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
 
