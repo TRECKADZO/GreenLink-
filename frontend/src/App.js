@@ -127,6 +127,12 @@ import FormationSessionsPage from "./pages/cooperative/formation/SessionsPage";
 import FormationPVPage from "./pages/cooperative/formation/PVPresencePage";
 import FormationAttestationsPage from "./pages/cooperative/formation/AttestationsPage";
 
+// Gouvernance Module
+import GouvernanceDashboard from "./pages/cooperative/gouvernance/GouvernanceDashboard";
+import OrganigrammePage from "./pages/cooperative/gouvernance/OrganigrammePage";
+import PolitiquePage from "./pages/cooperative/gouvernance/PolitiquePage";
+import GouvernanceRevuePage from "./pages/cooperative/gouvernance/RevueDirectionPage";
+
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
 import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
@@ -303,6 +309,10 @@ function App() {
               <Route path="/cooperative/formation/sessions" element={<FormationSessionsPage />} />
               <Route path="/cooperative/formation/pv" element={<FormationPVPage />} />
               <Route path="/cooperative/formation/attestations" element={<FormationAttestationsPage />} />
+              <Route path="/cooperative/gouvernance" element={<GouvernanceDashboard />} />
+              <Route path="/cooperative/gouvernance/organigramme" element={<OrganigrammePage />} />
+              <Route path="/cooperative/gouvernance/politique" element={<PolitiquePage />} />
+              <Route path="/cooperative/gouvernance/revue" element={<GouvernanceRevuePage />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
 

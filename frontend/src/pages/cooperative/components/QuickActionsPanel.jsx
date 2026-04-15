@@ -3,7 +3,7 @@ import {
   Plus, Users, Shield, Target, Package, Store,
   DollarSign, Leaf, FileText, TreePine, AlertTriangle,
   UserCircle, Clock, Smartphone, ChevronDown, Gift, BarChart3,
-  GraduationCap, Award
+  GraduationCap, Award, Building2
 } from 'lucide-react';
 
 const categories = [
@@ -43,6 +43,15 @@ const categories = [
       { icon: AlertTriangle, label: 'SSRTE / ICI', path: '/cooperative/ssrte', color: 'text-[#6B7280]' },
       { icon: UserCircle, label: 'Inscriptions', path: '/cooperative/inscriptions', color: 'text-[#6B7280]' },
       { icon: Target, label: 'Ecarts', path: '/cooperative/ecarts', color: 'text-[#DC2626]' },
+    ],
+  },
+  {
+    title: 'Gouvernance',
+    items: [
+      { icon: Building2, label: 'Dashboard', path: '/cooperative/gouvernance', color: 'text-[#1A3622]' },
+      { icon: Users, label: 'Organigramme', path: '/cooperative/gouvernance/organigramme', color: 'text-[#1A3622]' },
+      { icon: FileText, label: 'Politique', path: '/cooperative/gouvernance/politique', color: 'text-[#1A3622]' },
+      { icon: Shield, label: 'Revue direction', path: '/cooperative/gouvernance/revue', color: 'text-[#1A3622]' },
     ],
   },
   {

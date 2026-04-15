@@ -60,6 +60,7 @@ from routes import pdc_v2_pdf
 from routes import traceability
 from routes import audit_internal
 from routes import formation
+from routes import gouvernance
 
 
 ROOT_DIR = Path(__file__).parent
@@ -220,6 +221,7 @@ app.include_router(pdc_v2_pdf.router)
 app.include_router(traceability.router)
 app.include_router(audit_internal.router)
 app.include_router(formation.router)
+app.include_router(gouvernance.router)
 
 # Set database for cooperative_referral module
 cooperative_referral.set_database(db)
