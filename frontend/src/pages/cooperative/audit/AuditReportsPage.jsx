@@ -85,9 +85,12 @@ const AuditReportsPage = () => {
             <span className="text-white/80">Rapports</span>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Rapports d'Audit</h1>
-              <p className="text-sm text-white/60 mt-1">Resultats et exports pour auditeurs ARS 1000</p>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/cooperative/audit')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+              <div>
+                <h1 className="text-xl font-bold text-white tracking-tight">Rapports d'Audit</h1>
+                <p className="text-sm text-white/60 mt-1">Resultats et exports pour auditeurs ARS 1000</p>
+              </div>
             </div>
             <div className="flex gap-2">
               <button onClick={() => handleExport('excel')} disabled={!!exporting || !sessionId} className="flex items-center gap-2 px-4 py-2 bg-[#065F46] text-white rounded-md text-sm font-medium hover:bg-[#064E3B] disabled:opacity-50" data-testid="btn-export-excel">

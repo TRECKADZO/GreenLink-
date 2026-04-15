@@ -94,9 +94,12 @@ const RegistrePage = () => {
             <span className="text-white/80">Registre</span>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Base de Donnees des Membres</h1>
-              <p className="text-sm text-white/60 mt-1">{total} membre(s) | Champs conformes norme 4.2.3.2 (a-n)</p>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/cooperative/membres')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+              <div>
+                <h1 className="text-xl font-bold text-white tracking-tight">Base de Donnees des Membres</h1>
+                <p className="text-sm text-white/60 mt-1">{total} membre(s) | Champs conformes norme 4.2.3.2 (a-n)</p>
+              </div>
             </div>
             <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-white text-[#1A3622] rounded-md text-sm font-medium hover:bg-white/90" data-testid="btn-export-excel">
               <FileSpreadsheet className="h-4 w-4" /> Export Excel

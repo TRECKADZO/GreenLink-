@@ -80,9 +80,12 @@ const ReportsPage = () => {
             <span className="text-white/80">Rapports & Audits</span>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Rapports & Audits</h1>
-              <p className="text-sm text-white/60 mt-1">Generation de rapports pour les auditeurs ARS 1000</p>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/cooperative/traceability')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+              <div>
+                <h1 className="text-xl font-bold text-white tracking-tight">Rapports & Audits</h1>
+                <p className="text-sm text-white/60 mt-1">Generation de rapports pour les auditeurs ARS 1000</p>
+              </div>
             </div>
             <div className="flex gap-2">
               <button

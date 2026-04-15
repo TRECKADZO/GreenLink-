@@ -57,9 +57,12 @@ const ProgrammePage = () => {
             <span className="text-white/80">Programme Annuel</span>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Programme Annuel de Formation</h1>
-              <p className="text-sm text-white/60 mt-1">{programme ? `${programme.campagne} | ${complets}/${themes.length} themes completes` : 'Aucun programme'}</p>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/cooperative/formation')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+              <div>
+                <h1 className="text-xl font-bold text-white tracking-tight">Programme Annuel de Formation</h1>
+                <p className="text-sm text-white/60 mt-1">{programme ? `${programme.campagne} | ${complets}/${themes.length} themes completes` : 'Aucun programme'}</p>
+              </div>
             </div>
             {programme && (
               <button onClick={() => navigate('/cooperative/formation/sessions?create=1')} className="flex items-center gap-2 px-4 py-2 bg-white text-[#1A3622] rounded-md text-sm font-medium hover:bg-white/90" data-testid="btn-new-session">

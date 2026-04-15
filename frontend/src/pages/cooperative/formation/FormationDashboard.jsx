@@ -57,7 +57,10 @@ const FormationDashboard = () => {
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight" data-testid="page-title">Formation & Sensibilisation</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-3" data-testid="page-title">
+                <button onClick={() => navigate('/cooperative/dashboard')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+                Formation & Sensibilisation
+              </h1>
               <p className="text-sm text-white/60 mt-1">Clauses 7.3, 7.4, 12.2-12.10, 13.1-13.5</p>
             </div>
             <div className="flex flex-wrap gap-2">

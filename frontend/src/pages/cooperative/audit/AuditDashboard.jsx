@@ -175,7 +175,10 @@ const HeaderBar = ({ navigate, session, onNewSession }) => (
       </div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight" data-testid="audit-title">Audit & Conformite</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-3" data-testid="audit-title">
+            <button onClick={() => navigate('/cooperative/dashboard')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+            Audit & Conformite
+          </h1>
           <p className="text-sm text-white/60 mt-1">
             {session?.titre ? `${session.titre} | ${session.campagne} | ${session.niveau_certification}` : 'Module d\'audit interne ARS 1000'}
           </p>

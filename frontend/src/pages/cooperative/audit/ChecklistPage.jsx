@@ -119,7 +119,10 @@ const ChecklistPage = () => {
             <ChevronRight className="h-3 w-3" />
             <span className="text-white/80">Checklist</span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Checklist d'Audit Interne</h1>
+          <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+            <button onClick={() => navigate('/cooperative/audit')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+            Checklist d'Audit Interne
+          </h1>
           <p className="text-sm text-white/60 mt-1">Evaluez chaque exigence ARS 1000</p>
         </div>
       </div>

@@ -76,7 +76,10 @@ const SegregationPage = () => {
             <ChevronRight className="h-3 w-3" />
             <span className="text-white/80">Segregation</span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Segregation Physique</h1>
+          <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+            <button onClick={() => navigate('/cooperative/traceability')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+            Segregation Physique
+          </h1>
           <p className="text-sm text-white/60 mt-1">Magasins virtuels certifie / non-certifie - Blocage automatique des melanges</p>
         </div>
       </div>

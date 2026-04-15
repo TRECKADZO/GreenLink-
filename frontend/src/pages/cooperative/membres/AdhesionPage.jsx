@@ -198,8 +198,13 @@ const Header = ({ navigate }) => (
         <ChevronRight className="h-3 w-3" />
         <span className="text-white/80">Procedure d'adhesion</span>
       </div>
-      <h1 className="text-xl font-bold text-white tracking-tight">Procedure d'Adhesion</h1>
-      <p className="text-sm text-white/60 mt-1">Clauses 4.2.2 & 4.2.3 - 4 etapes obligatoires</p>
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate('/cooperative/membres')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+        <div>
+          <h1 className="text-xl font-bold text-white tracking-tight">Procedure d'Adhesion</h1>
+          <p className="text-sm text-white/60 mt-1">Clauses 4.2.2 & 4.2.3 - 4 etapes obligatoires</p>
+        </div>
+      </div>
     </div>
   </div>
 );

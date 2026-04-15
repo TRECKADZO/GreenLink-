@@ -81,9 +81,12 @@ const ARS1000ConsolidePage = () => {
             <span className="text-white/80">Readiness ARS 1000</span>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight" data-testid="page-title">Readiness ARS 1000</h1>
-              <p className="text-sm text-white/60 mt-1">Score de conformite consolide - 6 modules</p>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/cooperative/dashboard')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour"><ChevronRight className="h-4 w-4 text-white rotate-180" /></button>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight" data-testid="page-title">Readiness ARS 1000</h1>
+                <p className="text-sm text-white/60 mt-1">Score de conformite consolide - 6 modules</p>
+              </div>
             </div>
             <button onClick={handleExportPDF} className="flex items-center gap-2 px-4 py-2 bg-white text-[#1A3622] rounded-md text-sm font-medium hover:bg-white/90" data-testid="btn-export-pdf">
               <Download className="h-4 w-4" /> Rapport PDF

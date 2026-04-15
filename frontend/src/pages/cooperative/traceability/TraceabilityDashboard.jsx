@@ -61,11 +61,16 @@ const TraceabilityDashboard = () => {
             <span className="text-white/80">Tracabilite ARS 1000-2</span>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight" data-testid="trace-title">
-                Tracabilite du Cacao
-              </h1>
-              <p className="text-sm text-white/60 mt-1">Conformite ARS 1000-2 - Clauses 11 a 16</p>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/cooperative/dashboard')} className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors" data-testid="btn-retour">
+                <ChevronRight className="h-4 w-4 text-white rotate-180" />
+              </button>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight" data-testid="trace-title">
+                  Tracabilite du Cacao
+                </h1>
+                <p className="text-sm text-white/60 mt-1">Conformite ARS 1000-2 - Clauses 11 a 16</p>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {[
