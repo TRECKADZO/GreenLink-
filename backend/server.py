@@ -61,6 +61,7 @@ from routes import traceability
 from routes import audit_internal
 from routes import formation
 from routes import gouvernance
+from routes import membres_ars
 
 
 ROOT_DIR = Path(__file__).parent
@@ -222,6 +223,7 @@ app.include_router(traceability.router)
 app.include_router(audit_internal.router)
 app.include_router(formation.router)
 app.include_router(gouvernance.router)
+app.include_router(membres_ars.router)
 
 # Set database for cooperative_referral module
 cooperative_referral.set_database(db)

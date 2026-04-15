@@ -46,6 +46,15 @@ const categories = [
     ],
   },
   {
+    title: 'Membres',
+    items: [
+      { icon: Users, label: 'Dashboard', path: '/cooperative/membres', color: 'text-[#1A3622]' },
+      { icon: Plus, label: 'Adhesion', path: '/cooperative/membres/adhesion', color: 'text-[#1A3622]' },
+      { icon: Users, label: 'Registre', path: '/cooperative/membres/registre', color: 'text-[#1A3622]' },
+      { icon: Shield, label: 'Perimetre SM', path: '/cooperative/membres/perimetre', color: 'text-[#1A3622]' },
+    ],
+  },
+  {
     title: 'Gouvernance',
     items: [
       { icon: Building2, label: 'Dashboard', path: '/cooperative/gouvernance', color: 'text-[#1A3622]' },

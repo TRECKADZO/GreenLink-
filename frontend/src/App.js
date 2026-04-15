@@ -133,6 +133,12 @@ import OrganigrammePage from "./pages/cooperative/gouvernance/OrganigrammePage";
 import PolitiquePage from "./pages/cooperative/gouvernance/PolitiquePage";
 import GouvernanceRevuePage from "./pages/cooperative/gouvernance/RevueDirectionPage";
 
+// Membres ARS 1000 Module
+import MembresARSDashboard from "./pages/cooperative/membres/MembresDashboard";
+import AdhesionPage from "./pages/cooperative/membres/AdhesionPage";
+import RegistreMembresPage from "./pages/cooperative/membres/RegistrePage";
+import PerimetreSMPage from "./pages/cooperative/membres/PerimetrePage";
+
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
 import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
@@ -313,6 +319,10 @@ function App() {
               <Route path="/cooperative/gouvernance/organigramme" element={<OrganigrammePage />} />
               <Route path="/cooperative/gouvernance/politique" element={<PolitiquePage />} />
               <Route path="/cooperative/gouvernance/revue" element={<GouvernanceRevuePage />} />
+              <Route path="/cooperative/membres" element={<MembresARSDashboard />} />
+              <Route path="/cooperative/membres/adhesion" element={<AdhesionPage />} />
+              <Route path="/cooperative/membres/registre" element={<RegistreMembresPage />} />
+              <Route path="/cooperative/membres/perimetre" element={<PerimetreSMPage />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
 
