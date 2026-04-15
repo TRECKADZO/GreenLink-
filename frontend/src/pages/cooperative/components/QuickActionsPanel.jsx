@@ -8,6 +8,12 @@ import {
 
 const categories = [
   {
+    title: 'ARS 1000',
+    items: [
+      { icon: Shield, label: 'Readiness', path: '/cooperative/ars1000-readiness', color: 'text-[#D4AF37]' },
+    ],
+  },
+  {
     title: 'Exploitation',
     items: [
       { icon: Plus, label: 'Parcelle', path: '/cooperative/parcels/new', color: 'text-[#1A3622]' },
