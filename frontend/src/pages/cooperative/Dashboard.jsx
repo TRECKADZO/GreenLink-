@@ -19,6 +19,7 @@ import { AlertsBanner } from './components/AlertsBanner';
 import { REDDWidget } from './components/REDDWidget';
 import { SSRTEWidget } from './components/SSRTEWidget';
 import { ARS1000Widget } from './components/ARS1000Widget';
+import { ModulesARSGrid } from './components/ModulesARSGrid';
 import { REDDEvolutionChart } from './components/REDDEvolutionChart';
 import { SSRTETrendsChart } from './components/SSRTETrendsChart';
 import { RiskByZoneChart } from './components/RiskByZoneChart';
@@ -151,6 +152,9 @@ const Dashboard = () => {
               <SSRTEWidget ssrte={kpiData?.ssrte} ici={kpiData?.ici} />
               <ARS1000Widget />
             </div>
+
+            {/* Modules ARS 1000 */}
+            <ModulesARSGrid />
 
             {/* Charts Section */}
             {hasChartData && (

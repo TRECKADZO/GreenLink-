@@ -12,6 +12,7 @@ const categories = [
     items: [
       { icon: Shield, label: 'Readiness', path: '/cooperative/ars1000-readiness', color: 'text-[#D4AF37]' },
       { icon: Shield, label: 'Simulation Audit', path: '/cooperative/simulation-audit', color: 'text-[#D4AF37]' },
+      { icon: AlertTriangle, label: 'Risques', path: '/cooperative/risques', color: 'text-[#C25E30]' },
     ],
   },
   {

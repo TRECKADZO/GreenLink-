@@ -64,6 +64,7 @@ from routes import gouvernance
 from routes import membres_ars
 from routes import ars1000_consolide
 from routes import simulation_audit
+from routes import risques_durabilite
 
 
 ROOT_DIR = Path(__file__).parent
@@ -228,6 +229,7 @@ app.include_router(gouvernance.router)
 app.include_router(membres_ars.router)
 app.include_router(ars1000_consolide.router)
 app.include_router(simulation_audit.router)
+app.include_router(risques_durabilite.router)
 
 # Set database for cooperative_referral module
 cooperative_referral.set_database(db)

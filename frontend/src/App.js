@@ -143,6 +143,9 @@ import PerimetreSMPage from "./pages/cooperative/membres/PerimetrePage";
 import ARS1000ConsolidePage from "./pages/cooperative/ARS1000ConsolidePage";
 import SimulationAuditPage from "./pages/cooperative/SimulationAuditPage";
 
+// Risques & Durabilite Module
+import RisquesDashboard from "./pages/cooperative/risques/RisquesDashboard";
+
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
 import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
@@ -329,6 +332,7 @@ function App() {
               <Route path="/cooperative/membres/perimetre" element={<PerimetreSMPage />} />
               <Route path="/cooperative/ars1000-readiness" element={<ARS1000ConsolidePage />} />
               <Route path="/cooperative/simulation-audit" element={<SimulationAuditPage />} />
+              <Route path="/cooperative/risques" element={<RisquesDashboard />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
 

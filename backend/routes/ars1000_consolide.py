@@ -129,6 +129,25 @@ async def get_consolidated_dashboard(current_user: dict = Depends(get_current_us
 
     # ─── 6. AUDIT (clauses 9.2, 9.3) ───
     a_session = await db.audit_sessions.find_one({"coop_id": coop_id}, sort=[("created_at", -1)])
+
+    # ─── 6b. RISQUES (clauses 6.1, 6.2) ───
+    r_total = await db.risques_registre.count_documents({"coop_id": coop_id})
+    r_mitigees = await db.risques_registre.count_documents({"coop_id": coop_id, "statut": "en_mitigation"})
+    r_critiques = await db.risques_registre.count_documents({"coop_id": coop_id, "niveau": "Critique"})
+    r_score = 0
+    if r_total > 0:
+        r_score = min(100, round((r_mitigees / r_total) * 100))
+    modules["risques"] = {
+        "titre": "Risques & Durabilite",
+        "clauses": "6.1, 6.2",
+        "score": r_score,
+        "indicateurs": [
+            {"label": "Risques identifies", "valeur": r_total, "cible": max(r_total, 5)},
+            {"label": "Risques mitigees", "valeur": r_mitigees, "cible": max(r_total, 1)},
+            {"label": "Risques critiques", "valeur": r_critiques, "cible": 0},
+        ],
+        "actions": _actions(r_score, r_total == 0, "Identifier les risques de durabilite", r_critiques > 0, f"{r_critiques} risque(s) critique(s) a traiter"),
+    }
     a_score = 0
     a_indicateurs = [{"label": "Session d'audit", "valeur": 0, "cible": 1}]
     a_actions_list = ["Creer une session d'audit interne"]
