@@ -5,7 +5,7 @@
 - Frontend: React (CRA) sur port 3000
 - Database: MongoDB | Langues: Francais
 
-## 7 Modules ARS 1000 Implementes
+## 8 Modules ARS 1000 Implementes
 
 ### 1. PDC v2 - 4 etapes, PDF conforme, Score Ombrage
 ### 2. Tracabilite ARS 1000-2 - 7 etapes, Segregation, QR Codes, USSD
@@ -13,13 +13,15 @@
 ### 4. Formation & Sensibilisation - 12 themes obligatoires, PV, Attestations
 ### 5. Gouvernance & Direction - 7 postes, Politique, Revue direction auto-collecte
 ### 6. Membres & Enregistrement - Adhesion 4 etapes, 14 champs 4.2.3.2, Perimetre SM
-### 7. Tableau de Bord Consolide ARS 1000 - NOUVEAU
-- **Score de readiness global** : Jauge circulaire, moyenne des 6 modules
-- **6 cartes modules** : Score individuel, indicateurs, barres de progression, actions prioritaires
-- **Niveaux** : >=80% Pret pour l'audit (vert) | >=50% En bonne voie (ambre) | <50% Actions requises (rouge)
-- **Export PDF** : Rapport de readiness complet pour l'auditeur
-- Backend: /api/ars1000-consolide/* (2 endpoints)
-- Route: /cooperative/ars1000-readiness
+### 7. Tableau de Bord Consolide ARS 1000 - Score readiness global, 6 cartes modules
+### 8. Simulation d'Audit Blanc - 17 clauses interactives, verdict, recommandations, PDF
+- Parcours clause par clause avec boutons Conforme/NC/NA
+- Score recalcule en temps reel, mini-dots de progression
+- 3 verdicts: FAVORABLE / FAVORABLE AVEC RESERVES / DEFAVORABLE
+- Recommandations specifiques par NC avec priorite
+- Export PDF rapport complet
+- Backend: /api/simulation-audit/* (7 endpoints)
+- Collection: simulation_audits
 
 ## Backlog
 - P1: Integration Gateway SMS reel (Orange CI / MTN)
