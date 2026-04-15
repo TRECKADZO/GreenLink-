@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
   Plus, Users, Shield, Target, Package, Store,
   DollarSign, Leaf, FileText, TreePine, AlertTriangle,
-  UserCircle, Clock, Smartphone, ChevronDown, Gift, BarChart3
+  UserCircle, Clock, Smartphone, ChevronDown, Gift, BarChart3,
+  GraduationCap, Award
 } from 'lucide-react';
 
 const categories = [
@@ -42,6 +43,16 @@ const categories = [
       { icon: AlertTriangle, label: 'SSRTE / ICI', path: '/cooperative/ssrte', color: 'text-[#6B7280]' },
       { icon: UserCircle, label: 'Inscriptions', path: '/cooperative/inscriptions', color: 'text-[#6B7280]' },
       { icon: Target, label: 'Ecarts', path: '/cooperative/ecarts', color: 'text-[#DC2626]' },
+    ],
+  },
+  {
+    title: 'Formation',
+    items: [
+      { icon: GraduationCap, label: 'Dashboard', path: '/cooperative/formation', color: 'text-[#065F46]' },
+      { icon: FileText, label: 'Programme', path: '/cooperative/formation/programme', color: 'text-[#065F46]' },
+      { icon: Users, label: 'Sessions', path: '/cooperative/formation/sessions', color: 'text-[#065F46]' },
+      { icon: FileText, label: 'PV & Presence', path: '/cooperative/formation/pv', color: 'text-[#065F46]' },
+      { icon: Award, label: 'Attestations', path: '/cooperative/formation/attestations', color: 'text-[#065F46]' },
     ],
   },
   {

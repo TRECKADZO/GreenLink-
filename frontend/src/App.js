@@ -120,6 +120,13 @@ import AuditNonConformitesPage from "./pages/cooperative/audit/NonConformitesPag
 import AuditReportsPage from "./pages/cooperative/audit/AuditReportsPage";
 import RevueDirectionPage from "./pages/cooperative/audit/RevueDirectionPage";
 
+// Formation Module
+import FormationDashboard from "./pages/cooperative/formation/FormationDashboard";
+import FormationProgrammePage from "./pages/cooperative/formation/ProgrammePage";
+import FormationSessionsPage from "./pages/cooperative/formation/SessionsPage";
+import FormationPVPage from "./pages/cooperative/formation/PVPresencePage";
+import FormationAttestationsPage from "./pages/cooperative/formation/AttestationsPage";
+
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
 import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
@@ -291,6 +298,11 @@ function App() {
               <Route path="/cooperative/audit/non-conformites" element={<AuditNonConformitesPage />} />
               <Route path="/cooperative/audit/reports" element={<AuditReportsPage />} />
               <Route path="/cooperative/audit/revue" element={<RevueDirectionPage />} />
+              <Route path="/cooperative/formation" element={<FormationDashboard />} />
+              <Route path="/cooperative/formation/programme" element={<FormationProgrammePage />} />
+              <Route path="/cooperative/formation/sessions" element={<FormationSessionsPage />} />
+              <Route path="/cooperative/formation/pv" element={<FormationPVPage />} />
+              <Route path="/cooperative/formation/attestations" element={<FormationAttestationsPage />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
 
