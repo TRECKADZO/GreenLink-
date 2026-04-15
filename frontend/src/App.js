@@ -141,6 +141,7 @@ import PerimetreSMPage from "./pages/cooperative/membres/PerimetrePage";
 
 // ARS 1000 Consolide
 import ARS1000ConsolidePage from "./pages/cooperative/ARS1000ConsolidePage";
+import SimulationAuditPage from "./pages/cooperative/SimulationAuditPage";
 
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
@@ -327,6 +328,7 @@ function App() {
               <Route path="/cooperative/membres/registre" element={<RegistreMembresPage />} />
               <Route path="/cooperative/membres/perimetre" element={<PerimetreSMPage />} />
               <Route path="/cooperative/ars1000-readiness" element={<ARS1000ConsolidePage />} />
+              <Route path="/cooperative/simulation-audit" element={<SimulationAuditPage />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
 
