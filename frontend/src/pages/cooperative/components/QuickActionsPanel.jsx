@@ -45,6 +45,16 @@ const categories = [
     ],
   },
   {
+    title: 'Tracabilite',
+    items: [
+      { icon: Package, label: 'Dashboard', path: '/cooperative/traceability', color: 'text-[#065F46]' },
+      { icon: Store, label: 'Flux Cacao', path: '/cooperative/traceability/flow', color: 'text-[#065F46]' },
+      { icon: Shield, label: 'Segregation', path: '/cooperative/traceability/segregation', color: 'text-[#065F46]' },
+      { icon: FileText, label: 'Rapports', path: '/cooperative/traceability/reports', color: 'text-[#065F46]' },
+      { icon: Target, label: 'Objectifs', path: '/cooperative/traceability/objectives', color: 'text-[#065F46]' },
+    ],
+  },
+  {
     title: 'Reseau',
     items: [
       { icon: Gift, label: 'Parrainage', path: '/cooperative/referral', color: 'text-[#7C3AED]' },

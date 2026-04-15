@@ -106,6 +106,13 @@ import ARS1000Dashboard from "./pages/cooperative/ARS1000Dashboard";
 import PDCListPage from "./pages/cooperative/pdc/PDCListPage";
 import PDCStepperPage from "./pages/cooperative/pdc/PDCStepperPage";
 
+// Traceability Module
+import TraceabilityDashboard from "./pages/cooperative/traceability/TraceabilityDashboard";
+import CacaoFlowPage from "./pages/cooperative/traceability/CacaoFlowPage";
+import SegregationPage from "./pages/cooperative/traceability/SegregationPage";
+import TraceabilityReportsPage from "./pages/cooperative/traceability/ReportsPage";
+import TraceabilityObjectivesPage from "./pages/cooperative/traceability/ObjectivesPage";
+
 // SSRTE Agent Routes
 import SSRTEAgentDashboard from "./pages/ssrte/SSRTEAgentDashboard";
 import SSRTERealTimeDashboard from "./pages/ssrte/SSRTERealTimeDashboard";
@@ -267,6 +274,11 @@ function App() {
               <Route path="/cooperative/pdc-v2" element={<PDCListPage />} />
               <Route path="/cooperative/pdc-v2/:id" element={<PDCStepperPage />} />
               <Route path="/cooperative/certification" element={<ARS1000Dashboard />} />
+              <Route path="/cooperative/traceability" element={<TraceabilityDashboard />} />
+              <Route path="/cooperative/traceability/flow" element={<CacaoFlowPage />} />
+              <Route path="/cooperative/traceability/segregation" element={<SegregationPage />} />
+              <Route path="/cooperative/traceability/reports" element={<TraceabilityReportsPage />} />
+              <Route path="/cooperative/traceability/objectives" element={<TraceabilityObjectivesPage />} />
               <Route path="/guide-redd" element={<REDDGuidePage />} />
               <Route path="/redd/tracking" element={<REDDTrackingPage />} />
 
