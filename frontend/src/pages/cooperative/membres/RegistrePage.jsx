@@ -147,7 +147,8 @@ const RegistrePage = () => {
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Code</th>
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Nom (a)</th>
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Sexe (c)</th>
-                    <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Village (f)</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Village/Section</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Campement</th>
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Ha (j)</th>
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Adhesion</th>
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Statut</th>
@@ -160,7 +161,8 @@ const RegistrePage = () => {
                       <td className="px-3 py-2 text-xs font-mono">{m.code_membre}</td>
                       <td className="px-3 py-2 text-xs font-medium text-[#111827]">{m.full_name}</td>
                       <td className="px-3 py-2 text-xs">{m.sexe === 'M' ? 'H' : m.sexe === 'F' ? 'F' : '-'}</td>
-                      <td className="px-3 py-2 text-xs">{m.village}</td>
+                      <td className="px-3 py-2 text-xs">{m.localite || m.village}</td>
+                      <td className="px-3 py-2 text-xs">{m.campement || '-'}</td>
                       <td className="px-3 py-2 text-xs">{m.hectares_approx || 0}</td>
                       <td className="px-3 py-2 text-xs">{m.date_adhesion}</td>
                       <td className="px-3 py-2"><span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${STATUT_STYLES[m.statut] || 'bg-gray-100 text-gray-600'}`}>{STATUT_LABELS[m.statut] || m.statut}</span></td>

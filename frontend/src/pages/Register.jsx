@@ -104,7 +104,8 @@ const Register = () => {
     niveauEducation: '',
     tailleMenage: '',
     nombreEnfants: '',
-    village: ''
+    village: '',
+    campement: ''
   });
   const [acceptConditions, setAcceptConditions] = useState(false);
   const [registrationResult, setRegistrationResult] = useState(null);
@@ -199,7 +200,8 @@ const Register = () => {
       niveau_education: formData.niveauEducation || null,
       taille_menage: formData.tailleMenage ? parseInt(formData.tailleMenage) : null,
       nombre_enfants: formData.nombreEnfants ? parseInt(formData.nombreEnfants) : null,
-      village: formData.village || null
+      village: formData.village || null,
+      campement: formData.campement || null
     } : {};
 
     const result = await register(
@@ -405,16 +407,29 @@ const Register = () => {
                 </div>
               </div>
               
-              {/* Village Input */}
-              <div>
-                <Label className="text-xs text-gray-500 mb-1 block">Village/Localité</Label>
-                <Input
-                  type="text"
-                  placeholder="Nom du village"
-                  value={formData.village}
-                  onChange={(e) => updateField('village', e.target.value)}
-                  className="text-sm"
-                />
+              {/* Village/Section Input */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-gray-500 mb-1 block">Village / Section</Label>
+                  <Input
+                    type="text"
+                    placeholder="Nom du village ou section"
+                    value={formData.village}
+                    onChange={(e) => updateField('village', e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500 mb-1 block">Campement</Label>
+                  <Input
+                    type="text"
+                    placeholder="Nom du campement"
+                    value={formData.campement}
+                    onChange={(e) => updateField('campement', e.target.value)}
+                    className="text-sm"
+                    data-testid="campement-input"
+                  />
+                </div>
               </div>
               
               <p className="text-xs text-gray-500">

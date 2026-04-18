@@ -124,6 +124,7 @@ class AdhesionCreate(BaseModel):
     sexe: str = ""
     contact: str = ""
     localite: str = ""
+    campement: str = ""
     # === INFORMATIONS SUR LA CACAOYERE ===
     nombre_champs: int = 0
     code_cacaoyere: str = ""
@@ -179,6 +180,7 @@ class MemberUpdate(BaseModel):
     sexe: Optional[str] = None
     contact: Optional[str] = None
     localite: Optional[str] = None
+    campement: Optional[str] = None
     nombre_champs: Optional[int] = None
     code_cacaoyere: Optional[str] = None
     date_creation_cacaoyere: Optional[str] = None
@@ -260,6 +262,7 @@ async def create_adhesion(data: AdhesionCreate, current_user: dict = Depends(get
         "phone_number": contact,
         "localite": village,
         "village": village,
+        "campement": data.campement,
         "department": data.department,
         "zone": data.zone or data.section,
         # INFORMATIONS SUR LA CACAOYERE
@@ -427,7 +430,8 @@ async def generate_bulletin_pdf(adhesion_id: str, current_user: dict = Depends(g
         ["Sexe (c)", a.get("sexe", "")],
         ["N CNI (d)", a.get("cni_number", "")],
         ["Telephone (e)", a.get("phone_number", "")],
-        ["Village (f)", a.get("village", "")],
+        ["Village/Section (f)", a.get("localite", "") or a.get("village", "")],
+        ["Campement", a.get("campement", "")],
         ["Departement (g)", a.get("department", "")],
         ["Zone (h)", a.get("zone", "")],
         ["Parcelles (i)", str(a.get("nombre_parcelles", 0))],
@@ -664,11 +668,11 @@ async def export_registre_excel(current_user: dict = Depends(get_current_user)):
 
     # Row 1: Section headers
     sections = [
-        ("A", "L", "IDENTIFICATION DU PRODUCTEUR"),
-        ("M", "X", "INFORMATIONS SUR LA CACAOYERE"),
-        ("Y", "AB", "INFORMATIONS DE PRODUCTION"),
-        ("AC", "AG", "TRAVAILLEURS AGRICOLES PERMANENTS"),
-        ("AH", "AQ", "COMPOSITION DU MENAGE"),
+        ("A", "M", "IDENTIFICATION DU PRODUCTEUR"),
+        ("N", "Y", "INFORMATIONS SUR LA CACAOYERE"),
+        ("Z", "AC", "INFORMATIONS DE PRODUCTION"),
+        ("AD", "AH", "TRAVAILLEURS AGRICOLES PERMANENTS"),
+        ("AI", "AR", "COMPOSITION DU MENAGE"),
     ]
     for start, end, title in sections:
         cell = ws[f"{start}1"]
@@ -682,7 +686,7 @@ async def export_registre_excel(current_user: dict = Depends(get_current_user)):
     headers = [
         # A-L: Identification
         "N", "Section", "Nom", "Prenom", "N enregistrement", "N CNI",
-        "Date naissance", "Sexe", "Contact", "Localite", "Code membre", "Statut",
+        "Date naissance", "Sexe", "Contact", "Village/Section", "Campement", "Code membre", "Statut",
         # M-X: Cacaoyere
         "Nb champs", "Code cacaoyere", "Date creation", "Date enregistrement",
         "Superficie (ha)", "Culture", "Densite (pieds)", "Polygone (oui/non)",
@@ -730,6 +734,7 @@ async def export_registre_excel(current_user: dict = Depends(get_current_user)):
             m.get("date_naissance", ""), m.get("sexe", ""),
             m.get("contact", "") or m.get("phone_number", ""),
             m.get("localite", "") or m.get("village", ""),
+            m.get("campement", ""),
             m.get("code_membre", ""), m.get("statut", ""),
             m.get("nombre_champs", "") or m.get("nombre_parcelles", ""),
             m.get("code_cacaoyere", ""), m.get("date_creation_cacaoyere", ""),

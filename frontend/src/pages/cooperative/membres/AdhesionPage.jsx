@@ -24,7 +24,7 @@ const AdhesionPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     // Identification
-    section: '', nom: '', prenom: '', cni_number: '', date_naissance: '', sexe: '', contact: '', localite: '',
+    section: '', nom: '', prenom: '', cni_number: '', date_naissance: '', sexe: '', contact: '', localite: '', campement: '',
     // Cacaoyere
     nombre_champs: 0, code_cacaoyere: '', date_creation_cacaoyere: '', date_enregistrement: new Date().toISOString().slice(0, 10),
     superficie_ha: 0, culture: 'Cacao', densite_pieds: 0, polygone_disponible: 'non',
@@ -161,7 +161,8 @@ const Step1Identification = ({ form, up }) => (
       <Fld label="Contact (telephone) *" value={form.contact} onChange={v => up('contact', v)} testid="input-contact" placeholder="+225 07..." />
       <Fld label="Section" value={form.section} onChange={v => up('section', v)} testid="input-section" placeholder="Section / Zone" />
     </div>
-    <Fld label="Localite / Village *" value={form.localite} onChange={v => up('localite', v)} testid="input-localite" placeholder="Village ou localite du producteur" />
+    <Fld label="Village / Section *" value={form.localite} onChange={v => up('localite', v)} testid="input-localite" placeholder="Village ou section du producteur" />
+    <Fld label="Campement" value={form.campement} onChange={v => up('campement', v)} testid="input-campement" placeholder="Nom du campement" />
   </div>
 );
 
@@ -279,6 +280,7 @@ const Step4Validation = ({ form, up }) => (
         <div><strong>Nom:</strong> {form.nom} {form.prenom}</div>
         <div><strong>Contact:</strong> {form.contact}</div>
         <div><strong>Localite:</strong> {form.localite}</div>
+        <div><strong>Campement:</strong> {form.campement}</div>
         <div><strong>Superficie:</strong> {form.superficie_ha} ha</div>
         <div><strong>Volume certifier:</strong> {form.volume_certifier_kg} Kg</div>
         <div><strong>Travailleurs:</strong> {form.travailleurs_liste.length}</div>
