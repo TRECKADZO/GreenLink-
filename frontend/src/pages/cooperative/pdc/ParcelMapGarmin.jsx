@@ -193,20 +193,24 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
   const containerRef = useRef(null);
   const watchIdRef = useRef(null);
   const trackingStartRef = useRef(null);
+  const liveWatchRef = useRef(null);
 
-  const [mode, setMode] = useState(null); // null, 'polygon', 'tree'
+  const [mode, setMode] = useState(null); // null, 'tree'
   const [capturing, setCapturing] = useState(false);
   const [tracking, setTracking] = useState(false);
   const [currentPos, setCurrentPos] = useState(null);
   const [trackElapsed, setTrackElapsed] = useState(0);
   const [trackAccuracy, setTrackAccuracy] = useState(null);
+  const [livePos, setLivePos] = useState(null); // Position live agent (toujours active)
+  const [liveAccuracy, setLiveAccuracy] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   // GPS tree: permanent button state
   const [gpsTreeLoading, setGpsTreeLoading] = useState(false);
   const [treeForm, setTreeForm] = useState(null);
 
   // Rectangle detection prompt
-  const [rectPrompt, setRectPrompt] = useState(false); // { lat, lng, numero, nom_botanique, nom_local, circonference, origine, decision }
+  const [rectPrompt, setRectPrompt] = useState(false);
 
   const polygon = data?.polygon || [];
   const trees = data?.arbres_ombrage || [];
@@ -215,20 +219,51 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
     onChange({ ...data, ...updates });
   }, [data, onChange]);
 
-  // ---- Manual vertex / tree ----
-  const handleAddVertex = useCallback((pt) => {
-    if (tracking) return;
-    const next = [...polygon, pt];
-    updateData({ polygon: next });
+  // ---- LIVE POSITION: Toujours afficher la position de l'agent ----
+  useEffect(() => {
+    if (!navigator.geolocation) return;
 
-    // Rectangle detection: 4th point close to 1st → propose snap
-    if (next.length === 4) {
-      const d = distanceM(next[3], next[0]);
-      if (d < 30) { // within 30 meters
-        setRectPrompt(true);
-      }
-    }
-  }, [polygon, updateData, tracking]);
+    // Get initial position immediately
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const pt = [pos.coords.latitude, pos.coords.longitude];
+        setLivePos(pt);
+        setLiveAccuracy(Math.round(pos.coords.accuracy));
+        // Center map on agent position if no polygon drawn yet
+        if (polygon.length === 0 && mapRef.current) {
+          mapRef.current.setView(pt, 17);
+        }
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+
+    // Continuously watch position for live display
+    liveWatchRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        setLivePos([pos.coords.latitude, pos.coords.longitude]);
+        setLiveAccuracy(Math.round(pos.coords.accuracy));
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 30000 }
+    );
+
+    return () => {
+      if (liveWatchRef.current !== null) navigator.geolocation.clearWatch(liveWatchRef.current);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Online/Offline detection
+  useEffect(() => {
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline); };
+  }, []);
+
+  // ---- Manual vertex (disabled - removed trace manuel) ----
+  const handleAddVertex = useCallback(() => {}, []);
 
   // Drag & drop: move a vertex
   const handleVertexDrag = useCallback((index, newPos) => {
@@ -334,7 +369,12 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
     setTrackAccuracy(null);
     trackingStartRef.current = Date.now();
 
-    toast.success('GPS Tracking demarre - Marchez le long des limites de la parcelle');
+    // Center map on current live position first
+    if (livePos && mapRef.current) {
+      mapRef.current.setView(livePos, 18);
+    }
+
+    toast.success('GPS ACTIF — Marchez le long des limites de la parcelle. Vos deplacements sont enregistres en temps reel.');
 
     const polygonRef = { current: [] };
 
@@ -362,7 +402,7 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
       },
       { enableHighAccuracy: true, maximumAge: 1000, timeout: 30000 }
     );
-  }, [updateData]);
+  }, [updateData, livePos]);
 
   const stopTracking = useCallback(() => {
     if (watchIdRef.current !== null) {
@@ -424,8 +464,8 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
   const perimeter = perimeterM(polygon);
   const defaultCenter = polygon.length > 0 ? polygon[0] : [6.8, -5.3];
 
-  // Whether vertices should be draggable (not tracking, not drawing polygon, not readOnly)
-  const verticesDraggable = !readOnly && !tracking && mode !== 'polygon';
+  // Whether vertices should be draggable (not tracking, not readOnly)
+  const verticesDraggable = !readOnly && !tracking;
 
   return (
     <div className="space-y-3" data-testid="parcel-map-garmin">
@@ -438,6 +478,23 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
           <span className="text-[#C8E6C9] font-mono"><span className="text-[#81C784]">Per: </span>{perimeter}m</span>
           <span className="text-[#C8E6C9] font-mono"><span className="text-[#81C784]">Pts: </span>{polygon.length}</span>
           <span className="text-[#C8E6C9] font-mono"><span className="text-[#81C784]">Arbres: </span>{trees.length}</span>
+        </div>
+        {/* Live position & status */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-[10px]">
+          {livePos ? (
+            <span className="text-emerald-400 font-mono flex items-center gap-1">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              GPS: {livePos[0].toFixed(5)}, {livePos[1].toFixed(5)} {liveAccuracy !== null && `(±${liveAccuracy}m)`}
+            </span>
+          ) : (
+            <span className="text-orange-400 font-mono flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" /> Acquisition GPS...
+            </span>
+          )}
+          <span className={`font-mono flex items-center gap-1 ${isOnline ? 'text-emerald-400' : 'text-red-400'}`}>
+            {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            {isOnline ? 'En ligne' : 'Hors ligne'}
+          </span>
         </div>
       </div>
 
@@ -522,11 +579,21 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
             />
           ))}
 
-          {/* Current position (blue pulsing dot) */}
+          {/* Current position during tracking (red pulsing dot) */}
           {currentPos && tracking && (
-            <CircleMarker center={currentPos} radius={10} pathOptions={CURRENT_POS_PATH}>
-              <Popup className="text-xs">Position actuelle<br />{currentPos[0].toFixed(5)}, {currentPos[1].toFixed(5)}</Popup>
+            <CircleMarker center={currentPos} radius={12} pathOptions={{ color: '#EF4444', fillColor: '#EF4444', fillOpacity: 0.7, weight: 3 }}>
+              <Popup className="text-xs">Position actuelle (tracking)<br />{currentPos[0].toFixed(5)}, {currentPos[1].toFixed(5)}</Popup>
             </CircleMarker>
+          )}
+
+          {/* Live position agent (always visible - blue dot) */}
+          {livePos && !tracking && (
+            <>
+              <CircleMarker center={livePos} radius={30} pathOptions={{ color: '#3B82F6', fillColor: '#3B82F6', fillOpacity: 0.1, weight: 1 }} />
+              <CircleMarker center={livePos} radius={8} pathOptions={{ color: '#fff', fillColor: '#3B82F6', fillOpacity: 0.9, weight: 3 }}>
+                <Popup className="text-xs"><b>Ma position</b><br />{livePos[0].toFixed(5)}, {livePos[1].toFixed(5)}{liveAccuracy !== null && <><br />Precision: ±{liveAccuracy}m</>}</Popup>
+              </CircleMarker>
+            </>
           )}
 
           {/* Tree markers */}
@@ -547,6 +614,7 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
 
           {!readOnly && !tracking && <MapClickHandler mode={mode} onAddVertex={handleAddVertex} onAddTree={handleAddTree} />}
           {tracking && currentPos && <FollowPosition position={currentPos} />}
+          {!tracking && livePos && polygon.length === 0 && trees.length === 0 && <FollowPosition position={livePos} />}
           {!tracking && (polygon.length > 0 || trees.length > 0) && <FitBounds polygon={polygon} trees={trees} />}
         </MapContainer>
 
@@ -557,10 +625,10 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
         />
 
         {/* Mode indicator */}
-        {mode && !tracking && (
+        {mode === 'tree' && !tracking && (
           <div className="absolute top-3 left-3 z-[1000]">
-            <Badge className={`text-xs px-2 py-1 ${mode === 'polygon' ? 'bg-blue-500 text-white' : 'bg-yellow-500 text-black'}`}>
-              {mode === 'polygon' ? 'Mode: Trace parcelle' : 'Mode: Marquer arbre'}
+            <Badge className="text-xs px-2 py-1 bg-yellow-500 text-black">
+              Mode: Marquer arbre
               <span className="ml-1 opacity-70">( cliquez sur la carte )</span>
             </Badge>
           </div>
@@ -723,28 +791,18 @@ const ParcelMapGarmin = ({ data, onChange, readOnly = false, producerInfo = {} }
             </Button>
           </div>
 
-          {/* Manual mode row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2" data-testid="map-actions">
+          {/* Manual mode row - tree only (trace manuel removed) */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2" data-testid="map-actions">
             <Button
-              variant={mode === 'polygon' ? 'default' : 'outline'}
+              variant="outline"
               size="sm"
-              onClick={() => setMode(mode === 'polygon' ? null : 'polygon')}
-              disabled={tracking}
-              className={`h-11 text-xs font-semibold ${mode === 'polygon' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'border-[#4A5C4A] text-[#1A3622] hover:bg-[#E8F0EA]'}`}
-              data-testid="map-btn-polygon"
+              onClick={() => { if (livePos && mapRef.current) mapRef.current.setView(livePos, 18); }}
+              disabled={!livePos}
+              className="h-11 text-xs font-semibold border-blue-400 text-blue-700 hover:bg-blue-50"
+              data-testid="map-btn-center-me"
             >
-              <Route className="w-4 h-4 mr-1" /> Trace manuel
+              <Crosshair className="w-4 h-4 mr-1" /> Ma position
             </Button>
-            {mode === 'polygon' && polygon.length >= 3 && (
-              <Button
-                size="sm"
-                onClick={finishTrace}
-                className="h-11 text-xs font-bold bg-[#1A3622] hover:bg-[#112417] text-white"
-                data-testid="map-btn-finish-trace"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-1" /> Terminer le trace
-              </Button>
-            )}
             <Button
               variant={mode === 'tree' ? 'default' : 'outline'}
               size="sm"
