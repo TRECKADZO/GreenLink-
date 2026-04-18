@@ -4,19 +4,21 @@ import { tokenService } from '../../../services/tokenService';
 import {
   Shield, Users, GraduationCap, Building2, FileText, Package,
   ClipboardCheck, AlertTriangle, Play, Loader2, ChevronRight,
-  CheckCircle2, Clock, XCircle
+  CheckCircle2, Clock, XCircle, ShieldCheck, Boxes
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const MODULE_CONFIG = [
   { key: 'readiness', title: 'Readiness ARS 1000', path: '/cooperative/ars1000-readiness', icon: Shield, apiPath: null, color: '#D4AF37' },
+  { key: 'certification', title: 'Certification', path: '/cooperative/ars1000?tab=certification', icon: ShieldCheck, apiPath: '/api/ars1000/certification/dashboard', color: '#065F46' },
+  { key: 'pdc', title: 'Tous les PDC', path: '/cooperative/pdc-v2', icon: FileText, apiPath: '/api/pdc-v2/stats/overview', color: '#1A3622' },
+  { key: 'lots', title: 'Tracabilite Lots', path: '/cooperative/ars1000?tab=lots', icon: Boxes, apiPath: '/api/ars1000/lots/stats', color: '#065F46' },
   { key: 'membres', title: 'Membres', path: '/cooperative/membres', icon: Users, apiPath: '/api/membres/dashboard', color: '#065F46' },
   { key: 'gouvernance', title: 'Gouvernance', path: '/cooperative/gouvernance', icon: Building2, apiPath: '/api/gouvernance/dashboard', color: '#1A3622' },
   { key: 'formation', title: 'Formation', path: '/cooperative/formation', icon: GraduationCap, apiPath: '/api/formation/dashboard', color: '#065F46' },
   { key: 'risques', title: 'Risques & Durabilite', path: '/cooperative/risques', icon: AlertTriangle, apiPath: '/api/risques/dashboard', color: '#C25E30' },
   { key: 'audit', title: 'Audit & NC', path: '/cooperative/audit', icon: ClipboardCheck, apiPath: '/api/audit/dashboard', color: '#7C3AED' },
-  { key: 'tracabilite', title: 'Tracabilite', path: '/cooperative/traceability', icon: Package, apiPath: '/api/traceability/dashboard', color: '#065F46' },
   { key: 'simulation', title: 'Simulation Audit', path: '/cooperative/simulation-audit', icon: Play, apiPath: null, color: '#D4AF37' },
 ];
 
@@ -60,6 +62,12 @@ export const ModulesARSGrid = () => {
 
   const extractKPI = (key, data) => {
     switch (key) {
+      case 'certification': {
+        const cert = data.certification || {};
+        return { primary: cert.niveau || 'N/A', label: 'niveau', secondary: `${data.stats?.total_pdcs || 0} PDC` };
+      }
+      case 'pdc': return { primary: data.total || 0, label: 'PDC', secondary: `${data.valides || 0} valides` };
+      case 'lots': return { primary: data.total || 0, label: 'lots', secondary: `${data.certifies || 0} certifies` };
       case 'membres': return { primary: data.kpis?.valides || 0, label: 'actifs', secondary: `${data.kpis?.total || 0} total` };
       case 'gouvernance': return { primary: `${data.kpis?.conformite_globale || 0}%`, label: 'conformite', secondary: `${data.kpis?.postes_pourvus || 0}/${data.kpis?.postes_total || 7} postes` };
       case 'formation': return { primary: data.kpis?.completees || 0, label: 'sessions', secondary: `${data.kpis?.taux_couverture || 0}% couverture` };
@@ -68,7 +76,6 @@ export const ModulesARSGrid = () => {
         const g = data.global || {};
         return { primary: `${g.taux_conformite || 0}%`, label: 'conformite', secondary: `${g.non_conformes || 0} NC` };
       }
-      case 'tracabilite': return { primary: data.kpis?.total_lots || 0, label: 'lots', secondary: `${data.kpis?.lots_certifies || 0} certifies` };
       default: return { primary: '-', label: '', secondary: '' };
     }
   };

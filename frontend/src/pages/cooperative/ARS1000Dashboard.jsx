@@ -1,6 +1,6 @@
 import { tokenService } from "../../services/tokenService";
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
@@ -1763,7 +1763,9 @@ const DiagnosticConformitePDC = () => {
 // ============= MAIN PAGE =============
 export default function ARS1000Dashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('certification');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'certification';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [certDashboard, setCertDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
 
