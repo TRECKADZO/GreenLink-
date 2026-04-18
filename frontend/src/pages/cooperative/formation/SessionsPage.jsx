@@ -201,7 +201,7 @@ const CreateSessionModal = ({ themes, onSubmit, onClose }) => {
       theme_titre: theme?.titre || '',
       clause_ref: theme?.clause || '',
       public_cible: theme?.public_cible || '',
-      contenu: theme?.description || '',
+      contenu: '',
     });
   };
 
@@ -240,15 +240,15 @@ const CreateSessionModal = ({ themes, onSubmit, onClose }) => {
           </div>
           <Fld label="Public cible" value={form.public_cible} onChange={(v) => setForm({...form, public_cible: v})} testid="input-public" />
           <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1">Resume / Objectifs generaux</label>
-            <textarea value={form.contenu} onChange={(e) => setForm({...form, contenu: e.target.value})} rows={2} className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md resize-none" data-testid="input-contenu" />
+            <label className="block text-xs font-medium text-[#374151] mb-1">Resume / Objectifs generaux <span className="text-[#D4AF37] font-normal">(a completer par le formateur)</span></label>
+            <textarea value={form.contenu} onChange={(e) => setForm({...form, contenu: e.target.value})} rows={2} placeholder="Le formateur doit decrire les objectifs generaux de la session..." className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md resize-none" data-testid="input-contenu" />
           </div>
 
           {/* Plan de formation du formateur */}
           <div className="border border-[#D4AF37] rounded-md overflow-hidden" data-testid="plan-formation-section">
             <div className="px-4 py-2.5 bg-[#FFF9E6] border-b border-[#D4AF37] flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-[#92400E]">Plan de Formation du Formateur</p>
+                <p className="text-xs font-bold text-[#92400E]">Plan de Formation <span className="font-normal">(a completer par le formateur)</span></p>
                 <p className="text-[9px] text-[#92400E]/70">Modules, objectifs et contenu detaille de la session</p>
               </div>
               <button type="button" onClick={addModule} className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-[#1A3622] text-white rounded hover:bg-[#112417]" data-testid="btn-add-module">
@@ -266,8 +266,8 @@ const CreateSessionModal = ({ themes, onSubmit, onClose }) => {
                   </div>
                   <Fld label="Titre / Objectif du module" value={m.titre} onChange={(v) => updateModule(i, 'titre', v)} testid={`mod-titre-${i}`} />
                   <div className="mt-2">
-                    <label className="block text-[10px] font-medium text-[#374151] mb-1">Contenu detaille</label>
-                    <textarea value={m.description} onChange={(e) => updateModule(i, 'description', e.target.value)} rows={2} placeholder="Points cles, exercices, methodes pedagogiques..." className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md resize-none" data-testid={`mod-desc-${i}`} />
+                    <label className="block text-[10px] font-medium text-[#374151] mb-1">Contenu detaille <span className="text-[#D4AF37]">(formateur)</span></label>
+                    <textarea value={m.description} onChange={(e) => updateModule(i, 'description', e.target.value)} rows={2} placeholder="A completer par le formateur: points cles, exercices, methodes pedagogiques..." className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md resize-none" data-testid={`mod-desc-${i}`} />
                   </div>
                 </div>
               ))}
