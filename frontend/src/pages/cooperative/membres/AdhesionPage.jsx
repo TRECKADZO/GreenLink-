@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { tokenService } from '../../../services/tokenService';
 import { toast } from 'sonner';
 import { StableInput, StableSelect, StableTextarea } from '../../../components/StableInput';
+import { LocationSelector } from '../../../components/LocationSelector';
 import {
   UserPlus, Loader2, Home, ChevronRight, CheckCircle2, ArrowRight,
   User, MapPin, TreePine, BarChart3, Users, GraduationCap, FileText,
@@ -25,6 +26,7 @@ const AdhesionPage = () => {
   const [form, setForm] = useState({
     // Identification
     section: '', nom: '', prenom: '', cni_number: '', date_naissance: '', sexe: '', contact: '', localite: '', campement: '',
+    loc_region: '', loc_departement: '', loc_sous_prefecture: '',
     // Cacaoyere
     nombre_champs: 0, code_cacaoyere: '', date_creation_cacaoyere: '', date_enregistrement: new Date().toISOString().slice(0, 10),
     superficie_ha: 0, culture: 'Cacao', densite_pieds: 0, polygone_disponible: 'non',
@@ -157,12 +159,32 @@ const Step1Identification = ({ form, up }) => (
       <Fld label="Date de naissance" value={form.date_naissance} type="date" onChange={v => up('date_naissance', v)} testid="input-naissance" />
       <Sel label="Sexe *" value={form.sexe} onChange={v => up('sexe', v)} testid="input-sexe" options={[{ v: '', l: 'Choisir' }, { v: 'M', l: 'Masculin' }, { v: 'F', l: 'Feminin' }]} />
     </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Fld label="Contact (telephone) *" value={form.contact} onChange={v => up('contact', v)} testid="input-contact" placeholder="+225 07..." />
-      <Fld label="Section" value={form.section} onChange={v => up('section', v)} testid="input-section" placeholder="Section / Zone" />
+    <Fld label="Contact (telephone) *" value={form.contact} onChange={v => up('contact', v)} testid="input-contact" placeholder="+225 07..." />
+    {/* Selecteur en cascade Region → Departement → Sous-prefecture → Village */}
+    <div className="border border-[#D4AF37] rounded-md overflow-hidden">
+      <div className="px-3 py-2 bg-[#FFF9E6] border-b border-[#D4AF37]">
+        <p className="text-[10px] font-bold text-[#92400E]">LOCALISATION (Region → Departement → Sous-prefecture → Village)</p>
+      </div>
+      <div className="p-3">
+        <LocationSelector
+          region={form.loc_region}
+          departement={form.loc_departement}
+          sousPrefecture={form.loc_sous_prefecture}
+          village={form.localite}
+          onChange={({ region, departement, sous_prefecture, village }) => {
+            up('loc_region', region);
+            up('loc_departement', departement);
+            up('loc_sous_prefecture', sous_prefecture);
+            up('localite', village);
+            if (!form.section && sous_prefecture) up('section', sous_prefecture);
+          }}
+        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <Fld label="Campement" value={form.campement} onChange={v => up('campement', v)} testid="input-campement" placeholder="Nom du campement" />
+          <Fld label="Section" value={form.section} onChange={v => up('section', v)} testid="input-section" placeholder="Auto-rempli ou saisir manuellement" />
+        </div>
+      </div>
     </div>
-    <Fld label="Village / Section *" value={form.localite} onChange={v => up('localite', v)} testid="input-localite" placeholder="Village ou section du producteur" />
-    <Fld label="Campement" value={form.campement} onChange={v => up('campement', v)} testid="input-campement" placeholder="Nom du campement" />
   </div>
 );
 

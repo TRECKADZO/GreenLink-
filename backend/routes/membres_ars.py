@@ -125,6 +125,9 @@ class AdhesionCreate(BaseModel):
     contact: str = ""
     localite: str = ""
     campement: str = ""
+    loc_region: str = ""
+    loc_departement: str = ""
+    loc_sous_prefecture: str = ""
     # === INFORMATIONS SUR LA CACAOYERE ===
     nombre_champs: int = 0
     code_cacaoyere: str = ""
@@ -263,7 +266,10 @@ async def create_adhesion(data: AdhesionCreate, current_user: dict = Depends(get
         "localite": village,
         "village": village,
         "campement": data.campement,
-        "department": data.department,
+        "loc_region": data.loc_region,
+        "loc_departement": data.loc_departement,
+        "loc_sous_prefecture": data.loc_sous_prefecture,
+        "department": data.department or data.loc_departement,
         "zone": data.zone or data.section,
         # INFORMATIONS SUR LA CACAOYERE
         "nombre_champs": data.nombre_champs,
