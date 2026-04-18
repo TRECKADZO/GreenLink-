@@ -33,6 +33,16 @@
 - Pattern: ChevronRight rotate-180 dans un bouton w-8 h-8 bg-white/10
 - Modules couverts: Tracabilite (5), Audit (5), Formation (5), Gouvernance (4), Membres (4), Risques (1), Consolide (1), Simulation (1)
 
+### Risques & Durabilite ARS 1000-1 Ch. 6.1 (ENRICHI - 2026-04-18)
+- Backend: Modele risque enrichi avec processus 5 etapes ARS 1000-1
+  - Etape 1-2: G (Gravite 1-5) x F (Frequence 1-5) = NR avec codes I-V
+  - Etape 3: Mesure prevention M (A-E: Tres pertinente -> Pas pertinente)
+  - Etape 4: EFR (Evaluation Finale) = matrice NR x M -> Decision (vert/jaune/rouge)
+  - Etape 5: Actions traitement (libelle, responsable, contributeur, echeance), Surveillance, Objectifs G/F cibles, Evaluation efficacite
+- Frontend: Dashboard avec matrice 5x5 interactive, repartition EFR, echelle M, formulaire complet
+- Export Excel conforme au format Cartographie des Risques SMCD officiel
+- Compatible avec anciens risques (migration transparente)
+
 ### Registre ARS 1000 Complet (DONE - 2026-04-18)
 - Backend: Modele AdhesionCreate enrichi avec 5 sections (43 champs conforme registre YAKRO)
   - Identification Producteur (9 champs), Cacaoyere (12), Production (4), Travailleurs (liste dynamique), Menage (liste dynamique avec scolarisation)
