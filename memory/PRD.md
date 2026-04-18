@@ -33,6 +33,15 @@
 - Pattern: ChevronRight rotate-180 dans un bouton w-8 h-8 bg-white/10
 - Modules couverts: Tracabilite (5), Audit (5), Formation (5), Gouvernance (4), Membres (4), Risques (1), Consolide (1), Simulation (1)
 
+### Registre ARS 1000 Complet (DONE - 2026-04-18)
+- Backend: Modele AdhesionCreate enrichi avec 5 sections (43 champs conforme registre YAKRO)
+  - Identification Producteur (9 champs), Cacaoyere (12), Production (4), Travailleurs (liste dynamique), Menage (liste dynamique avec scolarisation)
+- Endpoint /api/membres/coop-info GET/PUT pour infos cooperative ARS 1000 (sigle, siege, nb sections, nb magasins, nb cacaoyeres, niveau certification, campagne)
+- Frontend: Formulaire adhesion 4 etapes refait (AdhesionPage.jsx) avec stepper et toutes les sections
+- Frontend: Page Register enrichie avec champs ARS 1000 cooperative
+- Export Excel restructure avec 5 sections + headers hierarchiques conformes au fichier officiel
+- Tests: 11/11 backend, 100% frontend
+
 ### Code Quality Fixes (DONE - 2026-04-15)
 - Secrets tests: 6 fichiers migres vers os.environ.get() avec fallback
 - Catch vides: 12+ handlers remplaces par console.error() (farmer, ARS1000, PDC, formation)
