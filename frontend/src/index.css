@@ -172,3 +172,41 @@ html {
     min-height: 100dvh;
   }
 }
+
+
+/* === PRINT STYLES === */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-section, .print-section * {
+    visibility: visible !important;
+  }
+  [data-testid="session-info"], [data-testid="session-info"] * {
+    visibility: visible !important;
+  }
+  [data-testid="plan-formation"], [data-testid="plan-formation"] * {
+    visibility: visible !important;
+  }
+  [data-testid="participants-list"], [data-testid="participants-list"] * {
+    visibility: visible !important;
+  }
+  [data-testid="signature-block"], [data-testid="signature-block"] * {
+    visibility: visible !important;
+  }
+  [data-testid="pv-page"] {
+    visibility: visible !important;
+  }
+  [data-testid="pv-page"] > * {
+    visibility: visible !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .lg\:col-span-4 {
+    display: none !important;
+  }
+  .lg\:col-span-8 {
+    grid-column: 1 / -1 !important;
+  }
+}

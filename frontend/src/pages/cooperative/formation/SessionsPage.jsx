@@ -190,7 +190,7 @@ const SessionsPage = () => {
 const CreateSessionModal = ({ themes, onSubmit, onClose }) => {
   const [form, setForm] = useState({
     theme_code: '', theme_titre: '', date_session: new Date().toISOString().slice(0, 10),
-    lieu: '', formateur: '', public_cible: '', contenu: '', duree_heures: 2, clause_ref: '', notes: '',
+    lieu: '', formateur: '', public_cible: '', contenu: '', contenu_formation: [], duree_heures: 2, clause_ref: '', notes: '',
   });
 
   const handleThemeChange = (code) => {
@@ -205,14 +205,22 @@ const CreateSessionModal = ({ themes, onSubmit, onClose }) => {
     });
   };
 
+  const addModule = () => setForm({ ...form, contenu_formation: [...form.contenu_formation, { titre: '', description: '' }] });
+  const removeModule = (i) => setForm({ ...form, contenu_formation: form.contenu_formation.filter((_, idx) => idx !== i) });
+  const updateModule = (i, k, v) => {
+    const list = [...form.contenu_formation];
+    list[i] = { ...list[i], [k]: v };
+    setForm({ ...form, contenu_formation: list });
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" data-testid="create-session-modal">
-      <div className="bg-white rounded-md w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="px-5 py-4 border-b border-[#E5E5E0] flex items-center justify-between">
+      <div className="bg-white rounded-md w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="px-5 py-4 border-b border-[#E5E5E0] flex items-center justify-between sticky top-0 bg-white z-10">
           <h3 className="text-sm font-semibold text-[#1A3622]">Nouvelle session de formation</h3>
           <button onClick={onClose} className="text-[#6B7280] hover:text-[#111827] text-xl">&times;</button>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="p-5 space-y-3">
+        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="p-5 space-y-4">
           <div>
             <label className="block text-xs font-medium text-[#374151] mb-1">Theme obligatoire ARS 1000</label>
             <select value={form.theme_code} onChange={(e) => handleThemeChange(e.target.value)} className="w-full px-3 py-2 text-sm border border-[#E5E5E0] rounded-md" data-testid="select-theme">
@@ -226,16 +234,49 @@ const CreateSessionModal = ({ themes, onSubmit, onClose }) => {
             <Fld label="Date" value={form.date_session} type="date" onChange={(v) => setForm({...form, date_session: v})} testid="input-date" />
             <Fld label="Duree (heures)" value={form.duree_heures} type="number" onChange={(v) => setForm({...form, duree_heures: parseFloat(v) || 0})} testid="input-duree" />
           </div>
-          <Fld label="Lieu" value={form.lieu} onChange={(v) => setForm({...form, lieu: v})} testid="input-lieu" />
-          <Fld label="Formateur" value={form.formateur} onChange={(v) => setForm({...form, formateur: v})} testid="input-formateur" />
+          <div className="grid grid-cols-2 gap-3">
+            <Fld label="Lieu" value={form.lieu} onChange={(v) => setForm({...form, lieu: v})} testid="input-lieu" />
+            <Fld label="Formateur" value={form.formateur} onChange={(v) => setForm({...form, formateur: v})} testid="input-formateur" />
+          </div>
           <Fld label="Public cible" value={form.public_cible} onChange={(v) => setForm({...form, public_cible: v})} testid="input-public" />
           <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1">Contenu</label>
-            <textarea value={form.contenu} onChange={(e) => setForm({...form, contenu: e.target.value})} rows={3} className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md resize-none" data-testid="input-contenu" />
+            <label className="block text-xs font-medium text-[#374151] mb-1">Resume / Objectifs generaux</label>
+            <textarea value={form.contenu} onChange={(e) => setForm({...form, contenu: e.target.value})} rows={2} className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md resize-none" data-testid="input-contenu" />
           </div>
+
+          {/* Plan de formation du formateur */}
+          <div className="border border-[#D4AF37] rounded-md overflow-hidden" data-testid="plan-formation-section">
+            <div className="px-4 py-2.5 bg-[#FFF9E6] border-b border-[#D4AF37] flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-[#92400E]">Plan de Formation du Formateur</p>
+                <p className="text-[9px] text-[#92400E]/70">Modules, objectifs et contenu detaille de la session</p>
+              </div>
+              <button type="button" onClick={addModule} className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium bg-[#1A3622] text-white rounded hover:bg-[#112417]" data-testid="btn-add-module">
+                <Plus className="h-3 w-3" /> Module
+              </button>
+            </div>
+            <div className="p-3 space-y-2">
+              {form.contenu_formation.length === 0 ? (
+                <p className="text-[10px] text-[#9CA3AF] italic text-center py-3">Aucun module ajoute. Cliquez "+ Module" pour definir le plan de formation.</p>
+              ) : form.contenu_formation.map((m, i) => (
+                <div key={`mod-${i}`} className="bg-white border border-[#E5E5E0] rounded p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] font-bold text-[#D4AF37]">MODULE {i + 1}</span>
+                    <button type="button" onClick={() => removeModule(i)} className="text-red-400 hover:text-red-600 text-xs">&times;</button>
+                  </div>
+                  <Fld label="Titre / Objectif du module" value={m.titre} onChange={(v) => updateModule(i, 'titre', v)} testid={`mod-titre-${i}`} />
+                  <div className="mt-2">
+                    <label className="block text-[10px] font-medium text-[#374151] mb-1">Contenu detaille</label>
+                    <textarea value={m.description} onChange={(e) => updateModule(i, 'description', e.target.value)} rows={2} placeholder="Points cles, exercices, methodes pedagogiques..." className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md resize-none" data-testid={`mod-desc-${i}`} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2 text-sm border border-[#E5E5E0] rounded-md hover:bg-[#F3F4F6]">Annuler</button>
-            <button type="submit" className="flex-1 px-4 py-2 text-sm bg-[#1A3622] text-white rounded-md hover:bg-[#112417]" data-testid="btn-submit-session">Creer</button>
+            <button type="submit" className="flex-1 px-4 py-2 text-sm bg-[#1A3622] text-white rounded-md hover:bg-[#112417]" data-testid="btn-submit-session">Creer la session</button>
           </div>
         </form>
       </div>

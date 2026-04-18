@@ -56,6 +56,7 @@ class SessionCreate(BaseModel):
     formateur: str = ""
     public_cible: str = ""
     contenu: str = ""
+    contenu_formation: List[dict] = []  # [{titre, description}] - Plan de formation du formateur
     duree_heures: float = 0
     clause_ref: str = ""
     notes: str = ""
@@ -66,6 +67,7 @@ class SessionUpdate(BaseModel):
     lieu: Optional[str] = None
     formateur: Optional[str] = None
     contenu: Optional[str] = None
+    contenu_formation: Optional[List[dict]] = None
     duree_heures: Optional[float] = None
     notes: Optional[str] = None
 
@@ -166,6 +168,7 @@ async def create_session(data: SessionCreate, current_user: dict = Depends(get_c
         "formateur": data.formateur,
         "public_cible": data.public_cible or (theme_info["public_cible"] if theme_info else ""),
         "contenu": data.contenu or (theme_info["description"] if theme_info else ""),
+        "contenu_formation": data.contenu_formation,
         "duree_heures": data.duree_heures,
         "notes": data.notes,
         "statut": "planifiee",
@@ -358,8 +361,32 @@ async def generate_pv_pdf(session_id: str, current_user: dict = Depends(get_curr
     el.append(Spacer(1, 0.5*cm))
 
     if s.get("contenu"):
-        el.append(Paragraph("Contenu de la formation", h2_s))
+        el.append(Paragraph("Contenu / Resume de la formation", h2_s))
         el.append(Paragraph(s["contenu"], styles["Normal"]))
+        el.append(Spacer(1, 0.3*cm))
+
+    # Plan de formation detaille
+    plan = s.get("contenu_formation", [])
+    if plan:
+        el.append(Paragraph("Plan de Formation du Formateur", h2_s))
+        el.append(Spacer(1, 0.2*cm))
+        plan_rows = [["N", "Module / Objectif", "Description / Contenu detaille"]]
+        for i, item in enumerate(plan, 1):
+            plan_rows.append([str(i), item.get("titre", ""), item.get("description", "")])
+        pt_plan = Table(plan_rows, colWidths=[1*cm, 5.5*cm, 9.5*cm])
+        pt_plan.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D4AF37")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#1A3622")),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E5E5E0")),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#FFF9E6")]),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]))
+        el.append(pt_plan)
         el.append(Spacer(1, 0.5*cm))
 
     # Liste de presence
@@ -390,8 +417,38 @@ async def generate_pv_pdf(session_id: str, current_user: dict = Depends(get_curr
 
     el.append(Spacer(1, 1*cm))
     el.append(Paragraph(f"Total participants: {len(parts)}", styles["Normal"]))
-    el.append(Spacer(1, 1*cm))
-    el.append(Paragraph("Signature du Formateur: ________________     Cachet Cooperative: ________________", styles["Normal"]))
+    el.append(Spacer(1, 1.5*cm))
+
+    # Bloc signature formateur
+    sig_s = ParagraphStyle("Sig", parent=styles["Normal"], fontSize=9)
+    el.append(Paragraph("VALIDATION ET SIGNATURES", h2_s))
+    el.append(Spacer(1, 0.3*cm))
+
+    formateur_nom = s.get("formateur", "")
+    sig_data = [
+        ["Formateur", "Responsable SMCD", "Cachet Cooperative"],
+        [f"Nom: {formateur_nom}", "Nom: ________________", ""],
+        ["", "", ""],
+        ["Signature:", "Signature:", ""],
+        ["", "", ""],
+        ["", "", ""],
+        ["________________", "________________", "________________"],
+        [f"Date: {s.get('date_session', '')}", f"Date: {s.get('date_session', '')}", f"Date: {s.get('date_session', '')}"],
+    ]
+    sig_t = Table(sig_data, colWidths=[5.5*cm, 5.5*cm, 5*cm])
+    sig_t.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1A3622")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("GRID", (0, 0), (-1, 0), 0.5, colors.HexColor("#E5E5E0")),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#E5E5E0")),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("ALIGN", (0, 6), (-1, 6), "CENTER"),
+    ]))
+    el.append(sig_t)
 
     doc.build(el)
     buf.seek(0)

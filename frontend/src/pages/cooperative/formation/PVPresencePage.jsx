@@ -4,7 +4,7 @@ import { tokenService } from '../../../services/tokenService';
 import { toast } from 'sonner';
 import {
   FileText, Users, Plus, Loader2, Home, ChevronRight,
-  Download, UserPlus
+  Download, UserPlus, Printer
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -141,9 +141,14 @@ const PVPresencePage = () => {
                 <div className="bg-white border border-[#E5E5E0] rounded-md overflow-hidden" data-testid="session-info">
                   <div className="px-5 py-4 border-b border-[#E5E5E0] flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-[#1A3622]">{selectedSession.theme_titre}</h3>
-                    <button onClick={handleDownloadPV} className="flex items-center gap-2 px-3 py-1.5 bg-[#1A3622] text-white rounded-md text-xs font-medium hover:bg-[#112417]" data-testid="btn-download-pv">
-                      <Download className="h-3.5 w-3.5" /> Telecharger PV
-                    </button>
+                    <div className="flex gap-2">
+                      <button onClick={() => window.print()} className="flex items-center gap-2 px-3 py-1.5 border border-[#E5E5E0] text-[#1A3622] rounded-md text-xs font-medium hover:bg-[#F3F4F6]" data-testid="btn-print-pv">
+                        <Printer className="h-3.5 w-3.5" /> Imprimer
+                      </button>
+                      <button onClick={handleDownloadPV} className="flex items-center gap-2 px-3 py-1.5 bg-[#1A3622] text-white rounded-md text-xs font-medium hover:bg-[#112417]" data-testid="btn-download-pv">
+                        <Download className="h-3.5 w-3.5" /> PDF
+                      </button>
+                    </div>
                   </div>
                   <div className="p-5 grid grid-cols-2 md:grid-cols-3 gap-3 text-xs text-[#374151]">
                     <div><span className="text-[10px] font-bold text-[#9CA3AF] block">Date</span>{selectedSession.date_session}</div>
@@ -153,13 +158,48 @@ const PVPresencePage = () => {
                     <div><span className="text-[10px] font-bold text-[#9CA3AF] block">Clause ARS</span>{selectedSession.clause_ref || '-'}</div>
                     <div><span className="text-[10px] font-bold text-[#9CA3AF] block">Duree</span>{selectedSession.duree_heures || 0}h</div>
                   </div>
+                  {selectedSession.contenu && (
+                    <div className="px-5 pb-4">
+                      <span className="text-[10px] font-bold text-[#9CA3AF] block mb-1">Resume / Objectifs</span>
+                      <p className="text-xs text-[#374151]">{selectedSession.contenu}</p>
+                    </div>
+                  )}
                 </div>
 
+                {/* Plan de formation */}
+                {(selectedSession.contenu_formation || []).length > 0 && (
+                  <div className="bg-white border border-[#D4AF37] rounded-md overflow-hidden print-section" data-testid="plan-formation">
+                    <div className="px-5 py-3 bg-[#FFF9E6] border-b border-[#D4AF37]">
+                      <h3 className="text-sm font-semibold text-[#92400E]">Plan de Formation du Formateur</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-[#E5E5E0] bg-[#FFF9E6]">
+                            <th className="px-4 py-2 text-left text-[10px] font-bold uppercase text-[#92400E] w-10">N</th>
+                            <th className="px-4 py-2 text-left text-[10px] font-bold uppercase text-[#92400E]">Module / Objectif</th>
+                            <th className="px-4 py-2 text-left text-[10px] font-bold uppercase text-[#92400E]">Contenu detaille</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E5E5E0]">
+                          {selectedSession.contenu_formation.map((m, i) => (
+                            <tr key={`plan-${i}`} className={i % 2 === 0 ? 'bg-white' : 'bg-[#FFFDF0]'}>
+                              <td className="px-4 py-2 text-xs font-bold text-[#D4AF37]">{i + 1}</td>
+                              <td className="px-4 py-2 text-xs font-medium text-[#1A3622]">{m.titre}</td>
+                              <td className="px-4 py-2 text-xs text-[#374151]">{m.description}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
                 {/* Participants list */}
-                <div className="bg-white border border-[#E5E5E0] rounded-md overflow-hidden" data-testid="participants-list">
+                <div className="bg-white border border-[#E5E5E0] rounded-md overflow-hidden print-section" data-testid="participants-list">
                   <div className="px-5 py-4 border-b border-[#E5E5E0] flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-[#1A3622]">Liste de presence ({participants.length})</h3>
-                    <button onClick={() => setShowAddParticipant(true)} className="flex items-center gap-1 px-3 py-1.5 bg-[#E8F0EA] text-[#1A3622] rounded-md text-xs font-medium hover:bg-[#D1E5D5]" data-testid="btn-add-participant">
+                    <button onClick={() => setShowAddParticipant(true)} className="flex items-center gap-1 px-3 py-1.5 bg-[#E8F0EA] text-[#1A3622] rounded-md text-xs font-medium hover:bg-[#D1E5D5] no-print" data-testid="btn-add-participant">
                       <UserPlus className="h-3.5 w-3.5" /> Ajouter
                     </button>
                   </div>
@@ -190,6 +230,36 @@ const PVPresencePage = () => {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+
+                {/* Signature block */}
+                <div className="bg-white border border-[#E5E5E0] rounded-md overflow-hidden print-section" data-testid="signature-block">
+                  <div className="px-5 py-3 border-b border-[#E5E5E0] bg-[#F9FAFB]">
+                    <h3 className="text-sm font-semibold text-[#1A3622]">Validation et Signatures</h3>
+                  </div>
+                  <div className="p-5 grid grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-[#1A3622] mb-1">Formateur</p>
+                      <p className="text-[10px] text-[#6B7280] mb-8">{selectedSession.formateur || '________________'}</p>
+                      <div className="border-b border-[#374151] mx-4 mb-1" />
+                      <p className="text-[9px] text-[#9CA3AF]">Signature</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-[#1A3622] mb-1">Responsable SMCD</p>
+                      <p className="text-[10px] text-[#6B7280] mb-8">________________</p>
+                      <div className="border-b border-[#374151] mx-4 mb-1" />
+                      <p className="text-[9px] text-[#9CA3AF]">Signature</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-[#1A3622] mb-1">Cachet Cooperative</p>
+                      <p className="text-[10px] text-[#6B7280] mb-8">&nbsp;</p>
+                      <div className="border-b border-[#374151] mx-4 mb-1" />
+                      <p className="text-[9px] text-[#9CA3AF]">Cachet</p>
+                    </div>
+                  </div>
+                  <div className="px-5 pb-4 text-center">
+                    <p className="text-[9px] text-[#9CA3AF]">Date: {selectedSession.date_session} | Total participants: {participants.length}</p>
                   </div>
                 </div>
               </div>
