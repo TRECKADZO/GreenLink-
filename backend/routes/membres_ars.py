@@ -23,30 +23,70 @@ from routes.cooperative import verify_cooperative
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/membres", tags=["Membres & Enregistrement ARS 1000"])
 
-# ============= CHAMPS NORME 4.2.3.2 (a-n) =============
+# ============= CHAMPS REGISTRE ARS 1000 =============
+# Structure conforme au registre officiel ARS 1000 YAKRO
 
-CHAMPS_4232 = [
-    {"code": "a", "label": "Nom et prenoms complets", "field": "full_name", "required": True},
-    {"code": "b", "label": "Date de naissance", "field": "date_naissance", "required": False},
-    {"code": "c", "label": "Sexe", "field": "sexe", "required": True},
-    {"code": "d", "label": "Numero de piece d'identite (CNI)", "field": "cni_number", "required": True},
-    {"code": "e", "label": "Numero de telephone", "field": "phone_number", "required": True},
-    {"code": "f", "label": "Village / Localite", "field": "village", "required": True},
-    {"code": "g", "label": "Departement / Sous-prefecture", "field": "department", "required": False},
-    {"code": "h", "label": "Zone / Section", "field": "zone", "required": False},
-    {"code": "i", "label": "Nombre de parcelles", "field": "nombre_parcelles", "required": False},
-    {"code": "j", "label": "Superficie totale (hectares)", "field": "hectares_approx", "required": False},
-    {"code": "k", "label": "GPS parcelle principale", "field": "gps_parcelle", "required": False},
-    {"code": "l", "label": "Nombre de travailleurs", "field": "nombre_travailleurs", "required": False},
-    {"code": "m", "label": "Date d'adhesion", "field": "date_adhesion", "required": False},
-    {"code": "n", "label": "Statut du producteur", "field": "statut_producteur", "required": False},
-]
+SECTIONS_REGISTRE = {
+    "identification": {
+        "titre": "IDENTIFICATION DU PRODUCTEUR",
+        "champs": [
+            {"field": "section", "label": "Section", "required": False},
+            {"field": "nom", "label": "Nom", "required": True},
+            {"field": "prenom", "label": "Prenom", "required": True},
+            {"field": "numero_enregistrement", "label": "N d'enregistrement", "required": False},
+            {"field": "cni_number", "label": "N CNI", "required": False},
+            {"field": "date_naissance", "label": "Date de naissance", "required": False},
+            {"field": "sexe", "label": "Sexe", "required": True},
+            {"field": "contact", "label": "Contact", "required": True},
+        ],
+    },
+    "cacaoyere": {
+        "titre": "INFORMATIONS SUR LA CACAOYERE",
+        "champs": [
+            {"field": "nombre_champs", "label": "Nombre de champs", "required": False},
+            {"field": "code_cacaoyere", "label": "Code de la cacaoyere", "required": False},
+            {"field": "date_creation_cacaoyere", "label": "Date de creation", "required": False},
+            {"field": "date_enregistrement", "label": "Date d'enregistrement", "required": False},
+            {"field": "superficie_ha", "label": "Superficie (ha)", "required": False},
+            {"field": "culture", "label": "Culture", "required": False},
+            {"field": "densite_pieds", "label": "Densite (pieds)", "required": False},
+            {"field": "polygone_disponible", "label": "Polygone disponible (oui/non)", "required": False},
+            {"field": "gps_latitude", "label": "GPS Latitude", "required": False},
+            {"field": "gps_longitude", "label": "GPS Longitude", "required": False},
+            {"field": "autres_cultures", "label": "Autres cultures presentes", "required": False},
+            {"field": "date_audit_interne", "label": "Date d'audit interne", "required": False},
+        ],
+    },
+    "production": {
+        "titre": "INFORMATIONS DE PRODUCTION",
+        "champs": [
+            {"field": "recolte_precedente_kg", "label": "Recolte annee precedente (Kg)", "required": False},
+            {"field": "volume_vendu_precedent_kg", "label": "Volume vendu campagne precedente (Kg)", "required": False},
+            {"field": "estimation_rendement_kg_ha", "label": "Estimation rendement (Kg/ha)", "required": False},
+            {"field": "volume_certifier_kg", "label": "Volume a certifier (Kg)", "required": False},
+        ],
+    },
+    "travailleurs": {
+        "titre": "TRAVAILLEURS AGRICOLES PERMANENTS",
+        "champs": [
+            {"field": "nb_travailleurs", "label": "Nombre", "required": False},
+            {"field": "travailleurs_liste", "label": "Liste des travailleurs", "required": False},
+        ],
+    },
+    "menage": {
+        "titre": "COMPOSITION DU MENAGE",
+        "champs": [
+            {"field": "membres_menage", "label": "Membres du menage", "required": False},
+        ],
+    },
+}
+
 
 ETAPES_ADHESION = [
-    {"etape": 1, "titre": "Sensibilisation", "description": "Information sur les objectifs et la portee de la norme ARS 1000, les activites de durabilite."},
-    {"etape": 2, "titre": "Collecte des informations", "description": "Saisie des informations obligatoires exigees par la norme 4.2.3.2 (a-n)."},
-    {"etape": 3, "titre": "Bulletin d'adhesion", "description": "Signature du bulletin/contrat d'adhesion par le producteur et 2 temoins."},
-    {"etape": 4, "titre": "Validation", "description": "Validation par le Responsable SMCD ou le CA/CG."},
+    {"etape": 1, "titre": "Identification du Producteur", "description": "Informations personnelles du producteur conformes a la norme ARS 1000."},
+    {"etape": 2, "titre": "Informations Cacaoyere & Production", "description": "Donnees sur les parcelles, la production et les objectifs de certification."},
+    {"etape": 3, "titre": "Travailleurs & Menage", "description": "Travailleurs agricoles permanents et composition du menage."},
+    {"etape": 4, "titre": "Bulletin d'adhesion & Validation", "description": "Signature du bulletin et validation par le Responsable SMCD."},
 ]
 
 
@@ -56,16 +96,66 @@ def get_coop_id(user):
 
 # ============= MODELS =============
 
+class TravailleurItem(BaseModel):
+    nom: str = ""
+    prenom: str = ""
+    sexe: str = ""
+    date_naissance: str = ""
+
+class MembreMenageItem(BaseModel):
+    nom: str = ""
+    prenom: str = ""
+    sexe: str = ""
+    date_naissance: str = ""
+    qualite_filiation: str = ""  # Conjointe, enfant, neveu, niece, frere, soeur
+    frequentation_ecole: str = ""  # oui/non
+    raison_non_scolarisation: str = ""
+    nom_ecole: str = ""
+    classe: str = ""
+
 class AdhesionCreate(BaseModel):
-    # Step 1: Sensibilisation
-    sensibilisation_faite: bool = False
-    sensibilisation_date: str = ""
-    sensibilisation_accuse: bool = False
-    # Step 2: Info 4.2.3.2
-    full_name: str
+    # === IDENTIFICATION DU PRODUCTEUR ===
+    section: str = ""
+    nom: str = ""
+    prenom: str = ""
+    numero_enregistrement: str = ""
+    cni_number: str = ""
     date_naissance: str = ""
     sexe: str = ""
-    cni_number: str = ""
+    contact: str = ""
+    localite: str = ""
+    # === INFORMATIONS SUR LA CACAOYERE ===
+    nombre_champs: int = 0
+    code_cacaoyere: str = ""
+    date_creation_cacaoyere: str = ""
+    date_enregistrement: str = ""
+    superficie_ha: float = 0
+    culture: str = "Cacao"
+    densite_pieds: int = 0
+    polygone_disponible: str = "non"
+    gps_latitude: str = ""
+    gps_longitude: str = ""
+    autres_cultures: str = ""
+    date_audit_interne: str = ""
+    # === INFORMATIONS DE PRODUCTION ===
+    recolte_precedente_kg: float = 0
+    volume_vendu_precedent_kg: float = 0
+    estimation_rendement_kg_ha: float = 0
+    volume_certifier_kg: float = 0
+    # === TRAVAILLEURS AGRICOLES PERMANENTS ===
+    nb_travailleurs: int = 0
+    travailleurs_liste: List[TravailleurItem] = []
+    # === COMPOSITION DU MENAGE ===
+    membres_menage: List[MembreMenageItem] = []
+    # === BULLETIN D'ADHESION ===
+    signature_producteur: bool = False
+    temoin_1_nom: str = ""
+    temoin_1_signature: bool = False
+    temoin_2_nom: str = ""
+    temoin_2_signature: bool = False
+    notes: str = ""
+    # Legacy compat
+    full_name: str = ""
     phone_number: str = ""
     village: str = ""
     department: str = ""
@@ -75,29 +165,48 @@ class AdhesionCreate(BaseModel):
     gps_parcelle: str = ""
     nombre_travailleurs: int = 0
     statut_producteur: str = "actif"
-    # Step 3: Bulletin
-    signature_producteur: bool = False
-    temoin_1_nom: str = ""
-    temoin_1_signature: bool = False
-    temoin_2_nom: str = ""
-    temoin_2_signature: bool = False
-    notes: str = ""
+    sensibilisation_faite: bool = False
+    sensibilisation_date: str = ""
+    sensibilisation_accuse: bool = False
 
 class MemberUpdate(BaseModel):
-    full_name: Optional[str] = None
+    section: Optional[str] = None
+    nom: Optional[str] = None
+    prenom: Optional[str] = None
+    numero_enregistrement: Optional[str] = None
+    cni_number: Optional[str] = None
     date_naissance: Optional[str] = None
     sexe: Optional[str] = None
-    cni_number: Optional[str] = None
+    contact: Optional[str] = None
+    localite: Optional[str] = None
+    nombre_champs: Optional[int] = None
+    code_cacaoyere: Optional[str] = None
+    date_creation_cacaoyere: Optional[str] = None
+    date_enregistrement: Optional[str] = None
+    superficie_ha: Optional[float] = None
+    culture: Optional[str] = None
+    densite_pieds: Optional[int] = None
+    polygone_disponible: Optional[str] = None
+    gps_latitude: Optional[str] = None
+    gps_longitude: Optional[str] = None
+    autres_cultures: Optional[str] = None
+    date_audit_interne: Optional[str] = None
+    recolte_precedente_kg: Optional[float] = None
+    volume_vendu_precedent_kg: Optional[float] = None
+    estimation_rendement_kg_ha: Optional[float] = None
+    volume_certifier_kg: Optional[float] = None
+    nb_travailleurs: Optional[int] = None
+    travailleurs_liste: Optional[List[TravailleurItem]] = None
+    membres_menage: Optional[List[MembreMenageItem]] = None
+    statut_producteur: Optional[str] = None
+    notes: Optional[str] = None
+    full_name: Optional[str] = None
     phone_number: Optional[str] = None
     village: Optional[str] = None
     department: Optional[str] = None
     zone: Optional[str] = None
     nombre_parcelles: Optional[int] = None
     hectares_approx: Optional[float] = None
-    gps_parcelle: Optional[str] = None
-    nombre_travailleurs: Optional[int] = None
-    statut_producteur: Optional[str] = None
-    notes: Optional[str] = None
 
 class PerimetreUpdate(BaseModel):
     description: str = ""
@@ -112,18 +221,24 @@ class PerimetreUpdate(BaseModel):
 
 @router.post("/adhesion")
 async def create_adhesion(data: AdhesionCreate, current_user: dict = Depends(get_current_user)):
-    """Creer une demande d'adhesion complete (4 etapes)"""
+    """Creer une demande d'adhesion complete - Registre ARS 1000"""
     verify_cooperative(current_user)
     coop_id = get_coop_id(current_user)
 
     adhesion_id = str(uuid.uuid4())
     code_membre = f"MBR-{uuid.uuid4().hex[:6].upper()}"
 
-    # Determine etape courante
+    # Build full_name from nom+prenom or legacy
+    full_name = f"{data.nom} {data.prenom}".strip() if (data.nom or data.prenom) else data.full_name
+    contact = data.contact or data.phone_number
+    village = data.localite or data.village
+    superficie = data.superficie_ha or data.hectares_approx
+
+    # Determine etape
     etape = 1
-    if data.sensibilisation_faite:
+    if full_name and contact:
         etape = 2
-    if data.full_name and data.phone_number:
+    if data.nombre_champs > 0 or data.superficie_ha > 0:
         etape = 3
     if data.signature_producteur:
         etape = 4
@@ -132,32 +247,60 @@ async def create_adhesion(data: AdhesionCreate, current_user: dict = Depends(get
         "adhesion_id": adhesion_id,
         "code_membre": code_membre,
         "coop_id": coop_id,
-        # Etape 1
+        # IDENTIFICATION DU PRODUCTEUR
+        "section": data.section,
+        "nom": data.nom,
+        "prenom": data.prenom,
+        "full_name": full_name,
+        "numero_enregistrement": data.numero_enregistrement,
+        "cni_number": data.cni_number,
+        "date_naissance": data.date_naissance,
+        "sexe": data.sexe,
+        "contact": contact,
+        "phone_number": contact,
+        "localite": village,
+        "village": village,
+        "department": data.department,
+        "zone": data.zone or data.section,
+        # INFORMATIONS SUR LA CACAOYERE
+        "nombre_champs": data.nombre_champs,
+        "nombre_parcelles": data.nombre_parcelles or data.nombre_champs,
+        "code_cacaoyere": data.code_cacaoyere,
+        "date_creation_cacaoyere": data.date_creation_cacaoyere,
+        "date_enregistrement": data.date_enregistrement or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "superficie_ha": superficie,
+        "hectares_approx": superficie,
+        "culture": data.culture,
+        "densite_pieds": data.densite_pieds,
+        "polygone_disponible": data.polygone_disponible,
+        "gps_latitude": data.gps_latitude,
+        "gps_longitude": data.gps_longitude,
+        "gps_parcelle": f"{data.gps_latitude},{data.gps_longitude}" if data.gps_latitude else data.gps_parcelle,
+        "autres_cultures": data.autres_cultures,
+        "date_audit_interne": data.date_audit_interne,
+        # INFORMATIONS DE PRODUCTION
+        "recolte_precedente_kg": data.recolte_precedente_kg,
+        "volume_vendu_precedent_kg": data.volume_vendu_precedent_kg,
+        "estimation_rendement_kg_ha": data.estimation_rendement_kg_ha,
+        "volume_certifier_kg": data.volume_certifier_kg,
+        # TRAVAILLEURS AGRICOLES PERMANENTS
+        "nb_travailleurs": data.nb_travailleurs or data.nombre_travailleurs,
+        "nombre_travailleurs": data.nb_travailleurs or data.nombre_travailleurs,
+        "travailleurs_liste": [t.model_dump() for t in data.travailleurs_liste],
+        # COMPOSITION DU MENAGE
+        "membres_menage": [m.model_dump() for m in data.membres_menage],
+        # BULLETIN
         "sensibilisation_faite": data.sensibilisation_faite,
         "sensibilisation_date": data.sensibilisation_date,
         "sensibilisation_accuse": data.sensibilisation_accuse,
-        # Etape 2: Info 4.2.3.2
-        "full_name": data.full_name,
-        "date_naissance": data.date_naissance,
-        "sexe": data.sexe,
-        "cni_number": data.cni_number,
-        "phone_number": data.phone_number,
-        "village": data.village,
-        "department": data.department,
-        "zone": data.zone,
-        "nombre_parcelles": data.nombre_parcelles,
-        "hectares_approx": data.hectares_approx,
-        "gps_parcelle": data.gps_parcelle,
-        "nombre_travailleurs": data.nombre_travailleurs,
-        "statut_producteur": data.statut_producteur,
-        "date_adhesion": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        # Etape 3: Bulletin
         "signature_producteur": data.signature_producteur,
         "temoin_1_nom": data.temoin_1_nom,
         "temoin_1_signature": data.temoin_1_signature,
         "temoin_2_nom": data.temoin_2_nom,
         "temoin_2_signature": data.temoin_2_signature,
-        # Meta
+        "statut_producteur": data.statut_producteur,
+        "date_adhesion": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        # META
         "etape_courante": etape,
         "statut": "en_cours" if etape < 4 else "en_attente_validation",
         "validation": {"validee": False, "validee_par": "", "date_validation": ""},
@@ -511,26 +654,109 @@ async def export_registre_excel(current_user: dict = Depends(get_current_user)):
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "Registre des Membres"
+    ws.title = "Registre des Producteurs"
     hf = PatternFill(start_color="1A3622", end_color="1A3622", fill_type="solid")
+    sf = PatternFill(start_color="D4AF37", end_color="D4AF37", fill_type="solid")
     hfont = Font(color="FFFFFF", bold=True, size=9)
+    sfont = Font(color="000000", bold=True, size=9)
     tb = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+    center = Alignment(horizontal='center', wrap_text=True)
 
-    headers = ["Code", "Nom (a)", "Naissance (b)", "Sexe (c)", "CNI (d)", "Tel (e)", "Village (f)", "Dept (g)", "Zone (h)", "Parcelles (i)", "Hectares (j)", "GPS (k)", "Travailleurs (l)", "Adhesion (m)", "Statut (n)", "Sensib.", "Signature", "Temoin1", "Temoin2", "Valide"]
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=h)
+    # Row 1: Section headers
+    sections = [
+        ("A", "L", "IDENTIFICATION DU PRODUCTEUR"),
+        ("M", "X", "INFORMATIONS SUR LA CACAOYERE"),
+        ("Y", "AB", "INFORMATIONS DE PRODUCTION"),
+        ("AC", "AG", "TRAVAILLEURS AGRICOLES PERMANENTS"),
+        ("AH", "AQ", "COMPOSITION DU MENAGE"),
+    ]
+    for start, end, title in sections:
+        cell = ws[f"{start}1"]
+        cell.value = title
         cell.fill = hf
         cell.font = hfont
-        cell.border = tb
+        cell.alignment = center
+        ws.merge_cells(f"{start}1:{end}1")
 
-    for row, m in enumerate(membres, 2):
-        v = m.get("validation", {})
-        vals = [m.get("code_membre", ""), m.get("full_name", ""), m.get("date_naissance", ""), m.get("sexe", ""), m.get("cni_number", ""), m.get("phone_number", ""), m.get("village", ""), m.get("department", ""), m.get("zone", ""), m.get("nombre_parcelles", 0), m.get("hectares_approx", 0), m.get("gps_parcelle", ""), m.get("nombre_travailleurs", 0), m.get("date_adhesion", ""), m.get("statut", ""), "Oui" if m.get("sensibilisation_faite") else "Non", "Oui" if m.get("signature_producteur") else "Non", m.get("temoin_1_nom", ""), m.get("temoin_2_nom", ""), "Oui" if v.get("validee") else "Non"]
+    # Row 2: Field headers
+    headers = [
+        # A-L: Identification
+        "N", "Section", "Nom", "Prenom", "N enregistrement", "N CNI",
+        "Date naissance", "Sexe", "Contact", "Localite", "Code membre", "Statut",
+        # M-X: Cacaoyere
+        "Nb champs", "Code cacaoyere", "Date creation", "Date enregistrement",
+        "Superficie (ha)", "Culture", "Densite (pieds)", "Polygone (oui/non)",
+        "GPS Latitude", "GPS Longitude", "Autres cultures", "Date audit interne",
+        # Y-AB: Production
+        "Recolte precedente (Kg)", "Volume vendu precedent (Kg)",
+        "Estimation rendement (Kg/ha)", "Volume a certifier (Kg)",
+        # AC-AG: Travailleurs
+        "Nb travailleurs", "Noms travailleurs", "Prenoms travailleurs",
+        "Sexe travailleurs", "Naissance travailleurs",
+        # AH-AQ: Menage
+        "Noms menage", "Prenoms menage", "Sexe menage", "Naissance menage",
+        "Qualite (filiation)", "Ecole (oui/non)", "Raison non-scolarisation",
+        "Nom ecole", "Classe", "Localite menage",
+    ]
+
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=2, column=col, value=h)
+        cell.fill = sf
+        cell.font = sfont
+        cell.border = tb
+        cell.alignment = Alignment(wrap_text=True)
+
+    for row, m in enumerate(membres, 3):
+        travailleurs = m.get("travailleurs_liste", [])
+        menage = m.get("membres_menage", [])
+        t_noms = ", ".join(t.get("nom", "") for t in travailleurs) if travailleurs else ""
+        t_prenoms = ", ".join(t.get("prenom", "") for t in travailleurs) if travailleurs else ""
+        t_sexes = ", ".join(t.get("sexe", "") for t in travailleurs) if travailleurs else ""
+        t_naiss = ", ".join(t.get("date_naissance", "") for t in travailleurs) if travailleurs else ""
+        m_noms = ", ".join(p.get("nom", "") for p in menage) if menage else ""
+        m_prenoms = ", ".join(p.get("prenom", "") for p in menage) if menage else ""
+        m_sexes = ", ".join(p.get("sexe", "") for p in menage) if menage else ""
+        m_naiss = ", ".join(p.get("date_naissance", "") for p in menage) if menage else ""
+        m_filiation = ", ".join(p.get("qualite_filiation", "") for p in menage) if menage else ""
+        m_ecole = ", ".join(p.get("frequentation_ecole", "") for p in menage) if menage else ""
+        m_raison = ", ".join(p.get("raison_non_scolarisation", "") for p in menage) if menage else ""
+        m_nom_ecole = ", ".join(p.get("nom_ecole", "") for p in menage) if menage else ""
+        m_classe = ", ".join(p.get("classe", "") for p in menage) if menage else ""
+
+        vals = [
+            row - 2, m.get("section", ""), m.get("nom", "") or m.get("full_name", "").split(" ")[0] if m.get("full_name") else "",
+            m.get("prenom", "") or (" ".join(m.get("full_name", "").split(" ")[1:]) if m.get("full_name") else ""),
+            m.get("numero_enregistrement", ""), m.get("cni_number", ""),
+            m.get("date_naissance", ""), m.get("sexe", ""),
+            m.get("contact", "") or m.get("phone_number", ""),
+            m.get("localite", "") or m.get("village", ""),
+            m.get("code_membre", ""), m.get("statut", ""),
+            m.get("nombre_champs", "") or m.get("nombre_parcelles", ""),
+            m.get("code_cacaoyere", ""), m.get("date_creation_cacaoyere", ""),
+            m.get("date_enregistrement", ""),
+            m.get("superficie_ha", "") or m.get("hectares_approx", ""),
+            m.get("culture", ""), m.get("densite_pieds", ""),
+            m.get("polygone_disponible", ""),
+            m.get("gps_latitude", ""), m.get("gps_longitude", ""),
+            m.get("autres_cultures", ""), m.get("date_audit_interne", ""),
+            m.get("recolte_precedente_kg", ""), m.get("volume_vendu_precedent_kg", ""),
+            m.get("estimation_rendement_kg_ha", ""), m.get("volume_certifier_kg", ""),
+            m.get("nb_travailleurs", "") or m.get("nombre_travailleurs", ""),
+            t_noms, t_prenoms, t_sexes, t_naiss,
+            m_noms, m_prenoms, m_sexes, m_naiss, m_filiation, m_ecole, m_raison, m_nom_ecole, m_classe,
+            m.get("localite", "") or m.get("village", ""),
+        ]
         for col, val in enumerate(vals, 1):
             ws.cell(row=row, column=col, value=val).border = tb
 
-    for i in range(1, 21):
-        ws.column_dimensions[chr(64 + i) if i < 27 else 'A'].width = 14
+    # Auto-width - skip merged cells
+    from openpyxl.cell.cell import MergedCell
+    for col in ws.columns:
+        # Filter out merged cells
+        cells = [cell for cell in col if not isinstance(cell, MergedCell)]
+        if cells:
+            max_len = max(len(str(cell.value or "")) for cell in cells)
+            ws.column_dimensions[cells[0].column_letter].width = min(max(max_len + 2, 10), 25)
 
     buf = io.BytesIO()
     wb.save(buf)
@@ -548,4 +774,70 @@ async def get_etapes():
 
 @router.get("/reference/champs")
 async def get_champs():
-    return {"champs": CHAMPS_4232}
+    return {"sections": SECTIONS_REGISTRE}
+
+@router.get("/reference/sections")
+async def get_sections_registre():
+    return {"sections": SECTIONS_REGISTRE}
+
+
+
+# ============= INFOS COOPERATIVE ARS 1000 =============
+
+class CoopInfoARS(BaseModel):
+    campagne: str = ""
+    sigle: str = ""
+    siege: str = ""
+    nb_sections: int = 0
+    nb_magasins_stockage: int = 0
+    nb_cacaoyeres: int = 0
+    niveau_certification: str = "Bronze"  # Bronze, Argent, Or
+
+@router.get("/coop-info")
+async def get_coop_info(current_user: dict = Depends(get_current_user)):
+    verify_cooperative(current_user)
+    coop_id = get_coop_id(current_user)
+    info = await db.coop_info_ars.find_one({"coop_id": coop_id}, {"_id": 0})
+    if not info:
+        # Auto-populate from user data
+        nb_prod = await db.membres_adhesions.count_documents({"coop_id": coop_id})
+        info = {
+            "coop_id": coop_id,
+            "nom_cooperative": current_user.get("coop_name", "") or current_user.get("full_name", ""),
+            "campagne": "2024/2025",
+            "sigle": "",
+            "siege": current_user.get("headquarters_region", ""),
+            "nb_sections": 0,
+            "nb_magasins_stockage": 0,
+            "nb_producteurs": nb_prod,
+            "nb_cacaoyeres": 0,
+            "niveau_certification": "Bronze",
+        }
+    return {"info": info}
+
+@router.put("/coop-info")
+async def update_coop_info(data: CoopInfoARS, current_user: dict = Depends(get_current_user)):
+    verify_cooperative(current_user)
+    coop_id = get_coop_id(current_user)
+    nb_prod = await db.membres_adhesions.count_documents({"coop_id": coop_id})
+
+    doc = {
+        "coop_id": coop_id,
+        "nom_cooperative": current_user.get("coop_name", "") or current_user.get("full_name", ""),
+        "campagne": data.campagne,
+        "sigle": data.sigle,
+        "siege": data.siege,
+        "nb_sections": data.nb_sections,
+        "nb_magasins_stockage": data.nb_magasins_stockage,
+        "nb_producteurs": nb_prod,
+        "nb_cacaoyeres": data.nb_cacaoyeres,
+        "niveau_certification": data.niveau_certification,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    await db.coop_info_ars.update_one(
+        {"coop_id": coop_id},
+        {"$set": doc},
+        upsert=True,
+    )
+    return {"status": "success", "info": doc}

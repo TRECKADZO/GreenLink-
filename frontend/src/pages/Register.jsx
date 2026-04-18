@@ -91,6 +91,13 @@ const Register = () => {
     // Cooperative fields
     coopName: '',
     sponsorReferralCode: '', // Code de parrainage (optionnel)
+    coopSigle: '',
+    coopSiege: '',
+    coopNbSections: '',
+    coopNbMagasins: '',
+    coopNbCacaoyeres: '',
+    coopNiveauCertification: 'Bronze',
+    coopCampagne: '2024/2025',
     // ICI Data Fields for producers
     genre: '',
     dateNaissance: '',
@@ -204,6 +211,13 @@ const Register = () => {
         zone: formData.zone,
         coop_name: formData.coopName || null,
         sponsor_referral_code: formData.sponsorReferralCode?.toUpperCase() || null,
+        coop_sigle: formData.coopSigle || null,
+        coop_siege: formData.coopSiege || null,
+        coop_nb_sections: parseInt(formData.coopNbSections) || 0,
+        coop_nb_magasins: parseInt(formData.coopNbMagasins) || 0,
+        coop_nb_cacaoyeres: parseInt(formData.coopNbCacaoyeres) || 0,
+        coop_niveau_certification: formData.coopNiveauCertification || 'Bronze',
+        coop_campagne: formData.coopCampagne || '2024/2025',
         ...iciData
       }
     );
@@ -462,9 +476,52 @@ const Register = () => {
               {/* Message service gratuit */}
               <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-xs text-blue-700">
-                  💡 <strong>Service 100% gratuit</strong> - Le service est entierement gratuit pour votre cooperative. 
+                  <strong>Service 100% gratuit</strong> - Le service est entierement gratuit pour votre cooperative. 
                   Vous pourrez parrainer d'autres cooperatives en partageant votre code apres inscription.
                 </p>
+              </div>
+
+              {/* ARS 1000 Cooperative Fields */}
+              <div className="mt-4 p-3 bg-white rounded-lg border border-amber-200 space-y-3">
+                <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wide">Informations ARS 1000</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">Sigle</Label>
+                    <Input type="text" placeholder="Ex: COOPAD" value={formData.coopSigle} onChange={(e) => setFormData({ ...formData, coopSigle: e.target.value })} className="text-sm" data-testid="coop-sigle-input" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">Siege</Label>
+                    <Input type="text" placeholder="Ville / Localite" value={formData.coopSiege} onChange={(e) => setFormData({ ...formData, coopSiege: e.target.value })} className="text-sm" data-testid="coop-siege-input" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">Nb sections</Label>
+                    <Input type="number" placeholder="0" value={formData.coopNbSections} onChange={(e) => setFormData({ ...formData, coopNbSections: e.target.value })} className="text-sm" data-testid="coop-nb-sections" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">Nb magasins stockage</Label>
+                    <Input type="number" placeholder="0" value={formData.coopNbMagasins} onChange={(e) => setFormData({ ...formData, coopNbMagasins: e.target.value })} className="text-sm" data-testid="coop-nb-magasins" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">Nb cacaoyeres</Label>
+                    <Input type="number" placeholder="0" value={formData.coopNbCacaoyeres} onChange={(e) => setFormData({ ...formData, coopNbCacaoyeres: e.target.value })} className="text-sm" data-testid="coop-nb-cacaoyeres" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">Niveau certification</Label>
+                    <select value={formData.coopNiveauCertification} onChange={(e) => setFormData({ ...formData, coopNiveauCertification: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md" data-testid="coop-niveau-cert">
+                      <option value="Bronze">Bronze</option>
+                      <option value="Argent">Argent</option>
+                      <option value="Or">Or</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">Campagne</Label>
+                    <Input type="text" value={formData.coopCampagne} onChange={(e) => setFormData({ ...formData, coopCampagne: e.target.value })} className="text-sm" data-testid="coop-campagne" />
+                  </div>
+                </div>
               </div>
             </div>
           )}
