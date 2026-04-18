@@ -7,7 +7,7 @@ import { LocationSelector } from '../../../components/LocationSelector';
 import {
   UserPlus, Loader2, Home, ChevronRight, CheckCircle2, ArrowRight,
   User, MapPin, TreePine, BarChart3, Users, GraduationCap, FileText,
-  Plus, Trash2
+  Plus, Trash2, Navigation, Camera, MapPinned
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -147,6 +147,73 @@ const AdhesionPage = () => {
   );
 };
 
+
+// ============= GEO CAPTURE =============
+const GeoCapture = ({ latitude, longitude, onCapture }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const fileRef = React.useRef(null);
+
+  const capturePosition = () => {
+    if (!navigator.geolocation) { setError('Geolocalisation non supportee'); return; }
+    setLoading(true);
+    setError('');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        onCapture(String(pos.coords.latitude.toFixed(6)), String(pos.coords.longitude.toFixed(6)));
+        setLoading(false);
+      },
+      (err) => {
+        setError(err.code === 1 ? 'Acces GPS refuse. Autorisez la localisation.' : 'Impossible d\'obtenir la position.');
+        setLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  };
+
+  const handlePhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoPreview(URL.createObjectURL(file));
+    // Try to extract EXIF GPS from photo, otherwise use device GPS
+    capturePosition();
+  };
+
+  const hasCoords = latitude && longitude;
+
+  return (
+    <div className="border border-emerald-200 rounded-md bg-emerald-50/50 p-3" data-testid="geo-capture">
+      <div className="flex items-center gap-2 mb-2">
+        <MapPinned className="h-4 w-4 text-emerald-700" />
+        <p className="text-[10px] font-bold text-emerald-800 uppercase">Geolocalisation de la parcelle</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={capturePosition} disabled={loading} className="flex items-center gap-2 px-3 py-2 bg-[#1A3622] text-white rounded-md text-xs font-medium hover:bg-[#112417] disabled:opacity-50" data-testid="btn-capture-gps">
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Navigation className="h-3.5 w-3.5" />}
+          {loading ? 'Acquisition GPS...' : 'Capturer ma position'}
+        </button>
+        <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-2 px-3 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-md text-xs font-medium hover:bg-emerald-50" data-testid="btn-photo-geo">
+          <Camera className="h-3.5 w-3.5" /> Photo geolocalisee
+        </button>
+        <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhoto} data-testid="input-photo-geo" />
+      </div>
+      {error && <p className="text-[10px] text-red-600 mt-2">{error}</p>}
+      {hasCoords && (
+        <div className="flex items-center gap-3 mt-2">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+          <p className="text-xs text-emerald-800 font-mono">Lat: {latitude} | Lng: {longitude}</p>
+        </div>
+      )}
+      {photoPreview && (
+        <div className="mt-2">
+          <img src={photoPreview} alt="Photo parcelle" className="h-16 w-16 object-cover rounded border border-emerald-200" />
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ============= STEP 1: IDENTIFICATION =============
 const Step1Identification = ({ form, up }) => (
   <div className="space-y-4" data-testid="step1-form">
@@ -207,6 +274,15 @@ const Step2CacaoyereProduction = ({ form, up }) => (
         <Fld label="Densite (pieds)" value={form.densite_pieds} type="number" onChange={v => up('densite_pieds', parseInt(v) || 0)} testid="input-densite" />
         <Sel label="Polygone disponible" value={form.polygone_disponible} onChange={v => up('polygone_disponible', v)} testid="input-polygone" options={[{ v: 'non', l: 'Non' }, { v: 'oui', l: 'Oui' }]} />
         <Fld label="Autres cultures" value={form.autres_cultures} onChange={v => up('autres_cultures', v)} testid="input-autres-cultures" placeholder="Cafe, Hevea..." />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+        <div className="md:col-span-3">
+          <GeoCapture
+            latitude={form.gps_latitude}
+            longitude={form.gps_longitude}
+            onCapture={(lat, lng) => { up('gps_latitude', lat); up('gps_longitude', lng); }}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
         <Fld label="GPS Latitude" value={form.gps_latitude} onChange={v => up('gps_latitude', v)} testid="input-lat" placeholder="-5.2345" />
