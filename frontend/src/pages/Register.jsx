@@ -22,57 +22,57 @@ const userTypes = [
 
 // Liste des 51 départements de Côte d'Ivoire
 const DEPARTEMENTS = [
-  { code: "ABEN", nom: "Abengourou", zone: "Est" },
-  { code: "ABID", nom: "Abidjan", zone: "Sud" },
-  { code: "ABOI", nom: "Aboisso", zone: "Sud-Est" },
-  { code: "ADIA", nom: "Adiaké", zone: "Sud-Est" },
-  { code: "ADZO", nom: "Adzopé", zone: "Sud-Est" },
-  { code: "AGBO", nom: "Agboville", zone: "Sud" },
-  { code: "AGNI", nom: "Agnibilékro", zone: "Est" },
-  { code: "ALEP", nom: "Alépé", zone: "Sud-Est" },
-  { code: "BANG", nom: "Bangolo", zone: "Ouest" },
-  { code: "BEOU", nom: "Béoumi", zone: "Centre" },
-  { code: "BIAN", nom: "Biankouma", zone: "Ouest" },
-  { code: "BOCA", nom: "Bocanda", zone: "Centre" },
-  { code: "BOND", nom: "Bondoukou", zone: "Nord-Est" },
-  { code: "BONG", nom: "Bongouanou", zone: "Centre-Est" },
-  { code: "BOUA", nom: "Bouaflé", zone: "Centre-Ouest" },
-  { code: "BOUK", nom: "Bouaké", zone: "Centre" },
-  { code: "DABA", nom: "Dabakala", zone: "Nord" },
-  { code: "DABO", nom: "Dabou", zone: "Sud" },
-  { code: "DANA", nom: "Danané", zone: "Ouest" },
-  { code: "DAOU", nom: "Daoukro", zone: "Centre-Est" },
-  { code: "DIMB", nom: "Dimbokro", zone: "Centre" },
-  { code: "DALO", nom: "Daloa", zone: "Centre-Ouest" },
-  { code: "DIVO", nom: "Divo", zone: "Sud" },
-  { code: "DOUE", nom: "Duékoué", zone: "Ouest" },
-  { code: "GAGN", nom: "Gagnoa", zone: "Centre-Ouest" },
-  { code: "BASS", nom: "Grand-Bassam", zone: "Sud" },
-  { code: "LAHO", nom: "Grand-Lahou", zone: "Sud" },
-  { code: "GUIG", nom: "Guiglo", zone: "Ouest" },
-  { code: "ISSI", nom: "Issia", zone: "Centre-Ouest" },
-  { code: "JACQ", nom: "Jacqueville", zone: "Sud" },
-  { code: "LAKO", nom: "Lakota", zone: "Sud-Ouest" },
-  { code: "MAN", nom: "Man", zone: "Ouest" },
-  { code: "MANK", nom: "Mankono", zone: "Nord" },
-  { code: "MBAH", nom: "M'Bahiakro", zone: "Centre" },
-  { code: "OUME", nom: "Oumé", zone: "Centre-Ouest" },
-  { code: "SAKA", nom: "Sakassou", zone: "Centre" },
-  { code: "SANP", nom: "San-Pédro", zone: "Sud-Ouest" },
-  { code: "SASS", nom: "Sassandra", zone: "Sud-Ouest" },
-  { code: "SEGU", nom: "Séguéla", zone: "Nord-Ouest" },
-  { code: "SINF", nom: "Sinfra", zone: "Centre-Ouest" },
-  { code: "SOUB", nom: "Soubré", zone: "Sud-Ouest" },
-  { code: "TABO", nom: "Tabou", zone: "Sud-Ouest" },
-  { code: "TAND", nom: "Tanda", zone: "Nord-Est" },
-  { code: "TIAS", nom: "Tiassalé", zone: "Sud" },
-  { code: "TOUL", nom: "Touleupleu", zone: "Ouest" },
-  { code: "TIEB", nom: "Tiébissou", zone: "Centre" },
-  { code: "TOUB", nom: "Touba", zone: "Nord-Ouest" },
-  { code: "TOUM", nom: "Toumodi", zone: "Centre" },
-  { code: "VAVO", nom: "Vavoua", zone: "Centre-Ouest" },
-  { code: "YAMO", nom: "Yamoussoukro", zone: "Centre" },
-  { code: "ZUEN", nom: "Zuénoula", zone: "Centre-Ouest" },
+  { code: "ABEN", nom: "Abengourou", region: "Indenie-Djuablin" },
+  { code: "ABID", nom: "Abidjan", region: "District d'Abidjan" },
+  { code: "ABOI", nom: "Aboisso", region: "Sud-Comoe" },
+  { code: "ADIA", nom: "Adiaké", region: "Sud-Comoe" },
+  { code: "ADZO", nom: "Adzopé", region: "La Me" },
+  { code: "AGBO", nom: "Agboville", region: "Agneby-Tiassa" },
+  { code: "AGNI", nom: "Agnibilékro", region: "Indenie-Djuablin" },
+  { code: "ALEP", nom: "Alépé", region: "La Me" },
+  { code: "BANG", nom: "Bangolo", region: "Guemon" },
+  { code: "BEOU", nom: "Béoumi", region: "Gbeke" },
+  { code: "BIAN", nom: "Biankouma", region: "Tonkpi" },
+  { code: "BOCA", nom: "Bocanda", region: "N'Zi" },
+  { code: "BOND", nom: "Bondoukou", region: "Gontougo" },
+  { code: "BONG", nom: "Bongouanou", region: "Moronou" },
+  { code: "BOUA", nom: "Bouaflé", region: "Marahoue" },
+  { code: "BOUK", nom: "Bouaké", region: "Gbeke" },
+  { code: "DABA", nom: "Dabakala", region: "Hambol" },
+  { code: "DABO", nom: "Dabou", region: "Grands-Ponts" },
+  { code: "DANA", nom: "Danané", region: "Tonkpi" },
+  { code: "DAOU", nom: "Daoukro", region: "Iffou" },
+  { code: "DIMB", nom: "Dimbokro", region: "N'Zi" },
+  { code: "DALO", nom: "Daloa", region: "Haut-Sassandra" },
+  { code: "DIVO", nom: "Divo", region: "Loh-Djiboua" },
+  { code: "DOUE", nom: "Duékoué", region: "Guemon" },
+  { code: "GAGN", nom: "Gagnoa", region: "Goh" },
+  { code: "BASS", nom: "Grand-Bassam", region: "Sud-Comoe" },
+  { code: "LAHO", nom: "Grand-Lahou", region: "Grands-Ponts" },
+  { code: "GUIG", nom: "Guiglo", region: "Cavally" },
+  { code: "ISSI", nom: "Issia", region: "Haut-Sassandra" },
+  { code: "JACQ", nom: "Jacqueville", region: "Grands-Ponts" },
+  { code: "LAKO", nom: "Lakota", region: "Loh-Djiboua" },
+  { code: "MAN", nom: "Man", region: "Tonkpi" },
+  { code: "MANK", nom: "Mankono", region: "Bere" },
+  { code: "MBAH", nom: "M'Bahiakro", region: "N'Zi" },
+  { code: "OUME", nom: "Oumé", region: "Goh" },
+  { code: "SAKA", nom: "Sakassou", region: "Gbeke" },
+  { code: "SANP", nom: "San-Pédro", region: "San-Pedro" },
+  { code: "SASS", nom: "Sassandra", region: "Gbokle" },
+  { code: "SEGU", nom: "Séguéla", region: "Worodougou" },
+  { code: "SINF", nom: "Sinfra", region: "Marahoue" },
+  { code: "SOUB", nom: "Soubré", region: "Nawa" },
+  { code: "TABO", nom: "Tabou", region: "San-Pedro" },
+  { code: "TAND", nom: "Tanda", region: "Gontougo" },
+  { code: "TIAS", nom: "Tiassalé", region: "Agneby-Tiassa" },
+  { code: "TOUL", nom: "Touleupleu", region: "Cavally" },
+  { code: "TIEB", nom: "Tiébissou", region: "Belier" },
+  { code: "TOUB", nom: "Touba", region: "Bafing" },
+  { code: "TOUM", nom: "Toumodi", region: "Belier" },
+  { code: "VAVO", nom: "Vavoua", region: "Haut-Sassandra" },
+  { code: "YAMO", nom: "Yamoussoukro", region: "District de Yamoussoukro" },
+  { code: "ZUEN", nom: "Zuénoula", region: "Marahoue" },
 ];
 
 const Register = () => {
@@ -122,12 +122,12 @@ const Register = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.userType]);
 
-  // Get unique zones for filtering
-  const zones = [...new Set(DEPARTEMENTS.map(d => d.zone))].sort();
+  // Get unique regions for filtering
+  const regions = [...new Set(DEPARTEMENTS.map(d => d.region))].sort();
   
-  // Filter departments by selected zone
+  // Filter departments by selected region
   const filteredDepartements = formData.zone 
-    ? DEPARTEMENTS.filter(d => d.zone === formData.zone)
+    ? DEPARTEMENTS.filter(d => d.region === formData.zone)
     : DEPARTEMENTS;
 
   // Validate referral code for cooperatives
@@ -355,21 +355,21 @@ const Register = () => {
             <div className="space-y-3">
               <Label className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
-                Zone et Département de production
+                Region et Departement de production
               </Label>
               
               <div className="grid grid-cols-2 gap-3">
-                {/* Zone Filter */}
+                {/* Region Filter */}
                 <div>
-                  <Label className="text-xs text-gray-500 mb-1 block">Filtrer par zone</Label>
+                  <Label className="text-xs text-gray-500 mb-1 block">Region</Label>
                   <select
                     className="w-full p-2 border rounded-md text-sm"
                     value={formData.zone}
                     onChange={(e) => setFormData({ ...formData, zone: e.target.value, departement: '' })}
                   >
-                    <option value="">Toutes les zones</option>
-                    {zones.map(zone => (
-                      <option key={zone} value={zone}>{zone}</option>
+                    <option value="">Toutes les regions</option>
+                    {regions.map(region => (
+                      <option key={region} value={region}>{region}</option>
                     ))}
                   </select>
                 </div>
@@ -385,7 +385,7 @@ const Register = () => {
                       setFormData({ 
                         ...formData, 
                         departement: e.target.value,
-                        zone: dept ? dept.zone : formData.zone
+                        zone: dept ? dept.region : formData.zone
                       });
                     }}
                     required={showDepartmentSelection}
@@ -393,7 +393,7 @@ const Register = () => {
                     <option value="">-- Sélectionner --</option>
                     {filteredDepartements.map(dept => (
                       <option key={dept.code} value={dept.code}>
-                        {dept.nom} ({dept.zone})
+                        {dept.nom} ({dept.region})
                       </option>
                     ))}
                   </select>
