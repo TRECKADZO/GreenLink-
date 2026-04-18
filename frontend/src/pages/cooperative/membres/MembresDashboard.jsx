@@ -88,7 +88,7 @@ const MembresDashboard = () => {
                 ) : (
                   <div className="space-y-2">
                     {villages.map((v, i) => (
-                      <div key={i} className="flex items-center gap-4">
+                      <div key={v.village || `vill-${i}`} className="flex items-center gap-4">
                         <div className="w-28 text-xs font-medium text-[#374151] truncate">{v.village}</div>
                         <div className="flex-1 bg-[#F3F4F6] rounded-full h-5 relative overflow-hidden">
                           <div className="h-full rounded-full bg-[#1A3622] transition-all duration-700" style={{ width: `${kpis.total > 0 ? Math.max(4, (v.count / kpis.total) * 100) : 0}%` }} />

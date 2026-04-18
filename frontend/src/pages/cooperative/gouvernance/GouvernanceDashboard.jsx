@@ -76,7 +76,7 @@ const GouvernanceDashboard = () => {
         {alertes.length > 0 && (
           <div className="space-y-2 mb-6" data-testid="alertes">
             {alertes.map((a, i) => (
-              <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-md border ${a.severity === 'error' ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
+              <div key={a.message || `alerte-${i}`} className={`flex items-center gap-3 px-4 py-3 rounded-md border ${a.severity === 'error' ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
                 <AlertTriangle className={`h-4 w-4 flex-shrink-0 ${a.severity === 'error' ? 'text-red-600' : 'text-amber-600'}`} />
                 <span className={`text-sm ${a.severity === 'error' ? 'text-red-800' : 'text-amber-800'}`}>{a.message}</span>
               </div>
@@ -98,8 +98,8 @@ const GouvernanceDashboard = () => {
                   { label: 'Tracabilite', value: moduleData.trace_summary, icon: Shield },
                   { label: 'Formation', value: moduleData.formation_summary, icon: Users },
                   { label: 'Audit', value: moduleData.audit_summary, icon: CheckCircle2 },
-                ].map((m, i) => (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 bg-[#F9FAFB] rounded">
+                ].map((m) => (
+                  <div key={m.label} className="flex items-center gap-3 px-3 py-2.5 bg-[#F9FAFB] rounded">
                     <m.icon className="h-4 w-4 text-[#1A3622] flex-shrink-0" strokeWidth={1.5} />
                     <div>
                       <p className="text-[10px] font-bold uppercase text-[#9CA3AF]">{m.label}</p>

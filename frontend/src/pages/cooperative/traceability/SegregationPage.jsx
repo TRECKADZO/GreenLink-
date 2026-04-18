@@ -198,7 +198,7 @@ const WarehouseCard = ({ title, icon: Icon, iconColor, borderColor, bgColor, tot
       ) : (
         <div className="space-y-2">
           {items.map((item, i) => (
-            <div key={i} className="flex items-center justify-between px-3 py-2 bg-[#F9FAFB] rounded">
+            <div key={item.label || `lot-${i}`} className="flex items-center justify-between px-3 py-2 bg-[#F9FAFB] rounded">
               <div className="flex items-center gap-2">
                 <Package className="h-3.5 w-3.5 text-[#6B7280]" strokeWidth={1.5} />
                 <span className="text-xs font-medium text-[#374151]">{item.label}</span>

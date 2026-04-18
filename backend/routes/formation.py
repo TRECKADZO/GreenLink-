@@ -420,7 +420,6 @@ async def generate_pv_pdf(session_id: str, current_user: dict = Depends(get_curr
     el.append(Spacer(1, 1.5*cm))
 
     # Bloc signature formateur
-    sig_s = ParagraphStyle("Sig", parent=styles["Normal"], fontSize=9)
     el.append(Paragraph("VALIDATION ET SIGNATURES", h2_s))
     el.append(Spacer(1, 0.3*cm))
 

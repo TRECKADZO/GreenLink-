@@ -143,7 +143,7 @@ const ReportsPage = () => {
                   {parProducteur.length === 0 ? (
                     <tr><td colSpan={4} className="px-4 py-6 text-center text-xs text-[#6B7280]">Aucune donnee</td></tr>
                   ) : parProducteur.map((p, i) => (
-                    <tr key={i} className="hover:bg-[#F9FAFB]">
+                    <tr key={p.farmer || `prod-${i}`} className="hover:bg-[#F9FAFB]">
                       <td className="px-4 py-2 text-xs text-[#111827]">{p.farmer}</td>
                       <td className="px-4 py-2 text-xs text-[#374151]">{p.lots}</td>
                       <td className="px-4 py-2 text-xs text-[#374151]">{(p.volume_kg || 0).toLocaleString('fr-FR')} kg</td>
@@ -174,7 +174,7 @@ const ReportsPage = () => {
                   {parEtape.length === 0 ? (
                     <tr><td colSpan={3} className="px-4 py-6 text-center text-xs text-[#6B7280]">Aucune donnee</td></tr>
                   ) : parEtape.map((e, i) => (
-                    <tr key={i} className="hover:bg-[#F9FAFB]">
+                    <tr key={e.label || `etape-${i}`} className="hover:bg-[#F9FAFB]">
                       <td className="px-4 py-2 text-xs text-[#111827]">{e.label}</td>
                       <td className="px-4 py-2 text-xs text-[#374151]">{e.lots}</td>
                       <td className="px-4 py-2 text-xs text-[#374151]">{(e.volume_kg || 0).toLocaleString('fr-FR')} kg</td>
