@@ -24,12 +24,9 @@ const authHeaders = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-T
 
 // ============= TABS =============
 const TABS = [
-  { id: 'certification', label: 'Certification', icon: Shield },
-  { id: 'pdc', label: 'Tous les PDC', icon: FileText },
-  { id: 'lots', label: 'Traçabilité', icon: Package },
-  { id: 'recoltes', label: 'Récoltes', icon: Wheat },
+  { id: 'recoltes', label: 'Recoltes', icon: Wheat },
   { id: 'agroforesterie', label: 'Agroforesterie', icon: TreePine },
-  { id: 'especes', label: 'Guide Espèces', icon: BookOpen },
+  { id: 'especes', label: 'Guide Especes', icon: BookOpen },
   { id: 'diagnostic', label: 'Diagnostic', icon: Search },
   { id: 'protection', label: 'Protection Env.', icon: Droplets },
   { id: 'registres', label: 'Registres', icon: Scale },
@@ -1764,7 +1761,7 @@ const DiagnosticConformitePDC = () => {
 export default function ARS1000Dashboard() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'certification';
+  const initialTab = searchParams.get('tab') || 'recoltes';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [certDashboard, setCertDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1822,9 +1819,6 @@ export default function ARS1000Dashboard() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {activeTab === 'certification' && <CertificationTab dashboard={certDashboard} onRefresh={loadCertification} />}
-        {activeTab === 'pdc' && <PDCTab onRefresh={loadCertification} />}
-        {activeTab === 'lots' && <LotsTab />}
         {activeTab === 'recoltes' && <RecoltesTab />}
         {activeTab === 'agroforesterie' && <AgroforesterieTab />}
         {activeTab === 'especes' && <GuideEspeces />}

@@ -11,9 +11,9 @@ const API = process.env.REACT_APP_BACKEND_URL;
 
 const MODULE_CONFIG = [
   { key: 'readiness', title: 'Readiness ARS 1000', path: '/cooperative/ars1000-readiness', icon: Shield, apiPath: null, color: '#D4AF37' },
-  { key: 'certification', title: 'Certification', path: '/cooperative/ars1000?tab=certification', icon: ShieldCheck, apiPath: '/api/ars1000/certification/dashboard', color: '#065F46' },
+  { key: 'certification', title: 'Certification', path: '/cooperative/ars1000', icon: ShieldCheck, apiPath: '/api/ars1000/certification/dashboard', color: '#065F46' },
   { key: 'pdc', title: 'Tous les PDC', path: '/cooperative/pdc-v2', icon: FileText, apiPath: '/api/pdc-v2/stats/overview', color: '#1A3622' },
-  { key: 'lots', title: 'Tracabilite Lots', path: '/cooperative/ars1000?tab=lots', icon: Boxes, apiPath: '/api/ars1000/lots/stats', color: '#065F46' },
+  { key: 'lots', title: 'Tracabilite Lots', path: '/cooperative/ars1000?tab=registres', icon: Boxes, apiPath: '/api/ars1000/lots/stats', color: '#065F46' },
   { key: 'membres', title: 'Membres', path: '/cooperative/membres', icon: Users, apiPath: '/api/membres/dashboard', color: '#065F46' },
   { key: 'gouvernance', title: 'Gouvernance', path: '/cooperative/gouvernance', icon: Building2, apiPath: '/api/gouvernance/dashboard', color: '#1A3622' },
   { key: 'formation', title: 'Formation', path: '/cooperative/formation', icon: GraduationCap, apiPath: '/api/formation/dashboard', color: '#065F46' },
