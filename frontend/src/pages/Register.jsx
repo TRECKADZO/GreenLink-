@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/card';
@@ -112,6 +112,11 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [referralValidation, setReferralValidation] = useState(null);
   const [validatingReferral, setValidatingReferral] = useState(false);
+
+  // Stable field updater to prevent re-renders losing keyboard focus on mobile
+  const updateField = useCallback((field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   // Effet pour sélectionner Email par défaut pour les coopératives
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -342,7 +347,7 @@ const Register = () => {
                 type="text"
                 placeholder="Jean Kouadio"
                 value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                onChange={(e) => updateField('fullName', e.target.value)}
                 className="pl-10"
                 required
                 data-testid="fullname-input"
@@ -407,7 +412,7 @@ const Register = () => {
                   type="text"
                   placeholder="Nom du village"
                   value={formData.village}
-                  onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+                  onChange={(e) => updateField('village', e.target.value)}
                   className="text-sm"
                 />
               </div>
@@ -431,7 +436,7 @@ const Register = () => {
                   type="text"
                   placeholder="Ex: Cooperative des planteurs de Daloa"
                   value={formData.coopName}
-                  onChange={(e) => setFormData({ ...formData, coopName: e.target.value })}
+                  onChange={(e) => updateField('coopName', e.target.value)}
                   className="text-sm"
                   required
                   data-testid="coop-name-input"
@@ -447,7 +452,7 @@ const Register = () => {
                   type="text"
                   placeholder="Ex: GL-COOP-ABJ-1234"
                   value={formData.sponsorReferralCode}
-                  onChange={(e) => setFormData({ ...formData, sponsorReferralCode: e.target.value.toUpperCase() })}
+                  onChange={(e) => updateField('sponsorReferralCode', e.target.value.toUpperCase())}
                   className="text-sm font-mono uppercase"
                   data-testid="sponsor-code-input"
                 />
@@ -487,31 +492,31 @@ const Register = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs text-gray-500 mb-1 block">Sigle</Label>
-                    <Input type="text" placeholder="Ex: COOPAD" value={formData.coopSigle} onChange={(e) => setFormData({ ...formData, coopSigle: e.target.value })} className="text-sm" data-testid="coop-sigle-input" />
+                    <Input type="text" placeholder="Ex: COOPAD" value={formData.coopSigle} onChange={(e) => updateField('coopSigle', e.target.value)} className="text-sm" data-testid="coop-sigle-input" />
                   </div>
                   <div>
                     <Label className="text-xs text-gray-500 mb-1 block">Siege</Label>
-                    <Input type="text" placeholder="Ville / Localite" value={formData.coopSiege} onChange={(e) => setFormData({ ...formData, coopSiege: e.target.value })} className="text-sm" data-testid="coop-siege-input" />
+                    <Input type="text" placeholder="Ville / Localite" value={formData.coopSiege} onChange={(e) => updateField('coopSiege', e.target.value)} className="text-sm" data-testid="coop-siege-input" />
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <Label className="text-xs text-gray-500 mb-1 block">Nb sections</Label>
-                    <Input type="number" placeholder="0" value={formData.coopNbSections} onChange={(e) => setFormData({ ...formData, coopNbSections: e.target.value })} className="text-sm" data-testid="coop-nb-sections" />
+                    <Input type="number" placeholder="0" value={formData.coopNbSections} onChange={(e) => updateField('coopNbSections', e.target.value)} className="text-sm" data-testid="coop-nb-sections" />
                   </div>
                   <div>
                     <Label className="text-xs text-gray-500 mb-1 block">Nb magasins stockage</Label>
-                    <Input type="number" placeholder="0" value={formData.coopNbMagasins} onChange={(e) => setFormData({ ...formData, coopNbMagasins: e.target.value })} className="text-sm" data-testid="coop-nb-magasins" />
+                    <Input type="number" placeholder="0" value={formData.coopNbMagasins} onChange={(e) => updateField('coopNbMagasins', e.target.value)} className="text-sm" data-testid="coop-nb-magasins" />
                   </div>
                   <div>
                     <Label className="text-xs text-gray-500 mb-1 block">Nb cacaoyeres</Label>
-                    <Input type="number" placeholder="0" value={formData.coopNbCacaoyeres} onChange={(e) => setFormData({ ...formData, coopNbCacaoyeres: e.target.value })} className="text-sm" data-testid="coop-nb-cacaoyeres" />
+                    <Input type="number" placeholder="0" value={formData.coopNbCacaoyeres} onChange={(e) => updateField('coopNbCacaoyeres', e.target.value)} className="text-sm" data-testid="coop-nb-cacaoyeres" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs text-gray-500 mb-1 block">Niveau certification</Label>
-                    <select value={formData.coopNiveauCertification} onChange={(e) => setFormData({ ...formData, coopNiveauCertification: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md" data-testid="coop-niveau-cert">
+                    <select value={formData.coopNiveauCertification} onChange={(e) => updateField('coopNiveauCertification', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md" data-testid="coop-niveau-cert">
                       <option value="Bronze">Bronze</option>
                       <option value="Argent">Argent</option>
                       <option value="Or">Or</option>
@@ -519,7 +524,7 @@ const Register = () => {
                   </div>
                   <div>
                     <Label className="text-xs text-gray-500 mb-1 block">Campagne</Label>
-                    <Input type="text" value={formData.coopCampagne} onChange={(e) => setFormData({ ...formData, coopCampagne: e.target.value })} className="text-sm" data-testid="coop-campagne" />
+                    <Input type="text" value={formData.coopCampagne} onChange={(e) => updateField('coopCampagne', e.target.value)} className="text-sm" data-testid="coop-campagne" />
                   </div>
                 </div>
               </div>
@@ -545,7 +550,7 @@ const Register = () => {
                   <select
                     className="w-full p-2 border rounded-md text-sm"
                     value={formData.genre}
-                    onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                    onChange={(e) => updateField('genre', e.target.value)}
                   >
                     <option value="">-- Sélectionner --</option>
                     <option value="homme">Homme</option>
@@ -562,7 +567,7 @@ const Register = () => {
                   <select
                     className="w-full p-2 border rounded-md text-sm"
                     value={formData.dateNaissance}
-                    onChange={(e) => setFormData({ ...formData, dateNaissance: e.target.value })}
+                    onChange={(e) => updateField('dateNaissance', e.target.value)}
                   >
                     <option value="">-- Sélectionner --</option>
                     {Array.from({ length: 70 }, (_, i) => 2006 - i).map(year => (
@@ -582,7 +587,7 @@ const Register = () => {
                   <select
                     className="w-full p-2 border rounded-md text-sm"
                     value={formData.niveauEducation}
-                    onChange={(e) => setFormData({ ...formData, niveauEducation: e.target.value })}
+                    onChange={(e) => updateField('niveauEducation', e.target.value)}
                   >
                     <option value="">-- Sélectionner --</option>
                     <option value="aucun">Aucun</option>
@@ -604,7 +609,7 @@ const Register = () => {
                     max="20"
                     placeholder="Ex: 5"
                     value={formData.tailleMenage}
-                    onChange={(e) => setFormData({ ...formData, tailleMenage: e.target.value })}
+                    onChange={(e) => updateField('tailleMenage', e.target.value)}
                     className="text-sm"
                   />
                 </div>
@@ -623,7 +628,7 @@ const Register = () => {
                     max="15"
                     placeholder="Ex: 3"
                     value={formData.nombreEnfants}
-                    onChange={(e) => setFormData({ ...formData, nombreEnfants: e.target.value })}
+                    onChange={(e) => updateField('nombreEnfants', e.target.value)}
                     className="text-sm"
                   />
                 </div>
@@ -667,7 +672,7 @@ const Register = () => {
                   type="tel"
                   placeholder="+225 0707070707"
                   value={formData.identifier}
-                  onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+                  onChange={(e) => updateField('identifier', e.target.value)}
                   className="pl-10"
                   required
                   data-testid="phone-input"
@@ -681,7 +686,7 @@ const Register = () => {
                   type="email"
                   placeholder="exemple@email.com"
                   value={formData.identifier}
-                  onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+                  onChange={(e) => updateField('identifier', e.target.value)}
                   className="pl-10"
                   required
                   data-testid="email-input"
@@ -700,7 +705,7 @@ const Register = () => {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Minimum 6 caractères"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) => updateField('password', e.target.value)}
                 className="pl-10 pr-10"
                 required
                 minLength={6}

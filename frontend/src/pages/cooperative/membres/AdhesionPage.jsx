@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tokenService } from '../../../services/tokenService';
 import { toast } from 'sonner';
+import { StableInput, StableSelect, StableTextarea } from '../../../components/StableInput';
 import {
   UserPlus, Loader2, Home, ChevronRight, CheckCircle2, ArrowRight,
   User, MapPin, TreePine, BarChart3, Users, GraduationCap, FileText,
@@ -40,7 +41,7 @@ const AdhesionPage = () => {
   });
   const [result, setResult] = useState(null);
 
-  const up = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+  const up = useCallback((k, v) => setForm(prev => ({ ...prev, [k]: v })), []);
 
   const addTravailleur = () => up('travailleurs_liste', [...form.travailleurs_liste, { nom: '', prenom: '', sexe: '', date_naissance: '' }]);
   const removeTravailleur = (i) => up('travailleurs_liste', form.travailleurs_liste.filter((_, idx) => idx !== i));
@@ -327,34 +328,15 @@ const SectionTitle = ({ icon: Icon, title }) => (
   </div>
 );
 
-const Fld = ({ label, value, onChange, type = 'text', testid, placeholder }) => (
-  <div>
-    <label className="block text-[10px] font-medium text-[#374151] mb-1">{label}</label>
-    <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md focus:outline-none focus:border-[#1A3622] bg-white" data-testid={testid} />
-  </div>
-);
-
-const Sel = ({ label, value, onChange, testid, options }) => (
-  <div>
-    <label className="block text-[10px] font-medium text-[#374151] mb-1">{label}</label>
-    <select value={value} onChange={e => onChange(e.target.value)} className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md focus:outline-none focus:border-[#1A3622] bg-white" data-testid={testid}>
-      {options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-    </select>
-  </div>
-);
+const Fld = StableInput;
+const Sel = StableSelect;
+const TArea = StableTextarea;
 
 const Chk = ({ label, checked, onChange, testid }) => (
   <label className="flex items-center gap-2 cursor-pointer" data-testid={testid}>
     <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="rounded border-[#E5E5E0] text-[#1A3622] focus:ring-[#1A3622]" />
     <span className="text-xs text-[#374151]">{label}</span>
   </label>
-);
-
-const TArea = ({ label, value, onChange, testid, placeholder }) => (
-  <div>
-    <label className="block text-[10px] font-medium text-[#374151] mb-1">{label}</label>
-    <textarea value={value} onChange={e => onChange(e.target.value)} rows={2} placeholder={placeholder} className="w-full px-3 py-2 text-xs border border-[#E5E5E0] rounded-md resize-none bg-white" data-testid={testid} />
-  </div>
 );
 
 export default AdhesionPage;

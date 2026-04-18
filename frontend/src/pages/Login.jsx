@@ -1,5 +1,5 @@
 import { tokenService } from "../services/tokenService";
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/card';
@@ -19,6 +19,10 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const updateField = useCallback((field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   // Helper function to get redirect path based on user type
   const getRedirectPath = (userData) => {
@@ -107,7 +111,7 @@ const Login = () => {
                 type="text"
                 placeholder="exemple@email.com ou +225 0707070707"
                 value={formData.identifier}
-                onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+                onChange={(e) => updateField('identifier', e.target.value)}
                 className="pl-10"
                 required
               />
@@ -129,7 +133,7 @@ const Login = () => {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Votre mot de passe"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) => updateField('password', e.target.value)}
                 className="pl-10 pr-10"
                 required
                 data-testid="password-input"

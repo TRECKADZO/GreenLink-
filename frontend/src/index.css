@@ -150,3 +150,25 @@ code {
         border-bottom-color: inherit;
     }
 }
+
+
+/* === MOBILE KEYBOARD FIX === */
+/* Prevent viewport resize when virtual keyboard opens */
+html {
+  height: -webkit-fill-available;
+  overflow-y: auto;
+}
+
+/* Prevent iOS zoom on input focus (font-size < 16px causes zoom) */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Stabilize layout when keyboard is open */
+@supports (height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+}
