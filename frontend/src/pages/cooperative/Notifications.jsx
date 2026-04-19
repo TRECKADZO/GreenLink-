@@ -33,14 +33,44 @@ const CooperativeNotifications = () => {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const response = await fetch(`${API_URL}/api/notifications/history?limit=100`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-      }
+      // Trigger generation of ARS 1000 alerts (deduped within 24h server-side)
+      fetch(`${API_URL}/api/notifications/generate`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(() => {});
+
+      // Fetch both web notifications (ARS alerts) and push history, then merge
+      const [webRes, histRes] = await Promise.all([
+        fetch(`${API_URL}/api/notifications/web?limit=100`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/notifications/history?limit=100`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+
+      const web = webRes.ok ? (await webRes.json()).notifications || [] : [];
+      const hist = histRes.ok ? (await histRes.json()).notifications || [] : [];
+
+      const normalized = [
+        ...web.map(n => ({
+          _id: n.id,
+          title: n.title,
+          body: n.message,
+          type: n.type,
+          action_url: n.action_url,
+          read: n.is_read,
+          created_at: n.created_at,
+          source: 'web',
+        })),
+        ...hist.map(n => ({
+          _id: n._id,
+          title: n.title,
+          body: n.body,
+          type: n.type,
+          read: n.read,
+          created_at: n.created_at,
+          source: 'push',
+        })),
+      ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      setNotifications(normalized);
     } catch (error) {
       /* error logged */
     } finally {
@@ -57,9 +87,12 @@ const CooperativeNotifications = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchNotifications]);
 
-  const handleMarkRead = async (notificationId) => {
+  const handleMarkRead = async (notificationId, source = 'push') => {
     try {
-      await fetch(`${API_URL}/api/notifications/history/${notificationId}/read`, {
+      const path = source === 'web'
+        ? `${API_URL}/api/notifications/web/${notificationId}/read`
+        : `${API_URL}/api/notifications/history/${notificationId}/read`;
+      await fetch(path, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -73,10 +106,14 @@ const CooperativeNotifications = () => {
 
   const handleMarkAllRead = async () => {
     try {
-      await fetch(`${API_URL}/api/notifications/history/read-all`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      await Promise.all([
+        fetch(`${API_URL}/api/notifications/web/read-all`, {
+          method: 'PUT', headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${API_URL}/api/notifications/history/read-all`, {
+          method: 'PUT', headers: { 'Authorization': `Bearer ${token}` }
+        }),
+      ]);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (error) {
       /* error logged */
@@ -268,12 +305,16 @@ const CooperativeNotifications = () => {
                     {notifications.map((notification) => (
                       <div
                         key={notification._id}
-                        onClick={() => !notification.read && handleMarkRead(notification._id)}
+                        onClick={() => {
+                          if (!notification.read) handleMarkRead(notification._id, notification.source);
+                          if (notification.action_url) navigate(notification.action_url);
+                        }}
                         className={`bg-white rounded-xl shadow-sm p-4 transition cursor-pointer ${
                           notification.read 
                             ? 'hover:shadow-md' 
                             : 'border-l-4 border-emerald-500 bg-emerald-50/50 hover:shadow-lg'
                         }`}
+                        data-testid={`notif-item-${notification._id}`}
                       >
                         <div className="flex items-start gap-4">
                           <div className={`p-3 rounded-full ${

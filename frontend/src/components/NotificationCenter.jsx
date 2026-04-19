@@ -292,6 +292,15 @@ export const NotificationCenter = () => {
               </span>
             </div>
           )}
+          <div className="px-4 py-2 border-t bg-gray-50">
+            <button
+              onClick={() => { setOpen(false); navigate('/cooperative/notifications'); }}
+              className="w-full text-center text-xs text-emerald-700 font-semibold hover:underline"
+              data-testid="view-all-notifications-btn"
+            >
+              Voir toutes les notifications →
+            </button>
+          </div>
         </div>
       )}
     </div>
