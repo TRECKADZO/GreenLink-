@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { analyticsApi } from '../../services/analyticsApi';
+import { tokenService } from '../../services/tokenService';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
@@ -108,6 +109,27 @@ const InstitutionalImpactTab = () => {
     toast.success('Export CSV régional téléchargé');
   };
 
+  const exportPDF = async () => {
+    try {
+      toast.info('Génération du rapport PDF...');
+      const token = tokenService.getToken();
+      const res = await fetch(`${API_URL}/api/admin/analytics/institutional-report-pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('PDF generation failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `greenlink_impact_institutionnel_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Rapport PDF institutionnel téléchargé');
+    } catch {
+      toast.error('Erreur lors de la génération du PDF');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -129,10 +151,19 @@ const InstitutionalImpactTab = () => {
     <div className="space-y-6" data-testid="institutional-tab">
       {/* Headline */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Globe className="w-5 h-5 text-emerald-600" />
-          <h2 className="text-lg font-bold text-gray-900">Impact Institutionnel</h2>
-          <Badge variant="outline" className="text-[10px]">ONU · UE · Banque Mondiale · CFI · ICI</Badge>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-emerald-600" />
+            <h2 className="text-lg font-bold text-gray-900">Impact Institutionnel</h2>
+            <Badge variant="outline" className="text-[10px]">ONU · UE · Banque Mondiale · CFI · ICI</Badge>
+          </div>
+          <button
+            onClick={exportPDF}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-md hover:from-emerald-700 hover:to-emerald-800 font-medium shadow-sm"
+            data-testid="export-institutional-pdf"
+          >
+            <Download className="w-4 h-4" /> Rapport PDF Institutionnel
+          </button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           <HeadlineCard label="Bénéficiaires" value={headline.beneficiaires_total} icon={Users} color="#E5243B" />

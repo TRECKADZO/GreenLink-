@@ -66,6 +66,7 @@ from routes import ars1000_consolide
 from routes import simulation_audit
 from routes import risques_durabilite
 from routes import notifications_generator
+from routes import institutional_pdf
 
 
 ROOT_DIR = Path(__file__).parent
@@ -176,6 +177,7 @@ app.include_router(tracking.router)
 app.include_router(analytics_advanced.router)
 app.include_router(notifications.router)
 app.include_router(notifications_generator.router)
+app.include_router(institutional_pdf.router)
 app.include_router(subscriptions.router)
 app.include_router(carbon_sales.router)
 app.include_router(billing.router)
