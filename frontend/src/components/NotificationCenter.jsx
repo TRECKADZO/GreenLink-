@@ -1,5 +1,6 @@
 import { tokenService } from "../services/tokenService";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Check, CheckCheck, MapPin, Leaf, AlertTriangle, X, ShoppingCart, Wheat, ShieldAlert, GraduationCap, ClipboardCheck, Users, FileText } from 'lucide-react';
 import { Button } from './ui/button';
@@ -60,6 +61,7 @@ export const NotificationCenter = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const ref = useRef(null);
+  const dropdownRef = useRef(null);
   const sseRef = useRef(null);
   const navigate = useNavigate();
 
@@ -194,7 +196,9 @@ export const NotificationCenter = () => {
 
   useEffect(() => {
     const handleClick = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      const inBell = ref.current && ref.current.contains(e.target);
+      const inDropdown = dropdownRef.current && dropdownRef.current.contains(e.target);
+      if (!inBell && !inDropdown) setOpen(false);
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -221,10 +225,11 @@ export const NotificationCenter = () => {
         )}
       </Button>
 
-      {open && (
+      {open && createPortal(
         <div
-          className="absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden"
+          className="fixed inset-x-2 top-16 sm:right-4 sm:left-auto sm:top-16 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] overflow-hidden max-h-[85vh] flex flex-col"
           data-testid="notification-dropdown"
+          ref={dropdownRef}
         >
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white">
             <h3 className="font-semibold text-sm">Notifications</h3>
@@ -244,7 +249,7 @@ export const NotificationCenter = () => {
             </div>
           </div>
 
-          <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
+          <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 flex-1">
             {loading ? (
               <div className="p-6 text-center text-gray-400 text-sm">Chargement...</div>
             ) : notifications.length === 0 ? (
@@ -301,7 +306,8 @@ export const NotificationCenter = () => {
               Voir toutes les notifications →
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
