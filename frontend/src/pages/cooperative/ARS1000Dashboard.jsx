@@ -1758,7 +1758,7 @@ const DiagnosticConformitePDC = () => {
 export default function ARS1000Dashboard() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'agroforesterie';
+  const initialTab = searchParams.get('tab') || 'diagnostic';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [certDashboard, setCertDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
