@@ -101,7 +101,7 @@ const AttestationsPage = () => {
               ) : (
                 <div className="space-y-2">
                   {memberHistory.formations.map((f, i) => (
-                    <div key={i} className="flex items-center justify-between px-3 py-2 bg-[#F9FAFB] rounded border border-[#E5E5E0]">
+                    <div key={f.session_id || `form-${i}`} className="flex items-center justify-between px-3 py-2 bg-[#F9FAFB] rounded border border-[#E5E5E0]">
                       <div>
                         <p className="text-xs font-medium text-[#111827]">{f.theme_titre}</p>
                         <p className="text-[10px] text-[#6B7280]">{f.date_session} | {f.lieu} | {f.formateur}</p>

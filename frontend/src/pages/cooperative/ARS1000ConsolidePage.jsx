@@ -139,7 +139,7 @@ const ARS1000ConsolidePage = () => {
             </div>
             <div className="divide-y divide-[#E5E5E0]">
               {actions.map((a, i) => (
-                <button key={i} onClick={() => navigate(MODULE_PATHS[a.module_key] || '/cooperative/dashboard')}
+                <button key={a.action || `act-${i}`} onClick={() => navigate(MODULE_PATHS[a.module_key] || '/cooperative/dashboard')}
                   className="w-full px-5 py-3 flex items-center gap-4 hover:bg-[#F9FAFB] transition-colors text-left group" data-testid={`action-${i}`}>
                   <span className="w-6 h-6 rounded-full bg-[#E8F0EA] flex items-center justify-center text-[10px] font-bold text-[#1A3622] flex-shrink-0">{i + 1}</span>
                   <div className="flex-1 min-w-0">
@@ -187,7 +187,7 @@ const ModuleCard = ({ moduleKey, mod, navigate }) => {
         {/* Indicateurs */}
         <div className="space-y-1.5">
           {mod.indicateurs?.map((ind, i) => (
-            <div key={i} className="flex items-center justify-between">
+            <div key={ind.label || `ind-${i}`} className="flex items-center justify-between">
               <span className="text-[10px] text-[#6B7280]">{ind.label}</span>
               <span className="text-[10px] font-bold text-[#374151]">{ind.valeur} / {ind.cible}</span>
             </div>
@@ -198,7 +198,7 @@ const ModuleCard = ({ moduleKey, mod, navigate }) => {
         {mod.actions?.length > 0 && (
           <div className="mt-3 pt-2 border-t border-[#E5E5E0]">
             {mod.actions.slice(0, 2).map((a, i) => (
-              <p key={i} className="text-[10px] text-red-600 flex items-center gap-1">
+              <p key={`modact-${i}-${a.slice(0,10)}`} className="text-[10px] text-red-600 flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3 flex-shrink-0" /> {a}
               </p>
             ))}

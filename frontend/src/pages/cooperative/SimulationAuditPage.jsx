@@ -150,7 +150,7 @@ const SimulationAuditPage = () => {
               </div>
               <div className="divide-y divide-[#E5E5E0]">
                 {r.recommandations.map((rec, i) => (
-                  <div key={i} className="px-5 py-3">
+                  <div key={rec.clause || `rec-${i}`} className="px-5 py-3">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-mono font-bold text-[#1A3622]">{rec.clause}</span>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${rec.type === 'Majeure' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{rec.type}</span>
@@ -198,7 +198,7 @@ const SimulationAuditPage = () => {
             {/* Mini clause indicators */}
             <div className="flex gap-0.5 mt-3 flex-wrap">
               {evaluations.map((e, i) => (
-                <button key={i} onClick={() => setCurrentIdx(i)} className={`w-5 h-5 rounded text-[8px] font-bold flex items-center justify-center transition-all ${
+                <button key={e.clause || `eval-${i}`} onClick={() => setCurrentIdx(i)} className={`w-5 h-5 rounded text-[8px] font-bold flex items-center justify-center transition-all ${
                   i === currentIdx ? 'ring-2 ring-[#1A3622] ring-offset-1' : ''
                 } ${e.conformite === 'C' ? 'bg-emerald-500 text-white' : e.conformite === 'NC' ? 'bg-red-500 text-white' : e.conformite === 'NA' ? 'bg-amber-400 text-white' : 'bg-[#E5E5E0] text-[#6B7280]'}`}
                   data-testid={`clause-dot-${i}`}>
