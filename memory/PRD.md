@@ -32,6 +32,14 @@
 - La certification est deja exposee via la grille ModulesARSGrid (carte "Conformite Globale")
 - Section "Actions Rapides" conservee a la demande de l'utilisateur
 
+### Systeme de Notifications In-App ARS 1000 (DONE - 2026-02-19)
+- Backend: `/api/notifications/generate` genere auto 6 types de notifications avec dedup 24h
+  - `audit_upcoming` (audits dans 30j), `formation_missing` (< 12 themes obligatoires),
+  - `nc_critique` (NC ouvertes priorite haute), `risque_critique` (niveau Critique / EFR rouge),
+  - `members_pending` (>= 5 adhesions en attente > 7j), `pdc_renouveler` (PDC validite > 10 mois)
+- Frontend: `NotificationCenter` enrichi (icones specifiques, redirection via action_url au clic)
+- Dashboard: appel automatique `generate` au chargement -> alertes immediates sur la cloche
+
 ### Navigation - Boutons Retour (DONE - 2026-04-15)
 - 26 pages avec bouton retour (data-testid="btn-retour")
 - Navigation coherente: dashboards -> /cooperative/dashboard, sous-pages -> dashboard module parent

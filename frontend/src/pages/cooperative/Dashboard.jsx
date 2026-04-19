@@ -117,6 +117,17 @@ const Dashboard = () => {
     loadActivationStats();
     loadKPIs();
     loadCharts();
+    // Trigger in-app notifications generation (ARS 1000 alerts)
+    const triggerNotifs = async () => {
+      try {
+        const token = tokenService.getToken();
+        await fetch(`${API_URL}/api/notifications/generate`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (e) { /* silent */ }
+    };
+    triggerNotifs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

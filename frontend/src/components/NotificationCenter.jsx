@@ -1,6 +1,7 @@
 import { tokenService } from "../services/tokenService";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, Check, CheckCheck, MapPin, Leaf, AlertTriangle, X, ShoppingCart, Wheat } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Check, CheckCheck, MapPin, Leaf, AlertTriangle, X, ShoppingCart, Wheat, ShieldAlert, GraduationCap, ClipboardCheck, Users, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 
@@ -8,6 +9,18 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const getNotifIcon = (type) => {
   switch (type) {
+    case 'audit_upcoming':
+      return <ClipboardCheck className="h-4 w-4 text-purple-600" />;
+    case 'formation_missing':
+      return <GraduationCap className="h-4 w-4 text-emerald-600" />;
+    case 'nc_critique':
+      return <ShieldAlert className="h-4 w-4 text-red-600" />;
+    case 'risque_critique':
+      return <AlertTriangle className="h-4 w-4 text-orange-600" />;
+    case 'members_pending':
+      return <Users className="h-4 w-4 text-blue-600" />;
+    case 'pdc_renouveler':
+      return <FileText className="h-4 w-4 text-amber-600" />;
     case 'new_parcel_to_verify':
       return <MapPin className="h-4 w-4 text-blue-500" />;
     case 'parcel_verified':
@@ -48,6 +61,7 @@ export const NotificationCenter = () => {
   const [loading, setLoading] = useState(false);
   const ref = useRef(null);
   const sseRef = useRef(null);
+  const navigate = useNavigate();
 
   const token = tokenService.getToken();
   const headers = { Authorization: `Bearer ${token}` };
@@ -244,7 +258,13 @@ export const NotificationCenter = () => {
                   className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors ${
                     notif.is_read ? 'bg-white' : 'bg-green-50/60'
                   } hover:bg-gray-50`}
-                  onClick={() => !notif.is_read && markAsRead(notif.id)}
+                  onClick={() => {
+                    if (!notif.is_read) markAsRead(notif.id);
+                    if (notif.action_url) {
+                      setOpen(false);
+                      navigate(notif.action_url);
+                    }
+                  }}
                   data-testid={`notification-item-${notif.id}`}
                 >
                   <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
