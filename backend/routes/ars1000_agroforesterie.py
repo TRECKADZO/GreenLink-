@@ -793,3 +793,114 @@ async def get_protection_env(current_user: dict = Depends(get_current_user)):
             stats[t] += 1
 
     return {"mesures": docs, "total": len(docs), "par_type": stats}
+
+
+
+# ============= INVENTAIRE PAR PRODUCTEUR =============
+
+@router.get("/inventaire/farmer/{farmer_id}")
+async def get_farmer_inventaire(farmer_id: str, current_user: dict = Depends(get_current_user)):
+    """Retourne l'inventaire des arbres d'un producteur depuis son PDC"""
+    pdc = await db.pdc.find_one({"farmer_id": farmer_id, "statut": {"$ne": "archive"}})
+    if not pdc:
+        return {"arbres": [], "total": 0, "superficie_ha": 0}
+
+    inventaire = pdc.get("inventaire_arbres", [])
+    arbres_ombrage = pdc.get("arbres_ombrage", {})
+    parcelles = pdc.get("parcelles", [])
+    total_ha = sum(p.get("superficie_ha", 0) for p in parcelles)
+    nom = f"{pdc.get('identification', {}).get('nom', '')} {pdc.get('identification', {}).get('prenoms', '')}"
+
+    return {
+        "farmer_id": farmer_id,
+        "farmer_name": nom.strip(),
+        "arbres": inventaire,
+        "total_arbres": arbres_ombrage.get("nombre_total", len(inventaire)),
+        "superficie_ha": total_ha,
+        "densite": round(arbres_ombrage.get("nombre_total", len(inventaire)) / max(total_ha, 0.01), 1),
+        "strate_haute": arbres_ombrage.get("strate_haute", 0),
+        "strate_moyenne": arbres_ombrage.get("strate_moyenne", 0),
+        "strate_basse": arbres_ombrage.get("strate_basse", 0),
+        "especes": arbres_ombrage.get("especes", []),
+    }
+
+
+# ============= ACTIONS CORRECTIVES AGROFORESTERIE =============
+
+class ActionCorrectiveCreate(BaseModel):
+    farmer_id: str
+    farmer_name: str = ""
+    pdc_id: str = ""
+    type_action: str = ""  # plantation, eclaircissement, remplacement, retrait_espece_interdite
+    description: str = ""
+    arbres_a_planter: int = 0
+    especes_recommandees: list = []
+    echeance: str = ""
+    responsable: str = ""
+
+
+@router.post("/actions-correctives")
+async def create_action_corrective(data: ActionCorrectiveCreate, current_user: dict = Depends(get_current_user)):
+    coop_id = str(current_user.get("_id", ""))
+    doc = {
+        "action_id": str(ObjectId()),
+        "coop_id": coop_id,
+        "farmer_id": data.farmer_id,
+        "farmer_name": data.farmer_name,
+        "pdc_id": data.pdc_id,
+        "type_action": data.type_action,
+        "description": data.description,
+        "arbres_a_planter": data.arbres_a_planter,
+        "especes_recommandees": data.especes_recommandees,
+        "echeance": data.echeance,
+        "responsable": data.responsable,
+        "statut": "planifie",
+        "arbres_plantes": 0,
+        "suivi": [],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.agro_actions_correctives.insert_one(doc)
+    doc.pop("_id", None)
+    return {"status": "success", "action": doc}
+
+
+@router.get("/actions-correctives")
+async def list_actions_correctives(current_user: dict = Depends(get_current_user), statut: Optional[str] = None):
+    coop_id = str(current_user.get("_id", ""))
+    query = {"coop_id": coop_id}
+    if statut:
+        query["statut"] = statut
+    actions = await db.agro_actions_correctives.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+
+    stats = {"total": len(actions), "planifie": 0, "en_cours": 0, "termine": 0, "total_arbres_a_planter": 0, "total_arbres_plantes": 0}
+    for a in actions:
+        s = a.get("statut", "planifie")
+        if s in stats:
+            stats[s] += 1
+        stats["total_arbres_a_planter"] += a.get("arbres_a_planter", 0)
+        stats["total_arbres_plantes"] += a.get("arbres_plantes", 0)
+
+    return {"actions": actions, "stats": stats}
+
+
+@router.put("/actions-correctives/{action_id}/suivi")
+async def update_action_suivi(action_id: str, current_user: dict = Depends(get_current_user), arbres_plantes: int = 0, commentaire: str = "", statut: str = ""):
+    coop_id = str(current_user.get("_id", ""))
+    update = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    push = {"suivi": {"date": datetime.now(timezone.utc).isoformat(), "arbres_plantes": arbres_plantes, "commentaire": commentaire, "par": current_user.get("full_name", "")}}
+
+    if arbres_plantes > 0:
+        update["$inc"] = {"arbres_plantes": arbres_plantes}
+    if statut:
+        update["statut"] = statut
+
+    set_update = {k: v for k, v in update.items() if k != "$inc"}
+    ops = {"$set": set_update, "$push": push}
+    if "$inc" in update:
+        ops["$inc"] = update["$inc"]
+
+    result = await db.agro_actions_correctives.update_one({"action_id": action_id, "coop_id": coop_id}, ops)
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Action non trouvee")
+    return {"status": "success"}
