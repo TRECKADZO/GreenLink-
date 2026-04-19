@@ -25,6 +25,7 @@ const farmingPractices = [
   { id: 'zero_pesticides', label: 'Zero pesticides chimiques', description: 'Agriculture propre' },
   { id: 'couverture_vegetale', label: 'Couverture vegetale', description: 'Protection du sol' },
   { id: 'rotation_cultures', label: 'Rotation des cultures', description: 'Diversification' },
+  { id: 'zero_brulage', label: 'Zero brulage des residus', description: 'Compostage a la place (-1.5 pts si brulage)' },
 ];
 
 const CarbonCalculator = ({ isOpen, onClose }) => {

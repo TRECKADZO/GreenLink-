@@ -433,6 +433,204 @@ def _build_carbon_premiums_section(carbon_payments):
     }
 
 
+# ============= INSTITUTIONAL METRICS (SDG / ODD + EUDR + CFI + Regional) =============
+
+def _guess_female(u):
+    """Simple heuristic to detect female farmers from available fields."""
+    # Prefer explicit field
+    g = (u.get("gender") or u.get("sexe") or "").lower()
+    if g in ("f", "femme", "female", "w"):
+        return True
+    if g in ("m", "homme", "male", "h"):
+        return False
+    name = (u.get("full_name") or u.get("prenom") or "").lower()
+    return any(name.startswith(p) for p in ("mme ", "mlle ", "aminata", "fatou", "aya ", "awa ", "adjoua", "marie ", "mariam"))
+
+
+def _build_sdg_section(farmers, coop_members, parcels, harvests, carbon_payments, ici_profiles, cooperatives, field_agents):
+    """Map platform metrics to UN Sustainable Development Goals (SDG / ODD)."""
+    total_hectares = sum(p.get("area_hectares", 0) for p in parcels)
+    total_co2 = sum(p.get("co2_captured_tonnes", 0) for p in parcels)
+    agroforestry_parcels = [p for p in parcels if (p.get("carbon_score", 0) or 0) >= 6 or "agroforesterie" in (p.get("pratiques", []) or [])]
+    zero_defo_parcels = [p for p in parcels if p.get("gps_polygon") or p.get("polygon_coordinates")]
+    ars_certified = [p for p in parcels if p.get("certification") or p.get("ars_level") in ("Or", "Argent", "Bronze")]
+
+    women = [u for u in farmers if _guess_female(u)] + [m for m in coop_members if _guess_female(m)]
+    women_coop_leaders = [u for u in cooperatives if _guess_female(u)]
+    total_premium = sum(p.get("amount", 0) for p in carbon_payments)
+    ici_verified = [p for p in ici_profiles if p.get("status") in ("verified", "complete", "no_risk")]
+
+    n_farmers = max(len(farmers) + len(coop_members), 1)
+
+    return {
+        "title": "Alignement aux ODD / SDG (ONU)",
+        "description": "Métriques alignées aux Objectifs de Développement Durable",
+        "goals": [
+            {
+                "sdg": 1, "name": "Pas de pauvreté", "color": "#E5243B",
+                "metrics": [
+                    {"label": "Primes carbone redistribuées", "value": round(total_premium), "unit": "FCFA"},
+                    {"label": "Producteurs bénéficiaires", "value": len(set(p.get("farmer_id") for p in carbon_payments if p.get("farmer_id")))},
+                    {"label": "Prime moyenne/producteur", "value": round(total_premium / n_farmers), "unit": "FCFA/an"},
+                ],
+            },
+            {
+                "sdg": 5, "name": "Égalité des genres", "color": "#FF3A21",
+                "metrics": [
+                    {"label": "Productrices femmes", "value": len(women)},
+                    {"label": "Taux femmes producteurs", "value": round(len(women) / n_farmers * 100, 1), "unit": "%"},
+                    {"label": "Dirigeantes coop (f)", "value": len(women_coop_leaders)},
+                ],
+            },
+            {
+                "sdg": 8, "name": "Travail décent & Anti-travail enfants", "color": "#A21942",
+                "metrics": [
+                    {"label": "Profils ICI vérifiés", "value": len(ici_verified)},
+                    {"label": "Taux couverture ICI", "value": round(len(ici_verified) / n_farmers * 100, 1), "unit": "%"},
+                    {"label": "Agents terrain déployés", "value": len(field_agents)},
+                ],
+            },
+            {
+                "sdg": 12, "name": "Consommation & production responsables", "color": "#BF8B2E",
+                "metrics": [
+                    {"label": "Parcelles ARS 1000 certifiées", "value": len(ars_certified)},
+                    {"label": "Taux certification", "value": round(len(ars_certified) / max(len(parcels), 1) * 100, 1), "unit": "%"},
+                    {"label": "Tonnes cacao traçables", "value": round(sum(h.get("quantity_kg", 0) for h in harvests) / 1000, 1), "unit": "t"},
+                ],
+            },
+            {
+                "sdg": 13, "name": "Action climatique", "color": "#3F7E44",
+                "metrics": [
+                    {"label": "CO₂ séquestré", "value": round(total_co2, 1), "unit": "t CO₂"},
+                    {"label": "CO₂ par hectare", "value": round(total_co2 / max(total_hectares, 1), 2), "unit": "t/ha/an"},
+                    {"label": "Hectares sous gestion", "value": round(total_hectares, 1), "unit": "ha"},
+                ],
+            },
+            {
+                "sdg": 15, "name": "Vie terrestre & agroforesterie", "color": "#56C02B",
+                "metrics": [
+                    {"label": "Parcelles agroforestières", "value": len(agroforestry_parcels)},
+                    {"label": "Taux agroforesterie", "value": round(len(agroforestry_parcels) / max(len(parcels), 1) * 100, 1), "unit": "%"},
+                    {"label": "Parcelles zéro-déforest.", "value": len(zero_defo_parcels)},
+                ],
+            },
+        ],
+    }
+
+
+def _build_regional_section(parcels, coop_members, cooperatives, harvests):
+    """KPIs per region (31 régions de Côte d'Ivoire)."""
+    regions = {}
+    for p in parcels:
+        r = p.get("region") or "Non spécifié"
+        regions.setdefault(r, {"parcels": 0, "hectares": 0, "co2": 0, "carbon_score_sum": 0})
+        regions[r]["parcels"] += 1
+        regions[r]["hectares"] += p.get("area_hectares", 0) or 0
+        regions[r]["co2"] += p.get("co2_captured_tonnes", 0) or 0
+        regions[r]["carbon_score_sum"] += p.get("carbon_score", 0) or 0
+
+    # Coop members per region
+    for m in coop_members:
+        r = m.get("region") or "Non spécifié"
+        regions.setdefault(r, {"parcels": 0, "hectares": 0, "co2": 0, "carbon_score_sum": 0})
+        regions[r]["members"] = regions[r].get("members", 0) + 1
+
+    # Cooperatives per region
+    for c in cooperatives:
+        r = c.get("region") or c.get("siege_region") or "Non spécifié"
+        regions.setdefault(r, {"parcels": 0, "hectares": 0, "co2": 0, "carbon_score_sum": 0})
+        regions[r]["cooperatives"] = regions[r].get("cooperatives", 0) + 1
+
+    # Harvests per region
+    for h in harvests:
+        r = h.get("region") or "Non spécifié"
+        regions.setdefault(r, {"parcels": 0, "hectares": 0, "co2": 0, "carbon_score_sum": 0})
+        regions[r]["tonnes"] = regions[r].get("tonnes", 0) + (h.get("quantity_kg", 0) or 0) / 1000
+
+    rows = []
+    for name, d in regions.items():
+        n = max(d["parcels"], 1)
+        rows.append({
+            "region": name,
+            "cooperatives": d.get("cooperatives", 0),
+            "members": d.get("members", 0),
+            "parcels": d["parcels"],
+            "hectares": round(d["hectares"], 1),
+            "co2_tonnes": round(d["co2"], 1),
+            "avg_carbon_score": round(d["carbon_score_sum"] / n, 1),
+            "tonnes_produites": round(d.get("tonnes", 0), 1),
+        })
+    rows.sort(key=lambda r: r["hectares"], reverse=True)
+    return {
+        "title": "KPIs par région (Côte d'Ivoire)",
+        "description": "Métriques régionales pour ministères et collectivités",
+        "total_regions_covered": len([r for r in rows if r["parcels"] > 0]),
+        "rows": rows,
+    }
+
+
+def _build_cfi_section(parcels, ssrte_visits):
+    """Cocoa & Forests Initiative (CFI) alignment."""
+    total = max(len(parcels), 1)
+    geo = len([p for p in parcels if p.get("gps_polygon") or p.get("gps_coordinates")])
+    agro = len([p for p in parcels if (p.get("carbon_score", 0) or 0) >= 6])
+    visits = len(ssrte_visits)
+    return {
+        "title": "Cocoa & Forests Initiative (CFI)",
+        "description": "Engagements sectoriels cacao-forêts (CI/Ghana)",
+        "parcels_mapped": geo,
+        "parcels_mapped_pct": round(geo / total * 100, 1),
+        "agroforestry_adoption_pct": round(agro / total * 100, 1),
+        "monitoring_visits": visits,
+        "zero_deforestation_commitment": True,
+        "shade_trees_target_per_ha": "18-25",
+    }
+
+
+@router.get("/institutional-metrics")
+async def get_institutional_metrics(current_user: dict = Depends(get_admin_user)):
+    """
+    Institutional-grade metrics for global/regional bodies:
+    UN (SDG), EU (EUDR), World Bank, IFC, CFI, ICI, BAD, CCC-CI.
+    """
+    data = await _fetch_all_dashboard_data()
+    farmers, cooperatives, carbon_auditors, dual_role_agents, field_agents = _classify_users(data["users"])
+
+    sdg = _build_sdg_section(
+        farmers, data["coop_members"], data["parcels"], data["harvests"],
+        data["carbon_payments"], data["ici_profiles"], cooperatives, field_agents,
+    )
+    eudr = _build_eudr_section(data["parcels"], data["coop_members"], cooperatives, data["ssrte_visits"], data["ici_profiles"])
+    regional = _build_regional_section(data["parcels"], data["coop_members"], cooperatives, data["harvests"])
+    cfi = _build_cfi_section(data["parcels"], data["ssrte_visits"])
+
+    # Headline summary for exec briefing
+    total_co2 = sum(p.get("co2_captured_tonnes", 0) for p in data["parcels"])
+    total_ha = sum(p.get("area_hectares", 0) for p in data["parcels"])
+    total_premium = sum(p.get("amount", 0) for p in data["carbon_payments"])
+    headline = {
+        "beneficiaires_total": len(farmers) + len(data["coop_members"]),
+        "cooperatives": len(cooperatives),
+        "hectares_suivis": round(total_ha, 1),
+        "co2_sequestre_tonnes": round(total_co2, 1),
+        "primes_redistribuees_xof": round(total_premium),
+        "eudr_compliance_rate": eudr.get("eudr_compliance_rate", 0),
+        "regions_couvertes": regional.get("total_regions_covered", 0),
+    }
+
+    return {
+        "generated_at": datetime.utcnow().isoformat(),
+        "headline": headline,
+        "sdg": sdg,
+        "eudr": eudr,
+        "cfi": cfi,
+        "regional": regional,
+    }
+
+
+
+
+
 # ============= STRATEGIC DASHBOARD =============
 
 @router.get("/dashboard")

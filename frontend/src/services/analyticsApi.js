@@ -96,7 +96,15 @@ export const analyticsApi = {
   },
 
   // ARS 1000 Excel Export
-  getArs1000ExcelUrl: (pdcId) => `${BACKEND_URL}/api/admin/analytics/ars1000/export/excel/${pdcId}`
+  getArs1000ExcelUrl: (pdcId) => `${BACKEND_URL}/api/admin/analytics/ars1000/export/excel/${pdcId}`,
+
+  // Institutional metrics (SDG/ODD, EUDR, CFI, Regional)
+  getInstitutionalMetrics: async () => {
+    const response = await axios.get(`${BACKEND_URL}/api/admin/analytics/institutional-metrics`, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  }
 };
 
 export default analyticsApi;

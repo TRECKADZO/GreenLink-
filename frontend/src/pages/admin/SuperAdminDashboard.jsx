@@ -5,6 +5,7 @@ import MarketplaceAnalyticsTab from '../../components/admin/MarketplaceAnalytics
 import USSDSimulator from '../../components/USSDSimulator';
 import OnboardingDashboard from '../../components/admin/OnboardingDashboard';
 import CooperativeNetworkTab from './CooperativeNetworkTab';
+import InstitutionalImpactTab from '../../components/admin/InstitutionalImpactTab';
 import { 
   BarChart3, Globe, Leaf, Users, DollarSign, 
   TrendingUp, FileText, Download, Building2,
@@ -347,6 +348,7 @@ const SuperAdminDashboard = () => {
             <TabsTrigger value="onboarding" className="data-[state=active]:bg-cyan-600">Onboarding</TabsTrigger>
             <TabsTrigger value="coop-network" className="data-[state=active]:bg-teal-600" data-testid="coop-network-tab-trigger">Réseau Coopératives</TabsTrigger>
             <TabsTrigger value="ars1000" className="data-[state=active]:bg-lime-600" data-testid="ars1000-tab-trigger">ARS 1000</TabsTrigger>
+            <TabsTrigger value="institutional" className="data-[state=active]:bg-blue-700" data-testid="institutional-tab-trigger">🌍 Impact Institutionnel</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW TAB */}
@@ -679,6 +681,10 @@ const SuperAdminDashboard = () => {
 
           <TabsContent value="ars1000">
             <ARS1000Tab data={ars1000Data} loading={ars1000Loading} />
+          </TabsContent>
+
+          <TabsContent value="institutional">
+            <InstitutionalImpactTab />
           </TabsContent>
         </Tabs>
       </div>

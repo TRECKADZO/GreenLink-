@@ -2382,8 +2382,8 @@ async def calculate_premium_public(data: dict):
             "culture": data.get("culture", "cacao"),
             # Compost implique substitution d'engrais chimique
             "engrais": "non" if "compost" in practices else "oui",
-            # Brulage non demande par le formulaire public
-            "brulage": "non",
+            # Brulage : si pratique "zero_brulage" cochee => non ; sinon on considere oui (par defaut risque)
+            "brulage": "non" if "zero_brulage" in practices else "oui",
             "compost": "oui" if "compost" in practices else "non",
             "agroforesterie": "oui" if "agroforesterie" in practices else "non",
             "couverture_sol": "oui" if "couverture_vegetale" in practices else "non",

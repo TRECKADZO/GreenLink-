@@ -40,6 +40,19 @@
 - Frontend: `NotificationCenter` enrichi (icones specifiques, redirection via action_url au clic)
 - Dashboard: appel automatique `generate` au chargement -> alertes immediates sur la cloche
 
+### Calculateur Prime Carbone corrige (DONE - 2026-02-19)
+- Corrections formule: zero_pesticides mappe vers absence_pesticides, rotation_cultures ajoute (+0.2), auto-estimation couverture ombragee depuis les 3 strates
+- Question "Zero brulage des residus" ajoutee (penalite -1.5 si brulage)
+- Recommandations dynamiques (jusqu'a 5) au lieu de hardcodees
+
+### Super Admin - Onglet Impact Institutionnel (DONE - 2026-02-19)
+- Backend: `/api/admin/analytics/institutional-metrics` (SDG/ODD, EUDR, CFI, regional)
+- 6 ODD alignes ONU (SDG 1, 5, 8, 12, 13, 15) avec couleurs officielles et metriques cibles
+- EUDR Compliance (UE 2023/1115) avec 5 dimensions et breakdown GPS polygones/points/sans GPS
+- Cocoa & Forests Initiative (CFI) avec cartographie + agroforesterie
+- Tableau KPIs par region (31 regions CI) avec filtre + export CSV
+- Sources citees: ONU, UE, World Cocoa Foundation, ICI CI, ARS 1000-1
+
 ### Navigation - Boutons Retour (DONE - 2026-04-15)
 - 26 pages avec bouton retour (data-testid="btn-retour")
 - Navigation coherente: dashboards -> /cooperative/dashboard, sous-pages -> dashboard module parent

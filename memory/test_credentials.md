@@ -1,5 +1,11 @@
 # Test Credentials - GreenLink Agritech
 
+## Super Admin
+- Email: klenakan.eric@gmail.com
+- Password: admin123456
+- User Type: admin
+- Dashboard: /admin/dashboard
+
 ## Cooperative
 - Email: bielaghana@gmail.com
 - Password: test123456
