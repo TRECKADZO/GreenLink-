@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { offlineCooperativeApi as cooperativeApi } from '../../services/offlineCooperativeApi';
-import { useOffline } from '../../context/OfflineContext';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
@@ -18,7 +17,6 @@ import { USSDPanel } from './components/USSDPanel';
 import { AlertsBanner } from './components/AlertsBanner';
 import { REDDWidget } from './components/REDDWidget';
 import { SSRTEWidget } from './components/SSRTEWidget';
-import { ARS1000Widget } from './components/ARS1000Widget';
 import { ModulesARSGrid } from './components/ModulesARSGrid';
 import { REDDEvolutionChart } from './components/REDDEvolutionChart';
 import { SSRTETrendsChart } from './components/SSRTETrendsChart';
@@ -150,7 +148,6 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <REDDWidget redd={kpiData?.redd} />
               <SSRTEWidget ssrte={kpiData?.ssrte} ici={kpiData?.ici} />
-              <ARS1000Widget />
             </div>
 
             {/* Modules ARS 1000 */}

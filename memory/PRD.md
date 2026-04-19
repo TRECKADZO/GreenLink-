@@ -27,6 +27,11 @@
 - ModulesARSGrid integre: Barre readiness ARS 1000 + 7 cartes modules cliquables avec KPIs temps reel
 - Toutes les sections dans les Actions Rapides sidebar
 
+### Nettoyage Dashboard Cooperatif (DONE - 2026-02-19)
+- Suppression du widget `ARS1000Widget` (carte "Certification ARS 1000" redondante)
+- La certification est deja exposee via la grille ModulesARSGrid (carte "Conformite Globale")
+- Section "Actions Rapides" conservee a la demande de l'utilisateur
+
 ### Navigation - Boutons Retour (DONE - 2026-04-15)
 - 26 pages avec bouton retour (data-testid="btn-retour")
 - Navigation coherente: dashboards -> /cooperative/dashboard, sous-pages -> dashboard module parent
