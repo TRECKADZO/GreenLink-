@@ -23,6 +23,6 @@ if ('serviceWorker' in navigator) {
           }
         });
       })
-      .catch((err) => console.log('[PWA] Erreur SW:', err));
+      .catch(() => {});
   });
 }

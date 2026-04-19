@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tokenService } from '../../../services/tokenService';
 import {
@@ -27,11 +27,7 @@ export const ModulesARSGrid = () => {
   const [moduleData, setModuleData] = useState({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadModules();
-  }, []);
-
-  const loadModules = async () => {
+  const loadModules = useCallback(async () => {
     const token = tokenService.getToken();
     const results = {};
 
@@ -58,7 +54,9 @@ export const ModulesARSGrid = () => {
     await Promise.all(fetches);
     setModuleData(results);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => { loadModules(); }, [loadModules]);
 
   const extractKPI = (key, data) => {
     switch (key) {
