@@ -105,6 +105,7 @@ const Navbar = () => {
       cooperative: [
         { icon: User, label: 'Membres', route: '/cooperative/members' },
         { icon: Package, label: 'Ventes Groupées', route: '/cooperative/lots' },
+        { icon: Bell, label: 'Notifications', route: '/cooperative/notifications' },
       ],
       field_agent: [],
       agent_terrain: [],

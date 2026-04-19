@@ -1,6 +1,6 @@
 import { tokenService } from "../../../services/tokenService";
 import React, { useState } from 'react';
-import { Building2, Home, UserCircle, Plus, FileDown, Loader2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Building2, Home, UserCircle, Plus, FileDown, Loader2, Wifi, WifiOff, RefreshCw, Bell } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { NotificationCenter } from '../../../components/NotificationCenter';
 import { useOffline } from '../../../context/OfflineContext';
@@ -135,6 +135,16 @@ export const DashboardHeader = ({ coopInfo, user, navigate }) => {
             >
               <UserCircle className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
               Profil
+            </Button>
+            <Button
+              onClick={() => navigate('/cooperative/notifications')}
+              variant="ghost"
+              size="sm"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              data-testid="notifications-page-btn"
+            >
+              <Bell className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+              Notifications
             </Button>
             <Button
               onClick={() => navigate('/cooperative/members/new')}
