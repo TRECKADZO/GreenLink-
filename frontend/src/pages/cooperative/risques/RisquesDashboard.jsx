@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { StableInput, StableSelect, StableTextarea } from '../../../components/StableInput';
 import {
   AlertTriangle, Shield, Loader2, Home, ChevronRight, Plus,
-  CheckCircle2, XCircle, Download, Eye, EyeOff, Target
+  CheckCircle2, XCircle, Download, Eye, EyeOff, Target, ClipboardList, ArrowRight
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -26,6 +26,7 @@ const RisquesDashboard = () => {
   const [echelles, setEchelles] = useState({});
   const [categories, setCategories] = useState([]);
   const [expanded, setExpanded] = useState(null);
+  const [showAutoDiag, setShowAutoDiag] = useState(false);
 
   const loadAll = useCallback(async () => {
     const token = tokenService.getToken();
@@ -97,8 +98,9 @@ const RisquesDashboard = () => {
                 <p className="text-sm text-white/60 mt-1">ARS 1000-1 Clause 6.1 - Processus en 5 etapes</p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 bg-white/10 text-white rounded-md text-sm hover:bg-white/20" data-testid="btn-export"><Download className="h-4 w-4" /> Export Excel</button>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setShowAutoDiag(true)} className="flex items-center gap-2 px-3 py-2 bg-[#D4AF37] text-[#1A3622] rounded-md text-sm font-medium hover:bg-[#C49B2F]" data-testid="btn-auto-diag"><ClipboardList className="h-4 w-4" /> Auto-Diagnostic</button>
+              <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 bg-white/10 text-white rounded-md text-sm hover:bg-white/20" data-testid="btn-export"><Download className="h-4 w-4" /> Excel</button>
               <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 bg-white text-[#1A3622] rounded-md text-sm font-medium hover:bg-white/90" data-testid="btn-create-risque"><Plus className="h-4 w-4" /> Nouveau risque</button>
             </div>
           </div>
@@ -285,6 +287,7 @@ const RisquesDashboard = () => {
       </div>
 
       {showCreate && <CreateRisqueModal categories={categories} echelles={echelles} onSubmit={handleCreate} onClose={() => setShowCreate(false)} />}
+      {showAutoDiag && <AutoDiagnosticModal onClose={() => setShowAutoDiag(false)} onFinish={() => { setShowAutoDiag(false); loadAll(); }} />}
     </div>
   );
 };
@@ -428,5 +431,218 @@ const KPI = ({ label, value, color = "text-[#111827]", bg = "bg-white" }) => (
 const Detail = ({ label, value }) => (
   <div className="text-[9px]"><span className="font-bold text-[#1A3622]">{label}:</span> <span className="text-[#374151]">{value}</span></div>
 );
+
+// ============= AUTO-DIAGNOSTIC MODAL =============
+const THEME_LABELS = { TRACABILITE: 'Tracabilite', AGROCHIMIQUES: 'Agrochimiques & SST', ENVIRONNEMENT: 'Environnement & Climat', SOCIAL: 'Social & Droits', ECONOMIQUE: 'Economique & Productivite' };
+const THEME_COLORS = { TRACABILITE: 'bg-blue-500', AGROCHIMIQUES: 'bg-orange-500', ENVIRONNEMENT: 'bg-emerald-500', SOCIAL: 'bg-purple-500', ECONOMIQUE: 'bg-amber-500' };
+
+const AutoDiagnosticModal = ({ onClose, onFinish }) => {
+  const [questions, setQuestions] = useState([]);
+  const [themes, setThemes] = useState({});
+  const [reponses, setReponses] = useState({});
+  const [step, setStep] = useState('questionnaire'); // questionnaire | resultats
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [activeTheme, setActiveTheme] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = tokenService.getToken();
+        const res = await fetch(`${API}/api/risques/auto-diagnostic/questions`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+          const d = await res.json();
+          setQuestions(d.questions || []);
+          setThemes(d.par_theme || {});
+          setActiveTheme(Object.keys(d.par_theme || {})[0] || null);
+        }
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    };
+    load();
+  }, []);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const token = tokenService.getToken();
+      const res = await fetch(`${API}/api/risques/auto-diagnostic/evaluer`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(reponses),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setResult(d.diagnostic);
+        setStep('resultats');
+      }
+    } catch (e) { toast.error('Erreur'); }
+    finally { setSubmitting(false); }
+  };
+
+  const handleGenerate = async () => {
+    if (!result) return;
+    setGenerating(true);
+    try {
+      const token = tokenService.getToken();
+      const res = await fetch(`${API}/api/risques/auto-diagnostic/generer-risques?diagnostic_id=${result.diagnostic_id}`, {
+        method: 'POST', headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const d = await res.json();
+        toast.success(`${d.risques_crees} fiche(s) risque creee(s) dans la cartographie`);
+        onFinish();
+      }
+    } catch (e) { toast.error('Erreur'); }
+    finally { setGenerating(false); }
+  };
+
+  const themeKeys = Object.keys(themes);
+  const answered = Object.keys(reponses).length;
+  const total = questions.length;
+  const pctAnswered = total > 0 ? Math.round((answered / total) * 100) : 0;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" data-testid="auto-diagnostic-modal">
+      <div className="bg-white rounded-md w-full max-w-3xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-[#E5E5E0] flex items-center justify-between flex-shrink-0">
+          <div>
+            <h3 className="text-sm font-semibold text-[#1A3622]">Auto-Diagnostic des Risques</h3>
+            <p className="text-[9px] text-[#6B7280]">Questionnaire adapte ARS 1000 — Repondez Oui/Non pour identifier vos risques</p>
+          </div>
+          <button onClick={onClose} className="text-[#6B7280] hover:text-[#111827] text-xl">&times;</button>
+        </div>
+
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#1A3622]" /></div>
+        ) : step === 'questionnaire' ? (
+          <>
+            {/* Progress */}
+            <div className="px-5 py-3 border-b border-[#E5E5E0] bg-[#F9FAFB]">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-bold text-[#6B7280]">{answered}/{total} questions repondues</span>
+                <span className="text-[10px] font-bold text-[#1A3622]">{pctAnswered}%</span>
+              </div>
+              <div className="h-2 bg-[#E5E5E0] rounded-full"><div className="h-full bg-[#1A3622] rounded-full transition-all" style={{width:`${pctAnswered}%`}} /></div>
+            </div>
+
+            {/* Theme tabs */}
+            <div className="px-5 pt-3 flex gap-1 flex-wrap">
+              {themeKeys.map(t => {
+                const qs = themes[t] || [];
+                const answeredInTheme = qs.filter(q => reponses[q.id]).length;
+                return (
+                  <button key={t} onClick={() => setActiveTheme(t)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-medium transition-all ${activeTheme === t ? 'bg-[#1A3622] text-white' : 'bg-[#F3F4F6] text-[#6B7280] hover:bg-[#E5E5E0]'}`}>
+                    <span className={`w-2 h-2 rounded-full ${THEME_COLORS[t] || 'bg-gray-400'}`} />
+                    {THEME_LABELS[t] || t}
+                    <span className="opacity-60">{answeredInTheme}/{qs.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Questions */}
+            <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
+              {(themes[activeTheme] || []).map((q) => (
+                <div key={q.id} className={`border rounded-md p-3 transition-all ${reponses[q.id] ? 'border-[#1A3622] bg-[#F0FDF4]' : 'border-[#E5E5E0] bg-white'}`} data-testid={`question-${q.id}`}>
+                  <p className="text-xs text-[#374151] mb-2">{q.question}</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => setReponses(prev => ({...prev, [q.id]: 'oui'}))}
+                      className={`px-4 py-1.5 rounded text-xs font-medium transition-all ${reponses[q.id] === 'oui' ? 'bg-[#1A3622] text-white' : 'bg-[#F3F4F6] text-[#6B7280] hover:bg-[#E5E5E0]'}`}>
+                      Oui
+                    </button>
+                    <button onClick={() => setReponses(prev => ({...prev, [q.id]: 'non'}))}
+                      className={`px-4 py-1.5 rounded text-xs font-medium transition-all ${reponses[q.id] === 'non' ? 'bg-[#1A3622] text-white' : 'bg-[#F3F4F6] text-[#6B7280] hover:bg-[#E5E5E0]'}`}>
+                      Non
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3 border-t border-[#E5E5E0] flex items-center justify-between flex-shrink-0">
+              <button onClick={onClose} className="px-4 py-2 text-sm border border-[#E5E5E0] rounded-md hover:bg-[#F3F4F6]">Annuler</button>
+              <button onClick={handleSubmit} disabled={answered === 0 || submitting} className="flex items-center gap-2 px-5 py-2 text-sm bg-[#1A3622] text-white rounded-md hover:bg-[#112417] disabled:opacity-50 font-medium" data-testid="btn-evaluer">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ArrowRight className="h-4 w-4" /> Evaluer ({answered}/{total})</>}
+              </button>
+            </div>
+          </>
+        ) : (
+          /* RESULTATS */
+          <div className="flex-1 overflow-y-auto">
+            {result && (
+              <div className="p-5 space-y-4">
+                {/* Score global */}
+                <div className={`rounded-md p-4 border-2 ${result.score_global >= 70 ? 'bg-emerald-50 border-emerald-200' : result.score_global >= 40 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${result.score_global >= 70 ? 'bg-emerald-500' : result.score_global >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}>
+                      <span className="text-xl font-bold text-white">{result.score_global}%</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-[#1A3622]">Score Global</p>
+                      <p className="text-xs text-[#6B7280]">{result.total_risques} risque(s) identifie(s) sur {result.total_questions} questions</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Score par theme */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {Object.entries(result.score_par_theme || {}).map(([theme, s]) => (
+                    <div key={theme} className="border border-[#E5E5E0] rounded-md p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className={`w-2 h-2 rounded-full ${THEME_COLORS[theme] || 'bg-gray-400'}`} />
+                        <p className="text-[10px] font-bold text-[#374151]">{THEME_LABELS[theme] || theme}</p>
+                      </div>
+                      <p className={`text-lg font-bold ${s.score >= 70 ? 'text-emerald-600' : s.score >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{s.score}%</p>
+                      <p className="text-[9px] text-[#9CA3AF]">{s.a_risque} risque(s) / {s.total}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Risques identifies */}
+                {result.risques_identifies?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold text-[#1A3622] mb-2">Risques identifies ({result.risques_identifies.length})</p>
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                      {result.risques_identifies.map((r, i) => (
+                        <div key={`ri-${i}`} className="border border-[#E5E5E0] rounded-md p-3 bg-red-50/30">
+                          <div className="flex items-center gap-2 mb-1">
+                            <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+                            <p className="text-xs font-semibold text-[#374151]">{r.titre}</p>
+                          </div>
+                          <p className="text-[9px] text-[#6B7280] mb-1">G={r.gravite_suggeree} F={r.frequence_suggeree} | {r.categorie}</p>
+                          <div className="space-y-0.5">
+                            {(r.actions_suggerees || []).slice(0, 2).map((a, j) => (
+                              <p key={`a-${j}`} className="text-[9px] text-emerald-700 flex items-center gap-1"><Target className="h-2.5 w-2.5 flex-shrink-0" />{a}</p>
+                            ))}
+                            {(r.actions_suggerees || []).length > 2 && <p className="text-[9px] text-[#9CA3AF]">+{r.actions_suggerees.length - 2} autre(s) action(s)</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-2 border-t border-[#E5E5E0]">
+                  <button onClick={onClose} className="flex-1 px-4 py-2.5 text-sm border border-[#E5E5E0] rounded-md hover:bg-[#F3F4F6]">Fermer</button>
+                  {result.risques_identifies?.length > 0 && (
+                    <button onClick={handleGenerate} disabled={generating} className="flex-1 px-4 py-2.5 text-sm bg-[#1A3622] text-white rounded-md hover:bg-[#112417] font-medium disabled:opacity-50" data-testid="btn-generer-risques">
+                      {generating ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : `Generer ${result.risques_identifies.length} fiche(s) risque`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default RisquesDashboard;
