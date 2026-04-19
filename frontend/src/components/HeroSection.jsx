@@ -29,7 +29,7 @@ const HeroSection = () => {
         </h1>
         
         <p className="text-sm sm:text-lg lg:text-xl text-white/90 text-center max-w-4xl mb-6 sm:mb-8 leading-relaxed px-2">
-          Recevez des primes sur Orange Money grace a vos pratiques durables.
+          Recevez des primes sur Mobile Money grace a vos pratiques durables.
           Score carbone, certification ARS 1000 et tracabilite complete de votre cacao.
         </p>
 
@@ -37,7 +37,7 @@ const HeroSection = () => {
         <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-8 sm:mb-10">
           <div className="flex items-center gap-1.5 sm:gap-2 bg-[#d4a574]/20 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 border border-[#d4a574]/30">
             <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4a574]" />
-            <span className="text-white font-medium text-xs sm:text-base">Prime Orange Money</span>
+            <span className="text-white font-medium text-xs sm:text-base">Prime carbone</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
             <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
