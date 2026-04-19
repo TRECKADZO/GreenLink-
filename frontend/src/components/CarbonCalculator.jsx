@@ -479,13 +479,22 @@ const CarbonCalculator = ({ isOpen, onClose }) => {
               )}
 
               {!result.eligible && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4" data-testid="recommandations-block">
                   <p className="text-sm text-amber-800 font-medium mb-2">Pour ameliorer votre score :</p>
-                  <ul className="text-sm text-amber-700 space-y-1">
-                    <li>- Plantez plus d'especes de Strate 3 (canopee &gt; 30m)</li>
-                    <li>- Pratiquez l'agroforesterie</li>
-                    <li>- Utilisez du compost organique</li>
-                    <li>- Evitez les pesticides chimiques</li>
+                  <ul className="text-sm text-amber-700 space-y-1 list-disc list-inside">
+                    {(result.recommandations && result.recommandations.length > 0) ? (
+                      result.recommandations.map((r, idx) => (
+                        <li key={`reco-${idx}-${r.slice(0, 20)}`}>{r}</li>
+                      ))
+                    ) : (
+                      <>
+                        {formData.practices.indexOf('agroforesterie') === -1 && <li>Pratiquez l'agroforesterie (arbres + cultures)</li>}
+                        {formData.practices.indexOf('compost') === -1 && <li>Utilisez du compost organique pour remplacer les engrais chimiques</li>}
+                        {formData.practices.indexOf('zero_pesticides') === -1 && <li>Reduisez les pesticides chimiques</li>}
+                        {formData.practices.indexOf('couverture_vegetale') === -1 && <li>Ajoutez une couverture vegetale du sol</li>}
+                        {(parseInt(formData.arbres_grands) || 0) < 5 && <li>Plantez plus d'especes de Strate 3 (canopee &gt; 30m)</li>}
+                      </>
+                    )}
                   </ul>
                 </div>
               )}

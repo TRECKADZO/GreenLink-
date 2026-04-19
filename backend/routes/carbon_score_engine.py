@@ -37,6 +37,7 @@ PRATIQUES_ECO = {
     "protection_cours_eau": 0.2,
     "couverture_sol": 0.2,
     "agroforesterie": 0.3,
+    "rotation_cultures": 0.2,
 }
 MAX_PRATIQUES_ECO = 1.2
 

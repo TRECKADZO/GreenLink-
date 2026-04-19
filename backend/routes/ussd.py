@@ -228,6 +228,10 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
         pratiques.append("agroforesterie")
     if answers.get("couverture_sol") == "oui":
         pratiques.append("couverture_sol")
+    if answers.get("rotation_cultures") == "oui":
+        pratiques.append("rotation_cultures")
+    if answers.get("zero_pesticides") == "oui":
+        pratiques.append("absence_pesticides")
 
     # REDD+ practices from USSD answers
     redd_prac = []
@@ -242,13 +246,21 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
     brulage = answers.get("brulage") == "oui" if answers.get("brulage") else None
     engrais = (answers.get("engrais") == "oui" or answers.get("engrais_chimique") == "oui") if (answers.get("engrais") or answers.get("engrais_chimique")) else None
 
-    from routes.carbon_score_engine import calculate_carbon_score
+    from routes.carbon_score_engine import calculate_carbon_score, estimate_couverture_ombragee
+    # Auto-estimate shade coverage from tree strata counts (realistic formula)
+    couverture_est = estimate_couverture_ombragee(
+        arbres_petits=arbres_petits,
+        arbres_moyens=arbres_moyens,
+        arbres_grands=arbres_grands,
+        area_hectares=hectares,
+    )
     result = calculate_carbon_score(
         area_hectares=hectares,
         arbres_petits=arbres_petits,
         arbres_moyens=arbres_moyens,
         arbres_grands=arbres_grands,
         nombre_arbres=total_trees,
+        couverture_ombragee=couverture_est,
         pratique_brulage=brulage,
         engrais_chimique=engrais,
         pratiques_ecologiques=pratiques,
@@ -336,6 +348,7 @@ def calculate_ussd_carbon_premium(answers: dict, avg_rse_price: float = 18000) -
         "redd_score": redd_score,
         "redd_level": redd_level,
         "redd_practices": redd_practices,
+        "recommandations": result.get("recommandations", []),
     }
 
 
@@ -2360,17 +2373,22 @@ async def ussd_carbon_calculator(request: USSDRequest):
 async def calculate_premium_public(data: dict):
     """Public carbon premium calculator for the homepage."""
     try:
+        practices = data.get("practices", []) or []
         answers = {
             "hectares": float(data.get("hectares", 1)),
             "arbres_grands": int(data.get("arbres_grands", 0)),
             "arbres_moyens": int(data.get("arbres_moyens", 0)),
             "arbres_petits": int(data.get("arbres_petits", 0)),
             "culture": data.get("culture", "cacao"),
-            "engrais": "non" if "zero_pesticides" in data.get("practices", []) else "oui",
+            # Compost implique substitution d'engrais chimique
+            "engrais": "non" if "compost" in practices else "oui",
+            # Brulage non demande par le formulaire public
             "brulage": "non",
-            "compost": "oui" if "compost" in data.get("practices", []) else "non",
-            "agroforesterie": "oui" if "agroforesterie" in data.get("practices", []) else "non",
-            "couverture_sol": "oui" if ("couverture_vegetale" in data.get("practices", []) or "rotation_cultures" in data.get("practices", [])) else "non",
+            "compost": "oui" if "compost" in practices else "non",
+            "agroforesterie": "oui" if "agroforesterie" in practices else "non",
+            "couverture_sol": "oui" if "couverture_vegetale" in practices else "non",
+            "rotation_cultures": "oui" if "rotation_cultures" in practices else "non",
+            "zero_pesticides": "oui" if "zero_pesticides" in practices else "non",
         }
 
         avg_price = 18000
@@ -2403,6 +2421,8 @@ async def calculate_premium_public(data: dict):
             "ars_level": result.get("ars_level", ""),
             "ars_pct": result.get("ars_pct", 0),
             "ars_conseil": result.get("ars_conseil", ""),
+            "recommandations": result.get("recommandations", []),
+            "avg_price_used": avg_price,
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
