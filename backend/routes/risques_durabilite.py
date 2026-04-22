@@ -1104,3 +1104,88 @@ async def export_diagnostic_excel(diagnostic_id: str, current_user: dict = Depen
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+
+# ============= COMPARAISON 2 DIAGNOSTICS =============
+
+@router.get("/auto-diagnostic/{diagnostic_id}/comparer")
+async def comparer_diagnostic(diagnostic_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Compare le diagnostic courant avec le precedent de la meme cooperative.
+    Retourne : score delta, risques nouveaux / resolus / persistants,
+    score par theme avant/apres, progression globale.
+    """
+    verify_cooperative(current_user)
+    coop_id = get_coop_id(current_user)
+
+    current = await db.risques_auto_diagnostic.find_one(
+        {"diagnostic_id": diagnostic_id, "coop_id": coop_id},
+        {"_id": 0},
+    )
+    if not current:
+        raise HTTPException(status_code=404, detail="Diagnostic courant non trouve")
+
+    # Previous = any diagnostic before this one (by created_at desc)
+    previous = await db.risques_auto_diagnostic.find_one(
+        {"coop_id": coop_id, "created_at": {"$lt": current.get("created_at", "")}},
+        {"_id": 0},
+        sort=[("created_at", -1)],
+    )
+    if not previous:
+        return {
+            "has_previous": False,
+            "current": current,
+            "message": "Aucun diagnostic precedent pour comparaison",
+        }
+
+    # Keys = question_id identifying a risk
+    curr_risks_by_q = {r.get("question"): r for r in (current.get("risques_identifies") or [])}
+    prev_risks_by_q = {r.get("question"): r for r in (previous.get("risques_identifies") or [])}
+
+    nouveaux = [curr_risks_by_q[q] for q in curr_risks_by_q if q not in prev_risks_by_q]
+    resolus = [prev_risks_by_q[q] for q in prev_risks_by_q if q not in curr_risks_by_q]
+    persistants = [curr_risks_by_q[q] for q in curr_risks_by_q if q in prev_risks_by_q]
+
+    # Theme progression
+    themes = {}
+    curr_themes = current.get("score_par_theme") or {}
+    prev_themes = previous.get("score_par_theme") or {}
+    all_themes = set(curr_themes.keys()) | set(prev_themes.keys())
+    for t in all_themes:
+        c = curr_themes.get(t, {"score": 0, "total": 0, "a_risque": 0})
+        p = prev_themes.get(t, {"score": 0, "total": 0, "a_risque": 0})
+        themes[t] = {
+            "score_current": c.get("score", 0),
+            "score_previous": p.get("score", 0),
+            "delta": c.get("score", 0) - p.get("score", 0),
+            "risques_current": c.get("a_risque", 0),
+            "risques_previous": p.get("a_risque", 0),
+        }
+
+    score_delta = current.get("score_global", 0) - previous.get("score_global", 0)
+    return {
+        "has_previous": True,
+        "current": {
+            "diagnostic_id": current.get("diagnostic_id"),
+            "created_at": current.get("created_at"),
+            "score_global": current.get("score_global", 0),
+            "total_risques": current.get("total_risques", 0),
+            "total_questions": current.get("total_questions", 0),
+            "created_by": current.get("created_by", ""),
+        },
+        "previous": {
+            "diagnostic_id": previous.get("diagnostic_id"),
+            "created_at": previous.get("created_at"),
+            "score_global": previous.get("score_global", 0),
+            "total_risques": previous.get("total_risques", 0),
+            "total_questions": previous.get("total_questions", 0),
+            "created_by": previous.get("created_by", ""),
+        },
+        "score_delta": score_delta,
+        "progression": "amelioration" if score_delta > 0 else ("degradation" if score_delta < 0 else "stable"),
+        "nouveaux": nouveaux,
+        "resolus": resolus,
+        "persistants": persistants,
+        "themes": themes,
+    }

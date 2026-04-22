@@ -446,6 +446,30 @@ const AutoDiagnosticModal = ({ onClose, onFinish }) => {
   const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [activeTheme, setActiveTheme] = useState(null);
+  const [comparison, setComparison] = useState(null);
+  const [loadingCompare, setLoadingCompare] = useState(false);
+
+  const handleCompare = async () => {
+    if (!result?.diagnostic_id) return;
+    setLoadingCompare(true);
+    try {
+      const token = tokenService.getToken();
+      const res = await fetch(`${API}/api/risques/auto-diagnostic/${result.diagnostic_id}/comparer`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!data.has_previous) {
+        toast.info("Aucun diagnostic precedent pour cette cooperative — la comparaison sera disponible apres un prochain diagnostic.");
+        setLoadingCompare(false);
+        return;
+      }
+      setComparison(data);
+    } catch {
+      toast.error('Erreur lors de la comparaison');
+    } finally {
+      setLoadingCompare(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -668,6 +692,14 @@ const AutoDiagnosticModal = ({ onClose, onFinish }) => {
                   >
                     Exporter Excel
                   </button>
+                  <button
+                    onClick={handleCompare}
+                    disabled={loadingCompare}
+                    className="flex-1 min-w-[100px] px-4 py-2.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium disabled:opacity-50"
+                    data-testid="btn-compare-diagnostic"
+                  >
+                    {loadingCompare ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : 'Comparer avec precedent'}
+                  </button>
                   {result.risques_identifies?.length > 0 && (
                     <button onClick={handleGenerate} disabled={generating} className="flex-1 min-w-[150px] px-4 py-2.5 text-sm bg-[#1A3622] text-white rounded-md hover:bg-[#112417] font-medium disabled:opacity-50" data-testid="btn-generer-risques">
                       {generating ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : `Generer ${result.risques_identifies.length} fiche(s) risque`}
@@ -678,6 +710,124 @@ const AutoDiagnosticModal = ({ onClose, onFinish }) => {
             )}
           </div>
         )}
+      </div>
+      {comparison && <ComparisonModal comparison={comparison} onClose={() => setComparison(null)} />}
+    </div>
+  );
+};
+
+const ComparisonModal = ({ comparison, onClose }) => {
+  const { current, previous, score_delta, progression, nouveaux, resolus, persistants, themes } = comparison;
+  const deltaColor = progression === 'amelioration' ? 'text-emerald-600' : (progression === 'degradation' ? 'text-red-600' : 'text-gray-600');
+  const arrow = progression === 'amelioration' ? '▲' : (progression === 'degradation' ? '▼' : '=');
+
+  const fmtDate = (s) => s ? new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4" data-testid="comparison-modal">
+      <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        {/* Header */}
+        <div className="px-6 py-4 border-b sticky top-0 bg-white flex items-center justify-between z-10">
+          <div>
+            <h3 className="text-lg font-bold text-[#1A3622]">Comparaison des diagnostics</h3>
+            <p className="text-xs text-gray-500">Progression entre 2 auto-evaluations ARS 1000</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none" data-testid="btn-close-comparison">×</button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Scores side-by-side */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gray-50 border rounded-lg p-4">
+              <p className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Diagnostic precedent</p>
+              <p className="text-xs text-gray-600 mt-1">{fmtDate(previous.created_at)}</p>
+              <p className="text-3xl font-bold text-gray-700 mt-2">{previous.score_global}%</p>
+              <p className="text-xs text-gray-500 mt-1">{previous.total_risques} risque(s) sur {previous.total_questions} questions</p>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <p className="text-[10px] uppercase tracking-wide text-emerald-700 font-semibold">Diagnostic actuel</p>
+              <p className="text-xs text-emerald-700 mt-1">{fmtDate(current.created_at)}</p>
+              <p className="text-3xl font-bold text-emerald-800 mt-2">{current.score_global}%</p>
+              <p className="text-xs text-emerald-700 mt-1">{current.total_risques} risque(s) sur {current.total_questions} questions</p>
+            </div>
+          </div>
+
+          {/* Delta banner */}
+          <div className={`border rounded-lg p-4 text-center ${progression === 'amelioration' ? 'bg-emerald-50 border-emerald-200' : (progression === 'degradation' ? 'bg-red-50 border-red-200' : 'bg-gray-50')}`}>
+            <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Evolution du score global</p>
+            <p className={`text-4xl font-bold mt-1 ${deltaColor}`} data-testid="score-delta">
+              {arrow} {score_delta > 0 ? '+' : ''}{score_delta} pts
+            </p>
+            <p className="text-sm text-gray-600 mt-1 capitalize">
+              {progression === 'amelioration' ? 'Progression positive de la cooperative' :
+               progression === 'degradation' ? 'Regression — attention a corriger rapidement' : 'Score stable'}
+            </p>
+          </div>
+
+          {/* Risks breakdown */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3" data-testid="risques-nouveaux">
+              <p className="text-xs font-bold text-red-700 uppercase">🆕 Nouveaux ({nouveaux.length})</p>
+              <p className="text-[10px] text-red-600 mt-1">Risques apparus depuis le dernier diagnostic</p>
+              <ul className="mt-2 space-y-1 text-xs text-red-900 max-h-40 overflow-y-auto">
+                {nouveaux.length === 0 ? <li className="italic text-gray-500">Aucun</li> : nouveaux.map((r, i) => (
+                  <li key={`new-${i}-${r.question}`} className="border-l-2 border-red-400 pl-2">{r.titre}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3" data-testid="risques-resolus">
+              <p className="text-xs font-bold text-emerald-700 uppercase">✓ Resolus ({resolus.length})</p>
+              <p className="text-[10px] text-emerald-600 mt-1">Risques corriges depuis le dernier diagnostic</p>
+              <ul className="mt-2 space-y-1 text-xs text-emerald-900 max-h-40 overflow-y-auto">
+                {resolus.length === 0 ? <li className="italic text-gray-500">Aucun</li> : resolus.map((r, i) => (
+                  <li key={`res-${i}-${r.question}`} className="border-l-2 border-emerald-400 pl-2">{r.titre}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3" data-testid="risques-persistants">
+              <p className="text-xs font-bold text-amber-700 uppercase">⚠ Persistants ({persistants.length})</p>
+              <p className="text-[10px] text-amber-600 mt-1">Risques encore presents</p>
+              <ul className="mt-2 space-y-1 text-xs text-amber-900 max-h-40 overflow-y-auto">
+                {persistants.length === 0 ? <li className="italic text-gray-500">Aucun</li> : persistants.map((r, i) => (
+                  <li key={`per-${i}-${r.question}`} className="border-l-2 border-amber-400 pl-2">{r.titre}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Themes table */}
+          <div>
+            <h4 className="text-sm font-bold text-[#1A3622] mb-2">Progression par theme</h4>
+            <div className="overflow-x-auto border rounded-lg">
+              <table className="w-full text-xs">
+                <thead className="bg-[#F5F7F2] text-[#1A3622]">
+                  <tr>
+                    <th className="text-left px-3 py-2">Theme</th>
+                    <th className="text-right px-3 py-2">Precedent</th>
+                    <th className="text-right px-3 py-2">Actuel</th>
+                    <th className="text-right px-3 py-2">Delta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(themes).map(([theme, t]) => (
+                    <tr key={theme} className="border-t hover:bg-gray-50">
+                      <td className="px-3 py-2 font-medium">{theme}</td>
+                      <td className="px-3 py-2 text-right text-gray-600">{t.score_previous}%</td>
+                      <td className="px-3 py-2 text-right font-semibold">{t.score_current}%</td>
+                      <td className={`px-3 py-2 text-right font-bold ${t.delta > 0 ? 'text-emerald-600' : (t.delta < 0 ? 'text-red-600' : 'text-gray-400')}`}>
+                        {t.delta > 0 ? '+' : ''}{t.delta}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-3 border-t bg-gray-50 flex justify-end">
+          <button onClick={onClose} className="px-4 py-2 text-sm border rounded-md hover:bg-gray-100">Fermer</button>
+        </div>
       </div>
     </div>
   );
