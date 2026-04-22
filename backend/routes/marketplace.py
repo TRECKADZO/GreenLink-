@@ -823,12 +823,13 @@ async def get_order(
     order["_id"] = str(order["_id"])
     return order
 
-@router.put("/orders/{order_id}/status")
-async def update_order_status(
+@router.put("/orders/{order_id}/status-legacy")
+async def update_order_status_legacy(
     order_id: str,
     status: str,
     current_user: dict = Depends(get_current_user)
 ):
+    """Legacy supplier status update. New callers should use /orders/{id}/status."""
     if current_user.get("user_type") != "fournisseur":
         raise HTTPException(status_code=403, detail="Seuls les fournisseurs peuvent modifier le statut")
     

@@ -474,7 +474,7 @@ const TimelineModal = ({ data, onClose }) => {
                   </div>
 
                   {step.events?.length > 0 && step.events.map((evt, j) => (
-                    <div key={j} className="ml-2 mt-1 p-2 bg-[#F9FAFB] rounded border border-[#E5E5E0]">
+                    <div key={evt.id || evt._id || `${evt.date_evenement || ''}-${evt.lieu || ''}-${j}`} className="ml-2 mt-1 p-2 bg-[#F9FAFB] rounded border border-[#E5E5E0]">
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-[#6B7280]">
                         {evt.date_evenement && <span>Date: {new Date(evt.date_evenement).toLocaleDateString('fr-FR')}</span>}
                         {evt.quantite_kg > 0 && <span>Qte: {evt.quantite_kg} kg</span>}

@@ -516,7 +516,7 @@ async def get_my_assigned_farmers(
 @router.post("/log-activity")
 async def log_agent_activity(
     activity_type: str,
-    details: dict = {},
+    details: Optional[dict] = None,
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -524,13 +524,13 @@ async def log_agent_activity(
     """
     verify_field_agent(current_user)
     user_id = str(current_user.get('_id'))
-    
+
     activity = {
         "agent_id": user_id,
         "agent_name": current_user.get('full_name'),
         "cooperative_id": current_user.get('cooperative_id'),
         "activity_type": activity_type,
-        "details": details,
+        "details": details or {},
         "timestamp": datetime.utcnow()
     }
     
