@@ -836,3 +836,271 @@ async def get_diagnostic_historique(current_user: dict = Depends(get_current_use
     coop_id = get_coop_id(current_user)
     docs = await db.risques_auto_diagnostic.find({"coop_id": coop_id}, {"_id": 0}).sort("created_at", -1).to_list(20)
     return {"diagnostics": docs}
+
+
+
+# ============= EXPORT PDF / EXCEL (Auto-Diagnostic) =============
+
+@router.get("/auto-diagnostic/{diagnostic_id}/pdf")
+async def export_diagnostic_pdf(diagnostic_id: str, current_user: dict = Depends(get_current_user)):
+    """PDF officiel d'un auto-diagnostic (ARS 1000 Ch. 6.1)."""
+    verify_cooperative(current_user)
+    coop_id = get_coop_id(current_user)
+    diag = await db.risques_auto_diagnostic.find_one({"diagnostic_id": diagnostic_id, "coop_id": coop_id})
+    if not diag:
+        raise HTTPException(status_code=404, detail="Diagnostic non trouve")
+
+    from io import BytesIO
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import cm
+    from reportlab.lib.enums import TA_CENTER
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+    from reportlab.platypus.flowables import HRFlowable
+
+    FOREST = colors.HexColor("#1A3622")
+    GOLD = colors.HexColor("#D4AF37")
+    MUTED = colors.HexColor("#6B7280")
+    BORDER = colors.HexColor("#E5E5E0")
+    LIGHT = colors.HexColor("#FAF9F6")
+
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle("H1", parent=styles["Heading1"], fontSize=16, textColor=FOREST, alignment=TA_CENTER, fontName="Helvetica-Bold"))
+    styles.add(ParagraphStyle("Sub", parent=styles["Normal"], fontSize=9, textColor=MUTED, alignment=TA_CENTER, spaceAfter=10))
+    styles.add(ParagraphStyle("Sec", parent=styles["Heading2"], fontSize=11, textColor=FOREST, spaceBefore=10, spaceAfter=6, fontName="Helvetica-Bold"))
+    styles.add(ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, leading=11))
+    styles.add(ParagraphStyle("Cell", parent=styles["Normal"], fontSize=8, leading=10))
+    styles.add(ParagraphStyle("Small", parent=styles["Normal"], fontSize=7, textColor=MUTED, leading=9))
+
+    buf = BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=1.2 * cm, rightMargin=1.2 * cm,
+        topMargin=1.2 * cm, bottomMargin=1.2 * cm,
+        title="Auto-Diagnostic Risques & Durabilite",
+    )
+    story = []
+
+    coop_name = current_user.get("coop_name") or current_user.get("full_name", "")
+    created_at = diag.get("created_at", datetime.now(timezone.utc).isoformat())[:19].replace("T", " ")
+    score = diag.get("score_global", 0)
+    total_q = diag.get("total_questions", 0)
+    total_r = diag.get("total_risques", 0)
+
+    story.append(Paragraph("Auto-Diagnostic Risques & Durabilite", styles["H1"]))
+    story.append(Paragraph(f"{coop_name} - Genere le {created_at} - ARS 1000 Chapitre 6.1", styles["Sub"]))
+    story.append(HRFlowable(width="100%", thickness=1, color=GOLD, spaceBefore=2, spaceAfter=10))
+
+    # Headline box
+    score_color = "#10B981" if score >= 70 else ("#F59E0B" if score >= 40 else "#EF4444")
+    headline = Table([[
+        Paragraph(f'<font size="24" color="{score_color}"><b>{score}%</b></font>', styles["Body"]),
+        Paragraph(f'<b>Score Global</b><br/>{total_r} risque(s) identifie(s) sur {total_q} questions', styles["Body"]),
+    ]], colWidths=[3.5 * cm, 14 * cm])
+    headline.setStyle(TableStyle([
+        ("BOX", (0, 0), (-1, -1), 1, BORDER),
+        ("BACKGROUND", (0, 0), (0, 0), LIGHT),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 12),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+        ("LEFTPADDING", (0, 0), (-1, -1), 14),
+    ]))
+    story.append(headline)
+
+    # Score par theme
+    story.append(Paragraph("Score par theme", styles["Sec"]))
+    theme_rows = [[
+        Paragraph("<b>Theme</b>", styles["Cell"]),
+        Paragraph("<b>Questions</b>", styles["Cell"]),
+        Paragraph("<b>Risques</b>", styles["Cell"]),
+        Paragraph("<b>Score</b>", styles["Cell"]),
+    ]]
+    for theme, s in (diag.get("score_par_theme") or {}).items():
+        theme_rows.append([
+            Paragraph(theme, styles["Cell"]),
+            Paragraph(str(s.get("total", 0)), styles["Cell"]),
+            Paragraph(str(s.get("a_risque", 0)), styles["Cell"]),
+            Paragraph(f"{s.get('score', 0)}%", styles["Cell"]),
+        ])
+    t = Table(theme_rows, colWidths=[9 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm])
+    t.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), FOREST),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("BOX", (0, 0), (-1, -1), 0.5, BORDER),
+        ("INNERGRID", (0, 0), (-1, -1), 0.3, BORDER),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT]),
+    ]))
+    story.append(t)
+
+    # Risques identifies
+    risques = diag.get("risques_identifies") or []
+    if risques:
+        story.append(PageBreak())
+        story.append(Paragraph(f"Risques identifies ({len(risques)})", styles["Sec"]))
+        rows = [[
+            Paragraph("<b>#</b>", styles["Cell"]),
+            Paragraph("<b>Titre / Categorie</b>", styles["Cell"]),
+            Paragraph("<b>G</b>", styles["Cell"]),
+            Paragraph("<b>F</b>", styles["Cell"]),
+            Paragraph("<b>Actions suggerees</b>", styles["Cell"]),
+        ]]
+        for i, r in enumerate(risques, 1):
+            actions_str = "<br/>".join(f"- {a}" for a in (r.get("actions_suggerees") or []))
+            rows.append([
+                Paragraph(str(i), styles["Cell"]),
+                Paragraph(f"<b>{r.get('titre', '')}</b><br/><font size=7 color='#6B7280'>{r.get('categorie', '')}</font>", styles["Cell"]),
+                Paragraph(str(r.get("gravite_suggeree", "")), styles["Cell"]),
+                Paragraph(str(r.get("frequence_suggeree", "")), styles["Cell"]),
+                Paragraph(actions_str or "-", styles["Cell"]),
+            ])
+        rt = Table(rows, colWidths=[0.8 * cm, 6 * cm, 1 * cm, 1 * cm, 8.7 * cm])
+        rt.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), FOREST),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("BOX", (0, 0), (-1, -1), 0.5, BORDER),
+            ("INNERGRID", (0, 0), (-1, -1), 0.3, BORDER),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT]),
+        ]))
+        story.append(rt)
+
+    # Signature footer
+    story.append(Spacer(1, 1 * cm))
+    story.append(HRFlowable(width="100%", thickness=0.3, color=BORDER))
+    story.append(Paragraph(
+        f"<b>Cooperative :</b> {coop_name} &nbsp;&nbsp; <b>Responsable :</b> {diag.get('created_by', '-')} &nbsp;&nbsp; <b>Date :</b> {created_at}",
+        styles["Small"],
+    ))
+    story.append(Paragraph(
+        "Signature du responsable HSE / Coordinateur ARS 1000 : __________________________    Cachet : __________________________",
+        styles["Small"],
+    ))
+    story.append(Paragraph(
+        "Diagnostic genere selon le referentiel ARS 1000 Cacao Durable - Chapitre 6.1 Processus d'evaluation des risques.",
+        styles["Small"],
+    ))
+
+    doc.build(story)
+    buf.seek(0)
+    filename = f"auto_diagnostic_{diagnostic_id[:8]}.pdf"
+    return StreamingResponse(
+        buf, media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/auto-diagnostic/{diagnostic_id}/excel")
+async def export_diagnostic_excel(diagnostic_id: str, current_user: dict = Depends(get_current_user)):
+    """Excel d'un auto-diagnostic (reponses + risques identifies)."""
+    verify_cooperative(current_user)
+    coop_id = get_coop_id(current_user)
+    diag = await db.risques_auto_diagnostic.find_one({"diagnostic_id": diagnostic_id, "coop_id": coop_id})
+    if not diag:
+        raise HTTPException(status_code=404, detail="Diagnostic non trouve")
+
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    wb = Workbook()
+    hf = PatternFill(start_color="1A3622", end_color="1A3622", fill_type="solid")
+    sf = PatternFill(start_color="D4AF37", end_color="D4AF37", fill_type="solid")
+    hfont = Font(color="FFFFFF", bold=True, size=10)
+    sfont = Font(color="000000", bold=True, size=9)
+    tb = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+    center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+    coop_name = current_user.get("coop_name") or current_user.get("full_name", "")
+
+    # Sheet 1: Resume
+    ws = wb.active
+    ws.title = "Resume"
+    ws.column_dimensions["A"].width = 45
+    ws.column_dimensions["B"].width = 30
+    ws["A1"] = "AUTO-DIAGNOSTIC RISQUES & DURABILITE"
+    ws["A1"].font = Font(bold=True, size=14, color="1A3622")
+    ws.merge_cells("A1:B1")
+    info = [
+        ("Cooperative", coop_name),
+        ("Date", diag.get("created_at", "")[:19].replace("T", " ")),
+        ("Responsable", diag.get("created_by", "")),
+        ("Score global", f"{diag.get('score_global', 0)}%"),
+        ("Total questions", diag.get("total_questions", 0)),
+        ("Total risques identifies", diag.get("total_risques", 0)),
+    ]
+    for i, (k, v) in enumerate(info, 3):
+        ws.cell(row=i, column=1, value=k).font = Font(bold=True)
+        ws.cell(row=i, column=2, value=v)
+
+    # Sheet 2: Scores par theme
+    ws2 = wb.create_sheet("Scores par theme")
+    headers_t = ["Theme", "Total questions", "A risque", "Score %"]
+    for i, h in enumerate(headers_t, 1):
+        cell = ws2.cell(row=1, column=i, value=h)
+        cell.fill = hf
+        cell.font = hfont
+        cell.border = tb
+        cell.alignment = center
+    for row, (theme, s) in enumerate((diag.get("score_par_theme") or {}).items(), 2):
+        ws2.cell(row=row, column=1, value=theme).border = tb
+        ws2.cell(row=row, column=2, value=s.get("total", 0)).border = tb
+        ws2.cell(row=row, column=3, value=s.get("a_risque", 0)).border = tb
+        ws2.cell(row=row, column=4, value=s.get("score", 0)).border = tb
+    for col_letter in ["A", "B", "C", "D"]:
+        ws2.column_dimensions[col_letter].width = 25 if col_letter == "A" else 15
+
+    # Sheet 3: Risques identifies
+    ws3 = wb.create_sheet("Risques identifies")
+    headers_r = ["#", "Titre", "Categorie", "Question source", "Gravite", "Frequence", "Actions suggerees"]
+    for i, h in enumerate(headers_r, 1):
+        cell = ws3.cell(row=1, column=i, value=h)
+        cell.fill = hf
+        cell.font = hfont
+        cell.border = tb
+        cell.alignment = center
+    for row, r in enumerate(diag.get("risques_identifies") or [], 2):
+        actions_str = " | ".join(r.get("actions_suggerees") or [])
+        values = [
+            row - 1,
+            r.get("titre", ""),
+            r.get("categorie", ""),
+            r.get("question", ""),
+            r.get("gravite_suggeree", ""),
+            r.get("frequence_suggeree", ""),
+            actions_str,
+        ]
+        for i, v in enumerate(values, 1):
+            cell = ws3.cell(row=row, column=i, value=v)
+            cell.border = tb
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+    widths = {"A": 6, "B": 35, "C": 20, "D": 40, "E": 10, "F": 12, "G": 50}
+    for col_letter, w in widths.items():
+        ws3.column_dimensions[col_letter].width = w
+
+    # Sheet 4: Reponses detaillees
+    ws4 = wb.create_sheet("Reponses")
+    hdrs = ["Question ID", "Reponse"]
+    for i, h in enumerate(hdrs, 1):
+        cell = ws4.cell(row=1, column=i, value=h)
+        cell.fill = sf
+        cell.font = sfont
+        cell.border = tb
+    reponses = diag.get("reponses") or {}
+    for row, (qid, rep) in enumerate(reponses.items(), 2):
+        ws4.cell(row=row, column=1, value=qid).border = tb
+        ws4.cell(row=row, column=2, value=rep).border = tb
+    ws4.column_dimensions["A"].width = 20
+    ws4.column_dimensions["B"].width = 10
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    filename = f"auto_diagnostic_{diagnostic_id[:8]}.xlsx"
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

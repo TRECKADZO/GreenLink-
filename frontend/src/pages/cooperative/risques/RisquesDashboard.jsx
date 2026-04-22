@@ -628,10 +628,48 @@ const AutoDiagnosticModal = ({ onClose, onFinish }) => {
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-3 pt-2 border-t border-[#E5E5E0]">
-                  <button onClick={onClose} className="flex-1 px-4 py-2.5 text-sm border border-[#E5E5E0] rounded-md hover:bg-[#F3F4F6]">Fermer</button>
+                <div className="flex gap-3 pt-2 border-t border-[#E5E5E0] flex-wrap">
+                  <button onClick={onClose} className="flex-1 min-w-[100px] px-4 py-2.5 text-sm border border-[#E5E5E0] rounded-md hover:bg-[#F3F4F6]">Fermer</button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const token = tokenService.getToken();
+                        const res = await fetch(`${API}/api/risques/auto-diagnostic/${result.diagnostic_id}/pdf`, { headers: { Authorization: `Bearer ${token}` } });
+                        if (!res.ok) throw new Error();
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = `auto_diagnostic_${result.diagnostic_id.slice(0,8)}.pdf`; a.click();
+                        URL.revokeObjectURL(url);
+                        toast.success('PDF telecharge');
+                      } catch { toast.error('Erreur export PDF'); }
+                    }}
+                    className="flex-1 min-w-[100px] px-4 py-2.5 text-sm bg-[#D4AF37] text-[#1A3622] rounded-md hover:bg-[#C49B2F] font-medium"
+                    data-testid="btn-export-diagnostic-pdf"
+                  >
+                    Exporter PDF
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const token = tokenService.getToken();
+                        const res = await fetch(`${API}/api/risques/auto-diagnostic/${result.diagnostic_id}/excel`, { headers: { Authorization: `Bearer ${token}` } });
+                        if (!res.ok) throw new Error();
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = `auto_diagnostic_${result.diagnostic_id.slice(0,8)}.xlsx`; a.click();
+                        URL.revokeObjectURL(url);
+                        toast.success('Excel telecharge');
+                      } catch { toast.error('Erreur export Excel'); }
+                    }}
+                    className="flex-1 min-w-[100px] px-4 py-2.5 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium"
+                    data-testid="btn-export-diagnostic-excel"
+                  >
+                    Exporter Excel
+                  </button>
                   {result.risques_identifies?.length > 0 && (
-                    <button onClick={handleGenerate} disabled={generating} className="flex-1 px-4 py-2.5 text-sm bg-[#1A3622] text-white rounded-md hover:bg-[#112417] font-medium disabled:opacity-50" data-testid="btn-generer-risques">
+                    <button onClick={handleGenerate} disabled={generating} className="flex-1 min-w-[150px] px-4 py-2.5 text-sm bg-[#1A3622] text-white rounded-md hover:bg-[#112417] font-medium disabled:opacity-50" data-testid="btn-generer-risques">
                       {generating ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : `Generer ${result.risques_identifies.length} fiche(s) risque`}
                     </button>
                   )}
