@@ -35,6 +35,8 @@ const PDCStepperPage = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [activeFiche, setActiveFiche] = useState(0);
   const [expandedSections, setExpandedSections] = useState({});
+  // Active year per fiche (6, 7, 8) - shared across fiches, default = null => uses annee_depart
+  const [activePlanYear, setActivePlanYear] = useState(null);
 
   const userType = user?.user_type || '';
   const isCoopOrAdmin = ['cooperative', 'admin', 'super_admin'].includes(userType);
@@ -68,6 +70,14 @@ const PDCStepperPage = () => {
   }, [id]);
 
   useEffect(() => { loadPdc(); }, [loadPdc]);
+
+  // Ensure annee_depart is set on first edit (Step 3 planning)
+  useEffect(() => {
+    if (pdc && !pdc.step3?.fiche6?.annee_depart && canEditStep3 && !readOnly) {
+      updateField('step3', 'fiche6', 'annee_depart', new Date().getFullYear());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdc?._id]);
 
   const saveStep = async (stepNum) => {
     setSaving(true);
@@ -245,6 +255,38 @@ const PDCStepperPage = () => {
       step[ficheKey] = fiche;
       return { ...prev, [stepKey]: step };
     });
+  };
+
+  // Year-scoped update for Step 3 (fiche6/7/8 planning)
+  const updateYearedArray = (ficheKey, year, arrayKey, value) => {
+    setPdc(prev => {
+      const step = { ...prev.step3 };
+      const fiche = { ...(step[ficheKey] || {}) };
+      const annees = { ...(fiche.annees || {}) };
+      const yearData = { ...(annees[year] || {}) };
+      yearData[arrayKey] = value;
+      annees[year] = yearData;
+      fiche.annees = annees;
+      step[ficheKey] = fiche;
+      return { ...prev, step3: step };
+    });
+  };
+
+  const getPlanningYears = () => {
+    const start = parseInt(pdc?.step3?.fiche6?.annee_depart, 10) || new Date().getFullYear();
+    return [start, start + 1, start + 2, start + 3, start + 4];
+  };
+
+  const getCurrentPlanYear = () => {
+    const years = getPlanningYears();
+    if (activePlanYear && years.includes(activePlanYear)) return activePlanYear;
+    return years[0];
+  };
+
+  const getYearedRows = (ficheKey, year, arrayKey) => {
+    const fiche = pdc?.step3?.[ficheKey] || {};
+    const annees = fiche.annees || {};
+    return annees[year]?.[arrayKey] || [];
   };
 
   const toggleSection = (key) => {
@@ -1151,6 +1193,60 @@ const PDCStepperPage = () => {
     'Axe 6 : Gestion financiere de l\'exploitation',
   ];
 
+  const AXE_OPTIONS = [
+    ...AXES_STRATEGIQUES.map(a => ({ value: a, label: a })),
+    { value: '__custom__', label: '+ Axe personnalise...' },
+  ];
+
+  // Starting-year selector (2020-2030) for PDC planning
+  const PlanYearSelector = ({ compact = false }) => {
+    const years = getPlanningYears();
+    const current = getCurrentPlanYear();
+    return (
+      <div className={`flex flex-wrap items-center gap-3 ${compact ? '' : 'bg-[#F5F7F2] border border-[#E5E5E0] rounded-lg p-3'}`}>
+        {!compact && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-[#1A3622]">Annee de depart PDC :</span>
+            <select
+              value={parseInt(pdc?.step3?.fiche6?.annee_depart, 10) || new Date().getFullYear()}
+              onChange={(e) => updateField('step3', 'fiche6', 'annee_depart', parseInt(e.target.value, 10))}
+              disabled={!canEditStep3 || readOnly}
+              className="border border-[#E5E5E0] rounded px-2 py-1 text-xs bg-white"
+              data-testid="annee-depart-select"
+            >
+              {Array.from({ length: 11 }, (_, i) => 2020 + i).map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="flex items-center gap-1 ml-auto">
+          <span className="text-xs font-semibold text-[#1A3622] mr-2">Annee active :</span>
+          {years.map((y, idx) => {
+            const isActive = y === current;
+            return (
+              <button
+                key={y}
+                type="button"
+                onClick={() => setActivePlanYear(y)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-colors ${
+                  isActive
+                    ? 'bg-[#1A3622] text-white border-[#1A3622]'
+                    : 'bg-white text-[#1A3622] border-[#E5E5E0] hover:bg-[#F5F7F2]'
+                }`}
+                data-testid={`plan-year-${y}`}
+              >
+                A{idx + 1} · {y}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Ensure annee_depart is set on first edit
+
   // Auto-fill Step 3 summary from Step 1 data
   const getStep3Summary = () => {
     const s1 = pdc.step1 || {};
@@ -1331,126 +1427,216 @@ const PDCStepperPage = () => {
   };
 
   const renderFiche6 = () => {
-    const f = pdc.step3?.fiche6 || {};
     const disabled = !canEditStep3;
-
-    const defaultAxes = AXES_STRATEGIQUES.map(a => ({
-      axe: a, objectifs: '', activites: '', cout: '', a1: '', a2: '', a3: '', a4: '', a5: '', responsable: '', partenaires: ''
-    }));
-    const axes = f.axes && f.axes.length > 0 ? f.axes : defaultAxes;
+    const year = getCurrentPlanYear();
+    // Backward-compat: migrate old fiche6.axes into year-scoped storage on first access
+    const yearAxes = getYearedRows('fiche6', year, 'axes');
+    const legacyAxes = pdc.step3?.fiche6?.axes || [];
+    const axes = yearAxes.length > 0 ? yearAxes : legacyAxes;
 
     return (
       <div className="space-y-4" data-testid="fiche-6">
         {activeStep === 3 && activeFiche === 0 && renderStep3Summary()}
-        <SectionCard title="FICHE 6 : MATRICE DE PLANIFICATION STRATEGIQUE" sectionKey="f6-matrice">
-          <p className="text-xs text-[#6B7280] mb-3">Annexe 3 : Outils de planification. Definissez les axes strategiques, objectifs et activites du PDC. Periode sur 5 ans (A1 a A5).</p>
+        <PlanYearSelector />
+        <SectionCard title={`FICHE 6 : MATRICE DE PLANIFICATION STRATEGIQUE - Annee ${year}`} sectionKey="f6-matrice">
+          <p className="text-xs text-[#6B7280] mb-3">
+            Annexe 3 : Selectionnez les axes strategiques a realiser en {year}. Une ligne par axe.
+            Utilisez le menu deroulant pour choisir parmi les 6 axes officiels ou ajouter un axe personnalise.
+          </p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'axe', label: 'Axes strategiques', width: '200px' },
-              { key: 'objectifs', label: 'Objectifs', width: '150px' },
-              { key: 'activites', label: 'Activites', width: '150px' },
-              { key: 'cout', label: 'Cout', type: 'number', width: '90px' },
-              { key: 'a1', label: 'A1', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a2', label: 'A2', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a3', label: 'A3', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a4', label: 'A4', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'a5', label: 'A5', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'responsable', label: 'Responsable', width: '110px' },
-              { key: 'partenaires', label: 'Partenaires', width: '110px' },
+              { key: 'axe', label: 'Axe strategique', type: 'select', options: AXE_OPTIONS, width: '240px' },
+              { key: 'axe_custom', label: 'Libelle (si personnalise)', width: '180px' },
+              { key: 'objectifs', label: 'Objectifs', width: '170px' },
+              { key: 'activites', label: 'Activites', width: '170px' },
+              { key: 'cout', label: 'Cout (FCFA)', type: 'number', width: '110px' },
+              { key: 'responsable', label: 'Responsable', width: '120px' },
+              { key: 'partenaires', label: 'Partenaires', width: '120px' },
             ]}
             rows={axes}
-            onChange={v => updateArray('step3', 'fiche6', 'axes', v)}
-            addLabel="Ajouter un axe/activite"
+            onChange={v => updateYearedArray('fiche6', year, 'axes', v)}
+            addLabel="Ajouter un axe"
           />
-          <p className="text-[10px] text-[#6B7280] mt-2 italic">Periode : A1 = Annee 1, A2 = Annee 2, ..., A5 = Annee 5</p>
+          <p className="text-[10px] text-[#6B7280] mt-2 italic">
+            Ces axes seront automatiquement reportes dans la Fiche 7 de {year}.
+          </p>
         </SectionCard>
       </div>
     );
   };
 
   const renderFiche7 = () => {
-    const f = pdc.step3?.fiche7 || {};
     const disabled = !canEditStep3;
+    const year = getCurrentPlanYear();
+    // Read axes from Fiche 6 of same year
+    const f6Axes = getYearedRows('fiche6', year, 'axes');
+    const legacyF6 = pdc.step3?.fiche6?.axes || [];
+    const sourceAxes = f6Axes.length > 0 ? f6Axes : legacyF6;
+    const existingActions = getYearedRows('fiche7', year, 'actions');
 
-    const defaultActions = AXES_STRATEGIQUES.map(a => ({
-      axe: a, activites: '', sous_activites: '', indicateurs: '', t1: '', t2: '', t3: '', t4: '', execution: '', appui: '', cout: ''
-    }));
-    const actions = f.actions && f.actions.length > 0 ? f.actions : defaultActions;
+    // Auto-derive action rows from Fiche 6 axes (one line per axe)
+    const axeLabelFor = (a) => (a.axe === '__custom__' ? (a.axe_custom || 'Axe personnalise') : a.axe);
+    const defaultActions = sourceAxes.map(a => {
+      const label = axeLabelFor(a);
+      const prev = existingActions.find(x => x.axe === label);
+      return prev || {
+        axe: label,
+        activites: a.activites || '',
+        sous_activites: '',
+        indicateurs: '',
+        t1: '', t2: '', t3: '', t4: '',
+        execution: a.responsable || '',
+        appui: a.partenaires || '',
+        cout: a.cout || '',
+      };
+    });
+    // Merge with any extra manually-added actions that don't match an axe
+    const extras = existingActions.filter(x => !sourceAxes.some(a => axeLabelFor(a) === x.axe));
+    const actions = [...defaultActions, ...extras];
 
     return (
       <div className="space-y-4" data-testid="fiche-7">
-        <SectionCard title="FICHE 7 : MATRICE DU PROGRAMME ANNUEL D'ACTION" sectionKey="f7-programme">
-          <p className="text-xs text-[#6B7280] mb-3">Annexe 3 : Outils de planification. Programme annuel avec activites, sous-activites, indicateurs, chronogramme (T1-T4), execution, appui et cout.</p>
+        <PlanYearSelector />
+        <SectionCard title={`FICHE 7 : MATRICE DU PROGRAMME ANNUEL D'ACTION - Annee ${year}`} sectionKey="f7-programme">
+          {sourceAxes.length === 0 && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded p-2 mb-3">
+              Aucun axe defini pour {year} en Fiche 6. Definissez d'abord les axes strategiques.
+            </div>
+          )}
+          <p className="text-xs text-[#6B7280] mb-3">
+            Programme annuel pour {year}. Colonne <b>Axe</b> auto-reportee depuis la Fiche 6. Chronogramme trimestriel T1-T4.
+          </p>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'axe', label: 'Axes strategiques', width: '160px' },
-              { key: 'activites', label: 'ACTIVITES', width: '140px' },
-              { key: 'sous_activites', label: 'SOUS-ACTIVITES', width: '140px' },
-              { key: 'indicateurs', label: 'INDICATEURS', width: '120px' },
-              { key: 't1', label: 'T1', type: 'select', width: '45px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't2', label: 'T2', type: 'select', width: '45px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't3', label: 'T3', type: 'select', width: '45px', options: [{ value: 'x', label: 'X' }] },
-              { key: 't4', label: 'T4', type: 'select', width: '45px', options: [{ value: 'x', label: 'X' }] },
-              { key: 'execution', label: 'Execution', width: '95px' },
-              { key: 'appui', label: 'Appui', width: '95px' },
-              { key: 'cout', label: 'COUT', type: 'number', width: '90px' },
+              { key: 'axe', label: 'Axe strategique', width: '180px', readOnly: true },
+              { key: 'activites', label: 'ACTIVITES', width: '150px' },
+              { key: 'sous_activites', label: 'SOUS-ACTIVITES', width: '150px' },
+              { key: 'indicateurs', label: 'INDICATEURS', width: '130px' },
+              { key: 't1', label: 'T1', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't2', label: 'T2', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't3', label: 'T3', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 't4', label: 'T4', type: 'select', width: '50px', options: [{ value: 'x', label: 'X' }] },
+              { key: 'execution', label: 'Execution', width: '110px' },
+              { key: 'appui', label: 'Appui', width: '110px' },
+              { key: 'cout', label: 'COUT (FCFA)', type: 'number', width: '110px' },
             ]}
             rows={actions}
-            onChange={v => updateArray('step3', 'fiche7', 'actions', v)}
-            addLabel="Ajouter une action"
+            onChange={v => updateYearedArray('fiche7', year, 'actions', v)}
+            addLabel="Ajouter une action complementaire"
           />
-          <p className="text-[10px] text-[#6B7280] mt-2 italic">CHRONOGRAMME : T1 = Trimestre 1, T2 = Trimestre 2, T3 = Trimestre 3, T4 = Trimestre 4</p>
+          <p className="text-[10px] text-[#6B7280] mt-2 italic">T1 a T4 : Trimestres 1 a 4 de {year}.</p>
         </SectionCard>
       </div>
     );
   };
 
   const renderFiche8 = () => {
-    const f = pdc.step3?.fiche8 || {};
     const disabled = !canEditStep3;
+    const year = getCurrentPlanYear();
+    const years = getPlanningYears();
+    const yearMoyens = getYearedRows('fiche8', year, 'moyens');
 
     const defaultMoyens = [
-      { moyen: '--- INVESTISSEMENT ---', unite: '', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: 'Atomiseur', unite: 'unite', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: 'Pulverisateur', unite: 'unite', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: 'EPI', unite: 'kit', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: '--- INTRANTS ---', unite: '', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: 'Engrais', unite: 'kg', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: 'Insecticide', unite: 'litre', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: 'Fongicide', unite: 'litre', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: 'Plants de cacao', unite: 'plants', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: '--- MAIN D\'OEUVRE ---', unite: '', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: 'M.O. permanente', unite: 'pers', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
-      { moyen: 'M.O. occasionnelle', unite: 'pers', a1_qte: '', a1_cout: '', a2_qte: '', a2_cout: '', a3_qte: '', a3_cout: '', a4_qte: '', a4_cout: '', a5_qte: '', a5_cout: '' },
+      { moyen: '--- INVESTISSEMENT ---', unite: '', qte: '', cout: '' },
+      { moyen: 'Atomiseur', unite: 'unite', qte: '', cout: '' },
+      { moyen: 'Pulverisateur', unite: 'unite', qte: '', cout: '' },
+      { moyen: 'EPI', unite: 'kit', qte: '', cout: '' },
+      { moyen: '--- INTRANTS ---', unite: '', qte: '', cout: '' },
+      { moyen: 'Engrais', unite: 'kg', qte: '', cout: '' },
+      { moyen: 'Insecticide', unite: 'litre', qte: '', cout: '' },
+      { moyen: 'Fongicide', unite: 'litre', qte: '', cout: '' },
+      { moyen: 'Plants de cacao', unite: 'plants', qte: '', cout: '' },
+      { moyen: '--- MAIN D\'OEUVRE ---', unite: '', qte: '', cout: '' },
+      { moyen: 'M.O. permanente', unite: 'pers', qte: '', cout: '' },
+      { moyen: 'M.O. occasionnelle', unite: 'pers', qte: '', cout: '' },
     ];
-    const moyens = f.moyens && f.moyens.length > 0 ? f.moyens : defaultMoyens;
+    const moyens = yearMoyens.length > 0 ? yearMoyens : defaultMoyens;
+
+    // Totals per year (for recap)
+    const totalForYear = (y) => {
+      const rows = getYearedRows('fiche8', y, 'moyens');
+      return rows.reduce((sum, r) => sum + (parseFloat(r.cout) || 0) * (parseFloat(r.qte) || 1), 0);
+    };
+    const yearTotal = moyens.reduce((sum, r) => sum + (parseFloat(r.cout) || 0) * (parseFloat(r.qte) || 1), 0);
+    const grandTotal = years.reduce((sum, y) => sum + totalForYear(y), 0);
+
+    // Axes & actions context from same year for guidance
+    const f6Axes = getYearedRows('fiche6', year, 'axes');
+    const f7Actions = getYearedRows('fiche7', year, 'actions');
 
     return (
       <div className="space-y-4" data-testid="fiche-8">
-        <SectionCard title="FICHE 8 : TABLEAU DE DETERMINATION DES MOYENS ET DES COUTS" sectionKey="f8-moyens">
-          <p className="text-xs text-[#6B7280] mb-3">Annexe 3 : Outils de planification. Estimez les moyens specifiques (investissement, intrants, main d'oeuvre) et couts sur 5 ans.</p>
+        <PlanYearSelector />
+        <SectionCard title={`FICHE 8 : MOYENS ET COUTS - Annee ${year}`} sectionKey="f8-moyens">
+          <p className="text-xs text-[#6B7280] mb-3">
+            Moyens specifiques en lien avec les axes strategiques et le programme annuel de {year}.
+          </p>
+          {(f6Axes.length > 0 || f7Actions.length > 0) && (
+            <div className="bg-[#F5F7F2] border border-[#E5E5E0] rounded-lg p-3 mb-3 text-xs">
+              <p className="font-semibold text-[#1A3622] mb-1">Contexte {year} :</p>
+              <ul className="list-disc list-inside text-[#374151] space-y-0.5">
+                {f6Axes.map((a, i) => {
+                  const label = a.axe === '__custom__' ? (a.axe_custom || 'Axe personnalise') : a.axe;
+                  return <li key={`ctx-${i}-${label.slice(0, 15)}`}>{label} {a.cout ? `(${a.cout} FCFA budget)` : ''}</li>;
+                })}
+              </ul>
+            </div>
+          )}
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[
-              { key: 'moyen', label: 'Moyens specifiques', width: '160px' },
-              { key: 'unite', label: 'Unites', width: '70px' },
-              { key: 'a1_qte', label: 'Annee 1 Qte', type: 'number', width: '70px' },
-              { key: 'a1_cout', label: 'Annee 1 Cout', type: 'number', width: '80px' },
-              { key: 'a2_qte', label: 'Annee 2 Qte', type: 'number', width: '70px' },
-              { key: 'a2_cout', label: 'Annee 2 Cout', type: 'number', width: '80px' },
-              { key: 'a3_qte', label: 'Annee 3 Qte', type: 'number', width: '70px' },
-              { key: 'a3_cout', label: 'Annee 3 Cout', type: 'number', width: '80px' },
-              { key: 'a4_qte', label: 'Annee 4 Qte', type: 'number', width: '70px' },
-              { key: 'a4_cout', label: 'Annee 4 Cout', type: 'number', width: '80px' },
-              { key: 'a5_qte', label: 'Annee 5 Qte', type: 'number', width: '70px' },
-              { key: 'a5_cout', label: 'Annee 5 Cout', type: 'number', width: '80px' },
+              { key: 'moyen', label: 'Moyen specifique', width: '200px' },
+              { key: 'unite', label: 'Unite', width: '80px' },
+              { key: 'qte', label: `Qte ${year}`, type: 'number', width: '90px' },
+              { key: 'cout', label: `Cout unitaire ${year} (FCFA)`, type: 'number', width: '140px' },
             ]}
             rows={moyens}
-            onChange={v => updateArray('step3', 'fiche8', 'moyens', v)}
+            onChange={v => updateYearedArray('fiche8', year, 'moyens', v)}
             addLabel="Ajouter un moyen"
           />
+          <div className="mt-3 flex justify-end items-center gap-2 text-sm">
+            <span className="text-[#6B7280]">Total {year} :</span>
+            <span className="font-bold text-[#1A3622] text-base" data-testid={`f8-total-${year}`}>
+              {yearTotal.toLocaleString('fr-FR')} FCFA
+            </span>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="RECAPITULATIF DES COUTS SUR 5 ANS" sectionKey="f8-recap" defaultOpen={false}>
+          <div className="overflow-x-auto border border-[#E5E5E0] rounded-md">
+            <table className="w-full text-sm">
+              <thead className="bg-[#E8F0EA] text-[#1A3622]">
+                <tr>
+                  <th className="text-left px-3 py-2 text-xs font-semibold">Periode</th>
+                  <th className="text-right px-3 py-2 text-xs font-semibold">Nb moyens</th>
+                  <th className="text-right px-3 py-2 text-xs font-semibold">Total (FCFA)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {years.map((y, idx) => {
+                  const rows = getYearedRows('fiche8', y, 'moyens');
+                  return (
+                    <tr key={y} className="border-b border-[#E5E5E0] last:border-0 hover:bg-[#FAF9F6]">
+                      <td className="px-3 py-2 text-[#374151]">A{idx + 1} · {y}</td>
+                      <td className="px-3 py-2 text-right text-[#374151]">{rows.length}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-[#1A3622]" data-testid={`f8-recap-${y}`}>
+                        {totalForYear(y).toLocaleString('fr-FR')}
+                      </td>
+                    </tr>
+                  );
+                })}
+                <tr className="bg-[#F5F7F2] border-t-2 border-[#1A3622]">
+                  <td className="px-3 py-2 font-bold text-[#1A3622]">GRAND TOTAL</td>
+                  <td className="px-3 py-2" />
+                  <td className="px-3 py-2 text-right font-bold text-[#1A3622] text-base" data-testid="f8-grand-total">
+                    {grandTotal.toLocaleString('fr-FR')} FCFA
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </SectionCard>
       </div>
     );

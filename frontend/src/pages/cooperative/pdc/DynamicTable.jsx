@@ -45,7 +45,7 @@ const DynamicTable = ({ columns, rows, onChange, readOnly = false, addLabel = 'A
               <tr key={`row-${rowIdx}`} className="border-b border-[#E5E5E0] last:border-0 hover:bg-[#FAF9F6]">
                 {columns.map(col => (
                   <td key={col.key} className="px-2 py-1.5">
-                    {readOnly ? (
+                    {readOnly || col.readOnly ? (
                       <span className="text-sm text-[#374151]">{row[col.key] || '-'}</span>
                     ) : col.type === 'select' ? (
                       <select
