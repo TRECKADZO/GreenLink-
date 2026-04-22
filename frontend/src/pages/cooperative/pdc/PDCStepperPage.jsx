@@ -363,9 +363,23 @@ const PDCStepperPage = () => {
     const enq = f.enqueteur || {};
     const prod = f.producteur || {};
     const disabled = !canEditStep1;
+    const prefilled = f._prefilled_from_adhesion;
 
     return (
       <div className="space-y-4" data-testid="fiche-1">
+        {prefilled && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start gap-2 text-xs text-emerald-800" data-testid="prefilled-banner">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600" />
+            <div>
+              <p className="font-semibold">Pre-remplissage automatique depuis la fiche d'adhesion</p>
+              <p className="text-emerald-700 mt-0.5">
+                Les informations du producteur, du menage, des cultures et de la production ont ete
+                auto-completees depuis le bulletin d'adhesion
+                {f._code_membre ? <> (<b>{f._code_membre}</b>)</> : null}. Verifiez et modifiez au besoin.
+              </p>
+            </div>
+          </div>
+        )}
         <SectionCard title="Informations de l'enqueteur" sectionKey="f1-enq">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <FormField label="Date" type="date" value={enq.date} onChange={v => updateField('step1', 'fiche1', 'enqueteur.date', v)} disabled={disabled} />

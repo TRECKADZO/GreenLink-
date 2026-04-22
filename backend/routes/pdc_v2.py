@@ -71,6 +71,167 @@ def get_user_id(user: dict) -> str:
     return str(user["_id"])
 
 
+async def find_member_adhesion(farmer_id: str, farmer_name: str = "", phone: str = "", coop_id: str = ""):
+    """
+    Lookup an existing adhesion (membres_adhesions) that matches the farmer.
+    Tries in priority: farmer_id -> phone -> full_name within same coop.
+    Returns the adhesion doc or None.
+    """
+    # Try direct ID match (member._id as string, or adhesion linked by farmer_id field)
+    try:
+        adh = await db.membres_adhesions.find_one({"farmer_id": farmer_id})
+        if adh:
+            return adh
+    except Exception:
+        pass
+
+    # If farmer_id looks like ObjectId, try member_id
+    try:
+        adh = await db.membres_adhesions.find_one({"member_id": farmer_id})
+        if adh:
+            return adh
+    except Exception:
+        pass
+
+    # Phone match within coop
+    if phone:
+        query = {"$or": [{"phone_number": phone}, {"contact": phone}]}
+        if coop_id:
+            query["coop_id"] = coop_id
+        adh = await db.membres_adhesions.find_one(query)
+        if adh:
+            return adh
+
+    # Name match within coop (exact, case-insensitive)
+    if farmer_name:
+        query = {"full_name": {"$regex": f"^{farmer_name.strip()}$", "$options": "i"}}
+        if coop_id:
+            query["coop_id"] = coop_id
+        adh = await db.membres_adhesions.find_one(query)
+        if adh:
+            return adh
+
+    return None
+
+
+def build_prefilled_step1(adhesion: dict) -> dict:
+    """Map adhesion fields into PDC Step 1 structure (fiche1-4)."""
+    a = adhesion or {}
+
+    producteur = {
+        "nom": a.get("full_name", ""),
+        "code_national": a.get("code_membre", "") or a.get("cni_number", ""),
+        "delegation_regionale": a.get("loc_region", "") or a.get("zone", ""),
+        "departement": a.get("loc_departement", "") or a.get("department", ""),
+        "sous_prefecture": a.get("loc_sous_prefecture", ""),
+        "village": a.get("village", "") or a.get("localite", ""),
+        "campement": a.get("campement", ""),
+        "telephone": a.get("contact", "") or a.get("phone_number", ""),
+        "date_naissance": a.get("date_naissance", ""),
+        "sexe": a.get("sexe", ""),
+        "cni": a.get("cni_number", ""),
+        "section": a.get("section", ""),
+        "numero_enregistrement": a.get("numero_enregistrement", ""),
+    }
+
+    # Household members
+    membres_menage = []
+    for m in a.get("membres_menage", []) or []:
+        if not isinstance(m, dict):
+            continue
+        membres_menage.append({
+            "nom": m.get("full_name", "") or m.get("nom", ""),
+            "date_naissance": m.get("date_naissance", ""),
+            "sexe": m.get("sexe", ""),
+            "statut_famille": m.get("relation", "") or m.get("statut_famille", ""),
+            "scolarise": m.get("scolarise", ""),
+            "travaille_plantation": m.get("travaille_plantation", ""),
+        })
+
+    # Cultures
+    cultures = []
+    if a.get("superficie_ha"):
+        cultures.append({
+            "libelle": a.get("culture", "Cacao"),
+            "superficie_ha": a.get("superficie_ha"),
+        })
+    for ac in (a.get("autres_cultures") or []):
+        if isinstance(ac, dict):
+            cultures.append({
+                "libelle": ac.get("nom", "") or ac.get("libelle", ""),
+                "superficie_ha": ac.get("superficie", "") or ac.get("superficie_ha", ""),
+            })
+        elif isinstance(ac, str):
+            cultures.append({"libelle": ac, "superficie_ha": ""})
+
+    # GPS from adhesion
+    gps = {
+        "latitude": a.get("gps_latitude", ""),
+        "longitude": a.get("gps_longitude", ""),
+        "sous_prefecture": a.get("loc_sous_prefecture", ""),
+    }
+
+    # Production cacao
+    prod_cacao = []
+    if a.get("recolte_precedente_kg") or a.get("volume_vendu_precedent_kg") or a.get("estimation_rendement_kg_ha"):
+        prod_cacao.append({
+            "annee": (a.get("date_audit_interne") or "")[:4],
+            "production_kg": a.get("recolte_precedente_kg", ""),
+            "volume_vendu_kg": a.get("volume_vendu_precedent_kg", ""),
+            "rendement_kg_ha": a.get("estimation_rendement_kg_ha", ""),
+        })
+
+    # Main d'oeuvre (travailleurs)
+    main_oeuvre = []
+    for t in (a.get("travailleurs_liste") or []):
+        if not isinstance(t, dict):
+            continue
+        main_oeuvre.append({
+            "type": "permanent",
+            "nom": t.get("full_name", "") or t.get("nom", ""),
+            "nombre": 1,
+            "statut": t.get("statut", ""),
+        })
+
+    return {
+        "fiche1": {
+            "enqueteur": {},
+            "producteur": producteur,
+            "membres_menage": membres_menage,
+            "_prefilled_from_adhesion": True,
+            "_adhesion_id": a.get("adhesion_id", ""),
+            "_code_membre": a.get("code_membre", ""),
+        },
+        "fiche2": {
+            "coordonnees_gps": gps,
+            "carte_parcelle": {"polygon": [], "arbres_ombrage": [], "map_snapshot": None},
+            "cultures": cultures,
+            "materiels": [],
+            "arbres": [],
+            "code_cacaoyere": a.get("code_cacaoyere", ""),
+            "date_creation_cacaoyere": a.get("date_creation_cacaoyere", ""),
+            "densite_pieds": a.get("densite_pieds", ""),
+            "nombre_parcelles": a.get("nombre_parcelles") or a.get("nombre_champs"),
+        },
+        "fiche3": {
+            "etat_cacaoyere": {},
+            "maladies": [],
+            "etat_sol": {},
+            "recolte_post_recolte": {},
+            "engrais": [],
+            "phytosanitaires": [],
+            "gestion_emballages": "",
+        },
+        "fiche4": {
+            "epargne": [],
+            "production_cacao": prod_cacao,
+            "autres_revenus": [],
+            "depenses": [],
+            "main_oeuvre": main_oeuvre,
+        },
+    }
+
+
 def serialize_pdc_v2(pdc: dict) -> dict:
     result = {
         "id": str(pdc["_id"]),
@@ -150,6 +311,7 @@ async def create_pdc(data: PDCCreateRequest, current_user: dict = Depends(get_cu
 
     # Check farmer exists
     farmer = await db.users.find_one({"_id": ObjectId(farmer_id)})
+    member = None
     if not farmer:
         # Try coop_members
         member = await db.coop_members.find_one({"_id": ObjectId(farmer_id)})
@@ -177,6 +339,24 @@ async def create_pdc(data: PDCCreateRequest, current_user: dict = Depends(get_cu
     if existing:
         raise HTTPException(status_code=409, detail="Un PDC actif existe deja pour ce planteur")
 
+    # Try to auto-prefill Step 1 from the member's adhesion form
+    farmer_phone = (farmer.get("phone_number") if farmer else None) or (member.get("phone_number") if member else "")
+    adhesion = await find_member_adhesion(
+        farmer_id=farmer_id,
+        farmer_name=farmer_name,
+        phone=farmer_phone or "",
+        coop_id=coop_id,
+    )
+    if adhesion:
+        step1 = build_prefilled_step1(adhesion)
+    else:
+        step1 = {
+            "fiche1": {"enqueteur": {}, "producteur": {}, "membres_menage": []},
+            "fiche2": {"coordonnees_gps": {}, "carte_parcelle": {"polygon": [], "arbres_ombrage": [], "map_snapshot": None}, "cultures": [], "materiels": [], "arbres": []},
+            "fiche3": {"etat_cacaoyere": {}, "maladies": [], "etat_sol": {}, "recolte_post_recolte": {}, "engrais": [], "phytosanitaires": [], "gestion_emballages": ""},
+            "fiche4": {"epargne": [], "production_cacao": [], "autres_revenus": [], "depenses": [], "main_oeuvre": []},
+        }
+
     now = datetime.now(timezone.utc).isoformat()
     doc = {
         "farmer_id": farmer_id,
@@ -185,12 +365,8 @@ async def create_pdc(data: PDCCreateRequest, current_user: dict = Depends(get_cu
         "created_by": user_id,
         "current_step": 1,
         "statut": "brouillon",
-        "step1": {
-            "fiche1": {"enqueteur": {}, "producteur": {}, "membres_menage": []},
-            "fiche2": {"coordonnees_gps": {}, "carte_parcelle": {"polygon": [], "arbres_ombrage": [], "map_snapshot": None}, "cultures": [], "materiels": [], "arbres": []},
-            "fiche3": {"etat_cacaoyere": {}, "maladies": [], "etat_sol": {}, "recolte_post_recolte": {}, "engrais": [], "phytosanitaires": [], "gestion_emballages": ""},
-            "fiche4": {"epargne": [], "production_cacao": [], "autres_revenus": [], "depenses": [], "main_oeuvre": []},
-        },
+        "prefilled_from_adhesion": bool(adhesion),
+        "step1": step1,
         "step2": {
             "fiche5": {"analyses": []},
         },
