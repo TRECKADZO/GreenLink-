@@ -37,6 +37,7 @@ const PDCStepperPage = () => {
   const [expandedSections, setExpandedSections] = useState({});
   // Active year per fiche (6, 7, 8) - shared across fiches, default = null => uses annee_depart
   const [activePlanYear, setActivePlanYear] = useState(null);
+  const [syncingAdhesion, setSyncingAdhesion] = useState(false);
 
   const userType = user?.user_type || '';
   const isCoopOrAdmin = ['cooperative', 'admin', 'super_admin'].includes(userType);
@@ -289,6 +290,47 @@ const PDCStepperPage = () => {
     return annees[year]?.[arrayKey] || [];
   };
 
+  const handleSyncToAdhesion = async () => {
+    if (!pdc?._id) return;
+    if (!window.confirm("Synchroniser les donnees du PDC vers la fiche d'adhesion ?\n\nLes champs du producteur, menage, cultures, GPS, production seront mis a jour dans l'adhesion.")) return;
+    setSyncingAdhesion(true);
+    try {
+      const res = await fetch(`${API_URL}/api/pdc-v2/${pdc._id}/sync-to-adhesion`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erreur');
+      toast.success(`Adhesion synchronisee (${data.fields_updated?.length || 0} champs mis a jour)`);
+      await loadPdc();
+    } catch (e) {
+      toast.error(e.message || "Erreur lors de la synchronisation");
+    } finally {
+      setSyncingAdhesion(false);
+    }
+  };
+
+  const handleCopyPreviousYear = () => {
+    const years = getPlanningYears();
+    const current = getCurrentPlanYear();
+    const currentIdx = years.indexOf(current);
+    if (currentIdx <= 0) {
+      toast.error("Pas d'annee precedente a copier (vous etes deja en A1)");
+      return;
+    }
+    const prevYear = years[currentIdx - 1];
+    const prevAxes = getYearedRows('fiche6', prevYear, 'axes');
+    if (prevAxes.length === 0) {
+      toast.error(`Aucun axe planifie en ${prevYear} a copier`);
+      return;
+    }
+    if (!window.confirm(`Copier ${prevAxes.length} axe(s) de ${prevYear} vers ${current} ?\n\nCette operation remplacera les axes existants de ${current}.`)) return;
+    // Deep clone to avoid reference sharing
+    const copied = prevAxes.map(a => ({ ...a }));
+    updateYearedArray('fiche6', current, 'axes', copied);
+    toast.success(`${copied.length} axe(s) copies depuis ${prevYear}`);
+  };
+
   const toggleSection = (key) => {
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -368,16 +410,35 @@ const PDCStepperPage = () => {
     return (
       <div className="space-y-4" data-testid="fiche-1">
         {prefilled && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start gap-2 text-xs text-emerald-800" data-testid="prefilled-banner">
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600" />
-            <div>
-              <p className="font-semibold">Pre-remplissage automatique depuis la fiche d'adhesion</p>
-              <p className="text-emerald-700 mt-0.5">
-                Les informations du producteur, du menage, des cultures et de la production ont ete
-                auto-completees depuis le bulletin d'adhesion
-                {f._code_membre ? <> (<b>{f._code_membre}</b>)</> : null}. Verifiez et modifiez au besoin.
-              </p>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start justify-between gap-3 text-xs text-emerald-800" data-testid="prefilled-banner">
+            <div className="flex items-start gap-2 flex-1">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600" />
+              <div>
+                <p className="font-semibold">Pre-remplissage automatique depuis la fiche d'adhesion</p>
+                <p className="text-emerald-700 mt-0.5">
+                  Les informations du producteur, du menage, des cultures et de la production ont ete
+                  auto-completees depuis le bulletin d'adhesion
+                  {f._code_membre ? <> (<b>{f._code_membre}</b>)</> : null}. Verifiez et modifiez au besoin.
+                </p>
+                {pdc.last_synced_to_adhesion_at && (
+                  <p className="text-emerald-600/80 mt-1 text-[10px]">
+                    Derniere synchronisation vers adhesion : {new Date(pdc.last_synced_to_adhesion_at).toLocaleString('fr-FR')}
+                  </p>
+                )}
+              </div>
             </div>
+            {!readOnly && (
+              <Button
+                size="sm"
+                onClick={handleSyncToAdhesion}
+                disabled={syncingAdhesion}
+                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs whitespace-nowrap"
+                data-testid="btn-sync-to-adhesion"
+              >
+                {syncingAdhesion ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Save className="w-3.5 h-3.5 mr-1" />}
+                Synchroniser vers adhesion
+              </Button>
+            )}
           </div>
         )}
         <SectionCard title="Informations de l'enqueteur" sectionKey="f1-enq">
@@ -1453,10 +1514,24 @@ const PDCStepperPage = () => {
         {activeStep === 3 && activeFiche === 0 && renderStep3Summary()}
         <PlanYearSelector />
         <SectionCard title={`FICHE 6 : MATRICE DE PLANIFICATION STRATEGIQUE - Annee ${year}`} sectionKey="f6-matrice">
-          <p className="text-xs text-[#6B7280] mb-3">
-            Annexe 3 : Selectionnez les axes strategiques a realiser en {year}. Une ligne par axe.
-            Utilisez le menu deroulant pour choisir parmi les 6 axes officiels ou ajouter un axe personnalise.
-          </p>
+          <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+            <p className="text-xs text-[#6B7280] flex-1">
+              Annexe 3 : Selectionnez les axes strategiques a realiser en {year}. Une ligne par axe.
+              Utilisez le menu deroulant pour choisir parmi les 6 axes officiels ou ajouter un axe personnalise.
+            </p>
+            {!disabled && !readOnly && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCopyPreviousYear}
+                className="text-xs whitespace-nowrap border-[#D4AF37] text-[#1A3622] hover:bg-[#FAF6E8]"
+                data-testid="btn-copy-previous-year"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                Copier annee precedente
+              </Button>
+            )}
+          </div>
           <DynamicTable
             readOnly={disabled || readOnly}
             columns={[

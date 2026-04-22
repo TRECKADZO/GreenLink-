@@ -838,3 +838,152 @@ async def get_pdc_shade_score(pdc_id: str, current_user: dict = Depends(get_curr
 
     return result
 
+
+
+
+# ============= SYNC PDC -> ADHESION (bidirectional) =============
+
+@router.post("/{pdc_id}/sync-to-adhesion")
+async def sync_pdc_to_adhesion(pdc_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Pousse les donnees modifiees du PDC (Step 1 : producteur, cacaoyere, cultures,
+    GPS, menage, production, main d'oeuvre) vers la fiche d'adhesion liee.
+    Utile quand l'agent terrain corrige sur le terrain et veut maintenir les deux
+    registres coherents pour les audits ARS 1000.
+    """
+    pdc = await db.pdc_v2.find_one({"_id": ObjectId(pdc_id)})
+    if not pdc:
+        raise HTTPException(status_code=404, detail="PDC introuvable")
+
+    # Permissions: cooperative owner or field_agent of same coop
+    user_type = get_user_type(current_user)
+    coop_id = str(pdc.get("coop_id", ""))
+    if user_type == "cooperative" and str(current_user["_id"]) != coop_id:
+        raise HTTPException(status_code=403, detail="Acces refuse")
+    if user_type in ("field_agent", "agent_terrain") and str(current_user.get("cooperative_id", "")) != coop_id:
+        raise HTTPException(status_code=403, detail="Acces refuse")
+    if user_type not in ("cooperative", "field_agent", "agent_terrain", "admin"):
+        raise HTTPException(status_code=403, detail="Role non autorise")
+
+    # Lookup adhesion: by _adhesion_id stored during prefill, else by farmer
+    step1 = pdc.get("step1") or {}
+    f1 = step1.get("fiche1") or {}
+    f2 = step1.get("fiche2") or {}
+    f4 = step1.get("fiche4") or {}
+
+    producteur = f1.get("producteur") or {}
+    gps = (f2.get("coordonnees_gps") or {})
+    cultures = f2.get("cultures") or []
+    menage = f1.get("membres_menage") or []
+    prod_cacao = f4.get("production_cacao") or []
+    main_oeuvre = f4.get("main_oeuvre") or []
+
+    adhesion_id = f1.get("_adhesion_id")
+    adhesion = None
+    if adhesion_id:
+        adhesion = await db.membres_adhesions.find_one({"adhesion_id": adhesion_id})
+    if not adhesion:
+        adhesion = await find_member_adhesion(
+            farmer_id=pdc.get("farmer_id", ""),
+            farmer_name=pdc.get("farmer_name", "") or producteur.get("nom", ""),
+            phone=producteur.get("telephone", ""),
+            coop_id=coop_id,
+        )
+    if not adhesion:
+        raise HTTPException(status_code=404, detail="Aucune fiche d'adhesion correspondante trouvee")
+
+    # Build the update payload (only set fields that are non-empty in PDC)
+    updates = {}
+
+    def setf(key, value):
+        if value not in (None, "", []):
+            updates[key] = value
+
+    # Producer
+    setf("full_name", producteur.get("nom"))
+    setf("code_membre", producteur.get("code_national"))
+    setf("cni_number", producteur.get("cni"))
+    setf("sexe", producteur.get("sexe"))
+    setf("date_naissance", producteur.get("date_naissance"))
+    setf("loc_region", producteur.get("delegation_regionale"))
+    setf("loc_departement", producteur.get("departement"))
+    setf("loc_sous_prefecture", producteur.get("sous_prefecture"))
+    setf("village", producteur.get("village"))
+    setf("campement", producteur.get("campement"))
+    setf("contact", producteur.get("telephone"))
+    setf("numero_enregistrement", producteur.get("numero_enregistrement"))
+    setf("section", producteur.get("section"))
+
+    # GPS + cacaoyère
+    setf("gps_latitude", gps.get("latitude"))
+    setf("gps_longitude", gps.get("longitude"))
+    setf("code_cacaoyere", f2.get("code_cacaoyere"))
+    setf("date_creation_cacaoyere", f2.get("date_creation_cacaoyere"))
+    setf("densite_pieds", f2.get("densite_pieds"))
+    setf("nombre_parcelles", f2.get("nombre_parcelles"))
+
+    # Cultures
+    if cultures:
+        main = cultures[0]
+        if main.get("libelle"):
+            updates["culture"] = main.get("libelle")
+        if main.get("superficie_ha"):
+            updates["superficie_ha"] = main.get("superficie_ha")
+        if len(cultures) > 1:
+            updates["autres_cultures"] = [
+                {"nom": c.get("libelle", ""), "superficie": c.get("superficie_ha", "")}
+                for c in cultures[1:]
+            ]
+
+    # Household
+    if menage:
+        updates["membres_menage"] = [
+            {
+                "full_name": p.get("nom", ""),
+                "date_naissance": p.get("date_naissance", ""),
+                "sexe": p.get("sexe", ""),
+                "relation": p.get("statut_famille", ""),
+                "scolarise": p.get("scolarise", ""),
+                "travaille_plantation": p.get("travaille_plantation", ""),
+            }
+            for p in menage
+        ]
+
+    # Production history
+    if prod_cacao:
+        first = prod_cacao[0]
+        setf("recolte_precedente_kg", first.get("production_kg"))
+        setf("volume_vendu_precedent_kg", first.get("volume_vendu_kg"))
+        setf("estimation_rendement_kg_ha", first.get("rendement_kg_ha"))
+
+    # Workers
+    permanents = [t for t in main_oeuvre if (t.get("type") == "permanent" and t.get("nom"))]
+    if permanents:
+        updates["travailleurs_liste"] = [
+            {"full_name": t.get("nom", ""), "statut": t.get("statut", "")} for t in permanents
+        ]
+
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    updates["last_synced_from_pdc_id"] = pdc_id
+    updates["last_synced_from_pdc_at"] = updates["updated_at"]
+
+    if not updates or len(updates) == 3:  # only timestamps
+        raise HTTPException(status_code=400, detail="Aucune donnee a synchroniser")
+
+    await db.membres_adhesions.update_one(
+        {"_id": adhesion["_id"]},
+        {"$set": updates},
+    )
+
+    # Also tag the PDC so UI knows last sync time
+    await db.pdc_v2.update_one(
+        {"_id": ObjectId(pdc_id)},
+        {"$set": {"last_synced_to_adhesion_at": updates["updated_at"]}},
+    )
+
+    return {
+        "success": True,
+        "adhesion_id": adhesion.get("adhesion_id", ""),
+        "fields_updated": sorted([k for k in updates.keys() if k not in ("updated_at", "last_synced_from_pdc_id", "last_synced_from_pdc_at")]),
+        "synced_at": updates["updated_at"],
+    }
