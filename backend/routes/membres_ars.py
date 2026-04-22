@@ -654,127 +654,221 @@ async def get_membres_dashboard(current_user: dict = Depends(get_current_user)):
 
 @router.get("/export/excel")
 async def export_registre_excel(current_user: dict = Depends(get_current_user)):
+    """
+    Export du Registre ARS 1000 au format Excel conforme au template officiel
+    (Registre des membres ARS 1000 - YAKRO).
+    Sections : Identification Producteur / Société Coopérative / Production 2024-2025 /
+               Composition du Ménage / Informations complémentaires.
+    """
     verify_cooperative(current_user)
     coop_id = get_coop_id(current_user)
 
     membres = await db.membres_adhesions.find({"coop_id": coop_id}, {"_id": 0}).sort("full_name", 1).to_list(5000)
+    coop_info = await db.coop_info_ars.find_one({"coop_id": coop_id}, {"_id": 0}) or {}
+    coop_name = current_user.get("coop_name") or coop_info.get("nom_cooperative") or current_user.get("full_name", "")
+    campagne = coop_info.get("campagne", "2024/2025")
+    sigle = coop_info.get("sigle", "")
+    siege = coop_info.get("siege", current_user.get("headquarters_region", ""))
+    niveau_cert = coop_info.get("niveau_certification", "Bronze")
+    nb_magasins = coop_info.get("nb_magasins_stockage", 0)
+    nb_cacaoyeres = coop_info.get("nb_cacaoyeres", 0)
+
+    nb_producteurs = len(membres)
 
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.cell.cell import MergedCell
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "Registre des Producteurs"
+    ws.title = f"Registre {campagne.replace('/', '-')}"
     hf = PatternFill(start_color="1A3622", end_color="1A3622", fill_type="solid")
     sf = PatternFill(start_color="D4AF37", end_color="D4AF37", fill_type="solid")
-    hfont = Font(color="FFFFFF", bold=True, size=9)
+    hfont = Font(color="FFFFFF", bold=True, size=10)
     sfont = Font(color="000000", bold=True, size=9)
     tb = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-    center = Alignment(horizontal='center', wrap_text=True)
+    center = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-    # Row 1: Section headers
-    sections = [
-        ("A", "M", "IDENTIFICATION DU PRODUCTEUR"),
-        ("N", "Y", "INFORMATIONS SUR LA CACAOYERE"),
-        ("Z", "AC", "INFORMATIONS DE PRODUCTION"),
-        ("AD", "AH", "TRAVAILLEURS AGRICOLES PERMANENTS"),
-        ("AI", "AR", "COMPOSITION DU MENAGE"),
+    # ----- Layout columns (match YAKRO template exactly) -----
+    # Section A: Identification du producteur (7 col)
+    # Section B: Informations sur la societe cooperative (5 col)
+    # Section C: Informations de production (4 col)
+    # Section D: Composition du menage (6 col)
+    # Section E: Informations complementaires (11 col)
+    # Row 1 = section headers (merged), Row 2 = column titles
+
+    col_groups = [
+        ("IDENTIFICATION DU PRODUCTEUR", [
+            "N° CNI", "Nom Prénom", "Date de naissance", "Sexe",
+            "N° Section", "Nombre de sections (site de production)", "Nombre de champs",
+        ]),
+        ("INFORMATIONS SUR LA SOCIETE COOPERATIVE", [
+            "Nombre de producteurs membre", "Nom de la société coopérative",
+            "Code de la cacaoyère", "Localité", "Date de création",
+        ]),
+        ("INFORMATIONS DE PRODUCTION 2024/2025", [
+            "Autres cultures présentes", "Culture", "Superficie (ha)",
+            "Volume à certifier pour la campagne en cours (Kg)",
+        ]),
+        ("COMPOSITION DU MENAGE", [
+            "Noms Prénoms (membres du menage)",
+            "Travailleurs agricoles permanents",
+            "Pour enfants en âge de scolarisation",
+            "Fréquentation d'une école? (oui/non)",
+            "Nom de l'école", "Classe",
+        ]),
+        ("INFORMATIONS COMPLEMENTAIRES", [
+            "Nombre de cacaoyère", "Niveau de certification demandé",
+            "Nombre de magasin de stockage de fèves", "Sigle",
+            "N° d'enrégistrement", "Date d'enrégistrement", "Date d'audit interne",
+            "GPS Latitude", "GPS Longitude", "Siège", "Campagne",
+        ]),
     ]
-    for start, end, title in sections:
-        cell = ws[f"{start}1"]
-        cell.value = title
+
+    # Title row 0
+    total_cols = sum(len(cols) for _, cols in col_groups)
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=total_cols)
+    title_cell = ws.cell(row=1, column=1)
+    title_cell.value = f"REGISTRE DES MEMBRES ARS 1000 — {coop_name} — Campagne {campagne}"
+    title_cell.fill = hf
+    title_cell.font = Font(color="FFFFFF", bold=True, size=12)
+    title_cell.alignment = center
+    ws.row_dimensions[1].height = 24
+
+    # Section headers row 2
+    col_idx = 1
+    for section_title, cols in col_groups:
+        start = col_idx
+        end = col_idx + len(cols) - 1
+        ws.merge_cells(start_row=2, start_column=start, end_row=2, end_column=end)
+        cell = ws.cell(row=2, column=start)
+        cell.value = section_title
         cell.fill = hf
         cell.font = hfont
         cell.alignment = center
-        ws.merge_cells(f"{start}1:{end}1")
+        cell.border = tb
+        col_idx = end + 1
 
-    # Row 2: Field headers
-    headers = [
-        # A-L: Identification
-        "N", "Section", "Nom", "Prenom", "N enregistrement", "N CNI",
-        "Date naissance", "Sexe", "Contact", "Village/Section", "Campement", "Code membre", "Statut",
-        # M-X: Cacaoyere
-        "Nb champs", "Code cacaoyere", "Date creation", "Date enregistrement",
-        "Superficie (ha)", "Culture", "Densite (pieds)", "Polygone (oui/non)",
-        "GPS Latitude", "GPS Longitude", "Autres cultures", "Date audit interne",
-        # Y-AB: Production
-        "Recolte precedente (Kg)", "Volume vendu precedent (Kg)",
-        "Estimation rendement (Kg/ha)", "Volume a certifier (Kg)",
-        # AC-AG: Travailleurs
-        "Nb travailleurs", "Noms travailleurs", "Prenoms travailleurs",
-        "Sexe travailleurs", "Naissance travailleurs",
-        # AH-AQ: Menage
-        "Noms menage", "Prenoms menage", "Sexe menage", "Naissance menage",
-        "Qualite (filiation)", "Ecole (oui/non)", "Raison non-scolarisation",
-        "Nom ecole", "Classe", "Localite menage",
-    ]
-
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=2, column=col, value=h)
+    # Column titles row 3
+    flat_cols = []
+    for _, cols in col_groups:
+        flat_cols.extend(cols)
+    for i, header in enumerate(flat_cols, 1):
+        cell = ws.cell(row=3, column=i, value=header)
         cell.fill = sf
         cell.font = sfont
         cell.border = tb
-        cell.alignment = Alignment(wrap_text=True)
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws.row_dimensions[3].height = 40
 
-    for row, m in enumerate(membres, 3):
-        travailleurs = m.get("travailleurs_liste", [])
-        menage = m.get("membres_menage", [])
-        t_noms = ", ".join(t.get("nom", "") for t in travailleurs) if travailleurs else ""
-        t_prenoms = ", ".join(t.get("prenom", "") for t in travailleurs) if travailleurs else ""
-        t_sexes = ", ".join(t.get("sexe", "") for t in travailleurs) if travailleurs else ""
-        t_naiss = ", ".join(t.get("date_naissance", "") for t in travailleurs) if travailleurs else ""
-        m_noms = ", ".join(p.get("nom", "") for p in menage) if menage else ""
-        m_prenoms = ", ".join(p.get("prenom", "") for p in menage) if menage else ""
-        m_sexes = ", ".join(p.get("sexe", "") for p in menage) if menage else ""
-        m_naiss = ", ".join(p.get("date_naissance", "") for p in menage) if menage else ""
-        m_filiation = ", ".join(p.get("qualite_filiation", "") for p in menage) if menage else ""
-        m_ecole = ", ".join(p.get("frequentation_ecole", "") for p in menage) if menage else ""
-        m_raison = ", ".join(p.get("raison_non_scolarisation", "") for p in menage) if menage else ""
-        m_nom_ecole = ", ".join(p.get("nom_ecole", "") for p in menage) if menage else ""
-        m_classe = ", ".join(p.get("classe", "") for p in menage) if menage else ""
+    def _compact(items, key):
+        return ", ".join(str((i or {}).get(key, "")).strip() for i in (items or []) if isinstance(i, dict) and (i or {}).get(key))
+
+    # Data rows (start at row 4)
+    for row_idx, m in enumerate(membres, 4):
+        menage = m.get("membres_menage", []) or []
+        travailleurs = m.get("travailleurs_liste", []) or []
+        # Culture principale + autres
+        autres_cultures_raw = m.get("autres_cultures") or []
+        if isinstance(autres_cultures_raw, list):
+            autres_str = ", ".join(str(ac) if not isinstance(ac, dict) else ac.get("nom", ac.get("libelle", "")) for ac in autres_cultures_raw)
+        else:
+            autres_str = str(autres_cultures_raw)
+
+        noms_menage = _compact(menage, "full_name") or _compact(menage, "nom")
+        ecole_list = _compact(menage, "frequentation_ecole")
+        nom_ecole_list = _compact(menage, "nom_ecole")
+        classe_list = _compact(menage, "classe")
+        nb_travailleurs = m.get("nb_travailleurs") or m.get("nombre_travailleurs") or len(travailleurs) or ""
 
         vals = [
-            row - 2, m.get("section", ""), m.get("nom", "") or m.get("full_name", "").split(" ")[0] if m.get("full_name") else "",
-            m.get("prenom", "") or (" ".join(m.get("full_name", "").split(" ")[1:]) if m.get("full_name") else ""),
-            m.get("numero_enregistrement", ""), m.get("cni_number", ""),
-            m.get("date_naissance", ""), m.get("sexe", ""),
-            m.get("contact", "") or m.get("phone_number", ""),
-            m.get("localite", "") or m.get("village", ""),
-            m.get("campement", ""),
-            m.get("code_membre", ""), m.get("statut", ""),
+            # IDENTIFICATION DU PRODUCTEUR
+            m.get("cni_number", ""),
+            m.get("full_name", "") or f"{m.get('nom','')} {m.get('prenom','')}".strip(),
+            m.get("date_naissance", ""),
+            m.get("sexe", ""),
+            m.get("section", "") or m.get("zone", ""),
+            coop_info.get("nb_sections", "") or "",
             m.get("nombre_champs", "") or m.get("nombre_parcelles", ""),
-            m.get("code_cacaoyere", ""), m.get("date_creation_cacaoyere", ""),
-            m.get("date_enregistrement", ""),
-            m.get("superficie_ha", "") or m.get("hectares_approx", ""),
-            m.get("culture", ""), m.get("densite_pieds", ""),
-            m.get("polygone_disponible", ""),
-            m.get("gps_latitude", ""), m.get("gps_longitude", ""),
-            m.get("autres_cultures", ""), m.get("date_audit_interne", ""),
-            m.get("recolte_precedente_kg", ""), m.get("volume_vendu_precedent_kg", ""),
-            m.get("estimation_rendement_kg_ha", ""), m.get("volume_certifier_kg", ""),
-            m.get("nb_travailleurs", "") or m.get("nombre_travailleurs", ""),
-            t_noms, t_prenoms, t_sexes, t_naiss,
-            m_noms, m_prenoms, m_sexes, m_naiss, m_filiation, m_ecole, m_raison, m_nom_ecole, m_classe,
+            # INFOS SOCIETE COOPERATIVE
+            nb_producteurs,
+            coop_name,
+            m.get("code_cacaoyere", ""),
             m.get("localite", "") or m.get("village", ""),
+            m.get("date_creation_cacaoyere", ""),
+            # INFOS DE PRODUCTION
+            autres_str,
+            m.get("culture", ""),
+            m.get("superficie_ha", "") or m.get("hectares_approx", ""),
+            m.get("volume_certifier_kg", "") or m.get("recolte_precedente_kg", ""),
+            # COMPOSITION DU MENAGE
+            noms_menage,
+            nb_travailleurs,
+            sum(1 for p in menage if str(p.get("frequentation_ecole", "")).strip() or p.get("age_scolarisation")),
+            ecole_list,
+            nom_ecole_list,
+            classe_list,
+            # INFOS COMPLEMENTAIRES
+            nb_cacaoyeres,
+            niveau_cert,
+            nb_magasins,
+            sigle,
+            m.get("numero_enregistrement", ""),
+            m.get("date_enregistrement", ""),
+            m.get("date_audit_interne", ""),
+            m.get("gps_latitude", ""),
+            m.get("gps_longitude", ""),
+            siege,
+            campagne,
         ]
-        for col, val in enumerate(vals, 1):
-            ws.cell(row=row, column=col, value=val).border = tb
 
-    # Auto-width - skip merged cells
-    from openpyxl.cell.cell import MergedCell
+        for col, val in enumerate(vals, 1):
+            cell = ws.cell(row=row_idx, column=col, value=val)
+            cell.border = tb
+            cell.alignment = Alignment(wrap_text=True, vertical='center')
+
+    # Auto column widths (excluding merged cells)
     for col in ws.columns:
-        # Filter out merged cells
-        cells = [cell for cell in col if not isinstance(cell, MergedCell)]
+        cells = [c for c in col if not isinstance(c, MergedCell)]
         if cells:
-            max_len = max(len(str(cell.value or "")) for cell in cells)
-            ws.column_dimensions[cells[0].column_letter].width = min(max(max_len + 2, 10), 25)
+            lens = [len(str(c.value or "")) for c in cells]
+            max_len = max(lens) if lens else 10
+            ws.column_dimensions[cells[0].column_letter].width = min(max(max_len + 2, 12), 30)
+
+    ws.freeze_panes = "A4"
+
+    # Footer sheet with summary
+    ws2 = wb.create_sheet("Recapitulatif")
+    ws2.column_dimensions['A'].width = 45
+    ws2.column_dimensions['B'].width = 30
+    summary_rows = [
+        ("Nom de la cooperative", coop_name),
+        ("Sigle", sigle),
+        ("Siege", siege),
+        ("Campagne", campagne),
+        ("Niveau de certification demande", niveau_cert),
+        ("Nombre de producteurs membres", nb_producteurs),
+        ("Nombre de sections", coop_info.get("nb_sections", "")),
+        ("Nombre de cacaoyeres", nb_cacaoyeres),
+        ("Nombre de magasins de stockage de feves", nb_magasins),
+        ("Date de generation", datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M UTC")),
+        ("Genere par", current_user.get("full_name", current_user.get("email", ""))),
+    ]
+    ws2["A1"] = "RECAPITULATIF DU REGISTRE"
+    ws2["A1"].font = Font(bold=True, size=14, color="1A3622")
+    for i, (label, val) in enumerate(summary_rows, 3):
+        ws2.cell(row=i, column=1, value=label).font = Font(bold=True)
+        ws2.cell(row=i, column=2, value=val)
 
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
-    return StreamingResponse(buf, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={
-        "Content-Disposition": "attachment; filename=registre_membres_ars1000.xlsx"
-    })
+    filename = f"registre_ars1000_{coop_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ============= ETAPES & CHAMPS REFERENCE =============
