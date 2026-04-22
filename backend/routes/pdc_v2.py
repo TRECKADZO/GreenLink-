@@ -120,7 +120,7 @@ def build_prefilled_step1(adhesion: dict) -> dict:
 
     producteur = {
         "nom": a.get("full_name", ""),
-        "code_national": a.get("code_membre", "") or a.get("cni_number", ""),
+        "code_national": a.get("code_national_ccc", "") or a.get("code_membre", "") or a.get("cni_number", ""),
         "delegation_regionale": a.get("loc_region", "") or a.get("zone", ""),
         "departement": a.get("loc_departement", "") or a.get("department", ""),
         "sous_prefecture": a.get("loc_sous_prefecture", ""),

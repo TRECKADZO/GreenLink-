@@ -113,7 +113,7 @@ const RegistrePage = () => {
         <div className="flex flex-wrap gap-3 mb-6" data-testid="filters">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nom, code, telephone, CNI..." className="w-full pl-9 pr-4 py-2 text-sm border border-[#E5E5E0] rounded-md bg-white focus:outline-none focus:border-[#1A3622]" data-testid="search-input" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nom, code, telephone, CNI, code CCC..." className="w-full pl-9 pr-4 py-2 text-sm border border-[#E5E5E0] rounded-md bg-white focus:outline-none focus:border-[#1A3622]" data-testid="search-input" />
           </div>
           <select value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E5E0] rounded-md bg-white" data-testid="filter-statut">
             <option value="">Tous statuts</option>
@@ -145,6 +145,7 @@ const RegistrePage = () => {
                 <thead>
                   <tr className="border-b border-[#E5E5E0] bg-[#F9FAFB]">
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Code</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Code CCC</th>
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Nom (a)</th>
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Sexe (c)</th>
                     <th className="px-3 py-2 text-left text-[10px] font-bold uppercase text-[#6B7280]">Village/Section</th>
@@ -159,6 +160,7 @@ const RegistrePage = () => {
                   {membres.map(m => (
                     <tr key={m.adhesion_id} className="hover:bg-[#F9FAFB]">
                       <td className="px-3 py-2 text-xs font-mono">{m.code_membre}</td>
+                      <td className="px-3 py-2 text-xs font-mono text-[#D4AF37]" data-testid={`row-ccc-${m.adhesion_id}`}>{m.code_national_ccc || '-'}</td>
                       <td className="px-3 py-2 text-xs font-medium text-[#111827]">{m.full_name}</td>
                       <td className="px-3 py-2 text-xs">{m.sexe === 'M' ? 'H' : m.sexe === 'F' ? 'F' : '-'}</td>
                       <td className="px-3 py-2 text-xs">{m.localite || m.village}</td>

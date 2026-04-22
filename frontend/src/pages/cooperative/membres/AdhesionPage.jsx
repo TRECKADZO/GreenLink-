@@ -25,7 +25,7 @@ const AdhesionPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     // Identification
-    section: '', nom: '', prenom: '', cni_number: '', date_naissance: '', sexe: '', contact: '', localite: '', campement: '',
+    section: '', nom: '', prenom: '', cni_number: '', code_national_ccc: '', date_naissance: '', sexe: '', contact: '', localite: '', campement: '',
     loc_region: '', loc_departement: '', loc_sous_prefecture: '',
     // Cacaoyere
     nombre_champs: 0, code_cacaoyere: '', date_creation_cacaoyere: '', date_enregistrement: new Date().toISOString().slice(0, 10),
@@ -226,6 +226,7 @@ const Step1Identification = ({ form, up }) => (
       <Fld label="Date de naissance" value={form.date_naissance} type="date" onChange={v => up('date_naissance', v)} testid="input-naissance" />
       <Sel label="Sexe *" value={form.sexe} onChange={v => up('sexe', v)} testid="input-sexe" options={[{ v: '', l: 'Choisir' }, { v: 'M', l: 'Masculin' }, { v: 'F', l: 'Feminin' }]} />
     </div>
+    <Fld label="Code National (Conseil Cafe-Cacao)" value={form.code_national_ccc} onChange={v => up('code_national_ccc', v)} testid="input-code-national-ccc" placeholder="Code CCC officiel du planteur (ex: CI-CCC-123456)" />
     <Fld label="Contact (telephone) *" value={form.contact} onChange={v => up('contact', v)} testid="input-contact" placeholder="+225 07..." />
     {/* Selecteur en cascade Region → Departement → Sous-prefecture → Village */}
     <div className="border border-[#D4AF37] rounded-md overflow-hidden">

@@ -120,6 +120,7 @@ class AdhesionCreate(BaseModel):
     prenom: str = ""
     numero_enregistrement: str = ""
     cni_number: str = ""
+    code_national_ccc: str = ""  # Code officiel du Conseil Cafe-Cacao (CI)
     date_naissance: str = ""
     sexe: str = ""
     contact: str = ""
@@ -179,6 +180,7 @@ class MemberUpdate(BaseModel):
     prenom: Optional[str] = None
     numero_enregistrement: Optional[str] = None
     cni_number: Optional[str] = None
+    code_national_ccc: Optional[str] = None
     date_naissance: Optional[str] = None
     sexe: Optional[str] = None
     contact: Optional[str] = None
@@ -259,6 +261,7 @@ async def create_adhesion(data: AdhesionCreate, current_user: dict = Depends(get
         "full_name": full_name,
         "numero_enregistrement": data.numero_enregistrement,
         "cni_number": data.cni_number,
+        "code_national_ccc": data.code_national_ccc,
         "date_naissance": data.date_naissance,
         "sexe": data.sexe,
         "contact": contact,
@@ -519,6 +522,7 @@ async def get_registre_membres(
             {"code_membre": {"$regex": search, "$options": "i"}},
             {"phone_number": {"$regex": search, "$options": "i"}},
             {"cni_number": {"$regex": search, "$options": "i"}},
+            {"code_national_ccc": {"$regex": search, "$options": "i"}},
         ]
 
     total = await db.membres_adhesions.count_documents(query)
@@ -699,7 +703,7 @@ async def export_registre_excel(current_user: dict = Depends(get_current_user)):
 
     col_groups = [
         ("IDENTIFICATION DU PRODUCTEUR", [
-            "N° CNI", "Nom Prénom", "Date de naissance", "Sexe",
+            "N° CNI", "Code National CCC", "Nom Prénom", "Date de naissance", "Sexe",
             "N° Section", "Nombre de sections (site de production)", "Nombre de champs",
         ]),
         ("INFORMATIONS SUR LA SOCIETE COOPERATIVE", [
@@ -784,6 +788,7 @@ async def export_registre_excel(current_user: dict = Depends(get_current_user)):
         vals = [
             # IDENTIFICATION DU PRODUCTEUR
             m.get("cni_number", ""),
+            m.get("code_national_ccc", ""),
             m.get("full_name", "") or f"{m.get('nom','')} {m.get('prenom','')}".strip(),
             m.get("date_naissance", ""),
             m.get("sexe", ""),
